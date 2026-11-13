@@ -7,6 +7,18 @@ import org.tortodrone.character.WorldProfile;
 public final class KnightCombat {
     public static final int HURT_DEFENSE=277, CHARGE=283, DEFENSE=284, DODGE=286, BASH=287,
         INCOMPLETE=289, CHARGED=290, COOLDOWN=291, NORMAL=292;
+    // Stock dodge: 625 ms impulse window at magnitude 5 (Stock DungeoneerLogic).
+    public static final int DODGE_IMPULSE_MILLIS=625;
+    // Stock shield-hit pose length before control returns.
+    public static final int HURT_DEFENSE_MILLIS=411;
+    // A press held from this long before the running attack counts as a charge intent
+    // rather than a new chain link.
+    public static final int HELD_PRESS_WINDOW=350;
+    /** Held shield never auto-clears; a far-future clear keeps the raised pose under
+     * client control until the defend bit is released. */
+    public static final int SHIELD_CLEAR_SENTINEL_MILLIS=600000;
+    /** Shield-hit stamp meaning "before this scene's clock started" (full shield). */
+    public static final int PRE_SCENE_SENTINEL=-300000;
     public record Impulse(int started,int duration,float x,float y) {
         public float fraction(int time) {
             float t=Math.clamp((time-started)/(float)duration,0,1);
@@ -20,7 +32,7 @@ public final class KnightCombat {
             this(weapon,shield,shieldCostume,shieldMaximum,chainCount,chainReset,nextDodge,impulse,shieldHealth,shieldHit,shieldRegenStart,EquipmentCatalog.Modifiers.ZERO,EquipmentCatalog.Modifiers.ZERO);
         }
         public State(WorldProfile.Item weapon,String shield,String shieldCostume,int shieldMaximum,int chainCount,int chainReset,int nextDodge,Impulse impulse) {
-            this(weapon,shield,shieldCostume,shieldMaximum,chainCount,chainReset,nextDodge,impulse,shieldMaximum,-300000,0);
+            this(weapon,shield,shieldCostume,shieldMaximum,chainCount,chainReset,nextDodge,impulse,shieldMaximum,PRE_SCENE_SENTINEL,0);
         }
     }
     private final WeaponCatalog catalog;
@@ -38,7 +50,7 @@ public final class KnightCombat {
     private boolean impulseApplied;
     private int dodgeCooldown;
     private float shieldHealth;
-    private int shieldHit=-300000,shieldRegenStart;
+    private int shieldHit=PRE_SCENE_SENTINEL,shieldRegenStart;
     private boolean bashSpent;
     private SceneStatus.Modifiers status=SceneStatus.Modifiers.NORMAL;
     public void status(SceneStatus.Modifiers value){status=Objects.requireNonNull(value);if(!value.canMove())impulse=null;if(!value.canDefend()&&(activity==DEFENSE||activity==HURT_DEFENSE))clear(started);if(!value.canAttack()&&activity!=DEFENSE&&activity!=HURT_DEFENSE)clear(started);}
@@ -62,7 +74,7 @@ public final class KnightCombat {
         shield=equipped(2)==null?null:equipped(2).config();
         shieldCostume=equipped(15)==null?null:equipped(15).config();
         shieldDefinition=shield==null?null:catalog.findShield(shield);
-        if(!Objects.equals(previousShield,shield)){shieldHealth=shieldDefinition==null?0:shieldDefinition.health();shieldHit=-300000;shieldRegenStart=0;}
+        if(!Objects.equals(previousShield,shield)){shieldHealth=shieldDefinition==null?0:shieldDefinition.health();shieldHit=PRE_SCENE_SENTINEL;shieldRegenStart=0;}
         int slot=weapon==null?6:equipment.stream().filter(i->i.id()==weapon.id()).map(WorldProfile.Item::equippedSlot).findFirst().orElse(6);
         select(slot);
         updateModifiers();
@@ -81,7 +93,10 @@ public final class KnightCombat {
     public void interrupt(int time) { clear(time);chainCount=chainReset=0; }
     private void clear(int time) { activity=0;started=time;attack=null;impulseApplied=false; }
     public int activity(){return activity;}
-    public int flags(){return impulseApplied?128:0;}
+    /** Native Dungeoneer.ATTACK_IMPULSE_APPLIED (128): set while a knockback/dodge
+     * impulse is still integrating, so clients keep the pushed pose. */
+    public static final int ATTACK_IMPULSE_APPLIED_FLAG = 128;
+    public int flags(){return impulseApplied?ATTACK_IMPULSE_APPLIED_FLAG:0;}
     public int started(){return started;}
     public boolean canOverride(){return activity==0||activity==DEFENSE;}
     public boolean allowsMovement(){return activity==0||activity==CHARGE||activity==DEFENSE||attack!=null&&attack.blended()&&definition!=null&&definition.blended();}
@@ -115,36 +130,36 @@ public final class KnightCombat {
     }
     public void input(int flags,int changed,int time,float facing,float direction,boolean baseAllows) {
         advance(time,facing);
-        if(!baseAllows){if(canOverride()){int index=(flags&56)>>>3;if(index<org.tortodrone.character.SlotUpgrades.weapons(profile))select(6+index);}return;}
-        if(activity==CHARGE&&(flags&4)==0) {
+        if(!baseAllows){if(canOverride()){int index=(flags&InputBits.WEAPON_SLOT_MASK)>>>InputBits.WEAPON_SLOT_SHIFT;if(index<org.tortodrone.character.SlotUpgrades.weapons(profile))select(6+index);}return;}
+        if(activity==CHARGE&&(flags&InputBits.ACTION)==0) {
             if(definition!=null)startAttack(time-started>=EquipmentCatalog.chargeTimeMillis(definition.chargeTime(),equipmentModifiers,weaponModifiers)?CHARGED:nextNormal(time),time);
             else clear(time);
         }
-        if(activity==DEFENSE&&(flags&64)==0)clear(time);
+        if(activity==DEFENSE&&(flags&InputBits.DEFEND)==0)clear(time);
         // ActiveAdvancer updates the current attack before Dungeoneer evaluates a
         // new attack. A held press at rearm must charge instead of chaining again.
-        if(attack!=null&&canCharge()&&time-started>=attack.rearm()&&(flags&4)!=0&&changed<=started&&activity!=COOLDOWN) {
+        if(attack!=null&&canCharge()&&time-started>=attack.rearm()&&(flags&InputBits.ACTION)!=0&&changed<=started&&activity!=COOLDOWN) {
             started+=attack.rearm();activity=CHARGE;attack=null;
         }
         boolean rearmed=attack!=null&&time-started>=attack.rearm()&&activity!=COOLDOWN;
-        if(status.canMove()&&(flags&1024)!=0&&time>nextDodge&&activity!=CHARGE&&activity!=DEFENSE&&attack==null&&activity!=DODGE) {
+        if(status.canMove()&&(flags&InputBits.DODGE)!=0&&time>nextDodge&&activity!=CHARGE&&activity!=DEFENSE&&attack==null&&activity!=DODGE) {
             activity=DODGE;started=time;nextDodge=time+dodgeCooldown;attack=null;
-            float angle=(flags&1)!=0?direction:facing;
-            impulse=new Impulse(time,625,(float)Math.cos(angle)*5,(float)Math.sin(angle)*5);impulseApplied=true;
+            float angle=(flags&InputBits.MOVING)!=0?direction:facing;
+            impulse=new Impulse(time,DODGE_IMPULSE_MILLIS,(float)Math.cos(angle)*5,(float)Math.sin(angle)*5);impulseApplied=true;
         }
-        if((flags&4)!=0&&definition!=null&&(activity==0||rearmed)
+        if((flags&InputBits.ACTION)!=0&&definition!=null&&(activity==0||rearmed)
                 &&(definition.maxChain()==0||count(time)<definition.maxChain())) {
             if(changed>=started)startAttack(definition.attacks().isEmpty()?CHARGE:activity>=NORMAL?nextNormal(time):NORMAL,time);
-            else if(canCharge()&&changed+350<started){activity=CHARGE;started=time;attack=null;}
+            else if(canCharge()&&changed+HELD_PRESS_WINDOW<started){activity=CHARGE;started=time;attack=null;}
         }
-        if(status.canDefend()&&(flags&64)!=0&&shieldDefinition!=null&&(activity==0||rearmed)) {activity=DEFENSE;started=time;attack=null;
-            attackSink.accept(new AttackStart(shield,DEFENSE,started,0,600000,1));}
-        if(status.canMove()&&status.canDefend()&&(flags&2048)!=0&&shieldDefinition!=null&&shieldDefinition.bash()!=null&&currentShieldHealth(time)==shieldDefinition.health()&&(activity==0||activity==DEFENSE||rearmed)) {
+        if(status.canDefend()&&(flags&InputBits.DEFEND)!=0&&shieldDefinition!=null&&(activity==0||rearmed)) {activity=DEFENSE;started=time;attack=null;
+            attackSink.accept(new AttackStart(shield,DEFENSE,started,0,SHIELD_CLEAR_SENTINEL_MILLIS,1));}
+        if(status.canMove()&&status.canDefend()&&(flags&InputBits.SHIELD_BASH)!=0&&shieldDefinition!=null&&shieldDefinition.bash()!=null&&currentShieldHealth(time)==shieldDefinition.health()&&(activity==0||activity==DEFENSE||rearmed)) {
             activity=BASH;started=time;attack=scaled(shieldDefinition.bash());impulseApplied=false;bashSpent=false;
             attackSink.accept(new AttackStart(shield,activity,started,attack.land(),attack.clear(),attackSpeed()));
         }
         if(canOverride()) {
-            int index=(flags&56)>>>3;
+            int index=(flags&InputBits.WEAPON_SLOT_MASK)>>>InputBits.WEAPON_SLOT_SHIFT;
             // The profile owns the unlocked native weapon slots; input only selects an owned slot.
             if(index<org.tortodrone.character.SlotUpgrades.weapons(profile))select(6+index);
         }
@@ -179,8 +194,8 @@ public final class KnightCombat {
                 int end=started+attack.rearm();startAttack(COOLDOWN,end);
             }
             if(attack!=null&&time>=started+attack.clear())clear(started+attack.clear());
-        }else if(activity==DODGE&&time>=started+625)clear(started+625);
-        else if(activity==HURT_DEFENSE&&time>=started+411)clear(started+411);
+        }else if(activity==DODGE&&time>=started+DODGE_IMPULSE_MILLIS)clear(started+DODGE_IMPULSE_MILLIS);
+        else if(activity==HURT_DEFENSE&&time>=started+HURT_DEFENSE_MILLIS)clear(started+HURT_DEFENSE_MILLIS);
         // Keep a completed impulse through its final integration interval; movement retires it.
     }
     public void retireImpulse(int time){if(impulse!=null&&time>=impulse.started()+impulse.duration())impulse=null;}

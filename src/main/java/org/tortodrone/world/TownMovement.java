@@ -4,6 +4,10 @@ import java.util.ArrayDeque;
 
 /** Server-owned movement on the scene clock. Client frames never provide positions. */
 public final class TownMovement {
+    /** Native translation speed of Character/PC/Default (ActorConfig$Mobile.speed),
+     * shared by the dungeon PC (Character/PC/Level): 5.0 world-units/second; the
+     * config's own "movements" speeds are animation multipliers, not translation.
+     * Native Knight.getSpeed() triples this while the FAST flag (16) is set. */
     public static final float SPEED = 5f;
     // Half the shortest edge of the verified Default PC collision shape, as in MobileLogic.
     public static final float MAX_STEP = .333333f;
@@ -13,6 +17,9 @@ public final class TownMovement {
     // once the owning client's first input frame reports the finished scene load.
     public static final int LOADING = 1;
     public static final int USE_ITEM=5, USE_ITEM_MILLIS=1433;
+    /** Native Mobile.MOVING published actor flag (2): set on the pawn record while
+     * the server integrates a moving input segment. */
+    public static final int PUBLISHED_MOVING_FLAG = 2;
     // Stock KnightAdvancer registers the lockbox reveal as a stationary 8250 ms activity.
     public static final int OPEN_BOX=265, OPEN_BOX_MILLIS=8250;
     public static final int ANIMATED_ITEM=267;
@@ -24,6 +31,20 @@ public final class TownMovement {
     // DungeoneerAdvancer registers HURT_SOFT as Activity(true, 500):
     // movement and rotation continue during the reaction, independently of its animation.
     public static final int HURT_MILLIS=500, DYING_MILLIS=1290, RESURRECT_MILLIS=400;
+    // Stock Dungeoneer carry poses: raising (268) settles into the carried hold after
+    // 277 ms; both throw (270) and drop (271) play for 767 ms before control returns.
+    public static final int LIFT_POSE=268, LIFTED_POSE=269, THROW_POSE=270, DROP_POSE=271;
+    public static final int LIFT_MILLIS=277, THROWN_MILLIS=767;
+    /** Retail sprite command: activity 288, movement allowed, 750 ms. */
+    public static final int SPRITE_COMMAND=288, SPRITE_COMMAND_MILLIS=750;
+    // Server policy: how far a client-supplied input stamp may lead or lag the scene
+    // clock before the frame is refused as unsynchronized.
+    public static final int CLOCK_TOLERANCE_MILLIS=10000;
+    // Combat actions echo their activity stamp; accept it within this window.
+    public static final int ACTION_WINDOW_MILLIS=600000;
+    // Server policy: without fresh input frames for this long, held-button bits
+    // (other than persistent slot selection) are dropped as a stale connection.
+    public static final int INPUT_IDLE_MILLIS=500;
     private static final int MAX_PENDING = 256;
     private record Frame(int timestamp, float rotation, float direction, int flags,int actionChanged) { }
     private final ArrayDeque<Frame> pending = new ArrayDeque<>();
@@ -71,10 +92,10 @@ public final class TownMovement {
     }
     public void die(int stamp){if(dead())return;resetInput(stamp);setActivity(DYING,stamp);}
     public void resurrect(int stamp){resetInput(stamp);setActivity(RESURRECT,stamp);updateFlags();}
-    /** Retail sprite command: activity 288, movement allowed, 750 ms. */
+    /** Play the stock sprite-command pose; a battle-sprite ult button triggers it remotely. */
     public boolean spriteCommand(int stamp){
         if(activity!=0||!status.canAttack()||combat!=null&&!combat.canOverride())return false;
-        if(combat!=null)combat.reset(stamp);setActivity(288,stamp);updateFlags();return true;
+        if(combat!=null)combat.reset(stamp);setActivity(SPRITE_COMMAND,stamp);updateFlags();return true;
     }
     private Object activityData;
     private boolean publicationPending;
@@ -83,9 +104,9 @@ public final class TownMovement {
     public void throwing(java.util.function.IntPredicate handler){throwing=java.util.Objects.requireNonNull(handler);}
     public boolean lift(int stamp){
         if(activity!=0&&activity!=INVENTORY&&activity!=INVENTORY_END||combat!=null&&!combat.canOverride())return false;
-        if(combat!=null)combat.reset(stamp);setActivity(268,stamp);updateFlags();return true;
+        if(combat!=null)combat.reset(stamp);setActivity(LIFT_POSE,stamp);updateFlags();return true;
     }
-    public void thrown(boolean drop,int stamp){if(combat!=null)combat.reset(stamp);setActivity(drop?271:270,stamp);updateFlags();}
+    public void thrown(boolean drop,int stamp){if(combat!=null)combat.reset(stamp);setActivity(drop?DROP_POSE:THROW_POSE,stamp);updateFlags();}
     /** Active.interpolate switches activity at its start stamp but copies data from the older
      * record. Data-dependent activities must start at their first publication boundary. */
     public void preparePublication(int stamp){
@@ -133,7 +154,7 @@ public final class TownMovement {
     private java.util.function.BiFunction<Float,Float,SceneCollision.Penetration> dynamicPenetration=(x,y)->SceneCollision.Penetration.NONE;
     private SceneCollision staticCollision=SceneCollision.empty();
     private int collisionMask=43;
-    private static final Object PAWN_SHAPE=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",
+    private static final Object PAWN_SHAPE=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.SHAPE_CIRCLE,
         java.util.List.of(new FireCatalog.FieldValue("radius","float",ScenePortals.PAWN_RADIUS)));
     public void staticCollision(SceneCollision geometry,int mask){staticCollision=java.util.Objects.requireNonNull(geometry);collisionMask=mask;}
     private boolean walkable(float toX,float toY){
@@ -196,7 +217,7 @@ public final class TownMovement {
                 ||portals.triggers().stream().anyMatch(t->t.intersects(toX,toY)))return false;
         int watermark=inputSeen?Math.max(lastTimestamp,stamp):stamp;
         resetInput(stamp);lastTimestamp=watermark;inputSeen=true;
-        x=toX;y=toY;rotation=direction=normalize(facing);warpUntil=stamp+100;
+        x=toX;y=toY;rotation=direction=normalize(facing);warpUntil=stamp+100; // brief input suppression after a server-authored warp
         return true;
     }
 
@@ -206,11 +227,11 @@ public final class TownMovement {
     }
     public boolean accept(int stamp,float facing,float heading,int inputFlags,int actionChanged,int sceneTime,long now) {
         if (inTransit||portal!=null || !Float.isFinite(facing) || !Float.isFinite(heading)
-                || Math.abs((long) (stamp - sceneTime)) > 10000
+                || Math.abs((long) (stamp - sceneTime)) > CLOCK_TOLERANCE_MILLIS
                 || (inputSeen && stamp - lastTimestamp <= 0)
                 || pending.size() >= MAX_PENDING) return false;
-        if(combat!=null&&Math.abs((long)actionChanged-stamp)>600000)return false;
-        pending.addLast(new Frame(stamp, normalize(facing), normalize(heading), inputFlags & (combat==null?7:4095),actionChanged));
+        if(combat!=null&&Math.abs((long)actionChanged-stamp)>ACTION_WINDOW_MILLIS)return false;
+        pending.addLast(new Frame(stamp, normalize(facing), normalize(heading), inputFlags & (combat==null?InputBits.MOVING|InputBits.UI_WINDOW|InputBits.ACTION:InputBits.DEFINED_MASK),actionChanged));
         lastTimestamp = stamp;
         lastInputAt = now;
         inputSeen = true;
@@ -251,16 +272,16 @@ public final class TownMovement {
             if (status.canRotate()&&(activity == 0 || activityAllowsMovement()) && (combat==null||combat.allowsRotation(timestamp))) rotation = frame.rotation();
             direction = frame.direction();
             inputFlags = frame.flags();
-            if (activity != 0 && !activityAllowsMovement() && (inputFlags & 1) != 0) {
+            if (activity != 0 && !activityAllowsMovement() && (inputFlags & InputBits.MOVING) != 0) {
                 var emote = PlayerEmotes.byActivity(activity);
                 if(emote!=null)setActivity(emote.endActivity(),timestamp);
             }
-            if ((inputFlags & 2) != 0 && activity != INVENTORY && (activity==0||activity==INVENTORY_END||PlayerEmotes.byActivity(activity)!=null) && (combat==null||combat.canOverride())) {
+            if ((inputFlags & InputBits.UI_WINDOW) != 0 && activity != INVENTORY && (activity==0||activity==INVENTORY_END||PlayerEmotes.byActivity(activity)!=null) && (combat==null||combat.canOverride())) {
                 if(combat!=null)combat.reset(timestamp);setActivity(INVENTORY, timestamp);rotation=-(float)Math.PI/2;
             }
-            else if ((inputFlags & 2) == 0 && activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
-            if(activity==269&&(inputFlags&4)!=0&&frame.actionChanged()>=activityStarted&&throwing.test(timestamp))inputFlags&=~4;
-            boolean freshAction=(inputFlags&4)!=0&&frame.actionChanged()>interactionChange;
+            else if ((inputFlags & InputBits.UI_WINDOW) == 0 && activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
+            if(activity==LIFTED_POSE&&(inputFlags&InputBits.ACTION)!=0&&frame.actionChanged()>=activityStarted&&throwing.test(timestamp))inputFlags&=~InputBits.ACTION;
+            boolean freshAction=(inputFlags&InputBits.ACTION)!=0&&frame.actionChanged()>interactionChange;
             if(freshAction)interactionChange=frame.actionChanged();
             if(dead()){
                 if(activity==DEAD&&freshAction&&frame.actionChanged()>=activityStarted&&revival.test(timestamp)){
@@ -269,16 +290,16 @@ public final class TownMovement {
                 inputFlags=0;updateFlags();continue;
             }
             if(status.canAttack()&&activity==0&&(combat==null||combat.canOverride())&&freshAction&&interaction.test(timestamp)){
-                inputFlags&=~4;if(combat!=null)combat.reset(timestamp);
+                inputFlags&=~InputBits.ACTION;if(combat!=null)combat.reset(timestamp);
                 if(activity==0)setActivity(2,timestamp);
             }
             if(combat!=null)combat.input(inputFlags,frame.actionChanged(),timestamp,rotation,direction,activity==0&&status.canAttack());
             updateFlags();
         }
-        if (now - lastInputAt > 500) {
+        if (now - lastInputAt > INPUT_IDLE_MILLIS) {
             // Selection bits are persistent client state, not held buttons.
             // Timing out movement/attack must not invent a switch back to slot zero.
-            inputFlags &= 56;
+            inputFlags &= InputBits.WEAPON_SLOT_MASK;
             if (activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
             if(combat!=null)combat.input(inputFlags,timestamp,timestamp,rotation,direction,activity==0&&status.canAttack());
             updateFlags();
@@ -288,8 +309,8 @@ public final class TownMovement {
 
     private void moveTo(int target) {
         if(activity==DYING&&target-activityStarted>=DYING_MILLIS)setActivity(DEAD,activityStarted+DYING_MILLIS);
-        if(activity==268&&target-activityStarted>=277)setActivity(269,activityStarted+277);
-        int duration = activity==288?750:activity==ANIMATED_ITEM?animatedItemMillis:activity==OPEN_BOX?OPEN_BOX_MILLIS:activity==HURT?HURT_MILLIS:activity==RESURRECT?RESURRECT_MILLIS:activity==270||activity==271?767:activity == USE_ITEM ? USE_ITEM_MILLIS : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
+        if(activity==LIFT_POSE&&target-activityStarted>=LIFT_MILLIS)setActivity(LIFTED_POSE,activityStarted+LIFT_MILLIS);
+        int duration = activity==SPRITE_COMMAND?SPRITE_COMMAND_MILLIS:activity==ANIMATED_ITEM?animatedItemMillis:activity==OPEN_BOX?OPEN_BOX_MILLIS:activity==HURT?HURT_MILLIS:activity==RESURRECT?RESURRECT_MILLIS:activity==THROW_POSE||activity==DROP_POSE?THROWN_MILLIS:activity == USE_ITEM ? USE_ITEM_MILLIS : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
             : activity == SIT_END ? SIT_END_MILLIS : 0;
         var emote = PlayerEmotes.byActivity(activity);
         boolean movingEmote=emote!=null&&emote.allowsMovement();
@@ -309,7 +330,7 @@ public final class TownMovement {
             elapsed -= step;
             int previous=timestamp;timestamp+=step;
             if(combat!=null){combat.advance(timestamp,rotation);updateFlags();}
-            float distance = (flags&2)==0?0:SPEED * step / 1000f*status.speed()*(combat==null?1:combat.movementScale());
+            float distance = (flags&PUBLISHED_MOVING_FLAG)==0?0:SPEED * step / 1000f*status.speed()*(combat==null?1:combat.movementScale());
             float dx=(float)Math.cos(direction)*distance,dy=(float)Math.sin(direction)*distance;
             var impulse=combat==null?null:combat.state().impulse();
             if(impulse!=null&&status.canMove()){float portion=impulse.fraction(timestamp)-impulse.fraction(previous);dx+=impulse.x()*portion;dy+=impulse.y()*portion;}
@@ -364,12 +385,12 @@ public final class TownMovement {
         activityStarted = started;
     }
     private boolean activityAllowsMovement() {
-        if(activity==269||activity==HURT||activity==USE_ITEM||activity==288)return true;
+        if(activity==269||activity==HURT||activity==USE_ITEM||activity==SPRITE_COMMAND)return true;
         var emote=PlayerEmotes.byActivity(activity);
         return emote!=null&&emote.allowsMovement();
     }
     private void updateFlags() {
-        flags = status.canMove()&&(activity == 0 || activityAllowsMovement()) && (combat==null||combat.allowsMovement()) && (inputFlags & 1) != 0 ? 2 : 0;
+        flags = status.canMove()&&(activity == 0 || activityAllowsMovement()) && (combat==null||combat.allowsMovement()) && (inputFlags & InputBits.MOVING) != 0 ? PUBLISHED_MOVING_FLAG : 0;
     }
     private static float normalize(float angle) {
         return (float) Math.IEEEremainder(angle, Math.PI * 2);

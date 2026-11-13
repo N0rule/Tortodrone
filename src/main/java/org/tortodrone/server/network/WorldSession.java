@@ -162,7 +162,7 @@ final class WorldSession implements AutoCloseable {
             &&!args.isEmpty()&&args.getFirst() instanceof String key&&key.startsWith("PARTY_INV:");
         boolean operation=request.service()==20&&request.method()>=1&&request.method()<=3;
         if(!response&&!operation)return false;
-        if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid party listener");
+        if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid party listener");
         boolean valid=response?args.size()==3&&args.get(1) instanceof Integer:request.method()==3?args.size()==1:args.size()==2&&args.getFirst() instanceof String;
         if(!valid)throw new SessionDecoder.Rejected("Invalid party arguments");
         try{
@@ -309,7 +309,7 @@ final class WorldSession implements AutoCloseable {
     synchronized boolean exchangeInvocation(SessionDecoder.Invocation request)throws IOException{
         if(request.oid()!=SessionCodec.EXCHANGE_OID||request.service()!=SessionCodec.EXCHANGE_SERVICE)return false;
         var a=request.arguments();int method=request.method();
-        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(method==1?"ConfirmMarshaller":"ResultMarshaller")))throw new SessionDecoder.Rejected("Invalid Energy Exchange listener");
+        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.LISTENER_PREFIX+(method==1?"ConfirmMarshaller":"ResultMarshaller")))throw new SessionDecoder.Rejected("Invalid Energy Exchange listener");
         boolean valid=switch(method){case 1->a.size()==2&&a.getFirst() instanceof Integer;case 2->a.size()==1;case 3->a.size()==5&&a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Boolean&&a.get(3) instanceof Boolean;default->false;};
         if(!valid)throw new SessionDecoder.Rejected("Invalid Energy Exchange request");
         try{
@@ -325,7 +325,7 @@ final class WorldSession implements AutoCloseable {
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.MISSION_SERVICE)return false;
         if(!Set.of(4,5,6,10).contains(request.method()))return openingMissionInvocation(request);
         var a=request.arguments();int method=request.method();boolean purchase=method==10;
-        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(purchase?"ConfirmMarshaller":"ResultMarshaller")))throw new SessionDecoder.Rejected("Invalid depot listener");
+        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.LISTENER_PREFIX+(purchase?"ConfirmMarshaller":"ResultMarshaller")))throw new SessionDecoder.Rejected("Invalid depot listener");
         try{
             if(closed||!selected()||!entered||!subscribed||!scene.map().town()&&!scene.map().kind().equals("training"))throw new IOException("Enter a town first");
             if(purchase){
@@ -351,12 +351,12 @@ final class WorldSession implements AutoCloseable {
             return true; // Native no-listener operation; no unsupported item mutation.
         }
         boolean result=method==7;
-        if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(result?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid mission listener");
+        if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.LISTENER_PREFIX+(result?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid mission listener");
         boolean valid=switch(method){
             case 1->args.size()==3&&args.getFirst() instanceof String&&args.get(1) instanceof long[];
-            case 2->args.size()==6&&args.getFirst() instanceof String&&args.get(1) instanceof SessionDecoder.EnumValue band&&band.type().equals("com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty")&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean&&args.get(4) instanceof Boolean;
+            case 2->args.size()==6&&args.getFirst() instanceof String&&args.get(1) instanceof SessionDecoder.EnumValue band&&band.type().equals(org.tortodrone.protocol.WireTypes.DIFFICULTY)&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean&&args.get(4) instanceof Boolean;
             // Current build dropped the third boolean from the preview request.
-            case 7->args.size()==5&&args.getFirst() instanceof String&&args.get(1) instanceof SessionDecoder.EnumValue band&&band.type().equals("com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty")&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean;
+            case 7->args.size()==5&&args.getFirst() instanceof String&&args.get(1) instanceof SessionDecoder.EnumValue band&&band.type().equals(org.tortodrone.protocol.WireTypes.DIFFICULTY)&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean;
             case 3,9->args.size()==2&&args.getFirst() instanceof String;
             default->false;
         };
@@ -419,7 +419,7 @@ final class WorldSession implements AutoCloseable {
         boolean auction=request.service()==SessionCodec.AUCTION_SERVICE,mail=request.service()==SessionCodec.UPLINK_SERVICE&&(method==1||method==2||method==4||method==5||method==6||method==11);
         if(!auction&&!mail)return false;
         boolean resultListener=auction||method==6;
-        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid auction/mail listener");
+        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.LISTENER_PREFIX+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid auction/mail listener");
         boolean valid=auction?switch(method){case 1->a.size()==3&&a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 2,7->a.size()==2&&a.get(0) instanceof Long;case 3,4->a.size()==1;case 5->a.size()==3&&a.get(0) instanceof SessionDecoder.AuctionSearch&&a.get(1) instanceof Integer;case 6->a.size()==7&&a.get(0) instanceof Long&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer&&a.get(3) instanceof Integer&&a.get(4) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.auction.data.Duration")&&a.get(5) instanceof Boolean;default->false;}:a.size()==2&&(method==5?a.get(0) instanceof SessionDecoder.SentMail:method==6?a.get(0)==null||a.get(0) instanceof long[]:method==11?a.get(0) instanceof long[]:a.get(0) instanceof Long);
         if(!valid)throw new SessionDecoder.Rejected("Invalid auction/mail arguments");
         try{if(closed||!selected()||!entered||!subscribed)throw new IOException("Enter a scene first");
@@ -440,7 +440,7 @@ final class WorldSession implements AutoCloseable {
         var args=request.arguments();
         boolean result=method==2;
         if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(result?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid friend-list listener");
+                ||!listener.type().equals(org.tortodrone.protocol.WireTypes.LISTENER_PREFIX+(result?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid friend-list listener");
         boolean valid=switch(method){
             case 1->args.size()==4&&args.get(0) instanceof String&&args.get(1) instanceof String&&args.get(2) instanceof String;
             case 2->args.size()==3&&args.get(0) instanceof Integer&&args.get(1) instanceof List<?> names
@@ -480,7 +480,7 @@ final class WorldSession implements AutoCloseable {
         var args=request.arguments();
         if(args.size()!=3||!(args.get(0) instanceof Boolean)||!(args.get(1) instanceof Long)
                 ||!(args.getLast() instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller"))throw new SessionDecoder.Rejected("Invalid feed request");
+                ||!listener.type().equals(org.tortodrone.protocol.WireTypes.RESULT_LISTENER))throw new SessionDecoder.Rejected("Invalid feed request");
         output.send(()->codec.invocationResult(oid,listener.requestId(),List.of()));
         return true;
     }
@@ -497,7 +497,7 @@ final class WorldSession implements AutoCloseable {
         if(method==2){if(!args.isEmpty())throw new SessionDecoder.Rejected("Invalid event log request");return true;}
         return false;
     }
-    private static final String DIFFICULTY="com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty";
+    private static final String DIFFICULTY=WireTypes.DIFFICULTY;
     private static String friendUnjoinable(String name){return "%social:m.friend_unjoinable|~"+name;}
     /** Native method 3 in the current build: relationship-authorized travel, rechecked after the peer is captured. */
     private void joinFriend(String name)throws IOException {
@@ -628,8 +628,8 @@ final class WorldSession implements AutoCloseable {
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.BILLING_SERVICE)return false;
         var a=request.arguments();
         if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)
-                ||!Set.of("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",
-                    "com.threerings.presents.data.InvocationMarshaller$ResultMarshaller").contains(listener.type()))return true;
+                ||!Set.of(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER,
+                    org.tortodrone.protocol.WireTypes.RESULT_LISTENER).contains(listener.type()))return true;
         boolean result=listener.type().endsWith("$ResultMarshaller");
         boolean buy=result&&switch(request.method()){
             case 1->a.size()==4&&a.get(0) instanceof String&&a.get(1) instanceof Integer&&a.get(2) instanceof Boolean;
@@ -657,7 +657,7 @@ final class WorldSession implements AutoCloseable {
         boolean normal=request.method()==12;
         if(args.size()!=(normal?3:2)||!(args.get(0) instanceof Long id)||normal&&!(args.get(1) instanceof Integer)
                 ||!(args.getLast() instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller"))
+                ||!listener.type().equals(org.tortodrone.protocol.WireTypes.RESULT_LISTENER))
             throw new SessionDecoder.Rejected("Invalid box opening request");
         int option=normal?(Integer)args.get(1):-request.method();
         BoxRequest token=null;
@@ -706,7 +706,7 @@ final class WorldSession implements AutoCloseable {
         boolean use=request.service()==SessionCodec.ITEM_SERVICE&&request.method()==14&&args.size()==3&&args.getFirst() instanceof Long id&&profile!=null
             &&profile.items().stream().anyMatch(item->item.id()==id&&org.tortodrone.storage.StyleStore.kit(item.config())!=null);
         if(!apply&&!use)return false;
-        if(args.size()!=(apply?2:3)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")||use&&args.get(1)!=null)
+        if(args.size()!=(apply?2:3)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER)||use&&args.get(1)!=null)
             throw new SessionDecoder.Rejected("Invalid style request");
         try{
             if(closed||!selected()||!entered||!subscribed||portalMove!=null)throw new IOException("Enter a scene first");
@@ -716,8 +716,8 @@ final class WorldSession implements AutoCloseable {
             if(apply){
                 var value=args.getFirst();var kind=org.tortodrone.storage.StyleStore.Kind.Color;int ordinal;
                 if(value instanceof Integer color)ordinal=color;
-                else if(value instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.data.ProjectXCodes$EyeType")){kind=org.tortodrone.storage.StyleStore.Kind.Eye;ordinal=e.ordinal();}
-                else if(value instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.data.ProjectXCodes$KnightHeight")){kind=org.tortodrone.storage.StyleStore.Kind.Height;ordinal=e.ordinal();}
+                else if(value instanceof SessionDecoder.EnumValue e&&e.type().equals(org.tortodrone.protocol.WireTypes.EYE_TYPE)){kind=org.tortodrone.storage.StyleStore.Kind.Eye;ordinal=e.ordinal();}
+                else if(value instanceof SessionDecoder.EnumValue e&&e.type().equals(org.tortodrone.protocol.WireTypes.KNIGHT_HEIGHT)){kind=org.tortodrone.storage.StyleStore.Kind.Height;ordinal=e.ordinal();}
                 else throw new IOException("m.internal_error");
                 try{style=new org.tortodrone.storage.StyleStore.Style(kind,ordinal);}catch(IllegalArgumentException invalid){throw new IOException("m.internal_error");}
             }
@@ -809,7 +809,7 @@ final class WorldSession implements AutoCloseable {
         if(!open&&!operation&&!sprite&&!hatch&&!forge&&!learn&&!harness&&!wrap&&!unwrap&&!slotUpgrade&&!extend)return false;
         if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener))throw new SessionDecoder.Rejected("Missing Town listener");
         boolean resultListener=hatch||forge||unwrap||operation&&(townDialog==null||!Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))||sprite&&request.method()==7;
-        if(!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid Town listener");
+        if(!listener.type().equals(org.tortodrone.protocol.WireTypes.LISTENER_PREFIX+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid Town listener");
         try{
             if(closed||!selected()||!entered||!subscribed)throw new IOException("Enter a scene first");
             characters.worldProfile(knight.name(),authRevision,profile);
@@ -875,7 +875,7 @@ final class WorldSession implements AutoCloseable {
                 result=hatch?store.hatch(characters.accountId(),knight.id(),authRevision,id):harness?store.installHarness(characters.accountId(),knight.id(),authRevision,id):store.learn(characters.accountId(),knight.id(),authRevision,id);
             }else{
                 int method=request.method();int[] counts={0,4,6,3,2,3,3,4,3,4};if(method<1||method>9||a.size()!=counts[method])throw new SessionDecoder.Rejected("Invalid sprite argument count");
-                boolean valid=switch(method){case 1->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer;case 2->a.subList(0,5).stream().allMatch(v->v instanceof Integer);case 3->a.get(0) instanceof Integer&&(a.get(1)==null||a.get(1) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.sprites.data.SpritePerk"));case 4->a.get(0) instanceof Integer;case 5->a.get(0) instanceof Integer&&a.get(1) instanceof Long;case 6->a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 7->a.get(0) instanceof Integer&&a.get(1) instanceof Long&&a.get(2) instanceof Boolean;case 8->a.get(0) instanceof Integer&&a.get(1) instanceof String;case 9->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.sprites.data.SpriteCodes$Ultimate");default->false;};
+                boolean valid=switch(method){case 1->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer;case 2->a.subList(0,5).stream().allMatch(v->v instanceof Integer);case 3->a.get(0) instanceof Integer&&(a.get(1)==null||a.get(1) instanceof SessionDecoder.EnumValue e&&e.type().equals(org.tortodrone.protocol.WireTypes.SPRITE_PERK));case 4->a.get(0) instanceof Integer;case 5->a.get(0) instanceof Integer&&a.get(1) instanceof Long;case 6->a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 7->a.get(0) instanceof Integer&&a.get(1) instanceof Long&&a.get(2) instanceof Boolean;case 8->a.get(0) instanceof Integer&&a.get(1) instanceof String;case 9->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof SessionDecoder.EnumValue e&&e.type().equals(org.tortodrone.protocol.WireTypes.SPRITE_ULTIMATE);default->false;};
                 if(!valid)throw new SessionDecoder.Rejected("Invalid sprite arguments");result=store.sprite(characters.accountId(),knight.id(),authRevision,method,a,staff);
             }
             // Learning publishes its committed recipe through EntryAddedEvent below. Replacing
@@ -1021,7 +1021,7 @@ final class WorldSession implements AutoCloseable {
             return true;
         }
         if(request.service()==20&&request.method()==4){
-            if(args.size()!=3||!(args.get(0) instanceof String target)||!(args.get(1) instanceof Integer cost)||!(args.get(2) instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid revive request");
+            if(args.size()!=3||!(args.get(0) instanceof String target)||!(args.get(1) instanceof Integer cost)||!(args.get(2) instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid revive request");
             try{
                 if(closed||!subscribed||!entered||scene.map().town())throw new IOException("m.no_revive");
                 if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
@@ -1033,7 +1033,7 @@ final class WorldSession implements AutoCloseable {
             return true;
         }
         if(request.service()==SessionCodec.LEVEL_PARTY_SERVICE&&request.method()>=4&&request.method()<=6){
-            if(args.size()!=2||!(args.get(0) instanceof Boolean flag)||!(args.get(1) instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid party settings request");
+            if(args.size()!=2||!(args.get(0) instanceof Boolean flag)||!(args.get(1) instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid party settings request");
             try{
                 if(closed||!subscribed||!entered||scene.tutorial()!=null)throw new IOException("m.internal_error");
                 switch(request.method()){
@@ -1074,7 +1074,7 @@ final class WorldSession implements AutoCloseable {
         if(close){if(args.size()!=1||!(args.getFirst() instanceof Long))throw new SessionDecoder.Rejected("Invalid dialog close");
             if(broker!=null)broker.close(member,(Long)args.getFirst());return true;}
         if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))
+                ||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER))
             throw new SessionDecoder.Rejected("Invalid trade confirmation listener");
         boolean valid=invite?args.size()==2&&args.getFirst() instanceof String:
             response?args.size()==3&&args.get(0) instanceof String&&args.get(1) instanceof Integer:
@@ -1284,7 +1284,7 @@ final class WorldSession implements AutoCloseable {
             return true;
         }
         if(service==SessionCodec.ITEM_SERVICE&&(request.method()==4||request.method()==10)) {
-            if(args.size()!=2||!(args.getFirst() instanceof String name)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid loadout request");
+            if(args.size()!=2||!(args.getFirst() instanceof String name)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid loadout request");
             try {
                 if(!selected()||!subscribed||!entered||portalMove!=null)throw new IOException("Enter a scene first");
                 if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
@@ -1307,7 +1307,7 @@ final class WorldSession implements AutoCloseable {
         }
         if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==15){
             if(request.oid()!=SessionCodec.INVOCATION_OID||args.size()!=3||!(args.get(0) instanceof String name)||!(args.get(1) instanceof Boolean enabled)
-                    ||!(args.get(2) instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid PvP loadout request");
+                    ||!(args.get(2) instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid PvP loadout request");
             try{
                 if(!selected()||!subscribed||!entered||portalMove!=null)throw new IOException("Enter a scene first");
                 townChanged(characters.town(scenes.town()).loadoutPvp(characters.accountId(),knight.id(),authRevision,name,enabled));
@@ -1317,7 +1317,7 @@ final class WorldSession implements AutoCloseable {
         }
         // ItemMarshaller 1 (Trash) is dispatched in townInvocation; scene item use is 14 only.
         if(request.oid()==SessionCodec.INVOCATION_OID&&service==SessionCodec.ITEM_SERVICE&&request.method()==14){
-            if(args.size()!=3||!(args.getFirst() instanceof Long id)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")||args.get(1)!=null)throw new SessionDecoder.Rejected("Invalid item use request");
+            if(args.size()!=3||!(args.getFirst() instanceof Long id)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER)||args.get(1)!=null)throw new SessionDecoder.Rejected("Invalid item use request");
             if(!selected()||!subscribed||!entered||portalMove!=null){output.send(()->codec.invocationFailure(oid,listener.requestId(),"Enter a scene first"));return true;}
             var token=new BoxRequest(profile.worldId(),listener.requestId());var receipt=confettiReplies.get(token);
             if(receipt!=null){
@@ -1358,7 +1358,7 @@ final class WorldSession implements AutoCloseable {
                 throw new SessionDecoder.Rejected("Invalid equip item request");
             }
             equip(List.of(args.get(0), new SessionDecoder.EnumValue(
-                "com.threerings.projectx.item.data.ItemCodes$Location", 1), args.get(1), args.get(2)));
+                org.tortodrone.protocol.WireTypes.ITEM_LOCATION, 1), args.get(1), args.get(2)));
             return true;
         }
         return false;
@@ -1370,7 +1370,7 @@ final class WorldSession implements AutoCloseable {
         var args=request.arguments();
         if(request.service()!=6||request.method()!=2||args.size()!=2||!(args.get(0) instanceof String target)
                 ||!(args.get(1) instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller"))
+                ||!listener.type().equals(org.tortodrone.protocol.WireTypes.RESULT_LISTENER))
             throw new SessionDecoder.Rejected("Invalid inspection request");
         SceneRegistry.Instance place;
         synchronized(this) {
@@ -1529,7 +1529,7 @@ final class WorldSession implements AutoCloseable {
         int method=request.method();if(!Set.of(13,21,24,27,28,30,51).contains(method))return false;
         var args=request.arguments();
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.ADMIN_SERVICE||args.size()!=(method==24?3:2)
-                ||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")
+                ||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER)
                 ||(method==24?!(args.get(0) instanceof Integer)||!(args.get(1) instanceof Integer):!(args.getFirst() instanceof String)))throw new SessionDecoder.Rejected("Invalid player admin request");
         String name=method==24?null:(String)args.getFirst();
         try {
@@ -1580,7 +1580,7 @@ final class WorldSession implements AutoCloseable {
             else unavailable(reason);
             return;
         }
-        if(listener==null||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(method==23?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid admin listener");
+        if(listener==null||!listener.type().equals(org.tortodrone.protocol.WireTypes.LISTENER_PREFIX+(method==23?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid admin listener");
         if(method==1||method==5) {
             if(args.size()!=(method==1?3:2)||!(args.getFirst() instanceof Integer slot)||method==1&&!(args.get(1) instanceof String))throw new SessionDecoder.Rejected("Invalid accessory admin request");
             try {
@@ -1663,7 +1663,7 @@ final class WorldSession implements AutoCloseable {
     private void equip(List<Object> args) throws IOException {
         if (args.size() != 4 || !(args.get(0) instanceof Long item)
                 || !(args.get(1) instanceof SessionDecoder.EnumValue location)
-                || !location.type().equals("com.threerings.projectx.item.data.ItemCodes$Location")
+                || !location.type().equals(org.tortodrone.protocol.WireTypes.ITEM_LOCATION)
                 || !(args.get(2) instanceof Integer slot)
                 || !(args.get(3) instanceof SessionDecoder.Listener listener)
                 || !listener.type().endsWith("$ConfirmMarshaller")) {
@@ -1787,7 +1787,7 @@ final class WorldSession implements AutoCloseable {
                 ||!(args.get(0) instanceof String)
                 ||!(args.get(1)==null||args.get(1) instanceof String)
                 ||!(args.get(2) instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))
+                ||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER))
             throw new SessionDecoder.Rejected("Invalid emote request");
         String failure=null,target=null;SceneChat.Membership sender=null;
         var descriptor=PlayerEmotes.find((String)args.getFirst());

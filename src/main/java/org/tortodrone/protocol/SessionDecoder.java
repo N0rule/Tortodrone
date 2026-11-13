@@ -13,9 +13,9 @@ public final class SessionDecoder {
     public static final class Rejected extends IOException {
         public Rejected(String reason) { super(reason); }
     }
-    private static final String NET = "com.threerings.presents.net.";
-    private static final String DOB = "com.threerings.presents.dobj.";
-    private static final String INV = "com.threerings.presents.data.InvocationMarshaller$";
+    private static final String NET = WireTypes.NET_PREFIX;
+    private static final String DOB = WireTypes.DOBJ_PREFIX;
+    private static final String INV = WireTypes.LISTENER_PREFIX;
     private final Types types;
     private final Interns interns;
     private final Map<Integer,String> mapped = new LinkedHashMap<>();
@@ -118,7 +118,7 @@ public final class SessionDecoder {
         String name = type.substring(DOB.length());
         int oid = in.readInt(); check(oid > 0, "Invalid event target");
         if (name.equals("CompoundEvent")) {
-            check("com.threerings.util.StreamableArrayList".equals(types.read(in)), "Expected event list");
+            check(WireTypes.ARRAY_LIST.equals(types.read(in)), "Expected event list");
             int size = count(in);
             List<Event> events = new ArrayList<>();
             for (int i = 0; i < size; i++) events.add(event(in, depth + 1));
@@ -156,33 +156,33 @@ public final class SessionDecoder {
             case "[J" -> {int size=count(in);long[] values=new long[size];for(int i=0;i<size;i++)values[i]=in.readLong();yield values;}
             // Stock party suggestions replaced the streamed ArrayList with a Name[] whose
             // elements, like list elements, each carry their own class record.
-            case "[Lcom.threerings.util.Name;" -> values(in, depth);
+            case WireTypes.NAME_ARRAY -> values(in, depth);
             case "java.lang.String" -> in.readUTF();
             case "java.lang.Boolean" -> present(in);
             case "java.lang.Integer" -> in.readInt();
             case "java.lang.Byte" -> in.readByte();
             case "java.lang.Long" -> in.readLong();
             case "java.lang.Float" -> in.readFloat();
-            case "com.threerings.util.Name" -> string(in);
+            case WireTypes.NAME -> string(in);
             case "com.threerings.projectx.item.data.ItemCodes$Group" -> enumeration(in,type,29);
             case "com.threerings.projectx.item.data.ItemCodes$AccessoryLocation" -> enumeration(in,type,11);
-            case "com.threerings.projectx.sprites.data.SpritePerk" -> enumeration(in,type,72);
-            case "com.threerings.projectx.sprites.data.SpriteCodes$Ultimate" -> enumeration(in,type,3);
+            case WireTypes.SPRITE_PERK -> enumeration(in,type,72);
+            case WireTypes.SPRITE_ULTIMATE -> enumeration(in,type,3);
             case "com.threerings.projectx.auction.data.Duration" -> enumeration(in,type,10);
             case "com.threerings.projectx.auction.data.Search$Sort" -> enumeration(in,type,6);
             case "com.threerings.projectx.auction.data.Search" -> auctionSearch(in,depth);
             case "com.threerings.projectx.uplink.data.SentMail" -> sentMail(in,depth);
-            case "com.threerings.config.ConfigReference" -> configReference(in,depth);
+            case WireTypes.CONFIG_REFERENCE -> configReference(in,depth);
             case "com.threerings.config.ArgumentMap" -> argumentEntries(in,depth);
-            case "com.threerings.presents.dobj.DSet", "com.threerings.util.StreamableArrayList", "java.util.List", "java.util.Set", "java.util.ArrayList", "java.util.HashSet", "java.util.LinkedHashSet" -> values(in, depth);
-            case "com.threerings.projectx.data.ProjectXCodes$KnightHeight" -> enumeration(in, type, 5);
-            case "com.threerings.projectx.data.ProjectXCodes$EyeType" -> enumeration(in, type, 47);
-            case "com.threerings.projectx.item.data.ItemCodes$Location" -> enumeration(in,type,4);
+            case WireTypes.DSET, WireTypes.ARRAY_LIST, "java.util.List", "java.util.Set", "java.util.ArrayList", "java.util.HashSet", "java.util.LinkedHashSet" -> values(in, depth);
+            case WireTypes.KNIGHT_HEIGHT -> enumeration(in, type, 5);
+            case WireTypes.EYE_TYPE -> enumeration(in, type, 47);
+            case WireTypes.ITEM_LOCATION -> enumeration(in,type,4);
             case "com.threerings.projectx.data.Pref" -> enumeration(in, type, 3);
             // Stock Knight/Social options requests carry these ordinals even when
             // the operation is unsupported. Decode so its listener can be refused.
             case "com.threerings.projectx.data.LootReportLevel",
-                 "com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty" -> enumeration(in, type, 3);
+                 WireTypes.DIFFICULTY -> enumeration(in, type, 3);
             case "com.threerings.presents.client.InvocationReceiver$Registration" ->
                 new Registration(string(in), in.readShort());
             case INV + "ListenerMarshaller", INV + "ConfirmMarshaller", INV + "ResultMarshaller",

@@ -685,7 +685,7 @@ public final class TownStore {
                     if(level>=99&&perkLevel>5)return null;
                     boolean grant=SpriteRules.grantsPerk(level);level=Math.min(99,level+1);heat=0;
                     if(grant&&perkLevel<=5){var candidates=new ArrayList<Integer>();for(int i=0;i<rules.perks().size();i++)if(rules.perks().get(i).tier()==perkLevel&&!perks.contains(i))candidates.add(i);
-                        if(!candidates.isEmpty()){int granted=candidates.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(candidates.size()));perks.add(granted);result=new org.tortodrone.protocol.SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",granted);
+                        if(!candidates.isEmpty()){int granted=candidates.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(candidates.size()));perks.add(granted);result=new org.tortodrone.protocol.SessionDecoder.EnumValue(org.tortodrone.protocol.WireTypes.SPRITE_PERK,granted);
                             if(perk!=null&&rules.perks().get(granted).previous().equals(rules.perks().get(perk).name()))perk=granted;
                             int total=0;for(var candidate:rules.perks())if(candidate.tier()==perkLevel)total++;if(perks.size()==total){perkLevel++;perks.clear();}
                         }

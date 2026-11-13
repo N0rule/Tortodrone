@@ -12,7 +12,8 @@ import java.util.function.Consumer;
 /** Bounded UTF-8 operational logs and structured subscriptions; no authentication payloads. */
 public final class ServerLog implements AutoCloseable {
     public record Event(Instant timestamp, String level, String thread, String message, String line) { }
-    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss");
+    /** Date, time and UTC offset so logs from differently-zoned hosts stay comparable. */
+    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss XXX");
     private final Path directory;
     private final CopyOnWriteArrayList<Consumer<Event>> observers=new CopyOnWriteArrayList<>();
     private PrintWriter file;
@@ -88,7 +89,7 @@ public final class ServerLog implements AutoCloseable {
         return message.length()>8192?message.substring(0,8192)+" [truncated]":message;
     }
     private static String format(String level,String thread,String message) {
-        return "["+LocalTime.now().format(TIME)+"] ["+thread+"/"+level+"]: "+message;
+        return "["+OffsetDateTime.now().format(TIME)+"] ["+thread+"/"+level+"]: "+message;
     }
     @Override public synchronized void close() { if(closed)return;closed=true;file.close();observers.clear(); }
 }

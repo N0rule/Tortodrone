@@ -112,11 +112,20 @@ public final class SceneWeapons {
             default->false;
         };
     }
+    /** The ORBITAL visual-only fallback cleanup fuse the native data carries when its
+     * server handlers were stripped; not an authored lifetime. */
+    private static final int ORBITAL_FALLBACK_FUSE = 600000;
+    /** Destroyed shots stay tracked this long so late client frames can still resolve them. */
+    private static final int DESTROYED_GRACE_MILLIS = 100;
+    /** Ceiling on purely visual effect retention before garbage collection. */
+    private static final int EFFECT_TTL_MILLIS = 5000;
+    /** Orbit integration step: one native render frame (1/60 s). */
+    private static final float ORBIT_STEP_SECONDS = .016666668f;
     private static boolean supportedItemProjectile(FireCatalog.ActorSpec actor){
         if(actor==null||!Set.of("BULLET","BOMB","LASER","ORBITAL","ORBITAL_BULLET","COMPOUND_ORBITAL_BULLET").contains(actor.nativeType()))return false;
         // A retained visual without its stripped server handlers is not a usable weapon.
         // In particular an ORBITAL's fallback cleanup fuse is not an authored lifetime.
-        if(actor.nativeType().equals("ORBITAL")&&actor.fuse()==600000)return false;
+        if(actor.nativeType().equals("ORBITAL")&&actor.fuse()==ORBITAL_FALLBACK_FUSE)return false;
         if(actor.detonation()!=null&&!supportedItemAction(actor.detonation())||actor.shutdown()!=null&&!supportedItemAction(actor.shutdown()))return false;
         for(var timer:actor.timers())if(!supportedItemAction(timer.action())||timer.endAction()!=null&&!supportedItemAction(timer.endAction()))return false;
         return actor.detonation()!=null&&meaningfulItemAction(actor.detonation())
@@ -183,7 +192,7 @@ public final class SceneWeapons {
         // Each actor owns its clock: children born during another actor's
         // detonation catch up next tick without losing their first movement step.
         for(var shot:List.copyOf(shots.values())){
-            if(shot.destroyed!=Integer.MAX_VALUE){if(stamp-shot.destroyed>=100)shots.remove(shot.id);continue;}
+            if(shot.destroyed!=Integer.MAX_VALUE){if(stamp-shot.destroyed>=DESTROYED_GRACE_MILLIS)shots.remove(shot.id);continue;}
             boolean sourceBound=sourceBound(shot.spec);
             if(sourceBound){
                 var parent=owners.get(shot.source.actorId);
@@ -208,7 +217,7 @@ public final class SceneWeapons {
             if(shot.destroyed==Integer.MAX_VALUE)advanceShot(shot,end,owners.get(shot.source.ownerId));
             if(!sourceBound&&shot.destroyed==Integer.MAX_VALUE&&stamp-shot.created>=shot.spec.fuse())destroy(shot,shot.created+shot.spec.fuse(),!shot.spec.nativeType().equals("BOMB"));
         }
-        effects.removeIf(effect->stamp-effect.timestamp()>5000);lastStamp=stamp;
+        effects.removeIf(effect->stamp-effect.timestamp()>EFFECT_TTL_MILLIS);lastStamp=stamp;
     }
     /** Inert native helpers have no retained lifetime; bound their ownership to the source. */
     private static boolean sourceBound(FireCatalog.ActorSpec spec){
@@ -264,7 +273,7 @@ public final class SceneWeapons {
         // otherwise a tangent impact can miss the victim through rounding.
         if(shot.spec.collisionShape()!=null){
             float dx=x-shot.x,dy=y-shot.y,c=(float)Math.cos(shot.rotation),s=(float)Math.sin(shot.rotation);
-            var translation=new FireCatalog.DataValue("com.threerings.math.Vector2f",Map.of("x",dx*c+dy*s,"y",-dx*s+dy*c));
+            var translation=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.VECTOR2F,Map.of("x",dx*c+dy*s,"y",-dx*s+dy*c));
             var transform=new FireCatalog.DataValue("com.threerings.math.Transform2D",Map.of("_translation",translation,"_rotation",0f,"_scale",1f));
             var end=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$TransformedShape",Map.of("shape",shot.spec.collisionShape(),"transform",transform));
             shot.contactShape=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Compound",Map.of("shapes",new FireCatalog.ListValue("com.threerings.tudey.shape.config.ShapeConfig",List.of(shot.spec.collisionShape(),end))));
@@ -277,7 +286,7 @@ public final class SceneWeapons {
         var orbit=shot.spec.orbit();
         float remaining=Math.max(0,end-from)/1000f;
         while(remaining>0&&shot.destroyed==Integer.MAX_VALUE){
-            float rest=Math.max(remaining-.016666668f,0),elapsed=remaining-rest;
+            float rest=Math.max(remaining-ORBIT_STEP_SECONDS,0),elapsed=remaining-rest;
             int next=end-(int)(rest*1000);remaining=rest;
             float cx,cy;
             if(next-shot.created<=orbit.outDuration()){

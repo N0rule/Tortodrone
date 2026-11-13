@@ -51,7 +51,7 @@ public final class SceneHealth {
                 target.put(key,Float.toString(value+GearStats.defense(content.stats(),item,type,town)));
             }
         }
-        int difference=next-bonus;maximum=Math.min(3200,Math.round(content.stats().getOrDefault("player.base-health",1f))+next);current=Math.min(maximum,current+(current>0?Math.max(0,difference):0));bonus=next;
+        int difference=next-bonus;maximum=Math.min(MAX_PUBLISHED_HEALTH,Math.round(content.stats().getOrDefault("player.base-health",1f))+next);current=Math.min(maximum,current+(current>0?Math.max(0,difference):0));bonus=next;
         defenses.replaceAll((key,value)->Integer.toString((int)Math.ceil(Float.parseFloat(value))));
         defense=new SceneContent.Spec(defenses);
         shield.replaceAll((key,value)->Integer.toString((int)Math.ceil(Float.parseFloat(value))));shieldDefense=new SceneContent.Spec(shield);
@@ -63,14 +63,21 @@ public final class SceneHealth {
     /** Native DungeoneerLogic.INITIAL_INVULNERABILITY: five seconds of spawn protection
      * armed by finishedLoading when the client's first input ends the loading pose. */
     public static final int INITIAL_INVULNERABILITY_MILLIS = 5000;
+    /** Hard ceiling on published knight health; keeps the pip bar scale bounded. */
+    public static final int MAX_PUBLISHED_HEALTH = 3200;
+    /** Spark-of-life and emergency revive protection windows, and the automatic
+     * emergency revive delay after death. */
+    public static final int SPARK_REVIVE_PROTECTION_MILLIS = 2000;
+    public static final int EMERGENCY_REVIVE_PROTECTION_MILLIS = 5000;
+    public static final int EMERGENCY_REVIVE_DELAY_MILLIS = 5000;
     public void protectLoading(int stamp){if(alive())invulnerableUntil=Math.max(invulnerableUntil,stamp+INITIAL_INVULNERABILITY_MILLIS);}
     /** Archive emergency revive: five-second delay and five seconds of invulnerability. */
-    private void died(int stamp){if(!alive()){status.clear();if(emergencyRevive&&emergencyAt==0)emergencyAt=stamp+5000;}}
+    private void died(int stamp){if(!alive()){status.clear();if(emergencyRevive&&emergencyAt==0)emergencyAt=stamp+EMERGENCY_REVIVE_DELAY_MILLIS;}}
     public boolean canSparkRevive(){return !alive()&&!emergencyRevive&&emergencyAt==0;}
     public boolean revive(int stamp){if(alive())return false;
         // A manual Training resurrection can answer the pending automatic charge.
         // Both paths spend the same charge; neither a Spark nor equipment replenishes it.
-        emergencyRevive=false;current=maximum;status.clear();emergencyAt=0;invulnerableUntil=stamp+2000;return true;}
+        emergencyRevive=false;current=maximum;status.clear();emergencyAt=0;invulnerableUntil=stamp+SPARK_REVIVE_PROTECTION_MILLIS;return true;}
     public boolean damage(Object damage,int stamp){
         return hit(damage,stamp).amount()>0;
     }
@@ -82,7 +89,7 @@ public final class SceneHealth {
     }
     public Hit hit(Object damage,int stamp,float multiplier,KnightCombat combat){
         if(current==0||invulnerable(stamp)||combat!=null&&combat.activity()==KnightCombat.HURT_DEFENSE)return new Hit(0,0);
-        damage=SceneDamage.prune(damage,Math.round(content.stats().getOrDefault("player.damage-mask",13f)));
+        damage=SceneDamage.prune(damage,Math.round(content.stats().getOrDefault("player.damage-mask",SceneContent.DEFAULT_PLAYER_DAMAGE_MASK)));
         var spriteBlock=spriteShield.absorb(damage,stamp,multiplier);
         if(spriteBlock.held())damage=SceneDamage.select(damage,true);
         var fields=new HashMap<>(defense.fields());float blockableScale=spriteBlock.scale();
@@ -106,7 +113,7 @@ public final class SceneHealth {
     public boolean heal(int amount){amount=(int)Math.ceil(amount*status.state().modifiers().heal());if(amount<=0||current==0||current==maximum)return false;current=Math.min(maximum,current+amount);return true;}
     public void advance(int stamp,int elapsed,boolean moving){
         if(!alive()){
-            if(emergencyAt!=0&&stamp>=emergencyAt){emergencyRevive=false;revive(stamp);invulnerableUntil=stamp+5000;}
+            if(emergencyAt!=0&&stamp>=emergencyAt){emergencyRevive=false;revive(stamp);invulnerableUntil=stamp+EMERGENCY_REVIVE_PROTECTION_MILLIS;}
             return;
         }
         status.advance(stamp,elapsed,moving,amount->{if(!invulnerable(stamp))rawDamage((int)Math.ceil(amount),stamp);},amount->heal((int)Math.ceil(amount)));

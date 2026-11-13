@@ -7,7 +7,10 @@ import java.util.Map;
 /** Verified Presents handshake and connection-local mappings for the bounded session decoder. */
 public final class HandshakeCodec {
     public static final int MAX_FRAME = 65536;
-    private static final String PREFIX = "com.threerings.presents.net.";
+    private static final String PREFIX = WireTypes.NET_PREFIX;
+    /** Stock secure handshake constants: the client exchanges a 2048-bit RSA block
+     * (256 bytes) with a 4-byte salt, and this secure-protocol version tag only. */
+    private static final int RSA_BLOCK_BYTES = 256, SALT_BYTES = 4, SECURE_VERSION = 1;
     private final Map<Integer, String> classes = new HashMap<>();
     private final Map<Integer, String> interns = new HashMap<>();
 
@@ -46,9 +49,9 @@ public final class HandshakeCodec {
         require(type(in).equals(PREFIX + "SecureRequest"), "Expected SecureRequest");
         short id = in.readShort();
         require(type(in).equals(PREFIX + "PublicKeyCredentials"), "Expected public key credentials");
-        byte[] encrypted = bytes(in, 256);
-        byte[] salt = bytes(in, 4);
-        require(in.readInt() == 1, "Unsupported secure version");
+        byte[] encrypted = bytes(in, RSA_BLOCK_BYTES);
+        byte[] salt = bytes(in, SALT_BYTES);
+        require(in.readInt() == SECURE_VERSION, "Unsupported secure version");
         String version = string(in);
         String timezone = string(in);
         require(type(in).equals("[Ljava.lang.String;"), "Expected bootstrap groups");
@@ -80,6 +83,8 @@ public final class HandshakeCodec {
         for (int i = 0; i < groups; i++) {
             if ((mask[i / 8] & (1 << (i % 8))) != 0) in.readUTF();
         }
+        // Stock AES authentication envelope: a multiple of one 16-byte block, capped far
+        // above any credentials the client sends, so oversized frames are refused.
         int size = in.readInt();
         require(size > 0 && size <= 4096 && size % 16 == 0, "Invalid encrypted credential length");
         byte[] encrypted = new byte[size];
@@ -94,7 +99,7 @@ public final class HandshakeCodec {
         HandshakeCodec nested = new HandshakeCodec();
         DataInputStream in = new DataInputStream(new ByteArrayInputStream(plaintext));
         require(nested.type(in).equals("com.threerings.projectx.data.ProjectXCredentials"), "Unsupported credentials");
-        require(nested.type(in).equals("com.threerings.util.Name"), "Expected credential name");
+        require(nested.type(in).equals(WireTypes.NAME), "Expected credential name");
         String username = string(in);
         String passwordHash = string(in);
         nullableString(in); // installation ident; deliberately neither retained nor logged
@@ -230,7 +235,7 @@ public final class HandshakeCodec {
         if (accepted) out.writeUTF(sessionId);
         if (username == null) out.writeShort(0);
         else {
-            out.writeShort(-5); out.writeUTF("com.threerings.util.Name");
+            out.writeShort(-5); out.writeUTF(WireTypes.NAME);
             out.writeBoolean(true); out.writeUTF(username);
         }
         ByteArrayOutputStream frame = new ByteArrayOutputStream();

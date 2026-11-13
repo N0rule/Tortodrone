@@ -154,13 +154,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
         "Dynamic/Lift Objects/Clay Pot",new Pot(.5f,null,null,null,0,0),
         "Dynamic/Lift Objects/Fire Pot",new Pot(1f,new StarterCatalog.Model("Fire",Map.of(
                 "Chance",1f,"Power",80,
-                "Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA",5),
-                "Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE",2))),
-            new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",Map.of(
+                "Status Chance",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_CHANCE,"ULTRA",5),
+                "Status Power",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_POWER,"MODERATE",2))),
+            new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.DAMAGE_STATUS,Map.of(
                 "flags",2,"statusCondition",new StarterCatalog.Model("Fire",Map.of(
                     "Chance",1f,"Power",80,
-                    "Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA",5),
-                    "Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE",2))))),
+                    "Status Chance",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_CHANCE,"ULTRA",5),
+                    "Status Power",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_POWER,"MODERATE",2))))),
             "Bomb/Monster/ScorcherTorch",1f,6000),
         "Dynamic/Lift Objects/Oil Pot",new Pot(1f,null,null,"Bomb/Monster/Oil Slick",.45f,15000));
 
@@ -233,7 +233,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision){this(content,terrain,staticCollision,new Random());}
     public SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision,java.util.random.RandomGenerator random){
         this.random=Objects.requireNonNull(random);
-        this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);pawnCollisionMask=Math.round(content.stats().getOrDefault("player.collision-mask",43f));int stamp=SceneClock.now();
+        this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);pawnCollisionMask=Math.round(content.stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));int stamp=SceneClock.now();
         var rules=new ArrayList<SceneActions.Rule>();var anchorKeys=new HashSet<String>();
         for(var binding:content.entries()){
             if(binding.spec().text("kind","").equals("SceneAnchor")){
@@ -514,10 +514,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 // Native Extra Action torch: applies its status damage region to everything
                 // inside the patch on the Floor trap cadence (hazard-refractory, default 500).
                 e.hazardNext=stamp+e.spec.integer("hazard-refractory",500);
-                var shape=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",
+                var shape=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.SHAPE_CIRCLE,
                     List.of(new FireCatalog.FieldValue("radius","float",e.spec.number("radius",0))));
                 var hitArgs=new LinkedHashMap<String,Object>(Map.of("damage",e.hazardStatus,
-                    "region",new FireCatalog.DataValue("com.threerings.tudey.config.RegionConfig$Default",Map.of(
+                    "region",new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.REGION_DEFAULT,Map.of(
                         "location",new FireCatalog.DataValue("com.threerings.tudey.config.TargetConfig$Source",List.of()),"expansion",0f))));
                 hitArgs.put("shape",shape);
                 damage(new StarterCatalog.Model("DamageRegionFromPoint",hitArgs),e.x,e.y,e.rotation,stamp,e.id,null);
@@ -613,7 +613,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private void potLand(Entity e,int stamp){
         var pot=POTS.get(e.spec.config().name());if(pot==null)return;
         var damages=new ArrayList<Object>();
-        if(pot.ailment()!=null)damages.add(new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",
+        if(pot.ailment()!=null)damages.add(new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.DAMAGE_STATUS,
             Map.of("flags",2,"statusCondition",pot.ailment())));
         damages.add(new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$DepthScale",Map.of(
             "depthScale",new StarterCatalog.Model("PC/Damage/Base/Default",Map.of()),
@@ -621,7 +621,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var args=new LinkedHashMap<String,Object>(Map.of("damage",new FireCatalog.DataValue(
                 "com.threerings.projectx.dungeon.config.DamageConfig$Compound",Map.of("damages",
                     new FireCatalog.ListValue("com.threerings.projectx.dungeon.config.DamageConfig",damages))),
-            "region",new FireCatalog.DataValue("com.threerings.tudey.config.RegionConfig$Default",Map.of(
+            "region",new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.REGION_DEFAULT,Map.of(
                 "location",new FireCatalog.DataValue("com.threerings.tudey.config.TargetConfig$Source",List.of()),"expansion",pot.blast()))));
         var prepared=e.spec.model("source-shape");
         if(prepared!=null)args.put("shape",prepared.arguments().get("value"));
@@ -657,7 +657,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return null;
     }
     private boolean oilSpawnClear(float x,float y,float radius,int source){
-        var circle=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",radius));
+        var circle=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.SHAPE_CIRCLE,Map.of("radius",radius));
         if(staticCollision.isEmpty()?!terrain.walkable(x,y):!staticCollision.floorSupported(x,y)||!staticCollision.clear(3,circle,x,y,0))return false;
         for(var e:entities.values())if(e.id!=source&&e.destroyed==Integer.MAX_VALUE&&e.carrier==0
                 &&(e.config.name().equals("Bomb/Monster/Oil Slick")||(e.collisionFlags&3)!=0)
@@ -668,9 +668,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(oil.ignited)return;
         oil.ignited=true;
         var fire=new StarterCatalog.Model("Fire (Scaled)",Map.of(
-            "Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA",5),
-            "Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE",2)));
-        var damage=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",Map.of("statusCondition",fire,"flags",7));
+            "Status Chance",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_CHANCE,"ULTRA",5),
+            "Status Power",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_POWER,"MODERATE",2)));
+        var damage=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.DAMAGE_STATUS,Map.of("statusCondition",fire,"flags",7));
         hazard("Bomb/Monster/ScorcherTorch",damage,1f,4000,
             Map.of("config.argument.Lifetime","string|2 Seconds","config.argument.Nature","string|Neutral","hazard-active-lifetime","2000"),oil.x,oil.y,stamp).owner=oil.owner;
     }
@@ -804,7 +804,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private List<ActorState> targetCandidates(Entity e,List<ActorState> occupants){
         if(e.targeting==null||e.targeting.monsterMask()==0)return occupants;
         var candidates=new ArrayList<ActorState>();
-        if(e.targeting.includePlayers()&&(Math.round(content.stats().getOrDefault("player.damage-mask",13f))&e.targeting.monsterMask())!=0)candidates.addAll(occupants);
+        if(e.targeting.includePlayers()&&(Math.round(content.stats().getOrDefault("player.damage-mask",SceneContent.DEFAULT_PLAYER_DAMAGE_MASK))&e.targeting.monsterMask())!=0)candidates.addAll(occupants);
         candidates.addAll(entities.values().stream().filter(v->v!=e&&v.kind.equals("Monster")&&v.health>0&&v.destroyed==Integer.MAX_VALUE
             &&v.status.state().modifiers().canBeTargeted()&&(v.spec.integer("damage-mask",0)&e.targeting.monsterMask())!=0).map(Entity::snapshot).toList());return List.copyOf(candidates);
     }
@@ -1103,7 +1103,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var condition=e.spec.model("state."+state+".status");
         if(condition!=null){
             String tag=e.spec.text("state."+state+".status-tag","");float radius=e.spec.number("state."+state+".status-radius",0);
-            var damage=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",Map.of("statusCondition",condition));
+            var damage=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.DAMAGE_STATUS,Map.of("statusCondition",condition));
             for(var target:entities.values())if(target.kind.equals("Monster")&&target.destroyed==Integer.MAX_VALUE&&(tag.isBlank()||Arrays.asList(target.spec.text("tags","").split(",")).contains(tag))&&Math.hypot(target.x-e.x,target.y-e.y)<=radius+target.spec.number("radius",0))target.status.apply(damage,stamp);
         }
         signal(e.spec.text("state."+state+".tag",""),e.spec.text("state."+state+".signal",""),stamp,"actor:"+e.id);
@@ -1446,10 +1446,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     /** Retail Bomb/Revive/Revive: radius 2, level 13, five-unit radial impulse over 400 ms. */
     public void reviveImpulse(ActorState player,int stamp){
-        var region=new FireCatalog.DataValue("com.threerings.tudey.config.RegionConfig$Default",Map.of("shape",
-            new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",2f))));
+        var region=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.REGION_DEFAULT,Map.of("shape",
+            new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.SHAPE_CIRCLE,Map.of("radius",2f))));
         var impulse=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.ImpulseConfig$DamageImpulse",Map.of("level",13,"duration",400,
-            "translation",new FireCatalog.DataValue("com.threerings.math.Vector2f",Map.of("x",5f,"y",0f))));
+            "translation",new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.VECTOR2F,Map.of("x",5f,"y",0f))));
         impulse(new StarterCatalog.Model("ImpartImpulse",Map.of("region",region,"impulse",impulse,"flags",2)),player.x(),player.y(),0,stamp,player.id());
     }
     @Override public void impulse(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){
@@ -1461,7 +1461,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(shape instanceof FireCatalog.DataValue?SceneShape.intersects(shape,dx*c+dy*s,-dx*s+dy*c,e.spec.number("radius",0)+expansion):Math.hypot(dx,dy)<=ScenePortals.PAWN_RADIUS+e.spec.number("radius",0)+expansion)
                 applyImpulse(e,region,x,y,rotation,stamp);
         }
-        if((flags&Math.round(content.stats().getOrDefault("player.damage-mask",13f)))!=0)for(var player:players)if(player.id()!=owner&&playerActive.test(player.id())){
+        if((flags&Math.round(content.stats().getOrDefault("player.damage-mask",SceneContent.DEFAULT_PLAYER_DAMAGE_MASK)))!=0)for(var player:players)if(player.id()!=owner&&playerActive.test(player.id())){
             float dx=player.x()-x,dy=player.y()-y;
             if(shape instanceof FireCatalog.DataValue?SceneShape.intersects(shape,dx*c+dy*s,-dx*s+dy*c,ScenePortals.PAWN_RADIUS+expansion):Math.hypot(dx,dy)<=2*ScenePortals.PAWN_RADIUS+expansion){
                 var impulse=createImpulse(region,x,y,rotation,player.x(),player.y(),Math.round(content.stats().getOrDefault("player.impulse-level",1f)),stamp);

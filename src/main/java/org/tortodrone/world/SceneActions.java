@@ -57,7 +57,7 @@ public final class SceneActions {
         public Impulse{
             Objects.requireNonNull(config);
             if(!config.name().equals("ImpartImpulse")||!config.arguments().keySet().equals(Set.of("region","impulse","impulse-origin","flags","shape"))
-                    ||!(config.arguments().get("region") instanceof FireCatalog.DataValue region)||!region.type().equals("com.threerings.tudey.config.RegionConfig$Default")
+                    ||!(config.arguments().get("region") instanceof FireCatalog.DataValue region)||!region.type().equals(org.tortodrone.protocol.WireTypes.REGION_DEFAULT)
                     ||!(config.arguments().get("shape") instanceof FireCatalog.DataValue shape)||!shape.type().equals("com.threerings.tudey.shape.config.ShapeConfig$Point")
                     ||!(config.arguments().get("flags") instanceof Number flags)||flags.doubleValue()!=flags.intValue()||flags.intValue()<0||flags.intValue()>65535
                     ||!(config.arguments().get("impulse") instanceof FireCatalog.DataValue impulse)||!impulse.type().equals("com.threerings.projectx.dungeon.config.ImpulseConfig$DamageImpulse"))throw new IllegalArgumentException("Unsupported scripted point impulse");
@@ -65,7 +65,7 @@ public final class SceneActions {
             bounded(impulse,"duration",3_600_000,true);bounded(impulse,"level",1_000_000,true);bounded(region,"expansion",1_000_000,false);
         }
         private static void vector(Object value){
-            if(!(value instanceof FireCatalog.DataValue data)||!data.type().equals("com.threerings.math.Vector2f"))throw new IllegalArgumentException("Invalid impulse vector");
+            if(!(value instanceof FireCatalog.DataValue data)||!data.type().equals(org.tortodrone.protocol.WireTypes.VECTOR2F))throw new IllegalArgumentException("Invalid impulse vector");
             for(String axis:List.of("x","y"))if(!(SceneDamage.field(data,axis) instanceof Number n)||!Double.isFinite(n.doubleValue())||Math.abs(n.doubleValue())>1_000_000)throw new IllegalArgumentException("Invalid impulse vector component");
         }
         private static void bounded(Object data,String field,int limit,boolean integral){

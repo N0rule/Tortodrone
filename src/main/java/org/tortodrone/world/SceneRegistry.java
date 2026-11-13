@@ -44,7 +44,7 @@ public final class SceneRegistry {
     private WeaponCatalog weapons=WeaponCatalog.empty();
     private EquipmentCatalog equipment=EquipmentCatalog.empty();
     public EquipmentCatalog equipment(){return equipment;}
-    public void equipment(EquipmentCatalog catalog){equipment=Objects.requireNonNull(catalog);equipment.town(town);equipment.stats(this.catalog.scenes().getFirst().content().stats());}
+    public void equipment(EquipmentCatalog catalog){equipment=Objects.requireNonNull(catalog);equipment.town(town);equipment.stats(this.catalog.entry().content().stats());}
     private FireCatalog petFires=FireCatalog.empty();
     public void petFires(FireCatalog catalog){petFires=Objects.requireNonNull(catalog);for(var copies:instances.values())for(var instance:copies)instance.simulation().petFires(catalog);}
     private FireCatalog fires=FireCatalog.empty();

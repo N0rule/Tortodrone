@@ -11,7 +11,7 @@ public record SceneEntityState(String kind,int destroyed,float speed,float maxSt
     public SceneEntityState(String kind,int destroyed,float speed,float maxStep,float health,int state,int stateEntered,int count,int hitTime,String key,SceneLiftState lift){this(kind,destroyed,speed,maxStep,health,state,stateEntered,count,hitTime,key,lift,SceneStatus.State.NORMAL);}
     public SceneEntityState(String kind,int destroyed,float speed,float maxStep,float health,int state,int stateEntered,int count,int hitTime,String key){this(kind,destroyed,speed,maxStep,health,state,stateEntered,count,hitTime,key,null);}
     public String nativeClass(){return switch(kind){
-        case "Actor" -> "com.threerings.tudey.data.actor.Actor";
+        case "Actor" -> org.tortodrone.protocol.WireTypes.ACTOR;
         case "Agent" -> "com.threerings.tudey.data.actor.Agent";
         case "Stranger" -> "com.threerings.projectx.data.actor.Stranger";
         case "EntryState" -> "com.threerings.tudey.data.actor.EntryState";

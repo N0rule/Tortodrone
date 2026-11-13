@@ -5,6 +5,9 @@ import java.util.*;
 
 /** Reusable chat membership/routing; recipients enqueue without holding the routing lock. */
 public final class SceneChat {
+    /** SpeakMarshaller _invCode values (scene-scoped and party-scoped chat): server-chosen
+     * invocation codes the client only echoes back; see SessionCodec's *_INVOCATION notes.
+     * MAX_CHARACTERS is the server's chat-length policy, not a wire constant. */
     public static final int SERVICE=12,PARTY_SERVICE=21,MAX_CHARACTERS=256;
     public record Message(String speaker,String text,byte mode,boolean personal,String bundle) {
         public Message(String speaker,String text,byte mode){this(speaker,text,mode,false,null);}

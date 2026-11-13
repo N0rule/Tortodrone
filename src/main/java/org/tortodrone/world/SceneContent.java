@@ -9,6 +9,9 @@ import org.tortodrone.character.StarterCatalog;
 public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses,List<MapIcon> mapIcons,Map<String,Spec> actorTemplates) {
     /** Original 314 has 4.89 MB of bounded actor/action metadata; keep a hard file cap. */
     public static final int MAX_BYTES=8_000_000;
+    /** Fallback player collision and damage masks when a map's stats table omits them;
+     * referenced wherever the masks are resolved so the defaults never diverge. */
+    public static final float DEFAULT_PLAYER_COLLISION_MASK=43f, DEFAULT_PLAYER_DAMAGE_MASK=13f;
     public record MapIcon(String icon,float x,float y) { }
     public SceneContent(List<Entry> entries,Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses,List<MapIcon> mapIcons){this(entries,scales,conversations,stats,items,cycles,statuses,mapIcons,Map.of());}
     public SceneContent(List<Entry> entries,Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses){this(entries,scales,conversations,stats,items,cycles,statuses,List.of());}

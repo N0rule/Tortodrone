@@ -11,6 +11,10 @@ public final class SceneSimulation {
     /** Native Dungeoneer TIER_ENABLED publication flag (256): served content has no gated subtown
      * segment, so live captures show it set on every Character/PC/Level pawn in every dungeon. */
     public static final int TIER_ENABLED_FLAG = 256;
+    /** Native Knight.HIDDEN_FOR_DIALOG (32): published while the Cloak status
+     * condition is active, hiding the knight from other clients' scene views.
+     * Same value as Monster.CAMO, but this is the Knight/KnightData namespace. */
+    public static final int HIDDEN_FOR_DIALOG_FLAG = 32;
     @FunctionalInterface public interface RevivePayment<T>{T commit()throws java.io.IOException;}
     /** Run on the requesting session thread. No network I/O occurs under this lock.
      * Holding the scene through commit makes departure and competing revives mutually
@@ -141,7 +145,7 @@ public final class SceneSimulation {
             if(sprite==null||instance.map().town())return;
             if(petSkill!=0&&stamp>=petClear){petSkill=0;petStarted=petClear;}
             else if(petSkill!=0&&stamp>=petRearm)petFollow=true;
-            int input=(movement.inputFlags()&384)>>>7;
+            int input=(movement.inputFlags()&InputBits.SPRITE_SKILL_MASK)>>>InputBits.SPRITE_SKILL_SHIFT;
             if(input==0){lastSkillInput=0;return;}
             if(input==lastSkillInput||petSkill!=0||!health.alive())return;
             lastSkillInput=input;int skill=input-1;
@@ -192,6 +196,14 @@ public final class SceneSimulation {
         public void inventory(org.tortodrone.character.WorldProfile profile){synchronized(SceneSimulation.this){
             check();carriedItems=profile.items();health.inventory(profile);entities.reconsiderPickups(appearance.id());
         }}
+        /**
+         * Native transient-pickup capacity: consumables are stackable into a single Item
+         * per distinct type (wire captures show repeated EntryUpdated, never a new slot),
+         * the HUD belt has exactly 4 quickbar slots (interface_quickbar.dat slot0..3), and
+         * every capsule/vial Pickup actor carries failureEffect=Player/Full Inventory.
+         * The per-type cap of 3 matches stock-server behavior (wiki-corroborated); it is
+         * not present as a client constant. So: at most 3 of a held type, at most 4 types.
+         */
         private boolean canPickup(SceneContent.Spec spec){
             if(!spec.flag("pickup-transient",false))return true;
             String item=spec.text("pickup-item","");
@@ -243,7 +255,7 @@ public final class SceneSimulation {
             movement.resetInput(actor.created());
             movement.beginLoading(actor.created());
             movement.dynamicPenetration((x,y)->entities.penetration(x,y,actor.id()));
-            movement.staticCollision(instance.map().staticCollision(),Math.round(instance.map().content().stats().getOrDefault("player.collision-mask",43f)));
+            movement.staticCollision(instance.map().staticCollision(),Math.round(instance.map().content().stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK)));
             movement.interaction(stamp->{var prompt=entities.interaction(movement.x(),movement.y(),movement.rotation(),appearance.id(),lift);
                 if(prompt==null)return false;
                 if(prompt.action().equals("Lift")){
@@ -256,7 +268,7 @@ public final class SceneSimulation {
             movement.throwing(stamp->{if(lift==0)return false;
                 boolean snap=entities.prepareDrop(lift,actor());
                 boolean drop=!entities.canThrow(lift)||snap;
-                movement.thrown(drop,stamp);if(drop)dropAt=stamp+400;else{entities.throwLift(lift,actor(),stamp);lift=0;}return true;});
+                movement.thrown(drop,stamp);if(drop)dropAt=stamp+DROP_FLIGHT_MILLIS;else{entities.throwLift(lift,actor(),stamp);lift=0;}return true;});
         }
         public void enter(){enter(initialPublish);}
         public void enter(Consumer<Snapshot> publication){synchronized(SceneSimulation.this){check();
@@ -347,7 +359,7 @@ public final class SceneSimulation {
             var a=appearance;
             return new ActorState(a.id(),a.clientOid(),a.name(),a.color(),a.created(),movement.x(),movement.y(),
                 movement.rotation(),movement.direction(),movement.flags()|(!instance.map().town()?TIER_ENABLED_FLAG:0)
-                    |(!instance.map().town()&&health.invulnerable(SceneClock.now())?SceneHealth.INVULNERABLE_FLAG:0)|(health.cloaked()?32:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
+                    |(!instance.map().town()&&health.invulnerable(SceneClock.now())?SceneHealth.INVULNERABLE_FLAG:0)|(health.cloaked()?HIDDEN_FOR_DIALOG_FLAG:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
                     !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation(),appearance.id(),lift),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,knightSkill,health.hitTime()));
         }
         private ConversationRequest pendingConversation;
@@ -417,7 +429,12 @@ public final class SceneSimulation {
     }
     private final SceneRegistry.Instance instance;
     private final Map<Integer,Membership> members=new LinkedHashMap<>();
-    private int nextPetId=1_700_000_000;
+    /** Battle-sprite actors use this fixed id base so their ids never collide with
+     * client-visible pawn or entity oid ranges observed on the wire; server-chosen. */
+    private static final int PET_ACTOR_ID_BASE = 1_700_000_000;
+    /** Carried actors released by a drop land after the 400 ms tossed-flight window. */
+    private static final int DROP_FLIGHT_MILLIS = 400;
+    private int nextPetId=PET_ACTOR_ID_BASE;
     private FireCatalog petFires=FireCatalog.empty();
     public synchronized void petFires(FireCatalog catalog){petFires=Objects.requireNonNull(catalog);}
     private final SceneWeapons weapons;
@@ -438,7 +455,7 @@ public final class SceneSimulation {
         var map=instance.map();
         return Float.isFinite(x)&&Float.isFinite(y)&&map.collision().walkable(x,y)
             &&(map.staticCollision().isEmpty()||map.staticCollision().floorSupported(x,y)
-                &&!map.staticCollision().penetration(Math.round(map.content().stats().getOrDefault("player.collision-mask",43f)),x,y,ScenePortals.PAWN_RADIUS).present())
+                &&!map.staticCollision().penetration(Math.round(map.content().stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK)),x,y,ScenePortals.PAWN_RADIUS).present())
             &&!entities.penetration(x,y,0).present()
             &&map.portals().triggers().stream().noneMatch(t->t.intersects(x,y));
     }
@@ -622,7 +639,7 @@ public final class SceneSimulation {
             // collision stages run here once per instance, independent of observer count.
             for(var member:members.values())if(member.entered&&member.portal==null) {
                 if(member.auraOwner!=0&&member.health.status().conditions().stream().noneMatch(c->c.name().contains("Angelic Aura")))member.auraOwner=0;
-                member.health.advance(stamp,previous==null?0:stamp-previous.timestamp(),(member.movement.flags()&2)!=0);
+                member.health.advance(stamp,previous==null?0:stamp-previous.timestamp(),(member.movement.flags()&TownMovement.PUBLISHED_MOVING_FLAG)!=0);
                 member.updateLife(stamp);
                 member.movement.status(member.health.status().modifiers());
                 if(member.health.status().modifiers().shocked()&&member.lift!=0){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
