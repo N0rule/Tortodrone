@@ -319,16 +319,25 @@ public final class FireCatalogExport {
         return unsupported(action);
     }
     private static Action pickupSpawn(ConfigManager manager,ActionConfig.SpawnActor spawn,DungeonActorConfig.Pickup pickup)throws Exception {
-        // Party-per-member grants require a party reward transaction, rather than one claimant.
-        if(pickup.party||spawn instanceof ActionConfig.SpawnRandomTranslatedActor||spawn instanceof ActionConfig.SpawnFacingActor
+        if(spawn instanceof ActionConfig.SpawnRandomTranslatedActor||spawn instanceof ActionConfig.SpawnFacingActor
                 ||!(pickup.shape instanceof com.threerings.tudey.shape.config.ShapeConfig.Circle circle))return unsupported(spawn);
+        // Party pickups pay every member natively. Heat embers credit the whole instance at
+        // runtime (denomination from the stripped GrantHeat rules); crowns are marked party and
+        // the runtime accepts them only where the instance can hold a single member. Any other
+        // party reward still needs a per-member transaction and stays unsupported.
+        String heat=SceneContentExport.rule("actor."+spawn.actor.getName()+".pickup-heat");
         Object tooltip=field(pickup.sprite,"tooltipItem");
-        if(!(tooltip instanceof ConfigReference<?> item))return unsupported(spawn);
-        var itemConfig=manager.a(ItemConfig.class,new ConfigReference<ItemConfig>(item.getName()));
-        if(itemConfig==null)return unsupported(spawn);
         var fields=new TreeMap<String,String>();fields.put("native-type","com.threerings.projectx.dungeon.data.actor.Pickup");
         fields.put("config-json",FireCatalog.modelJson(model(spawn.actor)));fields.put("shape","Circle");fields.put("radius",Float.toString(circle.radius));
-        fields.put("pickup-item",item.getName());fields.put("pickup-transient",Boolean.toString(itemConfig.w(manager).Qp()));
+        if(pickup.party)fields.put("pickup-party","true");
+        if(heat!=null)fields.put("pickup-heat",heat);
+        else{
+            if(!(tooltip instanceof ConfigReference<?> item))return unsupported(spawn);
+            if(pickup.party&&!item.getName().startsWith("Instant/Crown/"))return unsupported(spawn);
+            var itemConfig=manager.a(ItemConfig.class,new ConfigReference<ItemConfig>(item.getName()));
+            if(itemConfig==null)return unsupported(spawn);
+            fields.put("pickup-item",item.getName());fields.put("pickup-transient",Boolean.toString(itemConfig.w(manager).Qp()));
+        }
         fields.put("vacuum-expansion",Float.toString(pickup.vacuumExpansion));fields.put("vacuum-speed",Float.toString(pickup.vacuumSpeed));fields.put("lifespan",Integer.toString(pickup.lifespan));
         float x=0,y=0,rotation=0,variance=0;boolean relative=true;
         if(spawn instanceof ActionConfig.SpawnTransformedActor transformed){x=transformed.translation.x;y=transformed.translation.y;}

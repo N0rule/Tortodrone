@@ -341,8 +341,10 @@ public final class SceneSimulation {
         private void updateLife(int stamp){
             if(health.alive()){if(movement.dead()){
                 movement.resurrect(stamp);
-                weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Emergency Rez",Map.of()),actor(),stamp);
-                entities.reviveImpulse(actor(),stamp);
+                if(!health.takeQuietRevival()){
+                    weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Emergency Rez",Map.of()),actor(),stamp);
+                    entities.reviveImpulse(actor(),stamp);
+                }
             }return;}
             cancelElevator(stamp);activeFloorAdvance=pendingFloorAdvance=null;
             if(movement.dead())return;
@@ -477,7 +479,8 @@ public final class SceneSimulation {
         entities.playerImpulse((id,impulse)->{var member=members.get(id);if(member!=null&&member.entered&&member.health.alive()&&member.combat!=null)member.combat.impulse(impulse);});
         entities.playerHits(hit->{var member=members.get(hit.actor());if(member!=null&&member.entered){
             var result=member.health.hit(hit.damage(),hit.timestamp(),hit.multiplier(),member.combat);
-            if(result.react()&&member.health.alive()){
+            // A held charge is never interruptable natively; post-hit invulnerability still applies.
+            if(result.react()&&member.health.alive()&&!(member.combat!=null&&member.combat.chargeHit(hit.timestamp()))){
                 weapons.cancelAttacks(hit.actor());
                 if(member.lift!=0){entities.dropLift(member.lift,member.actor(),hit.timestamp());member.lift=member.dropAt=0;}
                 member.movement.hurt(hit.timestamp());

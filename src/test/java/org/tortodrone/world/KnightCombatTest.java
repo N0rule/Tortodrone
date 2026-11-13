@@ -23,7 +23,15 @@ public final class KnightCombatTest {
         check(controller.activity()==293&&controller.state().chainCount()==2,"new press chains after rearm");
         controller.input(4,300,500,1,0,true);
         check(controller.activity()==283&&controller.started()==500,"held action charges at exact rearm deadline");
-        controller.input(0,300,1500,1,0,true);
+        check(controller.chargeHit(1400)&&controller.activity()==283&&controller.started()==1400-(int)(1000*KnightCombat.CHARGE_INTERRUPT),
+            "a hit cannot interrupt a held charge; it keeps 33% of the full charge time elapsed");
+        controller.input(4,300,1400+1000-(int)(1000*KnightCombat.CHARGE_INTERRUPT)-1,1,0,true);
+        controller.input(0,300,1400+1000-(int)(1000*KnightCombat.CHARGE_INTERRUPT)-1,1,0,true);
+        check(controller.activity()!=290,"the rewound charge needs the remaining 67% before releasing charged");
+        controller.reset(3000);controller.input(4,3000,3000,0,0,true);controller.input(4,3000,3200,1,0,true);
+        check(controller.activity()==283&&controller.started()==3200,"the charge is held again");
+        check(!new KnightCombat(catalog).chargeHit(3300),"only a held charge resists interruption");
+        controller.input(0,3000,4200,1,0,true);
         check(controller.activity()==290,"release after weapon charge duration uses charged activity");
         controller.reset(2000);
         controller.input(8,2000,2000,0,0,true);

@@ -708,16 +708,21 @@ Normal builds and release ZIPs bundle the original Crash Site
 **398/version 2008859103** and initial Rescue Camp **217/version 373**.
 A fresh knight enters Crash Site automatically. Existing knights retain their
 progression. On completing Crash Site's original exit and floor report, new
-knights travel directly to **Haven**, skipping the legacy Rescue Camp chain.
-Collected floor heat, completion, Haven access and the saved return location
-commit together; no skipped-mission receipts, rank or fixed rewards are granted.
+knights travel directly to **Haven**, skipping Rescue Camp, as the official
+2026-11-05 new-player update does. They arrive at rank **2-1** and receive the
+client's "Welcome to Haven!" orientation letter from Spiral HQ with a Proto Bomb
+attached. Collected floor heat, completion, rank, the letter, Haven access and the
+saved return location commit together, once; no skipped-mission receipts or
+prestige are granted. Welcome to Haven! is then available without a Crossing the
+Chasm receipt. Replaying rank 1 missions from Haven is not implemented yet.
 Existing Camp checkpoints remain unchanged. No manual map import is needed.
 
 Inside Crash Site, monsters use their native depth-0 defense and health (Proto
 hits land 10/10/13 with the sword and 6 with the gun) and flinch only on major
-hits or during interruptable attacks. After the free emergency revive is spent,
-a dead knight heals in place after 4 s, as the original tutorial party did,
-because the floor cannot be left early. The Ironwood Giant pays its authored
+hits or during interruptable attacks; a hit cannot interrupt a held charge. After
+the free emergency revive is spent, a dead knight regains 200 health in place after
+4 s, as the original tutorial party did. The Knight Squad waits for the ambush
+before walking to its posts. The Ironwood Giant pays its authored
 Shutdown spawns (17 crowns, credited immediately, and 110 floor heat). Crowns are
 paid as single-claimant pickups only because the tutorial instance is private.
 Size-scaled "Tutorial" loot rolls, shrub loot and Health (Tutorial) treasure

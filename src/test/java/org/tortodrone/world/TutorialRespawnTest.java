@@ -19,19 +19,23 @@ public final class TutorialRespawnTest {
         check(!health.alive()&&health.state().reviveFlags()==0&&health.canSparkRevive(),"a later death publishes no emergency flags and still accepts a Spark");
         health.advance(23999,3999,false);check(!health.alive(),"no respawn before the four-second tutorial delay");
         health.advance(24000,1,false);
-        check(health.alive()&&health.state().current()==200&&health.invulnerable(24000),"the tutorial heals in place to full after four seconds");
+        check(health.alive()&&health.state().current()==200&&!health.invulnerable(24000)&&health.takeQuietRevival()&&!health.takeQuietRevival(),
+            "the tutorial heals 200 in place after four seconds, without a protection window or revive effect");
         health.hit(damage(1000),30000);health.advance(31000,1000,false);
         check(health.revive(31000)&&health.state().current()==200,"a Spark revive answers the pending respawn");
         health.advance(36000,5000,false);check(health.alive()&&health.state().current()==200,"a spent respawn deadline cannot fire again");
         health.hit(damage(1000),40000);health.advance(44000,4000,false);check(health.alive(),"every subsequent tutorial death respawns");
 
+        var sturdy=new SceneHealth(new SceneContent(List.of(),Map.of(),Map.of(),Map.of("player.base-health",280f),Map.of(),Map.of(),Map.of()));sturdy.tutorialRespawn(true);
+        sturdy.hit(damage(1000),100);sturdy.advance(5100,5000,false);sturdy.hit(damage(1000),20000);sturdy.advance(24000,4000,false);
+        check(sturdy.alive()&&sturdy.state().current()==200&&sturdy.state().maximum()==280,"healMember adds 200 capped at maximum, not a full heal");
         var ordinary=new SceneHealth(content);ordinary.hit(damage(1000),100);ordinary.advance(5100,5000,false);
         ordinary.hit(damage(1000),20000);ordinary.advance(60000,40000,false);
         check(!ordinary.alive()&&ordinary.canSparkRevive(),"outside the tutorial a spent charge still requires a Spark");
 
         var catalog=ContentManager.load(Path.of(".")).scenes();var registry=new SceneRegistry(catalog);
         check(tutorialRespawn(registry.instance(398,0))&&!tutorialRespawn(registry.instance(294,0)),"only Crash Site instances enable tutorial respawn");
-        System.out.println("PASS: tutorial death after the emergency revive heals in place after 4 s; Spark revive and ordinary levels unchanged");
+        System.out.println("PASS: tutorial death after the emergency revive heals 200 in place after 4 s without effect or protection; Spark revive and ordinary levels unchanged");
     }
     private static boolean tutorialRespawn(SceneRegistry.Instance instance)throws Exception {
         int stamp=SceneClock.now();

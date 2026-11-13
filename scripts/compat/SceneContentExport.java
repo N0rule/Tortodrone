@@ -41,6 +41,8 @@ public final class SceneContentExport {
     private static com.threerings.projectx.dungeon.data.LevelSceneConfig levelContext;
     private static final Map<String,com.threerings.projectx.config.ProjectXActionConfig.StartConversation> scriptedConversations=new TreeMap<>();
     private SceneContentExport() { }
+    /** Restored server-field rule, or null outside a scene export. */
+    static String rule(String key){return rules==null?null:rules.getProperty(key);}
     static boolean scriptedActor(String name){return rules!=null&&Boolean.parseBoolean(rules.getProperty("actor."+name+".script.restore-program","false"));}
 
     /** Writes deterministic content metadata next to an already-staged scene.dat. */

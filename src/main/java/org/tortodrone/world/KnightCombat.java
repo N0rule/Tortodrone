@@ -91,6 +91,17 @@ public final class KnightCombat {
     public void reset(int time) { clear(time);chainCount=chainReset=0;impulse=null; }
     /** A soft hit interrupts attacks but retains the independently applied damage impulse. */
     public void interrupt(int time) { clear(time);chainCount=chainReset=0; }
+    /** Native DungeoneerLogic.CHARGE_INTERRUPT: a hit cannot interrupt HOLD_CHARGE. */
+    public static final float CHARGE_INTERRUPT=.33f;
+    /** Native DungeoneerLogic.hurt while holding a charge: the hold continues and its start is
+     * rewritten exactly as the original does, leaving 33% of the full charge time elapsed. */
+    public boolean chargeHit(int time){
+        if(activity!=CHARGE||definition==null)return false;
+        int full=EquipmentCatalog.chargeTimeMillis(definition.chargeTime(),equipmentModifiers,weaponModifiers);
+        int elapsed=Math.min(full,time-started),kept=(int)(full*CHARGE_INTERRUPT);
+        started=Math.max(time-kept,elapsed-kept);
+        return true;
+    }
     private void clear(int time) { activity=0;started=time;attack=null;impulseApplied=false; }
     public int activity(){return activity;}
     /** Native Dungeoneer.ATTACK_IMPULSE_APPLIED (128): set while a knockback/dodge

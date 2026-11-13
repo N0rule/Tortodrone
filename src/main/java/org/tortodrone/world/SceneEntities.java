@@ -53,6 +53,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final Map<Integer,Threat> victims;
         private record Threat(int hits,float damage) { }
         int scriptStep,scriptStarted=Integer.MIN_VALUE;ActorState scriptGoal;
+        /** A wait-move-rotate script whose Condition step waits for its activate signal. */
+        boolean scriptActivated;
         int target,nextAcquire,nextAttack,nextSwitch,nextHeal,carrier,owner,ownerOid,thrownAt,faction,detonateAt,affectedType,affectedTime;float z;int[] excluded;
         List<ScenePathing.Point> path=List.of();float pathX,pathY;int nextPath;
         SceneLiftState.Point dropPoint;
@@ -739,7 +741,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private void scriptedMovement(Entity e,int stamp,float elapsed){
         e.flags&=~2;if(e.scriptStep>=4)return;
-        if(e.scriptStep==0){e.scriptStep++;return;}
+        if(e.scriptStep==0){if(!e.spec.text("script.activate-signal","").isEmpty()&&!e.scriptActivated)return;e.scriptStep++;return;}
         if(e.scriptStarted==Integer.MIN_VALUE)e.scriptStarted=stamp;
         if(e.scriptStep==1){if(stamp-e.scriptStarted>e.script.waitMillis()){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;}return;}
         if(e.scriptStep==2){if(scriptMove(e,e.script.goal(),e.script.maxPath(),e.script.turnRate(),stamp,elapsed,false)){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;e.scriptGoal=null;}return;}
@@ -1307,6 +1309,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(target.doorIncrements==0||--target.doorIncrements!=0)return;
             name="open";
         }
+        if(target.script!=null&&name.equals(target.spec.text("script.activate-signal","")))target.scriptActivated=true;
         if(target.program!=null&&name.equals(target.spec.text("script.activate-signal","")))setVariable(new SceneActions.SetVariable("activate",true,new SceneActions.LogicTarget("source","")),stamp,"actor:"+target.id,"actor:"+target.id);
         if(target.platform!=null&&name.equals("next")&&target.state==0)setSwitch(target,1,stamp);
         if(target.kind.equals("Switch")&&target.platform==null&&target.spec.integer("switch-states",0)>0){

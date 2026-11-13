@@ -23,11 +23,14 @@ public final class SceneHealth {
     public int hitTime(){return hitTime;}
     private boolean emergencyRevive=true;
     private int emergencyAt;
-    /** Original tutorial parties never dissolve on defeat: Party.checkPartyDead heals every
-     * dead tutorial member in place after a fixed delay instead. */
-    public static final int TUTORIAL_RESPAWN_MILLIS=4000;
-    private boolean tutorialRespawn;
+    /** Original tutorial parties never dissolve on defeat: Party.checkPartyDead calls
+     * healMember(oid,200,0,true) on every dead tutorial member after 4 s instead, which adds
+     * 200 capped at maximum health without an effect, impulse or protection window. */
+    public static final int TUTORIAL_RESPAWN_MILLIS=4000,TUTORIAL_RESPAWN_HEALTH=200;
+    private boolean tutorialRespawn,quietRevival;
     private int respawnAt;
+    /** True once after a tutorial in-place heal, which publishes no revive effect. */
+    public boolean takeQuietRevival(){boolean result=quietRevival;quietRevival=false;return result;}
     public void tutorialRespawn(boolean enabled){tutorialRespawn=enabled;if(!enabled)respawnAt=0;}
     public record SpriteBlock(float scale,boolean held){public static final SpriteBlock NONE=new SpriteBlock(1,false);}
     @FunctionalInterface public interface SpriteShield{SpriteBlock absorb(Object damage,int stamp,float multiplier);}
@@ -121,7 +124,9 @@ public final class SceneHealth {
     public void advance(int stamp,int elapsed,boolean moving){
         if(!alive()){
             if(emergencyAt!=0&&stamp>=emergencyAt){emergencyRevive=false;revive(stamp);invulnerableUntil=stamp+EMERGENCY_REVIVE_PROTECTION_MILLIS;}
-            else if(respawnAt!=0&&stamp>=respawnAt)revive(stamp);
+            else if(respawnAt!=0&&stamp>=respawnAt){
+                current=Math.min(maximum,TUTORIAL_RESPAWN_HEALTH);status.clear();respawnAt=0;quietRevival=true;
+            }
             return;
         }
         status.advance(stamp,elapsed,moving,amount->{if(!invulnerable(stamp))rawDamage((int)Math.ceil(amount),stamp);},amount->heal((int)Math.ceil(amount)));
