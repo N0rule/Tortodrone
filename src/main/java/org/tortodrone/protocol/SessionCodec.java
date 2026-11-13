@@ -55,7 +55,10 @@ public final class SessionCodec {
         // Current build: the social feed reports view events and resolves party
         // suggestions through these two handles.
         "com.threerings.projectx.data.EventLogMarshaller",
-        "com.threerings.projectx.love.data.LoveMarshaller");
+        "com.threerings.projectx.love.data.LoveMarshaller",
+        // A steam-aliased session resolves the stock SteamDirector partner service from the
+        // bootstrap during logon; an inert registration keeps that observer from throwing.
+        "com.threerings.projectx.partner.data.SteamMarshaller");
     public static final int KNIGHT_SERVICE = serviceId("com.threerings.projectx.data.KnightMarshaller");
     public static final int CHAT_SERVICE = serviceId("com.threerings.crowd.chat.data.ChatMarshaller");
     public static final int SCENE_SERVICE = serviceId("com.threerings.whirled.data.SceneMarshaller");
@@ -76,6 +79,7 @@ public final class SessionCodec {
     // suggestions through this handle.
     public static final int EVENT_LOG_SERVICE = serviceId("com.threerings.projectx.data.EventLogMarshaller");
     public static final int LOVE_SERVICE = serviceId("com.threerings.projectx.love.data.LoveMarshaller");
+    public static final int STEAM_SERVICE = serviceId("com.threerings.projectx.partner.data.SteamMarshaller");
     private static int serviceId(String className) {
         int index = SERVICES.indexOf(className);
         if (index < 0) throw new IllegalStateException("Missing bootstrap service: " + className);

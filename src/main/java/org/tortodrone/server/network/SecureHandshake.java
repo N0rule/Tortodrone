@@ -83,9 +83,11 @@ public final class SecureHandshake {
             String language = null, region = null;
             String loginResult = "m.invalid_password";
             boolean normalLogin = false;
+            boolean steamClient = false;
             String attemptedUser = null;
             try (var decoded = HandshakeCodec.credentials(credentials)) {
                 normalLogin = decoded.normalLogin();
+                steamClient = decoded.steamClient();
                 attemptedUser = decoded.username();
                 if (normalLogin) {
                     language = decoded.language();
@@ -98,12 +100,21 @@ public final class SecureHandshake {
                 Arrays.fill(credentials, (byte) 0);
             }
             boolean accepted = account != null;
+            // The stock client adopts this name into its credentials, and SteamDirector offers
+            // account conversion to Steam-initialized clients whose session name is not a steam
+            // alias. Tortodrone never converts accounts, so a Steam client is reported under the
+            // server-chosen alias of its authenticated account; the account itself stays normal.
+            String authName = accepted ? (steamClient ? "steam:" + account.id() : account.username()) : null;
             byte[] authResponse = HandshakeCodec.authenticationResponse(auth.messageId(), loginResult,
-                accepted ? UUID.randomUUID().toString() : null, accepted ? account.username() : null);
+                accepted ? UUID.randomUUID().toString() : null, authName);
             socket.getOutputStream().write(authResponse);
             socket.getOutputStream().flush();
             log.debug("AuthResponse sent; result=" + (accepted ? "success" : "rejected")
                 + "; frame=" + authResponse.length + " bytes");
+            if (accepted && steamClient) {
+                log.debug("Steam client alias assigned; accountId=" + account.id()
+                    + "; the authenticated account and its password login are unchanged");
+            }
             if (!accepted) {
                 log.warn("Normal login rejected; account=" + ClientDiagnostics.text(attemptedUser)
                     + "; reason=" + (normalLogin ? loginResult : "unsupported_login") + "; normalLogin=" + normalLogin);

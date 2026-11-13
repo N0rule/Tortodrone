@@ -183,6 +183,9 @@ final class ClientSession {
             }
             world.receiverChanged(receivers);
         } else if (event instanceof SessionDecoder.Invocation invocation) {
+            // The steam partner service must be claimed before the party dispatcher: stock party
+            // operations share its service number on party objects and reject listener-less shapes.
+            if(world.steamInvocation(invocation))return;
             if(world.channelSpeak(invocation))return;
             if(world.partyInvocation(invocation))return;
             if(world.interiorPartyInvocation(invocation))return;

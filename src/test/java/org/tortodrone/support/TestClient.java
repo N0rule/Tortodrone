@@ -44,6 +44,12 @@ public final class TestClient {
     }
     public static int authenticate(Socket peer, PublicKey publicKey, String username, String password,
             String expectedResult, int timeoutMillis, LoginFlags flags, Session session) throws Exception {
+        return authenticate(peer, publicKey, username, password, expectedResult, timeoutMillis, flags, null, session);
+    }
+
+    /** expectedAuthName: exact authenticated name; null derives it from the login flags. */
+    public static int authenticate(Socket peer, PublicKey publicKey, String username, String password,
+            String expectedResult, int timeoutMillis, LoginFlags flags, String expectedAuthName, Session session) throws Exception {
         boolean valid="success".equals(expectedResult);
         peer.setSoTimeout(timeoutMillis);
         byte[] plain = new byte[20];
@@ -99,7 +105,13 @@ public final class TestClient {
         if (valid) UUID.fromString(response.readUTF());
         if (valid) {
             check(response.readShort() == -5 && response.readUTF().equals("com.threerings.util.Name"), "name mapping");
-            check(response.readBoolean() && response.readUTF().equalsIgnoreCase(username), "authenticated account name");
+            check(response.readBoolean(), "authenticated account name present");
+            String authName = response.readUTF();
+            if (expectedAuthName != null)
+                check(authName.equals(expectedAuthName), "authenticated account name: " + expectedAuthName);
+            else if (flags.steamClient())
+                check(authName.matches("steam:\\d+"), "steam client receives the steam alias of its account");
+            else check(authName.equalsIgnoreCase(username), "authenticated account name");
         } else check(response.readShort() == 0, "rejected authentication has no account name");
         check(response.available() == 0, "response boundary");
         int clientOid = 0;

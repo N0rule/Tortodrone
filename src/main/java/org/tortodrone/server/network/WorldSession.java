@@ -139,6 +139,23 @@ final class WorldSession implements AutoCloseable {
         deferredMove=null;departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
         if(forcedReceiver!=null){short receiver=forcedReceiver;output.send(()->codec.forceScene(oid,receiver,next));}
     }
+    /** Verified stock SteamMarshaller: 2[int] and 5[boolean] are unacknowledged client reports;
+     * purchase, profile and friend-invite requests carry listeners and receive native failure. */
+    boolean steamInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.STEAM_SERVICE)return false;
+        var args=request.arguments();
+        if(request.method()==2||request.method()==5){
+            Object value=args.size()==1?args.get(0):null;
+            if(request.method()==2?!(value instanceof Integer):!(value instanceof Boolean))
+                throw new SessionDecoder.Rejected("Invalid steam client report");
+            return true;
+        }
+        for(Object argument:args)
+            if(argument instanceof SessionDecoder.Listener listener)
+                output.send(()->codec.invocationFailure(oid,listener.requestId(),
+                    "Steam features are not available on this server."));
+        return true;
+    }
     boolean partyInvocation(SessionDecoder.Invocation request)throws IOException {
         var args=request.arguments();
         boolean response=request.oid()==SessionCodec.INVOCATION_OID&&request.service()==SessionCodec.SOCIAL_SERVICE&&request.method()==5

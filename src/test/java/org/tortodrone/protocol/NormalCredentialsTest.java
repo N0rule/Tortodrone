@@ -8,6 +8,7 @@ public final class NormalCredentialsTest {
     public static void main(String[] args) throws Exception {
         var decoded = HandshakeCodec.credentials(payload(null, false, false, 0, null));
         check(decoded.normalLogin() && decoded.username().equals("Alice"), "normal username/password envelope");
+        check(!decoded.steamClient(), "plain client environment flag");
         check(decoded.language().equals("en")&&decoded.region().equals("fixture-region"),"verified non-secret locale fields retained for debug diagnostics");
         char[] secret = decoded.passwordHash();
         check(!decoded.toString().contains("Alice") && !decoded.toString().contains("012345"), "credential diagnostics are redacted");
@@ -20,7 +21,7 @@ public final class NormalCredentialsTest {
             rejected(payload(null, false, steam, 0, null, true));
         }
         try (var steamCreds = HandshakeCodec.credentials(payload(null, false, true, 0, null))) {
-            check(steamCreds.normalLogin(), "steam client with username/password is accepted");
+            check(steamCreds.normalLogin() && steamCreds.steamClient(), "steam client with username/password is accepted");
         }
         byte[] normal = payload(null, false, false, 0, null);
         rejected(Arrays.copyOf(normal, normal.length + 1));

@@ -14,8 +14,9 @@ public final class HandshakeCodec {
     public record Request(short messageId, byte[] encryptedSecret, byte[] salt,
                           String version, String timezone) { }
     public record Authentication(short messageId, String version, int groupCount, byte[] encryptedCredentials) { }
-    public record Credentials(String username, char[] passwordHash, boolean normalLogin, String language, String region) implements AutoCloseable {
-        public Credentials(String username,char[] passwordHash,boolean normalLogin){this(username,passwordHash,normalLogin,null,null);}
+    public record Credentials(String username, char[] passwordHash, boolean normalLogin, String language, String region,
+            boolean steamClient) implements AutoCloseable {
+        public Credentials(String username,char[] passwordHash,boolean normalLogin){this(username,passwordHash,normalLogin,null,null,false);}
         @Override public void close() { java.util.Arrays.fill(passwordHash, '\0'); }
         @Override public String toString() { return "Credentials[redacted]"; }
     }
@@ -96,13 +97,13 @@ public final class HandshakeCodec {
         // Only normal username/password authentication is supported.
         require(in.readUnsignedByte() == 0, "Platform ticket not supported");
         boolean sega = in.readBoolean();
-        in.readBoolean(); // steamClient describes the client environment, not an authentication method
+        boolean steamClient = in.readBoolean(); // Client environment flag; the account stays a normal account.
         int site = in.readInt();
         String invite = nullableString(in);
         String region=nullableString(in);
         require(in.available() == 0, "Unexpected credential fields");
         return new Credentials(username, passwordHash.toCharArray(),
-            session == null && !sega && site == 0 && invite == null,language,region);
+            session == null && !sega && site == 0 && invite == null,language,region,steamClient);
     }
 
     public String nextMessageType(byte[] body) throws IOException {

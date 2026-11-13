@@ -78,7 +78,11 @@ public final class AuthenticationIntegrationTest {
     private static void login(int port, PublicKey key, String username, String password, String expected,
             LoginFlags flags, int accountId) throws Exception {
         try (var peer = new Socket("127.0.0.1", port)) {
-            int oid = TestClient.authenticate(peer, key, username, password, expected, 30000, flags, (socket, wire, clientOid) -> {
+            // A successful Steam-client login receives the steam alias of its own account; every
+            // other mode keeps the plain account name, and failures receive no name at all.
+            String alias = flags.steamClient() ? "steam:" + accountId : USERNAME;
+            int oid = TestClient.authenticate(peer, key, username, password, expected, 30000, flags,
+                "success".equals(expected) ? alias : null, (socket, wire, clientOid) -> {
                 var writer = new TestWire.Writer(TestWire.NET + "SecureRequest", TestWire.NET + "PublicKeyCredentials",
                     "[Ljava.lang.String;", TestWire.NET + "AESAuthRequest");
                 writer.send(socket.getOutputStream(), out -> { writer.message(out, "SubscribeRequest", 29); out.writeInt(clientOid); });
