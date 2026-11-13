@@ -109,7 +109,17 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     ||collisionFlags!=0||spec.integer("collision-mask",0)!=0||spec.integer("territory-color",99)!=99)throw new IllegalArgumentException("Unsupported territory control actor; only neutral static lighting is implemented");
                 state=99; // Installed native TerritoryProp constructor's neutral colorId.
             }
-            if(kind.equals("Switch"))flags|=2; // Native Switch constructor's START flag, including help bubbles.
+            if(kind.equals("Switch")){
+                flags|=2; // Native Switch constructor's START flag, including help bubbles.
+                int startup=spec.integer("startup-state",0);
+                if(startup!=0){
+                    // Authored native Startup State: the placeable's Startup handler signals
+                    // the switch into this state at its creation tick, and Switch.setState
+                    // then clears START exactly outside state 0.
+                    if(startup<0||startup>=spec.integer("switch-states",0))throw new IllegalArgumentException("Invalid native switch startup state");
+                    state=startup;flags&=~2;
+                }
+            }
             if(spec.flag("start-open",false))flags|=2;
             cycle=spec.text("cycle","");int split=cycle.lastIndexOf('|');if(split>=0)cycle=cycle.substring(split+1);
         }
@@ -1098,6 +1108,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private void setSwitch(Entity e,int state,int stamp){
         e.state=state;e.stateEntered=stamp;
+        e.flags=state==0?e.flags|2:e.flags&~2; // Native Switch.setState: START set exactly in state 0.
         if(e.platform!=null&&state==1)actions.perform(e.platform.pressed(),stamp,"actor:"+e.id,"actor:"+e.id);
         String effect=e.spec.text("state."+state+".effect","");if(!effect.isBlank())fireEffect(e,new StarterCatalog.Model(effect,Map.of()),stamp);
         var condition=e.spec.model("state."+state+".status");
@@ -1285,6 +1296,20 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         if(target.program!=null&&name.equals(target.spec.text("script.activate-signal","")))setVariable(new SceneActions.SetVariable("activate",true,new SceneActions.LogicTarget("source","")),stamp,"actor:"+target.id,"actor:"+target.id);
         if(target.platform!=null&&name.equals("next")&&target.state==0)setSwitch(target,1,stamp);
+        if(target.kind.equals("Switch")&&target.platform==null&&target.spec.integer("switch-states",0)>0){
+            // Native DumbSwitchLogic.signal: "next"/"prev" step with wrap, numeric names
+            // target a state, other names are swallowed; only prepared dumb switches carry
+            // their native state count, so authored smart-switch modes stay untouched.
+            Integer next=null;
+            if(name.equals("next"))next=target.state+1;
+            else if(name.equals("prev"))next=target.state-1;
+            else try{next=Integer.parseInt(name);}catch(NumberFormatException ignored){}
+            if(next!=null){
+                int states=target.spec.integer("switch-states",0);
+                if(next<0)next=states-1;else if(next>=states)next=0;
+                if(next!=target.state)setSwitch(target,next,stamp);
+            }
+        }
         if(target.kind.equals("Door")&&Set.of("open","close","toggle").contains(name)){
             boolean open=name.equals("open")||name.equals("toggle")&&(target.flags&2)==0;target.flags=(open?2:0)|4;target.stateEntered=stamp;
             for(var mover:entities.values())if(mover.kind.equals("Monster")){mover.path=List.of();mover.nextPath=0;}

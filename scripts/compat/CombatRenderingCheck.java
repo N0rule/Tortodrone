@@ -5,6 +5,7 @@ import com.threerings.tudey.data.actor.Actor;
 import com.threerings.tudey.dobj.SceneDeltaEvent;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -467,9 +468,10 @@ public final class CombatRenderingCheck {
         if(app.CZ()==null||app.Gx()==null)return;
         if(started==0)started=now;
         if(stage<3&&now-started>60_000_000_000L)throw new AssertionError("Tutorial entry timed out; zone="+app.CZ().zoneId+" loading="+(app.GK().mN()||app.GB()));
-        if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.ui.S").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
-            // The rebuilt ready-room view (ui.S) no longer exposes its controller; the
-            // old dR controller action "town" is, in its bytecode, aU.EQ().
+        if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
+            // The rebuilt ready-room view is client dT (extends the tudey place view dC and is
+            // built by the dS controller that tracks the knight appearance); it no longer
+            // exposes its controller, and the old dR action "town" is, in its bytecode, aU.EQ().
             app.GI().bU(com.threerings.projectx.client.aU.class).EQ();stage=1;return;
         }
         if((app.GK().mN()||app.GB())||!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gx()))return;
@@ -556,11 +558,18 @@ public final class CombatRenderingCheck {
                     tutorialEnemyGoalY=nearest.tG().y-(float)((nearest.tG().y-own.tG().y)/distance)*1.25f;
                     System.out.println("COMBAT: approaching "+nearest.MX().getName()+" id="+tutorialEnemy);
                 }
+                // The training grounds face the sword-only knight against ranged Gun Puppy
+                // turrets; Rhendon's own briefing teaches the shield. Hold DEFEND through
+                // their fire windows — natively the shield locks turning — and swing in the
+                // rearm gaps. Melee monsters keep the standing swing fight.
+                boolean ranged=nearest.MX().getName().contains("Construct/Gun Puppy");
+                boolean firing=ranged&&nearest instanceof com.threerings.projectx.dungeon.data.actor.Monster monster&&monster.aeM()>=4;
                 boolean moving=distance>1.4;
                 if(moving&&own.tG().y>55){
                     tutorialWalk(view,own,tutorialEnemyGoalX,tutorialEnemyGoalY,now);
                 }else moveToward(view,nearest.tG().x-own.tG().x,nearest.tG().y-own.tG().y,moving);
-                flags(view,(moving?1:0)|((now-tutorialEnemySince)%1_250_000_000L<100_000_000L?4:0));
+                boolean swing=!firing&&(now-tutorialEnemySince)%1_250_000_000L<100_000_000L;
+                flags(view,(moving?1:0)|(swing?4:0)|(firing?64:0));
                 if(!moving){tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;}return;
             }
             if(tutorialEnemy!=0){tutorialEnemy=0;tutorialPath=List.of();tutorialCombatAt=now;}
@@ -683,10 +692,11 @@ public final class CombatRenderingCheck {
     }
     private void readyRoomTick(long now)throws Exception{
         if(app.CZ()==null||app.Gx()==null)return;
-        if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.ui.S").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
+        if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
             if(started==0)started=now;if(now-started<3_000_000_000L)return;
             capture("ready-room");
-            // Old dR controller action "town" == the stock aU.EQ() enter-world call.
+            // The rebuilt ready-room view (client dT, built by the dS controller) no longer
+            // exposes its controller; the old dR action "town" is, in its bytecode, aU.EQ().
             app.GI().bU(com.threerings.projectx.client.aU.class).EQ();
             stage=1;started=now;System.out.println("CHECK: native Ready Room town action");
         }else if(stage==1){
@@ -739,8 +749,9 @@ public final class CombatRenderingCheck {
             if(readyRoomOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}if(campStory&&stage>=2)campStoryTick(new View(app.Gx()),now);else readyRoomTick(now);return;}
             if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(app.CZ()!=null&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE){
-                if(!initialWorldReturnRequested&&!(app.GK().mN()||app.GB())&&Class.forName("com.threerings.projectx.client.ui.S").isInstance(app.Gx())){
-                    // Old dR controller action "town" == the stock aU.EQ() enter-world call.
+                if(!initialWorldReturnRequested&&!(app.GK().mN()||app.GB())&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())){
+                    // The rebuilt ready-room view (client dT) has no controller; the old dR
+                    // action "town" == the stock aU.EQ() enter-world call.
                     app.GI().bU(com.threerings.projectx.client.aU.class).EQ();
                     initialWorldReturnRequested=true;
                 }
@@ -1682,10 +1693,54 @@ public final class CombatRenderingCheck {
             if(dy>0)axes[0]=dy;else axes[1]=-dy;if(dx>0)axes[3]=dx;else axes[2]=-dx;}
         if(length>0)face(view,axes);if(!moving)Arrays.fill(axes,0);flags(view,moving?1:0);
     }
-    private static void face(View view,float[] axes)throws Exception{
-        Object controller=view.acn();for(Class<?> type=controller.getClass();type!=null;type=type.getSuperclass())try{
-            var method=type.getDeclaredMethod("l",float[].class);method.setAccessible(true);method.invoke(controller,(Object)axes);return;
-        }catch(NoSuchMethodException ignored){}throw new NoSuchMethodException("Native controller facing helper");
+    private static final com.threerings.math.Vector3f FACE_POINT=new com.threerings.math.Vector3f();
+    private static Method facePickRay;
+    /** The stock controller aims with the cursor: each frame it derives the cursor's pick ray,
+     * intersects the pawn's ground plane and streams the resulting bearing as the input
+     * facing (build 20261110044614 carries no joystick-aim entry point). Place the cursor
+     * exactly like a player aiming along the given direction by solving the camera's own
+     * pick-ray map, and let the unchanged frame builder do the rest. */
+    private static void face(View view,float[] axes)throws Exception {
+        float dx=axes[3]-axes[2],dy=axes[0]-axes[1];
+        double length=Math.hypot(dx,dy);if(length<=0.5)return;dx/=length;dy/=length;
+        try{
+            Object controller=view.acn();
+            Object util=field(controller,"bPN").get(controller);
+            Object root=util.getClass().getMethod("getRoot").invoke(util);
+            Object compositor=util.getClass().getMethod("getCompositor").invoke(util);
+            Object camera=compositor.getClass().getMethod("getCamera").invoke(compositor);
+            if(facePickRay==null)facePickRay=camera.getClass().getMethod("getPickRay",int.class,int.class,com.threerings.math.c.class);
+            Object place=field(controller,"bPO").get(controller);
+            Object handler=place.getClass().getMethod("adf").invoke(place);
+            var target=(com.threerings.math.Vector3f)handler.getClass().getMethod("getTarget").invoke(handler);
+            var plane=(com.threerings.math.Plane)field(controller,"bQj").get(controller);
+            var pick=(com.threerings.math.c)field(controller,"_pick").get(controller);
+            float scale=(float)root.getClass().getMethod("getScale").invoke(root);
+            int width=(int)root.getClass().getMethod("getDisplayWidth").invoke(root);
+            int height=(int)root.getClass().getMethod("getDisplayHeight").invoke(root);
+            if(target==null||scale<=0||width<=0||height<=0)return;
+            // Aim two world units along the direction; the bearing only depends on the direction.
+            float aimX=target.x+dx*2f,aimY=target.y+dy*2f;
+            // Near the screen center the pick map is affine: sample it with the client's own
+            // ray-caster and solve for the cursor position that lands on the aim point.
+            int mx=Math.round(width/(2f*scale)),my=Math.round(height/(2f*scale));
+            if(!ground(facePickRay,camera,plane,pick,mx,my,scale))return;
+            float ox=FACE_POINT.x,oy=FACE_POINT.y;
+            float ax=0,ay=0,bx=0,by=0;
+            if(ground(facePickRay,camera,plane,pick,mx+24,my,scale)){ax=(FACE_POINT.x-ox)/24f;ay=(FACE_POINT.y-oy)/24f;}
+            if(ground(facePickRay,camera,plane,pick,mx,my+24,scale)){bx=(FACE_POINT.x-ox)/24f;by=(FACE_POINT.y-oy)/24f;}
+            float det=ax*by-ay*bx;if(Math.abs(det)<1e-9f)return;
+            float rx=aimX-ox,ry=aimY-oy;
+            float ux=(by*rx-bx*ry)/det,uy=(-ay*rx+ax*ry)/det;
+            int px=Math.max(0,Math.min(Math.round(width/scale)-1,Math.round(mx+ux)));
+            int py=Math.max(0,Math.min(Math.round(height/scale)-1,Math.round(my+uy)));
+            root.getClass().getMethod("setMousePosition",int.class,int.class).invoke(root,px,py);
+        }catch(ReflectiveOperationException|RuntimeException aimFailure){ /* transient view transitions keep the last cursor */ }
+    }
+    /** Ground-plane intersection of the client's pick ray for a candidate cursor position. */
+    private static boolean ground(Method pickRay,Object camera,com.threerings.math.Plane plane,com.threerings.math.c pick,int mouseX,int mouseY,float scale)throws Exception {
+        pickRay.invoke(camera,Math.round(mouseX*scale),Math.round(mouseY*scale),pick);
+        return plane.getIntersection(pick,FACE_POINT);
     }
     private static List<float[]> routeTo(SceneCatalog.MapScene map,float x,float y,float targetX,float targetY){
         record Cell(int x,int y){float wx(){return x*.25f;}float wy(){return y*.25f;}}

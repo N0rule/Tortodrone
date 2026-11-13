@@ -38,6 +38,10 @@ public final class SparseContentTest {
                 historical.keySet().removeIf(raw->{String key=raw.toString();return key.startsWith("gear.table.")
                     ||key.startsWith("gear.")&&(key.endsWith(".table")||key.endsWith(".rarity"))
                     ||key.startsWith("gear.variant.")&&(key.contains(".defense.")||key.contains(".tagged."));});
+                // The restored native DumbSwitch startup states are a deliberate additive
+                // import. Their authored values have dedicated checks in the stateful-camera
+                // regression; keep the inherited scene baseline independent of them.
+                historical.keySet().removeIf(raw->{String key=raw.toString();return key.matches("entry\\.[^.]++\\.(switch-states|startup-state)");});
                 // One deliberate correction to the old exporter: placed entry 3733 has no
                 // native rotation. Check it separately before comparing the historical snapshot.
                 if(map.getKey().toString().equals("1")){

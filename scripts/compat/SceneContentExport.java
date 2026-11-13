@@ -960,6 +960,33 @@ public final class SceneContentExport {
             addOptionalNumber(out, prefix + "state-time", field(original, "stateTime"));
             addOptionalNumber(out, prefix + "delay", field(original, "delay"));
         }
+        if (isKind(original, "DumbSwitch")) {
+            // Native DumbSwitch: handlers[0] is the Startup handler; the authored "Startup
+            // State" choice rewrites its Signal (a state number, or "next"), which the native
+            // DumbSwitchLogic applies at the actor's creation tick exactly like any other
+            // signal (Switch.setState re-stamps _stateEntered and sets START only in state 0).
+            // The installed client strips the Signal payloads of some options, so the
+            // option-to-state mapping is authored in actor-rules.properties from the archive
+            // actor.xml reconstruction and live wire ticks.
+            if (!(field(original, "states") instanceof Integer states) || states <= 0)
+                throw new IOException("DumbSwitch state count invalid: " + reference.getName());
+            out.put(prefix + "switch-states", Integer.toString(states));
+            String argument = out.get(prefix + "config.argument.Startup State");
+            if (argument != null) {
+                if (!(field(original, "handlers") instanceof HandlerConfig[] handlers) || handlers.length == 0
+                    || !(handlers[0] instanceof HandlerConfig.Startup))
+                    throw new IOException("DumbSwitch Startup State without a startup handler: " + reference.getName());
+                if (!argument.startsWith("string|")) throw new IOException("Startup State option argument: " + reference.getName());
+                String option = argument.substring(7);
+                String restored = rules.getProperty("actor." + reference.getName() + ".startup-state." + option);
+                if (restored == null)
+                    throw new IOException("Unrestored DumbSwitch Startup State option \"" + option + "\": " + reference.getName());
+                int state = Integer.parseInt(restored);
+                if (state < 0 || state >= states)
+                    throw new IOException("Restored startup state out of range: " + reference.getName());
+                if (state != 0) out.put(prefix + "startup-state", Integer.toString(state));
+            }
+        }
         if (isKind(original, "Door")) {
             int increments=doorCounter(cm,reference);if(increments>0)out.put(prefix+"door-increments",Integer.toString(increments));
             if(goldDoor(cm,reference)){
@@ -989,7 +1016,8 @@ public final class SceneContentExport {
                 ||!sentry.attacks[0].ref.getName().equals("Character/NPC/Monster/Construct/Gun Puppy")||Float.parseFloat(out.getOrDefault(prefix+"speed","NaN"))!=0||Float.parseFloat(out.getOrDefault(prefix+"targeted-speed","NaN"))!=0
                 ||!out.getOrDefault(prefix+"attack.0.clear","").equals("1852")||!out.getOrDefault(prefix+"attack.0.land","").equals("769"))throw new IOException("No-loot sentry native stationary/attack footprint changed: speed="+out.get(prefix+"speed")+", targeted-speed="+out.get(prefix+"targeted-speed")+", clear="+out.get(prefix+"attack.0.clear")+", land="+out.get(prefix+"attack.0.land")+", heads="+(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster m?Arrays.stream(m.attacks).map(a->a==null||a.ref==null?"none":a.ref.getName()).toList():List.of()));
         }
-        for(String key:rules.stringPropertyNames())if(key.startsWith(rulePrefix))out.put(prefix+key.substring(rulePrefix.length()),rules.getProperty(key));
+        // Startup-state rules are option-keyed and resolved per placement above; never copied verbatim.
+        for(String key:rules.stringPropertyNames())if(key.startsWith(rulePrefix)&&!key.startsWith(rulePrefix+"startup-state."))out.put(prefix+key.substring(rulePrefix.length()),rules.getProperty(key));
         String appended=out.get(prefix+"append-tags");
         if(appended!=null)out.put(prefix+"tags",out.getOrDefault(prefix+"tags","")+(out.getOrDefault(prefix+"tags","").isBlank()?"":",")+appended);
         writeMechanism(cm,out,prefix,reference,original);
