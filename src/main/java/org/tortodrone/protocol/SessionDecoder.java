@@ -154,6 +154,9 @@ public final class SessionDecoder {
         return switch (type) {
             case "com.google.common.collect.Multiset","com.google.common.collect.HashMultiset","com.google.common.collect.LinkedHashMultiset" -> {int size=count(in);var entries=new LinkedHashMap<Object,Integer>();for(int i=0;i<size;i++){Object entry=value(in,depth+1);int number=in.readInt();check((entry instanceof Long||entry instanceof Integer)&&number>0&&number<=9999&&entries.put(entry,number)==null,"Invalid Town multiset");}yield new Multiset(entries);}
             case "[J" -> {int size=count(in);long[] values=new long[size];for(int i=0;i<size;i++)values[i]=in.readLong();yield values;}
+            // Stock party suggestions replaced the streamed ArrayList with a Name[] whose
+            // elements, like list elements, each carry their own class record.
+            case "[Lcom.threerings.util.Name;" -> values(in, depth);
             case "java.lang.String" -> in.readUTF();
             case "java.lang.Boolean" -> present(in);
             case "java.lang.Integer" -> in.readInt();
