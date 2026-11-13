@@ -29,6 +29,8 @@ public final class SceneMonsterExport {
             }
             out.put(p+"blended",Boolean.toString(attack.blended));
             out.put(p+"monster-movement",Boolean.toString(attack.monsterMovement));
+            // Native AttackLogic.shouldReact: a reacting hit interrupts only interruptable attacks.
+            if(attack.interruptable)out.put(p+"interruptable","true");
             var impulse=attack.impulseReceived;
             if(impulse!=null){
                 if(impulse.translation==null)throw new java.io.IOException("Missing native attack motion translation");

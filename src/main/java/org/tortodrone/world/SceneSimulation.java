@@ -479,6 +479,8 @@ public final class SceneSimulation {
                 if(member.lift!=0){entities.dropLift(member.lift,member.actor(),hit.timestamp());member.lift=member.dropAt=0;}
                 member.movement.hurt(hit.timestamp());
             }
+            // Invulnerable and fully absorbed hits leave the native summary empty: no push.
+            if(result.amount()>0&&hit.impulse()!=null&&member.health.alive()&&member.combat!=null)member.combat.impulse(hit.impulse());
             member.updateLife(hit.timestamp());
             member.movement.status(member.health.status().modifiers());
             if(result.amount()>0)feedback(new SceneCombatEvent(0,hit.timestamp(),hit.actor(),result.feedback(),hit.source(),"NORMAL"));

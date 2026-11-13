@@ -11,6 +11,12 @@ public final class SceneDamage {
         if(value.type().endsWith("$Compound")&&field(damage,"damages") instanceof FireCatalog.ListValue list)return list.values().stream().anyMatch(SceneDamage::reacts);
         return Boolean.TRUE.equals(field(damage,"shouldReact"));
     }
+    /** Native DamageSummary.major: any component authored with majorReact. */
+    public static boolean major(Object damage){
+        if(!(damage instanceof FireCatalog.DataValue value))return false;
+        if(value.type().endsWith("$Compound")&&field(damage,"damages") instanceof FireCatalog.ListValue list)return list.values().stream().anyMatch(SceneDamage::major);
+        return Boolean.TRUE.equals(field(damage,"majorReact"));
+    }
     public static KnightCombat.Impulse impulse(Object config,float ox,float oy,float x,float y,int level,int stamp){
         if(!(config instanceof FireCatalog.DataValue))return null;
         int difference=level-(int)number(config,"level",1);if(difference>2)return null;

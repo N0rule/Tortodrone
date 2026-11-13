@@ -58,6 +58,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         SceneLiftState.Point dropPoint;
         SceneContent.Spec vial;String cycle;Set<String> fired=new HashSet<>();
         Object hazardStatus;int hazardNext;
+        /** Native MonsterLogic._reactDamage: each hurt is remembered for one second. */
+        final ArrayDeque<int[]> reactDamage=new ArrayDeque<>();
         final SceneStatus status;
         final Object shape;
         final int collisionFlags;
@@ -194,7 +196,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final java.util.random.RandomGenerator random;
     private record Link(Entity entity,int stamp,boolean ghost) { }
     private final ArrayDeque<Link> links=new ArrayDeque<>();
-    public record PlayerHit(int actor,Object damage,int timestamp,int source,float multiplier) {
+    /** A knight hit; impulse is the region's DamageImpulse, applied only if the hit lands. */
+    public record PlayerHit(int actor,Object damage,int timestamp,int source,float multiplier,KnightCombat.Impulse impulse) {
+        public PlayerHit(int actor,Object damage,int timestamp,int source,float multiplier){this(actor,damage,timestamp,source,multiplier,null);}
         public PlayerHit(int actor,Object damage,int timestamp,int source){this(actor,damage,timestamp,source,1);}
     }
     private java.util.function.Consumer<PlayerHit> playerDamage=hit->{};
@@ -563,7 +567,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             // before a knight standing on the pad can collect its replacement.
             if(e.kind.equals("Pickup")&&e.claim==0&&stamp-e.created>=1000)collect(e,elapsed,players);
             if(e.kind.equals("Monster")){
-                e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->{if(e.health>0)hurt(e,(float)amount,stamp);},amount->{if(e.health>0)e.health=Math.min(e.maximumHealth,e.health+(float)amount*e.status.state().modifiers().heal());});
+                e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->{if(e.health>0)hurt(e,(float)amount,stamp,false,false);},amount->{if(e.health>0)e.health=Math.min(e.maximumHealth,e.health+(float)amount*e.status.state().modifiers().heal());});
                 if(e.program!=null)scriptedProgram(e,stamp,elapsed);
                 else if(e.script!=null)scriptedMovement(e,stamp,elapsed);
                 else if(e.health==0)e.status.clear();else {if(e.status.state().modifiers().canMove())advanceImpulse(e,stamp);else e.impulse=null;move(e,stamp,elapsed,players);}
@@ -588,7 +592,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             playerDamage.accept(new PlayerHit(p.id(),pulse.damage(),stamp,source,1));
         if((pulse.mask()&128)!=0)for(var target:List.copyOf(entities.values()))if(target.id!=source&&target.kind.equals("Monster")&&target.health>0&&Math.hypot(target.x-x,target.y-y)<=pulse.radius()+target.spec.number("radius",0)+ScenePortals.PAWN_RADIUS){
             Object accepted=SceneDamage.prune(pulse.damage(),target.spec.integer("damage-mask",0));float amount=SceneDamage.amount(accepted,content,target.spec);
-            amount+=target.status.damaged(amount,stamp);target.status.apply(accepted,stamp);if(amount>0)hurt(target,amount,stamp);
+            amount+=target.status.damaged(amount,stamp);target.status.apply(accepted,stamp);if(amount>0)hurt(target,amount,stamp,SceneDamage.reacts(accepted),SceneDamage.major(accepted));
         }
     }
     private void lift(Entity e,int stamp,float elapsed,List<ActorState> players){
@@ -979,7 +983,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private boolean beginAttack(Entity e,int slot,int stamp){
         if(slot<0||slot>255||!e.status.state().modifiers().canAttack()||e.status.state().modifiers().attackSpeed()<=0)return false;
-        float curse=e.status.used(0);if(curse>0){hurt(e,curse,stamp);if(e.health<=0)return false;}
+        float curse=e.status.used(0);if(curse>0){hurt(e,curse,stamp,false,false);if(e.health<=0)return false;}
         // Activity changes reset fire receipts; a chained activity owns its own fire table and speed.
         e.attackSpeed=e.status.state().modifiers().attackSpeed();e.activity=4+slot;e.activityStarted=stamp;e.fired.clear();e.flags&=~64;return true;
     }
@@ -1408,7 +1412,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
                         if(stamp<source.hazardHits.getOrDefault(player.id(),0))continue;
                         source.hazardHits.put(player.id(),stamp+source.spec.integer("hazard-refractory",0));
                     }
-                    playerDamage.accept(new PlayerHit(player.id(),damage,stamp,sourceId,multiplier));
+                    // Native DamageRegionFromPoint pushes every actor the region damaged.
+                    var impulse=createImpulse(region,x,y,rotation,player.x(),player.y(),Math.round(content.stats().getOrDefault("player.impulse-level",1f)),stamp);
+                    playerDamage.accept(new PlayerHit(player.id(),damage,stamp,sourceId,multiplier,impulse));
                 }
             }
         }
@@ -1443,7 +1449,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             float amount=SceneDamage.amount(accepted,content,new SceneContent.Spec(defense),multiplier,gear,relative);
             if(e.kind.equals("Monster")){
                 amount+=e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0){
-                    int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp);
+                    int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp,SceneDamage.reacts(accepted),SceneDamage.major(accepted));
                     if(e.targeting!=null&&targetCandidates(e,players).stream().anyMatch(p->p.id()==owner&&targetActive(p))&&(e.victims.containsKey(owner)||e.victims.size()<256)){
                         var previous=e.victims.getOrDefault(owner,new Entity.Threat(0,0));
                         e.victims.put(owner,new Entity.Threat(Math.min(1_000_000,previous.hits()+1),Math.min(1_000_000_000f,previous.damage()+dealt)));e.nextAcquire=stamp;
@@ -1535,15 +1541,31 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 ||target.spec.contains(target.x,target.y,target.rotation,source.x+s,source.y-c,0))links.addLast(new Link(target,stamp+50,ghost));
         }
     }
-    private void hurt(Entity e,float amount,int stamp){
+    /** Native MonsterLogic.hurt: only reacting damage marks the hit effect, and the
+     * hurt activity follows shouldReact rather than any single hit's size. */
+    private void hurt(Entity e,float amount,int stamp,boolean react,boolean major){
         if(e.health<=0)return;
-        e.health=Math.max(0,e.health-amount);e.hitTime=e.affectedTime=stamp;e.affectedType=0;
+        e.health=Math.max(0,e.health-amount);e.hitTime=stamp;
+        e.reactDamage.addLast(new int[]{(int)Math.ceil(amount),stamp+REACT_WINDOW_MILLIS});
+        while(e.reactDamage.size()>64)e.reactDamage.removeFirst();
+        if(react){e.affectedTime=stamp;e.affectedType=0;}
         if(e.health==0){
             e.activity=2;e.activityStarted=stamp;e.destroyed=stamp+e.spec.integer("death-time",100);e.flags=0;
             String death=e.spec.text("death-action","");
             if(!death.isBlank())try{attack.accept(e.snapshot(),FireCatalog.actionJson(death));}
             catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid prepared monster death action",invalid);}
         }
-        else if(amount>=e.spec.number("min-react-percent",0)*e.spec.number("health",0)){e.activity=1;e.activityStarted=stamp;}
+        else if(shouldReact(e,react,major,stamp)){e.activity=1;e.activityStarted=stamp;}
+    }
+    /** Native window over which MonsterLogic sums damage for a major reaction. */
+    static final int REACT_WINDOW_MILLIS=1000;
+    /** Native MonsterLogic.shouldReact: an interruptable attack yields to any reacting hit;
+     * otherwise only major damage whose one-second sum strictly exceeds min-react-percent. */
+    private static boolean shouldReact(Entity e,boolean react,boolean major,int stamp){
+        if(react&&e.activity>=4&&e.activity<16&&e.spec.flag("attack."+(e.activity-4)+".interruptable",false))return true;
+        long sum=0;for(var it=e.reactDamage.iterator();it.hasNext();){int[] rec=it.next();if(rec[1]<stamp)it.remove();else sum+=rec[0];}
+        float maximum=e.maximumHealth>0?e.maximumHealth:e.spec.number("health",0);
+        if(major&&maximum>0&&sum/maximum>e.spec.number("min-react-percent",0)){e.reactDamage.clear();return true;}
+        return false;
     }
 }

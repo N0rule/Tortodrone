@@ -1139,12 +1139,14 @@ public final class SceneContentExport {
             String scaleName = referenceName(healthScale);
             put(out, prefix + "health-scale", scaleName);
         }
-        if (health instanceof Number number && number.doubleValue() > 0d) {
-            putNumber(out, prefix + "health", number);
-        } else if (healthScale != null) {
+        // Native Monster.health is editor-labelled "(if no healthScale)": a resolved
+        // health scale takes precedence over a leftover fixed pool.
+        if (healthScale != null) {
             Object scale = resolveReference(cm, healthScale, DepthScaleConfig.class);
             if (scale == null) throw new IOException("Unresolved health scale " + referenceName(healthScale));
             putFloat(out, prefix + "health", evaluateScale(cm, scale));
+        } else if (health instanceof Number number && number.doubleValue() > 0d) {
+            putNumber(out, prefix + "health", number);
         }
         Object defense = field(original, "defense");
         if (defense != null) writeDefense(cm, out, prefix, defense);
@@ -1267,6 +1269,21 @@ public final class SceneContentExport {
 
     private static void writeDefense(ConfigManager cm, Map<String, String> out, String prefix,
                                      Object defense) throws Exception {
+        // Monster defenses are usually a Compound of one DepthScaleMonster plus
+        // status-resist entries; only the depth-scaled type values are numeric defense.
+        if (defense.getClass().getName().endsWith("DefenseConfig$Compound")) {
+            Object entries = field(defense, "defenses");
+            if (entries != null && entries.getClass().isArray()) {
+                for (int i = 0; i < Array.getLength(entries); i++) {
+                    Object entry = Array.get(entries, i);
+                    if (entry == null) continue;
+                    if (field(entry, "normal") != null && out.containsKey(prefix + "defense.normal"))
+                        throw new IOException("Ambiguous compound monster defense");
+                    writeDefense(cm, out, prefix, entry);
+                }
+            }
+            return;
+        }
         for (String type : List.of("normal", "piercing", "elemental", "shadow")) {
             Object scaleReference = field(defense, type);
             if (scaleReference == null) continue;

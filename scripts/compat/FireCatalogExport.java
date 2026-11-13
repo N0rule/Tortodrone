@@ -543,6 +543,10 @@ public final class FireCatalogExport {
         }
         else if(actor instanceof DungeonActorConfig.Laser laser){type="LASER";fuse=laser.duration;speed=laser.length;}
         else if(refName.startsWith("Bullet/Pet/")&&actor.getClass()==ActorConfig.Original.class){type="ACTOR";fuse=600000;}
+        // Tutorial Ironwood Giant slam telegraph: retail strips its Timer handler's interval and
+        // removal action. Live wire removes each marker 1306-1406 ms after it appears (three
+        // samples); the bracket midpoint is INTERIM until the server timer is recovered.
+        else if(refName.equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Parts/Warning")&&actor.getClass()==ActorConfig.Original.class){type="ACTOR";fuse=1356;}
         else if(actor.getClass()==ActorConfig.Original.class&&inertActor(manager,actor)){type="ACTOR";}
         else if(actor instanceof DungeonActorConfig.Bullet bullet){type="BULLET";fuse=bullet.fuse;speed=bullet.speed;ox=bullet.offset==null?0:bullet.offset.x;oy=bullet.offset==null?0:bullet.offset.y;height=bullet.height;if(NESTED_ACTORS.add(reference)){try{detonation=readAction(manager,bullet.detonationAction);}finally{NESTED_ACTORS.remove(reference);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
         else if(actor instanceof DungeonActorConfig.Bomb bomb){type="BOMB";fuse=bomb.fuse;if(NESTED_ACTORS.add(reference)){try{detonation=readAction(manager,bomb.detonationAction);}finally{NESTED_ACTORS.remove(reference);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
