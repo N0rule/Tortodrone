@@ -60,6 +60,10 @@ public final class SceneHealth {
     public boolean alive(){return current>0;}
     public boolean invulnerable(int stamp){return stamp<invulnerableUntil;}
     public void protectEntry(int stamp){if(alive())invulnerableUntil=Math.max(invulnerableUntil,stamp+ENTRY_PROTECTION_MILLIS);}
+    /** Native DungeoneerLogic.INITIAL_INVULNERABILITY: five seconds of spawn protection
+     * armed by finishedLoading when the client's first input ends the loading pose. */
+    public static final int INITIAL_INVULNERABILITY_MILLIS = 5000;
+    public void protectLoading(int stamp){if(alive())invulnerableUntil=Math.max(invulnerableUntil,stamp+INITIAL_INVULNERABILITY_MILLIS);}
     /** Archive emergency revive: five-second delay and five seconds of invulnerability. */
     private void died(int stamp){if(!alive()){status.clear();if(emergencyRevive&&emergencyAt==0)emergencyAt=stamp+5000;}}
     public boolean canSparkRevive(){return !alive()&&!emergencyRevive&&emergencyAt==0;}

@@ -40,7 +40,7 @@ public final class SceneSimulationTest {
             check(one.canOpenBox(),"ready actor can open a box");one.openBox(references);
             var opening=a.snapshot();
             check(opening.players().getFirst().activity()==265&&opening.players().getFirst().sceneKnight().activityData().equals(references)
-                &&opening.players().get(1).activity()==0&&b.snapshot().players().getFirst().activity()==0,"committed reveal belongs only to the actor in its scene instance");
+                &&opening.players().get(1).activity()==TownMovement.LOADING&&b.snapshot().players().getFirst().activity()==TownMovement.LOADING,"committed reveal belongs only to the actor in its scene instance");
             SceneSimulation.Snapshot firstOpening;
             do{firstOpening=next(first);}while(firstOpening.players().getFirst().activity()!=265);
             check(firstOpening.players().getFirst().activityStarted()==firstOpening.timestamp(),"data-dependent activity starts at its first observer snapshot boundary");
@@ -52,7 +52,7 @@ public final class SceneSimulationTest {
             check(one.sit(SceneClock.now(),System.nanoTime()/1_000_000L),"entered knight can request sitting");
             var seated=a.snapshot();
             check(seated.actors().getFirst().activity()==TownMovement.SIT
-                &&seated.actors().get(1).activity()==0&&b.snapshot().actors().getFirst().activity()==0,
+                &&seated.actors().get(1).activity()==TownMovement.LOADING&&b.snapshot().actors().getFirst().activity()==TownMovement.LOADING,
                 "sitting changes only the owned actor, leaving peers and other instances alone");
             two.close();var removed=awaitMissing(first,2);
             var removedIds=removed.delta(current).removed();removedIds[0]=999;

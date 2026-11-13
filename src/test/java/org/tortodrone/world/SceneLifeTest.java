@@ -26,9 +26,17 @@ public final class SceneLifeTest {
             var simulation=new SceneRegistry.Instance(790+id,0,map).simulation();int stamp=SceneClock.now();
             var actor=new ActorState(219,1001,"Arrival",256,stamp,map.spawnX(),map.spawnY(),0,0,0,0,stamp,new StarterCatalog.Model("Character/PC/Default",Map.of()),false);
             try(var member=simulation.join(actor,s->{})){
-                check((simulation.snapshot().players().getFirst().flags()&SceneHealth.INVULNERABLE_FLAG)==0,"loading does not consume the arrival window");
+                var loading=simulation.snapshot().players().getFirst();
+                check((loading.flags()&SceneHealth.INVULNERABLE_FLAG)==0,"loading does not consume the arrival window");
+                check(loading.activity()==TownMovement.LOADING&&loading.activityStarted()==stamp,"join publishes the native loading pose from the pawn's arrival stamp");
+                check(((loading.flags()&SceneSimulation.TIER_ENABLED_FLAG)!=0)==!map.town(),"dungeon pawns carry the native tier flag; town arrivals stay clear");
                 member.enter();
                 check(((simulation.snapshot().players().getFirst().flags()&SceneHealth.INVULNERABLE_FLAG)!=0)==!map.town(),"ready Training and Hall of Heroes blink; town arrival stays normal");
+                int frame=stamp+2000;
+                check(member.input(frame,1,1,1,frame,frame,System.nanoTime()/1_000_000L),"the client's first input frame is accepted after the loading pose");
+                var playing=simulation.snapshot().players().getFirst();
+                check(playing.activity()==0&&playing.activityStarted()==frame,"loading ends exactly at the first input frame");
+                check(((playing.flags()&SceneHealth.INVULNERABLE_FLAG)!=0)==!map.town(),"first input arms the native five-second initial invulnerability");
                 var memberHealth=SceneSimulation.Membership.class.getDeclaredField("health");memberHealth.setAccessible(true);
                 var deadline=SceneHealth.class.getDeclaredField("invulnerableUntil");deadline.setAccessible(true);deadline.setInt(memberHealth.get(member),0);
                 member.pause();member.enter();

@@ -8,6 +8,9 @@ import java.util.function.Consumer;
  * Session callbacks only offer publications to bounded mailboxes; no socket or storage work
  * runs on the simulation thread. Terrain and future world systems belong to this instance. */
 public final class SceneSimulation {
+    /** Native Dungeoneer TIER_ENABLED publication flag (256): served content has no gated subtown
+     * segment, so live captures show it set on every Character/PC/Level pawn in every dungeon. */
+    public static final int TIER_ENABLED_FLAG = 256;
     @FunctionalInterface public interface RevivePayment<T>{T commit()throws java.io.IOException;}
     /** Run on the requesting session thread. No network I/O occurs under this lock.
      * Holding the scene through commit makes departure and competing revives mutually
@@ -238,6 +241,7 @@ public final class SceneSimulation {
             });
             movement=new TownMovement(instance.map().collision(),actor.x(),actor.y(),actor.rotation(),instance.map().portals());
             movement.resetInput(actor.created());
+            movement.beginLoading(actor.created());
             movement.dynamicPenetration((x,y)->entities.penetration(x,y,actor.id()));
             movement.staticCollision(instance.map().staticCollision(),Math.round(instance.map().content().stats().getOrDefault("player.collision-mask",43f)));
             movement.interaction(stamp->{var prompt=entities.interaction(movement.x(),movement.y(),movement.rotation(),appearance.id(),lift);
@@ -270,7 +274,13 @@ public final class SceneSimulation {
             return input(stamp,facing,heading,flags,stamp,sceneTime,now);
         }
         public boolean input(int stamp,float facing,float heading,int flags,int actionChanged,int sceneTime,long now) {
-            synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.accept(stamp,facing,heading,flags,actionChanged,sceneTime,now);}
+            synchronized(SceneSimulation.this){check();
+                boolean loading=movement.activity()==TownMovement.LOADING;
+                boolean accepted=entered&&portal==null&&movement.accept(stamp,facing,heading,flags,actionChanged,sceneTime,now);
+                // Native DungeoneerLogic.finishedLoading arms INITIAL_INVULNERABILITY when the
+                // client's first input ends the loading pose; town knights receive none.
+                if(accepted&&loading&&!instance.map().town())health.protectLoading(SceneClock.now());
+                return accepted;}
         }
         public void equipment(org.tortodrone.character.WorldProfile profile) {
             synchronized(SceneSimulation.this){check();
@@ -336,7 +346,8 @@ public final class SceneSimulation {
         private ActorState actor() {
             var a=appearance;
             return new ActorState(a.id(),a.clientOid(),a.name(),a.color(),a.created(),movement.x(),movement.y(),
-                movement.rotation(),movement.direction(),movement.flags()|(!instance.map().town()&&health.invulnerable(SceneClock.now())?SceneHealth.INVULNERABLE_FLAG:0)|(health.cloaked()?32:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
+                movement.rotation(),movement.direction(),movement.flags()|(!instance.map().town()?TIER_ENABLED_FLAG:0)
+                    |(!instance.map().town()&&health.invulnerable(SceneClock.now())?SceneHealth.INVULNERABLE_FLAG:0)|(health.cloaked()?32:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
                     !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation(),appearance.id(),lift),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,knightSkill,health.hitTime()));
         }
         private ConversationRequest pendingConversation;

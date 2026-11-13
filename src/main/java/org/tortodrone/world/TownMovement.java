@@ -9,6 +9,9 @@ public final class TownMovement {
     public static final float MAX_STEP = .333333f;
     // Verified stock KnightAdvancer inventory activities and closing duration.
     public static final int INVENTORY = 3, INVENTORY_END = 4, INVENTORY_END_MILLIS = 889;
+    // The stock Knight constructor publishes activity LOADING(1); KnightLogic.tick clears it
+    // once the owning client's first input frame reports the finished scene load.
+    public static final int LOADING = 1;
     public static final int USE_ITEM=5, USE_ITEM_MILLIS=1433;
     // Stock KnightAdvancer registers the lockbox reveal as a stationary 8250 ms activity.
     public static final int OPEN_BOX=265, OPEN_BOX_MILLIS=8250;
@@ -164,6 +167,13 @@ public final class TownMovement {
         rotation=normalize(facing);
     }
 
+    /** Native Knight constructor state: every published pawn begins frozen in LOADING
+     * until its client's first input frame signals the finished scene load. */
+    public void beginLoading(int stamp) {
+        if (dead() || activity == RESURRECT) throw new IllegalStateException("Cannot load a dead pawn");
+        setActivity(LOADING, stamp);
+    }
+
     /** Clear input on scene entry/re-entry without moving the character. */
     public void resetInput(int sceneTime) {
         inTransit=false;
@@ -204,6 +214,8 @@ public final class TownMovement {
         lastTimestamp = stamp;
         lastInputAt = now;
         inputSeen = true;
+        // Native KnightLogic.tick ends the loading pose on the client's first input frame.
+        if (activity == LOADING) setActivity(0, stamp);
         return true;
     }
 

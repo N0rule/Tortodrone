@@ -1,7 +1,7 @@
 entrances:
   level_start:
     id: 2659
-    facing: 6.8301826562367635E-6
+    facing: -90
     x: -21
     y: -69.5
 portals: {
