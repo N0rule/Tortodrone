@@ -1,5 +1,6 @@
 # Server state and local research; preparation reads config/ and content/.
 /local/
+AGENTS.md
 
 # Captures and logs
 *.pcap
