@@ -23,6 +23,12 @@ public final class SceneHealth {
     public int hitTime(){return hitTime;}
     private boolean emergencyRevive=true;
     private int emergencyAt;
+    /** Original tutorial parties never dissolve on defeat: Party.checkPartyDead heals every
+     * dead tutorial member in place after a fixed delay instead. */
+    public static final int TUTORIAL_RESPAWN_MILLIS=4000;
+    private boolean tutorialRespawn;
+    private int respawnAt;
+    public void tutorialRespawn(boolean enabled){tutorialRespawn=enabled;if(!enabled)respawnAt=0;}
     public record SpriteBlock(float scale,boolean held){public static final SpriteBlock NONE=new SpriteBlock(1,false);}
     @FunctionalInterface public interface SpriteShield{SpriteBlock absorb(Object damage,int stamp,float multiplier);}
     private SpriteShield spriteShield=(damage,stamp,multiplier)->SpriteBlock.NONE;
@@ -72,12 +78,13 @@ public final class SceneHealth {
     public static final int EMERGENCY_REVIVE_DELAY_MILLIS = 5000;
     public void protectLoading(int stamp){if(alive())invulnerableUntil=Math.max(invulnerableUntil,stamp+INITIAL_INVULNERABILITY_MILLIS);}
     /** Archive emergency revive: five-second delay and five seconds of invulnerability. */
-    private void died(int stamp){if(!alive()){status.clear();if(emergencyRevive&&emergencyAt==0)emergencyAt=stamp+EMERGENCY_REVIVE_DELAY_MILLIS;}}
+    private void died(int stamp){if(!alive()){status.clear();if(emergencyRevive&&emergencyAt==0)emergencyAt=stamp+EMERGENCY_REVIVE_DELAY_MILLIS;
+        else if(!emergencyRevive&&emergencyAt==0&&tutorialRespawn&&respawnAt==0)respawnAt=stamp+TUTORIAL_RESPAWN_MILLIS;}}
     public boolean canSparkRevive(){return !alive()&&!emergencyRevive&&emergencyAt==0;}
     public boolean revive(int stamp){if(alive())return false;
         // A manual Training resurrection can answer the pending automatic charge.
         // Both paths spend the same charge; neither a Spark nor equipment replenishes it.
-        emergencyRevive=false;current=maximum;status.clear();emergencyAt=0;invulnerableUntil=stamp+SPARK_REVIVE_PROTECTION_MILLIS;return true;}
+        emergencyRevive=false;current=maximum;status.clear();emergencyAt=respawnAt=0;invulnerableUntil=stamp+SPARK_REVIVE_PROTECTION_MILLIS;return true;}
     public boolean damage(Object damage,int stamp){
         return hit(damage,stamp).amount()>0;
     }
@@ -114,6 +121,7 @@ public final class SceneHealth {
     public void advance(int stamp,int elapsed,boolean moving){
         if(!alive()){
             if(emergencyAt!=0&&stamp>=emergencyAt){emergencyRevive=false;revive(stamp);invulnerableUntil=stamp+EMERGENCY_REVIVE_PROTECTION_MILLIS;}
+            else if(respawnAt!=0&&stamp>=respawnAt)revive(stamp);
             return;
         }
         status.advance(stamp,elapsed,moving,amount->{if(!invulnerable(stamp))rawDamage((int)Math.ceil(amount),stamp);},amount->heal((int)Math.ceil(amount)));

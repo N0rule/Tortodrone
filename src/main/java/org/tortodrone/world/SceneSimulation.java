@@ -124,6 +124,7 @@ public final class SceneSimulation {
         private int interactionTarget;
         private int lift,dropAt;
         private final SceneHealth health=new SceneHealth(instance.map().content());
+        {health.tutorialRespawn(instance.tutorial()!=null);}
         private float floorHeat;
         private boolean revivePending;
         private org.tortodrone.town.TownState.Sprite sprite;
