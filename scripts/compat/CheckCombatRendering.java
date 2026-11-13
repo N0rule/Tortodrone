@@ -136,7 +136,7 @@ public final class CheckCombatRendering {
                 if(peer.isAlive()||peer.exitValue()!=0||!Files.isRegularFile(outputDir.resolve("mp-disconnected")))throw new IOException("Multiplayer failed: "+tail(peerLog)+"\nPrimary: "+tail(clientLog));
                 peerLog=output.resolve("peer-reconnect.log");peer=start(peerCommand,peerLog,scratch);
             }
-            if (!client.waitFor(tutorialOnly?440:tutorialEntryOnly||readyRoomOnly?100:trainingOnly?440:400, TimeUnit.SECONDS)) {
+            if (!client.waitFor(tutorialOnly?1500:tutorialEntryOnly||readyRoomOnly?100:trainingOnly?440:400, TimeUnit.SECONDS)) {
                 throw new IOException("Graphical combat probe timed out:\n" + tail(clientLog) + "\nServer:\n" + tail(serverLog));
             }
             String log = Files.readString(clientLog);

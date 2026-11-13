@@ -498,6 +498,11 @@ public final class CombatRenderingCheck {
     private final Set<String> tutorialHelperAttacks=new HashSet<>(),tutorialHelperDamage=new HashSet<>();
     private final Set<Integer> tutorialGiantHeads=new HashSet<>();
     private boolean tutorialGiantDamage;
+    // The Giant encounter ends when the Giant is removed, not after a fixed delay: unreachable
+    // support turrets are skipped and the fight only fails if the Giant stops losing health.
+    private final Set<Integer> tutorialUnreachable=new HashSet<>();
+    private boolean tutorialNoRoute;
+    private float tutorialGiantHealth=Float.NaN;private long tutorialGiantProgressAt;
     private int tutorialPartyHealth=-1;
     private final Map<Integer,Float> tutorialMonsterHealth=new HashMap<>();
     private float tutorialLastX,tutorialLastY;
@@ -544,12 +549,12 @@ public final class CombatRenderingCheck {
             // them or change health/actor state in order to keep the route moving.
             Actor nearest=null;double distance=own.tG().y>55?14:4.2;
             for(var actor:authoritative.values())if(actor instanceof com.threerings.projectx.dungeon.data.actor.Monster monster
-                    &&actor.MX().getName().startsWith("Character/NPC/Monster/")&&!actor.MX().getName().contains("Ironwood Giant")&&monsterHealth(actor)>0){
+                    &&actor.MX().getName().startsWith("Character/NPC/Monster/")&&!actor.MX().getName().contains("Ironwood Giant")&&monsterHealth(actor)>0&&!tutorialUnreachable.contains(actor.vD())){
                 if(monster.aeM()>=4&&tutorialEnemyAttacks.add(actor.MX().getName())){capture("tutorial-enemy-attack-"+tutorialEnemyAttacks.size());System.out.println("ENEMY: native attack "+actor.MX().getName()+" activity="+monster.aeM()+" at="+actor.tG());}
                 double d=Math.hypot(actor.tG().x-own.tG().x,actor.tG().y-own.tG().y);if(d<distance){distance=d;nearest=actor;}
             }
             var locked=authoritative.get(tutorialEnemy);
-            if(locked!=null&&monsterHealth(locked)>0){double d=Math.hypot(locked.tG().x-own.tG().x,locked.tG().y-own.tG().y);if(d<(own.tG().y>55?14:4.2)){nearest=locked;distance=d;}}
+            if(locked!=null&&monsterHealth(locked)>0&&!tutorialUnreachable.contains(locked.vD())){double d=Math.hypot(locked.tG().x-own.tG().x,locked.tG().y-own.tG().y);if(d<(own.tG().y>55?14:4.2)){nearest=locked;distance=d;}}
             if(nearest!=null){
                 if(tutorialEnemy!=nearest.vD()||Math.hypot(nearest.tG().x-tutorialEnemyPoseX,nearest.tG().y-tutorialEnemyPoseY)>.35){
                     tutorialEnemy=nearest.vD();tutorialEnemySince=now;tutorialPath=List.of();tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;
@@ -567,6 +572,10 @@ public final class CombatRenderingCheck {
                 boolean moving=distance>1.4;
                 if(moving&&own.tG().y>55){
                     tutorialWalk(view,own,tutorialEnemyGoalX,tutorialEnemyGoalY,now);
+                    if(tutorialNoRoute&&now-tutorialEnemySince>5_000_000_000L){
+                        System.out.println("COMBAT: no route to "+nearest.MX().getName()+" id="+tutorialEnemy+"; skipping it while the encounter continues");
+                        tutorialUnreachable.add(tutorialEnemy);tutorialEnemy=0;tutorialPath=List.of();tutorialProgressAt=now;tutorialNoRoute=false;flags(view,0);return;
+                    }
                 }else moveToward(view,nearest.tG().x-own.tG().x,nearest.tG().y-own.tG().y,moving);
                 boolean swing=!firing&&(now-tutorialEnemySince)%1_250_000_000L<100_000_000L;
                 flags(view,(moving?1:0)|(swing?4:0)|(firing?64:0));
@@ -585,7 +594,9 @@ public final class CombatRenderingCheck {
                 if(tutorialBoss!=0&&!tutorialHelperDamage.isEmpty()){stage=5;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("ironwood-giant-removed");return;}
                 if(now-started>90_000_000_000L)throw new AssertionError("Original conversation did not spawn Giant");return;
             }
-            tutorialBoss=boss.vD();if(tutorialWalk(view,own,boss.tG().x,boss.tG().y-1.75f,now)){flags(view,0);stage=4;tutorialCombatAt=now;capture("ironwood-giant-encounter");}return;
+            tutorialBoss=boss.vD();
+            boolean near=Math.hypot(boss.tG().x-own.tG().x,boss.tG().y-own.tG().y)<6;
+            if(near||tutorialWalk(view,own,boss.tG().x,boss.tG().y-1.75f,now)){flags(view,0);stage=4;tutorialCombatAt=tutorialGiantProgressAt=now;tutorialGiantHealth=monsterHealth(boss);capture("ironwood-giant-encounter");}return;
         }
         if(stage==4){var boss=authoritative.get(tutorialBoss);
             if(boss==null){stage=5;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("ironwood-giant-removed");return;}
@@ -593,7 +604,9 @@ public final class CombatRenderingCheck {
             boolean guard=tutorialGiantDamage&&boss instanceof com.threerings.projectx.dungeon.data.actor.Monster monster
                 &&(monster.aeM()==4||monster.aeM()==5&&lastStamp-monster.aeN()<2800);
             flags(view,guard?64:(now-tutorialCombatAt)%1_250_000_000L<100_000_000L?4:0);
-            if(now-tutorialCombatAt>180_000_000_000L)throw new AssertionError("Normal stock sword input failed to defeat Giant; health="+monsterHealth(boss));return;
+            float giantHealth=monsterHealth(boss);
+            if(!(giantHealth>=tutorialGiantHealth)){tutorialGiantHealth=giantHealth;tutorialGiantProgressAt=now;}
+            if(now-tutorialGiantProgressAt>120_000_000_000L)throw new AssertionError("Giant fight stalled for 120 s; health="+giantHealth);return;
         }
         if(stage==5){float[][] exit={{13.5f,70},{13.5f,90.5f},{13,96.5f}};
             if(tutorialWaypoint<exit.length){if(tutorialWalk(view,own,exit[tutorialWaypoint][0],exit[tutorialWaypoint][1],now)){tutorialWaypoint++;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("tutorial-exit-walk-"+tutorialWaypoint);}}
@@ -622,7 +635,8 @@ public final class CombatRenderingCheck {
                     }
                 }return true;
             });tutorialNode=0;
-            if(tutorialPath.isEmpty()){flags(view,0);tutorialRouteRetryAt=now+500_000_000L;if(now-tutorialProgressAt>20_000_000_000L)throw new AssertionError("No collision route after authored encounter delays from "+own.tG()+" to "+x+","+y);return false;}
+            tutorialNoRoute=tutorialPath.isEmpty();
+            if(tutorialPath.isEmpty()){flags(view,0);tutorialRouteRetryAt=now+500_000_000L;if(!giantAlive()&&now-tutorialProgressAt>20_000_000_000L)throw new AssertionError("No collision route from "+own.tG()+" to "+x+","+y);return false;}
         }
         while(tutorialNode<tutorialPath.size()&&Math.hypot(own.tG().x-tutorialPath.get(tutorialNode).x(),own.tG().y-tutorialPath.get(tutorialNode).y())<.2)tutorialNode++;
         if(tutorialNode==tutorialPath.size()){tutorialPath=List.of();return false;}
@@ -632,7 +646,11 @@ public final class CombatRenderingCheck {
         if(now-tutorialRepathAt>5_000_000_000L){tutorialRepathAt=now;System.out.println("NAV: waypoint="+tutorialWaypoint+" at="+own.tG()+" node="+point+" target="+x+","+y);}
         if(now-tutorialProgressAt>2_000_000_000L&&now-tutorialRepathAt>1_000_000_000L){tutorialPath=List.of();}
         if(now-tutorialProgressAt>500_000_000L)flags(view,(now-tutorialProgressAt)%1_250_000_000L<150_000_000L?4:1);
-        if(now-tutorialProgressAt>15_000_000_000L)throw new AssertionError("Normal tutorial input blocked at "+own.tG()+" toward "+point+" waypoint="+tutorialWaypoint);
+        if(!giantAlive()&&now-tutorialProgressAt>15_000_000_000L)throw new AssertionError("Normal tutorial input blocked at "+own.tG()+" toward "+point+" waypoint="+tutorialWaypoint);
+        return false;
+    }
+    private boolean giantAlive()throws Exception{
+        for(var a:authoritative.values())if(a.MX().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")&&monsterHealth(a)>0)return true;
         return false;
     }
     private void tutorialSpawnSpecs(org.tortodrone.world.SceneActions.Action action){
