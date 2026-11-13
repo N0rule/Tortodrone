@@ -463,6 +463,8 @@ public final class SceneSimulation {
     public SceneSimulation(SceneRegistry.Instance instance){this.instance=Objects.requireNonNull(instance);
         arsenalZones=instance.map().content().entries().stream().filter(e->e.spec().flag("arsenal-zone",false)).toList();
         entities=new SceneEntities(instance.map().content(),instance.map().collision(),instance.map().staticCollision());
+        // Tutorial instances refuse every party change, so party rewards have one recipient.
+        entities.soloRewards(instance.tutorial()!=null);
         weapons=new SceneWeapons(instance.map().collision());weapons.staticCollision(instance.map().staticCollision());weapons.targets(entities);
         var gearTags=GearStats.damageTags(instance.map().content().stats());
         weapons.damageModifiers((owner,attack)->{var member=members.get(owner);

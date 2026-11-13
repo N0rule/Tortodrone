@@ -314,6 +314,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         return entity;
     }
+    private boolean soloRewards;
+    /** Set for instances that never admit a second member (the private tutorial). */
+    public void soloRewards(boolean value){soloRewards=value;}
     @Override public boolean spawnPickup(StarterCatalog.Model specification,float x,float y,float rotation,int stamp){
         if(specification==null||!(specification.arguments().get("fields") instanceof String json)||entities.size()+pendingActors.size()>=4096)return false;
         try{
@@ -323,7 +326,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 fields.put(key,value);
             }
             var spec=new SceneContent.Spec(fields);
-            if(!spec.text("native-type","").equals("com.threerings.projectx.dungeon.data.actor.Pickup")||spec.text("pickup-item","").isBlank())return false;
+            if(!spec.text("native-type","").equals("com.threerings.projectx.dungeon.data.actor.Pickup"))return false;
+            boolean item=!spec.text("pickup-item","").isBlank(),heat=spec.integer("pickup-heat",0)>0;
+            if(item==heat)return false;
+            // Native party pickups pay every member. Heat claims already credit the whole
+            // instance; an item/crown claim has one claimant, which is exact only when the
+            // instance can never hold a second member.
+            if(item&&spec.flag("pickup-party",false)&&!soloRewards)return false;
             spawn(new SceneContent.Entry("loot:"+nextId,x,y,rotation,spec),spec,null,stamp);return true;
         }catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid prepared loot actor",invalid);}
     }
