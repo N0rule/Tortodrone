@@ -12,7 +12,7 @@ final class ClientDiagnostics {
     private final String owner;
     private boolean hardwareReceived;
     ClientDiagnostics(SessionLog log,int clientOid,int accountId,String username){
-        this.log=log;owner="clientOid="+clientOid+"; accountId="+accountId+"; account="+text(username);
+        this.log=log;owner="account="+text(username)+" (#"+accountId+"); clientOid="+clientOid;
     }
     static void joined(SessionLog log,Socket socket,int session,AccountStore.Account account,
             HandshakeCodec.Request request,String language,String region,long elapsed){
@@ -31,9 +31,12 @@ final class ClientDiagnostics {
         if(!(args.get(7) instanceof Boolean)||!(args.get(8) instanceof Float scale)||!Float.isFinite(scale))throw new SessionDecoder.Rejected("Invalid client hardware display fields");
         if(hardwareReceived)return;hardwareReceived=true;
         if(!log.debugEnabled())return;
-        log.debug("Client hardware (client-reported); "+owner+"; os="+text((String)args.get(0))+"; os-version="+text((String)args.get(1))
-            +"; cpu="+text((String)args.get(2))+"; java="+text((String)args.get(3))+"; architecture="+text((String)args.get(4))
-            +"; desktop="+text((String)args.get(5))+"; window="+text((String)args.get(6))+"; fullscreen="+args.get(7)+"; ui-scale="+scale
+        log.debug("Client hardware; "+owner
+            +"; os="+text((String)args.get(0))+" (build "+text((String)args.get(1))+")"
+            +"; cpu="+text((String)args.get(2))
+            +"; java="+text((String)args.get(3))+" ("+text((String)args.get(4))+")"
+            +"; screen="+text((String)args.get(5))+"; window="+text((String)args.get(6))
+            +"; mode="+((Boolean)args.get(7)?"fullscreen":"windowed")+"; ui-scale="+scale
             +"; gpu=unavailable; ram=unavailable");
     }
     /** Bounded, quoted untrusted text for both pre-authentication and joined diagnostics. */

@@ -22,6 +22,12 @@ public final class HandshakeCodec {
     }
     public record SessionRequest(String type, short messageId, int objectId, SessionDecoder.Event event) { }
 
+    /** A valid stock Steam/platform-ticket login that this server deliberately refuses with a
+     * user-visible message instead of treating as a protocol error. */
+    public static final class TicketLogin extends IOException {
+        TicketLogin() { super("Platform ticket login is not supported"); }
+    }
+
     /** Returns a frame body, or null on clean EOF. Partial frames are errors. */
     public static byte[] readFrame(InputStream source) throws IOException {
         int first = source.read();
@@ -95,7 +101,7 @@ public final class HandshakeCodec {
         String language=nullableString(in);
         String session = nullableString(in);
         // Only normal username/password authentication is supported.
-        require(in.readUnsignedByte() == 0, "Platform ticket not supported");
+        if (in.readUnsignedByte() != 0) throw new TicketLogin();
         boolean sega = in.readBoolean();
         boolean steamClient = in.readBoolean(); // Client environment flag; the account stays a normal account.
         int site = in.readInt();

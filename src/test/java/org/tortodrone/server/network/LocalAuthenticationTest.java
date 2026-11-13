@@ -20,6 +20,7 @@ public final class LocalAuthenticationTest {
         rejection(key,"MissingUser","m.no_such_user");
         hardwareExchange(key);
         steamExchange(key);
+        steamTicketExchange(key);
         System.out.println("PASS: authentication, snapshots, receivers, batched requests, invocation failure callbacks, logoff, secret-free logs");
     }
 
@@ -109,6 +110,29 @@ public final class LocalAuthenticationTest {
         }
     }
 
+    /** A Steam account/ticket login is refused with a user-visible message, not a protocol error. */
+    private static void steamTicketExchange(KeyPair key)throws Exception {
+        var flags=new TestClient.LoginFlags(true,null,false,0,null,true);
+        try(var workers=Executors.newSingleThreadExecutor();var listener=new ServerSocket(0,1,InetAddress.getLoopbackAddress())){
+            var result=workers.submit(()->{
+                var logs=new ArrayList<String>();
+                try(var socket=listener.accept()){
+                    socket.setSoTimeout(5000);
+                    SecureHandshake.run(socket,key.getPrivate(),logs::add,true);
+                }
+                return logs;
+            });
+            try(var peer=new Socket(listener.getInetAddress(),listener.getLocalPort())){
+                TestClient.authenticate(peer,key.getPublic(),"steam:76561198000000000","ticket",
+                    SecureHandshake.STEAM_LOGIN_MESSAGE,8000,flags,(socket,wire,oid)->{});
+            }
+            var logs=result.get(5,TimeUnit.SECONDS);
+            check(logs.stream().anyMatch(s->s.equals("Steam platform-ticket login rejected; reason=steam_unsupported")),"ticket rejection is logged");
+            check(logs.stream().noneMatch(s->s.startsWith("Normal login rejected;")||s.startsWith("Client joined;")),"ticket login never becomes a normal account session");
+            check(logs.stream().noneMatch(s->s.contains(TestClient.passwordHash("tortodrone"))),"ticket rejection retains secret-free logs");
+        }
+    }
+
     private interface ArgumentWriter { void write(java.io.DataOutputStream out) throws java.io.IOException; }
 
     private static void report(TestWire.Writer writer,Socket socket,int sequence,int method,String type,ArgumentWriter value)throws Exception {
@@ -142,7 +166,10 @@ public final class LocalAuthenticationTest {
                 });
             }
             var logs=result.get(5,TimeUnit.SECONDS);
-            check(logs.stream().filter(s->s.startsWith("Client hardware (client-reported);")).count()==(foreign?0:1),"native hardware dispatch logs once and refuses foreign targets");
+            check(logs.stream().filter(s->s.startsWith("Client hardware;")).count()==(foreign?0:1),"native hardware dispatch logs once and refuses foreign targets");
+            if(!foreign)check(logs.stream().anyMatch(s->s.startsWith("Client hardware;")&&s.contains("account=\"tortodrone\" (#1)")
+                &&s.contains("os=\"Fixture OS\" (build \"1.0\")")&&s.contains("java=\"25\" (\"amd64\")")
+                &&s.contains("screen=\"1920x1080\"; window=\"1280x720\"; mode=windowed")&&s.contains("ui-scale=1.25")),"hardware summary stays readable and informative");
             check(logs.stream().noneMatch(s->s.contains("private-test-ident")||s.contains(TestClient.passwordHash("tortodrone"))),"hardware path retains secret-free authentication logs");
         }
     }

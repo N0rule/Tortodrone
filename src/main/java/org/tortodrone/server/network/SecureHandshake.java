@@ -15,6 +15,9 @@ import org.tortodrone.protocol.HandshakeCodec;
 
 /** Secure exchange and normal authentication against server-owned accounts. */
 public final class SecureHandshake {
+    /** Displayed verbatim by the stock logon panel (unknown codes fall back to their own text). */
+    static final String STEAM_LOGIN_MESSAGE =
+        "Steam accounts are not supported. Log in using your regular account name and password.";
     static void run(Socket socket, PrivateKey key, SessionLog log) throws Exception {
         run(socket, key, log, false);
     }
@@ -84,6 +87,7 @@ public final class SecureHandshake {
             String loginResult = "m.invalid_password";
             boolean normalLogin = false;
             boolean steamClient = false;
+            boolean ticketLogin = false;
             String attemptedUser = null;
             try (var decoded = HandshakeCodec.credentials(credentials)) {
                 normalLogin = decoded.normalLogin();
@@ -96,6 +100,11 @@ public final class SecureHandshake {
                     account = result.account();
                     loginResult = account != null ? "success" : result.failure() == AccountStore.LoginFailure.NO_SUCH_USER ? "m.no_such_user" : "m.invalid_password";
                 }
+            } catch (HandshakeCodec.TicketLogin ticket) {
+                // Steam account/ticket authentication stays unsupported, but the attempt is a valid
+                // stock mode: answer so the client can show why instead of reporting a network error.
+                ticketLogin = true;
+                loginResult = STEAM_LOGIN_MESSAGE;
             } finally {
                 Arrays.fill(credentials, (byte) 0);
             }
@@ -116,8 +125,12 @@ public final class SecureHandshake {
                     + "; the authenticated account and its password login are unchanged");
             }
             if (!accepted) {
-                log.warn("Normal login rejected; account=" + ClientDiagnostics.text(attemptedUser)
-                    + "; reason=" + (normalLogin ? loginResult : "unsupported_login") + "; normalLogin=" + normalLogin);
+                if (ticketLogin) {
+                    log.warn("Steam platform-ticket login rejected; reason=steam_unsupported");
+                } else {
+                    log.warn("Normal login rejected; account=" + ClientDiagnostics.text(attemptedUser)
+                        + "; reason=" + (normalLogin ? loginResult : "unsupported_login") + "; normalLogin=" + normalLogin);
+                }
                 return;
             }
             log.authenticated(account.id(), account.username());

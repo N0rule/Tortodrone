@@ -21,7 +21,10 @@ public final class TestClient {
     @FunctionalInterface public interface Session { void run(Socket peer, TestWire wire, int oid) throws Exception; }
 
     /** Stock credential fields; a Steam client flag alone is still a normal login. */
-    public record LoginFlags(boolean steamClient, String session, boolean sega, int site, String invite) {
+    public record LoginFlags(boolean steamClient, String session, boolean sega, int site, String invite, boolean ticket) {
+        public LoginFlags(boolean steamClient, String session, boolean sega, int site, String invite) {
+            this(steamClient, session, sega, site, invite, false);
+        }
         public boolean normalLogin() { return session == null && !sega && site == 0 && invite == null; }
     }
 
@@ -73,15 +76,21 @@ public final class TestClient {
         byte[] shared = HexFormat.of().parseHex(secure.readUTF());
         for (int i = 0; i < 16; i++) shared[i] ^= plain[i];
         byte[] credentials = credentials(username, password, flags);
-        try (var decoded = HandshakeCodec.credentials(credentials)) {
-            check(decoded.normalLogin() == flags.normalLogin() && decoded.username().equals(username), "credential envelope");
+        if (flags.ticket()) {
+            // A ticket login is a valid stock mode the server refuses with a user-visible result.
+            try { HandshakeCodec.credentials(credentials); throw new AssertionError("ticket login accepted"); }
+            catch (HandshakeCodec.TicketLogin expected) { }
+        } else {
+            try (var decoded = HandshakeCodec.credentials(credentials)) {
+                check(decoded.normalLogin() == flags.normalLogin() && decoded.username().equals(username), "credential envelope");
+            }
+            // Unknown fields must not be silently ignored in a credential envelope.
+            byte[] trailing = Arrays.copyOf(credentials, credentials.length + 1);
+            try {
+                HandshakeCodec.credentials(trailing);
+                throw new AssertionError("Trailing credential fields accepted");
+            } catch (IOException expected) { }
         }
-        // Unknown fields must not be silently ignored in a credential envelope.
-        byte[] trailing = Arrays.copyOf(credentials, credentials.length + 1);
-        try {
-            HandshakeCodec.credentials(trailing);
-            throw new AssertionError("Trailing credential fields accepted");
-        } catch (IOException expected) { }
         Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
         aes.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(shared, "AES"), new IvParameterSpec(
             new byte[] {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8}));
@@ -230,7 +239,7 @@ public final class TestClient {
         string(out, "private-test-ident"); string(out, "en");
         out.writeBoolean(flags.session() != null);
         if (flags.session() != null) out.writeUTF(flags.session());
-        out.writeBoolean(false); // ticket
+        out.writeBoolean(flags.ticket());
         out.writeBoolean(flags.sega()); out.writeBoolean(flags.steamClient()); out.writeInt(flags.site());
         out.writeBoolean(flags.invite() != null);
         if (flags.invite() != null) out.writeUTF(flags.invite());

@@ -18,7 +18,10 @@ public final class NormalCredentialsTest {
                     payload(null, false, steam, 1, null), payload(null, false, steam, 0, "invite")}) {
                 try (var credentials = HandshakeCodec.credentials(unsupported)) { check(!credentials.normalLogin(), "session/platform credential not authorized"); }
             }
-            rejected(payload(null, false, steam, 0, null, true));
+            // A platform-ticket (Steam account) login is a valid stock mode that is refused with a
+            // user-visible result rather than a silent protocol error.
+            try { HandshakeCodec.credentials(payload(null, false, steam, 0, null, true)); throw new AssertionError("ticket login accepted"); }
+            catch (HandshakeCodec.TicketLogin expected) { }
         }
         try (var steamCreds = HandshakeCodec.credentials(payload(null, false, true, 0, null))) {
             check(steamCreds.normalLogin() && steamCreds.steamClient(), "steam client with username/password is accepted");
