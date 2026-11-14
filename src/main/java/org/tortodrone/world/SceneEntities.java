@@ -1552,7 +1552,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return SceneDamage.impulse(region.arguments().get("impulse"),x+ox*c-oy*s,y+ox*s+oy*c,tx,ty,level,stamp);
     }
     private void applyImpulse(Entity entity,StarterCatalog.Model region,float x,float y,float rotation,int stamp){
-        var impulse=createImpulse(region,x,y,rotation,entity.x,entity.y,entity.spec.integer("impulse-level",1),stamp);
+        // The shared combat table stores stats as floats and actor() injects them unrounded
+        // ("1.0"); impulse levels are whole tiers, so read and round like the player side.
+        var impulse=createImpulse(region,x,y,rotation,entity.x,entity.y,Math.round(entity.spec.number("impulse-level",1)),stamp);
         if(impulse!=null){entity.impulse=SceneDamage.combine(impulse,entity.impulse);entity.impulseAdvanced=stamp;}
     }
     private void advanceImpulse(Entity e,int stamp){
