@@ -330,7 +330,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
             var spec=new SceneContent.Spec(fields);
             if(!spec.text("native-type","").equals("com.threerings.projectx.dungeon.data.actor.Pickup"))return false;
             boolean item=!spec.text("pickup-item","").isBlank(),heat=spec.integer("pickup-heat",0)>0;
-            if(item==heat)return false;
+            int heal=spec.integer("pickup-heal",0);
+            if((item?1:0)+(heat?1:0)+(heal>0?1:0)!=1||heal<0||heal>1_000_000)return false;
             // Native party pickups pay every member. Heat claims already credit the whole
             // instance; an item/crown claim has one claimant, which is exact only when the
             // instance can never hold a second member.
@@ -724,7 +725,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
 
     private void collect(Entity e,float elapsed,List<ActorState> players){
-        if(e.spec.text("pickup-item","").isEmpty()&&e.spec.integer("pickup-heat",0)==0)return;
+        boolean heal=e.spec.integer("pickup-heal",0)>0;
+        if(e.spec.text("pickup-item","").isEmpty()&&e.spec.integer("pickup-heat",0)==0&&!heal)return;
         for(var player:players){
             if(!playerActive.test(player.id())||!pickupEligible.test(player.id(),e.spec))continue;
             float dx=player.x()-e.x,dy=player.y()-e.y,distance=(float)Math.hypot(dx,dy);
@@ -732,7 +734,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(distance>reach+e.spec.number("vacuum-expansion",0)){e.refusedPickups.remove(player.id());continue;}
             if(e.refusedPickups.contains(player.id()))continue;
             if(e.spec.integer("pickup-heat",0)>0){e.claim=player.id();return;}
-            if(distance<=reach){e.claim=player.id();return;}
+            if(distance<=reach){
+                // Native hearts heal on contact and stay put while the knight is full.
+                if(heal){
+                    if(playerHeal.test(player.id(),e.spec.integer("pickup-heal",0)))e.destroyed=lastStamp;
+                    else e.refusedPickups.add(player.id());
+                }else e.claim=player.id();
+                return;
+            }
             float step=Math.min(distance,e.spec.number("vacuum-speed",0)*elapsed);
             float x=e.x+dx*step/distance,y=e.y+dy*step/distance;
             if(terrain.walkableSegment(e.x,e.y,x,y)){e.x=x;e.y=y;}
@@ -1539,8 +1548,33 @@ public final class SceneEntities implements SceneWeapons.Targets {
             case "StarlinkBlock" -> clearLinks(e,stamp,false);
             case "GhostlinkBlock" -> clearLinks(e,stamp,true);
             case "StoneBlock" -> {if(e.state<e.spec.integer("block-hits",1)-1){e.state++;e.stateEntered=stamp;}else e.destroyed=stamp;}
-            default -> {if(e.spec.text("damage-action","").equals("destroy"))e.destroyed=stamp;}
+            default -> {
+                if(e.spec.text("damage-action","").equals("destroy"))e.destroyed=stamp;
+                else if(e.config.name().startsWith("Block/Treasure, Health")){
+                    // Native treasure blocks run a TableSpawnPerMember of hearts and
+                    // then DestroyActor. The heart table is not expressible in content,
+                    // so drop the tutorial heart and destroy the block like stock.
+                    e.destroyed=stamp;
+                    dropHeart(e,stamp);
+                }
+            }
         }
+    }
+    /** Native Treasure Health block: drop the heart its stripped table would spawn. */
+    private void dropHeart(Entity e,int stamp){
+        var fields=new TreeMap<String,String>();
+        fields.put("config","Item/Consumable/Hearts/Heart");
+        fields.put("native-type","com.threerings.projectx.dungeon.data.actor.Pickup");
+        fields.put("shape","Circle");
+        fields.put("radius","0.4");
+        fields.put("pickup-heal","40");
+        fields.put("vacuum-expansion","0.6");
+        fields.put("vacuum-speed","8");
+        fields.put("lifespan","120000");
+        try{
+            var json=org.tortodrone.resources.Json.stringify(fields);
+            spawnPickup(new StarterCatalog.Model("Pickup",Map.of("fields",json)),e.x,e.y,e.rotation,stamp);
+        }catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared heart pickup",invalid);}
     }
     private void clearLinks(Entity source,int stamp,boolean ghost){
         if(source.destroyed!=Integer.MAX_VALUE)return;source.destroyed=stamp;if(ghost)source.flags|=2;
