@@ -756,10 +756,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(e.scriptStep==0){if(!e.spec.text("script.activate-signal","").isEmpty()&&!e.scriptActivated)return;e.scriptStep++;return;}
         if(e.scriptStarted==Integer.MIN_VALUE)e.scriptStarted=stamp;
         if(e.scriptStep==1){if(stamp-e.scriptStarted>e.script.waitMillis()){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;}return;}
-        if(e.scriptStep==2){if(scriptMove(e,e.script.goal(),e.script.maxPath(),e.script.turnRate(),stamp,elapsed,false)){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;e.scriptGoal=null;}return;}
+        if(e.scriptStep==2){if(scriptMove(e,e.script.goal(),e.script.maxPath(),e.script.turnRate(),stamp,elapsed)){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;e.scriptGoal=null;}return;}
         if(scriptRotate(e,e.script.rotation(),elapsed,e.script.turnRate()))e.scriptStep++;
     }
-    private boolean scriptMove(Entity e,String goal,float maxPath,float turnRate,int stamp,float elapsed,boolean partial){
+    /** Native ScriptLogic.Move: the script walks unlimited total distance through bounded
+     * partial paths, replanning whenever each path segment ends. maxPathLength bounds one
+     * pathfinding request, never the distance to the goal. */
+    private boolean scriptMove(Entity e,String goal,float maxPath,float turnRate,int stamp,float elapsed){
         if(e.scriptGoal==null){
             if(goal.isEmpty())return true;
             e.scriptGoal=taggedSources(goal,stamp).stream().min(Comparator.comparingDouble(a->Math.hypot(a.x()-e.x,a.y()-e.y))).orElse(null);
@@ -767,7 +770,6 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         if(!e.status.state().modifiers().canMove())return false;
         float tx=e.scriptGoal.x(),ty=e.scriptGoal.y(),speed=e.speed*e.status.state().modifiers().speed();
-        if(!partial&&Math.hypot(tx-e.x,ty-e.y)>maxPath)return false;
         if(Math.hypot(tx-e.x,ty-e.y)<=speed*elapsed){
             moveEntity(e,tx,ty);
             if(Math.hypot(tx-e.x,ty-e.y)<.0001){e.path=List.of();return true;}
@@ -776,9 +778,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             var path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
             double length=0;float px=e.x,py=e.y;for(var point:path){length+=Math.hypot(point.x()-px,point.y()-py);px=point.x();py=point.y();}
             if(length<=maxPath)e.path=path;
-            else if(partial){
-                // Native Move requests partial paths and replans when each bounded
-                // path ends. maxPathLength is not a maximum distance to its goal.
+            else{
                 var prefix=new ArrayList<ScenePathing.Point>();float remaining=maxPath;px=e.x;py=e.y;
                 for(var point:path){float distance=(float)Math.hypot(point.x()-px,point.y()-py);if(distance<=remaining){prefix.add(point);remaining-=distance;px=point.x();py=point.y();}
                     else{if(remaining>0)prefix.add(new ScenePathing.Point(px+(point.x()-px)*remaining/distance,py+(point.y()-py)*remaining/distance));break;}}
@@ -826,7 +826,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         boolean complete=switch(step){
             case SceneScript.Wait wait->stamp-e.scriptStarted>wait.millis();
             case SceneScript.Condition condition->condition.name().isEmpty()||variable(condition.name(),new SceneActions.LogicTarget("source",""),stamp,"actor:"+e.id,"actor:"+e.id);
-            case SceneScript.Move move->scriptMove(e,move.tag(),move.maxPath(),e.spec.number("turn-rate",0),stamp,elapsed,true);
+            case SceneScript.Move move->scriptMove(e,move.tag(),move.maxPath(),e.spec.number("turn-rate",0),stamp,elapsed);
             case SceneScript.Rotate ignored->scriptRotate(e,e.scriptRotation,elapsed,e.spec.number("turn-rate",0));
             case SceneScript.Action action->{var prepared=e.scriptActions.computeIfAbsent(e.scriptStep,index->actions.prepare(action.action()));actions.perform(prepared,stamp,"actor:"+e.id,"actor:"+e.id);yield true;}
             case SceneScript.Attack ignored->{if(e.activity>=4)move(e,stamp,elapsed,players);yield e.activity==0;}

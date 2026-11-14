@@ -26,13 +26,16 @@ public final class SceneMovementScriptTest {
             wentAround|=Math.abs(pose.y())>.5;
         }
         check(wentAround&&Math.abs(detour.actors().getFirst().x()-3)<.0001,"script uses a collision-legal detour to its marker");
-        fields.put("script.max-path","1");var blocked=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("10",0,0,0,new SceneContent.Spec(fields)),goal),Map.of()),SceneWeaponsTest.openTerrain());
-        for(int stamp=1000;stamp<4000;stamp+=50)blocked.advance(stamp,List.of());
-        check(blocked.actors().getFirst().x()==0,"unreachable/overlong authored path does not teleport to its marker");
+        fields.put("script.max-path","1");var distant=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("10",0,0,0,new SceneContent.Spec(fields)),goal),Map.of()),SceneWeaponsTest.openTerrain());
+        float progressed=0;
+        for(int stamp=1000;stamp<6000;stamp+=50){distant.advance(stamp,List.of());float x=distant.actors().getFirst().x();
+            check(x>=progressed-.0001&&x-progressed<=.101f,"partial path segments move at normal speed, never teleport");progressed=x;}
+        var arrived=distant.actors().getFirst();
+        check(Math.abs(arrived.x()-3)<.0001&&Math.abs(arrived.rotation()-Math.PI/2)<.0001,"a goal farther than max-path is reached through bounded replanned partial paths");
         try{new SceneMovementScript(-1,"goal",10,0,1);throw new AssertionError("Invalid wait accepted");}catch(IllegalArgumentException expected){}
         try{new SceneMovementScript(1,"goal",10,Float.NaN,1);throw new AssertionError("Invalid direction accepted");}catch(IllegalArgumentException expected){}
         fields.put("health","10");fields.put("script.kind","unknown");
         try{new SceneActions.Spawn(fields);throw new AssertionError("Unknown positive-health spawn script accepted");}catch(IllegalArgumentException expected){}
-        System.out.println("PASS: native one-step-per-tick wait/move/rotate, exact wait boundary, collision/speed integration, legal goal arrival, final facing, instance isolation and no overlong-path teleport");
+        System.out.println("PASS: native one-step-per-tick wait/move/rotate, exact wait boundary, collision/speed integration, legal goal arrival, final facing, instance isolation and bounded partial-path replanning to distant goals");
     }
 }
