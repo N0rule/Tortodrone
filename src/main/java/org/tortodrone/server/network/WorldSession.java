@@ -422,7 +422,10 @@ final class WorldSession implements AutoCloseable {
         if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.LISTENER_PREFIX+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid auction/mail listener");
         boolean valid=auction?switch(method){case 1->a.size()==3&&a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 2,7->a.size()==2&&a.get(0) instanceof Long;case 3,4->a.size()==1;case 5->a.size()==3&&a.get(0) instanceof SessionDecoder.AuctionSearch&&a.get(1) instanceof Integer;case 6->a.size()==7&&a.get(0) instanceof Long&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer&&a.get(3) instanceof Integer&&a.get(4) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.auction.data.Duration")&&a.get(5) instanceof Boolean;default->false;}:a.size()==2&&(method==5?a.get(0) instanceof SessionDecoder.SentMail:method==6?a.get(0)==null||a.get(0) instanceof long[]:method==11?a.get(0) instanceof long[]:a.get(0) instanceof Long);
         if(!valid)throw new SessionDecoder.Rejected("Invalid auction/mail arguments");
-        try{if(closed||!selected()||!entered||!subscribed)throw new IOException("Enter a scene first");
+        // The stock uplink window serves mail wherever a knight is selected; the auction
+        // station is a town place, so its operations keep the scene requirement.
+        try{if(closed||!selected())throw new IOException("m.internal_error");
+            if(auction&&(!entered||!subscribed))throw new IOException("Enter a scene first");
             if(trades!=null&&trades.active(tradeMember)&&(auction&&(method==1||method==2||method==6)||mail&&(method==1||method==2||method==5)))throw new IOException("Finish the trade first");
             var house=characters.auction(scenes.town());var result=auction?house.operate(characters.accountId(),knight.id(),authRevision,method,a,roles.gameMaster(),auctionPresence(characters.worldStorageFile())):house.mail(characters.accountId(),knight.id(),authRevision,method,a);
             townChanged(result);if(resultListener)output.send(()->codec.townResult(oid,listener.requestId(),result.result(),profile));else output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
@@ -461,11 +464,11 @@ final class WorldSession implements AutoCloseable {
                 case 4->joinBySecret((String)args.get(0),(Boolean)args.get(1));
                 case 6->setLookingForGroup((Boolean)args.get(0),(SessionDecoder.EnumValue)args.get(1));
                 case 8->{synchronized(this){
-                    requireFriendReady();var friends=characters.friends();friends.remove(characters.accountId(),knight.id(),authRevision,(String)args.get(0));
+                    requireFriendCurrent();var friends=characters.friends();friends.remove(characters.accountId(),knight.id(),authRevision,(String)args.get(0));
                     profile=characters.worldProfile(knight.name(),authRevision,profile);refreshFriends(null,friends.snapshot(),friendPresence(characters.worldStorageFile()));
                 }}
                 default->{synchronized(this){
-                    requireFriendReady();var friends=characters.friends();String name=(String)args.get(0);
+                    requireFriendCurrent();var friends=characters.friends();String name=(String)args.get(0);
                     if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another friend request");
                     friends.request(characters.accountId(),knight.id(),authRevision,name,(String)args.get(1),(String)args.get(2));
                 }}
@@ -587,6 +590,11 @@ final class WorldSession implements AutoCloseable {
     }
     private void requireFriendReady()throws IOException {
         if(closed||!selected()||!entered||!subscribed||portalMove!=null||deferredMove!=null)throw new IOException("Enter a scene first");
+        try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+    }
+    /** Stock social edits (request/unfriend) need only a selected knight; joins still travel. */
+    private void requireFriendCurrent()throws IOException {
+        if(closed||!selected())throw new IOException("m.internal_error");
         try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
     }
     private int friendNamed(String name)throws IOException {

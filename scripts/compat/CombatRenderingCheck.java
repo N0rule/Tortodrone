@@ -52,6 +52,7 @@ public final class CombatRenderingCheck {
     private final boolean peer;
     private final boolean trainingOnly;
     private boolean readyRoomOnly;
+    private boolean readyRoomMailOnly;
     private boolean initialWorldReturnRequested;
     private boolean freshOpening;
     private boolean campStory,campStoryReturn,campProgression,campProgressionReturn;
@@ -147,7 +148,7 @@ public final class CombatRenderingCheck {
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean trainingOnly=Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -168,7 +169,8 @@ public final class CombatRenderingCheck {
         probe.tutorialOnly=probe.freshOpening||Arrays.asList(args).contains("--tutorial-only");
         probe.tutorialEntryOnly=probe.tutorialOnly||Arrays.asList(args).contains("--tutorial-entry-only");
         if(probe.tutorialOnly)probe.tutorialMap=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("appdir")).getParent()).scenes().scene(398);
-        probe.readyRoomOnly=probe.campStory||probe.campStoryReturn||probe.campProgressionReturn||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--opening-return-only");
+        probe.readyRoomOnly=probe.campStory||probe.campStoryReturn||probe.campProgressionReturn||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--opening-return-only");
+        probe.readyRoomMailOnly=Arrays.asList(args).contains("--ready-room-mail-only");
         if(probe.campStory||probe.campStoryReturn||probe.campProgressionReturn)probe.readyRoomDestination=217;
         probe.multiplayerOnly=multiplayerOnly;probe.sharedWorldOnly=sharedWorldOnly;
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
@@ -708,6 +710,65 @@ public final class CombatRenderingCheck {
         var player=app.CZ();var receipt=player.completedMissions.f("securing_camp");
         if(receipt==null||receipt.completed<=0||receipt.difficulty!=null||player.rank.rank!=1||player.rank.subrank!=2||player.prestige!=10||!player.objectives.isEmpty()||itemCount("Rarity/Fire Crystal/Cracked")!=15||itemCount("Rarity/Spark of Life")!=5)throw new AssertionError("Native Securing Camp state/rewards differ");
     }
+    /** One isolated stock-client scenario: the Ready Room Uplink Mail tab must leave Loading. */
+    private void readyRoomMailTick(long now)throws Exception{
+        if(app.CZ()==null||app.Gx()==null)return;
+        var hudType=Class.forName("com.threerings.projectx.client.as");
+        var ctxType=Class.forName("com.threerings.projectx.util.w");
+        var tabType=Class.forName("com.threerings.projectx.client.UplinkWindow$Tab");
+        if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
+            if(started==0)started=now;if(now-started<3_000_000_000L)return;
+            capture("ready-room");
+            stage=1;started=now;
+        }else if(stage==1){
+            // Fresh disposable preferences open the native Uplink window on their own; reuse
+            // exactly that window and switch its tab strip the way a stock player would.
+            var root=app.getRoot();
+            Object window=null;
+            if(root!=null)for(int i=root.getWindowCount()-1;i>=0&&window==null;i--)
+                if(root.getWindow(i) instanceof com.threerings.projectx.client.UplinkWindow uplink)window=uplink;
+            if(window==null){
+                // Fallback: the native i-hotkey action itself opens the mail window.
+                if(now-started>3_000_000_000L){var hud=hudType.getMethod("i",ctxType).invoke(null,app);
+                    if(hud!=null)hud.getClass().getMethod("DV").invoke(hud);}
+                if(now-started>20_000_000_000L)throw new AssertionError("Ready Room uplink window never opened");
+                return;
+            }
+            mailWindow=window;
+            stage=2;started=now;System.out.println("CHECK: native Ready Room uplink window open");
+        }else if(stage==2){
+            // The stock open-mail action O(id): selects the MAIL tab and switches the panel to
+            // its inbox pane, which is what actually issues the native mail headers request.
+            mailWindow.getClass().getMethod("O",long.class).invoke(mailWindow,0L);
+            stage=3;started=now;System.out.println("CHECK: native Ready Room uplink mail open");
+        }else if(stage==3){
+            // The stock list label is m.loading until the headers callback; the empty inbox
+            // label only appears on native success, and the window must still be showing.
+            if(!(Boolean)mailWindow.getClass().getMethod("isAdded").invoke(mailWindow))
+                throw new AssertionError("Ready Room mail window was dismissed during the scenario");
+            String inbox=readyRoomInbox(mailWindow);
+            if(inbox!=null){
+                if(!inbox.isEmpty())throw new AssertionError("Fresh seeded mailbox unexpectedly returned mail: "+inbox);
+                capture("ready-room-mail");finishImages();
+                passed=done=true;System.out.println("PASS: stock graphical Ready Room Mail reaches the native empty inbox instead of staying on Loading");app.shutdown();
+            }
+            if(now-started>20_000_000_000L)throw new AssertionError("Ready Room Mail stayed on Loading; resolved="+readyRoomInbox(mailWindow));
+        }
+    }
+    private Object mailWindow;
+    /** Non-null only once the mailbox list label left m.loading: "" is the native empty inbox. */
+    private String readyRoomInbox(Object window)throws Exception{
+        if(window==null)return null;
+        var panels=field(window,"aPN").get(window);if(panels==null)return null;
+        var panel=field(panels,"aPL").get(panels);if(panel==null)return null;
+        var messages=field(panel,"_msgs").get(panel);
+        var label=(com.threerings.opengl.gui.Label)field(panel,"bMV").get(panel);
+        if(label==null)return null;
+        Object empty=messages.getClass().getMethod("cP",String.class).invoke(messages,"m.empty_inbox");
+        String text=label.getText();
+        if(text==null||text.equals(messages.getClass().getMethod("cP",String.class).invoke(messages,"m.loading")))return null;
+        return text.equals(empty)?"":"mail count "+((Map<?,?>)field(panel,"bMW").get(panel)).size()+" label "+text;
+    }
     private void readyRoomTick(long now)throws Exception{
         if(app.CZ()==null||app.Gx()==null)return;
         if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
@@ -752,11 +813,12 @@ public final class CombatRenderingCheck {
                 return;
             }
             // Fresh disposable preferences show Uplink automatically. Close that native
-            // startup window through its normal API before exercising the controller.
-            var root=app.getRoot();
+            // startup window through its normal API before exercising the controller —
+            // except in the mail scenario, which reuses exactly that native window.
+            if(!readyRoomMailOnly){var root=app.getRoot();
             if(root!=null)for(int window=root.getWindowCount()-1;window>=0;window--){
                 if(root.getWindow(window) instanceof com.threerings.projectx.client.UplinkWindow uplink)uplink.dismiss();
-            }
+            }}
             if(now-lastStatus>5_000_000_000L){
                 lastStatus=now;Object current=app.Gx();
                 System.out.println("STATE: peer="+peer+" stage="+stage+" actors="+authoritative.size()
@@ -764,7 +826,7 @@ public final class CombatRenderingCheck {
                     +(stage==20?konwayState(viewPawn()):""));
             }
             if(tutorialEntryOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}tutorialEntryTick(now);return;}
-            if(readyRoomOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}if(campStory&&stage>=2)campStoryTick(new View(app.Gx()),now);else readyRoomTick(now);return;}
+            if(readyRoomOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}if(campStory&&stage>=2)campStoryTick(new View(app.Gx()),now);else if(readyRoomMailOnly)readyRoomMailTick(now);else readyRoomTick(now);return;}
             if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(app.CZ()!=null&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE){
                 if(!initialWorldReturnRequested&&!(app.GK().mN()||app.GB())&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())){
