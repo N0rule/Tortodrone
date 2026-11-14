@@ -40,8 +40,12 @@ public final class CrashSiteBoxesTest {
             .findFirst().orElseThrow().id();
         healthWorld.damage(hit(1,false),health.x(),health.y(),0,stamp,219);
         check(healthWorld.actor(healthId)==null,"the tutorial heart block is destroyed by a normal hit");
-        var heart=healthWorld.actors().stream().filter(a->a.config().name().equals(HEART)&&a.entity().destroyed()==Integer.MAX_VALUE)
-            .findFirst().orElseThrow();
+        // The official tutorial table (depth 0 band {2,2}, value offset -1, spent largest tier
+        // first) draws value 1, so the block's whole loot is exactly one tier-1 Heart.
+        var hearts=healthWorld.actors().stream().filter(a->a.config().name().startsWith("Item/Consumable/Hearts/Heart")
+            &&a.entity().destroyed()==Integer.MAX_VALUE).toList();
+        check(hearts.size()==1,"the official tutorial table drops exactly one heart at depth 0");
+        var heart=hearts.getFirst();
         check(Math.abs(heart.x()-health.x())<1e-3f&&Math.abs(heart.y()-health.y())<1e-3f,"the heart drops where the block stood");
         var knight=new ActorState(219,1001,"Knight",0,stamp,health.x(),health.y(),0,0,0,0,stamp,
             new StarterCatalog.Model("Character/PC/Level",Map.of()),false);
