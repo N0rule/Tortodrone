@@ -71,6 +71,15 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
         SceneActorTemplates.validate(entries,actorTemplates);
     }
     public static SceneContent empty(){return new SceneContent(List.of(),Map.of());}
+    /** Prepared monster spawn fields omit the native config's impulse level. Restore the
+     * installed client's level from the shared table so damage impulses respect it. */
+    public Spec actor(Spec spec){
+        if(!spec.text("kind","").equals("Monster")||spec.fields().containsKey("impulse-level"))return spec;
+        Float level=stats.get("monster."+spec.text("config","")+".impulse-level");
+        if(level==null)return spec;
+        var fields=new TreeMap<>(spec.fields());fields.put("impulse-level",Float.toString(level));
+        return new Spec(fields);
+    }
     /** Placed NPCs own one actor binding; scene-started dialogues require reachable authored actions. */
     public void validateConversations()throws IOException {
         var pending=new ArrayDeque<String>();var reached=new HashSet<String>();
@@ -111,7 +120,7 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
                 entries.add(new Entry(key,x,y,rotation,spec));
             }
             for(String key:p.stringPropertyNames())if(key.startsWith("scale."))scales.put(key.substring(6),finite(Float.parseFloat(p.getProperty(key))));
-            for(String key:p.stringPropertyNames())if(key.startsWith("destination.")||key.startsWith("player.")||key.startsWith("gear.")||key.startsWith("status-power.")||key.startsWith("status-chance."))stats.put(key,finite(Float.parseFloat(p.getProperty(key))));
+            for(String key:p.stringPropertyNames())if(key.startsWith("destination.")||key.startsWith("player.")||key.startsWith("gear.")||key.startsWith("monster.")||key.startsWith("status-power.")||key.startsWith("status-chance."))stats.put(key,finite(Float.parseFloat(p.getProperty(key))));
             var items=new TreeMap<String,Spec>();
             for(String id:p.getProperty("items","").split(",")){
                 if(id.isBlank())continue;if(items.size()>=256)throw new IllegalArgumentException("Too many scene items");

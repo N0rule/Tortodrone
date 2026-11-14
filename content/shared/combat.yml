@@ -10067,6 +10067,18 @@ properties:
         '7': {damage: {BOMB: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}, HANDGUN: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}, NONE: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}, SWORD: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}}, defense: {elemental: 29.0, normal: 0.0, piercing: 29.0, shadow: 0.0}, health-bonus: 40, status-resist: {'2': 30, '4': 30}}
         '8': {damage: {BOMB: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}, HANDGUN: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}, NONE: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}, SWORD: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}}, defense: {elemental: 32.0, normal: 0.0, piercing: 32.0, shadow: 0.0}, health-bonus: 40, status-resist: {'2': 30, '4': 30}}
         '9': {damage: {BOMB: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}, HANDGUN: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}, NONE: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}, SWORD: {'0': {depth: 0, kind: 3, tagged: {fam_beast: 0.08}, value: 0.08}, count: 1}}, defense: {elemental: 36.0, normal: 0.0, piercing: 36.0, shadow: 0.0}, health-bonus: 40, status-resist: {'2': 30, '4': 30}}
+  monster:
+    # Native DungeonActorConfig.Monster.impulseLevel, read from the installed client.
+    # Prepared scene spawn fields omit it, so the server would otherwise treat every
+    # monster as level 1 and let damage impulses shove immovable turrets and bosses.
+    Character/NPC/Monster/Beast/Chromalisk/Chromalisk Whelp (Intro):
+      impulse-level: 1
+    Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant:
+      impulse-level: 10
+    Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG):
+      impulse-level: 20
+    Character/NPC/Monster/Slime/Jelly Cube (Intro):
+      impulse-level: 1
   player:
     base-health: 200
     collision-mask: 43

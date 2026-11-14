@@ -77,7 +77,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final Map<Integer,Integer> hazardHits=new HashMap<>();
         final Set<Integer> refusedPickups=new HashSet<>();
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
-            this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;
+            spec=content.actor(spec);this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;
             if(spec.fields().containsKey("door-increments")){
                 doorIncrements=spec.integer("door-increments",0);
                 if(!spec.text("kind","").equals("Door")||doorIncrements<1||doorIncrements>1_000_000)throw new IllegalArgumentException("Invalid native door counter");
