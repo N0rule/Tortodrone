@@ -1528,8 +1528,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     applyImpulse(e,region,x,y,rotation,stamp);
                     if(e.health==0)e.status.clear();
                     int sourceId=source!=null&&(source.kind.equals("DungeonLift")||source.kind.equals("Bomb"))?source.owner:owner;
+                    // Native MonsterLogic promotes the damage summary's performance (weak against
+                    // the target's defenses, strong into them) by the dealt fraction of its health.
+                    String tier=SceneDamage.performance(accepted,content,new SceneContent.Spec(defense),multiplier,gear,relative);
                     float fraction=dealt/e.spec.number("health",1);
-                    feedback.accept(new SceneCombatEvent(0,stamp,e.id,dealt,sourceId,fraction>.4f?"NORMAL_LARGE":fraction>.2f?"NORMAL_MEDIUM":"NORMAL_SMALL"));
+                    feedback.accept(new SceneCombatEvent(0,stamp,e.id,dealt,sourceId,e.x,e.y,e.rotation,tier+(fraction>.4f?"_LARGE":fraction>.2f?"_MEDIUM":"_SMALL")));
                 }
             }else if(amount>0&&(e.kind.startsWith("Block")||e.spec.text("damage-action","").equals("destroy")))blockHit(e,stamp);
         }

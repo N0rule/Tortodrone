@@ -1,6 +1,5 @@
 package org.tortodrone.server.network;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -58,14 +57,19 @@ public final class JellyMeleeSceneTest {
                 // Phase one - stand still like the reported AFK reproduction until a jelly
                 // lunge lands through the whole session pipeline.
                 float lowest=Float.MAX_VALUE;
+                var combat=new ArrayList<SceneCombatEvent>();
+                SceneSimulation.Snapshot previousSnapshot=null;
+                final int[] pawnId={0};
                 long afkEnd=System.nanoTime()+150_000_000_000L;
                 while(System.nanoTime()<afkEnd) {
                     Thread.sleep(100);
                     var failure=simulation.failure();
                     if(failure!=null){failure.printStackTrace();throw new AssertionError("Scene simulation crashed during the AFK phase: "+failure);}
                     SceneSimulation.Snapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
+                    combat.addAll(snapshot.combatEventsSince(previousSnapshot));previousSnapshot=snapshot;
                     var player=snapshot.players().stream().filter(p->p.entity()==null&&p.pet()==null).findFirst().orElse(null);
                     if(player!=null) {
+                        pawnId[0]=player.id();
                         var state=snapshot.health(player.id());
                         if(state!=null)lowest=Math.min(lowest,state.current());
                     }
@@ -84,6 +88,7 @@ public final class JellyMeleeSceneTest {
                     var failure=simulation.failure();
                     if(failure!=null){failure.printStackTrace();throw new AssertionError("Scene simulation crashed during the jelly fight: "+failure);}
                     SceneSimulation.Snapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
+                    combat.addAll(snapshot.combatEventsSince(previousSnapshot));previousSnapshot=snapshot;
                     if(System.nanoTime()-lastFrame>100_000_000L) {
                         lastFrame=System.nanoTime();
                         var pawn=snapshot.players().stream().filter(p->p.entity()==null&&p.pet()==null).findFirst().orElse(null);
@@ -113,14 +118,14 @@ public final class JellyMeleeSceneTest {
                     if(monsterDamaged)break;
                 }
                 check(monsterDamaged,"the knight's sword landed a weapon impulse on the wave");
-                // Combat feedback rides PartyObject$DamageEvent events on the subscribed party
-                // object: the knight's own posts carry packed type breakdowns and a literal zero
-                // source, and his sword hits on monsters carry the dealt amount with his pawn
-                // as the source (the client reserves the numbers for the attacker's client).
+                // Combat feedback rides the Feedback/Damage scene effect from the fight's own
+                // snapshots: the knight's own posts carry packed type breakdowns and a literal
+                // zero source, and his sword hits on monsters carry the dealt amount with his
+                // pawn as the source (the client reserves the numbers for the attacker's client).
                 var profile=(WorldProfile)field(world,"profile");
-                var damage=socket.damageEvents();
-                check(damage.stream().anyMatch(e->e[1]==knight.id()&&e[3]==0&&e[2]!=0),"the knight's lost hit rides a party damage event with a packed breakdown and a literal zero source");
-                check(damage.stream().anyMatch(e->e[3]==profile.worldId()&&e[2]>0),"the knight's sword hit rides a party damage event attributed to his pawn with a plain dealt amount");
+                check(combat.stream().anyMatch(e->e.actor()==pawnId[0]&&e.source()==0&&e.amount()!=0),"the knight's lost hit carries a packed breakdown and a literal zero source");
+                check(combat.stream().anyMatch(e->e.source()==profile.worldId()&&e.amount()>0),"the knight's sword hit is attributed to his pawn with a plain dealt amount");
+                check(combat.stream().allMatch(e->Math.abs(e.x())<1000f&&Math.abs(e.y())<1000f),"every feedback hit records a scene position");
                 // Fights continue on later ticks (impulse travel, death, pickups): keep
                 // the scene alive past the observed hits.
                 long settle=System.nanoTime()+10_000_000_000L;
@@ -137,24 +142,6 @@ public final class JellyMeleeSceneTest {
     private static Object field(WorldSession world,String name)throws Exception {synchronized(world){var f=WorldSession.class.getDeclaredField(name);f.setAccessible(true);return f.get(world);}}
     private static void move(WorldSession world,SceneCatalog.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));}
     private static final class RecordingSocket extends Socket {
-        private final ByteArrayOutputStream bytes=new ByteArrayOutputStream();
-        @Override public OutputStream getOutputStream(){return bytes;}
-        /** Damage events end with the UTF "damage" kind after the party oid, so each hit's
-         * trailing fields (timestamp, actor, amount, source) are read from there; the enum
-         * ordinal behind the interned performance type is ignored. */
-        java.util.List<int[]> damageEvents(){
-            var all=bytes.toString(java.nio.charset.StandardCharsets.ISO_8859_1);
-            var events=new ArrayList<int[]>();
-            for(int at=all.indexOf("\u0000\u0006damage");at>=0;at=all.indexOf("\u0000\u0006damage",at+8)){
-                if(at<6)continue;
-                int party=intAt(all,at-5);
-                if(party<=0||all.charAt(at-1)!=1)continue; // Require the UTF string presence flag.
-                events.add(new int[]{party,intAt(all,at+12),intAt(all,at+16),intAt(all,at+20)});
-            }
-            return events;
-        }
-        private static int intAt(String s,int at){
-            return (s.charAt(at)&255)<<24|(s.charAt(at+1)&255)<<16|(s.charAt(at+2)&255)<<8|(s.charAt(at+3)&255);
-        }
+        @Override public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}
     }
 }

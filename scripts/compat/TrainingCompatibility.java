@@ -190,14 +190,17 @@ public final class TrainingCompatibility {
         System.out.println("PASS: native party enables pickups and four-slot quickbar updates preserve transient item IDs");
     }
     private static void damageFeedback()throws Exception {
-        for(var sample:List.of(new SceneCombatEvent(1,100,219,(7<<20)+1,0,"NORMAL"),
-                new SceneCombatEvent(2,150,1000000000,43,219,"NORMAL_LARGE"))){
-            var notification=(com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().partyDamage(640,sample));
-            var event=(com.threerings.projectx.dungeon.data.PartyObject.DamageEvent)notification.yj();
-            if(event.QY()!=sample.timestamp()||event.QU()!=sample.actor()||event.QZ()!=sample.amount()||event.Qx()!=sample.source()
-                    ||!event.Ra().name().equals(sample.performance())||!event.getName().equals("damage"))throw new AssertionError("Native party damage feedback mismatch");
+        for(var sample:List.of(new SceneCombatEvent(1,100,219,(7<<20)+1,0,12.5f,-40.25f,0f,"NORMAL"),
+                new SceneCombatEvent(2,150,1000000000,43,219,-1.25f,-53.5f,1.5f,"NORMAL_LARGE"))){
+            var notification=(com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().sceneDelta(2114,3002,0,(short)30,88,sample.timestamp(),(short)50,List.of(),List.of(),new int[0],java.util.Map.of(),false,List.of(),List.of(sample)));
+            var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)notification.yj();
+            var effect=(com.threerings.projectx.dungeon.data.effect.DamageEffect)delta.afg()[0];
+            var target=(com.threerings.tudey.data.EntityKey.Actor)effect.aeX();
+            if(effect.adD()!=sample.timestamp()||target.vD()!=sample.actor()||effect.Sv()!=sample.amount()||effect.Rf()!=sample.source()
+                    ||!effect.Sw().name().equals(sample.performance())||effect.Su()||effect.lr()!=0)throw new AssertionError("Native damage feedback mismatch");
+            if(!"Feedback/Damage".equals(effect.MX().getName())||effect.tG().x!=sample.x()||effect.tG().y!=sample.y()||effect.tH()!=sample.rotation())throw new AssertionError("Native damage feedback is not the Feedback/Damage entry at the hit's position");
         }
-        System.out.println("PASS: native party damage events preserve timestamp, target, encoded knight/raw monster amounts, source and performance");
+        System.out.println("PASS: native Feedback/Damage scene effects preserve timestamp, target, encoded knight/raw monster amounts, source, performance and the hit position");
     }
     private static void progress()throws Exception{
         var knight=new Knight(1,"Rank-Fixture","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);

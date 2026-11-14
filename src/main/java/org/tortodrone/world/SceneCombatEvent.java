@@ -1,4 +1,6 @@
 package org.tortodrone.world;
 
-/** An instance-owned native party notification; player amounts use the knight HUD encoding. */
-public record SceneCombatEvent(long sequence,int timestamp,int actor,int amount,int source,String performance) { }
+/** An instance-owned combat feedback; player amounts use the knight HUD encoding. The hit
+ *  position is recorded at land time: the client's damage effect attaches numbers to the
+ *  target's sprite when it is on screen and falls back to this translation when it is not. */
+public record SceneCombatEvent(long sequence,int timestamp,int actor,int amount,int source,float x,float y,float rotation,String performance) { }

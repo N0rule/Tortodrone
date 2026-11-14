@@ -76,6 +76,27 @@ public final class SceneDamage {
         }
         return total;
     }
+    /** The native DamageSummary.getPerformance classification (applyDefense's ratio): every
+     *  dealt part is measured against the part the same attack would have taken against the
+     *  target's NORMAL defense alone, so an attack into weaker-than-normal defenses rates
+     *  STRONG (over 1.15), into stronger defenses WEAK (under 0.9) and otherwise NORMAL.
+     *  MonsterLogic promotes this base by the dealt fraction before posting feedback. */
+    public static String performance(Object damage,SceneContent content,SceneContent.Spec defense,float multiplier,GearStats.Damage gear,float relative){
+        var raw=new java.util.HashMap<String,Float>();rawParts(damage,content,raw,multiplier,1);
+        float normal=defense.number("defense.normal",0),baseline=0,dealt=0;
+        for(var part:raw.entrySet()){
+            float value=modified(gear.apply(part.getValue(),defense.text("tags","")),relative);
+            float valueDefense=part.getKey().equals("unblockable")?0:defense.number("defense."+part.getKey(),0);
+            if(valueDefense<=0){baseline+=value;dealt+=value;}
+            else{baseline+=mitigate(value,normal);dealt+=mitigate(value,valueDefense);}
+        }
+        float ratio=baseline>0?dealt/baseline:0;
+        return ratio<.9f?"WEAK":ratio>1.15f?"STRONG":"NORMAL";
+    }
+    /** The plain gear-less performance of an attack, for callers with no equipment bonuses. */
+    public static String performance(Object damage,SceneContent content,SceneContent.Spec defense){
+        return performance(damage,content,defense,1,GearStats.Damage.NONE,1);
+    }
     /** The native knight HUD packs four damage-type pip counts below the HP total. */
     public static int playerFeedback(Object damage,SceneContent content,SceneContent.Spec defense,int amount) {
         return playerFeedback(damage,content,defense,amount,1);

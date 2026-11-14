@@ -20,6 +20,7 @@ import org.tortodrone.world.ActorState;
 import org.tortodrone.world.SceneRegistry;
 import org.tortodrone.world.SceneCatalog;
 import org.tortodrone.world.SceneEffect;
+import org.tortodrone.world.SceneCombatEvent;
 import org.tortodrone.world.FireCatalog;
 import org.tortodrone.world.PartyRegistry;
 
@@ -1279,13 +1280,17 @@ public final class SessionCodec {
     }
     public byte[] sceneDelta(int oid,int sceneOid,int acknowledge,short ping,int reference,int timestamp,
             short elapsed,List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline,boolean interior,List<SceneEffect> effects)throws IOException {
+        return sceneDelta(oid,sceneOid,acknowledge,ping,reference,timestamp,elapsed,added,updated,removed,baseline,interior,effects,List.of());
+    }
+    public byte[] sceneDelta(int oid,int sceneOid,int acknowledge,short ping,int reference,int timestamp,
+            short elapsed,List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline,boolean interior,List<SceneEffect> effects,List<SceneCombatEvent> combat)throws IOException {
         return frame(out -> {
             type(out,PREFIX+"EventNotification");out.writeShort(-1);type(out,"com.threerings.tudey.dobj.SceneDeltaEvent");out.writeInt(oid);
             out.writeInt(sceneOid);out.writeInt(acknowledge);out.writeShort(ping);out.writeInt(reference);out.writeInt(timestamp);out.writeShort(elapsed);
             if(added.isEmpty())out.writeShort(0);else{type(out,WireTypes.ACTOR_ARRAY);out.writeInt(added.size());for(var a:added)actor(out,a,interior,oid);}
             if(updated.isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.tudey.dobj.ActorDelta;");out.writeInt(updated.size());out.writeShort((updated.size()+7)/8);for(int i=0;i<updated.size();i+=8)out.writeByte((1<<Math.min(8,updated.size()-i))-1);for(var a:updated)actorDelta(out,a,baseline.get(a.id()),interior,oid);}
             out.writeBoolean(true);out.writeInt(removed.length);for(int id:removed)out.writeInt(id);
-            if(effects.isEmpty())out.writeShort(0);else {type(out,"[Lcom.threerings.tudey.data.effect.Effect;");out.writeInt(effects.size());for(var effect:effects)effect(out,effect);}
+            if(effects.isEmpty()&&combat.isEmpty())out.writeShort(0);else {type(out,"[Lcom.threerings.tudey.data.effect.Effect;");out.writeInt(effects.size()+combat.size());for(var effect:effects)effect(out,effect);for(var damage:combat)effect(out,damage);}
         });
     }
 
@@ -1616,24 +1621,26 @@ public final class SessionCodec {
             type(out,"com.threerings.projectx.dungeon.data.Status");out.writeInt(playerOid);conditions(out,status);
             primitiveInts(out,status.expires().isEmpty()?null:status.expires().stream().mapToInt(Integer::intValue).toArray());out.writeByte(0);});
     }
-    /** PartyObject$DamageEvent, the native combat feedback channel (MonsterLogic and
-     *  DungeoneerLogic both end a landed hit with PartyObject.actorDamaged): a monster target
-     *  carries the dealt amount and the attacking pawn's actor id, while the knight's own post
-     *  carries the packed damage-type breakdown and a literal zero source. The 2026 client's
-     *  party-object listeners route the event by actorId: the controlled knight's delegate
-     *  shows his own lost-HP pips and vignette, and every monster sprite shows the gethit
-     *  particle, reserving the floating numbers for the attacker's own client (sourceId equals
-     *  the viewer's pawn). */
-    public byte[] partyDamage(int partyOid,int timestamp,int actorId,int amount,int sourceId,String performance)throws IOException {
-        int ordinal=DAMAGE_PERFORMANCE.indexOf(performance);
-        if(ordinal<0)throw new IOException("Unsupported damage performance: "+performance);
-        return frame(out -> {
-            type(out,PREFIX+"EventNotification");out.writeShort(-1);
-            type(out,"com.threerings.projectx.dungeon.data.PartyObject$DamageEvent");out.writeInt(partyOid);
-            string(out,"damage");
-            out.writeInt(timestamp);out.writeInt(actorId);out.writeInt(amount);out.writeInt(sourceId);
-            value(out,new SessionDecoder.EnumValue("com.threerings.projectx.dungeon.util.DamageSummary$Performance",ordinal));
-        });
+    /** DamageEffect, the current combat feedback channel: the party-object DamageEvent of the
+     *  2011 and 2022 clients (which the PartyObject$DamageEvent crash showed is gone from the
+     *  live client build) moved into the tudey effect stream as the Feedback/Damage entry the
+     *  shipped effect.dat defines. The current client's actor sprites implement its listener:
+     *  a damaged monster sprite plays the gethit particle and the attacker's own client draws
+     *  the floating number, while a damaged knight sprite decodes the packed per-type
+     *  breakdown into his own pips. Amount encodings ride the event unchanged: a monster's
+     *  dealt amount with its attacking pawn as source, a knight's packed breakdown with the
+     *  native literal zero source. */
+    private void effect(DataOutputStream out,SceneCombatEvent damage)throws IOException {
+        int ordinal=DAMAGE_PERFORMANCE.indexOf(damage.performance());
+        if(ordinal<0)throw new IOException("Unsupported damage performance: "+damage.performance());
+        type(out,"com.threerings.projectx.dungeon.data.effect.DamageEffect");
+        value(out,new StarterCatalog.Model("Feedback/Damage",Map.of()));
+        out.writeInt(damage.timestamp());
+        type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(damage.actor());
+        vector(out,damage.x(),damage.y());out.writeFloat(damage.rotation());
+        out.writeInt(0); // Client oid: a shared effect, never a private prefire.
+        out.writeBoolean(false);out.writeInt(damage.amount());out.writeInt(damage.source());
+        value(out,new SessionDecoder.EnumValue("com.threerings.projectx.dungeon.util.DamageSummary$Performance",ordinal));
     }
     private static final List<String> DAMAGE_PERFORMANCE=List.of(
         "WEAK","NORMAL","STRONG","WEAK_SMALL","WEAK_MEDIUM","WEAK_LARGE",

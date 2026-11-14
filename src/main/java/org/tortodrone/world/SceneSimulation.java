@@ -459,7 +459,7 @@ public final class SceneSimulation {
     private long combatSequence;
     private void feedback(SceneCombatEvent event){
         if(combatEvents.size()>=1024)combatEvents.removeFirst();
-        combatEvents.addLast(new SceneCombatEvent(++combatSequence,event.timestamp(),event.actor(),event.amount(),event.source(),event.performance()));
+        combatEvents.addLast(new SceneCombatEvent(++combatSequence,event.timestamp(),event.actor(),event.amount(),event.source(),event.x(),event.y(),event.rotation(),event.performance()));
     }
     public synchronized void fires(FireCatalog catalog){weapons.catalog(catalog);}
     private ScheduledExecutorService timer;
@@ -504,7 +504,7 @@ public final class SceneSimulation {
             member.movement.status(member.health.status().modifiers());
             // The native knight post carries a literal zero source: no hit on a knight says who
             // dealt it, so the client's own-pawn delegate owns the whole display.
-            if(result.amount()>0)feedback(new SceneCombatEvent(0,hit.timestamp(),hit.actor(),result.feedback(),0,"NORMAL"));
+            if(result.amount()>0)feedback(new SceneCombatEvent(0,hit.timestamp(),hit.actor(),result.feedback(),0,member.movement.x(),member.movement.y(),member.movement.rotation(),"NORMAL"));
         }});
         entities.conversations((definition,source,stamp,target)->{
             for(var member:members.values())if(member.entered&&(target==0||target==member.appearance.id()))member.pendingConversation=new ConversationRequest(definition,source,stamp);
