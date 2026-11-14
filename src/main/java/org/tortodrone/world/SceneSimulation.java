@@ -85,6 +85,19 @@ public final class SceneSimulation {
                 if(data!=null&&old!=null&&(actor.activity()!=old.activity()||actor.activityStarted()!=old.activityStarted()
                         ||!Objects.equals(data,old.sceneKnight()==null?null:old.sceneKnight().activityData())))return true;
             }
+            // A dying monster's first record is data-bearing the same way: the stock
+            // client's delayed-time ActorHistory needs the activity-2 transition and
+            // the destroyed stamp to run the death animation and fire the config's
+            // destructionTransient before the removal record arrives. Native deltas
+            // every tick, so coalescing must not eat the dying window.
+            for(var actor:actors){
+                if(actor.player())continue;
+                var entity=actor.entity();
+                var old=previous.byId.get(actor.id());
+                if(entity==null||old==null||old.entity()==null)continue;
+                if(actor.activity()==2&&old.activity()!=2)return true;
+                if(entity.destroyed()!=Integer.MAX_VALUE&&old.entity().destroyed()==Integer.MAX_VALUE)return true;
+            }
             return false;
         }
         public Delta delta(Snapshot previous) {
