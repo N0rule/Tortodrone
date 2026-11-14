@@ -489,7 +489,9 @@ public final class SceneSimulation {
             if(result.amount()>0&&hit.impulse()!=null&&member.health.alive()&&member.combat!=null)member.combat.impulse(hit.impulse());
             member.updateLife(hit.timestamp());
             member.movement.status(member.health.status().modifiers());
-            if(result.amount()>0)feedback(new SceneCombatEvent(0,hit.timestamp(),hit.actor(),result.feedback(),hit.source(),"NORMAL"));
+            // The native knight post carries a literal zero source: no hit on a knight says who
+            // dealt it, so the client's own-pawn delegate owns the whole display.
+            if(result.amount()>0)feedback(new SceneCombatEvent(0,hit.timestamp(),hit.actor(),result.feedback(),0,"NORMAL"));
         }});
         entities.conversations((definition,source,stamp,target)->{
             for(var member:members.values())if(member.entered&&(target==0||target==member.appearance.id()))member.pendingConversation=new ConversationRequest(definition,source,stamp);

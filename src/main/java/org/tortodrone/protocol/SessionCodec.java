@@ -1616,6 +1616,28 @@ public final class SessionCodec {
             type(out,"com.threerings.projectx.dungeon.data.Status");out.writeInt(playerOid);conditions(out,status);
             primitiveInts(out,status.expires().isEmpty()?null:status.expires().stream().mapToInt(Integer::intValue).toArray());out.writeByte(0);});
     }
+    /** PartyObject$DamageEvent, the native combat feedback channel (MonsterLogic and
+     *  DungeoneerLogic both end a landed hit with PartyObject.actorDamaged): a monster target
+     *  carries the dealt amount and the attacking pawn's actor id, while the knight's own post
+     *  carries the packed damage-type breakdown and a literal zero source. The 2026 client's
+     *  party-object listeners route the event by actorId: the controlled knight's delegate
+     *  shows his own lost-HP pips and vignette, and every monster sprite shows the gethit
+     *  particle, reserving the floating numbers for the attacker's own client (sourceId equals
+     *  the viewer's pawn). */
+    public byte[] partyDamage(int partyOid,int timestamp,int actorId,int amount,int sourceId,String performance)throws IOException {
+        int ordinal=DAMAGE_PERFORMANCE.indexOf(performance);
+        if(ordinal<0)throw new IOException("Unsupported damage performance: "+performance);
+        return frame(out -> {
+            type(out,PREFIX+"EventNotification");out.writeShort(-1);
+            type(out,"com.threerings.projectx.dungeon.data.PartyObject$DamageEvent");out.writeInt(partyOid);
+            string(out,"damage");
+            out.writeInt(timestamp);out.writeInt(actorId);out.writeInt(amount);out.writeInt(sourceId);
+            value(out,new SessionDecoder.EnumValue("com.threerings.projectx.dungeon.util.DamageSummary$Performance",ordinal));
+        });
+    }
+    private static final List<String> DAMAGE_PERFORMANCE=List.of(
+        "WEAK","NORMAL","STRONG","WEAK_SMALL","WEAK_MEDIUM","WEAK_LARGE",
+        "NORMAL_SMALL","NORMAL_MEDIUM","NORMAL_LARGE","STRONG_SMALL","STRONG_MEDIUM","STRONG_LARGE");
     private void projectileDelta(DataOutputStream out,ActorState actor)throws IOException {
         var p=actor.projectile();boolean bullet=p.nativeType().equals("BULLET");
         out.writeInt(actor.id());type(out,p.nativeType().equals("ACTOR")?WireTypes.ACTOR:"com.threerings.projectx.dungeon.data.actor."+p.nativeClass());

@@ -2072,6 +2072,12 @@ final class WorldSession implements AutoCloseable {
         short elapsed=(short)Math.max(1,Math.min(Short.MAX_VALUE,stamp-lastStamp));
         output.send(()->codec.sceneDelta(oid,scene.oid(),acknowledge,ping,reference,stamp,elapsed,
             delta.added(),delta.updated(),delta.removed(),delta.baseline(),!scene.map().town(),effects));
+        // Combat feedback rides the party object like native PartyObject.actorDamaged: monster
+        // damage numbers for each attacker's client, lost-HP pips for each hit knight. A scene
+        // without a subscribed party (a town has no party object) carries nothing, exactly as
+        // native party-less floors post nothing.
+        if(subscribedPartyOid!=0)for(var combat:current.combatEventsSince(lastSnapshot))
+            output.send(()->codec.partyDamage(subscribedPartyOid,combat.timestamp(),combat.actor(),combat.amount(),combat.source(),combat.performance()));
         var currentOwn=current.players().stream().filter(a->a.clientOid()==oid).findFirst().orElse(null);
         var health=currentOwn==null?null:current.health(currentOwn.id());
         var previousOwn=lastSnapshot==null?null:lastSnapshot.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
