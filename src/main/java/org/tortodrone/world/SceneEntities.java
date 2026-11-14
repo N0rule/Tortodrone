@@ -809,12 +809,24 @@ public final class SceneEntities implements SceneWeapons.Targets {
             Object shape=action.config().arguments().get("shape");
             if(shape instanceof FireCatalog.DataValue dv&&dv.type().endsWith("$TransformedShape")){
                 Object inner=SceneDamage.field(shape,"shape");
-                if(inner instanceof FireCatalog.DataValue idv&&idv.type().endsWith("$Circle"))
-                    return SceneDamage.number(inner,"radius",0);
+                if(inner instanceof FireCatalog.DataValue idv&&idv.type().endsWith("$Circle")){
+                    float radius=SceneDamage.number(inner,"radius",0);
+                    if(radius==1f&&ROUNDHOUSE_MEDIUM_CONFIG.equals(spec.config().name()))radius=ROUNDHOUSE_MEDIUM_RADIUS;
+                    return radius;
+                }
             }
         }catch(java.io.IOException ignored){}
         return Float.MAX_VALUE;
     }
+    /** Export resolution never applies an attack's parameter choices, so the Jelly
+     * Roundhouse's fire reference keeps its blank base Shape (Circle 1.0) while every
+     * Jelly Cube (Intro) resolves Damage Region=Medium, Circle 1.5. Medium is verified
+     * against the installed client's own choice table and matches the archive's
+     * identical stripped-RegionConfig reconstruction for the Ice Cube (WORKLOG
+     * 2026-10-29 lane/w5-ai). Restore the resolved radius until re-preparation can
+     * carry the applied choice in the native bindings. */
+    private static final String ROUNDHOUSE_MEDIUM_CONFIG="Character/NPC/Monster/Slime/Jelly Cube (Intro)";
+    private static final float ROUNDHOUSE_MEDIUM_RADIUS=1.5f;
     private void scriptedProgram(Entity e,int stamp,float elapsed){
         e.flags&=~2;if(e.scriptStep>=e.program.steps().size())return;
         var step=e.program.steps().get(e.scriptStep);boolean starting=e.scriptStarted==Integer.MIN_VALUE;
@@ -1440,6 +1452,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
             else if(model!=null)defined=model.arguments().get("value");
             else expansion+=source==null?ScenePortals.PAWN_RADIUS:source.spec.number("radius",0);
         }
+        // See ROUNDHOUSE_MEDIUM_CONFIG: the blank base circle expands to the resolved Medium radius.
+        if(source!=null&&ROUNDHOUSE_MEDIUM_CONFIG.equals(source.config.name())&&defined instanceof FireCatalog.DataValue blank
+                &&blank.type().endsWith("$TransformedShape")
+                &&SceneDamage.field(defined,"shape") instanceof FireCatalog.DataValue inner&&inner.type().endsWith("$Circle")
+                &&SceneDamage.number(inner,"radius",0)==1f)expansion+=ROUNDHOUSE_MEDIUM_RADIUS-1f;
         {
             float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             for(var player:players){float dx=player.x()-x,dy=player.y()-y;

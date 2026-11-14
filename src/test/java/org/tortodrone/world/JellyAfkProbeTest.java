@@ -6,8 +6,12 @@ import org.tortodrone.character.StarterCatalog;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
 
-/** Probe: place a real Crash Site Jelly Cube and an AFK knight at 3.0 distance, tick 30s,
- * log distances and damage. */
+/** The tutorial Jelly Cube's Roundhouse resolves Damage Region=Medium (Circle 1.5), but
+ *  the exported fire action carries the choice-less base circle (1.0), so the resolved
+ *  radius is restored at runtime. The range cap stops the monster at its damage reach
+ *  (radius + PAWN_RADIUS), so the restoration is observable in the standoff distance at
+ *  which the AFK knight is hit: ~1.833 centre-to-centre for Medium versus ~1.333 for the
+ *  blank base circle. */
 public final class JellyAfkProbeTest {
     public static void main(String[] args) throws Exception {
         var map = ContentManager.load(Path.of(".")).scenes().scene(398);
@@ -30,31 +34,28 @@ public final class JellyAfkProbeTest {
             SceneWeaponsTest.openTerrain());
         var weapons = new SceneWeapons(SceneWeaponsTest.openTerrain());
         weapons.targets(scene);
-        var health = new SceneHealth(content);
         var stampRef = new int[]{SceneClock.now()};
-        // AFK knight at (3, 0) — edge distance 3 - 0.333 = 2.667
+        // AFK knight at (3, 0): the jelly must close in to its restored Medium reach and attack
         var player = new ActorState(219, 1001, "Fixture", 0, stampRef[0], 3, 0, 0, 0, 0, 0, stampRef[0], new StarterCatalog.Model("Fixture", Map.of()), false);
-        var damageHits = new ArrayList<Object>();
-        scene.playerHits(hit -> { damageHits.add(hit.damage()); });
+        var hitDistances = new ArrayList<Float>();
+        scene.playerHits(hit -> { hitDistances.add((float)Math.hypot(scene.actors().getFirst().x()-player.x(), scene.actors().getFirst().y()-player.y())); });
         scene.attacks((actor, action) -> { weapons.fire(action, actor, stampRef[0]); });
-        // Tick 30 seconds
-        int attacks = 0;
-        for (int tick = 0; tick < 600; tick++) {
+        int ticks = 0;
+        for (; ticks < 600 && hitDistances.isEmpty(); ticks++) {
             stampRef[0] += 50;
             int ts = stampRef[0];
             scene.advance(ts, List.of(player));
             weapons.advance(ts, List.of(player));
-            var actor = scene.actors().getFirst();
-            double dist = Math.hypot(actor.x(), actor.y());
-            var ent = scene.actor(actor.id());
-            boolean moving = (actor.flags() & 2) != 0;
-            if (actor.activity() == 4 && !moving) {
-                attacks++;
-                if (damageHits.size() > 0) break;
-            }
         }
-        System.out.println("Result: attacks=" + attacks + " damageHits=" + damageHits + " finalHealth=" + health.state().current());
-        check(damageHits.size() > 0, "Jelly Cube eventually damages the AFK knight within 30s");
-        System.out.println("PASS: Jelly hits after " + attacks + " attacks");
+        var actor = scene.actors().getFirst();
+        double standoff = Math.hypot(actor.x()-player.x(), actor.y()-player.y());
+        System.out.println("Result: ticks=" + ticks + " hitDistances=" + hitDistances + " finalStandoff=" + standoff);
+        check(!hitDistances.isEmpty(), "Jelly Cube eventually damages the AFK knight within 30s");
+        float hit = hitDistances.getFirst();
+        // Medium reach stops the jelly at 1.5 + PAWN_RADIUS = 1.833 centre distance; the
+        // blank base circle would stop it at 1.333. Allow one 50ms approach step inward.
+        check(hit >= 1.5f, "hit lands from Medium standoff (>= 1.5 centre distance, was " + hit + ")");
+        check(hit <= 2.0f, "hit lands from at most the Medium stop distance (<= 2.0 centre distance, was " + hit + ")");
+        System.out.println("PASS: Jelly hits the AFK knight from the restored Medium standoff " + hit);
     }
 }
