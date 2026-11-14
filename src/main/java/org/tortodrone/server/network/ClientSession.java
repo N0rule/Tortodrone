@@ -193,10 +193,11 @@ final class ClientSession {
             if(world.friendInvocation(invocation))return;
             if(world.feedInvocation(invocation))return;
             if(world.eventLogInvocation(invocation))return;
-            // Auction and uplink mail leave through the early dispatcher below, which sits in
-            // front of the generic request logging, so they get their own debug line here.
+            // Auction, uplink mail and the item forge leave through the early dispatcher below,
+            // which sits in front of the generic request logging, so they get their own line here.
             if((invocation.service()==SessionCodec.AUCTION_SERVICE
-                    ||invocation.service()==SessionCodec.UPLINK_SERVICE&&invocation.method()!=7)){
+                    ||invocation.service()==SessionCodec.UPLINK_SERVICE&&invocation.method()!=7
+                    ||invocation.service()==SessionCodec.ITEM_SERVICE&&invocation.method()==8)){
                 String service = SessionCodec.SERVICES.get(invocation.service() - 1);
                 log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
                     + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());

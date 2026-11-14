@@ -819,6 +819,23 @@ final class WorldSession implements AutoCloseable {
         boolean resultListener=hatch||forge||unwrap||operation&&(townDialog==null||!Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))||sprite&&request.method()==7;
         if(!listener.type().equals(org.tortodrone.protocol.WireTypes.LISTENER_PREFIX+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid Town listener");
         try{
+            if(forge){
+                // The stock Forge window sends this from any attached HUD with no scene
+                // precondition (its button is disabled only during PvP), and its unselected
+                // failure is the native internal error like every stock item reply.
+                if(closed||!selected())throw new IOException("m.internal_error");
+                if(readyRoom){
+                    // The client-local Ready Room stages the knight with no party, so only the
+                    // selected knight and the native forge rules are required; scenes keep
+                    // their station gates below.
+                    characters.worldProfile(knight.name(),authRevision,profile);
+                    if(a.size()!=4||!(a.get(0) instanceof Long item)||!(a.get(1) instanceof Integer crystals)||!(a.get(2) instanceof Integer level))throw new SessionDecoder.Rejected("Invalid forge request");
+                    if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                    var forged=characters.town(scenes.town()).forge(characters.accountId(),knight.id(),authRevision,item,crystals,level);
+                    townChanged(forged);output.send(()->codec.townResult(oid,listener.requestId(),forged.result(),forged.profile()));
+                    return true;
+                }
+            }
             if(closed||!selected()||!entered||!subscribed)throw new IOException("Enter a scene first");
             characters.worldProfile(knight.name(),authRevision,profile);
             boolean staff=roles.gameMaster();
@@ -1294,9 +1311,11 @@ final class WorldSession implements AutoCloseable {
         if(service==SessionCodec.ITEM_SERVICE&&(request.method()==4||request.method()==10)) {
             if(args.size()!=2||!(args.getFirst() instanceof String name)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid loadout request");
             try {
-                if(!selected()||!subscribed||!entered||portalMove!=null)throw new IOException("Enter a scene first");
+                // Stock loadout pills are party-gated, not scene-gated, and the Ready Room
+                // stages with no party, so staging can apply and save its loadouts there.
+                if(!selected()||!readyRoom&&(!subscribed||!entered||portalMove!=null))throw new IOException("Enter a scene first");
                 if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
-                if(request.method()==4&&!membership.equipmentAllowed())throw new IOException("Equipment is locked outside an Arsenal Station in this level");
+                if(request.method()==4&&!readyRoom&&!membership.equipmentAllowed())throw new IOException("Equipment is locked outside an Arsenal Station in this level");
                 var result=characters.town(scenes.town()).loadout(characters.accountId(),knight.id(),authRevision,name,request.method()==10);
                 townChanged(result);output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
@@ -1304,7 +1323,7 @@ final class WorldSession implements AutoCloseable {
         }
         if(service==SessionCodec.ITEM_SERVICE&&request.method()==2){
             if(request.oid()!=SessionCodec.INVOCATION_OID||args.size()!=2||!(args.getFirst() instanceof String name)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid loadout removal");
-            try{if(!selected()||!entered||!subscribed||portalMove!=null)throw new IOException("Enter a scene first");
+            try{if(!selected()||!readyRoom&&(!entered||!subscribed||portalMove!=null))throw new IOException("Enter a scene first");
                 townChanged(characters.town(scenes.town()).removeLoadout(characters.accountId(),knight.id(),authRevision,name));
                 output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
@@ -1317,7 +1336,8 @@ final class WorldSession implements AutoCloseable {
             if(request.oid()!=SessionCodec.INVOCATION_OID||args.size()!=3||!(args.get(0) instanceof String name)||!(args.get(1) instanceof Boolean enabled)
                     ||!(args.get(2) instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.protocol.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid PvP loadout request");
             try{
-                if(!selected()||!subscribed||!entered||portalMove!=null)throw new IOException("Enter a scene first");
+                // The Ready Room has no party view, like every other stock loadout context.
+                if(!selected()||!readyRoom&&(!subscribed||!entered||portalMove!=null))throw new IOException("Enter a scene first");
                 townChanged(characters.town(scenes.town()).loadoutPvp(characters.accountId(),knight.id(),authRevision,name,enabled));
                 output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
@@ -1688,7 +1708,10 @@ final class WorldSession implements AutoCloseable {
             if (location.ordinal() != 0 && location.ordinal() != 1) {
                 throw new IOException("Only inventory and equipment moves are available");
             }
-            if(!subscribed||!entered||!membership.equipmentAllowed())throw new IOException("Equipment is locked outside an Arsenal Station in this level");
+            // The stock ItemManager gates equipping on the party alone (ensureCanEquip passes
+            // whenever the knight has no party), and the client-local Ready Room stages with no
+            // party, so gear may be changed while staging; live scenes keep their station rules.
+            if(!readyRoom&&(!subscribed||!entered||!membership.equipmentAllowed()))throw new IOException("Equipment is locked outside an Arsenal Station in this level");
             var before=visibleProfile();
             profile = characters.equip(knight.id(), authRevision, item, location.ordinal() == 0 ? null : slot);
             updateAppearance();

@@ -53,6 +53,7 @@ public final class CombatRenderingCheck {
     private final boolean trainingOnly;
     private boolean readyRoomOnly;
     private boolean readyRoomMailOnly;
+    private boolean readyRoomForgeOnly;
     private boolean initialWorldReturnRequested;
     private boolean freshOpening;
     private boolean campStory,campStoryReturn,campProgression,campProgressionReturn;
@@ -124,7 +125,7 @@ public final class CombatRenderingCheck {
         if(args.length==2&&args[0].equals("--seed-opening")){
             try(var store=new AccountStore(Path.of(args[1]))){store.create("LanPlayer","lan-test-password".toCharArray());}return;
         }
-        if(args.length==2&&(args[0].equals("--seed-equipment")||args[0].equals("--seed-items")||args[0].equals("--seed-multiplayer")||args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot"))){
+        if(args.length==2&&(args[0].equals("--seed-equipment")||args[0].equals("--seed-items")||args[0].equals("--seed-multiplayer")||args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot")||args[0].equals("--seed-forge"))){
             seed(Path.of(args[1]));
             if(args[0].equals("--seed-equipment"))seedEquipment(Path.of(args[1]));
             if(args[0].equals("--seed-items"))try(var store=new AccountStore(Path.of(args[1]))){
@@ -135,6 +136,7 @@ public final class CombatRenderingCheck {
                 store.grantItems("PeerPlayer","Peer-Knight","Usable/Confetti",2,-1,-1);
             }
             if(args[0].equals("--seed-boxes"))seedBoxes(Path.of(args[1]));
+            if(args[0].equals("--seed-forge"))forgeSeed(Path.of(args[1]));
             if(args[0].equals("--seed-depot"))try(var store=new AccountStore(Path.of(args[1]))){
                 store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.CROWNS,100000,-1,-1);
                 store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.ENERGY,100000,-1,-1);
@@ -148,7 +150,7 @@ public final class CombatRenderingCheck {
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean trainingOnly=Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -169,8 +171,9 @@ public final class CombatRenderingCheck {
         probe.tutorialOnly=probe.freshOpening||Arrays.asList(args).contains("--tutorial-only");
         probe.tutorialEntryOnly=probe.tutorialOnly||Arrays.asList(args).contains("--tutorial-entry-only");
         if(probe.tutorialOnly)probe.tutorialMap=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("appdir")).getParent()).scenes().scene(398);
-        probe.readyRoomOnly=probe.campStory||probe.campStoryReturn||probe.campProgressionReturn||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--opening-return-only");
+        probe.readyRoomOnly=probe.campStory||probe.campStoryReturn||probe.campProgressionReturn||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--opening-return-only");
         probe.readyRoomMailOnly=Arrays.asList(args).contains("--ready-room-mail-only");
+        probe.readyRoomForgeOnly=Arrays.asList(args).contains("--ready-room-forge-only");
         if(probe.campStory||probe.campStoryReturn||probe.campProgressionReturn)probe.readyRoomDestination=217;
         probe.multiplayerOnly=multiplayerOnly;probe.sharedWorldOnly=sharedWorldOnly;
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
@@ -205,6 +208,21 @@ public final class CombatRenderingCheck {
             store.grantItems("LanPlayer","Town-Knight","Rarity/Spark of Life",2,-1,-1);
             store.grantItems("LanPlayer","Town-Knight","Weapon/Bomb/Graviton Vortex",1,-1,-1);
             for(String item:ACTIONS.stream().map(Action::weapon).distinct().toList())store.grantItems("LanPlayer","Town-Knight",item,1,-1,-1);
+        }
+    }
+    /** The Ready Room forge scenario needs one fully heated weapon and spare fire crystals. */
+    private static void forgeSeed(Path data)throws Exception {
+        var content=org.tortodrone.resources.ContentManager.load(data.toAbsolutePath().normalize().getParent());
+        char[] password=AccountStore.transform("lan-test-password".toCharArray());
+        try(var store=new AccountStore(data,false,content.items(),content.town())){
+            try{
+                var account=store.authenticate("LanPlayer",password);
+                var profile=account.characters().worldProfile("Town-Knight",1);
+                long sword=profile.items().stream().filter(i->i.config().equals("Weapon/Sword/Proto Sword")).findFirst().orElseThrow().id();
+                new org.tortodrone.storage.Database(data,false).itemModifiers("LanPlayer","Town-Knight",account.id(),profile.worldId(),profile.revision(),sword,
+                    new org.tortodrone.character.ItemModifiers(0,1f,List.of()),content.items(),content.town());
+                store.grantItems("LanPlayer","Town-Knight","Rarity/Fire Crystal/Cracked",5,account.id(),profile.worldId());
+            }finally{Arrays.fill(password,'\0');}
         }
     }
     private record EquipmentGroup(String name,String item,int slot,int flags,int held,int activity,boolean projectile) { }
@@ -769,6 +787,50 @@ public final class CombatRenderingCheck {
         if(text==null||text.equals(messages.getClass().getMethod("cP",String.class).invoke(messages,"m.loading")))return null;
         return text.equals(empty)?"":"mail count "+((Map<?,?>)field(panel,"bMW").get(panel)).size()+" label "+text;
     }
+    /** One isolated stock-client scenario: the Ready Room Forge window must forge the heated Proto Sword. */
+    private void readyRoomForgeTick(long now)throws Exception{
+        if(app.CZ()==null||app.Gx()==null)return;
+        Object item=null;
+        for(var held:app.CZ().items)if(held instanceof com.threerings.projectx.item.data.LevelItem&&"Weapon/Sword/Proto Sword".equals(held.c(app).getName()))item=held;
+        if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
+            if(started==0)started=now;if(now-started<3_000_000_000L)return;
+            if(item==null)throw new AssertionError("The forge seed's Proto Sword is missing from the native arsenal");
+            capture("ready-room");stage=1;started=now;
+        }else if(stage==1){
+            // The stock Arsenal forge_item action: the HUD opens the native Forge window preselecting a LevelItem.
+            var hudType=Class.forName("com.threerings.projectx.client.as");
+            var ctxType=Class.forName("com.threerings.projectx.util.w");
+            var hud=hudType.getMethod("i",ctxType).invoke(null,app);
+            if(hud==null)throw new AssertionError("The Ready Room exposes no native Forge HUD");
+            hudType.getMethod("a",Class.forName("com.threerings.projectx.item.data.LevelItem")).invoke(hud,item);
+            stage=2;started=now;System.out.println("CHECK: native Ready Room forge window opens on the heated Proto Sword");
+        }else if(stage==2){
+            Object window=null;var root=app.getRoot();
+            if(root!=null)for(int i=root.getWindowCount()-1;i>=0&&window==null;i--){
+                var open=root.getWindow(i);
+                if(open!=null&&open.getClass().getName().equals("com.threerings.projectx.item.client.q"))window=open;
+            }
+            if(window==null){if(now-started>20_000_000_000L)throw new AssertionError("Ready Room forge window never opened");return;}
+            var panel=field(window,"bvf").get(window);
+            var button=field(panel,"buQ").get(panel);
+            if(!(Boolean)button.getClass().getMethod("isEnabled").invoke(button)){
+                if(now-started>20_000_000_000L)throw new AssertionError("The stock forge button stayed disabled in the Ready Room");
+                return;
+            }
+            // UI() is exactly what the stock button action runs: the native forge request.
+            var forge=panel.getClass().getDeclaredMethod("UI");forge.setAccessible(true);forge.invoke(panel);
+            stage=3;started=now;System.out.println("CHECK: native Ready Room forge request sent");
+        }else if(stage==3){
+            if(item==null)throw new AssertionError("The Proto Sword disappeared from the native arsenal");
+            int level=item.getClass().getMethod("wt").invoke(item) instanceof Integer value?value:-1;
+            int crystals=itemCount("Rarity/Fire Crystal/Cracked");
+            if(level==1&&crystals==4){
+                capture("ready-room-forge");finishImages();
+                passed=done=true;System.out.println("PASS: stock graphical Ready Room Forge window forges the heated Proto Sword and consumes its fire crystals");app.shutdown();
+            }
+            if(now-started>20_000_000_000L)throw new AssertionError("Ready Room forge never completed; sword level="+level+" crystals="+crystals);
+        }
+    }
     private void readyRoomTick(long now)throws Exception{
         if(app.CZ()==null||app.Gx()==null)return;
         if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
@@ -826,7 +888,7 @@ public final class CombatRenderingCheck {
                     +(stage==20?konwayState(viewPawn()):""));
             }
             if(tutorialEntryOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}tutorialEntryTick(now);return;}
-            if(readyRoomOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}if(campStory&&stage>=2)campStoryTick(new View(app.Gx()),now);else if(readyRoomMailOnly)readyRoomMailTick(now);else readyRoomTick(now);return;}
+            if(readyRoomOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}if(campStory&&stage>=2)campStoryTick(new View(app.Gx()),now);else if(readyRoomMailOnly)readyRoomMailTick(now);else if(readyRoomForgeOnly)readyRoomForgeTick(now);else readyRoomTick(now);return;}
             if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(app.CZ()!=null&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE){
                 if(!initialWorldReturnRequested&&!(app.GK().mN()||app.GB())&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())){
