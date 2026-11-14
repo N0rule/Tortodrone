@@ -29,9 +29,23 @@ public final class CrashSiteBoxesTest {
         world.advance(stamp+1,List.of(player));
         check(world.actor(explosiveId).entity().state()==1,"the explosive block arms on its first hit");
         check(hits.isEmpty(),"the arming hit does not damage the knight");
-        world.advance(stamp+101,List.of(player));
+        // Point-blank and the live capture's bracket: a knight hugging the solid block cannot
+        // enter its 1x1 footprint (his circle stops at 0.833 off-centre), so the official blast
+        // must reach past the footprint; the live capture pins a hit 1.48/0.41 off-centre and
+        // misses at 0.83/2.25. The 0.6 placement above overlaps the block and only exists to
+        // keep the arming knight in the scene.
+        var pointBlank=new ActorState(220,1002,"Knight",0,stamp,explosive.x()+0.9f,explosive.y(),0,0,0,0,stamp,
+            new StarterCatalog.Model("Character/PC/Level",Map.of()),false);
+        var captureHit=new ActorState(221,1003,"Knight",0,stamp,explosive.x()+1.48f,explosive.y()+0.41f,0,0,0,0,stamp,
+            new StarterCatalog.Model("Character/PC/Level",Map.of()),false);
+        var captureMiss=new ActorState(222,1004,"Knight",0,stamp,explosive.x()+0.83f,explosive.y()+2.25f,0,0,0,0,stamp,
+            new StarterCatalog.Model("Character/PC/Level",Map.of()),false);
+        world.advance(stamp+101,List.of(player,pointBlank,captureHit,captureMiss));
         check(world.actor(explosiveId)==null,"the explosive block detonates after its fuse");
         check(hits.stream().anyMatch(h->h.actor()==player.id()),"the detonation damages an adjacent knight");
+        check(hits.stream().anyMatch(h->h.actor()==pointBlank.id()),"the blast damages a knight hugging the solid block at point-blank");
+        check(hits.stream().anyMatch(h->h.actor()==captureHit.id()),"the blast damages the capture's knight 1.48/0.41 off-centre");
+        check(hits.stream().noneMatch(h->h.actor()==captureMiss.id()),"the capture's knight 0.83/2.25 off-centre is outside the blast");
 
         var healed=new ArrayList<Integer>();
         var healthWorld=new SceneEntities(map.content(),map.collision());

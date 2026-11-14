@@ -1457,6 +1457,19 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 &&blank.type().endsWith("$TransformedShape")
                 &&SceneDamage.field(defined,"shape") instanceof FireCatalog.DataValue inner&&inner.type().endsWith("$Circle")
                 &&SceneDamage.number(inner,"radius",0)==1f)expansion+=ROUNDHOUSE_MEDIUM_RADIUS-1f;
+        // The official explosive detonation (every Block/Explosive* variant detonates through
+        // the one "Block/Explosive Block - Explosion" action) carries a Default region with
+        // expansion 1.0; the 2026 client export strips regions to that constructor's default
+        // 0, leaving the blast at the block's own 1x1 footprint, which a knight hugging the
+        // solid block can never enter. The live capture brackets the official blast - a knight
+        // 1.48 off-centre (0.98 outside the footprint) is hit at the detonation timestamp,
+        // and knights 2.4 away are not - and the native Polygon corner expansion measures
+        // 2.41 x 2.41 on the block's own rectangle.
+        // Entity.kind is the native-type's simple name ("Block$Stateful" here), so match the
+        // family by prefix like the other block paths do.
+        if(source!=null&&source.kind.startsWith("Block")&&source.config.name().startsWith("Block/Explosive")
+                &&shape instanceof FireCatalog.DataValue blast&&blast.type().endsWith("$Default"))
+            expansion=Math.max(expansion,1f);
         {
             float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             for(var player:players){float dx=player.x()-x,dy=player.y()-y;
