@@ -43,6 +43,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         SceneActions.Prepared partyIntersection;
         float scriptRotation;
         final SceneTargeting targeting;
+        /** Maximum effective edge distance for attacks, capped to the damage shape radius. */
+        final float attackRangeCap;
         SceneTargeting.Mode targetMode;boolean targetModeUpdate,idleAttackDone;float targetRotation;
         final SceneWander wander;
         final SceneFollow follow;
@@ -82,6 +84,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             }
             if(spec.fields().containsKey("door-lock")&&(!spec.text("kind","").equals("Door")||!spec.text("door-lock","").equals("gold")))throw new IllegalArgumentException("Unsupported scene door lock");
             script=SceneMovementScript.read(spec);program=SceneScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);follow=SceneFollow.read(spec);attackMotion=SceneAttackMotion.readAll(spec);
+            attackRangeCap=meleeDamageRadius(spec);
             platform=ScenePartyPlatform.read(spec);
             elevator=SceneElevator.read(spec);
             try{
@@ -795,6 +798,23 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(Math.abs(delta)<.0001f){e.rotation=e.direction=target;return true;}
         e.rotation=e.direction=(float)Math.IEEEremainder(e.rotation+Math.copySign(Math.min(Math.abs(delta),step),delta),2*Math.PI);return false;
     }
+    /** Extract the damage circle radius from attack.0's first fire action. Returns Float.MAX_VALUE when
+     *  no damage shape can be determined (charging/ranged attacks handle their own range). */
+    private static float meleeDamageRadius(SceneContent.Spec spec){
+        try{
+            String json=spec.text("attack.0.fire.0.action","");
+            if(json.isEmpty())return Float.MAX_VALUE;
+            var action=FireCatalog.actionJson(json);
+            if(action.kind()!=FireCatalog.Kind.DAMAGE_REGION)return Float.MAX_VALUE;
+            Object shape=action.config().arguments().get("shape");
+            if(shape instanceof FireCatalog.DataValue dv&&dv.type().endsWith("$TransformedShape")){
+                Object inner=SceneDamage.field(shape,"shape");
+                if(inner instanceof FireCatalog.DataValue idv&&idv.type().endsWith("$Circle"))
+                    return SceneDamage.number(inner,"radius",0);
+            }
+        }catch(java.io.IOException ignored){}
+        return Float.MAX_VALUE;
+    }
     private void scriptedProgram(Entity e,int stamp,float elapsed){
         e.flags&=~2;if(e.scriptStep>=e.program.steps().size())return;
         var step=e.program.steps().get(e.scriptStep);boolean starting=e.scriptStarted==Integer.MIN_VALUE;
@@ -963,7 +983,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(target==null&&e.wander!=null){wander(e,stamp,elapsed);return;}
         if(target!=null)e.wanderPhase=0;
         float attackDistance=e.targeting==null?nearest:target==null?Float.POSITIVE_INFINITY:targetDistance(e,target);
-        float attackRange=e.targeting==null?e.spec.number("attack-distance",0):e.targetMode==null?0:e.targetMode.range();
+        float attackRange=e.targeting==null?e.spec.number("attack-distance",0):e.targetMode==null?0:Math.min(e.targetMode.range(),e.attackRangeCap);
         if(target!=null&&e.activity==0&&slot>=0&&(e.targeting==null?stamp>=e.nextAttack:stamp>e.nextAttack)&&attackDistance<=attackRange&&modifiers.attackSpeed()>0
                 &&sight(e,target.x(),target.y())){
             if(e.targeting!=null&&e.targetMode.faces()&&modifiers.canRotate()){
