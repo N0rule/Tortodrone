@@ -191,6 +191,9 @@ final class WorldSession implements AutoCloseable {
     private ActorState conversationSource;
     private OpeningMission conversationMission;
     private OpeningMission arrivalComlink;
+    /** The one arrival comlink this session already delivered; native bodyEntered spends the
+     *  held comlink once, so re-entering the scene must not reopen it. */
+    private OpeningMission deliveredComlink;
     private long conversationCreated;
     private long missionDialogCreated;
     private float conversationX,conversationY;
@@ -404,8 +407,17 @@ final class WorldSession implements AutoCloseable {
         if(gate==null||!mission.eligible(profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
         scenes.parties().soloGate(partyMember,partyOid(),()->Boolean.TRUE);return gate;
     }
-    private void openComlink(OpeningMission mission)throws IOException {
-        if(mission==null||OpeningComlinks.get(mission)==null||closed||!selected()||!entered||!subscribed||membership==null||scene.map().id()!=OpeningComlinks.scene(mission))throw new IOException("m.internal_error");
+    private void openComlink(OpeningMission mission)throws IOException {openComlink(mission,false);}
+    /** The arrival variant opens during the zone-change flush, mirroring native
+     * MissionManager.comlinkArrived from ThetyaSceneManager.bodyEntered: the stock client has
+     * already left its scene controller (SceneDirector.forcedMove -> didLeaveScene, then
+     * LocationDirector.didMoveTo -> didLeavePlace) and has not fetched the destination place
+     * object, so the dialog is stored by the sceneDialog listener's absence and displayed only
+     * when the destination view becomes visible (EF -> Iy) instead of over its loading screen.
+     * Delivery therefore must not require enteredPlace, which the client sends while still
+     * loading. */
+    private void openComlink(OpeningMission mission,boolean arriving)throws IOException {
+        if(mission==null||OpeningComlinks.get(mission)==null||closed||!selected()||(!arriving&&(!entered||!subscribed))||membership==null||scene.map().id()!=OpeningComlinks.scene(mission))throw new IOException("m.internal_error");
         profile=loadProfile(profile);if(!mission.eligible(profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
         var snapshot=scene.simulation().snapshot();var own=snapshot.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
         if(own==null||snapshot.portal(own.id())!=null||membership.health().current()<=0)throw new IOException("m.internal_error");
@@ -1492,6 +1504,10 @@ final class WorldSession implements AutoCloseable {
                 arrival=portalMove==null?null:portalMove.entrance();portalMove=null;
                 created=SceneClock.now();attach();
                 monitorScene();
+                // Arriving comlinks are delivered behind the move response (see completeMove),
+                // before the client can answer enteredPlace from inside its loading screen.
+                arrivalComlink=null;
+                for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&candidate.eligible(profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
             }
             int party=partyOid();
             // The stock PartyDirector resubscribes on every partyOid event,
@@ -1511,6 +1527,14 @@ final class WorldSession implements AutoCloseable {
     private void completeMove(short requestId,boolean zone)throws IOException {
         output.send(() -> codec.sceneMove(oid,requestId,zone,scene,scenes.catalog()));
         output.send(() -> codec.sceneLocation(oid,scene,scenes.channelOid(scene.map().zone(),false),scenes.channelOid(scene.map().zone(),true)));
+        // Deliver the pre-arranged arrival comlink behind the moveSucceeded response: the
+        // client processes it in the window where its scene controllers are gone (see the
+        // arrival openComlink), so the dialog waits for the destination view like native.
+        // A failed delivery falls back to the enteredPlace/publish path.
+        if(arrivalComlink!=null){
+            var pending=arrivalComlink;arrivalComlink=null;
+            try{openComlink(pending,true);deliveredComlink=pending;}catch(IOException unavailable){arrivalComlink=pending;}
+        }
     }
 
     private record AdminLocation(SceneRegistry.Instance scene,int world,String name,float x,float y,float rotation) { }
@@ -1767,7 +1791,7 @@ final class WorldSession implements AutoCloseable {
         membership.enter(snapshot->offer(placeInstance,generation,snapshot));
         if(scene.opening()!=null&&(!scenes.authorized(scene,profile.worldId(),partyMember)||!membership.authorizeElevator(Integer.toString(OpeningGate.GENERATOR_EXIT),Set.of(profile.worldId()))))throw new IOException("Opening mission exit is unavailable");
         arrivalComlink=null;
-        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate.eligible(profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
+        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&candidate.eligible(profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
         if(auctionAfterArrival){auctionAfterArrival=false;try{openAuction();}catch(IOException refused){unavailable(refused.getMessage());}}
         persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
     }
@@ -2092,7 +2116,7 @@ final class WorldSession implements AutoCloseable {
             output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,conversationSource,conversationCreated));
         }
         if(arrivalComlink!=null&&own!=null&&conversation==null&&townDialog==null&&missionDialogCreated==0){
-            var pending=arrivalComlink;arrivalComlink=null;openComlink(pending);
+            var pending=arrivalComlink;arrivalComlink=null;openComlink(pending);deliveredComlink=pending;
         }
         int target=membership.takeInteraction();
         if(target>0&&own!=null){

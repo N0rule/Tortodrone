@@ -46,15 +46,27 @@ public final class TutorialTravelSessionTest {
                     var finish=WorldSession.class.getDeclaredMethod("finishTutorialFloor",int.class);finish.setAccessible(true);
                     check((boolean)finish.invoke(world,SceneClock.now()),"same ready report retries through production settlement and handoff");
                     check(field(world,"portalMove")!=null&&!pending.valid(),"successful commit retires the report before publishing movement");
+                    check(!socket.contains("m.welcome_to_haven_1a"),"the tutorial handoff itself sends no arrival comlink dialog");
                 }
                 var after=characters.worldProfile(knight.name(),1);
                 check(after.progress().openingStage()==3&&after.progress().progressFlags()==4&&characters.lastTownScene(knight.id(),1)==1,"direct Haven checkpoint and town access committed");
                 check(after.items().equals(before.items())&&after.progress().rankPair().equals("2-1")&&after.progress().prestige()==0
                     &&after.town().mail().stream().filter(m->m.subject().equals("%uplink:s.skipped_rescue_camp")).count()==1,"skipped Camp missions grant no receipts or prestige; arrival is 2-1 with one orientation letter");
-                move(world,route.destination());world.subscribe((short)4);world.entered();
+                move(world,route.destination());
+                // The comlink must ride the zone-change batch (behind moveSucceeded, before the
+                // place object): the stock client defers such a dialog to the visible scene,
+                // while one delivered after enteredPlace shows over its loading screen.
+                await(()->socket.contains("m.welcome_to_haven_1a"));
+                check(socket.indexOf("m.welcome_to_haven_1a")>socket.lastIndexOf("com.threerings.whirled.zone.data.ZoneSummary"),"the zone-change response delivers the arrival comlink behind moveSucceeded");
+                check(OpeningComlinks.get(OpeningMission.WELCOME_HAVEN).initial().equals(field(world,"conversationNode")),"the arrival comlink opens during the move, before the client can answer enteredPlace");
+                world.subscribe((short)4);
+                await(()->socket.contains("com.threerings.projectx.town.data.TownSceneObject"));
+                check(socket.indexOf("com.threerings.projectx.town.data.TownSceneObject")>socket.indexOf("m.welcome_to_haven_1a"),"the deferred comlink precedes the destination place object");
+                world.entered();
                 var haven=registry.destination(1,before.worldId());
                 var pawn=haven.simulation().snapshot().players().stream().filter(p->p.id()==before.worldId()).findFirst().orElseThrow();
                 check(world.ownsScene(haven.oid())&&pawn.x()==route.entrance().x()&&pawn.y()==route.entrance().y(),"forced move handshake attaches at Haven's authored spawn");
+                check(socket.count("m.welcome_to_haven_1a")==1&&field(world,"arrivalComlink")==null,"enteredPlace publication never re-delivers the spent arrival comlink");
                 world.interiorPartyInvocation(report(party));
                 check(characters.worldProfile(knight.name(),1).equals(after),"late report does not settle twice");
             }
@@ -73,5 +85,12 @@ public final class TutorialTravelSessionTest {
     private static void move(WorldSession world,SceneCatalog.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));}
     private interface Check{boolean ok()throws Exception;}
     private static void await(Check check)throws Exception {long end=System.nanoTime()+4_000_000_000L;while(System.nanoTime()<end){if(check.ok())return;Thread.sleep(10);}throw new AssertionError("Exit sensor did not open a floor report");}
-    private static final class RecordingSocket extends Socket {@Override public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}}
+    private static final class RecordingSocket extends Socket {
+        private final ByteArrayOutputStream bytes=new ByteArrayOutputStream();
+        @Override public OutputStream getOutputStream(){return bytes;}
+        boolean contains(String text){return indexOf(text)>=0;}
+        int indexOf(String text){return bytes.toString(java.nio.charset.StandardCharsets.ISO_8859_1).indexOf(text);}
+        int lastIndexOf(String text){return bytes.toString(java.nio.charset.StandardCharsets.ISO_8859_1).lastIndexOf(text);}
+        int count(String text){var all=bytes.toString(java.nio.charset.StandardCharsets.ISO_8859_1);int total=0;for(int at=all.indexOf(text);at>=0;at=all.indexOf(text,at+text.length()))total++;return total;}
+    }
 }
