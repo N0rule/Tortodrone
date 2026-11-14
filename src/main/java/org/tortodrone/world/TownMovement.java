@@ -146,9 +146,23 @@ public final class TownMovement {
             :org.tortodrone.character.AnimatedItems.duration(config);
     }
     public boolean useItem(org.tortodrone.character.StarterCatalog.Model item,int stamp){
-        if(activity!=0&&activity!=INVENTORY&&activity!=INVENTORY_END||combat!=null&&!combat.canOverride())return false;
+        if(!canUseItem()||combat!=null&&!combat.canOverride())return false;
         if(combat!=null)combat.reset(stamp);setActivity(USE_ITEM,stamp);activityData=item;updateFlags();return true;
     }
+    /** A Use-request vial lift rides the same native canUseItem gate, not the interaction
+     *  carry gate: native doRun only rechecks canLift (lift==0, held by the membership)
+     *  before entering the LIFT pose. */
+    public boolean useLift(int stamp){
+        if(!canUseItem()||combat!=null&&!combat.canOverride())return false;
+        if(combat!=null)combat.reset(stamp);setActivity(LIFT_POSE,stamp);updateFlags();return true;
+    }
+    /** Native Dungeoneer.ITEM_PREVENTERS (LIFT, HOLD, THROW, DROP, DYING, DEAD, TRANSIT,
+     *  IDLE, USE_ITEM): the only activities a method-14 Use request refuses. The loading
+     *  pose, emotes and the hurt/shock poses stay usable exactly as the shipped rule;
+     *  elevator transit rides the frozen IDLE pose, which the set guards. */
+    private static final java.util.Set<Integer> ITEM_PREVENTERS=java.util.Set.of(
+        LIFT_POSE,LIFTED_POSE,THROW_POSE,DROP_POSE,DYING,DEAD,USE_ITEM,IDLE);
+    private boolean canUseItem(){return !ITEM_PREVENTERS.contains(activity);}
     private java.util.function.IntPredicate interaction=stamp->false;
     private java.util.function.BiPredicate<Float,Float> dynamicCollision=(x,y)->true;
     private java.util.function.BiFunction<Float,Float,SceneCollision.Penetration> dynamicPenetration=(x,y)->SceneCollision.Penetration.NONE;

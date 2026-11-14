@@ -83,6 +83,11 @@ public final class DungeonConsumablesTest {
                         drain(output,frames);
                         var listener=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)19);
                         for(String state:List.of("subscribed","entered")){var f=WorldSession.class.getDeclaredField(state);f.setAccessible(true);f.setBoolean(session,true);}
+                        // This fixture never sends an input frame, so the pawn keeps its
+                        // published LOADING pose (native Knight constructors freeze there
+                        // until KnightLogic.tick sees the client's first input). The use
+                        // request below pins that LOADING is not in the native
+                        // Dungeoneer.ITEM_PREVENTERS: the request is still accepted.
                         check(session.invocation(new SessionDecoder.Invocation(3,9,14,Arrays.asList(capsuleId,null,listener))),"full-health capsule reaches the native Use handler");
                         var replies=drain(output,frames);
                         check(replies.size()==1&&java.nio.ByteBuffer.wrap(replies.getFirst(),replies.getFirst().length-4,4).getInt()==((19<<16)|256),"full-health use sends only successful confirmation, with no chat or failure callback");

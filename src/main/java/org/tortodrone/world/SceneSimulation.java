@@ -186,7 +186,7 @@ public final class SceneSimulation {
         public boolean useItem(long id,SceneContent.Spec spec){synchronized(SceneSimulation.this){
             check();if(!entered||portal!=null||!health.alive()||pendingItem!=0||lift!=0||usedItems.contains(id))return false;
             if(spec.text("kind","").equals("vial")){
-                int stamp=SceneClock.now();if(!movement.lift(stamp))return false;lift=entities.vial(actor(),spec,stamp);
+                int stamp=SceneClock.now();if(!movement.useLift(stamp))return false;lift=entities.vial(actor(),spec,stamp);
                 if(lift==0){movement.resetInput(stamp);return false;}usedItems.add(id);health.curseItem(id,stamp);updateLife(stamp);return true;
             }
             if(!spec.text("kind","").equals("capsule"))return false;
