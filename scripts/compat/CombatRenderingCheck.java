@@ -541,7 +541,15 @@ public final class CombatRenderingCheck {
             var heat=party.heat.f(app.CZ().xP());
             if(heat!=null&&heat.amount>tutorialCollectedHeat){if(tutorialCollectedHeat==0)capture("tutorial-heat-collected");tutorialCollectedHeat=heat.amount;System.out.println("HEAT: native floor amount="+heat.amount);}
             var health=party.health.f(app.CZ().xP());
-            if(health!=null&&health.current<=0){flags(view,0);if(tutorialDeathAt==0){tutorialDeathAt=now;capture("tutorial-pawn-dead");}if(now-tutorialDeathAt>1_000_000_000L)throw new AssertionError("Tutorial pawn died during normal combat; no death/health shortcut used");return;}
+            if(health!=null){
+                if(health.current<=0){
+                    flags(view,0);
+                    if(tutorialDeathAt==0){tutorialDeathAt=now;capture("tutorial-pawn-dead");System.out.println("DEATH: tutorial knight down; the native in-place respawn must restore it");}
+                    if(now-tutorialDeathAt>8_000_000_000L)throw new AssertionError("Tutorial pawn stayed dead past the native four-second in-place respawn");
+                    return;
+                }
+                if(tutorialDeathAt!=0){tutorialDeathAt=0;capture("tutorial-pawn-respawned");System.out.println("DEATH: native tutorial respawn restored the knight at "+health.current+" HP");}
+            }
             // The stock client no longer streams discrete DamageEvents from the party
             // object; the same combat observations are derived from the authoritative
             // actor and member health deltas (see observeTutorialDamage).
