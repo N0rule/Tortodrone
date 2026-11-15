@@ -393,7 +393,7 @@ public final class ServerIntegrationTest {
 
     private static void checkLogFormat(String log) {
         check(log.lines().allMatch(line -> line.matches(
-            "\\[\\d{2}:\\d{2}:\\d{2}\\] \\[[^/\\]]+/(INFO|DEBUG|WARN|ERROR)\\]: .+")), "time/thread/level log format");
+            "\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2} [+-]\\d{2}:\\d{2}\\] \\[[^/\\]]+/(INFO|DEBUG|WARN|ERROR)\\]: .+")), "time/thread/level log format");
     }
 
     private static ProcessBuilder command(Path jar, Path config, Path directory) {
