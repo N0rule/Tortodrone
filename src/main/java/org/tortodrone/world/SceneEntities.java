@@ -43,8 +43,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
         SceneActions.Prepared partyIntersection;
         float scriptRotation;
         final SceneTargeting targeting;
-        /** Maximum effective edge distance for attacks, capped to the damage shape radius. */
-        final float attackRangeCap;
+        /** Per attack slot, the effective edge range a melee damage region can reach.
+         *  Only slots whose first fire action is a transformed damage circle carry an
+         *  entry; ranged/projectile slots keep their native targeting range. */
+        final Map<Integer,Float> meleeRangeCaps;
         SceneTargeting.Mode targetMode;boolean targetModeUpdate,idleAttackDone;float targetRotation;
         final SceneWander wander;
         final SceneFollow follow;
@@ -84,7 +86,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             }
             if(spec.fields().containsKey("door-lock")&&(!spec.text("kind","").equals("Door")||!spec.text("door-lock","").equals("gold")))throw new IllegalArgumentException("Unsupported scene door lock");
             script=SceneMovementScript.read(spec);program=SceneScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);follow=SceneFollow.read(spec);attackMotion=SceneAttackMotion.readAll(spec);
-            attackRangeCap=meleeDamageRadius(spec);
+            meleeRangeCaps=meleeRangeCaps(spec);
             platform=ScenePartyPlatform.read(spec);
             elevator=SceneElevator.read(spec);
             try{
@@ -798,11 +800,28 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(Math.abs(delta)<.0001f){e.rotation=e.direction=target;return true;}
         e.rotation=e.direction=(float)Math.IEEEremainder(e.rotation+Math.copySign(Math.min(Math.abs(delta),step),delta),2*Math.PI);return false;
     }
-    /** Extract the damage circle radius from attack.0's first fire action. Returns Float.MAX_VALUE when
-     *  no damage shape can be determined (charging/ranged attacks handle their own range). */
-    private static float meleeDamageRadius(SceneContent.Spec spec){
+    /** Per attack slot, the damage circle radius its first fire action can reach. A
+     *  monster that stops at the native targeting range can be unable to land a melee
+     *  region whose circle is smaller than that range (the Jelly Cube stops at
+     *  1.9997 edge while its resolved Medium circle reaches 1.5). Cap only that
+     *  slot, so a projectile or beam on another slot keeps its full range. */
+    private static Map<Integer,Float> meleeRangeCaps(SceneContent.Spec spec){
+        var caps=new HashMap<Integer,Float>();
+        for(String key:spec.fields().keySet()){
+            if(!key.startsWith("attack.")||!key.endsWith(".fire.0.action"))continue;
+            String slot=key.substring("attack.".length(),key.length()-".fire.0.action".length());
+            if(slot.isEmpty()||slot.length()>3||!slot.chars().allMatch(Character::isDigit))continue;
+            int index=Integer.parseInt(slot);float radius=meleeDamageRadius(spec,index);
+            if(radius!=Float.MAX_VALUE)caps.put(index,radius);
+        }
+        return Map.copyOf(caps);
+    }
+    /** Extract the damage circle radius from the attack slot's first fire action. Returns
+     *  Float.MAX_VALUE when no damage shape can be determined (charging/ranged attacks
+     *  handle their own range). */
+    private static float meleeDamageRadius(SceneContent.Spec spec,int slot){
         try{
-            String json=spec.text("attack.0.fire.0.action","");
+            String json=spec.text("attack."+slot+".fire.0.action","");
             if(json.isEmpty())return Float.MAX_VALUE;
             var action=FireCatalog.actionJson(json);
             if(action.kind()!=FireCatalog.Kind.DAMAGE_REGION)return Float.MAX_VALUE;
@@ -995,7 +1014,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(target==null&&e.wander!=null){wander(e,stamp,elapsed);return;}
         if(target!=null)e.wanderPhase=0;
         float attackDistance=e.targeting==null?nearest:target==null?Float.POSITIVE_INFINITY:targetDistance(e,target);
-        float attackRange=e.targeting==null?e.spec.number("attack-distance",0):e.targetMode==null?0:e.targetMode.range();
+        float attackRange=e.targeting==null?e.spec.number("attack-distance",0):e.targetMode==null?0:Math.min(e.targetMode.range(),e.meleeRangeCaps.getOrDefault(e.targetMode.attack(),Float.MAX_VALUE));
         if(target!=null&&e.activity==0&&slot>=0&&(e.targeting==null?stamp>=e.nextAttack:stamp>e.nextAttack)&&attackDistance<=attackRange&&modifiers.attackSpeed()>0
                 &&sight(e,target.x(),target.y())){
             if(e.targeting!=null&&e.targetMode.faces()&&modifiers.canRotate()){
