@@ -25,14 +25,14 @@ public final class ScenePlayerStatsExport {
         if (cm == null || out == null) throw new NullPointerException();
         TreeMap<String, String> values = new TreeMap<>();
         put(values, "player.base-health", "200");
-        var pc=cm.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Default").ai(cm);
+        var pc=cm.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Default").al(cm);
         put(values,"player.collision-mask",Integer.toString(pc.collisionMask));
         put(values,"player.collision-flags",Integer.toString(pc.collisionFlags));
-        var interaction=((com.threerings.projectx.config.ProjectXActorConfig.Knight)pc).interactionShape.acS().aex();
-        put(values,"player.interaction-offset-x",Float.toString((interaction.tt().x+interaction.tu().x)/2));
-        put(values,"player.interaction-offset-y",Float.toString((interaction.tt().y+interaction.tu().y)/2));
-        put(values,"player.interaction-radius",Float.toString(Math.min(interaction.tu().x-interaction.tt().x,interaction.tu().y-interaction.tt().y)/2));
-        var dungeon=(com.threerings.projectx.dungeon.config.DungeonActorConfig.Dungeoneer)cm.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Level").ai(cm);
+        var interaction=((com.threerings.projectx.config.ProjectXActorConfig.Knight)pc).interactionShape.adH().afo();
+        put(values,"player.interaction-offset-x",Float.toString((interaction.tA().x+interaction.tB().x)/2));
+        put(values,"player.interaction-offset-y",Float.toString((interaction.tA().y+interaction.tB().y)/2));
+        put(values,"player.interaction-radius",Float.toString(Math.min(interaction.tB().x-interaction.tA().x,interaction.tB().y-interaction.tA().y)/2));
+        var dungeon=(com.threerings.projectx.dungeon.config.DungeonActorConfig.Dungeoneer)cm.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Level").al(cm);
         put(values,"player.damage-mask",Integer.toString(dungeon.damageMask));
         // Server-only field: original Dungeoneer initializer and modern Training
         // thrown-vial deltas (source 144059) both establish a one-unit launch Z.
@@ -40,7 +40,7 @@ public final class ScenePlayerStatsExport {
 
         ConfigGroup<ItemConfig> group = configGroup(cm);
         List<ItemConfig> configs = new ArrayList<>();
-        for (ItemConfig config : group.kK()) configs.add(config);
+        for (ItemConfig config : group.kR()) configs.add(config);
         configs.sort(Comparator.comparing(ItemConfig::getName));
         for (ItemConfig config : configs) {
             ItemConfig.Original original = config.w(cm);
@@ -48,10 +48,10 @@ public final class ScenePlayerStatsExport {
             String name = config.getName();
             var level = gear.c(cm, 0);
             for(int mask:new int[]{1,2,4,8,16,32,64}){
-                int resist=level.eK(gear.defense.ei(mask));
+                int resist=level.ay(gear.defense.eq(mask),0);
                 if(resist!=0)put(values,"gear."+name+".status-resist."+mask,Integer.toString(resist));
             }
-            put(values, "gear." + name + ".health-bonus", Integer.toString(level.fr(0)));
+            put(values, "gear." + name + ".health-bonus", Integer.toString(level.fz(0)));
             for (String damageType : DAMAGE_TYPES) {
                 DamageSummary.DamageType type = DamageSummary.DamageType.valueOf(damageType.toUpperCase());
                 int base = gear.defense.a(cm, type, 0, gear.rarity);

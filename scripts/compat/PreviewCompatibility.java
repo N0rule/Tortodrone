@@ -12,7 +12,7 @@ public class PreviewCompatibility {
  public static void main(String[] args)throws Exception {
   System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
   var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-  resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+  resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
   var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
   var builder=Arrays.stream(Class.forName("com.threerings.projectx.item.b.b").getMethods()).filter(m->m.getName().equals("a")&&Arrays.equals(m.getParameterTypes(),new Class[]{int.class,boolean.class,boolean.class,ProjectXCodes.EyeType.class,ProjectXCodes.KnightHeight.class,Collection.class,Collection.class})).findFirst().orElseThrow();
   var bytes=new ByteArrayOutputStream();append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic-session","Alice"));

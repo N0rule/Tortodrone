@@ -30,7 +30,7 @@ public final class FireCompatibility {
             if(orbit==null){
                 Object nativeActor=event.afd()[0];
                 check((float)field(nativeActor,"_z")==Float.NEGATIVE_INFINITY
-                    &&!(boolean)nativeActor.getClass().getMethod("Rf").invoke(nativeActor),"native floor Z is unspecified: "+model.name());
+                    &&!(boolean)nativeActor.getClass().getMethod("RG").invoke(nativeActor),"native floor Z is unspecified: "+model.name());
             }
             if(orbit!=null){var nativeActor=event.afd()[0];
                 check(nativeActor.getClass().getSimpleName().equals(p.nativeClass()),"native orbital class");

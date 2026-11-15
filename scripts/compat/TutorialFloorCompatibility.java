@@ -47,8 +47,8 @@ public final class TutorialFloorCompatibility {
                 append(wire,codec.party((short)5,parties.view(member),scene,true));
                 var camp=registry.destination(1,profile.worldId(),member);
                 append(wire,codec.sceneMove(1555,(short)6,true,camp,registry.catalog()));
-                var reader=new com.threerings.io.v(new ByteArrayInputStream(wire.toByteArray()));reader.qe();reader.qe();
-                var server=(ServerObject)((ObjectResponse<?>)reader.qe()).yk();
+                var reader=new com.threerings.io.v(new ByteArrayInputStream(wire.toByteArray()));reader.ql();reader.ql();
+                var server=(ServerObject)((ObjectResponse<?>)reader.ql()).yo();
                 GateSummary gate=null;for(var candidate:server.gates)if((int)field(candidate,"_gateId")==397)gate=candidate;
                 check(gate!=null,"tutorial gate exists in native bootstrap");
                 check(field(gate,"_name").equals("m.tutorial_b")&&field(gate,"_icon").equals("queen")&&(int)field(gate,"_flags")==3&&(int)field(gate,"_tokens")==9,"captured tutorial gate identity and flags");
@@ -57,24 +57,24 @@ public final class TutorialFloorCompatibility {
                 var lengths=(float[])field(wheels[0],"_lengths");check(lengths.length==1&&lengths[0]==(float)(2*Math.PI)&&wheels[0].aD(0)==0,"one native full-circle wedge with valid index lookup");
                 boolean campPresent=false;for(var town:server.towns)if(town.defaultSceneId==217)campPresent=true;
                 check(campPresent,"Camp town is present in the bootstrap");
-                var party=(LevelPartyObject)((ObjectResponse<?>)reader.qe()).yk();
+                var party=(LevelPartyObject)((ObjectResponse<?>)reader.ql()).yo();
                 checkParty(party,false);
-                for(var child:((CompoundEvent)((EventNotification)reader.qe()).yj()).xE())child.b(party);
+                for(var child:((CompoundEvent)((EventNotification)reader.ql()).yn()).xI())child.b(party);
                 check(!party.inviteOnly&&party.allowFriends&&party.allowGuild,"boxed native party-setting attribute updates");
-                for(var child:((CompoundEvent)((EventNotification)reader.qe()).yj()).xE())child.b(party);
+                for(var child:((CompoundEvent)((EventNotification)reader.ql()).yn()).xI())child.b(party);
                 checkParty(party,false);
-                var compound=(CompoundEvent)((EventNotification)reader.qe()).yj();
-                check(compound.xE().size()==4,"exact final-floor transaction size");
+                var compound=(CompoundEvent)((EventNotification)reader.ql()).yn();
+                check(compound.xI().size()==4,"exact final-floor transaction size");
                 String[] fields={"pendingFloorType","pendingFloorDepth","pendingFloorName","returnFloor"};
                 for(int i=0;i<fields.length;i++){
-                    var event=(AttributeChangedEvent)compound.xE().get(i);check(event.getName().equals(fields[i]),"native report event order "+fields[i]);event.b(party);
+                    var event=(AttributeChangedEvent)compound.xI().get(i);check(event.getName().equals(fields[i]),"native report event order "+fields[i]);event.b(party);
                     if(i==2)check(party.pendingFloorType==LevelPartyObject.FloorType.NORMAL&&party.pendingFloorDepth==-1&&event.getValue()==null,"name event opens the report with already-current type/depth, including null name");
                 }
                 checkParty(party,true);
-                checkParty((LevelPartyObject)((ObjectResponse<?>)reader.qe()).yk(),true);
-                var move=(InvocationResponseEvent)((EventNotification)reader.qe()).yj();
-                check(Arrays.stream(move.yd()).anyMatch(v->v instanceof com.threerings.projectx.town.data.TownSceneConfig),"native Haven town scene config");
-                var model=Arrays.stream(move.yd()).filter(v->v instanceof com.threerings.tudey.data.TudeySceneModel).map(v->(com.threerings.tudey.data.TudeySceneModel)v).findFirst().orElseThrow();
+                checkParty((LevelPartyObject)((ObjectResponse<?>)reader.ql()).yo(),true);
+                var move=(InvocationResponseEvent)((EventNotification)reader.ql()).yn();
+                check(Arrays.stream(move.yh()).anyMatch(v->v instanceof com.threerings.projectx.town.data.TownSceneConfig),"native Haven town scene config");
+                var model=Arrays.stream(move.yh()).filter(v->v instanceof com.threerings.tudey.data.TudeySceneModel).map(v->(com.threerings.tudey.data.TudeySceneModel)v).findFirst().orElseThrow();
                 check(model.sceneId==1&&model.version==route.destination().version()&&reader.available()==0,"native Haven callback carries the original scene/version without trailing bytes");
                 registry.release(scene,profile.worldId());
             }
@@ -145,16 +145,16 @@ public final class TutorialFloorCompatibility {
         append(wire,codec.knightMemoryChanges(1555,Set.of("talkto_rhendon_icon"),Set.of("talkto_rhendon_icon","fixture_other")));
         append(wire,codec.knightMemoryChanges(1555,Set.of("talkto_rhendon_icon","fixture_other"),Set.of("fixture_other")));
         append(wire,codec.knightMemoryChanges(1555,Set.of("fixture_other"),Set.of()));
-        var in=new com.threerings.io.v(new ByteArrayInputStream(wire.toByteArray()));in.qe();in.qe();
-        var player=(com.threerings.projectx.data.PlayerObject)((ObjectResponse<?>)in.qe()).yk();
-        ((EventNotification)in.qe()).yj().b(player);
+        var in=new com.threerings.io.v(new ByteArrayInputStream(wire.toByteArray()));in.ql();in.ql();
+        var player=(com.threerings.projectx.data.PlayerObject)((ObjectResponse<?>)in.ql()).yo();
+        ((EventNotification)in.ql()).yn().b(player);
         var memory=player.memories.f("talkto_rhendon_icon");
-        check(player.memories.size()==1&&memory!=null&&memory.persistence==com.threerings.projectx.config.Persistence.KNIGHT&&memory.lj().equals("talkto_rhendon_icon"),"stock Memory persistence/identity and native DSet snapshot");
-        for(var child:((CompoundEvent)((EventNotification)in.qe()).yj()).xE())child.b(player);
+        check(player.memories.size()==1&&memory!=null&&memory.persistence==com.threerings.projectx.config.Persistence.KNIGHT&&memory.getKey().equals("talkto_rhendon_icon"),"stock Memory persistence/identity and native DSet snapshot");
+        for(var child:((CompoundEvent)((EventNotification)in.ql()).yn()).xI())child.b(player);
         check(player.memories.size()==2&&player.memories.f("fixture_other")!=null,"native EntryAddedEvent informs memory observers");
-        for(var child:((CompoundEvent)((EventNotification)in.qe()).yj()).xE())child.b(player);
+        for(var child:((CompoundEvent)((EventNotification)in.ql()).yn()).xI())child.b(player);
         check(player.memories.size()==1&&player.memories.f("talkto_rhendon_icon")==null,"native erase removes the named memory without changing its peer");
-        for(var child:((CompoundEvent)((EventNotification)in.qe()).yj()).xE())child.b(player);
+        for(var child:((CompoundEvent)((EventNotification)in.ql()).yn()).xI())child.b(player);
         check(player.memories.isEmpty()&&in.available()==0,"native clear and stream alignment");
         System.out.println("PASS: stock reader accepts KNIGHT Memory DSet snapshot and native add/remove observer events");
     }

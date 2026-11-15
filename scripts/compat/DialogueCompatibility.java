@@ -4,7 +4,7 @@ import java.util.*;
 public final class DialogueCompatibility {
     public static void main(String[] args)throws Exception {
         Locale.setDefault(Locale.ENGLISH);
-        var manager=new com.threerings.util.R("rsrc.i18n");var bundle=manager.gw("conversation");
+        var manager=new com.threerings.util.R("rsrc.i18n");var bundle=manager.gE("conversation");
         if(!bundle.f("r.atg_greeter_2a","FixtureKnight").equals("Thanks! I'm off to explore now."))throw new AssertionError("Verified stock dialogue localization changed");
         if(!bundle.cP("~Literal sentence").equals("Literal sentence"))throw new AssertionError("Separate literal decoder changed");
         String actual=bundle.f("~Literal sentence","FixtureKnight");

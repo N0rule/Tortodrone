@@ -880,7 +880,12 @@ public final class SessionCodec {
         if(a.participated()&&a.bidder()!=0&&!a.mine())status=a.bidder()==listingViewer?2:3;else if(!a.participated()&&a.watching())status=4;
         value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.BidStatus",status));
         int time=a.timeLeft(System.currentTimeMillis());
-        value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.TimeLeft",time));out.writeInt(a.buy());out.writeInt(a.bid());string(out,a.item().config());out.writeBoolean(false);out.writeInt(a.item().count());out.writeBoolean(a.mine());if(a.featured()){type(out,"com.threerings.projectx.auction.data.FeaturedInfo");out.writeShort(a.featuredRemaining());out.writeShort(a.featuredTotal());}else out.writeShort(0);
+        value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.TimeLeft",time));out.writeInt(a.buy());out.writeInt(a.bid());
+        // The current ListingInfo carries a numeric config id plus the export-encoded
+        // config arguments. Torodrone items are identified by name and do not carry
+        // per-instance config arguments, so send the stock id and a null argument map.
+        var definition=itemCatalog.find(a.item().config());out.writeInt(definition==null?0:definition.stockId());out.writeBoolean(false);
+        out.writeInt(a.item().count());out.writeBoolean(a.mine());if(a.featured()){type(out,"com.threerings.projectx.auction.data.FeaturedInfo");out.writeShort(a.featuredRemaining());out.writeShort(a.featuredTotal());}else out.writeShort(0);
     }
     private static String auctionMailText(String text){
         return text!=null&&text.matches("%auction:[sm]\\.(auction|bid)_.*")?"%uplink:"+text.substring(9):text;

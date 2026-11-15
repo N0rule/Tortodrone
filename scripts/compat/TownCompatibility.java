@@ -11,10 +11,14 @@ import com.threerings.projectx.data.PlayerObject;
 /** Focused stock-reader check for Town messages; no server or graphical client is launched. */
 public final class TownCompatibility {
     public static void main(String[] args)throws Exception{
+        // The stock editor registry reflects actor classes during PropertyEditor's own
+        // static initializer; prime the base class first so the subclass static cycle
+        // never starts from this direction.
+        Class.forName("com.threerings.editor.swing.PropertyEditor");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var sprite=new TownState.Sprite(7,"Drakon","Sparky",16,.5f,12345L,0,1,Set.of(6),0,List.of(1,2,0,0,0,0,0,0,0),List.of(0,0,0),9);
         var item=new WorldProfile.Item(20,WorldProfile.Slot.SWORD,"Weapon/Sword/Calibur",null,0,null,false,true,false,1,false,2,.4f,List.of(new StarterCatalog.Model("Weapon/Damage 1",Map.of())));
-        var mail=new AuctionState.Mail(10,42,123456L,"~Auction","~Result",100,null,false,false);
+        var mail=new AuctionState.Mail(10,42,123456L,"~Auction","~Result",100,0,List.of(),false,false,0,null,0,0,null);
         var state=new TownState(List.of(new TownState.LearnedRecipe(5,"Sword/Calibur",0,0)),List.of(sprite),7,List.of(new TownState.Harness(9,"Iron Harness")),List.of(mail));
         var profile=new WorldProfile(42,1,1,1000,100,1,List.of(item),KnightProgress.RECRUIT,state);
         var codec=new SessionCodec();var bytes=new ByteArrayOutputStream();
@@ -51,33 +55,33 @@ public final class TownCompatibility {
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,350,400,(short)50,auxiliary,List.of(),new int[0],Map.of(),true));
         int afterAuxiliary=bytes.size();
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,400,450,(short)50,List.of(),auxiliary,new int[0],Map.of(),true));
-        var in=new v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();var player=(PlayerObject)((ObjectResponse)in.qe()).yk();apply(in,player);apply(in,player);
+        var in=new v(new ByteArrayInputStream(bytes.toByteArray()));in.ql();in.ql();var player=(PlayerObject)((ObjectResponse)in.ql()).yo();apply(in,player);apply(in,player);
         if(!field(player.items.iterator().next(),"_level").equals(2))throw new AssertionError("Native crafted item level missing");
         if(!field(player.items.iterator().next(),"_heatProgress").equals(.4f)||java.lang.reflect.Array.getLength(field(player.items.iterator().next(),"_variants"))!=1)throw new AssertionError("Native heat or UV item state differs");
         if(player.sprites.size()!=1||player.recipes.size()!=1||player.equippedSprite!=7||player.harnesses.size()!=1||player.newMailInfo.size()!=1)throw new AssertionError("Native Town sets differ");
         for(int i=0;i<9;i++){apply(in,player);if(player.sceneDialog==null||player.sceneDialogCreated!=123456)throw new AssertionError("Native station dialog missing");}
         apply(in,player);if(!(player.uniqueDialog instanceof com.threerings.projectx.shop.data.UniqueShopInfo))throw new AssertionError("Native shop stock missing");
-        for(int i=0;i<3;i++)if(!(in.qe() instanceof EventNotification))throw new AssertionError("Missing Town callback");
-        var featuredReply=(com.threerings.presents.dobj.InvocationResponseEvent)((EventNotification)in.qe()).yj();
-        var nativeFeatured=((com.threerings.projectx.auction.data.ListingsPage)featuredReply.yd()[0]).listings.getFirst();
+        for(int i=0;i<3;i++)if(!(in.ql() instanceof EventNotification))throw new AssertionError("Missing Town callback");
+        var featuredReply=(com.threerings.presents.dobj.InvocationResponseEvent)((EventNotification)in.ql()).yn();
+        var nativeFeatured=((com.threerings.projectx.auction.data.ListingsPage)featuredReply.yh()[0]).listings.getFirst();
         if(nativeFeatured.featured==null||nativeFeatured.featured.total!=10||nativeFeatured.featured.remaining!=9||nativeFeatured.myAuction)throw new AssertionError("Featured stock/ownership fields differ");
-        var depotReply=(com.threerings.presents.dobj.InvocationResponseEvent)((EventNotification)in.qe()).yj();
-        var nativeGood=(com.threerings.projectx.mission.data.RankGood)((Map<?,?>)depotReply.yd()[0]).get(7);
-        if(nativeGood==null||!field(nativeGood.good,"_realPrice").equals(500)||!field(nativeGood.good,"_realEnergy").equals(200)||!nativeGood.special||!nativeGood.TY()||!field(nativeGood.good,"_originalPrice").equals(400)||!field(nativeGood.good,"_sale").equals(true)||nativeGood.promoHeader!=null||nativeGood.promoDetail!=null)throw new AssertionError("Depot good price/promotion fields differ");
+        var depotReply=(com.threerings.presents.dobj.InvocationResponseEvent)((EventNotification)in.ql()).yn();
+        var nativeGood=(com.threerings.projectx.mission.data.RankGood)((Map<?,?>)depotReply.yh()[0]).get(7);
+        if(nativeGood==null||!field(nativeGood.good,"_realPrice").equals(500)||!field(nativeGood.good,"_realEnergy").equals(200)||!nativeGood.special||!nativeGood.UF()||!field(nativeGood.good,"_originalPrice").equals(400)||!field(nativeGood.good,"_sale").equals(true)||nativeGood.promoHeader!=null||nativeGood.promoDetail!=null)throw new AssertionError("Depot good price/promotion fields differ");
         if(bytes.size()-in.available()!=callbackEnd)throw new AssertionError("Callback boundary differs by "+(bytes.size()-in.available()-callbackEnd)+" bytes");
-        var added=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();var nativeActor=(com.threerings.projectx.data.actor.Knight)added.aej()[0];if(field(nativeActor,"_sprite")==null)throw new AssertionError("Native equipped sprite absent from Knight");
-        var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();nativeActor=(com.threerings.projectx.data.actor.Knight)delta.aek()[0].apply(nativeActor);if(field(nativeActor,"_sprite")!=null)throw new AssertionError("Native sprite removal delta failed");
-        var petAdded=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();var nativePet=(com.threerings.projectx.dungeon.data.actor.SpriteActor)petAdded.aej()[0];
+        var added=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.ql()).yn();var nativeActor=(com.threerings.projectx.data.actor.Knight)added.afd()[0];if(field(nativeActor,"_sprite")==null)throw new AssertionError("Native equipped sprite absent from Knight");
+        var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.ql()).yn();nativeActor=(com.threerings.projectx.data.actor.Knight)delta.afe()[0].apply(nativeActor);if(field(nativeActor,"_sprite")!=null)throw new AssertionError("Native sprite removal delta failed");
+        var petAdded=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.ql()).yn();var nativePet=(com.threerings.projectx.dungeon.data.actor.SpriteActor)petAdded.afd()[0];
         if(!field(nativePet,"_knightId").equals(42))throw new AssertionError("Pet owner missing");
-        var petDelta=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();nativePet=(com.threerings.projectx.dungeon.data.actor.SpriteActor)petDelta.aek()[0].apply(nativePet);
+        var petDelta=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.ql()).yn();nativePet=(com.threerings.projectx.dungeon.data.actor.SpriteActor)petDelta.afe()[0].apply(nativePet);
         if(!field(nativePet,"_follow").equals(true)||!field(nativePet,"_shieldHealth").equals(40)||((int[])field(nativePet,"_nextSkill"))[2]!=300||!field(nativePet,"_shieldPower").equals("0"))throw new AssertionError("Native pet delta differs");
-        var dungeonAdd=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();var nativeDungeon=dungeonAdd.aej()[0];
+        var dungeonAdd=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.ql()).yn();var nativeDungeon=dungeonAdd.afd()[0];
         if(!field(nativeDungeon,"_spriteId").equals(companion.id())||!field(nativeDungeon,"_spriteAttack").equals(1))throw new AssertionError("Dungeon companion identity missing");
-        var dungeonUpdate=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();nativeDungeon=(com.threerings.tudey.data.actor.Actor)dungeonUpdate.aek()[0].apply(nativeDungeon);
+        var dungeonUpdate=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.ql()).yn();nativeDungeon=(com.threerings.tudey.data.actor.Actor)dungeonUpdate.afe()[0].apply(nativeDungeon);
         if(!field(nativeDungeon,"_spriteId").equals(companion.id()))throw new AssertionError("Dungeon companion delta differs");
         if(bytes.size()-in.available()!=beforeAuxiliary)throw new AssertionError("Dungeon packet boundary differs by "+(bytes.size()-in.available()-beforeAuxiliary)+" bytes");
-        var auxAdd=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();if(bytes.size()-in.available()!=afterAuxiliary)throw new AssertionError("Auxiliary packet boundary differs by "+(bytes.size()-in.available()-afterAuxiliary)+" bytes");var auxUpdate=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();
-        for(int i=0;i<3;i++){var nativeAux=auxUpdate.aek()[i].apply(auxAdd.aej()[i]);if(i==1&&!field(nativeAux,"_endPoint").equals(new com.threerings.math.Vector2f(4,0)))throw new AssertionError("Laser endpoint differs");if(i==2&&!field(nativeAux,"_followId").equals(42))throw new AssertionError("Orbital follow identity differs");}
+        var auxAdd=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.ql()).yn();if(bytes.size()-in.available()!=afterAuxiliary)throw new AssertionError("Auxiliary packet boundary differs by "+(bytes.size()-in.available()-afterAuxiliary)+" bytes");var auxUpdate=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.ql()).yn();
+        for(int i=0;i<3;i++){var nativeAux=auxUpdate.afe()[i].apply(auxAdd.afd()[i]);if(i==1&&!field(nativeAux,"_endPoint").equals(new com.threerings.math.Vector2f(4,0)))throw new AssertionError("Laser endpoint differs");if(i==2&&!field(nativeAux,"_followId").equals(42))throw new AssertionError("Orbital follow identity differs");}
         if(in.available()!=0)throw new AssertionError("Trailing Town wire bytes");
         upstream();
         serviceMessages();
@@ -97,22 +101,22 @@ public final class TownCompatibility {
         var owner=new WorldProfile(42,1,1,0,0,1,List.of(giftItem));
         append(bytes,codec.player((short)4,1002,1,"Fixture"));append(bytes,codec.itemChanges(1002,choices(),new WorldProfile(42,1,1,0,0,1,List.of()),owner));
         append(bytes,codec.townResult(1002,(short)8,new SessionDecoder.Multiset(Map.of(71L,1)),owner));
-        var in=new v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
+        var in=new v(new ByteArrayInputStream(bytes.toByteArray()));in.ql();in.ql();
         for(String command:List.of("forge","show_arsenal_station")){
-            var event=(MessageEvent)((EventNotification)in.qe()).yj();
-            var action=(com.threerings.tudey.config.ClientActionConfig.ControllerAction)event.yd()[0];
+            var event=(MessageEvent)((EventNotification)in.ql()).yn();
+            var action=(com.threerings.tudey.config.ClientActionConfig.ControllerAction)event.yh()[0];
             if(!event.getName().equals("forceClientAction")||!action.command.equals(command)||!action.argument.equals(""))throw new AssertionError("Native controller action layout differs");
         }
-        var scene=(com.threerings.projectx.data.ProjectXSceneObject)((ObjectResponse)in.qe()).yk();
+        var scene=(com.threerings.projectx.data.ProjectXSceneObject)((ObjectResponse)in.ql()).yo();
         if(scene.mapIcons.size()!=registry.entry().map().content().mapIcons().size()||scene.mapIcons.isEmpty())throw new AssertionError("Native scene minimap markers missing");
         for(var icon:scene.mapIcons)if(!icon.getIcon().startsWith("ui/minimap/"))throw new AssertionError("Non-stock minimap icon");
-        var policy=(AttributeChangedEvent)((EventNotification)in.qe()).yj();
+        var policy=(AttributeChangedEvent)((EventNotification)in.ql()).yn();
         if(policy.getValue()!=PlayerObject.EquipPolicy.ANY)throw new AssertionError("Native equipment policy differs");
-        var player=(PlayerObject)((ObjectResponse)in.qe()).yk();apply(in,player);
+        var player=(PlayerObject)((ObjectResponse)in.ql()).yo();apply(in,player);
         var gift=(com.threerings.projectx.item.data.GiftBoxItem)player.items.iterator().next();
         if(!gift.getMessage().equals("A gift for you")||!field(gift,"_wrapperName").equals("Gift-Alice")||((com.google.common.collect.Multiset<?>)field(gift,"_gifts")).size()!=1)throw new AssertionError("Native gift contents or author fields differ");
-        var unwrapped=(InvocationResponseEvent)((EventNotification)in.qe()).yj();
-        if(!unwrapped.yd()[0].equals(com.google.common.collect.ImmutableMultiset.of(71L))||in.available()!=0)throw new AssertionError("Native unwrap callback differs");
+        var unwrapped=(InvocationResponseEvent)((EventNotification)in.ql()).yn();
+        if(!unwrapped.yh()[0].equals(com.google.common.collect.ImmutableMultiset.of(71L))||in.available()!=0)throw new AssertionError("Native unwrap callback differs");
     }
     private static void upstream()throws Exception{
         var buys=com.google.common.collect.HashMultiset.<Integer>create();buys.add(2,3);var sells=com.google.common.collect.HashMultiset.<Long>create();sells.add(45L,2);
@@ -132,5 +136,5 @@ public final class TownCompatibility {
     private static Object field(Object value,String name)throws Exception{for(Class<?> type=value.getClass();type!=null;type=type.getSuperclass())try{var field=type.getDeclaredField(name);field.setAccessible(true);return field.get(value);}catch(NoSuchFieldException absent){}throw new AssertionError("Missing native field: "+name);}
     private static Knight choices(){return new Knight(1,"Fixture","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,1);}
     private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
-    private static void apply(v in,DObject object)throws Exception{var event=((EventNotification)in.qe()).yj();if(event instanceof CompoundEvent compound)for(var child:compound.xE())child.b(object);else event.b(object);}
+    private static void apply(v in,DObject object)throws Exception{var event=((EventNotification)in.ql()).yn();if(event instanceof CompoundEvent compound)for(var child:compound.xI())child.b(object);else event.b(object);}
 }

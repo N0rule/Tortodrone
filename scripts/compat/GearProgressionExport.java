@@ -10,10 +10,10 @@ public final class GearProgressionExport {
     public static void main(String[] args)throws Exception{
         Path game=Path.of(args[0]).toRealPath(),out=Path.of(args[1]).toAbsolutePath().normalize();
         if(Files.exists(out)||out.startsWith(game))throw new IOException("Choose a fresh output directory outside the installation");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
+        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
         var gear=new ArrayList<Object>();var forges=new TreeMap<String,Object>();var tables=new ArrayList<Object>();
-        for(var config:manager.bd(ItemConfig.class).kK()){
+        for(var config:manager.be(ItemConfig.class).kR()){
             var original=config.w(manager);if(!(original instanceof ItemConfig.Level level))continue;
             if(!(level.L(manager) instanceof ItemPropertyConfig.LevelItemProps props))continue;
             gear.add(Map.of("config",config.getName(),"levels",level.K(manager),"baseHeat",props.baseHeat,"maxHeat",props.maxHeat,"forge",props.forgeProperty==null?"":props.forgeProperty.getName()));
@@ -22,7 +22,7 @@ public final class GearProgressionExport {
             for(var row:forge.props)rows.add(Map.of("crystals",Arrays.stream(row.crystalsNeeded).boxed().toList(),"success",floats(row.success)));
             forges.put(props.forgeProperty.getName(),Map.of("config",props.forgeProperty.getName(),"rows",rows));
         }
-        for(var raw:manager.bd(VariantTableConfig.class).kK()){
+        for(var raw:manager.be(VariantTableConfig.class).kR()){
             var config=manager.a(VariantTableConfig.class,new ConfigReference<VariantTableConfig>(raw.getName()));
             if(config!=null)tables.add(Map.of("config",raw.getName(),"root",table(manager,config,0)));
         }

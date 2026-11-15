@@ -99,8 +99,8 @@ public final class OpeningGateCompatibility {
                     var fixture=new WorldProfile(profile.worldId(),profile.accountId(),profile.knightId(),profile.crowns(),profile.energy(),profile.revision(),profile.items(),state,profile.town());
                     append(bytes,codec.homeTown(1009,fixture));
                 }
-                var reader=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));reader.qe();reader.qe();
-                var server=(ServerObject)((ObjectResponse<?>)reader.qe()).yk();GateSummary nativeGate=null;for(var candidate:server.gates)if((int)field(candidate,"_gateId")==398)nativeGate=candidate;
+                var reader=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));reader.ql();reader.ql();
+                var server=(ServerObject)((ObjectResponse<?>)reader.ql()).yo();GateSummary nativeGate=null;for(var candidate:server.gates)if((int)field(candidate,"_gateId")==398)nativeGate=candidate;
                 for(var town:server.towns){
                     check((int)field(town,"_townId")== (registry.catalog().scene(town.defaultSceneId).zone()&0x00ffffff),"TownSummary carries an unqualified town ID");
                     check(town.flags==(town.defaultSceneId==217?1:0),"captured initial-Camp intro flag and ordinary powered-Camp/Haven flags");
@@ -108,13 +108,13 @@ public final class OpeningGateCompatibility {
                 check(nativeGate!=null,"native server advertises the available Generator mission gate");
                 check(nativeGate.getClass()==MissionGateSummary.class&&field(nativeGate,"_name").equals("%mission:m.ancient_generator")&&(int)field(nativeGate,"_flags")==8&&(int)field(nativeGate,"_ownerKnightId")==0,"current native mission gate shape, including owner field absent from older archive classes");
                 var wheels=(GateSummary.Wheel[])field(nativeGate,"_wheels");check(wheels.length==2&&((GateSummary.Wedge[])field(wheels[1],"_wedges")).length==1,"both captured gate wheels retained");
-                var nativeParty=(MissionPartyObject)((ObjectResponse<?>)reader.qe()).yk();
+                var nativeParty=(MissionPartyObject)((ObjectResponse<?>)reader.ql()).yo();
                 check(nativeParty.missionId.equals("ancient_generator")&&nativeParty.gateId==398&&nativeParty.floor==1&&nativeParty.depth==1&&nativeParty.levelType==com.threerings.projectx.dungeon.data.DungeonCodes.LevelType.LEVEL&&nativeParty.floorType==LevelPartyObject.FloorType.NORMAL&&nativeParty.difficulty.name().equals("EASY")&&nativeParty.memberLimit==1&&nativeParty.inviteOnly&&nativeParty.wedgeIndices.length==2,"native mission party identity, floor/depth/difficulty and solo settings");
-                var compound=(com.threerings.presents.dobj.CompoundEvent)((EventNotification)reader.qe()).yj();for(var event:compound.xE())event.b(nativeParty);
+                var compound=(com.threerings.presents.dobj.CompoundEvent)((EventNotification)reader.ql()).yn();for(var event:compound.xI())event.b(nativeParty);
                 check(nativeParty.playFanfare&&nativeParty.showLoot&&!nativeParty.showElevatorChoice&&nativeParty.pendingFloorDepth==-1&&nativeParty.pendingFloorType==LevelPartyObject.FloorType.NORMAL&&nativeParty.pendingFloorName==null,"ordered native terminal report fields");
                 var player=new com.threerings.projectx.data.PlayerObject();
                 for(int stage:new int[]{-1,0,1,2,3}){
-                    ((EventNotification)reader.qe()).yj().b(player);int expected=stage==2?218:stage>=0&&stage<2?217:registry.entry().map().id();
+                    ((EventNotification)reader.ql()).yn().b(player);int expected=stage==2?218:stage>=0&&stage<2?217:registry.entry().map().id();
                     check(player.homeTown.defaultSceneId==expected&&(int)field(player.homeTown,"_townId")== (registry.catalog().scene(expected).zone()&0x00ffffff),"native home town follows the saved opening checkpoint: "+stage);
                 }
                 check(reader.available()==0,"town/gate/party/report/home updates retain exact native stream alignment");

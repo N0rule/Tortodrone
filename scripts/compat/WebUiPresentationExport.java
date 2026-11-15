@@ -17,13 +17,13 @@ public final class WebUiPresentationExport {
         Locale.setDefault(Locale.ENGLISH);
         Path game=Path.of(args[0]).toRealPath(),out=Path.of(args[2]).toAbsolutePath();
         if(Files.exists(out)||out.startsWith(game))throw new IOException("Choose fresh output outside client");
-        var messages=new com.threerings.util.R("rsrc.i18n");itemText=messages.gw("item");spriteText=messages.gw("sprites");
+        var messages=new com.threerings.util.R("rsrc.i18n");itemText=messages.gE("item");spriteText=messages.gE("sprites");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,messages,"config/");cm.init();
         var variants=new TreeMap<String,Object>();
-        for(var v:cm.bd(VariantConfig.class).kK()) {
-            if(v.Vj().isEmpty()||v.getName().equals("Message/Message"))continue;
+        for(var v:cm.be(VariantConfig.class).kR()) {
+            if(v.VQ().isEmpty()||v.getName().equals("Message/Message"))continue;
             var facts=new TreeMap<String,Object>();facts.put("label",plain(v.d(itemText)));facts.put("category",v.getClass().getSimpleName());
             for(var field:v.getClass().getFields())if(field.getName().equals("bonus")&&field.get(v) instanceof Enum<?> rank){facts.put("rank",rank.ordinal());facts.put("strength",rank.name());}
             variants.put(v.getName(),facts);
@@ -43,16 +43,16 @@ public final class WebUiPresentationExport {
                 }
                 if(level instanceof ItemConfig.Weapon weapon) {
                     var damage=new DamageSummary();weapon.a(cm,damage);current.a(damage,30,(LevelConfig.Weapons)null,false);
-                    for(var type:DamageSummary.DamageType.values()) {float value=damage.RT().a(type);if(value!=0)stats.put("damage."+type.name().toLowerCase(Locale.ROOT),value);}
+                    for(var type:DamageSummary.DamageType.values()) {float value=damage.SA().a(type);if(value!=0)stats.put("damage."+type.name().toLowerCase(Locale.ROOT),value);}
                     stats.put("attack-speed",(float)weapon.displaySpeed);stats.put("attack-modifier",mods.attackSpeed);
-                    for(var tagged:damage.RU().entrySet())if(tagged.getValue().value!=0)effects.add(plain(itemText.i("m.tagged_damage_"+(tagged.getValue().value<0?"penalty":"bonus"),itemText.cP(ItemCodes.ItemValueKey.DAMAGE.key(tagged.getValue().value)),itemText.cP("t."+tagged.getKey()))));
+                    for(var tagged:damage.SB().entrySet())if(tagged.getValue().value!=0)effects.add(plain(itemText.i("m.tagged_damage_"+(tagged.getValue().value<0?"penalty":"bonus"),itemText.cP(ItemCodes.ItemValueKey.DAMAGE.key(tagged.getValue().value)),itemText.cP("t."+tagged.getKey()))));
                 }
                 levels.add(Map.of("effects",effects,"stats",stats));
             }
             items.put(entry.config(),levels);
         }
         var sprites=new TreeMap<String,Object>();
-        for(var s:cm.bd(BattleSpriteConfig.class).kK()) {
+        for(var s:cm.be(BattleSpriteConfig.class).kR()) {
             var skills=new ArrayList<Object>();
             for(var skill:s.skills)skills.add(Map.of("name",name(skill.name),"upgrades",Arrays.stream(skill.powerNames).map(WebUiPresentationExport::name).toList(),"ultimates",List.of(name(skill.ultimateNameA),name(skill.ultimateNameB))));
             sprites.put(s.getName(),Map.of("name",plain(spriteText.cR(s.spriteName)),"skills",skills));

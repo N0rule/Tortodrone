@@ -11,7 +11,7 @@ public final class SceneCollisionCompatibility {
     public static void main(String[] args)throws Exception {
         Path game=Path.of(args[0]),pack=Path.of(args[1]);
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         Path nativePack=Files.exists(pack.resolve("map.yml"))?pack.resolve("native"):pack;
         var scene=(TudeySceneModel)com.threerings.export.util.b.e(Files.readAllBytes(nativePack.resolve("scene.dat")));scene.init(cm);

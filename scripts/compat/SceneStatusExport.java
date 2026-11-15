@@ -24,7 +24,7 @@ public final class SceneStatusExport {
     public static void export(ConfigManager cm, Map<String, String> out) throws Exception {
         if (cm == null || out == null) throw new NullPointerException();
         List<StatusConditionConfig> configs = new ArrayList<>();
-        for (StatusConditionConfig config : cm.bd(StatusConditionConfig.class).kK())
+        for (StatusConditionConfig config : cm.be(StatusConditionConfig.class).kR())
             if (TYPES.contains(config.getClass().getSimpleName())) configs.add(config);
         configs.sort(Comparator.comparing(StatusConditionConfig::getName));
         if (configs.isEmpty()) throw new IOException("Native status config group has no supported status types");

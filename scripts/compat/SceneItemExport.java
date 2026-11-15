@@ -29,10 +29,10 @@ public final class SceneItemExport {
         java.nio.file.Path game=java.nio.file.Path.of(args[0]).toRealPath(),out=java.nio.file.Path.of(args[1]).toAbsolutePath();
         if(out.startsWith(game)||java.nio.file.Files.exists(out))throw new IOException("Choose a fresh output outside the client");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
         var actions=new TreeMap<String,Object>();
-        for(var config:itemGroup(manager).kK()){
+        for(var config:itemGroup(manager).kR()){
             var original=config.w(manager);
             if(!(original instanceof DungeonItemConfig.Capsule)||config.getConfigId()==0||original.name==null||original.name.isBlank()
                     ||config.getName().contains("/Parts/")||config.getName().contains("/Test/")||config.getName().contains("/Slime/")||config.getName().endsWith("/Base")||config.getName().endsWith(" Base"))continue;
@@ -54,7 +54,7 @@ public final class SceneItemExport {
         if (cm == null || out == null) throw new NullPointerException();
         TreeMap<String, String> values = new TreeMap<>();
         List<ItemConfig> configs = new ArrayList<>();
-        for (ItemConfig config : itemGroup(cm).kK()) configs.add(config);
+        for (ItemConfig config : itemGroup(cm).kR()) configs.add(config);
         configs.sort(Comparator.comparingInt(ItemConfig::getConfigId).thenComparing(ItemConfig::getName));
         List<String> ids = new ArrayList<>();
         int exportId = 0;
@@ -80,7 +80,7 @@ public final class SceneItemExport {
                     "Item", new ConfigReference<ItemConfig>(config.getName()));
                 put(values, prefix + "vial-config", drop.getName());
                 ActorConfig actor = cm.a(ActorConfig.class, drop);
-                if (actor == null || !(actor.ai(cm) instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.PickupLift lift))
+                if (actor == null || !(actor.al(cm) instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.PickupLift lift))
                     throw new IOException("Unresolved native Throwing Vial actor config");
                 if (lift.item == null || !config.getName().equals(lift.item.getName()))
                     throw new IOException("Throwing Vial actor is not bound to its source item " + config.getName());

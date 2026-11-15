@@ -48,8 +48,8 @@ public final class HavenSceneExport {
 
         var sourceFiles=new LinkedHashMap<Pack,Path>();
         for(Pack pack:PACKS) {
-            Path source=archive.resolve(pack.id+".dat").normalize();
-            if(!source.startsWith(archive)||Files.isSymbolicLink(source)||!Files.isRegularFile(source))
+            Path source=sources.resolve(pack.id+".dat").normalize();
+            if(!source.startsWith(sources)||Files.isSymbolicLink(source)||!Files.isRegularFile(source))
                 throw new IOException("Missing or unsafe captured scene: "+pack.id);
             String actual=digest(source);
             if(!actual.equals(pins.getProperty("scene."+pack.id+".sha256")))
@@ -98,7 +98,7 @@ public final class HavenSceneExport {
 
     private static ConfigManager manager(Path game)throws Exception {
         Object resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),
             com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");
         manager.init();return manager;
@@ -123,7 +123,7 @@ public final class HavenSceneExport {
             var discovered=new ArrayList<NativePortal>();
             for(var entry:scenes.get(source).ci(TudeySceneModel.AreaEntry.class)) {
                 if(!entry.area.getName().equals("Portals/Portal"))continue;
-                int id=((Number)entry.getKey()).intValue();var ref=entry.getReference();Map<String,Object> args=ref.kW();
+                int id=((Number)entry.getKey()).intValue();var ref=entry.getReference();Map<String,Object> args=ref.ld();
                 int destination=number(args.get("Scene ID"),"Scene ID",source,id);
                 if(!TOWNS.contains(destination))continue;
                 Object tagged=args.get("Portal");
@@ -176,7 +176,7 @@ public final class HavenSceneExport {
             if(!(config instanceof PlaceableConfig.Marker marker))
                 continue;
             if(marker.defaultEntrance) {
-                Vector3f defaultPosition=entry.transform.tD();Quaternion defaultRotation=entry.transform.tE();
+                Vector3f defaultPosition=entry.transform.tK();Quaternion defaultRotation=entry.transform.tL();
                 float defaultYaw=(float)Math.atan2(2f*(defaultRotation.w*defaultRotation.z+defaultRotation.x*defaultRotation.y),
                     1f-2f*(defaultRotation.y*defaultRotation.y+defaultRotation.z*defaultRotation.z));
                 Entrance fallback=new Entrance(((Number)entry.getKey()).intValue(),defaultPosition.x,defaultPosition.y,defaultYaw);
@@ -185,8 +185,8 @@ public final class HavenSceneExport {
                 defaults.add(fallback);
             }
             if(!entry.placeable.getName().equals("Dynamic/Portal/Destination"))continue;
-            Object raw=entry.placeable.kW().get("Tag");String tag=raw instanceof String value?value:"";
-            Vector3f position=entry.transform.tD();Quaternion rotation=entry.transform.tE();
+            Object raw=entry.placeable.ld().get("Tag");String tag=raw instanceof String value?value:"";
+            Vector3f position=entry.transform.tK();Quaternion rotation=entry.transform.tL();
             float yaw=(float)Math.atan2(2f*(rotation.w*rotation.z+rotation.x*rotation.y),
                 1f-2f*(rotation.y*rotation.y+rotation.z*rotation.z));
             Entrance entrance=new Entrance(((Number)entry.getKey()).intValue(),position.x,position.y,yaw);
@@ -269,7 +269,7 @@ public final class HavenSceneExport {
     }
 
     private static void verifyIntersection(TudeySceneModel.AreaEntry area,ConfigManager manager,int id)throws Exception {
-        AreaConfig.Original config=area.aq(manager);
+        AreaConfig.Original config=area.at(manager);
         if(config.handlers==null)throw new IOException("Native portal area has no handlers: "+id);
         var start=Arrays.stream(config.handlers).filter(h->h instanceof HandlerConfig.IntersectionStart)
             .map(h->(HandlerConfig.IntersectionStart)h).findFirst().orElseThrow(()->new IOException("Native area lacks IntersectionStart: "+id));

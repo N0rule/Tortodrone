@@ -50,7 +50,7 @@ public final class CraftCompatibility {
         craft.a(3,new long[0],false,(A.c)null);
         invocation=decode(dispatch.event);check("empty items",((long[])invocation.arguments().get(1)).length==0,true);
         // Dialog closes ride the scene service as [created].
-        var scene=new ProjectXSceneMarshaller();scene.a(10,6,dispatch);scene.R(123456L);
+        var scene=new ProjectXSceneMarshaller();scene.a(10,6,dispatch);scene.Q(123456L);
         invocation=decode(dispatch.event);check("service",invocation.service(),6);check("method",invocation.method(),1);
         check("close created",invocation.arguments().getFirst(),Long.valueOf(123456L));
         check("close listener count",invocation.arguments().size(),1);
@@ -66,15 +66,15 @@ public final class CraftCompatibility {
         append(bytes,codec.invocationFailure(10,(short)10,"Missing recipe ingredients"));
         append(bytes,codec.invocationConfirmed(10,(short)11));
         var in=new v(new ByteArrayInputStream(bytes.toByteArray()));
-        in.qe();in.qe(); // handshake and authentication responses prime the stock reader
-        var winner=(InvocationResponseEvent)((com.threerings.presents.net.EventNotification)in.qe()).yj();
-        check("success method",winner.yc(),1);check("success request",winner.yf(),9);
-        check("success payload",winner.yd()[0],Long.valueOf(527L));
-        var loser=(InvocationResponseEvent)((com.threerings.presents.net.EventNotification)in.qe()).yj();
-        check("failure method",loser.yc(),0);check("failure request",loser.yf(),10);
-        check("failure reason",loser.yd()[0] instanceof String text&&text.length()>1,true);
-        var confirmed=(InvocationResponseEvent)((com.threerings.presents.net.EventNotification)in.qe()).yj();
-        check("confirm method",confirmed.yc(),1);check("confirm args",confirmed.yd(),null);
+        in.ql();in.ql(); // handshake and authentication responses prime the stock reader
+        var winner=(InvocationResponseEvent)((com.threerings.presents.net.EventNotification)in.ql()).yn();
+        check("success method",success(winner),true);check("success request",winner.yj(),9);
+        check("success payload",winner.yh()[0],Long.valueOf(527L));
+        var loser=(InvocationResponseEvent)((com.threerings.presents.net.EventNotification)in.ql()).yn();
+        check("failure method",success(loser),false);check("failure request",loser.yj(),10);
+        check("failure reason",loser.yh()[0] instanceof String text&&text.length()>1,true);
+        var confirmed=(InvocationResponseEvent)((com.threerings.presents.net.EventNotification)in.ql()).yn();
+        check("confirm method",success(confirmed),true);check("confirm args",confirmed.yh(),null);
         if(in.available()!=0)throw new AssertionError("Trailing craft reply wire bytes");
         // The alchemy machines' catalogs must resolve server-side with matchable native ingredients.
         var rules=org.tortodrone.resources.ContentManager.load(Path.of(".")).town();
@@ -104,6 +104,11 @@ public final class CraftCompatibility {
         String expected="com.threerings.presents.data.InvocationMarshaller$"+(result?"ResultMarshaller":"ConfirmMarshaller");
         if(!listener.type().equals(expected))throw new AssertionError("Listener type differs: "+listener.type()+" != "+expected);
     }
+
+    private static boolean success(com.threerings.presents.dobj.InvocationResponseEvent event){
+        var args=event.yh();return args==null||args.length==0||!(args[0] instanceof String);
+    }
+
     private static void check(String name,Object actual,Object expected){
         if(!Objects.equals(actual,expected))throw new AssertionError(name+" differs: "+actual+" != "+expected);
     }

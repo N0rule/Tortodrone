@@ -16,7 +16,7 @@ public final class GearStatsExport {
         Path ancestor=out;while(!Files.exists(ancestor))ancestor=ancestor.getParent();
         if(Files.exists(out)||ancestor.toRealPath().startsWith(game))throw new IOException("Choose a fresh output outside the installation");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         var items=ItemYaml.load(content.resolve("items"));int count=0;
         for(var item:items.entries()) {
@@ -28,13 +28,13 @@ public final class GearStatsExport {
             put(prefix+"rarity",level.rarity);
             for(int n=0;n<Math.max(1,level.K(cm));n++) {
                 var current=level.c(cm,n);String p=prefix+"levels."+n+".";
-                put(p+"health-bonus",current.fr(0));
+                put(p+"health-bonus",current.fz(0));
                 if(original instanceof ItemConfig.Gear gear) {
                     for(var type:DamageType.values())if(type!=DamageType.UNBLOCKABLE)
                         put(p+"defense."+type.name().toLowerCase(Locale.ROOT),current.a(gear.defense.a(cm,type,0,gear.rarity),type,cm,0,gear.rarity));
                     for(int mask=1;mask<=1<<21;mask<<=1) {
-                        int resist=current.eK(gear.defense.ei(mask));
-                        if(resist!=0||level.c(cm,0).eK(gear.defense.ei(mask))!=0)put(p+"status-resist."+mask,resist);
+                        int resist=current.ay(gear.defense.eq(mask),0);
+                        if(resist!=0||level.c(cm,0).ay(gear.defense.eq(mask),0)!=0)put(p+"status-resist."+mask,resist);
                     }
                 }
                 for(var weapon:org.tortodrone.world.EquipmentCatalog.WeaponClass.values()) {
@@ -49,7 +49,7 @@ public final class GearStatsExport {
             }
             count++;
         }
-        for(var config:cm.bd(VariantConfig.class).kK()) {
+        for(var config:cm.be(VariantConfig.class).kR()) {
             String prefix="gear.variant."+config.getName()+".";
             for(var variant:VariantConfig.a(cm,List.of(new ConfigReference<VariantConfig>(config.getName())))) {
                 if(variant instanceof VariantConfig.DefenseTypeBonus defense)

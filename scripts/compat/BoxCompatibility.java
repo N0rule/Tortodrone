@@ -69,39 +69,39 @@ public final class BoxCompatibility {
             new StarterCatalog.Model("Character/PC/Default",Map.of()),false,null,null,null,null,new org.tortodrone.world.SceneKnightState(references,0));
         append(bytes,codec.sceneDelta(10,0,0,1000,List.of(actor),List.of(),new int[0]));
         append(bytes,codec.sceneDelta(10,0,1000,1050,List.of(),List.of(actor),new int[0]));
-        var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
-        var delay=(AttributeChangedEvent)((EventNotification)in.qe()).yj();
+        var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.ql();in.ql();
+        var delay=(AttributeChangedEvent)((EventNotification)in.ql()).yn();
         check(delay.getName().equals("itemAcquireDelay")&&delay.getValue().equals(7500),"captured acquisition delay before item events");
-        var added=((EventNotification)in.qe()).yj();check(added instanceof CompoundEvent,"native inventory update before reveal");
-        var decoded=((CompoundEvent)added).xE().stream().filter(e->e instanceof EntryAddedEvent<?> a&&a.xZ() instanceof com.threerings.projectx.item.data.UpgradingItem).map(e->(com.threerings.projectx.item.data.UpgradingItem)((EntryAddedEvent<?>)e).xZ()).findFirst().orElseThrow();
-        check(decoded.VA()==778&&decoded.Cs()&&decoded.getCount()==1&&decoded.VE()==null,"native inactive upgrade subclass, identity, binding and no running timer");
-        var newItems=((CompoundEvent)added).xE().stream().filter(e->e instanceof EntryAddedEvent<?>).map(e->((EntryAddedEvent<?>)e).xZ()).filter(e->e instanceof com.threerings.projectx.item.data.Item).map(e->(com.threerings.projectx.item.data.Item)e).toList();
-        var furnitureRead=newItems.stream().filter(e->e.VA()==779).findFirst().orElseThrow();
-        check(furnitureRead instanceof com.threerings.projectx.item.data.FurniItem&&furnitureRead.getCount()==2&&furnitureRead.VE()==null,"native undeployed FurniItem layout");
-        var timedRead=newItems.stream().filter(e->e.VA()==780).findFirst().orElseThrow();
-        check(timedRead instanceof com.threerings.projectx.item.data.LevelItem&&Objects.equals(timedRead.VE(),expiry),"native absolute Long expiration layout");
-        var reset=(AttributeChangedEvent)((EventNotification)in.qe()).yj();
+        var added=((EventNotification)in.ql()).yn();check(added instanceof CompoundEvent,"native inventory update before reveal");
+        var decoded=((CompoundEvent)added).xI().stream().filter(e->e instanceof EntryAddedEvent<?> a&&a.yd() instanceof com.threerings.projectx.item.data.UpgradingItem).map(e->(com.threerings.projectx.item.data.UpgradingItem)((EntryAddedEvent<?>)e).yd()).findFirst().orElseThrow();
+        check(decoded.Wg()==778&&decoded.Wc()&&decoded.getCount()==1&&decoded.Wk()==null,"native inactive upgrade subclass, identity, binding and no running timer");
+        var newItems=((CompoundEvent)added).xI().stream().filter(e->e instanceof EntryAddedEvent<?>).map(e->((EntryAddedEvent<?>)e).yd()).filter(e->e instanceof com.threerings.projectx.item.data.Item).map(e->(com.threerings.projectx.item.data.Item)e).toList();
+        var furnitureRead=newItems.stream().filter(e->e.Wg()==779).findFirst().orElseThrow();
+        check(furnitureRead instanceof com.threerings.projectx.item.data.FurniItem&&furnitureRead.getCount()==2&&furnitureRead.Wk()==null,"native undeployed FurniItem layout");
+        var timedRead=newItems.stream().filter(e->e.Wg()==780).findFirst().orElseThrow();
+        check(timedRead instanceof com.threerings.projectx.item.data.LevelItem&&Objects.equals(timedRead.Wk(),expiry),"native absolute Long expiration layout");
+        var reset=(AttributeChangedEvent)((EventNotification)in.ql()).yn();
         check(reset.getName().equals("itemAcquireDelay")&&reset.getValue().equals(0),"delay cleared before reward callback");
-        var result=(InvocationResponseEvent)((EventNotification)in.qe()).yj();
-        check(result.yc()==1&&result.yf()==9&&result.yd()[0] instanceof com.google.common.collect.Multiset<?> m&&m.count(777L)==3,"native result multiset of item IDs and quantities");
-        var failure=(InvocationResponseEvent)((EventNotification)in.qe()).yj();check(failure.yc()==0&&failure.yf()==10,"native failure callback");
-        var customResult=(InvocationResponseEvent)((EventNotification)in.qe()).yj();
-        var nativeWeapon=(ConfigReference<?>)customResult.yd()[0];
+        var result=(InvocationResponseEvent)((EventNotification)in.ql()).yn();
+        check(success(result)&&result.yj()==9&&result.yh()[0] instanceof com.google.common.collect.Multiset<?> m&&m.count(777L)==3,"native result multiset of item IDs and quantities");
+        var failure=(InvocationResponseEvent)((EventNotification)in.ql()).yn();check(!success(failure)&&failure.yj()==10,"native failure callback");
+        var customResult=(InvocationResponseEvent)((EventNotification)in.ql()).yn();
+        var nativeWeapon=(ConfigReference<?>)customResult.yh()[0];
         for(String channel:List.of("Blue","Green","Red")) {
             var wanted=(StarterCatalog.CustomColorization)weapon.arguments().get(channel);
-            var actual=(com.threerings.opengl.renderer.config.ColorizationConfig.CustomOffsets)nativeWeapon.kW().get(channel);
+            var actual=(com.threerings.opengl.renderer.config.ColorizationConfig.CustomOffsets)nativeWeapon.ld().get(channel);
             check(actual.clazz==wanted.clazz()&&actual.offsets.hue==wanted.hue()&&actual.offsets.saturation==wanted.saturation()&&actual.offsets.value==wanted.value(),"native custom color triplet: "+channel);
         }
-        var selected=(CompoundEvent)((EventNotification)in.qe()).yj();
-        var attrs=selected.xE().stream().filter(e->e instanceof AttributeChangedEvent).map(e->(AttributeChangedEvent)e).toList();
+        var selected=(CompoundEvent)((EventNotification)in.ql()).yn();
+        var attrs=selected.xI().stream().filter(e->e instanceof AttributeChangedEvent).map(e->(AttributeChangedEvent)e).toList();
         check(attrs.stream().anyMatch(e->e.getName().equals("weaponSlots")&&e.getValue().equals(2)),"native base weapon slots");
         check(attrs.stream().anyMatch(e->e.getName().equals("trinketSlots")&&e.getValue().equals(1)),"native activated trinket slot");
-        var reveal=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();
-        var knight=(com.threerings.projectx.data.actor.Knight)reveal.aej()[0];
-        var revealDelta=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();
-        knight=(com.threerings.projectx.data.actor.Knight)revealDelta.aek()[0].apply(knight);
+        var reveal=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.ql()).yn();
+        var knight=(com.threerings.projectx.data.actor.Knight)reveal.afd()[0];
+        var revealDelta=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.ql()).yn();
+        knight=(com.threerings.projectx.data.actor.Knight)revealDelta.afe()[0].apply(knight);
         var nativeReferences=knight.bY(List.class);
-        check(knight.adU()==265&&knight.adV()==1000&&nativeReferences.size()==3,"native opening activity and list data survive initial actor and delta");
+        check(knight.aeM()==265&&knight.aeN()==1000&&nativeReferences.size()==3,"native opening activity and list data survive initial actor and delta");
         for(int n=0;n<references.size();n++)check(((ConfigReference<?>)nativeReferences.get(n)).getName().equals(references.get(n).name()),"box then unique reward config references");
         check(in.available()==0,"no trailing bytes");
         System.out.println("PASS: stock method 12, all key options, ResultMarshaller, acquisition delay/reset, inventory-before-result, Long multiset quantities, opening actor/list delta, inactive UpgradingItem, furniture, timed costume and failure serialization");
@@ -109,7 +109,7 @@ public final class BoxCompatibility {
     private static void bindings(Path game)throws Exception {
         game=game.toRealPath();
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
         var items=ItemYaml.load(Path.of("content/items"));
         var pinned=Yaml.map(Yaml.map(Json.parseCatalog(Files.readString(Path.of("content/_internal/box-bindings.json"))),"bindings").get("boxes"),"boxes");
@@ -176,6 +176,11 @@ public final class BoxCompatibility {
         check(count==pinned.size(),"complete indexed box classification");
         System.out.println("PASS: "+count+" native box key bindings and Silver/Slime/Shadow ticket identities");
     }
+
+    private static boolean success(com.threerings.presents.dobj.InvocationResponseEvent event){
+        var args=event.yh();return args==null||args.length==0||!(args[0] instanceof String);
+    }
+
     private static void check(boolean ok,String message){if(!ok)throw new AssertionError(message);}
     private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
 }

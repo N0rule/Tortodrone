@@ -17,7 +17,7 @@ public final class SceneActionCompatibility {
         tagWire(restoredTags,new String[]{"direct","inherited"});
         System.out.println("PASS: stock reader accepts native iterable TagConfig and legacy imported tags as TagConfig, including inherited String arrays");
         var tagFields=new TreeMap<String,String>();SceneContentExport.writeTags(tagFields,"",tags);
-        if(!tagFields.get("tags").equals(String.join(",",tags.adx()))||!tagFields.get("tags").contains("inherited"))throw new AssertionError("Inherited native tags lost");
+        if(!tagFields.get("tags").equals(String.join(",",tags.aep()))||!tagFields.get("tags").contains("inherited"))throw new AssertionError("Inherited native tags lost");
         var marker=new com.threerings.tudey.config.PlaceableConfig();
         var parameter=new com.threerings.config.Parameter.Direct();parameter.name="Tag";parameter.paths=new String[]{"implementation.tags.tags[0]"};marker.parameters=new com.threerings.config.Parameter[]{parameter};
         tags.tags=new String[0];
@@ -36,7 +36,7 @@ public final class SceneActionCompatibility {
         var leaf=new com.threerings.projectx.dungeon.config.SpawnTableConfig.ActorEntry();leaf.actor=new com.threerings.config.ConfigReference<>("Fixture/Monster","Wave Tag","(Wave Tag)");table.root=leaf;
         var wave=new com.threerings.config.Parameter.Direct();wave.name="Wave";wave.paths=new String[]{"root.actor[\"Wave Tag\"]"};table.parameters=new com.threerings.config.Parameter[]{wave};
         var bound=SceneContentExport.singleTableActor(table,Map.of("Wave","boss support 1"));
-        if(!bound.kW().get("Wave Tag").equals("boss support 1")||!leaf.actor.kW().get("Wave Tag").equals("(Wave Tag)"))throw new AssertionError("Actor table lost argument binding or mutated native config");
+        if(!bound.ld().get("Wave Tag").equals("boss support 1")||!leaf.actor.ld().get("Wave Tag").equals("(Wave Tag)"))throw new AssertionError("Actor table lost argument binding or mutated native config");
         wave.paths=new String[]{"root.actor[\"Wave Tag\"]","root.unimplemented"};
         try{SceneContentExport.singleTableActor(table,Map.of("Wave","bad"));throw new AssertionError("Unsupported table parameter sibling ignored");}catch(IOException expected){}
         table.root=new com.threerings.projectx.dungeon.config.SpawnTableConfig.RandomEntry();
@@ -145,34 +145,34 @@ public final class SceneActionCompatibility {
         cosmetic.action=signal;
         if(SceneContentExport.cosmeticEffect(cosmetic))throw new AssertionError("Gameplay effect accepted without executing its action");
         if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(new ActionConfig.None(),0))) instanceof SceneActions.Sequence noop)||!noop.actions().isEmpty())throw new AssertionError("Native None must succeed without an effect");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
         var cm=(com.threerings.config.ConfigManager)com.threerings.config.ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         var counterReference=new com.threerings.config.ConfigReference<com.threerings.tudey.config.PlaceableConfig>("Trigger/Multi Trigger Action");
-        counterReference.kW().put("Tag","action 1a");counterReference.kW().put("Triggers","2");counterReference.kW().put("Action",signal);counterReference.kW().put("Reverse Action",new ActionConfig.None());
+        counterReference.ld().put("Tag","action 1a");counterReference.ld().put("Triggers","2");counterReference.ld().put("Action",signal);counterReference.ld().put("Reverse Action",new ActionConfig.None());
         var counterReferenceConfig=counterReference.a(cm,com.threerings.tudey.config.PlaceableConfig.class);
         var counted=SceneActions.parse(Json.stringify(SceneContentExport.multiTrigger(cm,counterReference,counterReferenceConfig,counterReferenceConfig.q(cm))));
         if(!counted.equals(new SceneActions.Count(2,new SceneActions.Signal("door end","open"))))throw new AssertionError("Native multi-trigger argument binding changed");
-        counterReference.kW().put("Reverse Action",signal);
+        counterReference.ld().put("Reverse Action",signal);
         try{SceneContentExport.multiTrigger(cm,counterReference,counterReferenceConfig,counterReferenceConfig.q(cm));throw new AssertionError("Unrecovered nonempty reverse operation accepted");}catch(IOException expected){}
-        var counterDoor=new com.threerings.config.ConfigReference<com.threerings.tudey.config.ActorConfig>("Door/Iron Gate/Multi Trigger 5");counterDoor.kW().put("Triggers","2");
+        var counterDoor=new com.threerings.config.ConfigReference<com.threerings.tudey.config.ActorConfig>("Door/Iron Gate/Multi Trigger 5");counterDoor.ld().put("Triggers","2");
         if(SceneContentExport.doorCounter(cm,counterDoor)!=2)throw new AssertionError("Native door threshold or derived parameter path lost");
-        counterDoor.kW().put("Triggers","2.5");try{SceneContentExport.doorCounter(cm,counterDoor);throw new AssertionError("Fractional door threshold accepted");}catch(IOException expected){}
+        counterDoor.ld().put("Triggers","2.5");try{SceneContentExport.doorCounter(cm,counterDoor);throw new AssertionError("Fractional door threshold accepted");}catch(IOException expected){}
         System.out.println("PASS: installed multi-trigger and door parameter paths/stripped footprints retain exact increment threshold and authored action; unknown reverse behavior refused");
         var leverReference=new com.threerings.config.ConfigReference<com.threerings.tudey.config.ActorConfig>("Dynamic/Switch/Lever/One-Time");
-        leverReference.kW().put("(Activate Signal)","increment");leverReference.kW().put("(Activate Tag)","action 1a");
-        var leverOriginal=leverReference.a(cm,com.threerings.tudey.config.ActorConfig.class).ai(cm);
+        leverReference.ld().put("(Activate Signal)","increment");leverReference.ld().put("(Activate Tag)","action 1a");
+        var leverOriginal=leverReference.a(cm,com.threerings.tudey.config.ActorConfig.class).al(cm);
         if(!SceneContentExport.oneTimeLever(cm,leverReference,leverOriginal).equals(new SceneActions.Signal("action 1a","increment")))throw new AssertionError("One-time lever outgoing action lost");
         System.out.println("PASS: installed stripped one-time lever footprint/mask/parameter paths; archive-backed one-use damage behavior");
         var goldReference=new com.threerings.config.ConfigReference<com.threerings.tudey.config.ActorConfig>("Door/Iron Gate/Gold 5");
         if(!SceneContentExport.goldDoor(cm,goldReference))throw new AssertionError("Native gold door descriptor/signal/handler binding lost");
         var keyReference=new com.threerings.config.ConfigReference<com.threerings.tudey.config.ActorConfig>("Dynamic/Lift Objects/Gold Key");
-        var keyOriginal=keyReference.a(cm,com.threerings.tudey.config.ActorConfig.class).ai(cm);var keyFields=new TreeMap<String,String>();
+        var keyOriginal=keyReference.a(cm,com.threerings.tudey.config.ActorConfig.class).al(cm);var keyFields=new TreeMap<String,String>();
         SceneContentExport.writeLift(cm,keyFields,"",keyReference,(com.threerings.projectx.config.ProjectXActorConfig.Lift)keyOriginal,false);
         if(!keyFields.get("actionable-signal").equals("gold_unlock")||!keyFields.get("can-throw").equals("false"))throw new AssertionError("Native carried key capability lost");
         System.out.println("PASS: installed gold-door stripped footprint, UnlockGold/gold_unlock binding and nonthrowable key lift capability");
         var twoTags=new com.threerings.config.ConfigReference<com.threerings.tudey.config.PlaceableConfig>("Trigger/Actor Removed (2 Tags)");
         var groupOpen=new ActionConfig.Signal();groupOpen.name="open";var groupTarget=new TargetConfig.Tagged();groupTarget.tag="door end";groupOpen.target=groupTarget;
-        twoTags.kW().put("Actor Tag","wave 5d");twoTags.kW().put("Actor Tag 2","wave 4d");twoTags.kW().put("Action",groupOpen);
+        twoTags.ld().put("Actor Tag","wave 5d");twoTags.ld().put("Actor Tag 2","wave 4d");twoTags.ld().put("Action",groupOpen);
         var twoTagConfig=twoTags.a(cm,com.threerings.tudey.config.PlaceableConfig.class);var twoTagOriginal=twoTagConfig.q(cm);
         var nativeRemovedGroup=SceneContentExport.twoTagRemoval(cm,twoTags,twoTagConfig,twoTagOriginal);
         if(!nativeRemovedGroup.tags().equals(List.of("wave 5d","wave 4d"))||!SceneActions.parse(Json.stringify(nativeRemovedGroup.action())).equals(new SceneActions.Signal("door end","open")))throw new AssertionError("Native two-tag removal lost its distinct waves or authored action");
@@ -190,12 +190,12 @@ public final class SceneActionCompatibility {
         System.out.println("PASS: native Random/WeightedAction -> all prepared branches and exact weights; Clockworks block destruction; unsupported sibling refused even at zero weight");
         var recursive=new ActionConfig.SpawnActor();recursive.actor=new com.threerings.config.ConfigReference<>("Character/NPC/Companions/Knights/Unique/Parts/Sword Knight");
         var squadSpawn=new ActionConfig.SpawnActor();squadSpawn.actor=new com.threerings.config.ConfigReference<>("Character/Scripted/Missions/Tutorial/Final Test/Knight Squad/Spiral Knight");
-        squadSpawn.actor.kW().put("Goal","waypoint_sk1");squadSpawn.actor.kW().put("Wait",500);squadSpawn.actor.kW().put("End Orientation",(float)Math.PI/2);
+        squadSpawn.actor.ld().put("Goal","waypoint_sk1");squadSpawn.actor.ld().put("Wait",500);squadSpawn.actor.ld().put("End Orientation",(float)Math.PI/2);
         var squadAction=(SceneActions.Spawn)SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(squadSpawn,0,cm)));
         var movement=org.tortodrone.world.SceneMovementScript.read(new org.tortodrone.world.SceneContent.Spec(squadAction.fields()));
         if(movement==null||!movement.goal().equals("waypoint_sk1")||movement.waitMillis()!=500||movement.rotation()!=(float)Math.PI/2)throw new AssertionError("Native nested Goal/Wait/End Orientation script bindings were lost");
         System.out.println("PASS: original squad script preserves nested Goal, Wait and final rotation without fabricating a combat policy");
-        var feron=new ActionConfig.SpawnActor();feron.actor=new com.threerings.config.ConfigReference<>("Character/Scripted/Missions/Tutorial/Final Test/Knight Squad/Feron");feron.actor.kW().put("Goal","feron_goal");feron.actor.kW().put("Wait",750);
+        var feron=new ActionConfig.SpawnActor();feron.actor=new com.threerings.config.ConfigReference<>("Character/Scripted/Missions/Tutorial/Final Test/Knight Squad/Feron");feron.actor.ld().put("Goal","feron_goal");feron.actor.ld().put("Wait",750);
         var feronSpawn=(SceneActions.Spawn)SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(feron,0,cm)));
         var feronMovement=org.tortodrone.world.SceneMovementScript.read(new org.tortodrone.world.SceneContent.Spec(feronSpawn.fields()));
         if(feronMovement==null||feronMovement.rotation()!=4.712389f||feronMovement.waitMillis()!=750||!feronMovement.goal().equals("feron_goal"))throw new AssertionError("Feron's fixed native orientation was replaced by a missing parameter");
@@ -327,12 +327,12 @@ public final class SceneActionCompatibility {
         var codec=new org.tortodrone.protocol.SessionCodec();var bytes=new java.io.ByteArrayOutputStream();
         var delta=codec.sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(),List.of(),new int[0],Map.of(),true,List.of(new org.tortodrone.world.SceneEffect(1,model,100,0,0,0,1001)));
         for(var frame:List.of(org.tortodrone.protocol.HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),org.tortodrone.protocol.HandshakeCodec.authenticationResponse((short)2,true,"fixture","Fixture"),delta))bytes.write(frame,4,frame.length-4);
-        var reader=new com.threerings.io.v(new java.io.ByteArrayInputStream(bytes.toByteArray()));reader.qe();reader.qe();
-        var event=(com.threerings.tudey.dobj.SceneDeltaEvent)((com.threerings.presents.net.EventNotification)reader.qe()).yj();
-        Object effect=event.aem()[0];
+        var reader=new com.threerings.io.v(new java.io.ByteArrayInputStream(bytes.toByteArray()));reader.ql();reader.ql();
+        var event=(com.threerings.tudey.dobj.SceneDeltaEvent)((com.threerings.presents.net.EventNotification)reader.ql()).yn();
+        Object effect=event.afg()[0];
         var field=effect.getClass().getDeclaredField("_config");field.setAccessible(true);
         var ref=(com.threerings.config.ConfigReference<?>)field.get(effect);
-        if(!(ref.kW().get("Tags") instanceof com.threerings.tudey.config.TagConfig actual)||!Arrays.equals(actual.adx(),expected)||reader.available()!=0)throw new AssertionError("TagConfig stock wire round trip changed");
+        if(!(ref.ld().get("Tags") instanceof com.threerings.tudey.config.TagConfig actual)||!Arrays.equals(actual.aep(),expected)||reader.available()!=0)throw new AssertionError("TagConfig stock wire round trip changed");
     }
 
 }

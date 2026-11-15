@@ -11,7 +11,7 @@ import org.tortodrone.world.*;
 public final class TutorialEnemyCompatibility {
     public static void main(String[] args)throws Exception {
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         if(args.length>1&&args[1].equals("sentries")){
             weighted(cm,"Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG)",false);

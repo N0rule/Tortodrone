@@ -21,6 +21,8 @@ public final class GameplayCompatibility {
         @Override public void a(int oid,int code,int method,Object[] args,Transport transport){request=new InvocationRequestEvent(oid,code,method,args);}
     }
     public static void main(String[] args)throws Exception {
+        // Prime the stock editor base class before actor classes are reflected.
+        Class.forName("com.threerings.editor.swing.PropertyEditor");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         Locale.setDefault(Locale.ENGLISH);
         var dispatch=new Dispatch();var itemService=new com.threerings.projectx.item.data.ItemMarshaller();itemService.a(3,9,dispatch);itemService.n("Battle",(com.threerings.presents.client.A.a)null);
@@ -56,44 +58,44 @@ public final class GameplayCompatibility {
         // Existing persisted auction mail is normalized on publication as well as new mail.
         var mail=new AuctionState.Mail(1,42,1,"%auction:s.auction_cancelled|%item:"+def.nameKey(),"%auction:m.auction_cancelled",0,null,false,false,0,"");
         append(bytes,codec.townResult(1001,(short)3,mail,empty));
-        var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
+        var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.ql();in.ql();
         var player=new PlayerObject();player.loadouts=new DSet<>(List.of(new com.threerings.projectx.data.Loadout("")));
         apply(in,player);check(player.loadouts.size()==2&&!player.loadouts.f("battle").pvp,"native entry add refreshes live loadouts");
         apply(in,player);check(player.loadouts.f("battle").pvp,"native entry update carries PvP designation");
         apply(in,player);check(player.loadouts.size()==1,"native entry remove retains the active loadout");
         apply(in,player);check(player.equipPolicy==PlayerObject.EquipPolicy.ANY,"station grants native ANY equipment policy first");
-        var action=(MessageEvent)((EventNotification)in.qe()).yj();
-        var controller=(com.threerings.tudey.config.ClientActionConfig.ControllerAction)action.yd()[0];
+        var action=(MessageEvent)((EventNotification)in.ql()).yn();
+        var controller=(com.threerings.tudey.config.ClientActionConfig.ControllerAction)action.yh()[0];
         check("show_arsenal_station".equals(controller.command)&&"".equals(controller.argument),"native controller receives the command in command, not argument");
-        check(action.yd()[1] instanceof EntityKey.Entry e&&e.getKey().equals(Integer.valueOf(station.entity().key())),"arsenal action uses its actual placed entry");
+        check(action.yh()[1] instanceof EntityKey.Entry e&&e.getKey().equals(Integer.valueOf(station.entity().key())),"arsenal action uses its actual placed entry");
         apply(in,player);check(player.equipPolicy==PlayerObject.EquipPolicy.NORMAL,"leaving station restores NORMAL");
-        var initial=(SceneDeltaEvent)((EventNotification)in.qe()).yj();
-        var pawn=(com.threerings.projectx.dungeon.data.actor.Dungeoneer)initial.aej()[0];
-        check(pawn.bR(com.threerings.projectx.dungeon.data.actor.Dungeoneer.INVULNERABLE)&&pawn.Rc()==1000,"native invulnerability flag and hit timestamp reach observers");
-        check(pawn.Nr() instanceof ActionDesc.Shop&&pawn.Ns() instanceof EntityKey.Entry,"native crown icon and placed interaction key");
-        var delta=(SceneDeltaEvent)((EventNotification)in.qe()).yj();pawn=(com.threerings.projectx.dungeon.data.actor.Dungeoneer)delta.aek()[0].apply(pawn);
-        check(!pawn.bR(64)&&pawn.bR(1)&&pawn.tz().x==4&&pawn.Nr()==null&&pawn.Ns()==null,"delta ends blinking, warps position and clears stale interaction");
+        var initial=(SceneDeltaEvent)((EventNotification)in.ql()).yn();
+        var pawn=(com.threerings.projectx.dungeon.data.actor.Dungeoneer)initial.afd()[0];
+        check(pawn.bT(com.threerings.projectx.dungeon.data.actor.Dungeoneer.INVULNERABLE)&&pawn.RD()==1000,"native invulnerability flag and hit timestamp reach observers");
+        check(pawn.NX() instanceof ActionDesc.Shop&&pawn.NY() instanceof EntityKey.Entry,"native crown icon and placed interaction key");
+        var delta=(SceneDeltaEvent)((EventNotification)in.ql()).yn();pawn=(com.threerings.projectx.dungeon.data.actor.Dungeoneer)delta.afe()[0].apply(pawn);
+        check(!pawn.bT(64)&&pawn.bT(1)&&pawn.tG().x==4&&pawn.NX()==null&&pawn.NY()==null,"delta ends blinking, warps position and clears stale interaction");
         apply(in,player);var dialog=(com.threerings.projectx.data.ConversationDialogInfo)player.sceneDialog;
         check(dialog.sourceKey instanceof EntityKey.Entry,"placed conversation keeps its entry identity without a synthetic actor");
-        var messages=new com.threerings.util.R("rsrc.i18n");var bundle=messages.gw(dialog.bundle);
+        var messages=new com.threerings.util.R("rsrc.i18n");var bundle=messages.gE(dialog.bundle);
         for(var map:maps.scenes())for(var c:map.content().conversations().values()){
-            var nativeBundle=messages.gw(c.bundle());check(c.name().startsWith("~")||nativeBundle.gu(c.name()),"supported NPC name resolves: "+c.name());
+            var nativeBundle=messages.gE(c.bundle());check(c.name().startsWith("~")||nativeBundle.gC(c.name()),"supported NPC name resolves: "+c.name());
             for(var node:c.nodes().values()){
-                check(nativeBundle.gu(node.message()),"supported dialogue resolves: "+node.message());
-                for(var response:node.responses())check(nativeBundle.gu(response.text()),"supported response resolves: "+response.text());
+                check(nativeBundle.gC(node.message()),"supported dialogue resolves: "+node.message());
+                for(var response:node.responses())check(nativeBundle.gC(response.text()),"supported response resolves: "+response.text());
             }
         }
         check(bundle.cP(dialog.name).equals("Plinkop")&&!bundle.f(dialog.message,"Fixture").contains("m.hav_clock"),"Haven speaker and dialogue resolve through the retail bundle");
         for(String response:dialog.responses)check(!bundle.f(response,"Fixture").startsWith("r."),"responses resolve while dialogue is open");
-        var reply=(InvocationResponseEvent)((EventNotification)in.qe()).yj();var received=(ReceivedMail)reply.yd()[0];
-        String name=messages.gw("item").cR(def.nameKey());
-        for(String key:List.of("s.auction_cancelled","m.auction_cancelled","s.auction_incomplete","m.auction_incomplete","s.auction_complete","m.auction_complete","s.bid_complete","m.bid_complete","s.bid_cancelled","m.bid_cancelled","s.bid_outbid","m.bid_outbid"))check(messages.gw("uplink").gu(key),"original auction mail template exists: "+key);
-        check(received.g(messages.gw("uplink")).equals("Your auction cancelled: "+name)&&!received.h(messages.gw("uplink")).contains("m.auction_cancelled"),"native auction mail resolves original subject, item name and body");
+        var reply=(InvocationResponseEvent)((EventNotification)in.ql()).yn();var received=(ReceivedMail)reply.yh()[0];
+        String name=messages.gE("item").cR(def.nameKey());
+        for(String key:List.of("s.auction_cancelled","m.auction_cancelled","s.auction_incomplete","m.auction_incomplete","s.auction_complete","m.auction_complete","s.bid_complete","m.bid_complete","s.bid_cancelled","m.bid_cancelled","s.bid_outbid","m.bid_outbid"))check(messages.gE("uplink").gC(key),"original auction mail template exists: "+key);
+        check(received.g(messages.gE("uplink")).equals("Your auction cancelled: "+name)&&!received.h(messages.gE("uplink")).contains("m.auction_cancelled"),"native auction mail resolves original subject, item name and body");
         check(in.available()==0,"no trailing bytes or missing native fields");
         System.out.println("PASS: retail loadout DSet events/PvP, arsenal entry/policy, interaction icons, warp/invulnerability deltas, dialogue and auction-mail localization");
     }
     private static WorldProfile profile(TownState.Loadout loadout){return new WorldProfile(42,1,1,0,0,2,List.of(),KnightProgress.RECRUIT,new TownState(List.of(),List.of(),0,List.of(),List.of(),List.of(loadout)));}
-    private static void apply(com.threerings.io.v in,DObject object)throws Exception {var event=((EventNotification)in.qe()).yj();if(event instanceof CompoundEvent compound)for(var child:compound.xE())child.b(object);else event.b(object);}
+    private static void apply(com.threerings.io.v in,DObject object)throws Exception {var event=((EventNotification)in.ql()).yn();if(event instanceof CompoundEvent compound)for(var child:compound.xI())child.b(object);else event.b(object);}
     private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
     private static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
 }

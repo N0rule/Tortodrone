@@ -142,10 +142,10 @@ public final class TutorialOpeningCompatibility {
         var bytes=new ByteArrayOutputStream();var codec=new SessionCodec();
         for(var frame:List.of(HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"),
                 codec.conversationDialog(1001,140,dialog.definition(),"part 1a",dialog.source(),1),codec.conversationDialog(1001,140,dialog.definition(),"part 2a",dialog.source(),1)))bytes.write(frame,4,frame.length-4);
-        var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();
+        var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.ql();input.ql();
         for(String node:List.of("part 1a","part 2a")){
-            var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)input.qe()).yj();
-            var wire=(com.threerings.projectx.data.ConversationDialogInfo)((com.threerings.presents.dobj.AttributeChangedEvent)event.xE().get(1)).getValue();
+            var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)input.ql()).yn();
+            var wire=(com.threerings.projectx.data.ConversationDialogInfo)((com.threerings.presents.dobj.AttributeChangedEvent)event.xI().get(1)).getValue();
             var expected=dialog.definition().nodes().get(node);
             if(!(wire.sourceKey instanceof com.threerings.tudey.data.EntityKey.Entry entry)||!entry.getKey().toString().equals(dialog.source().entity().key())
                     ||!wire.message.equals(expected.message())||!wire.name.equals(dialog.definition().name())||!wire.bundle.equals("conversation")

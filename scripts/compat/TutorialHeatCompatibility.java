@@ -41,12 +41,12 @@ public final class TutorialHeatCompatibility {
             while(activated==null&&System.nanoTime()<until){Thread.sleep(5);activated=simulation.snapshot().actors().stream().filter(a->a.id()==claim.entityId()&&a.entity().pickup()!=null).findFirst().orElse(null);}
             check(activated!=null,"native activation is published before the pickup's vacuum lifetime ends");
             var wire=new org.tortodrone.protocol.SessionCodec().sceneDelta(1001,700,0,(short)0,100,150,(short)50,List.of(activated),List.of(),new int[0],Map.of(),true);
-            var nativePickup=(com.threerings.projectx.dungeon.data.actor.Pickup)FireCompatibility.read(wire).aej()[0];
+            var nativePickup=(com.threerings.projectx.dungeon.data.actor.Pickup)FireCompatibility.read(wire).afd()[0];
             check(nativePickup.playerOids==null&&Arrays.equals(nativePickup.activations,new int[]{1001,activated.entity().pickup().activated()}),"2026 shared activation uses the player OID, not the pawn ID");
-            var original=(com.threerings.projectx.dungeon.data.actor.Pickup)FireCompatibility.read(new org.tortodrone.protocol.SessionCodec().sceneDelta(1001,700,0,(short)0,100,100,(short)50,List.of(before),List.of(),new int[0],Map.of(),true)).aej()[0];
+            var original=(com.threerings.projectx.dungeon.data.actor.Pickup)FireCompatibility.read(new org.tortodrone.protocol.SessionCodec().sceneDelta(1001,700,0,(short)0,100,100,(short)50,List.of(before),List.of(),new int[0],Map.of(),true)).afd()[0];
             var delta=FireCompatibility.read(new org.tortodrone.protocol.SessionCodec().sceneDelta(1001,700,0,(short)0,100,150,(short)50,List.of(),List.of(activated),new int[0],Map.of(before.id(),before),true));
-            var changed=(com.threerings.projectx.dungeon.data.actor.Pickup)delta.aek()[0].apply(original);
-            check(Arrays.equals(changed.activations,nativePickup.activations)&&changed.tz().equals(original.tz()),"native mutable activation delta preserves the authored pickup position");
+            var changed=(com.threerings.projectx.dungeon.data.actor.Pickup)delta.afe()[0].apply(original);
+            check(Arrays.equals(changed.activations,nativePickup.activations)&&changed.tG().equals(original.tG()),"native mutable activation delta preserves the authored pickup position");
         }
         check(simulation.playerCount()==0,"original scene fixture releases its membership");
         System.out.println("PASS: "+count+" original scene-398 Ember bindings, sourced denominations/body/vacuum, real pickup ticks, floor credit, native activation add/delta and replay refusal (pawn fixture beside original Ember; not a complete playthrough)");

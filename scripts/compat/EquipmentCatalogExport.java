@@ -25,7 +25,7 @@ public final class EquipmentCatalogExport {
 
         ItemCatalog grantCatalog = ItemCatalog.load(grants);
         var resource = Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga", String.class).invoke(resource, game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf", String.class).invoke(resource, game.resolve("rsrc").toString());
         var manager = (ConfigManager)ConfigManager.class
             .getConstructor(Class.forName("com.threerings.b.f"), com.threerings.util.R.class, String.class)
             .newInstance(resource, null, "config/");
@@ -33,7 +33,7 @@ public final class EquipmentCatalogExport {
 
         var definitions = new HashMap<String, ItemConfig.Original>();
         var representatives = new EnumMap<WeaponClass, ItemConfig.Weapon>(WeaponClass.class);
-        for (var config : manager.bd(ItemConfig.class).kK()) {
+        for (var config : manager.be(ItemConfig.class).kR()) {
             ItemConfig.Original original = config.w(manager);
             definitions.put(config.getName().toLowerCase(Locale.ROOT), original);
             if (original instanceof ItemConfig.Sword sword) representatives.putIfAbsent(WeaponClass.SWORD, sword);

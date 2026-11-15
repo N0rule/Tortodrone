@@ -13,14 +13,14 @@ import org.tortodrone.resources.Json;
 public final class PartyPlatformCompatibility {
  public static void main(String[] args)throws Exception {
   System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
-  var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+  var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
   var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
   var signal=new ActionConfig.Signal();var target=new TargetConfig.Tagged();target.tag="outro";signal.target=target;signal.name="open";
   var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>("Dynamic/Switch/Party Platform/Base","Action",signal);
-  var original=(com.threerings.projectx.dungeon.config.DungeonActorConfig.Switch)spawn.actor.a(cm,ActorConfig.class).ai(cm);
+  var original=(com.threerings.projectx.dungeon.config.DungeonActorConfig.Switch)spawn.actor.a(cm,ActorConfig.class).al(cm);
   System.out.println("NATIVE handlers="+Arrays.toString(Arrays.stream(original.handlers).map(h->h.getClass().getSimpleName()+(h instanceof HandlerConfig.BaseIntersectionCount count?" mask="+count.mask+" condition="+count.condition.getClass().getSimpleName():"")).toArray())+" states="+Arrays.toString(Arrays.stream(original.stateActions).map(a->a.getClass().getSimpleName()+(a instanceof ActionConfig.Compound compound?" children="+Arrays.toString(Arrays.stream(compound.actions).map(c->c.getClass().getSimpleName()).toArray()):"")).toArray()));
   System.out.println("ACTION "+((HandlerConfig.ActionHandlerConfig)original.handlers[2]).action);
-  var ga=((ActionConfig.Conditional)((ActionConfig.Compound)((HandlerConfig.ActionHandlerConfig)original.handlers[2]).action).actions[0]).action;System.out.println("GUARD "+ga.getClass()+" "+(ga instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.FireAction fa?fa.fireAction.getName()+" / "+fa.fireAction.kW().entrySet():""));
+  var ga=((ActionConfig.Conditional)((ActionConfig.Compound)((HandlerConfig.ActionHandlerConfig)original.handlers[2]).action).actions[0]).action;System.out.println("GUARD "+ga.getClass()+" "+(ga instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.FireAction fa?fa.fireAction.getName()+" / "+fa.fireAction.ld().entrySet():""));
   var graph=SceneContentExport.sceneAction(spawn,0,cm);var prepared=(SceneActions.Spawn)SceneActions.parse(Json.stringify(graph));
   if(ScenePartyPlatform.read(new SceneContent.Spec(prepared.fields()))==null)throw new AssertionError("Native platform was not prepared");
   Path temp=Files.createTempFile("party-platform-terrain-",".gz");
@@ -31,10 +31,10 @@ public final class PartyPlatformCompatibility {
    var scene=new SceneEntities(new SceneContent(List.of(trigger,door),Map.of()),CollisionMap.read(temp));
    scene.advance(1000,List.of(player(21,0),player(22,5)));scene.advance(1050,List.of(player(21,0),player(22,5)));
    var platform=scene.actors().stream().filter(a->a.entity().kind().equals("Switch")).findFirst().orElseThrow();
-   var nativeActor=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,1000,1050,(short)50,List.of(platform),List.of(),new int[0],Map.of(),true)).aej()[0];
+   var nativeActor=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,1000,1050,(short)50,List.of(platform),List.of(),new int[0],Map.of(),true)).afd()[0];
    if(FireCompatibility.field(nativeActor,"_key")!=null||platform.entity().state()!=0)throw new AssertionError("Spawned platform must have no entry binding and wait for the party");
    scene.advance(1100,List.of(player(21,0),player(22,1)));scene.advance(1150,List.of(player(21,0),player(22,1)));
-   var pressed=scene.actor(platform.id());var delta=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,1050,(short)0,1000,1150,(short)50,List.of(),List.of(pressed),new int[0],Map.of(platform.id(),platform),true));var changed=delta.aek()[0].apply(nativeActor);
+   var pressed=scene.actor(platform.id());var delta=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,1050,(short)0,1000,1150,(short)50,List.of(),List.of(pressed),new int[0],Map.of(platform.id(),platform),true));var changed=delta.afe()[0].apply(nativeActor);
    if((int)FireCompatibility.field(changed,"_state")!=1||!scene.walkable(8,0,0)||scene.defaultEntrance()==null)throw new AssertionError("Native platform did not press, execute its supplied action and set the checkpoint");
    System.out.println("PASS: original native party platform -> real source spawn -> living-party activation -> supplied action/checkpoint -> stock Switch creation/delta with null entry key (synthetic geometry; no full mission claim)");
   } finally {Files.deleteIfExists(temp);}

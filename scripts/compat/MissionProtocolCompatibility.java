@@ -9,7 +9,7 @@ import com.threerings.projectx.mission.data.*;
 /** Installed native reader/application oracle; no live gameplay is claimed. */
 public final class MissionProtocolCompatibility {
     private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
-    private static void apply(com.threerings.presents.dobj.DEvent event,PlayerObject player){if(event instanceof com.threerings.presents.dobj.CompoundEvent compound){for(var child:compound.xE())apply(child,player);}else event.b(player);}
+    private static void apply(com.threerings.presents.dobj.DEvent event,PlayerObject player){if(event instanceof com.threerings.presents.dobj.CompoundEvent compound){for(var child:compound.xI())apply(child,player);}else event.b(player);}
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var bytes=new ByteArrayOutputStream();var codec=new SessionCodec();
@@ -29,23 +29,23 @@ public final class MissionProtocolCompatibility {
                 node=panel.responses().get(panel.responses().size()-1).destination();
             }
         }
-        var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();
-        Object bootstrap=((BootstrapNotification)input.qe()).yh();
+        var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.ql();input.ql();
+        Object bootstrap=((BootstrapNotification)input.ql()).yl();
         var missionOid=bootstrap.getClass().getField("missionOid");if(missionOid.getInt(bootstrap)!=SessionCodec.MISSION_OID)throw new AssertionError("Bootstrap must name the served mission object");
-        var object=(MissionObject)((ObjectResponse)input.qe()).yk();if(object.xL()!=SessionCodec.MISSION_OID||object.expansionPrices==null||!object.expansionPrices.isEmpty())throw new AssertionError("Native MissionObject shape differs");
-        var player=(PlayerObject)((ObjectResponse)input.qe()).yk();apply(((EventNotification)input.qe()).yj(),player);apply(((EventNotification)input.qe()).yj(),player);
+        var object=(MissionObject)((ObjectResponse)input.ql()).yo();if(object.xP()!=SessionCodec.MISSION_OID||object.expansionPrices==null||!object.expansionPrices.isEmpty())throw new AssertionError("Native MissionObject shape differs");
+        var player=(PlayerObject)((ObjectResponse)input.ql()).yo();apply(((EventNotification)input.ql()).yn(),player);apply(((EventNotification)input.ql()).yn(),player);
         var dialog=(MissionCompleteDialogInfo)player.sceneDialog;
         if(player.rank.rank!=1||player.rank.subrank!=2||player.prestige!=10||player.completedMissions.size()!=1||!player.completedMissions.iterator().next().id.equals("securing_camp")||dialog.prevRank.rank!=1||dialog.prevRank.subrank!=1||!dialog.newRank||!dialog.immediate||dialog.prestige!=10||!dialog.icon.equals("ui/icon/difficulty/hard.png")||dialog.rewards.size()!=20)throw new AssertionError("Native mission settlement fields differ");
-        var counts=new HashMap<String,Integer>();for(var reward:dialog.rewards){if(!Boolean.TRUE.equals(reward.kW().get("_createLocked")))throw new AssertionError("Completion reward lost binding argument");counts.merge(reward.getName(),1,Integer::sum);}
+        var counts=new HashMap<String,Integer>();for(var reward:dialog.rewards){if(!Boolean.TRUE.equals(reward.ld().get("_createLocked")))throw new AssertionError("Completion reward lost binding argument");counts.merge(reward.getName(),1,Integer::sum);}
         if(!counts.equals(Map.of("Rarity/Fire Crystal/Cracked",15,"Rarity/Spark of Life",5)))throw new AssertionError("Native reward grouping differs");
-        apply(((EventNotification)input.qe()).yj(),player);
+        apply(((EventNotification)input.ql()).yn(),player);
         var generator=player.completedMissions.f("ancient_generator");
         if(generator==null||!generator.difficulty.name().equals("EASY")||player.completedMissions.size()!=2)throw new AssertionError("Reconnect receipt/difficulty framing differs");
         for(int i=0;i<panels.size();i++){
-            apply(((EventNotification)input.qe()).yj(),player);var panel=panels.get(i);var definition=dialogs.get(i);var opened=(ConversationDialogInfo)player.sceneDialog;
+            apply(((EventNotification)input.ql()).yn(),player);var panel=panels.get(i);var definition=dialogs.get(i);var opened=(ConversationDialogInfo)player.sceneDialog;
             var image=panel.userInterface().arguments().get("image");if(image==org.tortodrone.world.FireCatalog.NullValue.INSTANCE)image=null;
-            if(!opened.bundle.equals("mission")||!opened.name.equals(definition.name())||!opened.message.equals(panel.message())||!opened.model.getName().equals("character/npc/crew/model_kora.dat")||!opened.model.kW().get("Variant").equals("comlink")
-                ||!opened.userInterface.getName().equals(panel.userInterface().name())||!Objects.equals(opened.userInterface.kW().get("image"),image)||!opened.music.getName().equals("Custom/Mission/Comlink")||opened.responses.length!=panel.responses().size())throw new AssertionError("Native comlink panel differs: "+panel.id());
+            if(!opened.bundle.equals("mission")||!opened.name.equals(definition.name())||!opened.message.equals(panel.message())||!opened.model.getName().equals("character/npc/crew/model_kora.dat")||!opened.model.ld().get("Variant").equals("comlink")
+                ||!opened.userInterface.getName().equals(panel.userInterface().name())||!Objects.equals(opened.userInterface.ld().get("image"),image)||!opened.music.getName().equals("Custom/Mission/Comlink")||opened.responses.length!=panel.responses().size())throw new AssertionError("Native comlink panel differs: "+panel.id());
             for(int r=0;r<opened.responses.length;r++)if(!opened.responses[r].equals(panel.responses().get(r).text()))throw new AssertionError("Native choice differs");
         }
         if(input.available()!=0)throw new AssertionError("Unread comlink bytes");

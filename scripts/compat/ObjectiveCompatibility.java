@@ -19,16 +19,16 @@ public final class ObjectiveCompatibility {
         append(bytes,codec.knightObjectives(1001,Map.of("findRhendon",new KnightObjective.State(0,"findRhendon","m.find_rhendon"))));
         append(bytes,codec.knightObjectives(1001,Map.of("findRhendon",new KnightObjective.State(0,"findRhendon","m.find_rhendon"))));
         append(bytes,codec.knightObjectives(1001,Map.of()));
-        var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
-        var player=(PlayerObject)((ObjectResponse)in.qe()).yk();
+        var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.ql();in.ql();
+        var player=(PlayerObject)((ObjectResponse)in.ql()).yo();
         for(int i=0;i<2;i++){
-            var event=((EventNotification)in.qe()).yj();event.b(player);
+            var event=((EventNotification)in.ql()).yn();event.b(player);
             if(player.objectives.size()!=1)throw new AssertionError("Native objective was not applied");
             var objective=player.objectives.iterator().next();var config=(ObjectiveConfig.Simple)objective.config;
-            if(objective.jz()!=0||objective.persistence!=Persistence.KNIGHT||!config.text.equals("m.find_rhendon")||config.childX!=.5f||config.childY!=.5f||config.parentX!=.5f||config.parentY!=.5f||config.userInterface!=null)throw new AssertionError("Native objective fields differ");
+            if(objective.jG()!=0||objective.persistence!=Persistence.KNIGHT||!config.text.equals("m.find_rhendon")||config.childX!=.5f||config.childY!=.5f||config.parentX!=.5f||config.parentY!=.5f||config.userInterface!=null)throw new AssertionError("Native objective fields differ");
             var name=Objective.class.getDeclaredField("_name");name.setAccessible(true);if(!name.get(objective).equals("findRhendon"))throw new AssertionError("Objective identity lost");
         }
-        ((EventNotification)in.qe()).yj().b(player);
+        ((EventNotification)in.ql()).yn().b(player);
         if(!player.objectives.isEmpty()||in.available()!=0)throw new AssertionError("Objective clear/trailing bytes");
         System.out.println("PASS: stock Objective/Simple config/Persistence, exact message/layout defaults, stable index, repeated mappings and set clearing");
     }

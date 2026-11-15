@@ -13,7 +13,7 @@ import org.tortodrone.world.*;
 public final class SceneTableCompatibility {
     public static void main(String[] args)throws Exception {
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         var nativeAction=new DungeonActionConfig.TableSpawn();nativeAction.spawnTable=new ConfigReference<>("Treasure/Heat/Scaled Ember");nativeAction.topLevel=false;nativeAction.warp=false;
         var tag=new TargetConfig.Tagged();tag.tag="heat spawn";nativeAction.location=tag;

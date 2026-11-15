@@ -36,7 +36,7 @@ public final class GearProgressionCompatibility {
         var variant=new com.threerings.projectx.craft.data.VariantMarshaller();variant.a(10,101,new Dispatch());
         variant.a(2,22L,0L,1,(A.c)null);check(2,List.of(2,22L,0L,1),"ResultMarshaller");
         variant.a(22L,24L,1,(A.c)null);check(1,List.of(22L,24L,1),"ResultMarshaller");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,Path.of(args[0]).resolve("rsrc").toString());
+        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("gf",String.class).invoke(resource,Path.of(args[0]).resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
         for(String config:List.of("Upgrade/Weapon Slot","Upgrade/Trinket Slot","Upgrade/Trinket Slot (2 days)","Upgrade/Heat Bonus","Upgrade/Heat Bonus (1 day)","Upgrade/Heat Bonus (7 days)","Upgrade/Heat Bonus (30 days)","Upgrade/Coin Bonus")) {
             var nativeDef=(ItemConfig.Upgrade)manager.d(ItemConfig.class,config).w(manager);
@@ -45,7 +45,7 @@ public final class GearProgressionCompatibility {
         }
         var rules=org.tortodrone.resources.ContentManager.load(Path.of(".")).town();
         for(String config:List.of("Weapon/Sword/Proto Sword","Weapon/Sword/Calibur","Gear/Armor/Padded Armor")){
-            var nativeItem=new LevelItem(0,new ConfigReference<ItemConfig>(config));var gear=rules.gear().gear(config);
+            var nativeItem=new LevelItem(manager.d(ItemConfig.class,config).getConfigId(),new ConfigReference<ItemConfig>(config));var gear=rules.gear().gear(config);
             for(int level:new int[]{0,5,8}){nativeItem.a(manager,level,.2f);float expected=nativeItem.a(manager,17.25f),actual=gear.addHeat(level,.2f,17.25f);if(Math.abs(expected-actual)>.000001f)throw new AssertionError("Native heat gain differs: "+config+" level "+level+" "+expected+" != "+actual);}
         }
         for(int count=1;count<=3;count++)if(rules.roll("Shop/Variant "+count,"SWORD").size()!=count)throw new AssertionError("Resolved UV selection count differs");
@@ -53,8 +53,17 @@ public final class GearProgressionCompatibility {
         for(boolean gm:new boolean[]{false,true}){
             var codec=new SessionCodec();var bytes=new ByteArrayOutputStream();
             for(byte[] frame:List.of(HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Alice"),codec.player((short)3,1001,1,"Alice",Map.of(),List.of(),gm)))bytes.write(frame,4,frame.length-4);
-            var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();var player=(com.threerings.projectx.data.PlayerObject)((com.threerings.presents.net.ObjectResponse<?>)in.qe()).yk();
-            if(player.b(com.threerings.projectx.admin.data.a.avR,original)!=gm)throw new AssertionError("Staff Trash permission leaked to an ordinary player");
+            var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.ql();in.ql();var player=(com.threerings.projectx.data.PlayerObject)((com.threerings.presents.net.ObjectResponse<?>)in.ql()).yo();
+            // The generated permission constants are obfuscated; identify the widened Trash
+            // permission by its behaviour: a GM holds at least one on the stock weapon, an
+            // ordinary account holds none.
+            boolean any=false,allFalse=true;
+            for(var permissionField:com.threerings.projectx.admin.data.a.class.getFields()){
+                if(permissionField.getType()!=com.threerings.presents.data.a.class)continue;
+                boolean allowed=player.b((com.threerings.presents.data.a)permissionField.get(null),original);
+                any|=allowed;allFalse&=!allowed;
+            }
+            if(gm?!any:!allFalse)throw new AssertionError("Staff Trash permission leaked to an ordinary player");
         }
         System.out.println("PASS: installed sprite/gear/forge/UV invocation layouts and native heat formula");
         System.out.println("PASS: stock broad Trash permission is GM-only; ordinary accounts retain native item rules");

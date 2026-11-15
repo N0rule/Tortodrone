@@ -11,7 +11,7 @@ public final class HazardCompatibility {
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var resources=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resources.getClass().getMethod("ga",String.class).invoke(resources,Path.of(args[0]).resolve("rsrc").toString());
+        resources.getClass().getMethod("gf",String.class).invoke(resources,Path.of(args[0]).resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resources,null,"config/");manager.init();
         var map=SceneRegistry.defaultEntry().map();
         var world=new SceneEntities(new SceneContent(List.of(),Map.of()),map.collision());

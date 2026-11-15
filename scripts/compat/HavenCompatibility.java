@@ -22,7 +22,7 @@ public final class HavenCompatibility {
             "Usage: HavenCompatibility installed-game [content/maps]");
         Path game=Path.of(args[0]), maps=args.length==2?Path.of(args[1]):Path.of("content/maps");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),
             com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");
         manager.init();

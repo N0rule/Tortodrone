@@ -11,7 +11,7 @@ import org.tortodrone.world.*;
 public final class GameplayEffectCompatibility {
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         var action=new ActionConfig.FireEffect();var table=new ConfigReference<com.threerings.projectx.dungeon.config.SpawnTableConfig>("Monster/Tutorial/Training Grounds/Retrode","Tag","verified-wave");
         action.effect=new ConfigReference<>("Monster/Construct/Retrode/Emerge from Ground","Spawn Table",table);var target=new TargetConfig.Tagged();target.tag="emerge";action.location=target;
@@ -32,8 +32,8 @@ public final class GameplayEffectCompatibility {
         var effects=weapons.effects();if(effects.size()!=1||!Integer.valueOf(20).equals(effects.getFirst().targetEntry()))throw new AssertionError("Native emergence effect lost entry identity");
         var bytes=new ByteArrayOutputStream();var codec=new SessionCodec();append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"));
         append(bytes,codec.sceneDelta(1001,140,0,(short)0,1000+delay.delay,1000+delay.delay,(short)50,List.of(monster),List.of(),new int[0],Map.of(),true,effects));
-        var reader=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));reader.qe();reader.qe();var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((com.threerings.presents.net.EventNotification)reader.qe()).yj();
-        if(delta.aej().length!=1||!(delta.aej()[0] instanceof com.threerings.projectx.dungeon.data.actor.Monster)||delta.aem().length!=1||reader.available()!=0)throw new AssertionError("Native Monster/effect framing differs");
+        var reader=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));reader.ql();reader.ql();var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((com.threerings.presents.net.EventNotification)reader.ql()).yn();
+        if(delta.afd().length!=1||!(delta.afd()[0] instanceof com.threerings.projectx.dungeon.data.actor.Monster)||delta.afg().length!=1||reader.available()!=0)throw new AssertionError("Native Monster/effect framing differs");
         System.out.println("PASS: native Retrode emergence compound/delay/point impulse/table spawn -> real scene-owned Monster, exact wave/transform, original entry-targeted effect and stock reader (synthetic trigger; AI/floor/graphics not verified)");
     }
     private static CollisionMap terrain()throws Exception {

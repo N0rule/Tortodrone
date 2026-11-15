@@ -14,13 +14,13 @@ public final class AnimatedItemsCompatibility {
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,Path.of(args[0]).resolve("rsrc").toString());
+        resource.getClass().getMethod("gf",String.class).invoke(resource,Path.of(args[0]).resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
         var catalog=ItemCatalog.load(Path.of("content/items"));int count=0;
         for(var item:catalog.entries())if(AnimatedItems.supports(item.config())){
             var action=(ItemConfig.AnimatedAction)manager.d(ItemConfig.class,item.config()).w(manager);
             check(action.land==AnimatedItems.land(item.config()),"native land time: "+item.config());
-            check(action.land+action.fn(12345).clear==AnimatedItems.duration(item.config()),"native clear time: "+item.config());
+            check(action.land+action.fv(12345).clear==AnimatedItems.duration(item.config()),"native clear time: "+item.config());
             var refs=new ArrayList<ConfigReference<?>>();
             if(action.action instanceof ActionConfig.FireEffect fire)refs.add(fire.effect);
             else if(action.action instanceof ActionConfig.Random random)for(var weighted:random.actions){
@@ -30,11 +30,11 @@ public final class AnimatedItemsCompatibility {
             for(int i=0;i<refs.size();i++){
                 var def=definitions.get(i);var ref=refs.get(i);check(ref.getName().equals(def.effect()),"native effect name");
                 if(def.effect().equals("Basic")){
-                    check(Boolean.FALSE.equals(ref.kW().get("Attach to Target"))&&ref.kW().get("Lifespan").equals(6000),"native detached effect lifetime");
-                    var model=(ConfigReference<?>)ref.kW().get("Model");
-                    check(model.getName().equals("world/dynamic/fireworks/fx_fire.dat")&&model.kW().get("Model").equals(def.size())
-                        &&model.kW().get("Colorization").equals(def.color()),"native firework model/size/color");
-                }else check(ref.kW().get("Colorization").equals(def.color()),"native firefly color");
+                    check(Boolean.FALSE.equals(ref.ld().get("Attach to Target"))&&ref.ld().get("Lifespan").equals(6000),"native detached effect lifetime");
+                    var model=(ConfigReference<?>)ref.ld().get("Model");
+                    check(model.getName().equals("world/dynamic/fireworks/fx_fire.dat")&&model.ld().get("Model").equals(def.size())
+                        &&model.ld().get("Colorization").equals(def.color()),"native firework model/size/color");
+                }else check(ref.ld().get("Colorization").equals(def.color()),"native firefly color");
             }
             count++;
         }
@@ -48,11 +48,11 @@ public final class AnimatedItemsCompatibility {
         append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
         append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Alice"));
         append(bytes,codec.selected(1001,knight,active));append(bytes,codec.itemChanges(1001,knight,active,empty));
-        var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
+        var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.ql();in.ql();
         var player=new com.threerings.projectx.data.PlayerObject();
-        for(var child:((CompoundEvent)((EventNotification)in.qe()).yj()).xE())child.b(player);
+        for(var child:((CompoundEvent)((EventNotification)in.ql()).yn()).xI())child.b(player);
         check(player.heatBonus&&player.pvpTokenBonus==1,"native timed bonus selection attributes");
-        for(var child:((CompoundEvent)((EventNotification)in.qe()).yj()).xE())child.b(player);
+        for(var child:((CompoundEvent)((EventNotification)in.ql()).yn()).xI())child.b(player);
         check(!player.heatBonus&&player.pvpTokenBonus==0&&in.available()==0,"native expiry clears bonuses without trailing bytes");
         System.out.println("PASS: 82 native animated variants, effects, colors, sizes, delays and timed bonus selection/expiry attributes");
     }

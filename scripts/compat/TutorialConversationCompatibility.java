@@ -17,7 +17,7 @@ public final class TutorialConversationCompatibility {
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         byte[] bytes=Files.readAllBytes(Path.of(args[1]));
         String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
@@ -32,11 +32,11 @@ public final class TutorialConversationCompatibility {
         var disc=new ShapeConfig.Circle();disc.radius=ScenePortals.PAWN_RADIUS;int queries=0;
         for(int ix=0;ix<=80;ix++)for(int iy=0;iy<=40;iy++){
             float x=7.5f+ix*.1f,y=55.5f+iy*.1f;
-            boolean expected=original.av(cm).b(disc.acP().d(new Transform2D(new Vector2f(x,y),0)));
+            boolean expected=original.ay(cm).b(disc.adH().d(new Transform2D(new Vector2f(x,y),0)));
             if(expected!=sensor.spec().contains(sensor.x(),sensor.y(),sensor.rotation(),x,y,disc.radius))throw new AssertionError("Native ambush intersection differs at "+x+","+y);
             queries++;
         }
-        var nativePawn=cm.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Default").ai(cm);
+        var nativePawn=cm.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Default").al(cm);
         if(nativePawn.collisionFlags!=Math.round(content.stats().get("player.collision-flags")))throw new AssertionError("Player sensor flags changed");
         var world=new SceneEntities(content,CollisionMap.read(pack.resolve("walkability.gz")),SceneCollision.load(pack,hash));
         var starts=new ArrayList<SceneConversation>();var sources=new ArrayList<ActorState>();var targets=new ArrayList<Integer>();var times=new ArrayList<Integer>();
@@ -65,10 +65,10 @@ public final class TutorialConversationCompatibility {
         append(output,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"));
         append(output,codec.conversationDialog(1001,140,definition,"part 1a",source,100));
         append(output,codec.conversationDialog(1001,140,definition,"part 2a",source,100));
-        var input=new com.threerings.io.v(new ByteArrayInputStream(output.toByteArray()));input.qe();input.qe();
+        var input=new com.threerings.io.v(new ByteArrayInputStream(output.toByteArray()));input.ql();input.ql();
         for(String node:List.of("part 1a","part 2a")){
-            var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)input.qe()).yj();
-            var dialog=(com.threerings.projectx.data.ConversationDialogInfo)((com.threerings.presents.dobj.AttributeChangedEvent)event.xE().get(1)).getValue();
+            var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)input.ql()).yn();
+            var dialog=(com.threerings.projectx.data.ConversationDialogInfo)((com.threerings.presents.dobj.AttributeChangedEvent)event.xI().get(1)).getValue();
             var prepared=definition.nodes().get(node);
             if(!(dialog.sourceKey instanceof EntityKey.Entry entry)||!entry.getKey().equals(3280)||!dialog.sourceTranslation.equals(new Vector2f(11.5f,57.5f))||dialog.sourceRotation!=source.rotation()
                     ||!dialog.name.equals("n.tut_warden")||!dialog.bundle.equals("conversation")||!dialog.message.equals(prepared.message())
@@ -120,17 +120,17 @@ public final class TutorialConversationCompatibility {
         var bytes=new ByteArrayOutputStream();append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"));
         var legacyEffect=new SceneEffect(music.sequence()+1,music.config(),3100,player.x(),player.y(),player.rotation(),0,player.id());
         append(bytes,new SessionCodec().sceneDelta(1001,140,0,(short)0,11100,11100,(short)50,wireActors,List.of(),new int[0],Map.of(),true,List.of(music,legacyEffect)));
-        var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();
-        var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((com.threerings.presents.net.EventNotification)input.qe()).yj();
-        if(delta.aej().length!=4||Arrays.stream(delta.aej()).filter(a->a instanceof com.threerings.projectx.dungeon.data.actor.Monster).count()!=3||input.available()!=0)throw new AssertionError("Spawned monsters failed stock-reader decoding");
-        var nativeMusic=Arrays.stream(delta.aej()).filter(a->a instanceof com.threerings.projectx.dungeon.data.actor.Block).findFirst().orElseThrow();
-        if(!nativeMusic.Mv().getName().equals("Environment/Music")||!nativeMusic.Mv().kW().get("File").equals("sound/music/battle_1.ogg")||nativeMusic.adX()!=9100)throw new AssertionError("Native music block reference/framing changed");
-        if(delta.aem().length!=2)throw new AssertionError("Native entry/actor effects missing");
-        var decoded=delta.aem()[0];
-        if(!(decoded.aed() instanceof EntityKey.Entry target)||!target.getKey().equals(3363)||decoded.QY()!=3100||decoded.lk()!=0||!decoded.tz().equals(new Vector2f(music.x(),music.y()))||decoded.tA()!=music.rotation())throw new AssertionError("Native entry-targeted effect framing changed");
-        if(!(delta.aem()[1].aed() instanceof EntityKey.Actor)||!delta.aem()[1].aed().equals(new EntityKey.Actor(player.id())))throw new AssertionError("Existing actor-targeted effect framing changed");
-        var model=(ConfigReference<?>)decoded.Mv().kW().get("Model");
-        if(model==null||!model.getName().equals("model/scripted/play_sound_clip.dat")||!model.kW().get("File").equals("sound/music/fanfare_failure_1.ogg"))throw new AssertionError("Original boss sound reference lost");
+        var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.ql();input.ql();
+        var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((com.threerings.presents.net.EventNotification)input.ql()).yn();
+        if(delta.afd().length!=4||Arrays.stream(delta.afd()).filter(a->a instanceof com.threerings.projectx.dungeon.data.actor.Monster).count()!=3||input.available()!=0)throw new AssertionError("Spawned monsters failed stock-reader decoding");
+        var nativeMusic=Arrays.stream(delta.afd()).filter(a->a instanceof com.threerings.projectx.dungeon.data.actor.Block).findFirst().orElseThrow();
+        if(!nativeMusic.MX().getName().equals("Environment/Music")||!nativeMusic.MX().ld().get("File").equals("sound/music/battle_1.ogg")||nativeMusic.aeP()!=9100)throw new AssertionError("Native music block reference/framing changed");
+        if(delta.afg().length!=2)throw new AssertionError("Native entry/actor effects missing");
+        var decoded=delta.afg()[0];
+        if(!(decoded.aeX() instanceof EntityKey.Entry target)||!target.getKey().equals(3363)||decoded.adD()!=3100||decoded.lr()!=0||!decoded.tG().equals(new Vector2f(music.x(),music.y()))||decoded.tH()!=music.rotation())throw new AssertionError("Native entry-targeted effect framing changed");
+        if(!(delta.afg()[1].aeX() instanceof EntityKey.Actor)||!delta.afg()[1].aeX().equals(new EntityKey.Actor(player.id())))throw new AssertionError("Existing actor-targeted effect framing changed");
+        var model=(ConfigReference<?>)decoded.MX().ld().get("Model");
+        if(model==null||!model.getName().equals("model/scripted/play_sound_clip.dat")||!model.ld().get("File").equals("sound/music/fanfare_failure_1.ogg"))throw new AssertionError("Original boss sound reference lost");
         System.out.println("PASS: original boss fanfare effect -> existing effect queue -> stock reader, exact Entry(3363), sound reference, transform, timestamp and no pre-executing client (audio playback not verified)");
         System.out.println("PASS: real exported response -> production scene scheduler -> Gun Puppy now/3500 +/- 500 ms, Giant at 6000 ms, release at 8000 ms; exact marker transforms, wave tags, health, one-time activation, isolation and stock Monster creation frames (AI not covered)");
     }

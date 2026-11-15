@@ -28,7 +28,7 @@ public final class FireCatalogExport {
         Path ancestor = out; while (!Files.exists(ancestor)) ancestor = ancestor.getParent();
         if (ancestor.toRealPath().startsWith(game) || Files.exists(out)) throw new IOException("Choose a fresh output directory outside the installation");
         var resource = Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga", String.class).invoke(resource, game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf", String.class).invoke(resource, game.resolve("rsrc").toString());
         var manager = (ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"), com.threerings.util.R.class, String.class)
             .newInstance(resource, null, "config/");
         manager.init();
@@ -36,7 +36,7 @@ public final class FireCatalogExport {
         var entries = new ArrayList<AttackFire>();
         var previous=args.length>=3?FireCatalog.load(Path.of(args[2])):null;
         boolean vortex=args.length==4&&args[3].equals("--vortex"),statusBombs=args.length==4&&args[3].equals("--status-bombs"),sealed=args.length==4&&args[3].equals("--sealed");
-        for (ItemConfig config : manager.bd(ItemConfig.class).kK()) {
+        for (ItemConfig config : manager.be(ItemConfig.class).kR()) {
             ItemConfig.Original item = config.w(manager);
             if (!playerDefinition(config.getConfigId(), item)) continue;
             damageRarity=item.rarity;
@@ -146,7 +146,7 @@ public final class FireCatalogExport {
         AttackConfig.Original attack = AttackConfig.b(manager, reference);
         if (attack == null) throw new IOException("Unresolved stock attack " + reference.getName() + " for " + weapon);
         StarterCatalog.Model attackModel = model(reference);
-        if(weapon.startsWith("Sprite/")){var metadata=new TreeMap<>(attackModel.arguments());metadata.put("land",attack.Qk());metadata.put("rearm",attack.Qj());metadata.put("clear",attack.Qi());attackModel=new StarterCatalog.Model(attackModel.name(),metadata);}
+        if(weapon.startsWith("Sprite/")){var metadata=new TreeMap<>(attackModel.arguments());metadata.put("land",attack.QP());metadata.put("rearm",attack.QO());metadata.put("clear",attack.QN());attackModel=new StarterCatalog.Model(attackModel.name(),metadata);}
         var refs = new ArrayList<FireRef>();
         if(attack instanceof AttackConfig.ShieldBash bash&&bash.handler instanceof DungeonHandlerConfig.OneTimeIntersection handler
             &&handler.action instanceof DungeonActionConfig.DamageTargetFromPoint hit){
@@ -156,7 +156,7 @@ public final class FireCatalogExport {
             var shape=new com.threerings.tudey.shape.config.ShapeConfig.Circle();shape.radius=.67f;args.put("shape",argumentValue(shape));
             args.put("impulse",argumentValue(hit.impulseDealt));args.put("impulse-origin",argumentValue(new Vector2f(hit.impulseTranslation.x-.6f,hit.impulseTranslation.y)));
             Action sweep=new Action(Kind.SWEEP_DAMAGE,new StarterCatalog.Model("ShieldBash",args),null,"Source","","",.6f,0,0,0,true,0,0,0,hit.collisionMask,false,List.of(),"");
-            refs.add(new FireRef(new StarterCatalog.Model("ShieldBash",Map.of()),Math.max(0,550-attack.Qk()),50,false,0,0,0,sweep,null));
+            refs.add(new FireRef(new StarterCatalog.Model("ShieldBash",Map.of()),Math.max(0,550-attack.QP()),50,false,0,0,0,sweep,null));
         }
         if (attack.fireRefs != null) for (FireActionConfig.FireActionReference fireRef : attack.fireRefs) {
             if (fireRef == null || fireRef.ref == null) {
@@ -172,9 +172,9 @@ public final class FireCatalogExport {
                 // The official captures retain the weapon's Burst Color/Damage
                 // on its carrier and trails; bind the surviving attack arguments.
                 var bound=(DungeonActionConfig.SpawnPrespawned)spawn.clone();
-                bound.actor=new ConfigReference<>(spawn.actor.getName());bound.actor.kW().putAll(spawn.actor.kW());
-                if(reference.kW().containsKey("Burst Color"))bound.actor.kW().put("Color",reference.kW().get("Burst Color"));
-                if(reference.kW().containsKey("Burst Damage"))bound.actor.kW().put("Damage",reference.kW().get("Burst Damage"));
+                bound.actor=new ConfigReference<>(spawn.actor.getName());bound.actor.ld().putAll(spawn.actor.ld());
+                if(reference.ld().containsKey("Burst Color"))bound.actor.ld().put("Color",reference.ld().get("Burst Color"));
+                if(reference.ld().containsKey("Burst Damage"))bound.actor.ld().put("Damage",reference.ld().get("Burst Damage"));
                 action=readPrespawned(manager,bound);
             }else action = readFireAction(manager, fireRef.ref, fire);
             if (action == null) throw new IOException("Stock fire reference has no action: " + fireRef.ref.getName());
@@ -295,7 +295,7 @@ public final class FireCatalogExport {
         if (action instanceof ActionConfig.SpawnActor spawn) {
             if (spawn.actor == null) return noop();
             ActorConfig config = manager.a(ActorConfig.class,spawn.actor);
-            ActorConfig.Original actor = config == null ? null : config.ai(manager);
+            ActorConfig.Original actor = config == null ? null : config.al(manager);
             if (actor == null) throw new IOException("Unresolved actor reference " + spawn.actor.getName());
             if(actor instanceof DungeonActorConfig.Pickup pickup)return pickupSpawn(manager,spawn,pickup);
             if(sceneActors&&actor instanceof DungeonActorConfig.Monster&&action.getClass()==ActionConfig.SpawnActor.class
@@ -336,7 +336,7 @@ public final class FireCatalogExport {
             if(pickup.party&&!item.getName().startsWith("Instant/Crown/"))return unsupported(spawn);
             var itemConfig=manager.a(ItemConfig.class,new ConfigReference<ItemConfig>(item.getName()));
             if(itemConfig==null)return unsupported(spawn);
-            fields.put("pickup-item",item.getName());fields.put("pickup-transient",Boolean.toString(itemConfig.w(manager).Qp()));
+            fields.put("pickup-item",item.getName());fields.put("pickup-transient",Boolean.toString(itemConfig.w(manager).QU()));
         }
         fields.put("vacuum-expansion",Float.toString(pickup.vacuumExpansion));fields.put("vacuum-speed",Float.toString(pickup.vacuumSpeed));fields.put("lifespan",Integer.toString(pickup.lifespan));
         float x=0,y=0,rotation=0,variance=0;boolean relative=true;
@@ -381,7 +381,7 @@ public final class FireCatalogExport {
         // SpawnPrespawned.shouldPreExecute() is exactly actor != null in the stock archive.
         if (spawn == null || spawn.actor == null) return noop();
         ActorConfig config = manager.a(ActorConfig.class, spawn.actor);
-        ActorConfig.Original original = config == null ? null : config.ai(manager);
+        ActorConfig.Original original = config == null ? null : config.al(manager);
         if (original == null) throw new IOException("Unresolved prespawned actor " + spawn.actor.getName());
         ActorSpec spec = actor(manager, spawn.actor, original);
         Kind kind = isProjectile(spec.nativeType()) ? Kind.EMIT_PROJECTILE : Kind.SPAWN_ACTOR;
@@ -417,7 +417,7 @@ public final class FireCatalogExport {
             if(!(inner.action instanceof ActionConfig.Compound original))throw new IOException("Shield push-back action changed");
             var compound=(ActionConfig.Compound)original.clone();compound.actions=original.actions.clone();
             var choice=(com.threerings.config.Parameter.Choice)fire.getParameter("Knock-Back Power");
-            String selected=Objects.toString(reference.kW().get("Knock-Back Power"),choice.choice);ImpulseConfig.DamageImpulse impulse=null;
+            String selected=Objects.toString(reference.ld().get("Knock-Back Power"),choice.choice);ImpulseConfig.DamageImpulse impulse=null;
             for(var option:choice.options)if(option.name.equals(selected)){var field=option.getClass().getDeclaredField("_arguments");field.setAccessible(true);impulse=(ImpulseConfig.DamageImpulse)((Map<?,?>)field.get(option)).get("KB");}
             if(impulse==null)throw new IOException("Shield push-back power binding changed");
             for(int i=0;i<compound.actions.length;i++)if(compound.actions[i] instanceof DungeonActionConfig.ImpartImpulse push){
@@ -434,7 +434,7 @@ public final class FireCatalogExport {
                 ||!(compound.actions[0] instanceof ActionConfig.Conditional conditional))throw new IOException("Floor trap graph changed");
             action=readAction(manager,conditional.action);
             var choice=(com.threerings.config.Parameter.Choice)fire.getParameter("Damage Size");
-            for(var option:choice.options)if(option.name.equals(Objects.toString(reference.kW().get("Damage Size"),choice.choice))){
+            for(var option:choice.options)if(option.name.equals(Objects.toString(reference.ld().get("Damage Size"),choice.choice))){
                 var field=option.getClass().getDeclaredField("_arguments");field.setAccessible(true);
                 Object shape=((Map<?,?>)field.get(option)).get("Damage Region");
                 if(shape==null)throw new IOException("Floor trap shape missing");
@@ -446,7 +446,7 @@ public final class FireCatalogExport {
             // RegionConfig's server-only shape is stripped, but each attack's Shape
             // argument survives. Preserve that exact argument rather than the empty
             // Default region prototype returned by the client configuration manager.
-            Object shape=reference.kW().get("Shape");
+            Object shape=reference.ld().get("Shape");
             if(action.kind()!=Kind.DAMAGE_REGION||shape==null)throw new IOException("Verified transformed damage action changed shape");
             var data=new TreeMap<>(action.config().arguments());data.put("shape",argumentValue(shape));
             action=new Action(action.kind(),new StarterCatalog.Model(action.config().name(),data),action.actor(),action.targetType(),
@@ -457,7 +457,7 @@ public final class FireCatalogExport {
             // The original fire_action.xml has a point at (1.5,.312) plus the
             // supplied Attack Shape for damage, and that supplied shape for pushback.
             // Retail strips both regions, but retains this exact two-path binding.
-            var parameter=fire.getParameter("Attack Shape");Object rawShape=reference.kW().get("Attack Shape");
+            var parameter=fire.getParameter("Attack Shape");Object rawShape=reference.ld().get("Attack Shape");
             if(!(parameter instanceof com.threerings.config.Parameter.Direct direct)
                 ||!Arrays.equals(direct.paths,new String[]{"action.actions[0].region.shape.shapes[1]","action.actions[1].region.shape.shapes[0]"})
                 ||!(rawShape instanceof com.threerings.tudey.shape.config.ShapeConfig.TransformedShape)
@@ -585,7 +585,7 @@ public final class FireCatalogExport {
             var orbital=statusAttachment(bullet.detonationAction);
             if(orbital!=null){var definition=manager.a(ActorConfig.class,orbital);
                 if(definition==null)throw new IOException("Missing retained Catalyzer orbital");
-                attachment=actor(manager,orbital,definition.ai(manager));
+                attachment=actor(manager,orbital,definition.al(manager));
             }
         }
         if(refName.equals("Bullet/Monster/Mecha Zombie Beam")){
@@ -599,8 +599,8 @@ public final class FireCatalogExport {
                 ||!(actor.handlers[0] instanceof HandlerConfig.Timer timer)||timer.interval!=1||timer.offset!=0||timer.limit!=0
                 ||!(timer.action instanceof ActionConfig.SpawnActor spawn)||spawn.actor==null
                 ||!spawn.actor.getName().equals("Bullet/Monster/Parts/Mecha Zombie Beam Trail"))throw new IOException("Mecha beam stripped timer footprint changed");
-            var trail=new ActionConfig.SpawnActor();trail.location=spawn.location;trail.actor=new ConfigReference<>(spawn.actor.getName());trail.actor.kW().putAll(spawn.actor.kW());
-            for(String key:List.of("Color","Damage (Status)","Signal (Status)"))if(reference.kW().containsKey(key))trail.actor.kW().put(key,reference.kW().get(key));
+            var trail=new ActionConfig.SpawnActor();trail.location=spawn.location;trail.actor=new ConfigReference<>(spawn.actor.getName());trail.actor.ld().putAll(spawn.actor.ld());
+            for(String key:List.of("Color","Damage (Status)","Signal (Status)"))if(reference.ld().containsKey(key))trail.actor.ld().put(key,reference.ld().get(key));
             timers.add(new ActorTimer(50,50,9,readAction(manager,trail),null));
         }
         for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Shutdown ended){
@@ -617,7 +617,7 @@ public final class FireCatalogExport {
                 ||!(conditional.action instanceof ActionConfig.Compound compound)||compound.actions.length!=1
                 ||!(compound.actions[0] instanceof ActionConfig.SpawnActor spawn)||spawn.actor==null)
                 throw new IOException("Burst bullet timer layout changed");
-            Object count=reference.kW().get("Burst Count");
+            Object count=reference.ld().get("Burst Count");
             if(count!=null){int bursts=Integer.parseInt(count.toString());
                 if(bursts<1||bursts>32)throw new IOException("Invalid burst count");
                 // Retail's parameter paths still address stripped server nodes.
@@ -625,10 +625,10 @@ public final class FireCatalogExport {
                 // each trail, with Burst Scale renamed Scale. Resolve that child
                 // afresh so it cannot retain the prototype's monster damage.
                 var trail=new ActionConfig.SpawnActor();trail.location=spawn.location;
-                trail.actor=new ConfigReference<>(spawn.actor.getName());trail.actor.kW().putAll(spawn.actor.kW());
+                trail.actor=new ConfigReference<>(spawn.actor.getName());trail.actor.ld().putAll(spawn.actor.ld());
                 for(String key:List.of("Color","Damage","Extra FX","Ground Scar"))
-                    if(reference.kW().containsKey(key))trail.actor.kW().put(key,reference.kW().get(key));
-                if(reference.kW().containsKey("Burst Scale"))trail.actor.kW().put("Scale",reference.kW().get("Burst Scale"));
+                    if(reference.ld().containsKey(key))trail.actor.ld().put(key,reference.ld().get(key));
+                if(reference.ld().containsKey("Burst Scale"))trail.actor.ld().put("Scale",reference.ld().get("Burst Scale"));
                 timers.add(new ActorTimer(100,100,bursts,readAction(manager,trail),destroySource()));}
         } else if(refName.startsWith("Bullet/Handgun/Pulsar/")&&!refName.contains("(Charged)")) {
             for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Timer timer
@@ -673,7 +673,7 @@ public final class FireCatalogExport {
         if(shardBomb){
             // An explosive's retained graph is a single detonation, not a repeating pulse.
             // The client bomb wrapper retains its fuse even though Timer fields are stripped.
-            Object visualFuse=actor.sprite.model==null?null:actor.sprite.model.kW().get("Fuse");
+            Object visualFuse=actor.sprite.model==null?null:actor.sprite.model.ld().get("Fuse");
             if(!(visualFuse instanceof Float seconds)||!Float.isFinite(seconds)||seconds<=0)throw new IOException("Shard bomb has no visual fuse");
             for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Timer timer)
                 timers.add(new ActorTimer((int)(seconds*1000),0,1,shardFan(readAction(manager,bindShardBranches(timer.action,reference))),destroySource()));
@@ -681,7 +681,7 @@ public final class FireCatalogExport {
         if(refName.equals("Bomb/Parts/Shard/Shard Base (Timer)")){
             // Its signal trigger/timer is stripped. End the retained visual and damage
             // together at the authored model lifespan rather than leave an invisible bomb.
-            Object lifespan=actor.sprite.model==null?null:actor.sprite.model.kW().get("Lifespan");
+            Object lifespan=actor.sprite.model==null?null:actor.sprite.model.ld().get("Lifespan");
             if(!(lifespan instanceof Float seconds)||!Float.isFinite(seconds)||seconds<=0)throw new IOException("Shard has no visual lifespan");
             for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Signal signal)
                 timers.add(new ActorTimer((int)(seconds*1000),0,1,readAction(manager,signal.action),destroySource()));
@@ -718,7 +718,7 @@ public final class FireCatalogExport {
                 }
             }
         }
-        if(type.equals("ORBITAL")&&reference.kW().get("Duration") instanceof Number duration)fuse=Math.max(1,(int)(duration.floatValue()*1000));
+        if(type.equals("ORBITAL")&&reference.ld().get("Duration") instanceof Number duration)fuse=Math.max(1,(int)(duration.floatValue()*1000));
         if(type.equals("ACTOR")&&!timers.isEmpty())fuse=timers.stream().filter(t->t.action().kind()!=Kind.COMPOUND||!t.action().children().isEmpty()).mapToInt(t->t.delay()+t.interval()*(t.limit()-1)+1).max().orElse(1);
         detonation=restoreDamageShape(manager,reference,detonation);
         return new ActorSpec(type,model(reference),fuse,speed,maxStep,flags,ox,oy,height,detonation,orbit,actor.collisionMask,argumentValue(actor.shape),timers,
@@ -743,7 +743,7 @@ public final class FireCatalogExport {
     }
     private static ConfigReference<ActorConfig> statusAttachment(DamageConfig damage){
         if(damage instanceof DamageConfig.Compound compound)for(var child:compound.damages){var found=statusAttachment(child);if(found!=null)return found;}
-        if(damage instanceof DamageConfig.Status status&&status.statusCondition!=null&&status.statusCondition.kW().get("Actor") instanceof ConfigReference<?> actor){
+        if(damage instanceof DamageConfig.Status status&&status.statusCondition!=null&&status.statusCondition.ld().get("Actor") instanceof ConfigReference<?> actor){
             @SuppressWarnings("unchecked") var ref=(ConfigReference<ActorConfig>)actor;return ref;
         }
         return null;
@@ -778,9 +778,9 @@ public final class FireCatalogExport {
         if(raw instanceof ActionConfig.Compound compound){var copy=(ActionConfig.Compound)compound.clone();copy.actions=Arrays.stream(compound.actions).map(a->bindShardBranches(a,source)).toArray(ActionConfig[]::new);return copy;}
         if(raw instanceof ActionConfig.Delayed delayed){var copy=(ActionConfig.Delayed)delayed.clone();copy.action=bindShardBranches(delayed.action,source);return copy;}
         if(raw instanceof ActionConfig.SpawnActor spawn&&spawn.actor!=null&&spawn.actor.getName().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")){
-            var copy=(ActionConfig.SpawnActor)spawn.clone();copy.actor=spawn.actor.kX();
-            if(source.kW().containsKey("Shard Damage"))copy.actor.kW().put("Damage",source.kW().get("Shard Damage"));
-            if(source.kW().containsKey("Shard Color"))copy.actor.kW().put("Color",source.kW().get("Shard Color"));
+            var copy=(ActionConfig.SpawnActor)spawn.clone();copy.actor=spawn.actor.le();
+            if(source.ld().containsKey("Shard Damage"))copy.actor.ld().put("Damage",source.ld().get("Shard Damage"));
+            if(source.ld().containsKey("Shard Color"))copy.actor.ld().put("Color",source.ld().get("Shard Color"));
             return copy;
         }
         return raw;
@@ -823,11 +823,11 @@ public final class FireCatalogExport {
         while(reference!=null&&seen.add(reference.getName())){
             var config=manager.a(ActorConfig.class,reference);if(config==null)break;
             for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct){
-                for(String path:direct.paths)action=restoreDetonationCircle(action,path,reference.kW().get(direct.name));
+                for(String path:direct.paths)action=restoreDetonationCircle(action,path,reference.ld().get(direct.name));
             }else if(parameter instanceof com.threerings.config.Parameter.Choice choice){
                 for(var direct:choice.directs)for(String path:direct.paths)
                     if(path.matches("implementation\\.detonation_action(?:\\.actions\\[\\d+\\])?\\.region\\.shape\\.radius")){
-                        String selected=Objects.toString(reference.kW().get(choice.name),choice.choice);
+                        String selected=Objects.toString(reference.ld().get(choice.name),choice.choice);
                         for(var option:choice.options)if(option.name.equals(selected)){
                             var field=option.getClass().getDeclaredField("_arguments");field.setAccessible(true);
                             Object value=((Map<?,?>)field.get(option)).get(direct.name);
@@ -846,7 +846,7 @@ public final class FireCatalogExport {
             var config=manager.a(ActorConfig.class,reference);if(config==null)break;
             for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct){
                 String path="implementation.handlers["+handlerIndex+"].action.region.shape.radius";
-                if(Arrays.asList(direct.paths).contains(path)&&reference.kW().get(direct.name) instanceof Number radius)
+                if(Arrays.asList(direct.paths).contains(path)&&reference.ld().get(direct.name) instanceof Number radius)
                     action=withShape(action,circle(radius.floatValue()));
             }
             reference=config.implementation instanceof ActorConfig.Derived derived?derived.actor:null;
@@ -887,7 +887,7 @@ public final class FireCatalogExport {
 
     static StarterCatalog.Model model(ConfigReference<?> reference) throws IOException {
         if (reference == null) return null;
-        return new StarterCatalog.Model(reference.getName(),arguments(reference.kW(),0,new IdentityHashMap<>(),new int[]{0}));
+        return new StarterCatalog.Model(reference.getName(),arguments(reference.ld(),0,new IdentityHashMap<>(),new int[]{0}));
     }
     static Object argumentValue(Object value)throws IOException{return argument(value,0,new IdentityHashMap<>(),new int[]{0});}
     private static Map<String,Object> arguments(Map<?,?> input,int depth,IdentityHashMap<Object,Boolean> visiting,int[] nodes)throws IOException {

@@ -58,7 +58,7 @@ public final class SceneContentExport {
         if (Files.exists(target)) throw new IOException("Refusing to replace content.properties");
 
         importReport.clear();scriptedConversations.clear();startups.clear();actorTemplateIds.clear();actorTemplates.clear();
-        levelContext=scene.adG() instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level?level:null;
+        levelContext=scene.aev() instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level?level:null;
         TreeMap<String, String> values = new TreeMap<>();
         rules=new Properties();
         try(var in=Files.newInputStream(Path.of("content/_internal/provenance/actor-rules.properties"))){rules.load(in);}
@@ -126,7 +126,7 @@ public final class SceneContentExport {
         var existing=actorTemplateIds.get(key);if(existing!=null)return existing;
         if(actorTemplates.size()>=128)throw new IOException("Too many deferred scene actors");
         String id="spawn_"+actorTemplates.size();actorTemplateIds.put(key,id);
-        var copy=new ConfigReference<ActorConfig>(actor.getName());copy.kW().putAll(actor.kW());actorTemplates.add(copy);return id;
+        var copy=new ConfigReference<ActorConfig>(actor.getName());copy.ld().putAll(actor.ld());actorTemplates.add(copy);return id;
     }
 
     private static List<Binding> collectBindings(ConfigManager cm, TudeySceneModel scene)
@@ -134,8 +134,8 @@ public final class SceneContentExport {
         List<Binding> result = new ArrayList<>();
         var state=new com.threerings.projectx.dungeon.config.SpawnTableConfig.a();
         state.depth=0;state.difficulty=com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM;
-        if(scene.adG() instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level)state.bkh=level;
-        for (Object raw : scene.adK()) {
+        if(scene.aev() instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level)state.ble=level;
+        for (Object raw : scene.aez()) {
             HandlerConfig[] handlers;
             String sourceKey;
             float x, y, rotation;
@@ -143,27 +143,27 @@ public final class SceneContentExport {
             if (raw instanceof TudeySceneModel.PlaceableEntry entry) {
                 sourceKey = key(entry.getKey());
                 if (entry.placeable == null) throw new IOException("Placeable reference missing at " + sourceKey);
-                sourceArgs=entry.placeable.kW();
+                sourceArgs=entry.placeable.ld();
                 PlaceableConfig config = entry.placeable.a(cm, PlaceableConfig.class);
                 if (config == null) throw new IOException("Unresolved placeable at " + sourceKey);
                 Object implementation = config.q(cm);
                 Object rawHandlers = field(implementation, "handlers");
                 handlers = rawHandlers == null ? null : (HandlerConfig[])rawHandlers;
-                var point = entry.au(cm);
+                var point = entry.ax(cm);
                 x = finite(point.x, "x at " + sourceKey);
                 y = finite(point.y, "y at " + sourceKey);
-                var q=entry.transform.tE(); rotation=(float)Math.IEEEremainder(Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))-Math.PI/2,2*Math.PI);
+                var q=entry.transform.tL(); rotation=(float)Math.IEEEremainder(Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))-Math.PI/2,2*Math.PI);
                 if(implementation instanceof PlaceableConfig.StatefulProp prop&&prop.actor!=null)
                     result.add(new Binding(sourceKey,-1,x,y,rotation,bindArguments(prop.actor,sourceArgs)));
             } else if (raw instanceof TudeySceneModel.TileEntry entry) {
                 sourceKey = key(entry.getKey());
-                sourceArgs=entry.tile.kW();
+                sourceArgs=entry.tile.ld();
                 if (entry.tile == null) throw new IOException("Tile reference missing at " + sourceKey);
-                var config = entry.tile.a(cm, TileConfig.class).an(cm);
+                var config = entry.tile.a(cm, TileConfig.class).aq(cm);
                 if (config == null) throw new IOException("Unresolved tile at " + sourceKey);
                 Object rawHandlers = field(config, "handlers");
                 handlers = rawHandlers == null ? null : (HandlerConfig[])rawHandlers;
-                var point = entry.au(cm);
+                var point = entry.ax(cm);
                 x = finite(point.x, "x at " + sourceKey);
                 y = finite(point.y, "y at " + sourceKey);
                 rotation=(float)Math.IEEEremainder((entry.rotation-1)*Math.PI/2,2*Math.PI);
@@ -224,7 +224,7 @@ public final class SceneContentExport {
 
     /** Whole-graph extraction only: an unsupported sibling must never disappear from a compound. */
     private static void collectTriggers(ConfigManager cm,TudeySceneModel scene,Map<String,String> values,List<String> indexes)throws Exception {
-        for(Object raw:scene.adK())if(raw instanceof TudeySceneModel.PlaceableEntry entry){
+        for(Object raw:scene.aez())if(raw instanceof TudeySceneModel.PlaceableEntry entry){
             var reference=resolvedPlaceable(cm,entry.placeable);
             var config=reference.a(cm,PlaceableConfig.class);
             var original=config.q(cm);
@@ -233,7 +233,7 @@ public final class SceneContentExport {
                 String source=key(entry.getKey());
                 try{
                     var group=twoTagRemoval(cm,reference,config,original);
-                    var point=entry.au(cm);var q=entry.transform.tE();
+                    var point=entry.ax(cm);var q=entry.transform.tL();
                     float rotation=(float)Math.IEEEremainder(Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))-Math.PI/2,2*Math.PI);
                     for(int i=0;i<2;i++){
                         var fields=new TreeMap<String,String>();
@@ -261,7 +261,7 @@ public final class SceneContentExport {
                     var fields=new TreeMap<String,String>();
                     fields.put("kind","SceneTrigger");fields.put("config",entry.placeable.getName());fields.put("source-key",key(entry.getKey()));fields.put("handler-index",Integer.toString(hi));
                     fields.put("state-key",key(entry.getKey())+":"+hi);
-                    var point=entry.au(cm);fields.put("x",Float.toString(finite(point.x,"trigger x")));fields.put("y",Float.toString(finite(point.y,"trigger y")));var q=entry.transform.tE();
+                    var point=entry.ax(cm);fields.put("x",Float.toString(finite(point.x,"trigger x")));fields.put("y",Float.toString(finite(point.y,"trigger y")));var q=entry.transform.tL();
                     fields.put("rotation",Float.toString((float)Math.IEEEremainder(Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))-Math.PI/2,2*Math.PI)));
                     List<String> tags;
                     if(handler instanceof HandlerConfig.ActorRemoved removed){
@@ -272,7 +272,7 @@ public final class SceneContentExport {
                         tags=List.of("startup:"+key(entry.getKey())+":"+hi);
                     }else{
                         fields.putAll(sceneSignal(handler));
-                        tags=sceneTags(config,reference.kW(),original.tags);
+                        tags=sceneTags(config,reference.ld(),original.tags);
                         if(tags.isEmpty())throw new IOException("Signal handler has no resolved tags");
                     }
                     var graph=counterGraph==null?sceneAction(((HandlerConfig.ActionHandlerConfig)handler).action,0,cm):counterGraph;
@@ -300,10 +300,10 @@ public final class SceneContentExport {
         requirePaths(config,"Action","implementation.handlers[0].action.actions[1].action");
         requirePaths(config,"Reverse Action","implementation.handlers[1].action.actions[1].action");
         requirePaths(config,"Triggers","implementation.handlers[0].action.actions[1].condition.expression.second_operand.value","implementation.handlers[1].action.actions[1].condition.expression.second_operand.value");
-        if(!(reference.kW().get("Action") instanceof ActionConfig action))throw new IOException("Missing authored counter action");
-        Object reverse=reference.kW().get("Reverse Action");
+        if(!(reference.ld().get("Action") instanceof ActionConfig action))throw new IOException("Missing authored counter action");
+        Object reverse=reference.ld().get("Reverse Action");
         if(reverse!=null&&(!(reverse instanceof ActionConfig reverseAction)||!noAction(reverseAction)))throw new IOException("Multi-trigger reverse policy is not recovered");
-        return Map.of("kind","count","threshold",counterThreshold(reference.kW().get("Triggers")),"action",sceneAction(action,0,cm));
+        return Map.of("kind","count","threshold",counterThreshold(reference.ld().get("Triggers")),"action",sceneAction(action,0,cm));
     }
     private static boolean noAction(ActionConfig action){return action instanceof ActionConfig.None||action!=null&&action.getClass()==ActionConfig.SpawnActor.class&&((ActionConfig.SpawnActor)action).actor==null;}
     private static int counterThreshold(Object value)throws IOException {
@@ -334,7 +334,7 @@ public final class SceneContentExport {
             tags.add(target.tag);
         }
         var action=((ActionConfig.Conditional)changed.action).action;
-        if(!(reference.kW().get("Action") instanceof ActionConfig supplied)||!Objects.equals(supplied,action))throw new IOException("Two-tag removal action binding changed");
+        if(!(reference.ld().get("Action") instanceof ActionConfig supplied)||!Objects.equals(supplied,action))throw new IOException("Two-tag removal action binding changed");
         var graph=sceneAction(action,0,cm);org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(graph));
         return new RemovedGroup(List.copyOf(tags),graph);
     }
@@ -350,14 +350,14 @@ public final class SceneContentExport {
                 if(config==null)throw new IOException("Unresolved native area");
                 if(!(config.implementation instanceof com.threerings.tudey.config.AreaConfig.Derived derived))break;
                 if(derived.area==null)throw new IOException("Missing derived native area");
-                var next=new ConfigReference<com.threerings.tudey.config.AreaConfig>(derived.area.getName());next.kW().putAll(derived.area.kW());
-                for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.kW().containsKey(parameter.name))for(String path:direct.paths){
+                var next=new ConfigReference<com.threerings.tudey.config.AreaConfig>(derived.area.getName());next.ld().putAll(derived.area.ld());
+                for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.ld().containsKey(parameter.name))for(String path:direct.paths){
                     var match=java.util.regex.Pattern.compile("implementation\\.area\\[\"([^\"]+)\"\\]").matcher(path);
-                    if(match.matches())next.kW().put(match.group(1),reference.kW().get(parameter.name));
+                    if(match.matches())next.ld().put(match.group(1),reference.ld().get(parameter.name));
                 }
                 reference=next;if(depth==15)throw new IOException("Area derivation exceeds limit");
             }
-            var original=reference.a(cm,com.threerings.tudey.config.AreaConfig.class).aj(cm);
+            var original=reference.a(cm,com.threerings.tudey.config.AreaConfig.class).am(cm);
             if(original.handlers==null)continue;
             for(int hi=0;hi<original.handlers.length;hi++)try{
                 var handler=original.handlers[hi];if(!(handler instanceof HandlerConfig.BaseIntersection sensor))throw new IOException("Unsupported area handler "+handler.getClass().getName());
@@ -375,11 +375,11 @@ public final class SceneContentExport {
                 }
                 if(reference.getName().equals("Player Enter/Base")&&action instanceof ActionConfig.Conditional conditional&&conditional.elseAction==null
                         &&conditional.condition instanceof com.threerings.tudey.config.ConditionConfig.Tagged tagged&&tagged.tag.isEmpty()&&!tagged.all&&tagged.target instanceof com.threerings.tudey.config.TargetConfig.Source){
-                    Object extra=reference.kW().get("Trigger Condition");
+                    Object extra=reference.ld().get("Trigger Condition");
                     if(extra!=null&&(!(extra instanceof com.threerings.tudey.config.ConditionConfig[] conditions)||conditions.length!=0))throw new IOException("Unimplemented area trigger condition");
                     action=conditional.action;importReport.add("Restored archived PawnLogic area guard at "+entry.getKey()+" / "+hi);
                 }
-                var point=entry.au(cm);var polygon=new com.threerings.tudey.shape.config.ShapeConfig.Polygon();
+                var point=entry.ax(cm);var polygon=new com.threerings.tudey.shape.config.ShapeConfig.Polygon();
                 if(entry.vertices==null||entry.vertices.length<3||entry.vertices.length>256)throw new IOException("Invalid native area vertices");
                 polygon.vertices=new com.threerings.tudey.shape.config.ShapeConfig.Vertex[entry.vertices.length];
                 for(int v=0;v<entry.vertices.length;v++){polygon.vertices[v]=new com.threerings.tudey.shape.config.ShapeConfig.Vertex();polygon.vertices[v].x=finite(entry.vertices[v].x-point.x,"area x");polygon.vertices[v].y=finite(entry.vertices[v].y-point.y,"area y");}
@@ -416,9 +416,9 @@ public final class SceneContentExport {
         for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)){
             var reference=resolvedPlaceable(cm,entry.placeable);var config=reference.a(cm,PlaceableConfig.class);var original=config.q(cm);
             if(original.tags==null)continue;
-            var tags=sceneTags(config,reference.kW(),original.tags);if(tags.isEmpty())continue;
+            var tags=sceneTags(config,reference.ld(),original.tags);if(tags.isEmpty())continue;
             String index=Integer.toString(indexes.size()),prefix="entry."+index+".";indexes.add(index);
-            var point=entry.au(cm);var q=entry.transform.tE();
+            var point=entry.ax(cm);var q=entry.transform.tL();
             put(values,prefix+"kind","SceneAnchor");put(values,prefix+"config",entry.placeable.getName());put(values,prefix+"source-key",key(entry.getKey()));put(values,prefix+"handler-index","anchor");
             put(values,prefix+"source-tags",String.join(",",tags));putFloat(values,prefix+"x",finite(point.x,"anchor x"));putFloat(values,prefix+"y",finite(point.y,"anchor y"));
             putFloat(values,prefix+"rotation",(float)Math.IEEEremainder(Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))-Math.PI/2,2*Math.PI));
@@ -430,12 +430,12 @@ public final class SceneContentExport {
             if(config==null)throw new IOException("Unresolved scene placeable "+reference.getName());
             if(!(config.implementation instanceof PlaceableConfig.Derived derived))return reference;
             if(derived.placeable==null)throw new IOException("Missing derived scene placeable");
-            var next=new ConfigReference<PlaceableConfig>(derived.placeable.getName());next.kW().putAll(derived.placeable.kW());
+            var next=new ConfigReference<PlaceableConfig>(derived.placeable.getName());next.ld().putAll(derived.placeable.ld());
             // Recover preserved argument-to-argument paths without mutating the native reference.
-            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.kW().containsKey(parameter.name))
+            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.ld().containsKey(parameter.name))
                 for(String path:direct.paths){
                     var match=java.util.regex.Pattern.compile("implementation\\.placeable\\[\"([^\"]+)\"\\]").matcher(path);
-                    if(match.matches())next.kW().put(match.group(1),reference.kW().get(parameter.name));
+                    if(match.matches())next.ld().put(match.group(1),reference.ld().get(parameter.name));
                 }
             reference=next;
         }
@@ -542,7 +542,7 @@ public final class SceneContentExport {
                     ||!(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported monster activation table or transform");
             var table=spawn.spawnTable.a(cm,com.threerings.projectx.dungeon.config.SpawnTableConfig.class);
             if(table==null)throw new IOException("Missing monster activation table");
-            return preparedSpawn(cm,singleTableActor(table,spawn.spawnTable.kW()),true);
+            return preparedSpawn(cm,singleTableActor(table,spawn.spawnTable.ld()),true);
         }
         if(action!=null&&action.getClass()==com.threerings.projectx.dungeon.config.DungeonActionConfig.TableSpawn.class){
             var spawn=(com.threerings.projectx.dungeon.config.DungeonActionConfig.TableSpawn)action;
@@ -560,7 +560,7 @@ public final class SceneContentExport {
             if(cm==null||start.conversation==null||!(pawnTarget(start.target)||party||pawnActivator&&start.target instanceof com.threerings.tudey.config.TargetConfig.Activator)||rules==null)throw new IOException("Unsupported scripted conversation source/target");
             for(String id:rules.getProperty("dialogues","").split(","))if(start.conversation.getName().equals(rules.getProperty("dialogue."+id+".reference"))
                     &&rules.getProperty("dialogue."+id+".actor","").startsWith("@conversation/")){
-                if(!start.conversation.kW().isEmpty())throw new IOException("Parameterized scripted conversation is not implemented");
+                if(!start.conversation.ld().isEmpty())throw new IOException("Parameterized scripted conversation is not implemented");
                 var previous=scriptedConversations.putIfAbsent(id,start);
                 if(previous!=null&&(!Objects.equals(previous.name,start.name)||!Objects.equals(previous.model,start.model)||!Objects.equals(previous.music,start.music)||!Objects.equals(previous.sourceCloseAnimation,start.sourceCloseAnimation)))throw new IOException("Conflicting scripted conversation presentation");
                 return Map.of("kind","conversation","id",rules.getProperty("dialogue."+id+".actor"),"activator",start.target instanceof com.threerings.tudey.config.TargetConfig.Activator);
@@ -685,9 +685,9 @@ public final class SceneContentExport {
         try{
             if(rules==null){rules=new Properties();try(var input=Files.newInputStream(Path.of("content/_internal/provenance/actor-rules.properties"))){rules.load(input);}}
             writeActor(cm,fields,"",actor);
-            var resolved=resolvedActor(cm,actor);var config=resolved.a(cm,ActorConfig.class);var tags=(com.threerings.tudey.config.TagConfig)field(config.ai(cm),"tags");
+            var resolved=resolvedActor(cm,actor);var config=resolved.a(cm,ActorConfig.class);var tags=(com.threerings.tudey.config.TagConfig)field(config.al(cm),"tags");
             if(fields.get("kind").equals("Block")){
-                var original=config.ai(cm);
+                var original=config.al(cm);
                 if(original.getClass()!=com.threerings.projectx.dungeon.config.DungeonActorConfig.Block.class||original.handlers!=null&&original.handlers.length!=0)throw new IOException("Unimplemented block handlers");
                 var damage=((com.threerings.projectx.dungeon.config.DungeonActorConfig.Block)original).damageAction;
                 if(damage!=null){
@@ -695,7 +695,7 @@ public final class SceneContentExport {
                     fields.put("damage-action","destroy");
                 }
             }
-            if(tags!=null)fields.put("tags",String.join(",",sceneTags(config,resolved.kW(),tags)));
+            if(tags!=null)fields.put("tags",String.join(",",sceneTags(config,resolved.ld(),tags)));
             new org.tortodrone.world.SceneActions.Spawn(fields,activate);
         }catch(Exception invalid){throw new IOException("Unsupported scene spawn actor "+actor.getName()+": "+invalid.getMessage(),invalid);}
         return Map.of("kind","spawn","fields",fields,"activate",activate);
@@ -707,18 +707,18 @@ public final class SceneContentExport {
                 ||original.root==null||original.root.getClass()!=com.threerings.projectx.dungeon.config.SpawnTableConfig.ActorEntry.class
                 ||((com.threerings.projectx.dungeon.config.SpawnTableConfig.ActorEntry)original.root).actor==null)throw new IOException("Unsupported monster activation table root");
         var actor=((com.threerings.projectx.dungeon.config.SpawnTableConfig.ActorEntry)original.root).actor;
-        var result=new ConfigReference<ActorConfig>(actor.getName());result.kW().putAll(actor.kW());
+        var result=new ConfigReference<ActorConfig>(actor.getName());result.ld().putAll(actor.ld());
         for(var parameter:table.parameters)if(arguments.containsKey(parameter.name)){
             if(!(parameter instanceof com.threerings.config.Parameter.Direct direct)||direct.paths==null||direct.paths.length==0)throw new IOException("Unsupported actor table parameter");
             for(String path:direct.paths){
                 if(path.equals("root.actor")||path.equals("implementation.root.actor")){
                     Object value=arguments.get(parameter.name);
                     if(!(value instanceof ConfigReference<?> reference)||reference.getName()==null)throw new IOException("Invalid actor table reference");
-                    result=new ConfigReference<>(reference.getName());result.kW().putAll(reference.kW());
+                    result=new ConfigReference<>(reference.getName());result.ld().putAll(reference.ld());
                 }else{
                     var match=java.util.regex.Pattern.compile("(?:implementation\\.)?root\\.actor\\[\"([^\"]+)\"\\]").matcher(path);
                     if(!match.matches())throw new IOException("Unsupported actor table parameter path");
-                    result.kW().put(match.group(1),arguments.get(parameter.name));
+                    result.ld().put(match.group(1),arguments.get(parameter.name));
                 }
             }
         }
@@ -728,12 +728,12 @@ public final class SceneContentExport {
         if(depth>16)throw new IOException("Recursive scene table");
         if(table instanceof com.threerings.projectx.dungeon.config.SpawnTableConfig.Prefab prefab){
             if(levelContext!=null){
-                Object types=levelContext.bkJ?levelContext.bkH:levelContext.bkG;
+                Object types=levelContext.blG?levelContext.blE:levelContext.blD;
                 if(types instanceof Map<?,?> map&&!map.isEmpty()||types instanceof java.util.Set<?> set&&!set.isEmpty())throw new IOException("Themed prefab selection needs runtime type handling");
             }
             if(prefab.root==null||prefab.root.spawnTable==null||prefab.root.getClass()!=com.threerings.projectx.dungeon.config.SpawnTableConfig.SpawnTypeListEntry.class)throw new IOException("Unsupported prefab root");
             var reference=prefab.root.spawnTable;var next=reference.a(cm,com.threerings.projectx.dungeon.config.SpawnTableConfig.class);
-            return singleSceneTableActor(cm,next,reference.kW(),depth+1);
+            return singleSceneTableActor(cm,next,reference.ld(),depth+1);
         }
         return singleTableActor(table,arguments);
     }
@@ -744,21 +744,21 @@ public final class SceneContentExport {
         if(depth>16||reference==null)throw new IOException("Recursive or missing scene table");
         var table=reference.a(cm,SpawnTableConfig.class);if(table==null)throw new IOException("Missing referenced scene table");
         if(table instanceof SpawnTableConfig.Original original&&original.root instanceof SpawnTableConfig.RandomEntry random){
-            if(!reference.kW().isEmpty()||table.parameters.length!=0)throw new IOException("Unimplemented random table parameters");
+            if(!reference.ld().isEmpty()||table.parameters.length!=0)throw new IOException("Unimplemented random table parameters");
             return sceneTableEntry(cm,random,depth+1);
         }
         if(reference.getName().equals("Treasure/Heat/Scaled Ember")){
             if(!(table instanceof SpawnTableConfig.Original original)||!(original.root instanceof SpawnTableConfig.DepthListEntry list)
-                ||!reference.kW().isEmpty()||table.parameters.length!=0||list.offset!=0||list.bottomLimit!=.25f||list.topLimit!=.25f||list.entries.length!=6)throw new IOException("Scaled Ember depth-zero footprint changed");
+                ||!reference.ld().isEmpty()||table.parameters.length!=0||list.offset!=0||list.bottomLimit!=.25f||list.topLimit!=.25f||list.entries.length!=6)throw new IOException("Scaled Ember depth-zero footprint changed");
             int[] depths={0,6,11,16,21,26};
             for(int i=0;i<depths.length;i++)if(list.entries[i]==null||list.entries[i].depth!=depths[i]||!(list.entries[i].entry instanceof SpawnTableConfig.TableEntry child)||child.getClass()!=SpawnTableConfig.TableEntry.class
-                ||child.spawnTable==null||!child.spawnTable.kW().isEmpty()||!child.spawnTable.getName().equals("Treasure/Heat/Random Heat/Random Heat "+(i+1)))throw new IOException("Scaled Ember depth bands changed");
+                ||child.spawnTable==null||!child.spawnTable.ld().isEmpty()||!child.spawnTable.getName().equals("Treasure/Heat/Random Heat/Random Heat "+(i+1)))throw new IOException("Scaled Ember depth bands changed");
             // At zero the first band has weight one; every other band's lower
             // bound is strictly positive. This selection is deterministic.
             importReport.add("Prepared Scaled Ember for the scene export's depth-zero context; higher-depth selection is not implemented");
             return sceneTableEntry(cm,list.entries[0].entry,depth+1);
         }
-        var prepared=new TreeMap<String,Object>(preparedSpawn(cm,singleSceneTableActor(cm,table,reference.kW(),depth+1),false));prepared.put("activator",true);return prepared;
+        var prepared=new TreeMap<String,Object>(preparedSpawn(cm,singleSceneTableActor(cm,table,reference.ld(),depth+1),false));prepared.put("activator",true);return prepared;
     }
     private static Map<String,Object> sceneTableEntry(ConfigManager cm,SpawnTableConfig.Entry entry,int depth)throws IOException {
         if(depth>16||entry==null)throw new IOException("Recursive or missing scene table entry");
@@ -786,10 +786,10 @@ public final class SceneContentExport {
             if(config==null)throw new IOException("Unresolved scene actor");
             if(!(config.implementation instanceof ActorConfig.Derived derived))return reference;
             if(derived.actor==null)throw new IOException("Missing derived scene actor");
-            var next=new ConfigReference<ActorConfig>(derived.actor.getName());next.kW().putAll(derived.actor.kW());
-            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.kW().containsKey(parameter.name))for(String path:direct.paths){
+            var next=new ConfigReference<ActorConfig>(derived.actor.getName());next.ld().putAll(derived.actor.ld());
+            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.ld().containsKey(parameter.name))for(String path:direct.paths){
                 var match=java.util.regex.Pattern.compile("implementation\\.actor\\[\"([^\"]+)\"\\]").matcher(path);
-                if(match.matches())next.kW().put(match.group(1),reference.kW().get(parameter.name));
+                if(match.matches())next.ld().put(match.group(1),reference.ld().get(parameter.name));
             }
             reference=next;
         }
@@ -802,15 +802,15 @@ public final class SceneContentExport {
             if(!(config.implementation instanceof ActorConfig.Derived derived))return 0;
             if(derived.actor==null)throw new IOException("Missing derived door counter");
             if(reference.getName().equals("Door/Multi Trigger Base")){
-                if(!derived.actor.getName().equals("Door/Base")||!(derived.actor.kW().get("Handlers") instanceof HandlerConfig[] handlers))throw new IOException("Door counter base changed");
+                if(!derived.actor.getName().equals("Door/Base")||!(derived.actor.ld().get("Handlers") instanceof HandlerConfig[] handlers))throw new IOException("Door counter base changed");
                 counterFootprint(handlers);
                 requirePaths(config,"Triggers","implementation.actor[\"Handlers\"][0].action.actions[1].condition.expression.second_operand.value","implementation.actor[\"Handlers\"][1].action.actions[1].condition.expression.second_operand.value");
-                return counterThreshold(reference.kW().get("Triggers"));
+                return counterThreshold(reference.ld().get("Triggers"));
             }
-            var next=new ConfigReference<ActorConfig>(derived.actor.getName());next.kW().putAll(derived.actor.kW());
-            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.kW().containsKey(parameter.name))for(String path:direct.paths){
+            var next=new ConfigReference<ActorConfig>(derived.actor.getName());next.ld().putAll(derived.actor.ld());
+            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.ld().containsKey(parameter.name))for(String path:direct.paths){
                 var match=java.util.regex.Pattern.compile("implementation\\.actor\\[\"([^\"]+)\"\\]").matcher(path);
-                if(match.matches())next.kW().put(match.group(1),reference.kW().get(parameter.name));
+                if(match.matches())next.ld().put(match.group(1),reference.ld().get(parameter.name));
             }
             reference=next;
         }
@@ -818,9 +818,9 @@ public final class SceneContentExport {
     }
     static boolean goldDoor(ConfigManager cm,ConfigReference<ActorConfig> reference)throws IOException {
         var resolved=resolvedActor(cm,reference);
-        if(!(resolved.kW().get("Action Desc") instanceof com.threerings.projectx.config.ActionDesc.UnlockGold))return false;
-        if(!resolved.getName().equals("Door/Base")||!"gold_unlock".equals(resolved.kW().get("Actionable Signal"))
-            ||!(resolved.kW().get("Handlers") instanceof HandlerConfig[] handlers)||handlers.length!=2
+        if(!(resolved.ld().get("Action Desc") instanceof com.threerings.projectx.config.ActionDesc.UnlockGold))return false;
+        if(!resolved.getName().equals("Door/Base")||!"gold_unlock".equals(resolved.ld().get("Actionable Signal"))
+            ||!(resolved.ld().get("Handlers") instanceof HandlerConfig[] handlers)||handlers.length!=2
             ||!(handlers[0] instanceof HandlerConfig.SignalStart start)||!start.name.isEmpty()||!strippedGuard(start.action)
             ||!(((ActionConfig.Conditional)start.action).action instanceof ActionConfig.Compound compound)||compound.stopOnFailure||compound.actions.length!=1
             ||!(compound.actions[0] instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ClearMinimap)
@@ -875,12 +875,12 @@ public final class SceneContentExport {
     }
 
     private static ConfigReference<ActorConfig> bindArguments(ConfigReference<ActorConfig> actor,Map<String,Object> source){
-        var result=new ConfigReference<ActorConfig>(actor.getName());result.kW().putAll(actor.kW());
+        var result=new ConfigReference<ActorConfig>(actor.getName());result.ld().putAll(actor.ld());
         // Stripped startup parameter paths leave their authored placeholder defaults
         // intact. Bind preserved scene arguments without changing native asset data.
-        for(var argument:actor.kW().entrySet())if(argument.getValue() instanceof String value&&value.startsWith("(")&&value.endsWith(")")){
+        for(var argument:actor.ld().entrySet())if(argument.getValue() instanceof String value&&value.startsWith("(")&&value.endsWith(")")){
             String label=value.substring(1,value.length()-1);Object bound=source.get(label);
-            if(bound==null)bound=source.get(argument.getKey());if(bound!=null)result.kW().put(argument.getKey(),bound);
+            if(bound==null)bound=source.get(argument.getKey());if(bound!=null)result.ld().put(argument.getKey(),bound);
         }
         return result;
     }
@@ -889,7 +889,7 @@ public final class SceneContentExport {
                                    ConfigReference<ActorConfig> reference) throws Exception {
         ActorConfig config = reference.a(cm, ActorConfig.class);
         if (config == null) throw new IOException("Unresolved actor " + reference.getName());
-        Object original = config.ai(cm);
+        Object original = config.al(cm);
         if (original == null) throw new IOException("Actor has no original config: " + reference.getName());
         if(original instanceof com.threerings.projectx.dungeon.arena.config.ArenaActorConfig.TerritoryProp){
             if(((ActorConfig.Original)original).handlers.length!=0)throw new IOException("Territory lighting handlers require implementation");
@@ -907,30 +907,30 @@ public final class SceneContentExport {
         Object sprite=field(original,"sprite");Object description=field(sprite,"description");
         if(description instanceof ConfigReference<?> r)put(out,prefix+"description",r.getName());
         if(original instanceof com.threerings.projectx.config.ProjectXActorConfig.Stranger){
-            var knight=(com.threerings.projectx.config.ProjectXActorConfig.Knight)cm.d(ActorConfig.class,"Character/PC/Default").ai(cm);
-            var bounds=knight.interactionShape.acS().aex();
-            putFloat(out,prefix+"interaction-radius",Math.min(bounds.tu().x-bounds.tt().x,bounds.tu().y-bounds.tt().y)/2);
-            putFloat(out,prefix+"interaction-offset-x",(bounds.tu().x+bounds.tt().x)/2);
-            putFloat(out,prefix+"interaction-offset-y",(bounds.tu().y+bounds.tt().y)/2);
+            var knight=(com.threerings.projectx.config.ProjectXActorConfig.Knight)cm.d(ActorConfig.class,"Character/PC/Default").al(cm);
+            var bounds=knight.interactionShape.adH().afo();
+            putFloat(out,prefix+"interaction-radius",Math.min(bounds.tB().x-bounds.tA().x,bounds.tB().y-bounds.tA().y)/2);
+            putFloat(out,prefix+"interaction-offset-x",(bounds.tB().x+bounds.tA().x)/2);
+            putFloat(out,prefix+"interaction-offset-y",(bounds.tB().y+bounds.tA().y)/2);
         }
         if(field(sprite,"tooltipItem") instanceof ConfigReference<?> item){
             put(out,prefix+"pickup-item",item.getName());
             @SuppressWarnings("unchecked") var itemRef=(ConfigReference<com.threerings.projectx.item.config.ItemConfig>)item;
             var nativeItem=itemRef.a(cm,com.threerings.projectx.item.config.ItemConfig.class).w(cm);
-            put(out,prefix+"pickup-transient",Boolean.toString(nativeItem.Qp()));
+            put(out,prefix+"pickup-transient",Boolean.toString(nativeItem.QU()));
         }
-        if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Pickup&&reference.kW().get("Dungeon Item") instanceof ConfigReference<?> item){
+        if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Pickup&&reference.ld().get("Dungeon Item") instanceof ConfigReference<?> item){
             out.put(prefix+"pickup-item",item.getName());
             @SuppressWarnings("unchecked") var nativeItem=((ConfigReference<com.threerings.projectx.item.config.ItemConfig>)item).a(cm,com.threerings.projectx.item.config.ItemConfig.class).w(cm);
-            out.put(prefix+"pickup-transient",Boolean.toString(nativeItem.Qp()));
-            int slot=nativeItem.Vc();
+            out.put(prefix+"pickup-transient",Boolean.toString(nativeItem.QU()));
+            int slot=nativeItem.VG();
             if(slot<0||!nativeItem.h(slot,false))throw new IOException("Unsupported prepared dungeon equipment slot");
             out.put(prefix+"pickup-equip-slot",Integer.toString(slot));
         }
         writeTags(out, prefix, field(original, "tags"));
         if(field(original,"tags") instanceof com.threerings.tudey.config.TagConfig tags){
             var resolved=resolvedActor(cm,reference);var resolvedConfig=resolved.a(cm,ActorConfig.class);
-            out.put(prefix+"tags",String.join(",",sceneTags(resolvedConfig,resolved.kW(),tags)));
+            out.put(prefix+"tags",String.join(",",sceneTags(resolvedConfig,resolved.ld(),tags)));
         }
         if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster monster){
             String shutdownMode=rules.getProperty("actor."+reference.getName()+".script.shutdown-mode","scene");
@@ -946,7 +946,7 @@ public final class SceneContentExport {
                 }
             }
         }
-        if(reference.kW().get("Tag") instanceof String tag&&!tag.isBlank()&&!tag.startsWith("("))out.put(prefix+"tags",tag);
+        if(reference.ld().get("Tag") instanceof String tag&&!tag.isBlank()&&!tag.startsWith("("))out.put(prefix+"tags",tag);
         writeArguments(out, prefix + "config.argument.", reference);
 
         if (isKind(original, "Monster")) writeMonster(cm, out, prefix, original);
@@ -1033,7 +1033,7 @@ public final class SceneContentExport {
     /** Recover nested script bindings only from the preserved native parameter paths. */
     private static void writeSceneScript(ConfigManager cm,ActorConfig config,ConfigReference<ActorConfig> reference,Object original,Map<String,String> out,String prefix)throws IOException {
         if(!(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster)||!(config.implementation instanceof ActorConfig.Derived derived)
-                ||!(derived.actor.kW().get("Behavior Script") instanceof com.threerings.tudey.config.ScriptConfig[] nativeSteps))throw new IOException("Native script footprint changed");
+                ||!(derived.actor.ld().get("Behavior Script") instanceof com.threerings.tudey.config.ScriptConfig[] nativeSteps))throw new IOException("Native script footprint changed");
         String rp="actor."+reference.getName()+".script.";var steps=new ArrayList<Object>();
         int expected=Integer.parseInt(rules.getProperty(rp+"steps","-1"));if(nativeSteps.length!=expected)throw new IOException("Native script step count changed");
         for(int i=0;i<nativeSteps.length;i++){
@@ -1064,10 +1064,10 @@ public final class SceneContentExport {
     }
     static Map<String,Object> scriptShutdownArguments(ActorConfig config,ConfigReference<ActorConfig> reference)throws IOException {
         var bindings=new LinkedHashMap<String,Object>();String start="implementation.actor[\"Shutdown Action\"].actor[\"";
-        for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.kW().containsKey(parameter.name))for(String path:direct.paths){
+        for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.ld().containsKey(parameter.name))for(String path:direct.paths){
             if(!path.startsWith(start)||!path.endsWith("\"]"))continue;
             if(direct.paths.length!=1)throw new IOException("Unsupported shutdown parameter siblings");
-            String argument=path.substring(start.length(),path.length()-2);Object value=reference.kW().get(parameter.name);
+            String argument=path.substring(start.length(),path.length()-2);Object value=reference.ld().get(parameter.name);
             if(argument.isBlank()||argument.length()>256||value==null||bindings.putIfAbsent(argument,value)!=null)throw new IOException("Invalid or ambiguous shutdown argument binding");
         }return Map.copyOf(bindings);
     }
@@ -1078,7 +1078,7 @@ public final class SceneContentExport {
                 var action=shutdown.action;
                 if(!bindings.isEmpty()){
                     if(action==null||action.getClass()!=ActionConfig.SpawnActor.class||((ActionConfig.SpawnActor)action).actor==null)throw new IOException("Bound native shutdown SpawnActor footprint changed");
-                    var spawn=(ActionConfig.SpawnActor)action;var restored=(ActionConfig.SpawnActor)spawn.clone();var actor=new ConfigReference<ActorConfig>(spawn.actor.getName());actor.kW().putAll(spawn.actor.kW());actor.kW().putAll(bindings);restored.actor=actor;action=restored;
+                    var spawn=(ActionConfig.SpawnActor)action;var restored=(ActionConfig.SpawnActor)spawn.clone();var actor=new ConfigReference<ActorConfig>(spawn.actor.getName());actor.ld().putAll(spawn.actor.ld());actor.ld().putAll(bindings);restored.actor=actor;action=restored;
                 }
                 actions.add(sceneAction(action,0,cm));
             }else if(handler instanceof HandlerConfig.Reference reference&&reference.handler!=null){var config=cm.a(com.threerings.tudey.config.ParameterizedHandlerConfig.class,reference.handler);if(config==null)throw new IOException("Missing scene shutdown reference");sceneShutdown(cm,config.handlers,actions,bindings,depth+1);}
@@ -1087,7 +1087,7 @@ public final class SceneContentExport {
     private static void writeMovementScript(ActorConfig config,ConfigReference<ActorConfig> reference,Object original,Map<String,String> out,String prefix)throws IOException {
         if(!(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster monster)
                 ||!(config.implementation instanceof ActorConfig.Derived derived)
-                ||!(derived.actor.kW().get("Behavior Script") instanceof com.threerings.tudey.config.ScriptConfig[] steps)
+                ||!(derived.actor.ld().get("Behavior Script") instanceof com.threerings.tudey.config.ScriptConfig[] steps)
                 ||!scriptParameter(config,"Goal","implementation.actor[\"Behavior Script\"][2].target.tag"))return;
         if(steps.length!=4||!(steps[0] instanceof com.threerings.tudey.config.ScriptConfig.Condition condition)||!(condition.condition instanceof com.threerings.tudey.config.ConditionConfig.Always)
                 ||!(steps[1] instanceof com.threerings.tudey.config.ScriptConfig.Wait wait)||!(steps[2] instanceof com.threerings.tudey.config.ScriptConfig.Move move)
@@ -1095,8 +1095,8 @@ public final class SceneContentExport {
                 ||!(steps[3] instanceof com.threerings.tudey.config.ScriptConfig.Rotate rotate)||rotate.relative||rotate.rotationVariance!=0
                 ||!scriptParameter(config,"Wait","implementation.actor[\"Behavior Script\"][1].wait")
                 ||config.getParameter("End Orientation")!=null&&!scriptParameter(config,"End Orientation","implementation.actor[\"Behavior Script\"][3].direction"))throw new IOException("Unsupported complete native movement script: "+reference.getName());
-        Object goal=reference.kW().getOrDefault("Goal",move.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged?tagged.tag:"");
-        Object delay=reference.kW().getOrDefault("Wait",wait.wait),direction=config.getParameter("End Orientation")==null?rotate.direction:reference.kW().getOrDefault("End Orientation",rotate.direction);
+        Object goal=reference.ld().getOrDefault("Goal",move.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged?tagged.tag:"");
+        Object delay=reference.ld().getOrDefault("Wait",wait.wait),direction=config.getParameter("End Orientation")==null?rotate.direction:reference.ld().getOrDefault("End Orientation",rotate.direction);
         if(!(goal instanceof String tag)||!(delay instanceof Number millis)||millis.doubleValue()!=millis.intValue()||!(direction instanceof Number angle))throw new IOException("Invalid native movement script parameters");
         var script=new org.tortodrone.world.SceneMovementScript(millis.intValue(),tag,move.maxPathLength,angle.floatValue(),monster.turnRate);
         out.put(prefix+"script.kind","wait-move-rotate");out.put(prefix+"script.wait",Integer.toString(script.waitMillis()));out.put(prefix+"script.goal",script.goal());out.put(prefix+"script.max-path",Float.toString(script.maxPath()));out.put(prefix+"script.rotation",Float.toString(script.rotation()));out.put(prefix+"script.turn-rate",Float.toString(script.turnRate()));
@@ -1177,11 +1177,11 @@ public final class SceneContentExport {
             ||lever.stateActions[0].getClass()!=ActionConfig.SpawnActor.class||!noAction(lever.stateActions[0]))throw new IOException("Native one-time lever footprint changed");
         requirePaths(reference.a(cm,ActorConfig.class),"(Activate Signal)","implementation.state_actions[1].name");
         requirePaths(reference.a(cm,ActorConfig.class),"(Activate Tag)","implementation.state_actions[1].target.tag");
-        if(!(reference.kW().get("(Activate Signal)") instanceof String name)||!(reference.kW().get("(Activate Tag)") instanceof String tag))throw new IOException("Missing authored lever target");
+        if(!(reference.ld().get("(Activate Signal)") instanceof String name)||!(reference.ld().get("(Activate Tag)") instanceof String tag))throw new IOException("Missing authored lever target");
         try{return new org.tortodrone.world.SceneActions.Signal(tag,name);}catch(IllegalArgumentException invalid){throw new IOException("Invalid lever signal",invalid);}
     }
     private static void writeMechanism(ConfigManager cm,Map<String,String> out,String prefix,ConfigReference<ActorConfig> reference,Object original)throws Exception {
-        var args=reference.kW();String mode=out.get(prefix+"switch-mode");
+        var args=reference.ld();String mode=out.get(prefix+"switch-mode");
         if(reference.getName().equals("Dynamic/Switch/Lever/One-Time")){
             var operation=oneTimeLever(cm,reference,original);mode="damage-once";
             out.put(prefix+"switch-mode",mode);out.put(prefix+"switch-damage-mask","2");
@@ -1203,7 +1203,7 @@ public final class SceneContentExport {
                 ||!(guard.condition instanceof com.threerings.tudey.config.ConditionConfig.Limit||guard.condition instanceof com.threerings.tudey.config.ConditionConfig.Tagged tagged&&tagged.tag.isEmpty()&&!tagged.all&&tagged.target instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Native party intersection guard footprint changed");
             ActionConfig.Compound inner;
             if(guard.action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.FireAction retained&&retained.fireAction!=null
-                &&retained.fireAction.getName().equals("Base/Warp (with Poof Cloud)")&&retained.fireAction.kW().size()==1&&"White".equals(retained.fireAction.kW().get("Cloud FX Variant"))){
+                &&retained.fireAction.getName().equals("Base/Warp (with Poof Cloud)")&&retained.fireAction.ld().size()==1&&"White".equals(retained.fireAction.ld().get("Cloud FX Variant"))){
                 inner=new ActionConfig.Compound();var next=new ActionConfig.Signal();next.name="next";inner.actions=new ActionConfig[]{retained,next};
             }else if(guard.action instanceof ActionConfig.Compound compound&&compound.actions.length==2)inner=compound;
             else throw new IOException("Native party intersection action footprint changed");
@@ -1336,9 +1336,9 @@ public final class SceneContentExport {
         addOptionalNumber(out, prefix + "width", field(shape, "width"));
         addOptionalNumber(out, prefix + "height", field(shape, "height"));
         if(shape instanceof com.threerings.tudey.shape.config.ShapeConfig config){
-            var bounds=config.acS().aex();
-            putFloat(out,prefix+"bounds-min-x",bounds.tt().x);putFloat(out,prefix+"bounds-min-y",bounds.tt().y);
-            putFloat(out,prefix+"bounds-max-x",bounds.tu().x);putFloat(out,prefix+"bounds-max-y",bounds.tu().y);
+            var bounds=config.adH().afo();
+            putFloat(out,prefix+"bounds-min-x",bounds.tA().x);putFloat(out,prefix+"bounds-min-y",bounds.tA().y);
+            putFloat(out,prefix+"bounds-max-x",bounds.tB().x);putFloat(out,prefix+"bounds-max-y",bounds.tB().y);
         }
     }
     private static void writeDialogues(ConfigManager cm,Map<String,String> out,List<Binding> bindings)throws Exception {
@@ -1361,7 +1361,7 @@ public final class SceneContentExport {
                 if(!org.tortodrone.world.SceneActions.parse(initialAction).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(sceneAction(original,0,cm,true)))))throw new IOException("Conversation initial memory changed");
                 put(out,prefix+"initial-action",initialAction);
             }
-            Object model=script==null?field(cm.d(ActorConfig.class,actorName).ai(cm).sprite,"model"):script.model;
+            Object model=script==null?field(cm.d(ActorConfig.class,actorName).al(cm).sprite,"model"):script.model;
             String speaker=script==null?rules.getProperty(prefix+"name"):script.name.isBlank()?conversation.speakerName:script.name;
             if(speaker!=null&&speaker.isBlank())speaker=rules.getProperty(prefix+"name");
             if(speaker==null||speaker.isBlank())throw new IOException("Missing authored conversation speaker");
@@ -1515,9 +1515,9 @@ public final class SceneContentExport {
     }
 
     private static void addDepthScales(ConfigManager cm, Map<String, String> out) throws Exception {
-        Object group = cm.bd(DepthScaleConfig.class);
+        Object group = cm.be(DepthScaleConfig.class);
         if (group == null) throw new IOException("Native depth scale group is unavailable");
-        Object raw = cm.bd(DepthScaleConfig.class).kK();
+        Object raw = cm.be(DepthScaleConfig.class).kR();
         Iterable<?> configs;
         if (raw instanceof Iterable<?> iterable) configs = iterable;
         else if (raw != null && raw.getClass().isArray()) configs = arrayIterable(raw);

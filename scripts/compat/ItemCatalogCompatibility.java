@@ -13,7 +13,7 @@ public final class ItemCatalogCompatibility {
         boolean sample=args.length==3;
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
         var catalog=ItemCatalog.load(Path.of(args[1]));int checked=0;
         var selected=sample?sampleEntries(catalog):catalog.entries().stream().filter(ItemCatalog.Entry::grantable).toList();

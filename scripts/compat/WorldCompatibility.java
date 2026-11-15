@@ -94,7 +94,7 @@ public final class WorldCompatibility {
         if(occupant.pr==null) throw new AssertionError("Missing prestige rank for stock renderer");
         occupant.getIcon();
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
         var manager=(com.threerings.config.ConfigManager)com.threerings.config.ConfigManager.class
             .getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class)
             .newInstance(resource,null,"config/");

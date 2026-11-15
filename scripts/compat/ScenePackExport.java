@@ -19,13 +19,13 @@ public final class ScenePackExport {
         if(Files.exists(out))throw new IOException("Output already exists; choose a fresh map pack directory");
         byte[] layout=Files.readAllBytes(source);if(layout.length>900_000)throw new IOException("Scene is too large");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class)
             .newInstance(resource,null,"config/");manager.init();
         var scene=(TudeySceneModel)com.threerings.export.util.b.e(layout);scene.init(manager);
-        String kind=sceneKind(scene.adG());
+        String kind=sceneKind(scene.aev());
         Entrance entrance=defaultEntrance(scene,manager);
-        var coords=scene.adH();if(coords.isEmpty())throw new IOException("No static tiles");
+        var coords=scene.aew();if(coords.isEmpty())throw new IOException("No static tiles");
         int minX=coords.stream().mapToInt(c->c.x).min().orElseThrow()-1;
         int minY=coords.stream().mapToInt(c->c.y).min().orElseThrow()-1;
         int maxX=coords.stream().mapToInt(c->c.x).max().orElseThrow()+2;
@@ -34,8 +34,8 @@ public final class ScenePackExport {
         if((long)width*height>4_000_000)throw new IOException("Scene collision bounds are too large");
         var actor=new com.threerings.projectx.data.actor.Knight(new ConfigReference<>("Character/PC/Default"),1,0,new Vector2f(0,0),0);
         actor.init(manager);
-        var config=manager.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Default").ai(manager);
-        var shape=config.shape.acS();var bits=new BitSet(width*height);
+        var config=manager.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Default").al(manager);
+        var shape=config.shape.adH();var bits=new BitSet(width*height);
         float targetX=args.length==7?Float.parseFloat(args[5]):entrance.x;
         float targetY=args.length==7?Float.parseFloat(args[6]):entrance.y;
         if(!Float.isFinite(targetX)||!Float.isFinite(targetY))throw new IOException("Invalid spawn");
@@ -62,9 +62,9 @@ public final class ScenePackExport {
         var p=new Properties();p.setProperty("kind",kind);p.setProperty("scene-id",Integer.toString(scene.sceneId));
         p.setProperty("zone-id",args[3]);p.setProperty("zone-name",args[4]);p.setProperty("name",scene.name);
         p.setProperty("version",Integer.toString(scene.version));
-        if(!(scene.adG() instanceof com.threerings.projectx.data.ProjectXSceneConfig projectConfig)||projectConfig.Nn()==null)
+        if(!(scene.aev() instanceof com.threerings.projectx.data.ProjectXSceneConfig projectConfig)||projectConfig.NQ()==null)
             throw new IOException("Missing native scene background");
-        p.setProperty("image",projectConfig.Nn());p.setProperty("instances","1");
+        p.setProperty("image",projectConfig.NQ());p.setProperty("instances","1");
         p.setProperty("spawn-rotation",Float.toString(entrance.rotation));
         p.setProperty("spawn-x",Float.toString(spawnX));p.setProperty("spawn-y",Float.toString(spawnY));
         p.setProperty("scene-sha256",digest(out.resolve("scene.dat")));
@@ -93,10 +93,10 @@ public final class ScenePackExport {
         var matches=new ArrayList<TudeySceneModel.PlaceableEntry>();
         for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)) {
             // Entrances may be stateful elevator props, not only editor markers (scene 337).
-            if(entry.at(manager))matches.add(entry);
+            if(entry.au(manager))matches.add(entry);
         }
         if(matches.size()!=1)throw new IOException("Expected exactly one native default entrance, found "+matches.size());
-        var entry=matches.getFirst();var position=entry.transform.tD();var rotation=entry.transform.tE();
+        var entry=matches.getFirst();var position=entry.transform.tK();var rotation=entry.transform.tL();
         float yaw=(float)Math.atan2(2f*(rotation.w*rotation.z+rotation.x*rotation.y),
             1f-2f*(rotation.y*rotation.y+rotation.z*rotation.z));
         if(!Float.isFinite(position.x)||!Float.isFinite(position.y)||!Float.isFinite(yaw))

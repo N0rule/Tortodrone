@@ -260,7 +260,7 @@ public final class InteriorCompatibility {
 
     private static ConfigManager configManager(Path game) throws Exception {
         Object resource = Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga", String.class).invoke(resource, game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf", String.class).invoke(resource, game.resolve("rsrc").toString());
         var manager = (ConfigManager) ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),
             com.threerings.util.R.class, String.class).newInstance(resource, null, "config/");
         manager.init();

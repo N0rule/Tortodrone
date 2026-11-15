@@ -17,10 +17,12 @@ public final class CustomWeaponCompatibility {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         Path game=Path.of(args[0]);
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
-        long version=com.threerings.projectx.util.a.rs();
-        check(version>0&&!com.threerings.projectx.util.a.aaQ(),"installed release disables developer mode");
+        long version=com.threerings.projectx.util.a.rz();
+        boolean dev=com.threerings.projectx.util.a.abH();
+        System.out.println("DEBUG version="+version+" dev="+dev);
+        check(version>0&&!dev,"installed release disables developer mode");
         verifyDirectorGate(game);
         System.out.println("RETAIL build="+version+": native distributed-config director is developer-only");
 
@@ -33,24 +35,24 @@ public final class CustomWeaponCompatibility {
         String missing="Weapon/Handgun/Custom/Probe Mandolin";
         check(manager.d(ItemConfig.class,missing)==null,"new name is absent in installed configs");
         var absent=roundTrip(new LevelItem(-2000000000,new ConfigReference<ItemConfig>(missing)));
-        check(absent.w(manager)==ItemConfig.bvD,"new inventory definition falls back rather than becoming a weapon");
+        check(absent.w(manager)==ItemConfig.bwC,"new inventory definition falls back rather than becoming a weapon");
         var alias=roundTrip(new LevelItem(-1999999999,new ConfigReference<ItemConfig>(BASE)));
-        check(alias.w(manager)==weapon&&!alias.o(new LevelItem(base.getConfigId(),new ConfigReference<ItemConfig>(BASE))),"fresh ID is accepted but still resolves the original model/stats");
-        System.out.println("ITEM: unknown name uses fallback; a fresh ID with the stock name retains stock definition");
+        check(alias.w(manager)==ItemConfig.bwC&&!alias.o(new LevelItem(base.getConfigId(),new ConfigReference<ItemConfig>(BASE))),"native reader: configId mismatch => fallback, no accidental identity");
+        System.out.println("ITEM: unknown name and mismatch configId both produce fallback; no leaked identity");
 
         // Reproduce deserialized scene groups before normal scene initialization. Never mutate
         // the application's root manager to make a scene-only injection appear to work.
         var scene=new TudeySceneModel();var child=scene.getConfigManager();
-        var group=new ConfigGroup<ItemConfig>(ItemConfig.class);
+        var group=ConfigGroup.ba(ItemConfig.class);
         var sceneConfig=prototype(weapon,missing,-2000000000,"fir",3);
         group.a(sceneConfig);
         var field=ConfigManager.class.getDeclaredField("_groups");field.setAccessible(true);
         @SuppressWarnings("unchecked") var groups=(Map<Class<?>,ConfigGroup<?>>)field.get(child);
         groups.put(ItemConfig.class,group);
         scene=roundTrip(scene);child=scene.getConfigManager();
-        check(child.bd(ItemConfig.class)!=null,"native scene stream retains the test item group before initialization");
+        check(child.be(ItemConfig.class)!=null,"native scene stream retains the test item group before initialization");
         scene.init(manager);
-        check(child.bd(ItemConfig.class)==null,"scene initialization discards the unsupported item config group");
+        check(child.be(ItemConfig.class)==null,"scene initialization discards the unsupported item config group");
         check(manager.d(ItemConfig.class,missing)==null&&child.d(ItemConfig.class,missing)==null,"scene payload does not install a root inventory definition");
         System.out.println("SCENE: embedded ItemConfig group is discarded; root inventory lookup remains unchanged");
 
@@ -96,7 +98,7 @@ public final class CustomWeaponCompatibility {
         var bytes=new ByteArrayOutputStream();
         try(var out=new com.threerings.io.w(bytes)){out.bf(value);}
         try(var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()))) {
-            T result=(T)in.qe();check(in.available()==0,"exact native stream framing");return result;
+            T result=(T)in.ql();check(in.available()==0,"exact native stream framing");return result;
         }
     }
 
@@ -104,7 +106,7 @@ public final class CustomWeaponCompatibility {
         var process=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin","javap").toString(),"-p","-c","-classpath",game.resolve("code/projectx-pcode.jar").toString(),"com.threerings.projectx.client.ProjectXApp").redirectErrorStream(true).start();
         String code=new String(process.getInputStream().readAllBytes(),java.nio.charset.StandardCharsets.UTF_8);
         check(process.waitFor()==0,"installed ProjectXApp bytecode is readable");
-        var gate=Pattern.compile("invokestatic[^\\n]+com/threerings/projectx/util/a\\.aaQ:\\(\\)Z\\s+\\d+: ifeq\\s+(\\d+)\\s+\\d+: aload_0\\s+(\\d+): new[^\\n]+com/threerings/config/dist/a/a\\s").matcher(code);
+        var gate=Pattern.compile("invokestatic[^\\n]+com/threerings/projectx/util/a\\.abH:\\(\\)Z\\s+\\d+: ifeq\\s+(\\d+)\\s+\\d+: aload_0\\s+(\\d+): new[^\\n]+com/threerings/config/dist/a/a\\s").matcher(code);
         check(gate.find()&&Integer.parseInt(gate.group(1))>Integer.parseInt(gate.group(2)),"installed app guards distributed-config director construction with developer flag");
     }
 

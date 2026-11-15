@@ -21,20 +21,20 @@ public final class WeaponCatalogExport {
             throw new IOException("Choose a fresh output directory outside the installation");
 
         var resource = Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga", String.class).invoke(resource, game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf", String.class).invoke(resource, game.resolve("rsrc").toString());
         var manager = (ConfigManager)ConfigManager.class
             .getConstructor(Class.forName("com.threerings.b.f"), com.threerings.util.R.class, String.class)
             .newInstance(resource, null, "config/");
         manager.init();
 
         var weapons = new ArrayList<Weapon>(); var shields = new ArrayList<Shield>();
-        for (var config : manager.bd(ItemConfig.class).kK()) {
+        for (var config : manager.be(ItemConfig.class).kR()) {
             ItemConfig.Original item = config.w(manager);
             if (!playerDefinition(config.getConfigId(), item)) continue;
             if (item instanceof ItemConfig.Weapon weapon) weapons.add(readWeapon(manager, config.getName(), weapon));
             else if (item instanceof ItemConfig.Shield shield) shields.add(readShield(manager, config.getName(), shield));
         }
-        var pcConfig = manager.d(ActorConfig.class, "Character/PC/Level").ai(manager);
+        var pcConfig = manager.d(ActorConfig.class, "Character/PC/Level").al(manager);
         if (!(pcConfig instanceof DungeonActorConfig.Dungeoneer dungeoneerConfig))
             throw new IOException("Character/PC/Level did not resolve to the stock Dungeoneer config");
 
@@ -57,12 +57,12 @@ public final class WeaponCatalogExport {
         var attacks = new ArrayList<Attack>();
         for (AttackConfig.AttackReference reference : weapon.attacks) {
             AttackConfig.Original attack = resolve(manager, reference == null ? null : reference.ref);
-            if (attack != null) attacks.add(readAttack(weapon.Vb(), attack));
+            if (attack != null) attacks.add(readAttack(weapon.VJ(), attack));
         }
-        Attack incomplete = readAttackRef(manager, weapon.Vb(), weapon.incompleteChargedAttack);
-        Attack charged = readAttackRef(manager, weapon.Vb(), weapon.chargedAttack);
-        Attack cooldown = readAttackRef(manager, weapon.Vb(), weapon.cooldownAttack);
-        return new Weapon(name, weapon.chargeTime, weapon.maxChain, weapon.chainCooldown, weapon.Vc(), weapon.Vb(),
+        Attack incomplete = readAttackRef(manager, weapon.VJ(), weapon.incompleteChargedAttack);
+        Attack charged = readAttackRef(manager, weapon.VJ(), weapon.chargedAttack);
+        Attack cooldown = readAttackRef(manager, weapon.VJ(), weapon.cooldownAttack);
+        return new Weapon(name, weapon.chargeTime, weapon.maxChain, weapon.chainCooldown, weapon.VI(), weapon.VJ(),
             weapon.attackingSpeed, weapon.chargingSpeed, attacks, incomplete, charged, cooldown);
     }
 
@@ -88,7 +88,7 @@ public final class WeaponCatalogExport {
     private static Attack readAttack(boolean blended, AttackConfig.Original attack) {
         if (attack == null) return null;
         var impulse = attack.impulseReceived;
-        return new Attack(attack.Qh(), attack.Qg(), attack.Qf(), blended && attack.blended,
+        return new Attack(attack.land, attack.rearm, attack.clear, blended && attack.blended,
             impulse == null ? -1 : impulse.delay, impulse == null ? -1 : impulse.duration,
             impulse == null || impulse.translation == null ? 0f : impulse.translation.x,
             impulse == null || impulse.translation == null ? 0f : impulse.translation.y);

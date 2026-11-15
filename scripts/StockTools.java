@@ -81,7 +81,7 @@ public final class StockTools {
             }
             case "action-graphs-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("action-graphs-check expects game-directory");fixture="ActionGraphCompatibility";
-                for(String source:List.of("ActionGraphCompatibility","FireCatalogExport","SceneStatusExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+                for(String source:List.of("ActionGraphCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
             }
             case "monster-chains-check" -> {
                 if(args.length!=3)throw new IllegalArgumentException("monster-chains-check expects game-directory captured-activity-ledger");

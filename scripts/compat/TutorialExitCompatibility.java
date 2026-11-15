@@ -125,12 +125,12 @@ public final class TutorialExitCompatibility {
         nativeRead(entryEffectFrame,closing);
         advanceTo(removed+6000);
         if(!walk(13.5f,70,10000)||!walk(13.5f,90.5f,15000)||!walk(13,96.5f,10000))throw new AssertionError("Walk through opened exit failed at "+position());
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,game+"/rsrc");
+        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("gf",String.class).invoke(resource,game+"/rsrc");
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         var scene=(TudeySceneModel)com.threerings.export.util.b.e(layout);scene.init(cm);
         TudeySceneModel.AreaEntry portal=null;for(var area:scene.ci(TudeySceneModel.AreaEntry.class))if(area.getKey().equals(1943))portal=area;
         var circle=new ShapeConfig.Circle();circle.radius=ScenePortals.PAWN_RADIUS;
-        if(portal==null||!portal.av(cm).b(circle.acP().d(new com.threerings.math.Transform2D(new Vector2f(movement.x(),movement.y()),0))))throw new AssertionError("Movement never reached the original final portal area");
+        if(portal==null||!portal.ay(cm).b(circle.adH().d(new com.threerings.math.Transform2D(new Vector2f(movement.x(),movement.y()),0))))throw new AssertionError("Movement never reached the original final portal area");
         if(floorAdvances.size()!=1||floorAdvances.getFirst().player()!=219||!floorAdvances.getFirst().source().entity().entrySource()
                 ||!floorAdvances.getFirst().source().entity().key().equals("1943")||floorAdvances.getFirst().timestamp()<removed+5000)throw new AssertionError("Original portal did not perform exactly one native NextFloor action for its activating pawn");
         advanceTo(now+1000);if(floorAdvances.size()!=1)throw new AssertionError("Held portal intersection replayed NextFloor");
@@ -156,10 +156,10 @@ public final class TutorialExitCompatibility {
     private String position(){return "("+movement.x()+", "+movement.y()+")";}
     private void nativeRead(byte[] frame,Dialog closing)throws Exception {
         var output=new ByteArrayOutputStream();for(var part:List.of(HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"),frame,new SessionCodec().conversationDialog(1001,140,closing.definition(),"part 1a",closing.source(),1)))output.write(part,4,part.length-4);
-        var input=new com.threerings.io.v(new ByteArrayInputStream(output.toByteArray()));input.qe();input.qe();
-        var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((com.threerings.presents.net.EventNotification)input.qe()).yj();
-        if(delta.aej().length!=2||Arrays.stream(delta.aej()).anyMatch(a->!(a instanceof com.threerings.projectx.dungeon.data.actor.Door)||!a.bR(2))||!(delta.aem()[0].aed() instanceof EntityKey.Entry key)||!key.getKey().equals(3307))throw new AssertionError("Native exit door/effect wire differs");
-        var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)input.qe()).yj();var dialog=(com.threerings.projectx.data.ConversationDialogInfo)((com.threerings.presents.dobj.AttributeChangedEvent)event.xE().get(1)).getValue();
+        var input=new com.threerings.io.v(new ByteArrayInputStream(output.toByteArray()));input.ql();input.ql();
+        var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((com.threerings.presents.net.EventNotification)input.ql()).yn();
+        if(delta.afd().length!=2||Arrays.stream(delta.afd()).anyMatch(a->!(a instanceof com.threerings.projectx.dungeon.data.actor.Door)||!a.bT(2))||!(delta.afg()[0].aeX() instanceof EntityKey.Entry key)||!key.getKey().equals(3307))throw new AssertionError("Native exit door/effect wire differs");
+        var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)input.ql()).yn();var dialog=(com.threerings.projectx.data.ConversationDialogInfo)((com.threerings.presents.dobj.AttributeChangedEvent)event.xI().get(1)).getValue();
         if(!dialog.message.equals("m.tut_warden_3a")||!Arrays.equals(dialog.responses,new String[]{"r.tut_warden_3a"})||input.available()!=0)throw new AssertionError("Native closing dialogue wire differs");
     }
 }

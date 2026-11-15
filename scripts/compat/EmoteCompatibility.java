@@ -18,7 +18,7 @@ public final class EmoteCompatibility {
         if (args.length != 1) throw new IllegalArgumentException("Usage: EmoteCompatibility /path/to/Spiral Knights");
         Path game = Path.of(args[0]);
         Object resource = Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("ga", String.class).invoke(resource, game.resolve("rsrc").toString());
+        resource.getClass().getMethod("gf", String.class).invoke(resource, game.resolve("rsrc").toString());
         ConfigManager manager = (ConfigManager) ConfigManager.class.getConstructor(
             Class.forName("com.threerings.b.f"), com.threerings.util.R.class, String.class)
             .newInstance(resource, null, "config/");

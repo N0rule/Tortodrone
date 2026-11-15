@@ -995,7 +995,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(target==null&&e.wander!=null){wander(e,stamp,elapsed);return;}
         if(target!=null)e.wanderPhase=0;
         float attackDistance=e.targeting==null?nearest:target==null?Float.POSITIVE_INFINITY:targetDistance(e,target);
-        float attackRange=e.targeting==null?e.spec.number("attack-distance",0):e.targetMode==null?0:Math.min(e.targetMode.range(),e.attackRangeCap);
+        float attackRange=e.targeting==null?e.spec.number("attack-distance",0):e.targetMode==null?0:e.targetMode.range();
         if(target!=null&&e.activity==0&&slot>=0&&(e.targeting==null?stamp>=e.nextAttack:stamp>e.nextAttack)&&attackDistance<=attackRange&&modifiers.attackSpeed()>0
                 &&sight(e,target.x(),target.y())){
             if(e.targeting!=null&&e.targetMode.faces()&&modifiers.canRotate()){
