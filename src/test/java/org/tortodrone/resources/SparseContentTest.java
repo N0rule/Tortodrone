@@ -38,6 +38,10 @@ public final class SparseContentTest {
                 historical.keySet().removeIf(raw->{String key=raw.toString();return key.startsWith("gear.table.")
                     ||key.startsWith("gear.")&&(key.endsWith(".table")||key.endsWith(".rarity"))
                     ||key.startsWith("gear.variant.")&&(key.contains(".defense.")||key.contains(".tagged."));});
+                // Native monster impulse levels are a deliberate additive import: the
+                // prepared spawn fields omit them and the 0078b50 baseline predates the
+                // shared combat table. Their values have dedicated targeting regressions.
+                historical.keySet().removeIf(raw->raw.toString().startsWith("monster."));
                 // The restored native DumbSwitch startup states are a deliberate additive
                 // import. Their authored values have dedicated checks in the stateful-camera
                 // regression; keep the inherited scene baseline independent of them.

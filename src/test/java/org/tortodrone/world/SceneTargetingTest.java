@@ -29,7 +29,10 @@ public final class SceneTargetingTest {
         check((far.actors().getFirst().flags()&16)==0,"outside the expanded shape is not acquired");
         var hitWorld=new SceneEntities(content,SceneWeaponsTest.openTerrain());var damager=player(219,20);var peer=player(220,-2);
         hitWorld.advance(1000,List.of(damager,peer));hitWorld.advance(1050,List.of(damager,peer));
-        hitWorld.damage(hit(),0,0,0,1100,damager.id());hitWorld.advance(1150,List.of(damager,peer));hitWorld.advance(1200,List.of(damager,peer));
+        hitWorld.damage(hit(),0,0,0,1100,damager.id());
+        // The nearby peer pulls the monster into a native 250 ms attack first; the damage
+        // admission must outrank it and pursue once that uninterruptible activity clears.
+        for(int at=1150;at<=1600;at+=50)hitWorld.advance(at,List.of(damager,peer));
         check((hitWorld.actors().getFirst().flags()&16)!=0&&hitWorld.actors().getFirst().x()>0,"actual incoming damage participates in authoritative targeting");
         try{new SceneTargeting(Float.NaN,1000,0,1999,2,1);throw new AssertionError("Non-finite policy accepted");}catch(IllegalArgumentException expected){}
         stationary(fields);

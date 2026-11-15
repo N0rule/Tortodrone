@@ -80,15 +80,14 @@ public final class OptionRefusalTest {
         writer.message(out, "ForwardEventRequest", request);
         writer.type(out, TestWire.DOB + "InvocationRequestEvent"); out.writeInt(3);
         boolean loot = type.equals(LOOT);
-        out.writeInt(loot ? 1 : 12); out.writeByte(loot ? 17 : 4);
-        out.writeBoolean(true); out.writeInt(loot ? 3 : 4);
+        out.writeInt(loot ? 1 : 12); out.writeByte(loot ? 17 : 6);
+        out.writeBoolean(true); out.writeInt(loot ? 3 : 3);
         if (loot) {
             writer.type(out, "com.threerings.projectx.data.Pref"); out.writeByte(1);
         } else {
             writer.type(out, "java.lang.Boolean"); out.writeBoolean(false);
         }
         writer.type(out, type); out.writeByte(ordinal);
-        if (!loot) { writer.type(out, "java.lang.Boolean"); out.writeBoolean(true); }
         writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(request);
     }
 }

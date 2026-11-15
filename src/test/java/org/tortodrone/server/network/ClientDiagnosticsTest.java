@@ -17,12 +17,12 @@ public final class ClientDiagnosticsTest {
         var values=new ArrayList<Object>(List.of("Linux","6.10","Fixture CPU","25.0.4","amd64","1920x1080","1280x720",false,1.25f));
         var log=new Log(true);var diagnostics=new ClientDiagnostics(log,1002,7,"Alice");diagnostics.hardware(values);
         String hardware=log.lines.getFirst();
-        check(hardware.contains("accountId=7")&&hardware.contains("clientOid=1002")&&hardware.contains("account=\"Alice\"")&&hardware.contains("client-reported"),"report is bound to the authenticated session");
-        for(String field:List.of("os=\"Linux\"","os-version=\"6.10\"","cpu=\"Fixture CPU\"","java=\"25.0.4\"","architecture=\"amd64\"","desktop=\"1920x1080\"","window=\"1280x720\"","fullscreen=false","ui-scale=1.25","gpu=unavailable","ram=unavailable"))check(hardware.contains(field),"correct native argument mapping: "+field);
+        check(hardware.contains("account=\"Alice\"")&&hardware.contains("(#7)")&&hardware.contains("clientOid=1002"),"report is bound to the authenticated session");
+        for(String field:List.of("os=\"Linux\"","build \"6.10\"","cpu=\"Fixture CPU\"","java=\"25.0.4\"","(\"amd64\")","screen=\"1920x1080\"","window=\"1280x720\"","mode=windowed","ui-scale=1.25","gpu=unavailable","ram=unavailable"))check(hardware.contains(field),"correct native argument mapping: "+field);
         diagnostics.hardware(values);check(log.lines.size()==1,"repeated telemetry cannot flood logs");
         var second=new ClientDiagnostics(log,1004,8,"Bob");values.set(2,"Injected\n\r\u001b\u202e\u2028\"\\"+"x".repeat(2000));second.hardware(values);
         String sanitized=log.lines.getLast();check(sanitized.length()<1500&&!sanitized.contains("\n")&&!sanitized.contains("\r")&&!sanitized.contains("\u001b")&&!sanitized.contains("\u202e")&&!sanitized.contains("\u2028")&&sanitized.contains("\\\"\\\\"),"bounded quoted fields cannot inject terminal or log lines");
-        check(sanitized.contains("accountId=8")&&!sanitized.contains("Alice"),"reports cannot reuse another account context");
+        check(sanitized.contains("(#8)")&&!sanitized.contains("Alice"),"reports cannot reuse another account context");
         var quiet=new Log(false);new ClientDiagnostics(quiet,1006,9,"Normal").hardware(values);check(quiet.lines.isEmpty(),"normal mode emits no hardware report");
         values.set(2,null);new ClientDiagnostics(log,1008,10,"Nulls").hardware(values);check(log.lines.getLast().contains("cpu=unknown"),"nullable stock properties remain supported");
         var invalid=new ClientDiagnostics(log,1010,11,"Invalid");reject(()->invalid.hardware(List.of()));

@@ -28,6 +28,9 @@ public final class SpriteShieldTest {
             long deadline=System.nanoTime()+2_000_000_000L;ActorState pet=null;
             while(System.nanoTime()<deadline){Thread.sleep(25);pet=simulation.snapshot().actors().stream().filter(a->a.pet()!=null).findFirst().orElseThrow();if(pet.pet().shieldHealth()>0)break;}
             check(pet!=null&&pet.pet().shieldHealth()>0,"Aura raises the native pet shield after land");
+            // The first input ends the loading pose and arms the native five-second spawn
+            // protection, so clear that window after it instead of before the input.
+            immunity.setInt(health,0);immunity.setInt(otherHealth,0);
             int before=pet.pet().shieldHealth(),hp=health.state().current();
             var normal=new FireCatalog.DataValue("Damage$Normal",Map.of("flags",1,"amount",50f));
             synchronized(simulation){

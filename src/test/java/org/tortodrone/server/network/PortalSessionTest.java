@@ -53,7 +53,7 @@ public final class PortalSessionTest {
                 var actor=destination.simulation().snapshot().actors().getFirst();
                 check(actor.x()==16.5f&&actor.y()==7.5f&&Math.abs(actor.rotation()+Math.PI/2)<.001,
                     "server entrance supplies stock arrival position/facing regardless of client cache version");
-                check(actor.activity()==0&&actor.flags()==0,"arrival clears departing input and activity");
+                check(actor.activity()==TownMovement.LOADING&&actor.flags()==0,"arrival clears departing input and activity, publishing the native loading pose until the first input");
                 world.input(new SessionDecoder.Input(source,0,0,List.of()));
                 refuse(()->world.input(new SessionDecoder.Input(destination.oid(),0,0,List.of())));
                 world.subscribe((short)2);world.entered();
