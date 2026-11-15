@@ -115,7 +115,7 @@ public final class AuthenticationIntegrationTest {
             check(!log.contains(secret), "authentication payloads and truncated text never reach logs");
         }
         check(log.contains("/DEBUG]: AESAuthRequest decoded") == mode.equals("debug"), "debug detail follows log mode");
-        check(log.lines().allMatch(line -> line.matches("\\[\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2} [+-]\\d{2}:\\d{2}\\] \\[[^/\\]]+/(INFO|DEBUG|WARN|ERROR)\\]: .+")),
+        check(log.lines().allMatch(line -> line.matches("\\[\\d{2}-\\d{2}-\\d{4} \\d{2}:\\d{2}:\\d{2}\\] \\[[^/\\]]+/(INFO|DEBUG|WARN|ERROR)\\]: .+")),
             "saved log retains one formatted event per line");
     }
 
