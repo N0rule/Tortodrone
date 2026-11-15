@@ -21,7 +21,6 @@ public final class CustomWeaponCompatibility {
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
         long version=com.threerings.projectx.util.a.rz();
         boolean dev=com.threerings.projectx.util.a.abH();
-        System.out.println("DEBUG version="+version+" dev="+dev);
         check(version>0&&!dev,"installed release disables developer mode");
         verifyDirectorGate(game);
         System.out.println("RETAIL build="+version+": native distributed-config director is developer-only");
