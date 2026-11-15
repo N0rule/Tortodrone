@@ -8,24 +8,28 @@ import org.tortodrone.protocol.*;
 /** Focused native-reader acceptance for prepared scene entities and their deltas. */
 public final class TrainingCompatibility {
     public static void main(String[] args)throws Exception {
+        // The stock editor registry reflects actor classes during PropertyEditor's own
+        // static initializer; priming the editor base class avoids the subclass-before-
+        // superclass static cycle that the client never starts from this direction.
+        Class.forName("com.threerings.editor.swing.PropertyEditor");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         Path pack=Path.of(args[0]);
         var content=Files.exists(pack.resolve("map.yml"))?SceneCatalog.load(Path.of("content/maps")).scene(294).content():SceneContent.load(pack,"bbf967c39b3883e438fd8165fba74c3be45cfcbecdec9c585f1edaa21d1cc144");
         var entities=new SceneEntities(content,CollisionMap.read(Path.of("content/maps/advanced_training/native/walkability.gz")));
         var actors=entities.actors();
         var added=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,actors,List.of(),new int[0],Map.of(),true));
-        if(added.aej().length!=actors.size())throw new AssertionError("Missing native scene actors");
+        if(added.afd().length!=actors.size())throw new AssertionError("Missing native scene actors");
         var baseline=new HashMap<Integer,ActorState>();actors.forEach(a->baseline.put(a.id(),a));
 
         for(int i=0;i<actors.size();i++){
-            var state=actors.get(i);var nativeActor=added.aej()[i];
+            var state=actors.get(i);var nativeActor=added.afd()[i];
             if(!nativeActor.getClass().getName().equals(state.entity().nativeClass()))throw new AssertionError("Wrong native entity type");
-            if(state.entity().kind().equals("Switch")&&!nativeActor.bR(2))throw new AssertionError("Native Switch START flag missing");
+            if(state.entity().kind().equals("Switch")&&!nativeActor.bT(2))throw new AssertionError("Native Switch START flag missing");
             if(!FireCompatibility.field(nativeActor,"_config").equals(FireCompatibility.reference(state.config())))throw new AssertionError("Changed native actor arguments");
             com.threerings.tudey.dobj.SceneDeltaEvent updated;
             try{updated=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,100,(short)0,100,150,(short)50,List.of(),List.of(state),new int[0],Map.of(state.id(),state),true));}
             catch(Exception failure){throw new IOException("Native entity delta failed for "+state.entity().kind(),failure);}
-            var applied=updated.aek()[0].apply(nativeActor);
+            var applied=updated.afe()[0].apply(nativeActor);
             if((int)FireCompatibility.field(applied,"_id")!=state.id())throw new AssertionError("Entity delta changed identity");
             if(state.entity().kind().equals("Monster")&&Math.abs((float)FireCompatibility.field(applied,"_healthPct")-1)>.0001)throw new AssertionError("Wrong target health delta");
         }
@@ -35,14 +39,14 @@ public final class TrainingCompatibility {
             throw new AssertionError("Captured counter-front Konway Talk prompt is unreachable");
         var pc=new ActorState(1,1001,"Fixture",256,100,0,0,0,0,0,0,100,
             new StarterCatalog.Model("Character/PC/Default",Map.of()),false,null,null,null,capturedPrompt);
-        var nativePc=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(pc),List.of(),new int[0],Map.of(),true)).aej()[0];
+        var nativePc=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(pc),List.of(),new int[0],Map.of(),true)).afd()[0];
         if(FireCompatibility.field(nativePc,"_actionDesc")==null||FireCompatibility.field(nativePc,"_actionEntity")==null)throw new AssertionError("Native interaction prompt missing");
         var pcDelta=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,100,(short)0,100,150,(short)50,List.of(),List.of(pc),new int[0],Map.of(1,pc),true));
-        pcDelta.aek()[0].apply(nativePc);
+        pcDelta.afe()[0].apply(nativePc);
         var corpse=new ActorState(pc.id(),pc.clientOid(),pc.name(),pc.color(),pc.created(),pc.x(),pc.y(),pc.rotation(),pc.direction(),0,TownMovement.DEAD,150,
             pc.config(),false,null,null,null,new InteractionState(pc.id(),null,"Resurrect"),new SceneKnightState(null,0));
         var corpseEvent=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,100,(short)0,100,150,(short)50,List.of(),List.of(corpse),new int[0],Map.of(pc.id(),pc),true));
-        var nativeCorpse=corpseEvent.aek()[0].apply(nativePc);
+        var nativeCorpse=corpseEvent.afe()[0].apply(nativePc);
         if((int)FireCompatibility.field(nativeCorpse,"_activity")!=281
             ||!FireCompatibility.field(nativeCorpse,"_actionDesc").getClass().getName().equals("com.threerings.projectx.config.ActionDesc$Resurrect")
             ||(int)FireCompatibility.field(FireCompatibility.field(nativeCorpse,"_actionEntity"),"_id")!=pc.id())
@@ -50,7 +54,7 @@ public final class TrainingCompatibility {
         var revived=new ActorState(corpse.id(),corpse.clientOid(),corpse.name(),corpse.color(),corpse.created(),corpse.x(),corpse.y(),corpse.rotation(),corpse.direction(),64,TownMovement.RESURRECT,200,
             corpse.config(),false,null,null,null,null,new SceneKnightState(null,0));
         var reviveEvent=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,150,(short)0,150,200,(short)50,List.of(),List.of(revived),new int[0],Map.of(pc.id(),corpse),true));
-        var nativeRevived=reviveEvent.aek()[0].apply(nativeCorpse);
+        var nativeRevived=reviveEvent.afe()[0].apply(nativeCorpse);
         if((int)FireCompatibility.field(nativeRevived,"_activity")!=282||((int)FireCompatibility.field(nativeRevived,"_flags")&64)==0||FireCompatibility.field(nativeRevived,"_actionDesc")!=null)
             throw new AssertionError("Native revival delta did not clear the corpse prompt or set protection");
         var effects=new SceneWeapons(CollisionMap.read(Path.of("content/maps/advanced_training/native/walkability.gz")));
@@ -67,7 +71,7 @@ public final class TrainingCompatibility {
         var carrying=new ActorState(pc.id(),pc.clientOid(),pc.name(),pc.color(),pc.created(),pc.x(),pc.y(),pc.rotation(),pc.direction(),pc.flags(),268,150,
             pc.config(),false,null,null,null,pc.interaction(),new SceneKnightState(new StarterCatalog.Model("Pickup/Capsule/Health Capsule",Map.of()),actors.getFirst().id(),status,KnightProgress.RECRUIT,null,null,0,0,149));
         var carriedDelta=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,100,(short)0,100,150,(short)50,List.of(),List.of(carrying),new int[0],Map.of(pc.id(),pc),true));
-        var carried=carriedDelta.aek()[0].apply(nativePc);
+        var carried=carriedDelta.afe()[0].apply(nativePc);
         if((int)FireCompatibility.field(carried,"_hitTime")!=149||(int)FireCompatibility.field(carried,"_lift")!=actors.getFirst().id()||FireCompatibility.field(carried,"_activityData")==null
                 ||java.lang.reflect.Array.getLength(FireCompatibility.field(carried,"_conditions"))!=1)throw new AssertionError("Native knight lift/status delta mismatch");
         gameplay(content);
@@ -79,9 +83,9 @@ public final class TrainingCompatibility {
         for(var frame:List.of(HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),
                 HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"),
                 codec.conversationDialog(1001,140,conversation,conversation.initial(),npc,1)))bytes.write(frame,4,frame.length-4);
-        var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();
-        var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)input.qe()).yj();
-        var dialog=(com.threerings.projectx.data.ConversationDialogInfo)((com.threerings.presents.dobj.AttributeChangedEvent)event.xE().get(1)).getValue();
+        var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.ql();input.ql();
+        var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)input.ql()).yn();
+        var dialog=(com.threerings.projectx.data.ConversationDialogInfo)((com.threerings.presents.dobj.AttributeChangedEvent)event.xI().get(1)).getValue();
         if(!Arrays.equals(dialog.responses,conversation.nodes().get(conversation.initial()).responses().stream().map(SceneConversation.Response::text).toArray(String[]::new))||dialog.conversationService==null)
             throw new AssertionError("Native conversation responses or service missing");
         if(input.available()!=0)throw new AssertionError("Conversation framing mismatch");
@@ -89,7 +93,8 @@ public final class TrainingCompatibility {
     }
     private static StarterCatalog.Model hit(int flags,float amount){
         var damage=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",List.of(
-            new FireCatalog.FieldValue("flags","int",flags),new FireCatalog.FieldValue("amount","float",amount)));
+            new FireCatalog.FieldValue("flags","int",flags),new FireCatalog.FieldValue("amount","float",amount),
+            new FireCatalog.FieldValue("shouldReact","boolean",true)));
         return new StarterCatalog.Model("DamageRegion",Map.of("damage",damage,"shape",new FireCatalog.DataValue(
             "com.threerings.tudey.shape.config.ShapeConfig$Circle",List.of(new FireCatalog.FieldValue("radius","float",.1f)))));
     }
@@ -102,7 +107,7 @@ public final class TrainingCompatibility {
         world.damage(hit(2,1000),cube.x(),cube.y(),0,stamp,219);
         if(world.actor(cube.id())!=null)throw new AssertionError("Cube did not take weapon damage");
         var dying=world.actors().stream().filter(a->a.id()==cube.id()).findFirst().orElseThrow();
-        var nativeDying=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(dying),List.of(),new int[0],Map.of(),true)).aej()[0];
+        var nativeDying=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(dying),List.of(),new int[0],Map.of(),true)).afd()[0];
         if((int)FireCompatibility.field(nativeDying,"_affectedTime")!=stamp||(int)FireCompatibility.field(nativeDying,"_activity")!=2)throw new AssertionError("Monster hit/death feedback missing");
         int deathEnds=(int)FireCompatibility.field(nativeDying,"_destroyed");
         world.advance(deathEnds+150,List.of());
@@ -121,9 +126,9 @@ public final class TrainingCompatibility {
         var lift=world.actors().stream().filter(a->a.entity().kind().equals("DungeonLift")&&a.config().name().equals("Dynamic/Lift Objects/Clay Pot")).findFirst().orElseThrow();
         var owner=player(lift.x(),lift.y(),0);if(!world.carry(lift.id(),owner,stamp+10400))throw new AssertionError("Lift was not carried");
         world.throwLift(lift.id(),owner,stamp+10500);var thrown=world.actor(lift.id());
-        var nativeLift=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(lift),List.of(),new int[0],Map.of(),true)).aej()[0];
+        var nativeLift=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(lift),List.of(),new int[0],Map.of(),true)).afd()[0];
         var delta=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,100,(short)0,100,150,(short)50,List.of(),List.of(thrown),new int[0],Map.of(lift.id(),lift),true));
-        var applied=delta.aek()[0].apply(nativeLift);
+        var applied=delta.afe()[0].apply(nativeLift);
         if((float)FireCompatibility.field(applied,"_z")!=1||(int)FireCompatibility.field(applied,"_faction")!=219
                 ||((int[])FireCompatibility.field(applied,"_actorIds")).length!=0)throw new AssertionError("Native thrown-lift delta mismatch");
         var health=new SceneHealth(content);if(!health.damage(hit(8,30).arguments().get("damage"),stamp)||!health.heal(120)||health.state().current()!=health.state().maximum())throw new AssertionError("Party damage/heal mismatch");
@@ -139,7 +144,7 @@ public final class TrainingCompatibility {
         world.advance(stamp+10650,List.of(dropper));
         if(Math.hypot(world.actor(weight.id()).x()-plate.x(),world.actor(weight.id()).y()-plate.y())>.001||world.actor(plate.id()).entity().state()!=2)throw new AssertionError("Heavy weight did not press native plate: plate="+plate+" weight="+world.actor(weight.id()));
         var dropped=world.actor(weight.id());
-        var nativeWeight=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(dropped),List.of(),new int[0],Map.of(),true)).aej()[0];
+        var nativeWeight=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(dropped),List.of(),new int[0],Map.of(),true)).afd()[0];
         if(!new com.threerings.math.Vector2f(plate.x(),plate.y()).equals(FireCompatibility.field(nativeWeight,"_dropPoint")))throw new AssertionError("Native statue drop point missing");
         var spikes=world.actors().stream().filter(a->a.entity().kind().equals("Trap")&&a.config().name().endsWith("/Spikes")).findFirst().orElseThrow();
         var hazards=new SceneWeapons(collision);hazards.targets(world);world.attacks((actor,action)->hazards.fire(action,actor,stamp+10700));
@@ -151,14 +156,14 @@ public final class TrainingCompatibility {
 
     private static Object nativeMessage(byte[] frame)throws Exception {
         var bytes=new ByteArrayOutputStream();for(var part:List.of(HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"),frame))bytes.write(part,4,part.length-4);
-        var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();Object message=input.qe();
+        var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.ql();input.ql();Object message=input.ql();
         if(input.available()!=0)throw new AssertionError("Native message framing mismatch");return message;
     }
     private static void quickbar(SceneStatus.State status)throws Exception {
         var map=SceneCatalog.load(Path.of("content/maps")).scene(294);var scene=new SceneRegistry.Instance(140,0,map);
         var knight=new Knight(1,"Fixture","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);
         var profile=new WorldProfile(219,1,1,0,0,0,List.of());
-        var party=(com.threerings.projectx.dungeon.data.DungeonPartyObject)((com.threerings.presents.net.ObjectResponse<?>)nativeMessage(new SessionCodec().interiorParty((short)4,640,1001,knight,profile,scene,new SceneHealth.State(193,200,0),status))).yk();
+        var party=(com.threerings.projectx.dungeon.data.DungeonPartyObject)((com.threerings.presents.net.ObjectResponse<?>)nativeMessage(new SessionCodec().interiorParty((short)4,640,1001,knight,profile,scene,new SceneHealth.State(193,200,0),status))).yo();
         if(party.getClass()!=com.threerings.projectx.dungeon.data.LevelPartyObject.class||party.memberLimit!=8||party.spawn!=null)throw new AssertionError("Native Training revive-capable party type, capacity or spawn mismatch");
         if(!party.hasPickups)throw new AssertionError("Native quickbar HUD is hidden");
         if(party.speakService==null)throw new AssertionError("Native Training party chat has no service");
@@ -169,31 +174,31 @@ public final class TrainingCompatibility {
             public void a(com.threerings.presents.dobj.EntryAddedEvent<com.threerings.presents.dobj.DSet.Entry> event){}
             public void a(com.threerings.presents.dobj.EntryRemovedEvent<com.threerings.presents.dobj.DSet.Entry> event){}
             public void a(com.threerings.presents.dobj.EntryUpdatedEvent<com.threerings.presents.dobj.DSet.Entry> event){
-                if(Integer.valueOf(1001).equals(event.lj()))notifications.add(event.getName());
+                if(Integer.valueOf(1001).equals(event.getKey()))notifications.add(event.getName());
             }
         });
         if(health.current!=193||health.maximum!=200||condition.conditions.length!=1||!Arrays.equals(condition.expires,new int[]{5000}))throw new AssertionError("Party resubscription lost current health/status");
-        if(party.D(party.members.iterator().next().name)!=health||condition.flags!=1)throw new AssertionError("Native HUD health lookup or emergency revive entitlement differs");
-        var location=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().sceneLocation(1001,scene))).yj();
-        for(var child:location.xE())if(child instanceof com.threerings.presents.dobj.AttributeChangedEvent changed&&changed.getName().equals("partyOid"))throw new AssertionError("Location publication resubscribes and detaches the HUD from its party");
+        if(party.E(party.members.iterator().next().name)!=health||condition.flags!=1)throw new AssertionError("Native HUD health lookup or emergency revive entitlement differs");
+        var location=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().sceneLocation(1001,scene))).yn();
+        for(var child:location.xI())if(child instanceof com.threerings.presents.dobj.AttributeChangedEvent changed&&changed.getName().equals("partyOid"))throw new AssertionError("Location publication resubscribes and detaches the HUD from its party");
         for(int flags:new int[]{9,0}){
-            var update=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().partyVitals(640,1001,new SceneHealth.State(0,200,0,flags),status))).yj();
-            for(var child:update.xE()){if(!child.b(party))throw new AssertionError("Native HUD update was not applied");party.d(child);}
-            if(party.health.iterator().next().current!=0||party.status.iterator().next().flags!=flags||party.z(party.members.iterator().next().name)!=(flags==0))throw new AssertionError("Native free/Spark death panel gate differs");
+            var update=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().partyVitals(640,1001,new SceneHealth.State(0,200,0,flags),status))).yn();
+            for(var child:update.xI()){if(!child.b(party))throw new AssertionError("Native HUD update was not applied");party.d(child);}
+            if(party.health.iterator().next().current!=0||party.status.iterator().next().flags!=flags||party.A(party.members.iterator().next().name)!=(flags==0))throw new AssertionError("Native free/Spark death panel gate differs");
         }
-        var revived=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().partyVitals(640,1001,new SceneHealth.State(200,200,0,0),SceneStatus.State.NORMAL))).yj();
-        for(var child:revived.xE()){if(!child.b(party))throw new AssertionError("Native revive update was not applied");party.d(child);}
+        var revived=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().partyVitals(640,1001,new SceneHealth.State(200,200,0,0),SceneStatus.State.NORMAL))).yn();
+        for(var child:revived.xI()){if(!child.b(party))throw new AssertionError("Native revive update was not applied");party.d(child);}
         if(Collections.frequency(notifications,"health")!=3||Collections.frequency(notifications,"status")!=3)throw new AssertionError("Native HUD set listeners did not receive health/status updates: "+notifications);
-        if(party.D(party.members.iterator().next().name).current!=200||party.z(party.members.iterator().next().name))throw new AssertionError("Native HUD health does not recover on revive");
-        var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().quickbar(1001,new long[]{-1,-2,0,0}))).yj();
-        if(event.xE().size()!=4||!Long.valueOf(-1).equals(((com.threerings.presents.dobj.ElementUpdatedEvent)event.xE().getFirst()).getValue()))throw new AssertionError("Native quickbar slot event mismatch");
+        if(party.E(party.members.iterator().next().name).current!=200||party.A(party.members.iterator().next().name))throw new AssertionError("Native HUD health does not recover on revive");
+        var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().quickbar(1001,new long[]{-1,-2,0,0}))).yn();
+        if(event.xI().size()!=4||!Long.valueOf(-1).equals(((com.threerings.presents.dobj.ElementUpdatedEvent)event.xI().getFirst()).getValue()))throw new AssertionError("Native quickbar slot event mismatch");
         System.out.println("PASS: native party enables pickups and four-slot quickbar updates preserve transient item IDs");
     }
     private static void damageFeedback()throws Exception {
         for(var sample:List.of(new SceneCombatEvent(1,100,219,(7<<20)+1,0,12.5f,-40.25f,0f,"NORMAL"),
                 new SceneCombatEvent(2,150,1000000000,43,219,-1.25f,-53.5f,1.5f,"NORMAL_LARGE"))){
             var notification=(com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().sceneDelta(2114,3002,0,(short)30,88,sample.timestamp(),(short)50,List.of(),List.of(),new int[0],java.util.Map.of(),false,List.of(),List.of(sample)));
-            var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)notification.yj();
+            var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)notification.yn();
             var effect=(com.threerings.projectx.dungeon.data.effect.DamageEffect)delta.afg()[0];
             var target=(com.threerings.tudey.data.EntityKey.Actor)effect.aeX();
             if(effect.adD()!=sample.timestamp()||target.vD()!=sample.actor()||effect.Sv()!=sample.amount()||effect.Rf()!=sample.source()
@@ -206,20 +211,20 @@ public final class TrainingCompatibility {
         var knight=new Knight(1,"Rank-Fixture","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);
         var progress=new KnightProgress(10,3,45000);var profile=new WorldProfile(219,1,1,0,0,1,List.of(),progress);
         var notification=(com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().selected(1001,knight,profile));
-        var selected=(com.threerings.presents.dobj.CompoundEvent)notification.yj();boolean rank=false,prestige=false;
-        for(var raw:selected.xE())if(raw instanceof com.threerings.presents.dobj.AttributeChangedEvent event){
+        var selected=(com.threerings.presents.dobj.CompoundEvent)notification.yn();boolean rank=false,prestige=false;
+        for(var raw:selected.xI())if(raw instanceof com.threerings.presents.dobj.AttributeChangedEvent event){
             if(event.getName().equals("rank")){var pair=(com.threerings.projectx.mission.data.RankPair)event.getValue();rank=pair.rank==10&&pair.subrank==3;}
             if(event.getName().equals("prestige"))prestige=Integer.valueOf(45000).equals(event.getValue());
         }
         if(!rank||!prestige)throw new AssertionError("Native selected rank/prestige mismatch");
         var model=new StarterCatalog.Model("Character/PC/Default",Map.of());
         var actor=new ActorState(219,1001,"Rank-Fixture",256,100,0,0,0,0,0,0,100,model,false,null,null,null,null,new SceneKnightState(null,0,SceneStatus.State.NORMAL,progress));
-        var occupants=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().occupants(140,List.of(actor)))).yj();
-        var set=(com.threerings.presents.dobj.DSet<?>)((com.threerings.presents.dobj.AttributeChangedEvent)occupants.xE().get(1)).getValue();
+        var occupants=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().occupants(140,List.of(actor)))).yn();
+        var set=(com.threerings.presents.dobj.DSet<?>)((com.threerings.presents.dobj.AttributeChangedEvent)occupants.xI().get(1)).getValue();
         var info=(com.threerings.projectx.data.ProjectXOccupantInfo)set.iterator().next();
         if(info.rank!=10||info.pr.ordinal()!=5)throw new AssertionError("Native occupant rank/prestige badge mismatch");
-        var update=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().knightProgress(1001,profile))).yj();
-        if(update.xE().size()!=3)throw new AssertionError("Native progress update framing mismatch");
+        var update=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().knightProgress(1001,profile))).yn();
+        if(update.xI().size()!=3)throw new AssertionError("Native progress update framing mismatch");
         System.out.println("PASS: native selected rank/subrank, prestige total, occupant rank/badge and live progress events");
     }
 
