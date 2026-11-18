@@ -107,6 +107,13 @@ public final class CombatRenderingCheck {
     private String lastAnimation="";
     private Throwable failure;
     private boolean fullscreenApplied;
+    /** Free-movement acceptance in one scene: load it, drive the stock controller, verify motion. */
+    private boolean exploreOnly;
+    private int exploreScene;
+    private boolean exploreWorldRequested,exploreTravelRequested;
+    private long exploreTravelAt,exploreStepAt;
+    private float exploreFromX,exploreFromY;
+    private int exploreDirection;
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
@@ -150,8 +157,14 @@ public final class CombatRenderingCheck {
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean trainingOnly=Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
-        if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
+        boolean exploreOnly=Arrays.asList(args).contains("--explore-only");
+        boolean manual=Arrays.asList(args).contains("--manual");
+        int exploreScene=0;
+        for(String arg:args)if(arg.startsWith("--scene="))try{exploreScene=Integer.parseInt(arg.substring("--scene=".length()));}catch(NumberFormatException invalid){throw new IllegalArgumentException("Invalid --scene value: "+arg);}
+        if(exploreOnly&&exploreScene<=0)throw new IllegalArgumentException("--explore-only needs --scene=<id>");
+        boolean trainingOnly=exploreOnly||manual||Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        if(exploreOnly||manual){if(args.length<4)throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");}
+        else if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
         var configField=Class.forName("com.threerings.projectx.util.a").getDeclaredField("bNP");configField.setAccessible(true);
@@ -163,10 +176,11 @@ public final class CombatRenderingCheck {
         // the launcher's disposable preferences root, never the owner's settings.
         com.threerings.projectx.client.ProjectXPrefs.setVSyncEnabled(false);
         var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,Arrays.asList(args).contains("--opening-tutorial-only")?null:peer?"Peer-Knight":"Town-Knight",null,null,null,null);
-        app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
+        app.setTitle(manual?"Tortodrone disposable manual session":peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);probe.dialogueOnly=!peer&&args.length==4&&args[3].equals("--dialogue-only");
         probe.campProgression=Arrays.asList(args).contains("--camp-progression-only");probe.campProgressionReturn=Arrays.asList(args).contains("--camp-progression-return-only");
         probe.campStory=probe.campProgression||Arrays.asList(args).contains("--camp-story-only");probe.campStoryReturn=Arrays.asList(args).contains("--camp-story-return-only");
+        probe.exploreOnly=exploreOnly;probe.exploreScene=exploreScene;
         probe.freshOpening=Arrays.asList(args).contains("--opening-tutorial-only");
         probe.tutorialOnly=probe.freshOpening||Arrays.asList(args).contains("--tutorial-only");
         probe.tutorialEntryOnly=probe.tutorialOnly||Arrays.asList(args).contains("--tutorial-entry-only");
@@ -188,6 +202,7 @@ public final class CombatRenderingCheck {
         probe.vortexShieldOnly=Arrays.asList(args).contains("--vortex-shield-only");
         probe.equipmentGroups=Arrays.asList(args).contains("--equipment-groups");
         if(probe.movementOnly)probe.actions=List.of(ACTIONS.getFirst(),ACTIONS.get(8));
+        if(manual){System.out.println("MANUAL: disposable client logged in as LanPlayer; close the game window to end the session");app.startup();return;}
         var timer=new Timer(true);
         var pending=new AtomicBoolean();
         timer.scheduleAtFixedRate(new TimerTask(){public void run(){if(pending.compareAndSet(false,true))app.getRunQueue().postRunnable(()->{try{probe.tick();}finally{pending.set(false);}});}},50,40);
@@ -482,6 +497,62 @@ public final class CombatRenderingCheck {
                 stage=90;started=now;
             }
         }
+    }
+    /** Load one scene through the native command and drive free stock movement in it. */
+    private void exploreTick(long now)throws Exception {
+        if(app.CZ()==null)return;
+        if(app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE){
+            if(!exploreWorldRequested&&!(app.GK().mN()||app.GB())&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())){
+                app.GI().bU(com.threerings.projectx.client.aU.class).EQ();exploreWorldRequested=true;
+            }
+            return;
+        }
+        if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gx())||app.GK().mN()||app.GB())return;
+        var view=new View(app.Gx());if(view.PO()==null)return;
+        if(view.sceneId()!=exploreScene){
+            if(!exploreTravelRequested){
+                GLFW.glfwFocusWindow(app.getWindow());app.GK().bn(exploreScene);
+                exploreTravelRequested=true;exploreTravelAt=now;
+                System.out.println("CHECK: native scene travel to "+exploreScene);
+            }else if(now-exploreTravelAt>30_000_000_000L){
+                throw new AssertionError("Scene "+exploreScene+" did not load; current scene="+view.sceneId());
+            }
+            return;
+        }
+        if(stage==0){
+            var own=authoritative.get(app.CZ().pawnId);if(own==null)return;
+            GLFW.glfwFocusWindow(app.getWindow());
+            exploreFromX=own.tG().x;exploreFromY=own.tG().y;
+            capture("explore-"+exploreScene+"-arrival");stage=1;exploreDirection=0;exploreStepAt=now;
+            System.out.println("CHECK: scene "+exploreScene+" loaded at "+own.tG());
+            return;
+        }
+        if(stage!=1)return;
+        if(exploreDirection<4){
+            if(now-exploreStepAt>1_200_000_000L){
+                flags(view,0);capture("explore-"+exploreScene+"-step-"+exploreDirection);
+                exploreDirection++;exploreStepAt=now;return;
+            }
+            switch(exploreDirection){
+                case 0->moveToward(view,0,1,true);
+                case 1->moveToward(view,1,0,true);
+                case 2->moveToward(view,0,-1,true);
+                default->moveToward(view,-1,0,true);
+            }
+            return;
+        }
+        flags(view,0);
+        if(now-exploreStepAt<500_000_000L)return;
+        var own=authoritative.get(app.CZ().pawnId);if(own==null)return;
+        double moved=Math.hypot(own.tG().x-exploreFromX,own.tG().y-exploreFromY);
+        if(moved<0.5)throw new AssertionError("Stock movement did not move the knight in scene "+exploreScene+" ("+moved+")");
+        var rendered=view.PO().acU();
+        double drift=Math.hypot(rendered.tG().x-own.tG().x,rendered.tG().y-own.tG().y);
+        if(drift>.25)throw new AssertionError("Scene "+exploreScene+" prediction drift "+drift);
+        capture("explore-"+exploreScene+"-moved");finishImages();passed=done=true;
+        System.out.println("PASS: native scene "+exploreScene+" loaded and the controlled knight moved freely ("
+            +String.format(java.util.Locale.ROOT,"%.2f",moved)+" units, drift "+String.format(java.util.Locale.ROOT,"%.2f",drift)+")");
+        app.shutdown();
     }
     private boolean tutorialEntryOnly;
     private void tutorialEntryTick(long now)throws Exception {
@@ -895,6 +966,7 @@ public final class CombatRenderingCheck {
                     +" view="+(current==null?"none":current.getClass().getName())+" loading="+(app.GK().mN()||app.GB())
                     +(stage==20?konwayState(viewPawn()):""));
             }
+            if(exploreOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}exploreTick(now);return;}
             if(tutorialEntryOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}tutorialEntryTick(now);return;}
             if(readyRoomOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}if(campStory&&stage>=2)campStoryTick(new View(app.Gx()),now);else if(readyRoomMailOnly)readyRoomMailTick(now);else if(readyRoomForgeOnly)readyRoomForgeTick(now);else readyRoomTick(now);return;}
             if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
