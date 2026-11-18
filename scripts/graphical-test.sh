@@ -1,11 +1,11 @@
-#!/bin/sh
-# Isolated stock-client graphical acceptance, for agents and the owner.
+#!/usr/bin/env bash
+# Isolated stock-client graphical acceptance, for AI agents and the owner.
 #
 # Every run creates a disposable account, server, home/prefs and temporary
 # directory and launches the unmodified installed client fullscreen. Nothing
 # touches the owner's deployment, saves or preferences.
 #
-# Usage: scripts/graphical-test.sh <scenario> [scene-id] [game-dir] [output-dir] [--more-flags]
+# Usage: scripts/graphical-test.sh <scenario> [scene-id] [game-dir] [output-dir] [--flags]
 #
 # Scenarios:
 #   tutorial        fresh account: private Crash Site tutorial to Haven, reconnect
@@ -17,20 +17,30 @@
 #   training        Advanced Training Hall movement/combat scenario
 #   camp            Rescue Camp story
 #   preview         seeded knight, GM preview combat to Haven
-#   explore <id>    load a scene by native scene id and drive free stock movement
-#   manual          disposable server + interactive client for the owner (no
-#                   automation); uses their Steam launch parameters; close the
-#                   game window to end the session
+#   explore <id>    load a scene by native scene id, drive free stock movement
+#   manual          disposable server + interactive client, auto-logged in with
+#                   the owner's Steam launch wrapper (sk-nopad); only for the
+#                   owner, close the game window to end the session
 #   list            print the scenarios
 #
 # game-dir defaults to $SPIRAL_KNIGHTS_DIR or the Linux Steam library path.
-# output-dir must not exist; default is a timestamped directory under $TMPDIR.
 # Extra --flags are appended to CheckCombatRendering for other checked-in modes.
 # Set TORTODRONE_SKIP_BUILD=1 to reuse the current build/tortodrone.jar.
-set -eu
+#
+# Output layout (one directory per run, never reused):
+#   run.log              this script plus the full fixture output
+#   session/captures/    screenshots
+#   session/client.log   stock client log
+#   session/server.log   disposable server log
+# Success prints a final line: RESULT PASS scenario=... session=...
+set -euo pipefail
 
 usage() {
     sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+scenarios() {
+    sed -n '/^# Scenarios:/,/^# game-dir/p' "$0" | sed 's/^# \{0,1\}//' | sed '$d'
 }
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
@@ -40,7 +50,7 @@ scenario=
 scene=
 game=${SPIRAL_KNIGHTS_DIR:-}
 out=
-raw=
+declare -a extra=()
 
 for arg in "$@"; do
     case $arg in
@@ -49,17 +59,17 @@ for arg in "$@"; do
             exit 0
             ;;
         list)
-            sed -n '/^# Scenarios:/,/^# game-dir/p' "$0" | sed 's/^# \{0,1\}//' | sed '$d'
+            scenarios
             exit 0
             ;;
         tutorial|crash|ready-room|mail|forge|haven|training|camp|preview|explore|manual)
             scenario=$arg
             ;;
         --*)
-            raw="$raw $arg"
+            extra+=("$arg")
             ;;
         *)
-            if [ "$scenario" = explore ] && [ -z "$scene" ] && printf '%s' "$arg" | grep -qE '^[0-9]+$'; then
+            if [ "$scenario" = explore ] && [ -z "$scene" ] && [[ $arg =~ ^[0-9]+$ ]]; then
                 scene=$arg
             elif [ -z "$game" ]; then
                 game=$arg
@@ -76,26 +86,26 @@ done
 if [ -z "$scenario" ]; then
     scenario=tutorial
 fi
+declare -a scenario_flags=()
 case $scenario in
-    tutorial) flags="--opening-tutorial-only" ;;
-    crash) flags="--tutorial-entry-only" ;;
-    ready-room) flags="--ready-room-only" ;;
-    mail) flags="--ready-room-mail-only" ;;
-    forge) flags="--ready-room-forge-only" ;;
-    haven) flags="--town-dialogs-only" ;;
-    training) flags="--training-only" ;;
-    camp) flags="--camp-story-only" ;;
-    preview) flags="--tutorial-only" ;;
+    tutorial) scenario_flags=(--opening-tutorial-only) ;;
+    crash) scenario_flags=(--tutorial-entry-only) ;;
+    ready-room) scenario_flags=(--ready-room-only) ;;
+    mail) scenario_flags=(--ready-room-mail-only) ;;
+    forge) scenario_flags=(--ready-room-forge-only) ;;
+    haven) scenario_flags=(--town-dialogs-only) ;;
+    training) scenario_flags=(--training-only) ;;
+    camp) scenario_flags=(--camp-story-only) ;;
+    preview) scenario_flags=(--tutorial-only) ;;
     explore)
         if [ -z "$scene" ]; then
             echo "graphical-test: explore needs a numeric scene id, e.g. scripts/graphical-test.sh explore 398" >&2
             exit 2
         fi
-        flags="--explore-only --scene=$scene"
+        scenario_flags=(--explore-only "--scene=$scene")
         ;;
-    manual) flags="--manual" ;;
+    manual) scenario_flags=(--manual) ;;
 esac
-flags="$flags$raw"
 
 if [ -z "$game" ]; then
     game=${HOME:-/root}/.local/share/Steam/steamapps/common/Spiral Knights
@@ -117,28 +127,49 @@ if [ -e "$out" ]; then
     echo "graphical-test: output directory already exists: $out" >&2
     exit 2
 fi
+mkdir -p "$out"
+runlog="$out/run.log"
+session="$out/session"
+
+log() {
+    printf '[%s] graphical-test: %s\n' "$(date -Is)" "$*" | tee -a "$runlog"
+}
+
+log "START scenario=$scenario${scene:+ scene=$scene} game=$game"
+log "FLAGS ${scenario_flags[*]:-}"
+log "EXTRA ${extra[*]:-}"
+log "OUTPUT $out"
 
 if [ "${TORTODRONE_SKIP_BUILD:-0}" != 1 ]; then
-    echo "Building build/tortodrone.jar"
-    ./gradlew buildServer
+    log "BUILD build/tortodrone.jar"
+    ./gradlew buildServer >>"$runlog" 2>&1 || {
+        status=$?
+        log "RESULT FAIL scenario=$scenario stage=build exit=$status"
+        exit "$status"
+    }
 fi
 if [ ! -f build/tortodrone.jar ]; then
+    log "RESULT FAIL scenario=$scenario stage=build reason=missing-jar"
     echo "graphical-test: build/tortodrone.jar is missing; run ./gradlew buildServer" >&2
     exit 2
 fi
 
-echo "Scenario: $scenario"
-echo "Game:     $game"
-echo "Output:   $out"
-echo "Flags:   $flags"
-if java -cp build/tortodrone.jar scripts/compat/CheckCombatRendering.java "$game" "$out" $flags; then
-    echo
-    echo "Screenshots and logs: $out"
-    echo "Captures: $out/captures"
-    echo "Client:   $out/client.log"
-    echo "Server:   $out/server.log"
+command=(java -cp build/tortodrone.jar scripts/compat/CheckCombatRendering.java
+    "$game" "$session" "${scenario_flags[@]}" "${extra[@]}")
+log "COMMAND $(printf '%q ' "${command[@]}")"
+
+set +e
+"${command[@]}" 2>&1 | tee -a "$runlog"
+status=${PIPESTATUS[0]}
+set -e
+
+if [ "$status" -eq 0 ]; then
+    log "RESULT PASS scenario=$scenario${scene:+ scene=$scene} exit=0"
+    log "ARTIFACTS run=$runlog captures=$session/captures client=$session/client.log server=$session/server.log"
+    printf '\nScreenshots and logs: %s\n' "$out"
 else
-    status=$?
-    echo "graphical-test: scenario failed (exit $status); inspect $out" >&2
+    log "RESULT FAIL scenario=$scenario${scene:+ scene=$scene} exit=$status"
+    log "ARTIFACTS run=$runlog captures=$session/captures client=$session/client.log server=$session/server.log"
+    echo "graphical-test: scenario failed (exit $status); inspect $runlog" >&2
     exit "$status"
 fi

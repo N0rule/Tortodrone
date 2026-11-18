@@ -146,6 +146,13 @@ public final class CheckCombatRendering {
 
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
+            if(manual){
+                // The owner's Steam launch option is "sk-nopad %command%": the wrapper hides
+                // evdev devices GLFW would mistake for controllers and re-execs the client.
+                Path wrapper=Path.of(System.getenv().getOrDefault("SK_NOPAD",System.getProperty("user.home")+"/.local/bin/sk-nopad"));
+                if(Files.isExecutable(wrapper)){graphical.add(0,wrapper.toString());System.out.println("MANUAL: launch wrapper "+wrapper);}
+                else System.out.println("MANUAL: launcher wrapper not found at "+wrapper+"; starting the client directly");
+            }
             if(exploreOnly)graphical.addAll(List.of("--explore-only","--scene="+exploreScene));
             else if(manual)graphical.add("--manual");
             else if(trainingOnly)graphical.add(campProgression?"--camp-progression-only":campStory?"--camp-story-only":freshOpening?"--opening-tutorial-only":tutorialOnly?"--tutorial-only":tutorialEntryOnly?"--tutorial-entry-only":readyRoomMailOnly?"--ready-room-mail-only":readyRoomForgeOnly?"--ready-room-forge-only":readyRoomOnly?"--ready-room-only":equipmentGroups?"--equipment-groups":itemsOnly?"--items-only":sharedWorldOnly?"--multiplayer-world-only":multiplayerOnly?"--multiplayer-only":arsenalBlinkOnly?(arsenalStationOnly?"--arsenal-station-only":"--arsenal-blink-only"):boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
@@ -158,7 +165,7 @@ public final class CheckCombatRendering {
                 peerLog=output.resolve("peer-reconnect.log");peer=start(peerCommand,peerLog,scratch);
             }
             if(manual){
-                System.out.println("MANUAL: disposable server on 127.0.0.1:"+port+"; log in as LanPlayer / lan-test-password");
+                System.out.println("MANUAL: disposable server on 127.0.0.1:"+port+"; the client auto-logs in as LanPlayer/Town-Knight");
                 System.out.println("MANUAL: close the game window to end the session");
                 client.waitFor();
                 System.out.println("MANUAL: session ended; logs and screenshots retained at " + output);
