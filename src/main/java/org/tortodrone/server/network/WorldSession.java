@@ -1183,6 +1183,12 @@ final class WorldSession implements AutoCloseable {
             }
         }
         created = SceneClock.now();
+        if(characters.hasWorldStorage()){
+            var house=characters.auction(scenes.town());
+            boolean delivered=house.deliverCampaigns(profile.worldId());
+            if(house.deliverWelcome(profile.worldId(),knight.createdAt()))delivered=true;
+            if(delivered)profile=characters.worldProfile(knight.name(),authRevision,profile);
+        }
         if(characters.hasWorldStorage()){characters.friends().session(characters.accountId(),knight.id(),authRevision);profile=characters.worldProfile(knight.name(),authRevision,profile);}
         friendOnline=true;
         readyRoom=stageInReadyRoom;

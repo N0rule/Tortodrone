@@ -314,7 +314,7 @@ export async function run(group, { disposable = false, username, knight } = {}) 
                 'Three readable skill cards'
             );
             check(
-                document.querySelectorAll('#navigation svg.ui-icon').length === 12,
+                document.querySelectorAll('#navigation svg.ui-icon').length === 13,
                 'Consistent navigation icon family'
             );
             await navigate('accounts', { username }, () => !!control('Game Master permission'));

@@ -28,6 +28,7 @@ const shapes = {
     depot: 'M3 4h2l3 12h11l3-8H6M9 21h.01M19 21h.01',
     auctions: 'm5 4 4-2 8 8-4 4-8-8ZM3 21h12M12 13l-6 6m11-9 4 4',
     news: 'M4 3h16v18H4V3Zm4 4h8M8 11h8M8 15h3M8 18h8',
+    mailing: 'M3 5h18v14H3V5Zm0 2 9 6 9-6',
     content: 'm12 2 9 5v10l-9 5-9-5V7l9-5Zm-9 5 9 5 9-5M12 12v10',
     console: 'm4 6 6 6-6 6M13 18h7',
     logs: 'M5 3h14v18H5V3Zm4 5h6m-6 4h6m-6 4h6',

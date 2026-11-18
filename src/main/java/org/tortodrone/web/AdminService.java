@@ -56,6 +56,7 @@ public final class AdminService implements AutoCloseable {
             case "console"->AdminConsole.commands();
             case "logs"->{synchronized(logs){yield List.copyOf(logs);}}
             case "news"->news.read();
+            case "mail"->{var house=accounts.auctions();yield Map.of("now",System.currentTimeMillis(),"campaigns",house.campaigns().list(),"welcome",house.campaigns().welcome());}
             case "welcome"->welcome.read();
             case "content"->{var c=validatedContent==null?org.tortodrone.resources.ContentManager.load(deployment):validatedContent;yield Map.of("warnings",c.warnings(),"maps",c.scenes().scenes().size(),"items",c.items().entries().size(),"news",c.news(),"merchants",c.town().stations());}
             default->throw new IllegalArgumentException("Unknown resource");
@@ -97,6 +98,10 @@ public final class AdminService implements AutoCloseable {
             case "auction-create"->{return accounts.auctions().scheduleFeatured(p.text("config"),p.positive("quantity"),p.integer("bid"),p.integer("buy"),p.integer("stock"),p.number("starts"),p.number("expires"));}
             case "auction-cancel"->{return accounts.auctions().cancel(p.number("id"));}
             case "auction-settle"->accounts.auctions().settleExpired();
+            case "mail-save"->{return accounts.auctions().campaigns().save(p.number("id"),p.number("revision"),p.number("starts"),p.number("ends"),p.integer("sender"),p.text("subject"),p.text("body"),p.integer("crowns"),p.integer("energy"),gifts(p.text("items")));}
+            case "mail-send"->{var target=accounts.worldProfile(p.text("username"),p.text("knight"));return Map.of("id",accounts.auctions().campaigns().sendTo(target.worldId(),p.integer("sender"),p.text("subject"),p.text("body"),p.integer("crowns"),p.integer("energy"),gifts(p.text("items"))),"worldId",target.worldId());}
+            case "mail-welcome-save"->{return accounts.auctions().campaigns().saveWelcome(p.flag("enabled"),p.integer("sender"),p.optional("subject"),p.optional("body"));}
+            case "mail-cancel"->{return accounts.auctions().campaigns().cancel(p.number("id"),p.number("revision"));}
             case "news-save"->{return news.save(p.text("yaml"),p.text("revision"));}
             case "news-visual-save"->{return news.saveCatalog(p.text("catalog"),p.text("revision"));}
             case "news-upload"->{return news.upload(p.text("name"),p.text("data"));}
@@ -104,6 +109,18 @@ public final class AdminService implements AutoCloseable {
             default->throw new IllegalArgumentException("Unknown action");
         }
         return Map.of("ok",true);
+    }
+    @SuppressWarnings("unchecked") private static List<MailCampaignStore.Gift> gifts(String json)throws IOException {
+        try{
+            var rows=(List<Object>)org.tortodrone.resources.Json.parse(json);
+            var gifts=new ArrayList<MailCampaignStore.Gift>(rows.size());
+            for(var row:rows){
+                var map=(Map<String,Object>)row;
+                gifts.add(new MailCampaignStore.Gift((String)map.get("config"),((Number)map.get("count")).intValue(),
+                    Boolean.TRUE.equals(map.get("bound")),((Number)map.getOrDefault("expireDays",0)).intValue()));
+            }
+            return gifts;
+        }catch(RuntimeException bad){throw new IOException("Invalid gift list",bad);}
     }
     private static ItemModifiers modifiers(Input p){return new ItemModifiers(p.integer("level"),Float.parseFloat(p.text("heat")),p.optional("variants").isBlank()?List.of():Arrays.stream(p.text("variants").split("\n")).map(String::strip).filter(s->!s.isEmpty()).toList());}
     @FunctionalInterface private interface PasswordAction{void run(char[] password)throws IOException;}

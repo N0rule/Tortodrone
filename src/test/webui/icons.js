@@ -42,8 +42,12 @@ export async function run({ disposable = false } = {}) {
         );
     }
     check(
-        document.querySelectorAll('#navigation .native-symbol').length === 12,
-        'Sidebar uses original icons'
+        document.querySelectorAll('#navigation .ui-icon').length === 13,
+        'Sidebar renders one icon per page'
+    );
+    check(
+        document.querySelectorAll('#navigation .native-symbol').length >= 12,
+        'Sidebar uses original icons where the pack provides them'
     );
     check(
         document.querySelector('.brand .native-symbol[data-symbol="brand"]'),

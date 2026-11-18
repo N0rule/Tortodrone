@@ -11,6 +11,7 @@ import * as knights from './pages/knights.js';
 import * as depot from './pages/depot.js';
 import * as auctions from './pages/auctions.js';
 import * as news from './pages/news.js';
+import * as mailing from './pages/mailing.js';
 import * as content from './pages/content.js';
 import * as consolePage from './pages/console.js';
 import * as logs from './pages/logs.js';
@@ -25,6 +26,7 @@ const pages = [
     ['depot', 'Supply Depot', null, 2, depot],
     ['auctions', 'Auction House', null, 2, auctions],
     ['news', 'Uplink News', null, 2, news],
+    ['mailing', 'Player Mail', null, 2, mailing],
     ['content', 'Content Catalogue', null, 2, content],
     ['console', 'Console', null, 2, consolePage],
     ['logs', 'Logs', null, 0, logs],

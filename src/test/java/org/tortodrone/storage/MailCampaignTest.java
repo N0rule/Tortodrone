@@ -1,0 +1,140 @@
+package org.tortodrone.storage;
+
+import java.nio.file.*;
+import java.util.*;
+import org.tortodrone.account.Passwords;
+import org.tortodrone.character.*;
+import org.tortodrone.support.*;
+import static org.tortodrone.support.TestWire.check;
+
+/** Administrative mail campaigns: literal text, gifts, windows, retries, late knights and upgrade. */
+public final class MailCampaignTest {
+    public static void main(String[] args) throws Exception {
+        Path home = Files.createTempDirectory("tortodrone-mail-campaign-");
+        try {
+            var db = new Database(home, true);
+            var protection = new Passwords.Protection(new byte[16], new byte[32]);
+            int aliceAccount = db.create("Alice", protection, false);
+            int bobAccount = db.create("Bob", protection, false);
+            var items = ItemCatalog.load(ContentFixture.path("items/catalog.json"));
+            var rules = org.tortodrone.town.TownCatalog.load(ContentFixture.path("town/catalog.json"));
+            var aliceKnight = new CharacterStore(db, aliceAccount, "Alice", items).create(knight("Alice-Knight"));
+            new CharacterStore(db, bobAccount, "Bob", items).create(knight("Bob-Knight"));
+            int alice = db.worldProfile(aliceAccount, aliceKnight.id(), 1).worldId();
+            var house = new AuctionHouse(db, items, rules);
+            var campaigns = house.campaigns();
+            long now = System.currentTimeMillis();
+
+            var gift = new MailCampaignStore.Gift("Material/Gel Drop", 2, false, 7);
+            var saved = campaigns.save(0, 0, now - 60_000, now + 86_400_000L, 6,
+                "Supply drop", "Two gels for the road.", 25, 5, List.of(gift));
+            check(saved.id() > 0 && saved.enabled() && saved.delivered() == 0, "a campaign is saved with no deliveries");
+            check(saved.subject().equals("Supply drop") && saved.body().equals("Two gels for the road."), "literal staff text survives unchanged");
+
+            check(campaigns.deliver(alice), "delivery reports new mail");
+            var letter = inbox(db, alice).stream().filter(m -> m.subject().endsWith("Supply drop")).findFirst().orElseThrow();
+            check(letter.subject().equals("%uplink:~Supply drop") && letter.body().equals("%uplink:~Two gels for the road."), "staff text is stored as a tainted literal inside the uplink bundle");
+            check(letter.sender().equals(" 6") && letter.nativeType() == 3, "system sender and SYSTEM mail type");
+            check(letter.crowns() == 25 && letter.energy() == 5 && letter.items().size() == 1 && letter.items().getFirst().count() == 2, "crowns, energy and the gift stack travel with the letter");
+            long expiry = letter.items().getFirst().expiresAt() - now;
+            check(expiry > 6L * 86_400_000L && expiry < 8L * 86_400_000L, "gift expiry is relative to delivery, not campaign creation");
+
+            check(!campaigns.deliver(alice) && inbox(db, alice).stream().filter(m -> m.subject().endsWith("Supply drop")).count() == 1,
+                "a second visit never duplicates the gift");
+
+            int laterAccount = db.create("Later", protection, false);
+            var laterKnight = new CharacterStore(db, laterAccount, "Later", items).create(knight("Late-Knight"));
+            int laterWorld = db.worldProfile(laterAccount, laterKnight.id(), 1).worldId();
+            check(campaigns.deliver(laterWorld), "a knight created after the campaign still receives it");
+            check(inbox(db, laterWorld).stream().anyMatch(m -> m.subject().endsWith("Supply drop")), "the late knight's inbox holds the same letter");
+
+            house.mail(aliceAccount, aliceKnight.id(), 1, 2, List.of(letter.id()));
+            var claimed = db.worldProfile(aliceAccount, aliceKnight.id(), 1);
+            check(claimed.crowns() >= 25 && claimed.energy() >= 5, "claiming credits the campaign crowns and energy");
+            var gel = claimed.items().stream().filter(i -> i.config().equals("Material/Gel Drop")).findFirst().orElseThrow();
+            check(gel.count() == 2 && gel.expiresAt() != null && gel.expiresAt() > now + 6L * 86_400_000L, "claiming grants the timed gift stack");
+
+            long revision = campaigns.list().getFirst().updated();
+            refused(() -> campaigns.save(saved.id(), revision - 1, now, now + 60_000, 6, "stale", "stale", 0, 0, List.of()));
+            refused(() -> campaigns.save(0, 0, now, now, 6, "empty window", "body", 0, 0, List.of()));
+            refused(() -> campaigns.save(0, 0, now, now + 60_000, 6, "x".repeat(51), "body", 0, 0, List.of()));
+            refused(() -> campaigns.save(0, 0, now, now + 60_000, 6, "bad gift", "body", 0, 0, List.of(new MailCampaignStore.Gift("Missing/Item", 1, false, 0))));
+            refused(() -> campaigns.save(0, 0, now, now + 60_000, 6, "too much", "body", 0, 0, List.of(new MailCampaignStore.Gift("Material/Gel Drop", 15, false, 0))));
+            check(campaigns.list().size() == 1, "refused saves leave the campaign list unchanged");
+
+            var future = campaigns.save(0, 0, now + 60_000, now + 120_000, 6, "Later gift", "Not yet.", 0, 0, List.of());
+            check(!campaigns.deliver(laterWorld), "a scheduled campaign is not delivered before its window");
+            campaigns.save(0, 0, now - 120_000, now - 60_000, 6, "Missed gift", "Too late.", 0, 0, List.of());
+            check(!campaigns.deliver(laterWorld), "an expired campaign is not delivered");
+
+            campaigns.cancel(future.id(), future.updated());
+            refused(() -> campaigns.cancel(future.id(), future.updated()));
+            check(!campaigns.deliver(laterWorld), "a cancelled campaign never delivers");
+
+            var welcome = campaigns.saveWelcome(true, 6, "Welcome aboard", "Read the rules.");
+            check(welcome.enabled() && welcome.enabledAt() > 0, "welcome mail can be enabled");
+            check(!campaigns.deliverWelcome(alice, aliceKnight.createdAt()), "existing knights do not receive a newly enabled welcome");
+            int newAccount = db.create("Newcomer", protection, false);
+            var newKnight = new CharacterStore(db, newAccount, "Newcomer", items).create(knight("New-Knight"));
+            int newWorld = db.worldProfile(newAccount, newKnight.id(), 1).worldId();
+            check(campaigns.deliverWelcome(newWorld, newKnight.createdAt()), "a knight created after enabling receives the welcome");
+            check(inbox(db, newWorld).stream().anyMatch(m -> m.subject().endsWith("Welcome aboard")), "the welcome letter is in the new inbox");
+            check(!campaigns.deliverWelcome(newWorld, newKnight.createdAt()), "welcome mail is delivered exactly once");
+            long enabledAt = welcome.enabledAt();
+            var edited = campaigns.saveWelcome(true, 5, "Updated welcome", "New instructions.");
+            check(edited.enabledAt() == enabledAt, "editing the welcome letter keeps its eligibility clock");
+            int midAccount = db.create("Middle", protection, false);
+            var midKnight = new CharacterStore(db, midAccount, "Middle", items).create(knight("Mid-Knight"));
+            int midWorld = db.worldProfile(midAccount, midKnight.id(), 1).worldId();
+            check(campaigns.deliverWelcome(midWorld, midKnight.createdAt()), "a knight created between enable and edit still receives the edited welcome");
+            check(inbox(db, midWorld).stream().anyMatch(m -> m.subject().endsWith("Updated welcome")), "the current welcome text is delivered");
+            int pendingAccount = db.create("Pending", protection, false);
+            var pendingKnight = new CharacterStore(db, pendingAccount, "Pending", items).create(knight("Pending-Knight"));
+            int pendingWorld = db.worldProfile(pendingAccount, pendingKnight.id(), 1).worldId();
+            campaigns.saveWelcome(false, 5, "Updated welcome", "New instructions.");
+            check(campaigns.deliverWelcome(pendingWorld, pendingKnight.createdAt()), "a knight created while enabled still receives the welcome after it is disabled");
+            check(inbox(db, pendingWorld).stream().anyMatch(m -> m.subject().endsWith("Updated welcome")), "the pending knight receives the text that was current while enabled");
+            int offAccount = db.create("Disabled", protection, false);
+            var offKnight = new CharacterStore(db, offAccount, "Disabled", items).create(knight("Off-Knight"));
+            int offWorld = db.worldProfile(offAccount, offKnight.id(), 1).worldId();
+            check(!campaigns.deliverWelcome(offWorld, offKnight.createdAt()), "a disabled welcome never delivers");
+
+            long direct = campaigns.sendTo(midWorld, 4, "Direct gift", "For you.", 3, 1,
+                List.of(new MailCampaignStore.Gift("Material/Gel Drop", 1, false, 0)));
+            check(direct > 0, "direct mail returns the inbox row id");
+            var directLetter = inbox(db, midWorld).stream().filter(m -> m.subject().endsWith("Direct gift")).findFirst().orElseThrow();
+            check(directLetter.crowns() == 3 && directLetter.energy() == 1 && directLetter.items().size() == 1,
+                "direct mail carries crowns, energy and gifts while the knight is offline");
+            refused(() -> campaigns.sendTo(999_999, 6, "Nowhere", "Nobody.", 0, 0, List.of()));
+            campaigns.saveWelcome(true, 5, "Updated welcome", "New instructions.");
+
+            db.write(c -> { try (var s = c.createStatement()) { s.execute("PRAGMA user_version=16"); } return null; });
+            var upgraded = SchemaFixture.upgrade(home);
+            check(version(upgraded) == Database.SCHEMA_VERSION, "schema 16 upgrades to the campaign-aware schema");
+            var upgradedHouse = new AuctionHouse(upgraded, items, rules);
+            check(upgradedHouse.campaigns().list().stream().anyMatch(c -> c.subject().equals("Supply drop")), "campaigns survive the explicit upgrade");
+            check(upgradedHouse.campaigns().welcome().enabled() && upgradedHouse.campaigns().welcome().subject().equals("Updated welcome"), "the welcome letter survives the explicit upgrade");
+            int postAccount = upgraded.create("Post", protection, false);
+            var postKnight = new CharacterStore(upgraded, postAccount, "Post", items).create(knight("Post-Knight"));
+            int postWorld = upgraded.worldProfile(postAccount, postKnight.id(), 1).worldId();
+            check(upgradedHouse.campaigns().deliver(postWorld) && inbox(upgraded, postWorld).stream().anyMatch(m -> m.subject().endsWith("Supply drop")), "a freshly upgraded database still delivers active campaigns");
+            check(inbox(upgraded, midWorld).stream().anyMatch(m -> m.subject().endsWith("Direct gift")), "direct offline mail survives the explicit upgrade");
+            System.out.println("PASS: admin mail campaigns store literal text, gifts, crowns and energy; deliver once per knight including late knights; honour windows and cancellation; send direct offline mail; deliver an optional welcome once; survive schema 16 to 17 and claim native mail");
+        } finally {
+            try (var paths = Files.walk(home)) { for (var path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path); }
+        }
+    }
+    private static Knight knight(String name) {
+        return new Knight(0, name, "Gear/Helm/Spiral Sallet (Blue)", "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 0);
+    }
+    private static List<org.tortodrone.town.AuctionState.Mail> inbox(Database db, int world) throws Exception {
+        return db.read(c -> AuctionHouse.loadMail(c, world));
+    }
+    private static int version(Database db) throws Exception {
+        return db.read(c -> { try (var s = c.createStatement(); var r = s.executeQuery("PRAGMA user_version")) { r.next(); return r.getInt(1); } });
+    }
+    private static void refused(Operation operation) throws Exception {
+        try { operation.run(); throw new AssertionError("Expected refusal"); } catch (java.io.IOException expected) { }
+    }
+    private interface Operation { void run() throws Exception; }
+}

@@ -11,7 +11,8 @@ import org.tortodrone.town.*;
 /** Durable auction escrow and mail settlement, atomically protected by SQLite's write lock. */
 public final class AuctionHouse {
     private final Database database;private final ItemCatalog items;private final TownStore town;
-    public AuctionHouse(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;town=new TownStore(database,items,rules);}
+    private final MailCampaignStore campaigns;
+    public AuctionHouse(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;town=new TownStore(database,items,rules);campaigns=new MailCampaignStore(database,items);}
     private static final int[] RARITY_FEES={10,25,50,100,200,500},HOURS={4,12,24,48,72,96,120,144,168};
     private static final float[] MULTIPLIERS={.5f,.6f,.75f,1,0,0,0,0,0,0};
     /** ServerObject mail fees from the archive: a letter costs 25, any attachment adds 75. */
@@ -171,7 +172,7 @@ public final class AuctionHouse {
         try(var s=c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,crowns,item,auction) VALUES(?,?,?,?,?,?,?)")){s.setInt(1,world);s.setLong(2,System.currentTimeMillis());s.setString(3,"%uplink:"+subject);s.setString(4,"%uplink:"+body);s.setInt(5,crowns);s.setString(6,item==null?null:encode(item));s.setLong(7,auction);s.executeUpdate();}TownStore.touch(c,world);
     }
     public TownStore.Result mail(int account,int knight,long auth,int method,List<Object> args)throws IOException{
-        return database.write(c->{var p=WorldProfiles.load(c,account,knight,auth);sweep(c);Object result=null;
+        return database.write(c->{var p=WorldProfiles.load(c,account,knight,auth);sweep(c);campaigns.deliver(c,p.worldId());Object result=null;
             if(method==5)deliver(c,p,(SessionDecoder.SentMail)args.getFirst());
             else if(method==6){long[] ids=(long[])args.getFirst();var messages=loadMail(c,p.worldId());result=ids==null?messages:messages.stream().filter(m->java.util.stream.LongStream.of(ids).anyMatch(id->id==m.id())).toList();}
             else if(method==11){long[] ids=(long[])args.getFirst();for(long id:ids)try(var s=c.prepareStatement("UPDATE town_mail SET is_read=1 WHERE id=? AND world_id=?")){s.setLong(1,id);s.setInt(2,p.worldId());s.executeUpdate();}}
@@ -245,6 +246,12 @@ public final class AuctionHouse {
         }
         TownStore.touch(c,target.world());
     }
+    /** Materialises active admin mail campaigns before serving a knight's inbox. */
+    public boolean deliverCampaigns(int world)throws IOException{return campaigns.deliver(world);}
+    /** Delivers the optional welcome letter to a knight created after it was enabled. */
+    public boolean deliverWelcome(int world,long createdAt)throws IOException{return campaigns.deliverWelcome(world,createdAt);}
+    /** WebUI access to campaign definitions and delivery counts. */
+    public MailCampaignStore campaigns(){return campaigns;}
     static List<AuctionState.Mail> loadMail(Connection c,int world)throws SQLException,IOException {
         var messages=new ArrayList<AuctionState.Mail>();
         try(var s=c.prepareStatement("SELECT m.*,r.value AS friend_world,k.name AS friend_name,s.name AS sender_name FROM town_mail m LEFT JOIN metadata r ON r.key='social.request.'||m.id LEFT JOIN world_characters fw ON fw.world_id=r.value LEFT JOIN knights k ON k.account_id=fw.account_id AND k.id=fw.knight_id LEFT JOIN world_characters sw ON sw.world_id=m.sender LEFT JOIN knights s ON s.account_id=sw.account_id AND s.id=sw.knight_id WHERE m.world_id=? ORDER BY m.sent DESC,m.id DESC LIMIT 500")) {
@@ -259,7 +266,7 @@ public final class AuctionHouse {
         }
         return List.copyOf(messages);
     }
-    private static String encodeItems(List<WorldProfile.Item> items)throws IOException {
+    static String encodeItems(List<WorldProfile.Item> items)throws IOException {
         var encoded=new ArrayList<String>(items.size());
         for(var item:items)encoded.add(encode(item));
         return Json.stringify(encoded);
