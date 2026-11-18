@@ -940,7 +940,11 @@ final class WorldSession implements AutoCloseable {
                 ||!(args.get(0) instanceof Integer choice)||!(args.get(1) instanceof SessionDecoder.Listener listener)
                 ||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid conversation response");
         if(conversationResponses.contains(listener.requestId())){output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;}
-        if(conversation==null)throw new SessionDecoder.Rejected("No active conversation");
+        // A response can cross the native 1.0-unit auto-close: the player keeps walking
+        // until the panel appears and the queued confirm lands after the server dropped
+        // the conversation. ProjectX answers that listener with m.internal_error rather
+        // than treating it as a protocol violation, so never disconnect for it.
+        if(conversation==null){output.send(()->codec.invocationFailure(oid,listener.requestId(),"m.internal_error"));return true;}
         var responses=conversation.nodes().get(conversationNode).responses();
         if(choice<0||choice>=responses.size()){output.send(()->codec.invocationFailure(oid,listener.requestId(),"Invalid conversation choice"));return true;}
         var response=responses.get(choice);String destination=response.destination();

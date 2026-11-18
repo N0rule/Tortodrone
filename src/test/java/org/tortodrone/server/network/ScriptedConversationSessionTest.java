@@ -32,7 +32,7 @@ public final class ScriptedConversationSessionTest {
             var content=new SceneContent(List.of(area,boss,door),original.content().scales(),Map.of(id,definition),original.content().stats(),Map.of(),Map.of(),original.content().statuses());
             var map=new SceneCatalog.MapScene(900001,16777217,"%town:m.haven","Fixture",original.image(),"town",original.version(),original.spawnX(),original.spawnY(),0,1,original.collision(),original.layout(),ScenePortals.EMPTY,content);
             var maps=new TreeMap<Integer,SceneCatalog.MapScene>();maps.put(map.id(),map);var registry=new SceneRegistry(SceneCatalog.of(maps,map.id()));
-            var socket1=new DiscardSocket();var socket2=new DiscardSocket();
+            var socket1=new RecordingSocket();var socket2=new RecordingSocket();
             try(var output1=new SessionOutput(socket1);var output2=new SessionOutput(socket2);
                     var first=new WorldSession(socket1,firstCharacters,output1,new SessionCodec(),1001,1,message->{},registry);
                     var second=new WorldSession(socket2,secondCharacters,output2,new SessionCodec(),1002,1,message->{},registry)){
@@ -52,18 +52,20 @@ public final class ScriptedConversationSessionTest {
                 int afterDuplicate=registry.entry().simulation().snapshot().timestamp();
                 await(()->registry.entry().simulation().snapshot().timestamp()>afterDuplicate);
                 check(opened(registry),"duplicate terminal request cannot toggle progression twice");
-                refuse(()->first.conversationInvocation(response(oid,0,12)));
+                check(first.conversationInvocation(response(oid,0,12)),"a response that crosses the native close is answered, not a protocol disconnect");
+                await(()->socket1.contains("m.internal_error"));
                 second.subscribe((short)2);second.entered();await(()->"first".equals(node(second)));
                 check(node(first)==null,"delayed Activator conversation stays with the entering knight");
                 await(()->node(second)==null);
-                refuse(()->second.conversationInvocation(response(oid,0,20)));
+                check(second.conversationInvocation(response(oid,0,20)),"scene cleanup leaves a late response answered, not a protocol disconnect");
+                await(()->socket2.contains("m.internal_error"));
                 check(opened(registry),"scene cleanup closes the native panel without answering it or repeating encounter actions");
                 check(registry.entry().simulation().snapshot().actors().stream().noneMatch(actor->actor.id()==0),"entry presentation never creates a phantom actor");
                 first.unsubscribe();check(!first.conversationInvocation(response(oid+1,0,13)),"departed ownership cannot target another scene");
             }
             check(registry.entry().simulation().playerCount()==0,"disconnect cleans conversation ownership and scene occupants");
         }finally{try(var paths=Files.walk(home)){for(var file:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(file);}}
-        System.out.println("PASS: authored sensor -> delayed Activator dialogue -> native response -> scene action and delayed pawn ClearDialog, ownership, invalid choice, duplicate response/terminal and cleanup");
+        System.out.println("PASS: authored sensor -> delayed Activator dialogue -> native response -> scene action and delayed pawn ClearDialog, ownership, invalid choice, duplicate response/terminal, late responses and cleanup");
     }
     private static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
     private static SessionDecoder.Invocation response(int oid,int choice,int request){return new SessionDecoder.Invocation(oid,SceneConversation.SERVICE,1,List.of(choice,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)request)));}
@@ -72,5 +74,9 @@ public final class ScriptedConversationSessionTest {
     private static void await(Check condition)throws Exception{long until=System.nanoTime()+4_000_000_000L;while(System.nanoTime()<until){if(condition.ok())return;Thread.sleep(10);}throw new AssertionError("Timed out waiting for scripted conversation state");}
     private static void refuse(Operation operation)throws Exception{try{operation.run();throw new AssertionError("Expected conversation refusal");}catch(IOException expected){}}
     private interface Operation{void run()throws Exception;}private interface Check{boolean ok()throws Exception;}
-    private static final class DiscardSocket extends Socket{@Override public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}}
+    private static final class RecordingSocket extends Socket {
+        private final ByteArrayOutputStream bytes=new ByteArrayOutputStream();
+        @Override public OutputStream getOutputStream(){return bytes;}
+        boolean contains(String text){return bytes.toString(java.nio.charset.StandardCharsets.ISO_8859_1).contains(text);}
+    }
 }
