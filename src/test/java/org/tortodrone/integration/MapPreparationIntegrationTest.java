@@ -57,14 +57,15 @@ public final class MapPreparationIntegrationTest {
             "town/recipes.yml","11c508ef49d7055fbd6e750a124ec18449c08693a97ced903dd31c9a55ab7240").entrySet())
             check(Arrays.asList(ownership.getProperty("owned."+entry.getKey(),"").split(",")).contains(entry.getValue()),"pre-slicer default checksum retained: "+entry.getKey());
         Path file=output.resolve("_internal/item-bindings.json");
-        String previous=Files.readString(file);
-        // Retain the published field order; a JSON reserialization changes its checksum.
-        for(String id:List.of("botulent_slicer","botulent_slicer_recipe","toxic_slicer","toxic_slicer_recipe","queasinart","queasinart_recipe","ice_axe_tech_azure")) {
-            String removed=previous.replaceFirst("\""+id+"\":\\{[^{}]*\\},","");
-            check(!removed.equals(previous),"new binding exists: "+id);previous=removed;
+        String previous;
+        try(var input=new java.util.zip.GZIPInputStream(Objects.requireNonNull(
+                MapPreparationIntegrationTest.class.getResourceAsStream("/legacy/item-bindings-pre-slicer.json.gz"),"legacy binding fixture"))) {
+            previous=new String(input.readAllBytes(),java.nio.charset.StandardCharsets.UTF_8);
         }
+        for(String id:List.of("botulent_slicer","botulent_slicer_recipe","toxic_slicer","toxic_slicer_recipe","queasinart","queasinart_recipe","ice_axe_tech_azure"))
+            check(!previous.contains("\""+id+"\":"),"historical fixture predates new binding: "+id);
         String digest=HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(previous.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-        check(digest.equals("3c32e999f4d12ddb1d4bcb0441c7de8a1ef0acbf027eb8619873f0370692fd62"),"fixture exactly reconstructs the published pre-slicer bindings");
+        check(digest.equals("3c32e999f4d12ddb1d4bcb0441c7de8a1ef0acbf027eb8619873f0370692fd62"),"fixture is exactly the published pre-slicer bindings");
         Files.writeString(file,previous);
         try {ContentManager.load(output.getParent());throw new AssertionError("Mixed old bindings and new YAML accepted");}
         catch(IOException expected){check(expected.getMessage().contains("botulent_slicer: unknown item ID"),"reproduces reported startup failure");}

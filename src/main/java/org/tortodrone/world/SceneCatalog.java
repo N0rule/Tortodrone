@@ -56,6 +56,8 @@ public final class SceneCatalog {
     public MapScene entry(){return entryScene;}
     /** Counts without forcing lazy bodies. */
     public int sceneCount(){return paths!=null?paths.size():scenes.size();}
+    /** True when the id is registered, even if its body has not been loaded yet. */
+    public boolean contains(int id){return paths!=null?paths.containsKey(id):scenes.containsKey(id);}
     public int loadedCount(){synchronized(scenes){return scenes.size();}}
     public boolean isEmpty(){return sceneCount()==0;}
     /** Town templates only; a lazy catalog loads those few and leaves dungeons on disk. */

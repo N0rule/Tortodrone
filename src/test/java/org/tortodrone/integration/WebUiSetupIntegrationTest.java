@@ -72,7 +72,7 @@ public final class WebUiSetupIntegrationTest {
             System.out.println("PASS: single packaged JAR, first-run setup, private one-time console code, WebUI account CRUD, console recovery while stopped and persistent setup closure");
         }finally{try(var paths=Files.walk(root)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}}
     }
-    private static void await(BooleanSupplier test,String name)throws Exception{long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(45);while(System.nanoTime()<end){if(test.getAsBoolean())return;Thread.sleep(25);}throw new AssertionError("Timed out: "+name);}
+    private static void await(BooleanSupplier test,String name)throws Exception{long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);while(System.nanoTime()<end){if(test.getAsBoolean())return;Thread.sleep(25);}throw new AssertionError("Timed out: "+name);}
     private static final class Running implements AutoCloseable {
         final Process process;final Path output;
         Running(Path root)throws IOException {

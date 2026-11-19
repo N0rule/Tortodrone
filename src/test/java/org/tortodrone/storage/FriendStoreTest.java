@@ -15,14 +15,14 @@ public final class FriendStoreTest {
         Path home=Files.createTempDirectory("tortodrone-friends-");
         try {
             var content=ContentManager.load(Path.of("."));var db=new Database(home,true);var secret=new Passwords.Protection(new byte[16],new byte[32]);
-            for(String name:List.of("Alice","Bob","Carol")){int account=db.create(name,secret,false);new CharacterStore(db,account,name,content.items()).create(knight(name));}
+            for(String name:List.of("Alice","Bobby","Carol")){int account=db.create(name,secret,false);new CharacterStore(db,account,name,content.items()).create(knight(name));}
             var friends=new FriendStore(db);var mail=new AuctionHouse(db,content.items(),content.town());
-            friends.session(1,1,1);friends.request(1,1,1,"bOb","Hello","Play together? 🌍\nMeet in Haven.");
+            friends.session(1,1,1);friends.request(1,1,1,"bObBy","Hello","Play together? 🌍\nMeet in Haven.");
             var request=inbox(db,2).getFirst();
             check(request.friendWorld()==1&&request.friendName().equals("Alice")&&request.nativeType()==1&&request.crowns()==0&&request.item()==null,"offline request is native friend mail without rewards");
             check(friends.list(1,1,1).isEmpty()&&friends.list(2,1,1).isEmpty(),"request alone does not add either friend");
             var before=db.worldProfile(2,1,1);
-            refused(()->friends.request(1,1,1,"Bob","Again",""));refused(()->friends.request(1,1,1,"Alice","Self",""));
+            refused(()->friends.request(1,1,1,"Bobby","Again",""));refused(()->friends.request(1,1,1,"Alice","Self",""));
             refused(()->friends.request(1,1,99,"Carol","Stale",""));refused(()->friends.request(1,1,1,"Missing","Missing",""));
             refused(()->friends.request(1,1,1,"Carol","Bad","\ud800"));refused(()->friends.list(1,2,1));
             refused(()->mail.mail(3,1,1,2,List.of(request.id())));
@@ -37,15 +37,15 @@ public final class FriendStoreTest {
             }
             check(friends.list(1,1,1).getFirst().world()==2&&friends.list(2,1,1).getFirst().world()==1,"accept adds both sides atomically");
             check(new FriendStore(new Database(home,true)).list(2,1,1).getFirst().lastSession()>0,"friends and session timestamps survive reopen");
-            friends.remove(1,1,1,"bOB");refused(()->mail.mail(2,1,1,2,List.of(request.id())));
+            friends.remove(1,1,1,"bOBBY");refused(()->mail.mail(2,1,1,2,List.of(request.id())));
             check(friends.list(1,1,1).isEmpty()&&friends.list(2,1,1).isEmpty(),"removal is mutual and old accepted mail cannot recreate it");
-            friends.request(1,1,1,"Bob","Decline","");long declined=inbox(db,2).getFirst().id();mail.mail(2,1,1,4,List.of(declined));
+            friends.request(1,1,1,"Bobby","Decline","");long declined=inbox(db,2).getFirst().id();mail.mail(2,1,1,4,List.of(declined));
             check(inbox(db,2).stream().noneMatch(m->m.id()==declined)&&friends.list(2,1,1).isEmpty(),"deleting an unaccepted friend request declines without accepting");
-            friends.request(1,1,1,"Bob","Cross one","");friends.request(2,1,1,"Alice","Cross two","");
+            friends.request(1,1,1,"Bobby","Cross one","");friends.request(2,1,1,"Alice","Cross two","");
             long crossed=inbox(db,1).getFirst().id();mail.mail(1,1,1,1,List.of(crossed));
             check(inbox(db,1).isEmpty()&&inbox(db,2).stream().allMatch(AuctionState.Mail::claimed),"accept-and-delete removes current mail and claims crossed requests");
             friends.request(1,1,1,"Carol","Pending","");
-            db.password("Alice",secret,1);refused(()->friends.remove(1,1,1,"Bob"));refused(()->friends.request(1,1,1,"Carol","Revoked",""));
+            db.password("Alice",secret,1);refused(()->friends.remove(1,1,1,"Bobby"));refused(()->friends.request(1,1,1,"Carol","Revoked",""));
             check(friends.snapshot().authentication().get(1)==2L,"batched snapshots carry current authentication revisions");
             db.delete("Alice",1);
             check(friends.list(2,1,1).isEmpty()&&inbox(db,3).isEmpty(),"account deletion clears mutual friendships and its pending requests");

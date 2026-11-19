@@ -60,7 +60,7 @@ public final class ContentManagerTest {
             failure(()->{var p=MapYaml.prepare(npc.getParent().getParent(),home.resolve("content/shared"));SceneContent.load(p.content(),p.descriptor().getProperty("scene-sha256"));},"Broken conversation jump");
             Files.writeString(npc,original);
             Path portal=home.resolve("content/maps/advanced_training/portals.yml");String portals=Files.readString(portal);
-            Files.writeString(portal,portals.replace("destination: haven","destination: absent_map"));failure(()->ContentManager.load(home),"absent_map");Files.writeString(portal,portals);
+            Files.writeString(portal,portals.replace("destination: haven","destination: absent_map"));failure(()->loadAll(home),"absent_map");Files.writeString(portal,portals);
             Path nativeFile=home.resolve("content/maps/advanced_training/native/bindings.json");String nativeText=Files.readString(nativeFile);Files.writeString(nativeFile,nativeText+" ");failure(()->MapYaml.prepare(npc.getParent().getParent(),home.resolve("content/shared")),"fingerprint");Files.writeString(nativeFile,nativeText);
             Path gear=home.resolve("content/items/materials.yml");var yaml=Yaml.read(gear);var definitions=Yaml.map(yaml.get("items"),"items");var first=definitions.entrySet().iterator().next();var item=Yaml.map(first.getValue(),"item");item.put("stockId","invalid");Files.delete(gear);Yaml.write(gear,yaml);failure(()->ContentManager.load(home),"stockId");item.remove("stockId");Files.delete(gear);Yaml.write(gear,yaml);
             check(baseline.items().entries().size()==9355&&baseline.scenes().scene(294).content().conversations().get(konway.actor()).equals(konway),"failed loads never mutate an existing snapshot");
@@ -77,5 +77,14 @@ public final class ContentManagerTest {
         }finally{ContentFixture.delete(home);}
     }
     private interface Action{void run()throws Exception;}
+    /** Startup is lazy; force every body so a release snapshot proves its full graph. */
+    private static void loadAll(Path home)throws IOException {
+        var registry=ContentManager.load(home);
+        try {registry.scenes().scenes();}
+        catch(java.io.UncheckedIOException failure){
+            if(failure.getCause() instanceof IOException invalid)throw invalid;
+            throw failure;
+        }
+    }
     private static void failure(Action action,String message)throws Exception {try{action.run();throw new AssertionError("Invalid content accepted: "+message);}catch(IOException expected){check(expected.toString().toLowerCase(Locale.ROOT).contains(message.toLowerCase(Locale.ROOT)),"actionable error: "+expected);}}
 }

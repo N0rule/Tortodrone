@@ -22,9 +22,9 @@ public final class BoxExpansionTest {
                 check(Math.abs(value-mean)<=Math.max(0.000002,0.00002*mean),"archived expected quantity: "+row.getKey()+" / "+reward.getKey()+" "+value+" vs "+mean);
             }
         }
-        check(boxes.entries().stream().filter(BoxDefinition::enabled).count()==243,"every indexed real box has an explicit approximation");
+        check(boxes.entries().stream().filter(BoxDefinition::enabled).count()==247,"every indexed real box has an explicit approximation");
         check(boxes.entries().stream().filter(b->!b.enabled()).count()==7,"internal templates and empty Mystery remain disabled");
-        System.out.println("PASS: 223 archived graphs analytically match independent reward frequencies; 243 real boxes enabled, seven templates/placeholders disabled");
+        System.out.println("PASS: 223 archived graphs analytically match independent reward frequencies; 247 real boxes enabled, seven templates/placeholders disabled");
     }
     private static void group(BoxDefinition box,String name,double p,Map<String,Double> out) {
         var g=box.groups().get(name);double probability=p*g.rolls()*g.chance()/1_000_000d;

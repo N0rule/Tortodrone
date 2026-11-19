@@ -16,7 +16,7 @@ public final class BoxCatalogTest {
         try {
             BoxFixture.write(home);var file=home.resolve("loot/boxes/test.yml");var original=Files.readString(file);
             var stock=BoxCatalog.load(Path.of("content"),items);
-            check(stock.entries().size()==250&&stock.entries().stream().filter(BoxDefinition::enabled).count()==243,"all stock boxes classified; 243 explicit approximations enabled");
+            check(stock.entries().size()==254&&stock.entries().stream().filter(BoxDefinition::enabled).count()==247,"all stock boxes classified; 247 explicit approximations enabled");
             check(stock.entries().stream().filter(BoxDefinition::enabled).allMatch(b->b.status()==BoxDefinition.Status.APPROXIMATE),"estimates never claim verified odds");
             check(stock.entries().stream().filter(b->b.status()==BoxDefinition.Status.INCOMPLETE||b.status()==BoxDefinition.Status.UNSUPPORTED||b.status()==BoxDefinition.Status.UNRESEARCHED).noneMatch(BoxDefinition::enabled),"unknown and incomplete pools remain closed");
             for(var edit:List.<Consumer<Map<String,Object>>>of(
@@ -61,7 +61,7 @@ public final class BoxCatalogTest {
             box.put("guaranteed",List.of(BoxFixture.item("lucky_prize_box",1,"unbound")));
             map(map(data.get("boxes"),"boxes").get("lucky_prize_box"),"prize").put("guaranteed",List.of(BoxFixture.item("lockbox",1,"unbound")));
             Files.delete(file);write(file,data);refused(()->BoxCatalog.load(home,items));
-            System.out.println("PASS: 250 audited stock definitions with explicit approximation status, readable IDs, key parity, quantities/binding/classes, probabilities, duplicate/cyclic graphs and deterministic weighted boundaries");
+            System.out.println("PASS: 254 audited stock definitions with explicit approximation status, readable IDs, key parity, quantities/binding/classes, probabilities, duplicate/cyclic graphs and deterministic weighted boundaries");
         }finally{org.tortodrone.support.ContentFixture.delete(home);}
     }
     @FunctionalInterface private interface Work{void run()throws Exception;}

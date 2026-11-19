@@ -19,7 +19,7 @@ public final class ReadyRoomMailSessionTest {
         Path root=Files.createTempDirectory("tortodrone-ready-room-mail-");
         try{
             var content=ContentManager.load(Path.of("."));var scenes=content.createScenes();var db=new Database(root,false);
-            try(var alice=ready(db,content.items(),scenes,"Alice");var bob=person(db,content.items(),scenes,"Bob")){
+            try(var alice=ready(db,content.items(),scenes,"Alice");var bob=person(db,content.items(),scenes,"Bobby")){
                 // The panel's opening request (null ids) against an empty mailbox.
                 alice.world.auctionInvocation(new SessionDecoder.Invocation(3,SessionCodec.UPLINK_SERVICE,6,Arrays.asList((Object)null,result())));
                 // Mail reaches the Room knight while staged; loading it is the reported regression.
@@ -29,8 +29,8 @@ public final class ReadyRoomMailSessionTest {
                 var loaded=alice.socket.await("Town greeting");
                 check(!loaded.contains("Enter a scene first"),"Ready Room mail loads with a native result, not a scene failure");
                 // Native method 1 from the Ready Room: the social panel's request dialog.
-                alice.world.friendInvocation(new SessionDecoder.Invocation(3,SessionCodec.SOCIAL_SERVICE,1,List.of("Bob","Ready subject","Ready Room body",confirm())));
-                var bobProfile=bob.chars.worldProfile("Bob",1);long foreign=bobProfile.town().mail().getFirst().id();
+                alice.world.friendInvocation(new SessionDecoder.Invocation(3,SessionCodec.SOCIAL_SERVICE,1,List.of("Bobby","Ready subject","Ready Room body",confirm())));
+                var bobProfile=bob.chars.worldProfile("Bobby",1);long foreign=bobProfile.town().mail().getFirst().id();
                 // Ownership: another knight's mail is never readable, by id or by enumeration.
                 alice.world.auctionInvocation(new SessionDecoder.Invocation(3,SessionCodec.UPLINK_SERVICE,6,List.of(new long[]{foreign},result())));
                 alice.world.auctionInvocation(new SessionDecoder.Invocation(3,SessionCodec.UPLINK_SERVICE,6,Arrays.asList((Object)null,result())));
@@ -41,7 +41,7 @@ public final class ReadyRoomMailSessionTest {
                 // Native method 8 from the Ready Room after the friend request is accepted.
                 bob.chars.auction(content.town()).mail(bobProfile.accountId(),bobProfile.knightId(),1,2,List.of(foreign));
                 check(alice.chars.friends().list(1,1,1).size()==1&&bob.chars.friends().list(2,1,1).size()==1,"request and acceptance create mutual friendship");
-                alice.world.friendInvocation(new SessionDecoder.Invocation(3,SessionCodec.SOCIAL_SERVICE,8,List.of("Bob",confirm())));
+                alice.world.friendInvocation(new SessionDecoder.Invocation(3,SessionCodec.SOCIAL_SERVICE,8,List.of("Bobby",confirm())));
                 check(alice.chars.friends().list(1,1,1).isEmpty()&&bob.chars.friends().list(2,1,1).isEmpty(),"native method 8 removes both edges from the Ready Room");
                 check(!alice.socket.written.contains("Enter a scene first"),"mail and social edits from the Ready Room never hit the scene gate");
                 // The auction station stays bound to its town scene; the stock gate text remains.

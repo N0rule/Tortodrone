@@ -16,7 +16,8 @@ public final class WebGearTest {
     public static void main(String[] args)throws Exception {
         var content=ContentManager.load(Path.of("."));var root=Files.createTempDirectory("web-gear-test-");var data=root.resolve("data");
         try(var accounts=new AccountStore(data,false,content.items(),content.town());var log=new ServerLog(data.resolve("logs"));var service=new AdminService(accounts,new ServerControl("fixture",data),log,root,content)) {
-            var unsupported=(AdminViews.Item)service.read("item",new AdminService.Input(Map.of("config","Weapon/Bomb/Big Angry Bomb")));
+            String unsupportedConfig=content.items().entries().stream().filter(e->e.config().startsWith("Weapon/")&&!e.grantable()).findFirst().orElseThrow().config();
+            var unsupported=(AdminViews.Item)service.read("item",new AdminService.Input(Map.of("config",unsupportedConfig)));
             check(!unsupported.grantable()&&unsupported.compatibleSlots().isEmpty(),"unsupported native weapon remains inspectable without inventing a slot");
             var uv=List.of("Weapon/Attack Speed 4","Weapon/Beast Damage 4","Weapon/Charge Time 4");
             var preview=preview(service,BAN,4,uv);String display=Json.stringify(preview.get("effects"));

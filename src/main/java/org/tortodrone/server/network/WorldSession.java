@@ -1437,7 +1437,11 @@ final class WorldSession implements AutoCloseable {
                     alchemy=selectAlchemy();if(alchemy!=null){entrance=alchemy.entrance();map=scene.map();}
                 }
                 if(destination.equals("haven"))map=scenes.catalog().entry();
-                if(map==null)for(var candidate:scenes.catalog().towns())if(candidate.name().equals("%town:m."+destination)||candidate.id()==switch(destination){case "training"->294;case "lab"->30893;case "hoh"->318;default->-1;}){map=candidate;break;}
+                if(map==null){
+                    int candidate=switch(destination){case "training"->294;case "lab"->30893;case "hoh"->318;default->-1;};
+                    if(candidate>0&&scenes.catalog().contains(candidate))map=scenes.catalog().scene(candidate);
+                    if(map==null)map=scenes.catalog().townByName("%town:m."+destination);
+                }
                 if(map==null&&destination.matches("[a-zA-Z0-9_-]{1,96}"))for(var candidate:scenes.catalog().towns()){
                     String prefix="destination."+destination+".";var stats=candidate.content().stats();if(!stats.containsKey(prefix+"x"))continue;
                     float x=stats.get(prefix+"x"),y=stats.get(prefix+"y");if(!candidate.collision().walkable(x,y))continue;

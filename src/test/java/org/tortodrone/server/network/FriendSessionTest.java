@@ -19,36 +19,36 @@ public final class FriendSessionTest {
         Path root=Files.createTempDirectory("tortodrone-friend-session-");
         try{
             var content=ContentManager.load(Path.of("."));var scenes=content.createScenes();var db=new Database(root,false);
-            try(var alice=person(db,content.items(),scenes,"Alice");var bob=person(db,content.items(),scenes,"Bob");var other=person(db,content.items(),scenes,"Other")){
+            try(var alice=person(db,content.items(),scenes,"Alice");var bob=person(db,content.items(),scenes,"Bobby");var other=person(db,content.items(),scenes,"Other")){
                 check(alice.world.feedInvocation(new SessionDecoder.Invocation(3,11,1,List.of(true,0L,result()))),"current feed request is answered");
                 check(alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,2,List.of(1,List.of(),result()))),"current party-suggestion request is answered");
                 check(alice.world.eventLogInvocation(new SessionDecoder.Invocation(3,SessionCodec.EVENT_LOG_SERVICE,2,List.of())),"current event-log handle is accepted");
-                alice.world.friendInvocation(joinRpc("Bob"));alice.socket.await("m.internal_error");
+                alice.world.friendInvocation(joinRpc("Bobby"));alice.socket.await("m.internal_error");
                 check(alice.chars.friends().list(1,1,1).isEmpty(),"join cannot create or remove a friendship");
-                alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,1,List.of("Bob","Hello","Friend request",confirm())));
-                var mail=bob.chars.worldProfile("Bob",1).town().mail().getFirst();
+                alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,1,List.of("Bobby","Hello","Friend request",confirm())));
+                var mail=bob.chars.worldProfile("Bobby",1).town().mail().getFirst();
                 bob.chars.auction(content.town()).mail(2,1,1,2,List.of(mail.id()));
                 check(alice.chars.friends().list(1,1,1).size()==1,"native request and acceptance create mutual friendship");
                 var town=scenes.catalog().scenes().stream().filter(m->m.town()&&m.id()!=scenes.catalog().entry().id()).findFirst().orElseThrow();
                 bob.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of(destination(town),new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));
-                alice.world.friendInvocation(joinRpc("Bob"));alice.socket.await("changing scenes");
+                alice.world.friendInvocation(joinRpc("Bobby"));alice.socket.await("changing scenes");
                 move(bob,town);
-                var presence=WorldSession.friendPresence(db.file());int bobWorld=bob.chars.worldProfile("Bob",1).worldId();
+                var presence=WorldSession.friendPresence(db.file());int bobWorld=bob.chars.worldProfile("Bobby",1).worldId();
                 check(presence.get(bobWorld).instance()>0&&presence.get(bobWorld).zone()==town.zone(),"Town presence includes joinable native instance and zone");
-                alice.world.friendInvocation(joinRpc("Bob"));
+                alice.world.friendInvocation(joinRpc("Bobby"));
                 var pending=WorldSession.class.getDeclaredField("portalMove");pending.setAccessible(true);
                 check(pending.get(alice.world)!=null,"friend join starts native forced travel; queued="+alice.socket.frames);
                 check(alice.chars.friends().list(1,1,1).size()==1,"method 2 joins without unfriending");move(alice,town);
                 check(alice.world.ownsScene(scenes.destination(town.id(),bobWorld).oid()),"friend travel reaches the exact Town instance");
-                alice.world.friendInvocation(joinRpc("Bob"));
+                alice.world.friendInvocation(joinRpc("Bobby"));
                 check(alice.world.ownsScene(scenes.destination(town.id(),bobWorld).oid()),"same-scene join keeps the scene active");
                 // Native method 4: PlayerObject.Nq() is the authorization; friendship is not.
                 move(alice,scenes.catalog().entry());
-                String secret="Bob,"+String.format("%016x",bob.world.externalSecret());
-                alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,4,List.of("Bob,"+String.format("%016x",bob.world.externalSecret()^1),false,confirm())));
+                String secret="Bobby,"+String.format("%016x",bob.world.externalSecret());
+                alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,4,List.of("Bobby,"+String.format("%016x",bob.world.externalSecret()^1),false,confirm())));
                 String refusedSecret=alice.socket.await("%social:m.friend_unjoinable");
                 check(!refusedSecret.contains("~%social:"),"qualified social failures keep their bundle prefix");
-                alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,4,List.of("Bob,not-hex",false,confirm())));alice.socket.await("m.internal_error");
+                alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,4,List.of("Bobby,not-hex",false,confirm())));alice.socket.await("m.internal_error");
                 alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,4,List.of("Alice,"+String.format("%016x",alice.world.externalSecret()),false,confirm())));alice.socket.await("m.friend_self");
                 alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,4,List.of(secret,false,confirm())));
                 check(pending.get(alice.world)!=null,"secret join starts native forced travel");
@@ -60,7 +60,7 @@ public final class FriendSessionTest {
                 move(bob,training);
                 var trainingPresence=WorldSession.friendPresence(db.file()).get(bobWorld);
                 check(trainingPresence.instance()>0,"shared Training room publishes the instance that enables native Join");
-                alice.world.friendInvocation(joinRpc("Bob"));
+                alice.world.friendInvocation(joinRpc("Bobby"));
                 check(pending.get(alice.world)!=null,"friend join starts native forced travel into Training");
                 move(alice,training);
                 check(alice.world.ownsScene(trainingPresence.instance()),"friend join reaches the exact Training party instance");
@@ -71,12 +71,12 @@ public final class FriendSessionTest {
                 check(alice.world.lookingForGroup(),"party-finder toggle publishes its native lfg attribute");
                 alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,6,List.of(false,difficulty,confirm())));alice.socket.await("lfg");
                 check(!alice.world.lookingForGroup(),"party-finder toggle clears the native lfg attribute");
-                other.world.friendInvocation(joinRpc("Bob"));other.socket.await("m.internal_error");
+                other.world.friendInvocation(joinRpc("Bobby"));other.socket.await("m.internal_error");
                 bob.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("lab",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));move(bob,scenes.catalog().scene(30893));
-                alice.world.friendInvocation(joinRpc("Bob"));alice.socket.await("friend_unjoinable");
+                alice.world.friendInvocation(joinRpc("Bobby"));alice.socket.await("friend_unjoinable");
                 check(WorldSession.friendPresence(db.file()).get(bobWorld).instance()==0,"private interior is published as unjoinable");
-                bob.world.close();alice.world.friendInvocation(joinRpc("Bob"));alice.socket.await("friend_unjoinable");
-                alice.world.friendInvocation(rpc(8,"Bob"));
+                bob.world.close();alice.world.friendInvocation(joinRpc("Bobby"));alice.socket.await("friend_unjoinable");
+                alice.world.friendInvocation(rpc(8,"Bobby"));
                 check(alice.chars.friends().list(1,1,1).isEmpty()&&bob.chars.friends().list(2,1,1).isEmpty(),"native method 8 removes both friendship edges");
                 db.password("Other",new Passwords.Protection(new byte[16],new byte[32]),3);
                 other.world.friendInvocation(rpc(8,"Alice"));other.socket.await("reconnect");

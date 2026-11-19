@@ -70,18 +70,18 @@ public final class SparseContentTest {
             ContentFixture.copy(Path.of("content"),root.resolve("content"));ContentFixture.copy(Path.of("config"),root.resolve("config"));
             for(String resource:List.of("town-definitions.json","statuses.json")) {
                 Path nativeResource=root.resolve("content/_internal/"+resource),saved=root.resolve("saved-"+resource);
-                Files.move(nativeResource,saved);refused(()->ContentManager.load(root));Files.move(saved,nativeResource);
+                Files.move(nativeResource,saved);refused(()->loadAll(root));Files.move(saved,nativeResource);
             }
             Path townDefaults=root.resolve("content/_internal/town-definitions.json");String originalTown=Files.readString(townDefaults);
             var townData=Yaml.map(Json.parseCatalog(originalTown),"Town defaults");var itemRows=new ArrayList<Object>(Yaml.list(townData.get("items"),"native items"));itemRows.add(itemRows.getFirst());townData.put("items",itemRows);
-            Files.writeString(townDefaults,Json.stringify(townData));refused(()->ContentManager.load(root));Files.writeString(townDefaults,originalTown);
-            Path actorFile=root.resolve("content/maps/advanced_training/actors.yml");var actors=new LinkedHashMap<String,Object>();actors.put("made_up_actor",Map.of("x",1));write(actorFile,Map.of("actors",actors));refused(()->ContentManager.load(root));
+            Files.writeString(townDefaults,Json.stringify(townData));refused(()->loadAll(root));Files.writeString(townDefaults,originalTown);
+            Path actorFile=root.resolve("content/maps/advanced_training/actors.yml");var actors=new LinkedHashMap<String,Object>();actors.put("made_up_actor",Map.of("x",1));write(actorFile,Map.of("actors",actors));refused(()->loadAll(root));
             Path bindingFile=root.resolve("content/maps/advanced_training/native/bindings.json");var bindings=Yaml.map(Json.parseCatalog(Files.readString(bindingFile)),"bindings");var aliases=Yaml.map(bindings.get("actorAliases"),"aliases");var defaults=Yaml.map(bindings.get("actorDefaults"),"defaults");
             var alias=aliases.entrySet().stream().filter(e->{try{return Yaml.map(defaults.get(e.getValue()),"defaults").containsKey("child.health");}catch(IOException failure){throw new UncheckedIOException(failure);}}).findFirst().orElseThrow();
             actors.clear();actors.put(alias.getKey(),Map.of("monster",Map.of("health",33,"attackIntervalMs",3099),"position",Map.of("x",-17.5,"y",13.5)));write(actorFile,Map.of("actors",actors));
             var prepared=MapYaml.prepare(actorFile.getParent(),root.resolve("content/shared"));check(prepared.content().getProperty("entry."+alias.getValue()+".child.health").equals("33")&&prepared.content().getProperty("entry."+alias.getValue()+".child.attack-interval").equals("3099"),"semantic sparse controls retain engine units");
-            actors.put(alias.getValue().toString(),Map.of());write(actorFile,Map.of("actors",actors));refused(()->ContentManager.load(root));
-            write(actorFile,Map.of("actors",Map.of(alias.getKey(),Map.of("config","Forged/Identity"))));refused(()->ContentManager.load(root));
+            actors.put(alias.getValue().toString(),Map.of());write(actorFile,Map.of("actors",actors));refused(()->loadAll(root));
+            write(actorFile,Map.of("actors",Map.of(alias.getKey(),Map.of("config","Forged/Identity"))));refused(()->loadAll(root));
             check(!baseline.items().search("Silver Key").isEmpty(),"localized item names discover canonical stock IDs");
             var mirakat=baseline.items().find("Gear/Helm/Mirakat Hat");
             check(mirakat!=null&&mirakat.nameKey().equals("~Mirakat Hat"),"missing item bundle keys fall back to readable literal names");
@@ -92,5 +92,14 @@ public final class SparseContentTest {
     private static String hash(Properties p)throws Exception {var sorted=new TreeMap<String,Object>();p.forEach((k,v)->sorted.put(k.toString(),v.toString()));return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Json.stringify(sorted).getBytes(java.nio.charset.StandardCharsets.UTF_8)));}
     private static void write(Path path,Map<String,Object> data)throws IOException{Files.delete(path);Yaml.write(path,data);}
     private interface Work {void run()throws Exception;}
+    /** Startup is lazy; force every body so a release snapshot proves its full graph. */
+    private static void loadAll(Path root)throws IOException {
+        var registry=ContentManager.load(root);
+        try {registry.scenes().scenes();}
+        catch(java.io.UncheckedIOException failure){
+            if(failure.getCause() instanceof IOException invalid)throw invalid;
+            throw failure;
+        }
+    }
     private static void refused(Work work)throws Exception{try{work.run();throw new AssertionError("Expected refusal");}catch(IOException expected){}}
 }
