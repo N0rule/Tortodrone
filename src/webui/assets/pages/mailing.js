@@ -434,6 +434,8 @@ export async function mount(ctx) {
                         step: 1
                     });
                     const bound = input('Bound on delivery', gift.bound, 'checkbox');
+                    const boundLabel = label('Bound', bound);
+                    boundLabel.classList.remove('check');
                     quantity.oninput = () => {
                         gift.count = Math.max(1, Math.min(999, Number(quantity.value) || 1));
                         updateUnits();
@@ -444,7 +446,7 @@ export async function mount(ctx) {
                     row.append(
                         itemLine(definitions.get(gift.config), { config: gift.config }),
                         label('Quantity', quantity),
-                        label('Bound', bound),
+                        boundLabel,
                         button(
                             'Remove',
                             () => {
@@ -619,18 +621,16 @@ export async function mount(ctx) {
     renderSummary();
     renderWelcome();
     table.update(data.campaigns);
-    node.append(
-        summary,
-        welcomeHost,
-        panel(
-            'Mailings',
-            toolbar(
-                button('New mailing', () => compose('campaign')),
-                button('Send to knight', () => compose('direct'), 'secondary')
-            ),
-            table.node
-        )
+    const mailings = panel(
+        'Mailings',
+        toolbar(
+            button('New mailing', () => compose('campaign')),
+            button('Send to knight', () => compose('direct'), 'secondary')
+        ),
+        table.node
     );
+    mailings.classList.add('stack');
+    node.append(summary, welcomeHost, mailings);
     return {
         node,
         interval: 30000,

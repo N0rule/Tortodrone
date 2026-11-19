@@ -845,10 +845,15 @@
 .mail-gift {
     display: flex;
     flex-wrap: wrap;
-    align-items: end;
+    align-items: start;
     gap: 12px;
     padding: 12px 0;
     border-bottom: 1px solid var(--line);
+}
+.mail-gift input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
 }
 .mail-gift:last-child {
     border-bottom: 0;
@@ -888,6 +893,10 @@
 
 .mail-page {
     gap: 22px;
+}
+.mail-table .table-tools {
+    margin-top: 2px;
+    margin-bottom: 12px;
 }
 .mail-table td,
 .mail-table th {
