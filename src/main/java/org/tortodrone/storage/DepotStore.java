@@ -44,7 +44,7 @@ public final class DepotStore {
         }
         metadata(c,"supply-depot-initialized",1);
         metadata(c,"supply-depot-seed-version",legacy==null?0:legacy.version());
-        metadata(c,"supply-depot-defaults",2);
+        metadata(c,"supply-depot-defaults",3);
     }
     private static long revision(Connection c)throws SQLException {
         try(var s=c.createStatement();var r=s.executeQuery("SELECT value FROM metadata WHERE key='supply-depot-revision'")){return r.next()?r.getLong(1):0;}
@@ -63,16 +63,34 @@ public final class DepotStore {
             new LegacyFeatured(2,"Upgrade/Trinket Slot",150),
             new LegacyFeatured(3,"Ticket/Keys/Silver Key",750),
             new LegacyFeatured(4,"Upgrade/Coin Bonus",300));
-    /** Existing databases only: retire untouched seeded featured flags exactly once. */
+    /** Official offers earlier releases withheld because their native support was not yet verified. */
+    private record SeededGrant(int id,String item,int count,int crowns,int energy) { }
+    private static final List<SeededGrant> SEEDED_GRANTS=List.of(
+            new SeededGrant(0,"Upgrade/Heat Bonus (7 days)",1,0,1600),
+            new SeededGrant(1,"Upgrade/Heat Bonus (30 days)",1,0,5000),
+            new SeededGrant(2,"Upgrade/Trinket Slot",1,0,150),
+            new SeededGrant(4,"Upgrade/Coin Bonus",1,0,300),
+            new SeededGrant(154,"Gear/Shield/Heater Shield",1,300000,3500),
+            new SeededGrant(160,"Gear/Shield/Omega Shell",1,300000,3500),
+            new SeededGrant(192,"Upgrade/Heat Bonus",1,0,800),
+            new SeededGrant(196,"Upgrade/Weapon Slot",1,0,250),
+            new SeededGrant(198,"Weapon/Bomb/Big Angry Bomb",1,300000,3500));
+    /**
+     * Existing databases only: retire untouched seeded featured flags and enable untouched
+     * official rows that earlier releases withheld. Administrator edits are never replaced.
+     */
     static void alignDefaults(Database database)throws IOException {
-        boolean pending=database.read(c->{try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key='supply-depot-defaults'")){try(var r=s.executeQuery()){return !r.next()||r.getInt(1)<2;}}});
-        if(!pending)return;
+        int version=database.read(c->{try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key='supply-depot-defaults'")){try(var r=s.executeQuery()){return r.next()?r.getInt(1):0;}}});
+        if(version>=3)return;
         database.write(c->{
             boolean changed=false;
-            for(var legacy:LEGACY_SEEDED_FEATURED)try(var s=c.prepareStatement("UPDATE town_depot_offers SET featured=0 WHERE id=? AND item=? AND energy=? AND featured=1 AND promotion_only=0")) {
+            if(version<2)for(var legacy:LEGACY_SEEDED_FEATURED)try(var s=c.prepareStatement("UPDATE town_depot_offers SET featured=0 WHERE id=? AND item=? AND energy=? AND featured=1 AND promotion_only=0")) {
                 s.setInt(1,legacy.id());s.setString(2,legacy.item());s.setInt(3,legacy.energy());changed|=s.executeUpdate()==1;
             }
-            metadata(c,"supply-depot-defaults",2);
+            if(version<3)for(var grant:SEEDED_GRANTS)try(var s=c.prepareStatement("UPDATE town_depot_offers SET enabled=1 WHERE id=? AND item=? AND count=? AND crowns=? AND energy=? AND enabled=0 AND promotion_only=0")) {
+                s.setInt(1,grant.id());s.setString(2,grant.item());s.setInt(3,grant.count());s.setInt(4,grant.crowns());s.setInt(5,grant.energy());changed|=s.executeUpdate()==1;
+            }
+            metadata(c,"supply-depot-defaults",3);
             if(changed)advance(c,revision(c));
             return null;
         });

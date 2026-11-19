@@ -12,7 +12,7 @@ public final class DepotSeed {
     public record Data(int version,String provenance,List<DepotStore.Offer> offers,Map<Integer,String> unsupported) {
         public Data { offers=List.copyOf(offers);unsupported=Map.copyOf(unsupported); }
     }
-    public static final String SHA256="6becfe534726cd8154b2f27de16bade6392329514f45b18f2dd8ca5b3a820947";
+    public static final String SHA256="8a021ec608f7a5d0452cbbcd2669b35c89afc13db48022204c48f34bd0ad37ba";
     private DepotSeed() { }
     public static Data bundled()throws IOException {
         try(var in=DepotSeed.class.getResourceAsStream("/seeds/supply-depot.json")) {

@@ -39,13 +39,15 @@ public final class ItemCatalog {
             if (variant == Variant.FURNITURE_ITEM && (slot != WorldProfile.Slot.OTHER || !Set.of("Prop","Actor","SpecialProp").contains(type))) return "Furniture requires its native inventory representation";
             if (type.equals("Artifact") && (variant != Variant.SEED_ITEM || seed == null)) return "Artifact requires a verified seed item record";
             if (slot != WorldProfile.Slot.OTHER && stackable) return "Stackable equipment is unsupported";
-            if (slot != WorldProfile.Slot.OTHER && slot != WorldProfile.Slot.TRINKET && modelArgs.isEmpty()) return "Equipment has no representable model arguments";
+            if (slot != WorldProfile.Slot.OTHER && slot != WorldProfile.Slot.TRINKET && modelArgs.isEmpty() && stockId==0) return "Equipment has no verified native identity or model arguments";
             return "Available";
         }
         public boolean grantable() { return slot != null && (variant!=Variant.UPGRADE_ITEM || type.equals("Upgrade") && slot==WorldProfile.Slot.OTHER)
             && (variant!=Variant.FURNITURE_ITEM || slot==WorldProfile.Slot.OTHER&&Set.of("Prop","Actor","SpecialProp").contains(type))
             && (!type.equals("Artifact") || variant==Variant.SEED_ITEM&&seed!=null)
-            && (slot==WorldProfile.Slot.OTHER || !stackable && (slot==WorldProfile.Slot.TRINKET || !modelArgs.isEmpty())); }
+            // Native equipment models are resolved by the client from its own stock-ID config;
+            // model arguments are only a fallback for items without a native identity.
+            && (slot==WorldProfile.Slot.OTHER || !stackable && (slot==WorldProfile.Slot.TRINKET || !modelArgs.isEmpty() || stockId!=0)); }
         public Map<String,Object> arguments(int color) { return resolve(modelArgs,color); }
     }
     private final Map<String,Entry> entries;

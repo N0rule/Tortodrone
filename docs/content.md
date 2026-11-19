@@ -611,9 +611,12 @@ reconstruction is not replaced by another invention. Administrators can still
 create promotions and featured goods themselves.
 `sourcePrice=-1` records native item-property lookup; the stored Crown value is its
 resolved value, even when positive Energy is the currency selected by the client.
-The seed records provenance and derived support status. Nine indexed records have
-unsupported grant representations; they remain visible to administrators, disabled
-with exact support reasons. Catalog fidelity does not imply upgrade-item gameplay.
+The seed records provenance and derived support status. All 328 offers are now
+deliverable: the six timed slot/heat/coin upgrades and the three native gear items
+(`Heater Shield`, `Omega Shell`, `Big Angry Bomb`) are enabled with their verified
+inventory slots and combat/shield definitions. Upgrades grant inactive items and
+activate through the stock item-use path; activating a slot or bonus sets the
+native deadline, and an unused same-family upgrade can extend a running one.
 No game installation, capture or network access is needed to create a database.
 
 **Rank availability:** the depot advertises official stock progressively, evaluated
@@ -624,7 +627,7 @@ material, usable, accessory, key and ticket goods are always available. Sprite e
 sell from 3-1, matching the client's first sprite rank that requires knight rank
 (`ItemCodes.bvQ`). A purchase is refused when the offer was not advertised, so the
 same gate covers methods 4, 5, 6 and the quoted buy path. Administrators still see
-the full catalogue and its disabled records.
+the full catalogue and every rank tier.
 
 Explicit initialization/seed-version metadata makes seeding one-time. Restart,
 disabling all offers or intentionally clearing a managed catalog never reseeds it.

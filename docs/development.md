@@ -183,7 +183,7 @@ This uses disposable accounts/preferences and performs twelve rapid native craft
 Unified content regressions are `resources.ContentManagerTest` and `resources.MigrationPackLoaderTest`; fixtures are generated in temporary directories from the unified defaults, never maintained as a second checked-in catalog. The focused graphical `--dialogue-only` mode selects another verified localized Konway line through disposable YAML, enters Training, records both nodes and closes the native dialog. Arbitrary literal messages and responses are rejected after the stock graphical scenario showed the client appending the knight name instead of decoding literals.
 
 Economy/content regressions: `DepotStoreTest`, `DepotDefaultsTest`,
-`DepotGateTest`, `AuctionParityTest`, `SparseContentTest`
+`DepotGateTest`, `DepotSupportTest`, `AuctionParityTest`, `SparseContentTest`
 and the existing Town/featured/expiry/session tests use disposable SQLite state.
 `SparseContentTest` compares all seven compiled scene/portal snapshots and the full
 item catalog against pre-overhaul `0078b50` fingerprints. The focused stock
