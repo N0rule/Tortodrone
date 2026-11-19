@@ -29,6 +29,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     static final float DEFAULT_ACTIVATION_RADIUS=32;
     /** Damage wakes a monster even when it was hit outside every activation radius. */
     static final int DAMAGE_ENGAGE_MILLIS=5000;
+    /** Reuse a clear line of sight briefly; damage or a moved target invalidates it. */
+    static final int SIGHT_CACHE_MILLIS=150;
+    static final float SIGHT_CACHE_DISTANCE=.5f;
     private static final class Entity {
         final int id,created;final SceneContent.Spec spec;final SceneContent.Entry binding;
         final String kind;final StarterCatalog.Model config;final Entity pad;
@@ -68,6 +71,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         /** Activation scheduling; combat work is skipped while DORMANT. */
         SceneMonsterBand band=SceneMonsterBand.DORMANT;
         int nextThink,engagedUntil;
+        /** Cached line of sight from the current position to a recent target point. */
+        int sightStamp=Integer.MIN_VALUE;float sightX,sightY;boolean sightResult;
         List<ScenePathing.Point> path=List.of();float pathX,pathY;int nextPath;
         SceneLiftState.Point dropPoint;
         SceneContent.Spec vial;String cycle;Set<String> fired=new HashSet<>();
@@ -209,6 +214,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private record SpawnSource(SceneEntities scene,int id,int faction,String identity) { }
     private final Map<Entity,List<Entity>> arsenalProps=new LinkedHashMap<>();
     private int nextId=1_000_000_000,lastStamp;
+    private final ScenePathBudget pathBudget=new ScenePathBudget();
     private final java.util.random.RandomGenerator random;
     private record Link(Entity entity,int stamp,boolean ghost) { }
     private final ArrayDeque<Link> links=new ArrayDeque<>();
@@ -388,6 +394,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     PreparedActor prepared(int id){var e=entities.get(id);return e==null?null:e.prepared;}
     /** Test seam: current activation band for a live entity. */
     SceneMonsterBand band(int id){var e=entities.get(id);return e==null?null:e.band;}
+    /** Test seam: A* searches admitted in the most recent tick. */
+    int pathSearches(){return pathBudget.granted();}
+    int pathQueued(){return pathBudget.queued();}
     public ActorState station(String kind){return entities.values().stream().filter(e->e.spec.text("town-kind","").equals(kind)&&e.destroyed==Integer.MAX_VALUE).map(Entity::snapshot).findFirst().orElse(null);}
     /** Called only after the scene validates the knight's interaction intent. */
     public void openArsenal(int id,int stamp){
@@ -519,7 +528,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 for(var prop:station.getValue())if(prop.state!=0)setSwitch(prop,0,stamp);
         }
         while(!links.isEmpty()&&links.peekFirst().stamp()<=stamp){var link=links.removeFirst();clearLinks(link.entity(),stamp,link.ghost());}
-        float elapsed=lastStamp==0?0:Math.min(.25f,(stamp-lastStamp)/1000f);lastStamp=stamp;
+        float elapsed=lastStamp==0?0:Math.min(.25f,(stamp-lastStamp)/1000f);lastStamp=stamp;pathBudget.begin(stamp);
         for(var e:List.copyOf(entities.values())){
             if(e.destroyed!=Integer.MAX_VALUE){
                 if(e.trip!=null)cancelElevator(e.trip,stamp);
@@ -795,6 +804,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(Math.hypot(tx-e.x,ty-e.y)<.0001){e.path=List.of();return true;}
         }
         if(e.path.isEmpty()&&stamp>=e.nextPath){
+            if(!pathBudget.acquire(e.id))return false;
             var path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
             double length=0;float px=e.x,py=e.y;for(var point:path){length+=Math.hypot(point.x()-px,point.y()-py);px=point.x();py=point.y();}
             if(length<=maxPath)e.path=path;
@@ -919,6 +929,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(target!=null){
                 float distance=(float)Math.hypot(target.x()-e.x,target.y()-e.y);
                 if(distance<e.follow.minimum()||distance>e.follow.maximum()){
+                    if(!pathBudget.acquire(e.id))return;
                     var path=ScenePathing.route(e.x,e.y,target.x(),target.y(),(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
                     double length=0;float px=e.x,py=e.y;for(var point:path){length+=Math.hypot(point.x()-px,point.y()-py);px=point.x();py=point.y();}
                     if(length<=8)e.path=path;
@@ -1084,6 +1095,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.path.isEmpty()&&stamp<e.nextPath)return;
             if(e.path.isEmpty()||Math.hypot(tx-e.pathX,ty-e.pathY)>=1
                     ||!entitySegment(e,e.x,e.y,e.path.getFirst().x(),e.path.getFirst().y())){
+                if(!pathBudget.acquire(e.id))return;
                 e.path=target.entity()!=null&&e.targeting!=null?
                     ScenePathing.region(e.x,e.y,(x,y)->Math.max(targetDistance(x,y,target)-attackRange,sight(e,x,y,target.x(),target.y())?0:.01f),(x,y,nx,ny)->entitySegment(e,x,y,nx,ny)):
                     ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));e.pathX=tx;e.pathY=ty;
@@ -1109,12 +1121,21 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return sight(e,e.x,e.y,tx,ty);
     }
     private boolean sight(Entity e,float x,float y,float tx,float ty){
-        if(!staticCollision.clearSegment(129,POINT,x,y,tx,ty,0,disabledCollisionSources()))return false;
-        int steps=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/.1));
-        for(var obstacle:entities.values())if(obstacle!=e&&obstacle.destroyed==Integer.MAX_VALUE&&obstacle.carrier==0
-                &&(obstacle.collisionFlags&129)!=0&&!(obstacle.kind.equals("Door")&&(obstacle.flags&6)==2))
-            for(int i=0;i<=steps;i++)if(obstacle.spec.contains(obstacle.x,obstacle.y,obstacle.rotation,x+(tx-x)*i/steps,y+(ty-y)*i/steps,0))return false;
-        return true;
+        boolean current=x==e.x&&y==e.y;
+        if(current&&e.sightStamp!=Integer.MIN_VALUE&&lastStamp>=e.sightStamp
+                &&lastStamp-e.sightStamp<=SIGHT_CACHE_MILLIS
+                &&Math.hypot(tx-e.sightX,ty-e.sightY)<=SIGHT_CACHE_DISTANCE)
+            return e.sightResult;
+        boolean result=true;
+        if(!staticCollision.clearSegment(129,POINT,x,y,tx,ty,0,disabledCollisionSources()))result=false;
+        else {
+            int steps=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/.1));
+            for(var obstacle:entities.values())if(obstacle!=e&&obstacle.destroyed==Integer.MAX_VALUE&&obstacle.carrier==0
+                    &&(obstacle.collisionFlags&129)!=0&&!(obstacle.kind.equals("Door")&&(obstacle.flags&6)==2))
+                for(int i=0;i<=steps;i++)if(obstacle.spec.contains(obstacle.x,obstacle.y,obstacle.rotation,x+(tx-x)*i/steps,y+(ty-y)*i/steps,0)){result=false;break;}
+        }
+        if(current){e.sightStamp=lastStamp;e.sightX=tx;e.sightY=ty;e.sightResult=result;}
+        return result;
     }
     private boolean entitySegment(Entity mover,float x,float y,float tx,float ty){
         int mask=mover.spec.integer("collision-mask",pawnCollisionMask);
@@ -1600,7 +1621,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 amount+=e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0){
                     int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp,SceneDamage.reacts(accepted),SceneDamage.major(accepted));
                     // Being hit is authoritative: a dormant monster wakes even with no player nearby.
-                    e.band=SceneMonsterBand.ENGAGED;e.nextThink=stamp;e.engagedUntil=stamp+DAMAGE_ENGAGE_MILLIS;
+                    e.band=SceneMonsterBand.ENGAGED;e.nextThink=stamp;e.engagedUntil=stamp+DAMAGE_ENGAGE_MILLIS;e.sightStamp=Integer.MIN_VALUE;
                     if(e.targeting!=null&&targetCandidates(e,players).stream().anyMatch(p->p.id()==owner&&targetActive(p))&&(e.victims.containsKey(owner)||e.victims.size()<256)){
                         var previous=e.victims.getOrDefault(owner,new Entity.Threat(0,0));
                         e.victims.put(owner,new Entity.Threat(Math.min(1_000_000,previous.hits()+1),Math.min(1_000_000_000f,previous.damage()+dealt)));e.nextAcquire=stamp;

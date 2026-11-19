@@ -192,6 +192,18 @@ actors and an already-started attack sequence are never paused by the ladder.
 The per-scene awake cap and leash are part of the later wave lifecycle work; this
 phase only schedules existing placements.
 
+## Perception and path budget
+
+A clear line of sight is reused for at most 150 ms, or until the target moves more than
+0.5 world units or the monster is damaged. Only the monster's current position is cached;
+candidate points sampled inside a path search always evaluate collision afresh.
+
+A scene admits at most four A* searches per tick across combat pursuit, idle follow and
+scripted movement. A denied request leaves the current path and `nextPath` deadline in
+place, so the monster retries on a later tick and never searches more often than the
+existing 50 ms floor. Deferred ids wait in a bounded 128-entry burst queue; overflow
+drops and counts the oldest request instead of growing without limit.
+
 ## Source and derivation
 
 - Family/enemy names come from the shipped `rsrc/config/description.dat`
