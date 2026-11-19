@@ -191,9 +191,10 @@ Shipped defaults contain resolved text and need no installed client. The
 Each family file contains an `items` mapping keyed by stable administrator IDs.
 All 9,355 indexed entries have a readable `name` and `category`. The filename is a
 broad editing family; `category` and optional `subcategory` are administrative
-labels, independent of the native Java class and equipment slot. For example,
-`aggro_aura` has category `Armor` and subcategory `Aura` while retaining native
-AccessoryTicket serialization. Display labels may repeat. Editing `name` changes
+labels, independent of the native Java class and equipment slot. The labels follow
+the unmodified client's Arsenal tabs and use the native type only as their source.
+For example, `aggro_aura` has category `Accessory` and subcategory `Armor: Aura`
+while retaining native AccessoryTicket serialization. Display labels may repeat. Editing `name` changes
 administrator discovery only: the unchanged client still localizes its native
 item configuration. It does not support an item-name override in this record.
 
