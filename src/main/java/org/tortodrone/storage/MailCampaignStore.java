@@ -335,7 +335,9 @@ public final class MailCampaignStore {
     }
 
     private static int mailType(String senderLabel) {
-        return senderLabel == null ? 3 : 0;
+        // Both are SYSTEM mail so the inbox lists them; a custom name makes the
+        // native reader skip translation and show the plain text and literal sender.
+        return 3;
     }
 
     private List<WorldProfile.Item> materialise(List<Gift> gifts, long now) throws IOException {

@@ -58,7 +58,7 @@ public final class GameplayCompatibility {
         // Existing persisted auction mail is normalized on publication as well as new mail.
         var mail=new AuctionState.Mail(1,42,1,"%auction:s.auction_cancelled|%item:"+def.nameKey(),"%auction:m.auction_cancelled",0,null,false,false,0,"");
         append(bytes,codec.townResult(1001,(short)3,mail,empty));
-        var staff=new AuctionState.Mail(2,42,1,"Welcome, knights","Two gels for the road.\n— Tortodrone Staff",25,0,List.of(),false,true,0,"",-6,0,"Tortodrone Staff");
+        var staff=new AuctionState.Mail(2,42,1,"Welcome, knights","Two gels for the road.\n— Tortodrone Staff",25,0,List.of(),false,true,0,"",-6,3,"Tortodrone Staff");
         append(bytes,codec.townResult(1001,(short)4,staff,empty));
         var systemStaff=new AuctionState.Mail(3,42,1,"%uplink:~System welcome","%uplink:~A system letter.",0,0,List.of(),false,true,0,"",-6,3,"");
         append(bytes,codec.townResult(1001,(short)5,systemStaff,empty));

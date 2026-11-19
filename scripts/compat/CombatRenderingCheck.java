@@ -114,6 +114,7 @@ public final class CombatRenderingCheck {
     private long exploreTravelAt,exploreStepAt;
     private float exploreFromX,exploreFromY;
     private int exploreDirection;
+    private boolean mailCampaign;
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
@@ -131,6 +132,19 @@ public final class CombatRenderingCheck {
         }
         if(args.length==2&&args[0].equals("--seed-opening")){
             try(var store=new AccountStore(Path.of(args[1]))){store.create("LanPlayer","lan-test-password".toCharArray());}return;
+        }
+        if(args.length==2&&args[0].equals("--seed-mail")){
+            seed(Path.of(args[1]));
+            try(var store=new AccountStore(Path.of(args[1]),true)){
+                var profile=store.worldProfile("LanPlayer","Town-Knight");
+                var house=store.auctions();long now=System.currentTimeMillis();
+                house.campaigns().save(0,0,now-60_000,now+86_400_000L,6,"Tortodrone Staff",
+                    "Campaign letter","A campaign letter.",10,0,
+                    List.of(new org.tortodrone.storage.MailCampaignStore.Gift("Material/Gel Drop",2,false)));
+                house.campaigns().sendTo(profile.worldId(),5,"Tortodrone Staff","Direct letter",
+                    "A direct letter.",0,0,List.of(new org.tortodrone.storage.MailCampaignStore.Gift("Rarity/Fire Crystal/Cracked",1,false)));
+            }
+            return;
         }
         if(args.length==2&&(args[0].equals("--seed-equipment")||args[0].equals("--seed-items")||args[0].equals("--seed-multiplayer")||args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot")||args[0].equals("--seed-forge"))){
             seed(Path.of(args[1]));
@@ -159,10 +173,11 @@ public final class CombatRenderingCheck {
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
         boolean exploreOnly=Arrays.asList(args).contains("--explore-only");
         boolean manual=Arrays.asList(args).contains("--manual");
+        boolean mailCampaign=Arrays.asList(args).contains("--mail-campaign-only");
         int exploreScene=0;
         for(String arg:args)if(arg.startsWith("--scene="))try{exploreScene=Integer.parseInt(arg.substring("--scene=".length()));}catch(NumberFormatException invalid){throw new IllegalArgumentException("Invalid --scene value: "+arg);}
         if(exploreOnly&&exploreScene<=0)throw new IllegalArgumentException("--explore-only needs --scene=<id>");
-        boolean trainingOnly=exploreOnly||manual||Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=exploreOnly||manual||mailCampaign||Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(exploreOnly||manual){if(args.length<4)throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");}
         else if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
@@ -185,8 +200,9 @@ public final class CombatRenderingCheck {
         probe.tutorialOnly=probe.freshOpening||Arrays.asList(args).contains("--tutorial-only");
         probe.tutorialEntryOnly=probe.tutorialOnly||Arrays.asList(args).contains("--tutorial-entry-only");
         if(probe.tutorialOnly)probe.tutorialMap=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("appdir")).getParent()).scenes().scene(398);
-        probe.readyRoomOnly=probe.campStory||probe.campStoryReturn||probe.campProgressionReturn||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--opening-return-only");
-        probe.readyRoomMailOnly=Arrays.asList(args).contains("--ready-room-mail-only");
+        probe.mailCampaign=mailCampaign;
+        probe.readyRoomOnly=probe.mailCampaign||probe.campStory||probe.campStoryReturn||probe.campProgressionReturn||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--opening-return-only");
+        probe.readyRoomMailOnly=probe.mailCampaign||Arrays.asList(args).contains("--ready-room-mail-only");
         probe.readyRoomForgeOnly=Arrays.asList(args).contains("--ready-room-forge-only");
         if(probe.campStory||probe.campStoryReturn||probe.campProgressionReturn)probe.readyRoomDestination=217;
         probe.multiplayerOnly=multiplayerOnly;probe.sharedWorldOnly=sharedWorldOnly;
@@ -845,6 +861,17 @@ public final class CombatRenderingCheck {
                 throw new AssertionError("Ready Room mail window was dismissed during the scenario");
             String inbox=readyRoomInbox(mailWindow);
             if(inbox!=null){
+                if(mailCampaign){
+                    if(inbox.isEmpty()){
+                        // The stock list paints m.empty_inbox before the headers callback; give the
+                        // native mail request time to replace it before declaring the mailbox empty.
+                        if(now-started>2_000_000_000L)throw new AssertionError("Seeded campaign mailbox is empty");
+                        return;
+                    }
+                    if(!inbox.startsWith("mail count 2"))throw new AssertionError("Expected the seeded campaign and direct letters; got "+inbox);
+                    capture("ready-room-mail-campaign");finishImages();
+                    passed=done=true;System.out.println("PASS: stock graphical Ready Room Mail lists the seeded campaign and direct letters with custom senders");app.shutdown();return;
+                }
                 if(!inbox.isEmpty())throw new AssertionError("Fresh seeded mailbox unexpectedly returned mail: "+inbox);
                 capture("ready-room-mail");finishImages();
                 passed=done=true;System.out.println("PASS: stock graphical Ready Room Mail reaches the native empty inbox instead of staying on Loading");app.shutdown();
@@ -864,7 +891,8 @@ public final class CombatRenderingCheck {
         Object empty=messages.getClass().getMethod("cP",String.class).invoke(messages,"m.empty_inbox");
         String text=label.getText();
         if(text==null||text.equals(messages.getClass().getMethod("cP",String.class).invoke(messages,"m.loading")))return null;
-        return text.equals(empty)?"":"mail count "+((Map<?,?>)field(panel,"bMW").get(panel)).size()+" label "+text;
+        int count=((Map<?,?>)field(panel,"bMW").get(panel)).size();
+        return text.equals(empty)&&count==0?"":"mail count "+count+" label "+text;
     }
     /** One isolated stock-client scenario: the Ready Room Forge window must forge the heated Proto Sword. */
     private void readyRoomForgeTick(long now)throws Exception{

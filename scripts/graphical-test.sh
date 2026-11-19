@@ -11,6 +11,7 @@
 #   tutorial        fresh account: private Crash Site tutorial to Haven, reconnect
 #   crash           Ready Room -> Haven -> original Crash Site 398 entry
 #   ready-room      client-local Ready Room and return to Haven
+#   mail-campaign   stock Ready Room mail list with a seeded campaign and direct letter
 #   mail            Ready Room mail window
 #   forge           Ready Room forge window
 #   haven           Haven station dialogs
@@ -62,7 +63,7 @@ for arg in "$@"; do
             scenarios
             exit 0
             ;;
-        tutorial|crash|ready-room|mail|forge|haven|training|camp|preview|explore|manual)
+        tutorial|crash|ready-room|mail-campaign|mail|forge|haven|training|camp|preview|explore|manual)
             scenario=$arg
             ;;
         --*)
@@ -91,6 +92,7 @@ case $scenario in
     tutorial) scenario_flags=(--opening-tutorial-only) ;;
     crash) scenario_flags=(--tutorial-entry-only) ;;
     ready-room) scenario_flags=(--ready-room-only) ;;
+    mail-campaign) scenario_flags=(--mail-campaign-only) ;;
     mail) scenario_flags=(--ready-room-mail-only) ;;
     forge) scenario_flags=(--ready-room-forge-only) ;;
     haven) scenario_flags=(--town-dialogs-only) ;;

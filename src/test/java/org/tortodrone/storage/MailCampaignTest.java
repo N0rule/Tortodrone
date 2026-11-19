@@ -122,7 +122,7 @@ public final class MailCampaignTest {
             check(custom.senderLabel().equals("Server Team"), "a custom sender label is stored");
             check(campaigns.deliver(midWorld), "the custom-sender campaign delivers");
             var customLetter = inbox(db, midWorld).stream().filter(m -> m.subject().endsWith("Custom sender")).findFirst().orElseThrow();
-            check(customLetter.nativeType() == 0 && customLetter.sender().equals("Server Team") && customLetter.subject().equals("Custom sender"), "custom sender mail uses ANNOUNCE plain text and the literal name");
+            check(customLetter.nativeType() == 3 && customLetter.sender().equals("Server Team") && customLetter.subject().equals("Custom sender"), "custom sender mail uses ANNOUNCE plain text and the literal name");
             refused(() -> campaigns.save(0, 0, now, now + 60_000, 4, " Leading", "Invalid sender", "Body", 0, 0, List.of()));
             var giftWelcome = campaigns.saveWelcome(true, 5, "Aurora", "Welcome gift", "Take these.",
                 10, 5, List.of(new MailCampaignStore.Gift("Material/Gel Drop", 2, false)));
@@ -132,7 +132,7 @@ public final class MailCampaignTest {
             int giftWorld = db.worldProfile(giftAccount, giftKnight.id(), 1).worldId();
             check(campaigns.deliverWelcome(giftWorld, giftKnight.createdAt()), "the gift welcome delivers to a new knight");
             var welcomeLetter = inbox(db, giftWorld).stream().filter(m -> m.subject().endsWith("Welcome gift")).findFirst().orElseThrow();
-            check(welcomeLetter.nativeType() == 0 && welcomeLetter.sender().equals("Aurora") && welcomeLetter.subject().equals("Welcome gift")
+            check(welcomeLetter.nativeType() == 3 && welcomeLetter.sender().equals("Aurora") && welcomeLetter.subject().equals("Welcome gift")
                 && welcomeLetter.crowns() == 10 && welcomeLetter.energy() == 5 && welcomeLetter.items().size() == 1, "welcome mail carries its custom sender, plain text, crowns, energy and gift");
             campaigns.saveWelcome(true, 5, null, "Updated welcome", "New instructions.", 0, 0, List.of());
 
