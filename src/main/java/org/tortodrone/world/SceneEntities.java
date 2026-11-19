@@ -35,7 +35,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final SceneMovementScript script;
         final SceneScript program;
         final Map<Integer,SceneActions.Prepared> scriptActions=new HashMap<>();
-        final Map<String,SceneActions.Action> sceneFireActions=new HashMap<>();
+        final Map<String,SceneActions.Action> sceneFireActions;
+        final PreparedActor prepared;
         final SceneActions.Action shutdown;
         final ScenePartyPlatform platform;
         final SceneElevator elevator;
@@ -85,18 +86,17 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 if(!spec.text("kind","").equals("Door")||doorIncrements<1||doorIncrements>1_000_000)throw new IllegalArgumentException("Invalid native door counter");
             }
             if(spec.fields().containsKey("door-lock")&&(!spec.text("kind","").equals("Door")||!spec.text("door-lock","").equals("gold")))throw new IllegalArgumentException("Unsupported scene door lock");
-            script=SceneMovementScript.read(spec);program=SceneScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);follow=SceneFollow.read(spec);attackMotion=SceneAttackMotion.readAll(spec);
-            meleeRangeCaps=meleeRangeCaps(spec);
-            platform=ScenePartyPlatform.read(spec);
-            elevator=SceneElevator.read(spec);
-            try{
-                String graph=spec.text("scene-shutdown-action","");shutdown=graph.isEmpty()?null:SceneActions.parse(graph);
-                for(var field:spec.fields().entrySet())if(field.getKey().startsWith("attack.")&&field.getKey().endsWith(".scene-action"))sceneFireActions.put(field.getKey(),SceneActions.parse(field.getValue()));
-            }catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid native actor scene action",invalid);}
+            var prepared=PreparedActor.of(spec);
+            this.prepared=prepared;
+            script=prepared.script();program=prepared.program();targeting=prepared.targeting();wander=prepared.wander();follow=prepared.follow();attackMotion=prepared.attackMotion();
+            meleeRangeCaps=prepared.meleeRangeCaps();
+            platform=prepared.platform();
+            elevator=prepared.elevator();
+            shutdown=prepared.shutdown();sceneFireActions=prepared.sceneFireActions();
             if(follow!=null&&(targeting==null||targeting.monsterMask()==0||script!=null||wander!=null))throw new IllegalArgumentException("Conflicting native follow routine");
             if((script!=null||program!=null)&&(targeting!=null||wander!=null||follow!=null))throw new IllegalArgumentException("Conflicting scene actor behaviors");
             victims=targeting==null?Map.of():new LinkedHashMap<>();
-            config=spec.config();String type=spec.text("native-type","");kind=type.substring(type.lastIndexOf('.')+1);
+            config=prepared.config();kind=prepared.kind();String type=spec.text("native-type","");
             int heat=spec.integer("pickup-heat",0);
             if(heat<0||heat>1_000_000||heat>0&&(!kind.equals("Pickup")||!spec.text("pickup-item","").isEmpty()))throw new IllegalArgumentException("Invalid native heat pickup");
             if((targeting!=null||wander!=null||!attackMotion.isEmpty())&&!kind.equals("Monster"))throw new IllegalArgumentException("Native combat behavior requires a monster actor");
@@ -377,6 +377,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public List<ActorState> actors(){return entities.values().stream().filter(e->!e.entrySource()).map(Entity::snapshot).toList();}
     public ActorState actor(int id){var e=entities.get(id);return e==null||e.destroyed!=Integer.MAX_VALUE?null:e.snapshot();}
     public SceneContent.Spec specification(int id){var e=entities.get(id);return e==null||e.destroyed!=Integer.MAX_VALUE?null:e.spec;}
+    /** Test seam: the immutable parsed behaviour shared by every instance of this spec. */
+    PreparedActor prepared(int id){var e=entities.get(id);return e==null?null:e.prepared;}
     public ActorState station(String kind){return entities.values().stream().filter(e->e.spec.text("town-kind","").equals(kind)&&e.destroyed==Integer.MAX_VALUE).map(Entity::snapshot).findFirst().orElse(null);}
     /** Called only after the scene validates the knight's interaction intent. */
     public void openArsenal(int id,int stamp){
@@ -806,7 +808,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
      *  region whose circle is smaller than that range (the Jelly Cube stops at
      *  1.9997 edge while its resolved Medium circle reaches 1.5). Cap only that
      *  slot, so a projectile or beam on another slot keeps its full range. */
-    private static Map<Integer,Float> meleeRangeCaps(SceneContent.Spec spec){
+    static Map<Integer,Float> meleeRangeCaps(SceneContent.Spec spec){
         var caps=new HashMap<Integer,Float>();
         for(String key:spec.fields().keySet()){
             if(!key.startsWith("attack.")||!key.endsWith(".fire.0.action"))continue;

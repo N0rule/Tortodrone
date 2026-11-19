@@ -162,6 +162,16 @@ types without inventing client data; they remain embedded prepared specs with th
 scripted behaviour. No spawn command or new gameplay behaviour is provided by this
 resolution step.
 
+## Prepared actor sharing
+
+`world/PreparedActor` parses a prepared spec once and caches the immutable result for
+every identical `SceneContent.Spec`: movement script, script program, targeting, wander,
+follow, attack motion, melee range caps, party platform, elevator, shutdown action and
+scene-fire actions. `SceneEntities.Entity` keeps only per-instance mutable state (health,
+activity, targets, paths, status and timers), so spawning many copies of one type does not
+repeat graph parsing and cannot leak combat state between instances. The cache uses weak
+keys, so it holds nothing after a scene's content is released.
+
 ## Source and derivation
 
 - Family/enemy names come from the shipped `rsrc/config/description.dat`
