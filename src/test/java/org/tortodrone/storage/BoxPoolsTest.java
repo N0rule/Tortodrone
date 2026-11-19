@@ -32,6 +32,9 @@ public final class BoxPoolsTest {
         Path home=Files.createTempDirectory("tortodrone-shipped-boxes-");
         try {
             items=ItemYaml.load(Path.of("content/items"));boxes=BoxCatalog.load(Path.of("content"),items);db=new Database(home,true);
+            var eyePack=boxes.find(items.require("eyes_amazing").config());
+            check(eyePack!=null&&eyePack.enabled()&&eyePack.groups().get("main").entries().size()==3,"native eye packs are keyless approximation pools");
+            check(rewardConfigs(eyePack).contains(items.require("circuit").config())&&rewardConfigs(eyePack).contains(items.require("skull").config()),"eye pack candidates retain native eye identities");
             for(var box:boxes.entries().stream().filter(BoxDefinition::enabled).toList()) {
                 check(box.status()==BoxDefinition.Status.APPROXIMATE&&!box.evidence().isBlank(),"every shipped approximation is disclosed");
                 var p=player();p.grant(box.id(),1);p.grant("silver_key",2);p.grant("slime_key",2);
@@ -81,7 +84,7 @@ public final class BoxPoolsTest {
                 var reward=BoxRewardSelector.select(iron,new Choices(false,0,0,color)).getFirst();
                 check(reward.config().equals(items.require(color<6300?"barrel_belly_red":color<6580?"barrel_belly_divine":color<6860?"barrel_belly_volcanic":"barrel_belly_prismatic").config()),"explicit standard/divine/volcanic/prismatic boundaries");
             }
-            System.out.println("PASS: 243 shipped approximation pools, actual ordinary/Slime/keyless opens, all upgrade/bonus outcomes, historical separation, rarity boundaries and reconnect/restart persistence");
+            System.out.println("PASS: "+boxes.entries().stream().filter(BoxDefinition::enabled).count()+" shipped approximation pools including eye packs, actual ordinary/Slime/keyless opens, all upgrade/bonus outcomes, historical separation, rarity boundaries and reconnect/restart persistence");
         }finally{org.tortodrone.support.ContentFixture.delete(home);}
     }
     private static Set<String> rewardConfigs(BoxDefinition box) {

@@ -70,7 +70,7 @@ for item in items:
     elif kind=='WrappingPaper':
         if not data.get('giftBox'):reasons.append('no resolved gift box')
     elif kind=='GiftBox':pass  # Filled boxes are created by wrapping, then transferred/unwrapped natively.
-    elif kind=='Lockbox':
+    elif kind in {'Lockbox','Pack'}:
         state='partial' if boxes.get(name,{}).get('status')=='approximate' else 'disabled'
         reasons.append('native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md' if state=='partial' else 'native method 12 supported; reward pool unavailable or incomplete; see box-support.csv')
     elif kind=='VariantTicket':

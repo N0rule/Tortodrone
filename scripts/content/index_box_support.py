@@ -24,7 +24,7 @@ for file in sorted((args.content / 'loot/boxes').rglob('*.yml')):
         boxes[key] = row
 rows = []
 for key, binding in sorted(bindings.items()):
-    if binding['type'] != 'Lockbox':
+    if binding['type'] not in {'Lockbox', 'Pack'}:
         continue
     row = boxes[key]
     keys = native[key]['keyOptions']
@@ -55,7 +55,7 @@ with index.open(newline='') as source:
     rows = list(reader)
 configs = {bindings[key]['config']: value for key, value in boxes.items()}
 for row in rows:
-    if row[1] == 'Lockbox':
+    if row[1] in {'Lockbox', 'Pack'}:
         if row[0] not in configs:
             raise ValueError('Unclassified indexed box: ' + row[0])
         row[2:] = (['partial', 'native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md']

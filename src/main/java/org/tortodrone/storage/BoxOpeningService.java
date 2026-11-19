@@ -38,7 +38,7 @@ public final class BoxOpeningService {
             if(profile.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
             var held=TownStore.owned(profile,boxId);var box=boxes.find(held.config());
             if(box==null||!box.enabled())throw new IOException("This box has no complete supported reward distribution.");
-            if(held.equippedSlot()!=null||held.permanent()||held.gift()!=null||!items.require(held.config()).type().equals("Lockbox"))throw new IOException("m.internal_error");
+            if(held.equippedSlot()!=null||held.permanent()||held.gift()!=null||!Set.of("Lockbox","Pack").contains(items.require(held.config()).type()))throw new IOException("m.internal_error");
             WorldProfile.Item key=null;
             if(all){/* Native GM operation neither unlocks nor consumes the source box. */}
             else if(box.kind()==BoxDefinition.Kind.KEYLESS) {

@@ -1,0 +1,56 @@
+# Native keyless eye packs. The stock spawn tables list the candidates but do not
+# export their relative weights, so each candidate is equal-weight and marked approximate.
+boxes:
+  eyes_amazing:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: "Native Pack/Eyes, Amazing lists Circuit, Clover and Skull; exact weights are not exported; equal-weight approximation"
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: circuit, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clover, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: skull, quantity: 1, binding: catalog}]}
+  eyes_bedazzling:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: "Native Pack/Eyes, Bedazzling lists Blooming, Flower and Sparkle; exact weights are not exported; equal-weight approximation"
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: blooming, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flower, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sparkle, quantity: 1, binding: catalog}]}
+  eyes_shapely:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: "Native Pack/Eyes, Shapely lists Hexagon, Square and Triangle; exact weights are not exported; equal-weight approximation"
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: hexagon, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: square, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: triangle, quantity: 1, binding: catalog}]}
+  eyes_suited:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: "Native Pack/Eyes, Suited lists Club, Diamond, Heart and Spade; exact weights are not exported; equal-weight approximation"
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: club, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: diamond_s3931626403_bd9b13dace72, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: heart, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spade, quantity: 1, binding: catalog}]}

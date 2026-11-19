@@ -466,10 +466,10 @@ Upgrade/Lockboxes/Slime/Ruby,Lockbox,partial,native opening with documented cand
 Upgrade/Lockboxes/Slime/Sapphire,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Lockboxes/Slime/Shadow,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Lockboxes/Slime/Turquoise,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
-"Upgrade/Pack/Eyes, Amazing",Pack,unusable,no item-use handler for Pack
-"Upgrade/Pack/Eyes, Bedazzling",Pack,unusable,no item-use handler for Pack
-"Upgrade/Pack/Eyes, Shapely",Pack,unusable,no item-use handler for Pack
-"Upgrade/Pack/Eyes, Suited",Pack,unusable,no item-use handler for Pack
+"Upgrade/Pack/Eyes, Amazing",Pack,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Pack/Eyes, Bedazzling",Pack,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Pack/Eyes, Shapely",Pack,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Pack/Eyes, Suited",Pack,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/AeroTech Mk II Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/AeroTech Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Aerodynamic Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md

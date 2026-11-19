@@ -1187,6 +1187,22 @@
     "wizard_prize_box": {
       "keyOptions": [],
       "spawnTable": "Promo/Wizard Prize Box"
+    },
+    "eyes_amazing": {
+      "keyOptions": [],
+      "spawnTable": "Pack/Eyes, Amazing"
+    },
+    "eyes_bedazzling": {
+      "keyOptions": [],
+      "spawnTable": "Pack/Eyes, Bedazzling"
+    },
+    "eyes_shapely": {
+      "keyOptions": [],
+      "spawnTable": "Pack/Eyes, Shapely"
+    },
+    "eyes_suited": {
+      "keyOptions": [],
+      "spawnTable": "Pack/Eyes, Suited"
     }
   }
 }

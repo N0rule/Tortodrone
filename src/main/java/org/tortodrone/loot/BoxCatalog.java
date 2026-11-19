@@ -30,7 +30,7 @@ public final class BoxCatalog {
             var data=read(yaml);fields(data,yaml.toString(),"boxes");
             for(var row:map(data.get("boxes"),"boxes").entrySet()) {
                 String id=row.getKey();String config=item(items,id).config();
-                if(!items.inspect(config).type().equals("Lockbox"))throw new IOException("Not a Lockbox: "+id);
+                if(!Set.of("Lockbox","Pack").contains(items.inspect(config).type()))throw new IOException("Not a Lockbox or Pack: "+id);
                 var binding=map(nativeBoxes.get(id),"Missing native box binding: "+id);fields(binding,id,"keyOptions","spawnTable");
                 if(binding.containsKey("spawnTable"))tables.put(config,text(binding.get("spawnTable"),id+" spawn table"));
                 var nativeKeys=keys(binding.get("keyOptions"),items);
