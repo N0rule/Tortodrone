@@ -1,0 +1,5 @@
+# Hand-authored monster scheduling knobs only.
+# Native stats, damage, speed and attack timing come from the client export and are refused here.
+# Known keys: activation-radius (1..512), leash-radius (1..1024, >= activation-radius),
+# think (dormant|alert|engaged), archetype (lower_snake/kebab policy id).
+monsters: {}

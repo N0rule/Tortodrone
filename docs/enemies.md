@@ -69,6 +69,87 @@ excluded; see the notes.
   (for example `Barlok`, `Dybbuk`, `Gold Trojan`, `Dreadnaught`); they are not
   part of this roster.
 
+## Generated catalogue
+
+`content/monsters/` holds the generated, read-only type catalogue:
+
+- `catalog.json` — one entry per roster type, including unsupported ones.
+- `catalog.sha256` — SHA-256 fingerprint of `catalog.json`; a mismatch is refused at startup.
+- `overrides.yml` — the only hand-authored file: AI scheduling knobs, never stats.
+
+Each type carries the native description config, display name, family, selected actor
+config, an archetype default and, for supported types, the prepared attack fields the scene
+runtime already understands. Unsupported types stay listed with their exact failing action
+kinds; they cannot be spawned or referenced by a scene. The catalogue is parsed once at
+startup and shared by every scene instance. `generatedFrom` records the SHA-256 of the
+installed client's `actor.dat`, `description.dat` and `projectx-config.jar`.
+
+Coverage of the 253 roster entries (Phase 0 gate: at least 60%):
+
+| Family | Types | Supported | Unsupported |
+|---|---:|---:|---:|
+| Beast | 26 | 25 | 1 |
+| Construct | 40 | 37 | 3 |
+| Fiend | 29 | 29 | 0 |
+| Gremlin | 33 | 33 | 0 |
+| No Family | 34 | 31 | 3 |
+| Slime | 45 | 33 | 12 |
+| Undead | 46 | 34 | 12 |
+| **Total** | **253** | **222 (87.7%)** | **31** |
+
+Unsupported reasons are the client action kinds the fail-closed exporter still rejects:
+`DungeonActionConfig$DamageTarget` (6), `$ImpulseTarget` (6),
+`ProjectXActionConfig$StartConversation` (1), `ActionConfig$RotateActor` (1),
+`ActionConfig$Switch` (1), `DungeonActionConfig$TableSpawn` (1),
+`ConditionConfig$Action` chains (2), eight descriptions with no matching actor config, and
+five whose verified relative-fire export changes shape. Treat this list as the remaining
+exporter workstream, not as gameplay policy.
+
+### Regenerating
+
+The exporter is read-only against the installed client and refuses an existing output
+directory, so review the output before copying it in:
+
+```
+java -cp build/tortodrone.jar scripts/StockTools.java monster-roster "/path/to/Spiral Knights" /tmp/monster-roster
+java -cp build/tortodrone.jar scripts/StockTools.java monster-catalog "/path/to/Spiral Knights" /tmp/monster-catalog --catalog
+```
+
+Build the server JAR first (`./gradlew buildServer`). The report writes
+`monster-roster.json` plus `monster-roster.txt` with per-family supported/unsupported counts
+and every unsupported type. `monster-catalog` writes `catalog.json` and `catalog.sha256`.
+After review, replace the two
+files in `content/monsters/` and run `./gradlew validateContent` and
+`./gradlew testUnit -PunitTests=MonsterCatalogTest`. Regenerating must produce byte-identical
+output; sort-normalised object keys and descriptor field lists keep the file stable across
+JVM runs.
+
+### Overrides
+
+Only these keys are accepted, per monster type id:
+
+```yaml
+monsters:
+  darkfang_demo:
+    activation-radius: 12
+    leash-radius: 20
+    think: alert
+    archetype: melee-chaser
+```
+
+- `activation-radius` 1–512, `leash-radius` 1–1024; leash may not be smaller than activation.
+- `think` is `dormant`, `alert` or `engaged`; `archetype` is a lowercase policy id.
+- Unknown type ids, duplicate keys, unknown fields and identity/stat/timing fields fail
+  startup rather than being ignored. The overlay is validated now; its knobs are applied by
+  the later archetype phase.
+
+The validator already understands a prepared `Monster` placement carrying
+`monster-type: <id>`: it rejects an unknown or unsupported id, a non-monster actor, or an
+actor config that differs from the catalogue type. Map YAML does not expose that field yet;
+placement resolution and the existing Crash Site/Laboratory migration belong to the next
+roadmap phase. Until then the runtime still uses the prepared scene specs, and no spawn
+command or gameplay behaviour is provided here.
+
 ## Source and derivation
 
 - Family/enemy names come from the shipped `rsrc/config/description.dat`

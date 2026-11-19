@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 /** Read-only installed-client exporters/checks, with disposable home/preferences and Java 25 compilation. */
 public final class StockTools {
     public static void main(String[] args) throws Exception {
-        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|scene|haven|town|town-check|recipes|craft-check game-directory [arguments]");
+        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|scene|monster-roster|monster-catalog|haven|town|town-check|recipes|craft-check game-directory [arguments]");
         Path project = Path.of("").toAbsolutePath();
         Path game = args[1].equals("-")
             ? org.tortodrone.server.SteamClientLocator.find(org.tortodrone.server.SteamClientLocator.roots(
@@ -221,6 +221,16 @@ public final class StockTools {
                 sources.add(project.resolve("scripts/SceneCollisionTool.java"));
                 sources.add(project.resolve("scripts/CollisionPackExport.java"));
                 sources.add(project.resolve("scripts/compat/SceneCollisionExport.java"));
+            }
+            case "monster-roster" -> {
+                if(args.length!=3)throw new IllegalArgumentException("monster-roster expects game-directory fresh-output-directory");
+                fixture="MonsterRosterExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                for(String source:List.of("MonsterRosterExport","SceneMonsterExport","FireCatalogExport","SceneStatusExport","SceneContentExport","SceneItemExport","ScenePlayerStatsExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
+            case "monster-catalog" -> {
+                if(args.length!=4||!args[3].equals("--catalog"))throw new IllegalArgumentException("monster-catalog expects game-directory fresh-output-directory --catalog");
+                fixture="MonsterRosterExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add("--catalog");
+                for(String source:List.of("MonsterRosterExport","SceneMonsterExport","FireCatalogExport","SceneStatusExport","SceneContentExport","SceneItemExport","ScenePlayerStatsExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
             }
             case "scene" -> {
                 int count=args.length-(args[args.length-1].equals("--content")?1:0);
