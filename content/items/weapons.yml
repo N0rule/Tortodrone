@@ -395,7 +395,7 @@ items:
             forwardImpulse: 1
   antigua:
     name: Antigua
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -526,7 +526,7 @@ items:
             forwardImpulse: 1
   arcana:
     name: Arcana
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -585,7 +585,7 @@ items:
           allowMovementInput: true
   argent_peacemaker:
     name: Argent Peacemaker
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -746,7 +746,7 @@ items:
             allowMovementInput: true
   autogun:
     name: Autogun
-    category: Gun
+    category: Handgun
     rarity: 2
     bindsWhenEquipped: true
     combat:
@@ -901,7 +901,7 @@ items:
             forwardImpulse: 1
   barrier_cannon:
     name: Barrier Cannon
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -981,12 +981,12 @@ items:
     bindsWhenEquipped: true
   base_alchemer:
     name: Base (Alchemer)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_alchemer_wand:
     name: Base (Alchemer) (Wand)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_ascended_calibur:
@@ -996,12 +996,12 @@ items:
     bindsWhenEquipped: true
   base_auto_shell:
     name: Base (Auto Shell)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_auto_shell_1_shot:
     name: Base (Auto Shell) (1 Shot)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_calibur:
@@ -1011,12 +1011,12 @@ items:
     bindsWhenEquipped: true
   base_catalyzer_gun:
     name: Base (Catalyzer Gun)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_catalyzer_gun_arg_modify:
     name: Base (Catalyzer Gun) (Arg Modify)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_chargeonly:
@@ -1041,17 +1041,17 @@ items:
     bindsWhenEquipped: true
   base_heavy_shell:
     name: Base (Heavy Shell)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_heavy_shell_1_shot:
     name: Base (Heavy Shell) (1 Shot)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_heavy_shell_animated:
     name: Base (Heavy Shell) (Animated)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_leviathan_blade:
@@ -1061,12 +1061,12 @@ items:
     bindsWhenEquipped: true
   base_pulse_gun:
     name: Base (Pulse Gun)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_pulse_gun_charged_attack:
     name: Base (Pulse Gun) (Charged Attack)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_relic:
@@ -1076,7 +1076,7 @@ items:
     bindsWhenEquipped: true
   base_revolver_shell:
     name: Base (Revolver Shell)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_rocket_ham:
@@ -1098,7 +1098,7 @@ items:
     bindsWhenEquipped: true
   base_s0_bfa896109f49:
     name: Base
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_saber:
@@ -1118,17 +1118,17 @@ items:
     bindsWhenEquipped: true
   base_simple:
     name: Base (Simple)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_simple_bladed:
     name: Base (Simple) (Bladed)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_spiral_soaker:
     name: Spiral Soaker
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
   base_spur:
@@ -1143,17 +1143,17 @@ items:
     bindsWhenEquipped: true
   base_tortafist:
     name: Base (Tortafist)
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
   base_twin_diskgun:
     name: Base (Twin Diskgun)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   base_twin_mixer:
     name: Base (Twin Mixer)
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
   beast_basher:
@@ -1302,7 +1302,7 @@ items:
             forwardImpulse: 1
   biohazard:
     name: Biohazard
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -1361,7 +1361,7 @@ items:
           allowMovementInput: true
   black_chaingun:
     name: Black Chaingun
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -1412,7 +1412,7 @@ items:
           allowMovementInput: true
   blackhawk:
     name: Blackhawk
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -1514,7 +1514,7 @@ items:
             allowMovementInput: true
   blaster:
     name: Blaster
-    category: Gun
+    category: Handgun
     rarity: 2
     bindsWhenEquipped: true
     combat:
@@ -1632,7 +1632,7 @@ items:
             forwardImpulse: 1
   blazing_pulsar:
     name: Blazing Pulsar
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -1691,7 +1691,7 @@ items:
           allowMovementInput: true
   blight_needle:
     name: Blight Needle
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -1742,7 +1742,7 @@ items:
           allowMovementInput: true
   blitz_needle:
     name: Blitz Needle
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -1970,7 +1970,7 @@ items:
             forwardImpulse: 1
   botulent_slicer:
     name: Botulent Slicer
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -2088,7 +2088,7 @@ items:
             forwardImpulse: 1
   breach_blaster:
     name: Breach Blaster
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -2147,7 +2147,7 @@ items:
           allowMovementInput: true
   buccaneer_broadsider:
     name: Buccaneer Broadsider
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -2325,7 +2325,7 @@ items:
             forwardImpulse: 1
   callahan:
     name: Callahan
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -2385,7 +2385,7 @@ items:
           allowMovementInput: true
   catalyzer:
     name: Catalyzer
-    category: Gun
+    category: Handgun
     rarity: 2
     bindsWhenEquipped: true
     combat:
@@ -2503,7 +2503,7 @@ items:
             forwardImpulse: 1
   celestial_orbitgun:
     name: Celestial Orbitgun
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -2562,7 +2562,7 @@ items:
           allowMovementInput: true
   celestial_orbitgun_old:
     name: Celestial Orbitgun (OLD)
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -2706,7 +2706,7 @@ items:
             allowMovementInput: true
   chilling_duelist:
     name: Chilling Duelist
-    category: Gun
+    category: Handgun
     rarity: 1
     bindsWhenEquipped: true
     combat:
@@ -3075,7 +3075,7 @@ items:
             forwardImpulse: 1
   cryo_driver:
     name: Cryo Driver
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -3127,7 +3127,7 @@ items:
           allowMovementInput: true
   cryotech_alchemer:
     name: Cryotech Alchemer
-    category: Gun
+    category: Handgun
     rarity: 2
     bindsWhenEquipped: true
     combat:
@@ -3179,7 +3179,7 @@ items:
           allowMovementInput: true
   cryotech_alchemer_mk_ii:
     name: Cryotech Alchemer Mk II
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -3421,7 +3421,7 @@ items:
             allowMovementInput: true
   dark_chaingun:
     name: Dark Chaingun
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -4110,7 +4110,7 @@ items:
             allowMovementInput: true
   elemental_blaster:
     name: Elemental Blaster
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -4332,7 +4332,7 @@ items:
             forwardImpulse: 1
   feral_cannon:
     name: Feral Cannon
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -4477,7 +4477,7 @@ items:
             allowMovementInput: true
   fiery_diskgun:
     name: Fiery Diskgun
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -4536,7 +4536,7 @@ items:
           allowMovementInput: true
   fiery_pepperbox:
     name: Fiery Pepperbox
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -4842,7 +4842,7 @@ items:
             forwardImpulse: 1
   firo_driver:
     name: Firo Driver
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -4894,7 +4894,7 @@ items:
           allowMovementInput: true
   firotech_alchemer:
     name: Firotech Alchemer
-    category: Gun
+    category: Handgun
     rarity: 2
     bindsWhenEquipped: true
     combat:
@@ -4946,7 +4946,7 @@ items:
           allowMovementInput: true
   firotech_alchemer_mk_ii:
     name: Firotech Alchemer Mk II
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -5057,7 +5057,7 @@ items:
             forwardImpulse: 1
   flaming_pulsar:
     name: Flaming Pulsar
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -5201,7 +5201,7 @@ items:
             allowMovementInput: true
   freezing_pulsar:
     name: Freezing Pulsar
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -5312,7 +5312,7 @@ items:
             allowMovementInput: true
   frost_gun:
     name: Frost Gun
-    category: Gun
+    category: Handgun
     rarity: 1
     bindsWhenEquipped: true
     combat:
@@ -5430,7 +5430,7 @@ items:
             forwardImpulse: 1
   frozen_pulsar:
     name: Frozen Pulsar
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -5725,7 +5725,7 @@ items:
             forwardImpulse: 1
   fusion_blaster:
     name: Fusion Blaster
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -5784,7 +5784,7 @@ items:
           allowMovementInput: true
   gigawatt_pulsar:
     name: Gigawatt Pulsar
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -5843,7 +5843,7 @@ items:
           allowMovementInput: true
   gilded_griffin:
     name: Gilded Griffin
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -5978,7 +5978,7 @@ items:
             forwardImpulse: 1
   gorgofist:
     name: Gorgofist
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -6196,7 +6196,7 @@ items:
             forwardImpulse: 1
   grand_tortofist:
     name: Grand Tortofist
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -6334,7 +6334,7 @@ items:
             allowMovementInput: true
   grim_buster:
     name: Grim Buster
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -6394,7 +6394,7 @@ items:
           allowMovementInput: true
   grim_repeater:
     name: Grim Repeater
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -6490,7 +6490,7 @@ items:
             actionEndsAfterMs: 1239
   hail_driver:
     name: Hail Driver
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -6788,7 +6788,7 @@ items:
             actionEndsAfterMs: 1239
   heavy_pulsar:
     name: Heavy Pulsar
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -7866,7 +7866,7 @@ items:
             forwardImpulse: 1
   industrial_catalyzer:
     name: Industrial Catalyzer
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -7951,7 +7951,7 @@ items:
             allowMovementInput: true
   iron_slug:
     name: Iron Slug
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -8224,7 +8224,7 @@ items:
             actionEndsAfterMs: 1239
   kilowatt_pulsar:
     name: Kilowatt Pulsar
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -8368,7 +8368,7 @@ items:
             allowMovementInput: true
   magma_driver:
     name: Magma Driver
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -8420,7 +8420,7 @@ items:
           allowMovementInput: true
   magnus:
     name: Magnus
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -8480,7 +8480,7 @@ items:
           allowMovementInput: true
   mandolin:
     name: Mandolin
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -8565,7 +8565,7 @@ items:
             allowMovementInput: true
   master_blaster:
     name: Master Blaster
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -8624,7 +8624,7 @@ items:
           allowMovementInput: true
   mega_magnus:
     name: Mega Magnus
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -8684,7 +8684,7 @@ items:
           allowMovementInput: true
   mega_tundrus:
     name: Mega Tundrus
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -8744,7 +8744,7 @@ items:
           allowMovementInput: true
   mighty_cannon:
     name: Mighty Cannon
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -8804,7 +8804,7 @@ items:
           allowMovementInput: true
   needle_shot:
     name: Needle Shot
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -8855,7 +8855,7 @@ items:
           allowMovementInput: true
   nether_cannon:
     name: Nether Cannon
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -8915,7 +8915,7 @@ items:
           allowMovementInput: true
   neutralizer:
     name: Neutralizer
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10279,7 +10279,7 @@ items:
             actionEndsAfterMs: 1239
   nog_blaster:
     name: Nog Blaster
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10331,7 +10331,7 @@ items:
           allowMovementInput: true
   nova_driver:
     name: Nova Driver
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10383,7 +10383,7 @@ items:
           allowMovementInput: true
   obsidian_carbine:
     name: Obsidian Carbine
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10544,7 +10544,7 @@ items:
             forwardImpulse: 1
   omega_tortofist:
     name: Omega Tortofist
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10604,7 +10604,7 @@ items:
           allowMovementInput: true
   overcharged_mixmaster:
     name: Overcharged Mixmaster
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10663,7 +10663,7 @@ items:
           allowMovementInput: true
   overcharged_mixmaster_old:
     name: Overcharged Mixmaster (OLD)
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10722,12 +10722,12 @@ items:
           allowMovementInput: true
   owlite_wand_base:
     name: Owlite Wand
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
   owlite_wand_blue:
     name: Owlite Wand, Blue
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10772,7 +10772,7 @@ items:
           allowMovementInput: true
   owlite_wand_divine:
     name: Owlite Wand, Divine
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10817,7 +10817,7 @@ items:
           allowMovementInput: true
   owlite_wand_gold:
     name: Owlite Wand, Gold
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10862,7 +10862,7 @@ items:
           allowMovementInput: true
   owlite_wand_green:
     name: Owlite Wand, Green
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10907,7 +10907,7 @@ items:
           allowMovementInput: true
   owlite_wand_grey:
     name: Owlite Wand, Grey
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10952,7 +10952,7 @@ items:
           allowMovementInput: true
   owlite_wand_heavy:
     name: Owlite Wand, Heavy
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -10997,7 +10997,7 @@ items:
           allowMovementInput: true
   owlite_wand_pink:
     name: Owlite Wand, Pink
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11042,7 +11042,7 @@ items:
           allowMovementInput: true
   owlite_wand_purple:
     name: Owlite Wand, Purple
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11087,7 +11087,7 @@ items:
           allowMovementInput: true
   owlite_wand_red:
     name: Owlite Wand, Red
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11132,7 +11132,7 @@ items:
           allowMovementInput: true
   owlite_wand_shadow:
     name: Owlite Wand, Shadow
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11177,7 +11177,7 @@ items:
           allowMovementInput: true
   owlite_wand_volcanic:
     name: Owlite Wand, Volcanic
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11222,7 +11222,7 @@ items:
           allowMovementInput: true
   pepperbox:
     name: Pepperbox
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -11273,7 +11273,7 @@ items:
           allowMovementInput: true
   peppermint_repeater:
     name: Peppermint Repeater
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11324,7 +11324,7 @@ items:
           allowMovementInput: true
   permafroster:
     name: Permafroster
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11383,7 +11383,7 @@ items:
           allowMovementInput: true
   phantamos:
     name: Phantamos
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11442,7 +11442,7 @@ items:
           allowMovementInput: true
   pierce_blaster:
     name: Pierce Blaster
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -11558,7 +11558,7 @@ items:
             allowMovementInput: true
   plague_needle:
     name: Plague Needle
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11635,7 +11635,7 @@ items:
             allowMovementInput: true
   polaris:
     name: Polaris
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11694,7 +11694,7 @@ items:
           allowMovementInput: true
   pollinator:
     name: Pollinator
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11753,12 +11753,12 @@ items:
           allowMovementInput: true
   pollinator_base:
     name: Pollinator
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
   pollinator_tech_violet:
     name: Pollinator, Tech Violet
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -11869,7 +11869,7 @@ items:
             allowMovementInput: true
   primal_buster:
     name: Primal Buster
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -11929,7 +11929,7 @@ items:
           allowMovementInput: true
   prisma_driver:
     name: Prisma Driver
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -11981,7 +11981,7 @@ items:
           allowMovementInput: true
   prismatech_alchemer:
     name: Prismatech Alchemer
-    category: Gun
+    category: Handgun
     rarity: 2
     bindsWhenEquipped: true
     combat:
@@ -12033,7 +12033,7 @@ items:
           allowMovementInput: true
   prismatech_alchemer_mk_ii:
     name: Prismatech Alchemer Mk II
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -12190,7 +12190,7 @@ items:
             allowMovementInput: true
   proto_duelist:
     name: Proto Duelist
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
     combat:
@@ -12266,7 +12266,7 @@ items:
           allowMovementInput: true
   proto_gun:
     name: Proto Gun
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
     combat:
@@ -12384,7 +12384,7 @@ items:
             forwardImpulse: 1
   pulsar:
     name: Pulsar
-    category: Gun
+    category: Handgun
     rarity: 2
     bindsWhenEquipped: true
     combat:
@@ -12443,7 +12443,7 @@ items:
           allowMovementInput: true
   pummel_gun:
     name: Pummel Gun
-    category: Gun
+    category: Handgun
     rarity: 1
     bindsWhenEquipped: true
     combat:
@@ -12503,7 +12503,7 @@ items:
           allowMovementInput: true
   punch_gun:
     name: Punch Gun
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
     combat:
@@ -12589,7 +12589,7 @@ items:
             allowMovementInput: true
   queasinart:
     name: Queasinart
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -12648,7 +12648,7 @@ items:
           allowMovementInput: true
   radiant_pulsar:
     name: Radiant Pulsar
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -12733,7 +12733,7 @@ items:
             allowMovementInput: true
   raptor:
     name: Raptor
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -12888,7 +12888,7 @@ items:
             forwardImpulse: 1
   riftlocker:
     name: Riftlocker
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -13333,7 +13333,7 @@ items:
             forwardImpulse: 1
   savage_tortofist:
     name: Savage Tortofist
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -13608,7 +13608,7 @@ items:
             forwardImpulse: 1
   sentenza:
     name: Sentenza
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -13684,7 +13684,7 @@ items:
           allowMovementInput: true
   shadow_blaster:
     name: Shadow Blaster
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -13743,7 +13743,7 @@ items:
           allowMovementInput: true
   shadow_driver:
     name: Shadow Driver
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -13795,7 +13795,7 @@ items:
           allowMovementInput: true
   shadowtech_alchemer:
     name: Shadowtech Alchemer
-    category: Gun
+    category: Handgun
     rarity: 2
     bindsWhenEquipped: true
     combat:
@@ -13847,7 +13847,7 @@ items:
           allowMovementInput: true
   shadowtech_alchemer_mk_ii:
     name: Shadowtech Alchemer Mk II
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -14154,7 +14154,7 @@ items:
             forwardImpulse: 1
   silversix:
     name: Silversix
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -14230,7 +14230,7 @@ items:
           allowMovementInput: true
   slicer:
     name: Slicer
-    category: Gun
+    category: Handgun
     rarity: 2
     bindsWhenEquipped: true
     combat:
@@ -14563,7 +14563,7 @@ items:
             allowMovementInput: true
   spiral_soaker:
     name: Spiral Soaker
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -14614,7 +14614,7 @@ items:
           allowMovementInput: true
   spiral_soaker_tech_blue:
     name: Spiral Soaker, Tech Blue
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -14665,7 +14665,7 @@ items:
           allowMovementInput: true
   spiral_soaker_tech_violet:
     name: Spiral Soaker, Tech Violet
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -14716,7 +14716,7 @@ items:
           allowMovementInput: true
   spitfire:
     name: Spitfire
-    category: Gun
+    category: Handgun
     rarity: 1
     bindsWhenEquipped: true
     combat:
@@ -14967,7 +14967,7 @@ items:
             allowMovementInput: true
   static_diskgun:
     name: Static Diskgun
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -15111,7 +15111,7 @@ items:
             allowMovementInput: true
   stoic_buster:
     name: Stoic Buster
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -15171,7 +15171,7 @@ items:
           allowMovementInput: true
   storm_driver:
     name: Storm Driver
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -15223,7 +15223,7 @@ items:
           allowMovementInput: true
   strike_needle:
     name: Strike Needle
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -15353,7 +15353,7 @@ items:
             forwardImpulse: 1
   stun_gun:
     name: Stun Gun
-    category: Gun
+    category: Handgun
     rarity: 0
     bindsWhenEquipped: true
     combat:
@@ -15509,7 +15509,7 @@ items:
             allowMovementInput: true
   super_blaster:
     name: Super Blaster
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -15731,7 +15731,7 @@ items:
             allowMovementInput: true
   super_stun_gun:
     name: Super Stun Gun
-    category: Gun
+    category: Handgun
     rarity: 1
     bindsWhenEquipped: true
     combat:
@@ -15790,7 +15790,7 @@ items:
           allowMovementInput: true
   supernova:
     name: Supernova
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -16562,7 +16562,7 @@ items:
             forwardImpulse: 1
   thricer_slicer:
     name: Thricer Slicer
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -16692,17 +16692,17 @@ items:
             allowMovementInput: true
   tortafist_rank3:
     name: Tortafist (Rank3)
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
   tortafist_rank4:
     name: Tortafist (Rank4)
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
   tortafist_rank5:
     name: Tortafist (Rank5)
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
   toxic_atomizer:
@@ -16733,7 +16733,7 @@ items:
             allowMovementInput: true
   toxic_catalyzer:
     name: Toxic Catalyzer
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -16792,7 +16792,7 @@ items:
           allowMovementInput: true
   toxic_needle:
     name: Toxic Needle
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -16843,7 +16843,7 @@ items:
           allowMovementInput: true
   toxic_slicer:
     name: Toxic Slicer
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -17044,7 +17044,7 @@ items:
             actionEndsAfterMs: 1239
   tundrus:
     name: Tundrus
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -17159,7 +17159,7 @@ items:
             forwardImpulse: 1
   twicer_slicer:
     name: Twicer Slicer
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -17303,7 +17303,7 @@ items:
             allowMovementInput: true
   umbra_driver:
     name: Umbra Driver
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -17355,7 +17355,7 @@ items:
           allowMovementInput: true
   umbral_blaster:
     name: Umbral Blaster
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -17537,7 +17537,7 @@ items:
             forwardImpulse: 1
   valiance:
     name: Valiance
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -17596,7 +17596,7 @@ items:
           allowMovementInput: true
   valiance_bladed:
     name: Valiance
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -17764,7 +17764,7 @@ items:
             forwardImpulse: 1
   virulent_catalyzer:
     name: Virulent Catalyzer
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -17880,7 +17880,7 @@ items:
             allowMovementInput: true
   volatile_catalyzer:
     name: Volatile Catalyzer
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -17939,7 +17939,7 @@ items:
           allowMovementInput: true
   volcanic_pepperbox:
     name: Volcanic Pepperbox
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -17990,7 +17990,7 @@ items:
           allowMovementInput: true
   volt_driver:
     name: Volt Driver
-    category: Gun
+    category: Handgun
     rarity: 4
     bindsWhenEquipped: true
     combat:
@@ -18068,7 +18068,7 @@ items:
             allowMovementInput: true
   voltech_alchemer:
     name: Voltech Alchemer
-    category: Gun
+    category: Handgun
     rarity: 2
     bindsWhenEquipped: true
     combat:
@@ -18120,7 +18120,7 @@ items:
           allowMovementInput: true
   voltech_alchemer_mk_ii:
     name: Voltech Alchemer Mk II
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -18231,12 +18231,12 @@ items:
             forwardImpulse: 1
   wanderer_s_wand_base:
     name: Wanderer's Wand
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
   wanderer_s_wand_cool:
     name: Wanderer's Wand, Cool
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -18281,7 +18281,7 @@ items:
           allowMovementInput: true
   wanderer_s_wand_divine:
     name: Wanderer's Wand, Divine
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -18326,7 +18326,7 @@ items:
           allowMovementInput: true
   wanderer_s_wand_dusky:
     name: Wanderer's Wand, Dusky
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -18371,7 +18371,7 @@ items:
           allowMovementInput: true
   wanderer_s_wand_fancy:
     name: Wanderer's Wand, Fancy
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -18416,7 +18416,7 @@ items:
           allowMovementInput: true
   wanderer_s_wand_heavy:
     name: Wanderer's Wand, Heavy
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -18461,7 +18461,7 @@ items:
           allowMovementInput: true
   wanderer_s_wand_military:
     name: Wanderer's Wand, Military
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -18506,7 +18506,7 @@ items:
           allowMovementInput: true
   wanderer_s_wand_prismatic:
     name: Wanderer's Wand, Prismatic
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -18551,12 +18551,12 @@ items:
           allowMovementInput: true
   wanderer_s_wand_recolor:
     name: Wanderer's Wand
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
   wanderer_s_wand_regal:
     name: Wanderer's Wand, Regal
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -18601,7 +18601,7 @@ items:
           allowMovementInput: true
   wanderer_s_wand_shadow:
     name: Wanderer's Wand, Shadow
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -18646,7 +18646,7 @@ items:
           allowMovementInput: true
   wanderer_s_wand_toasty:
     name: Wanderer's Wand, Toasty
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -18691,7 +18691,7 @@ items:
           allowMovementInput: true
   wanderer_s_wand_volcanic:
     name: Wanderer's Wand, Volcanic
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -18820,7 +18820,7 @@ items:
             allowMovementInput: true
   wild_buster:
     name: Wild Buster
-    category: Gun
+    category: Handgun
     rarity: 3
     bindsWhenEquipped: true
     combat:
@@ -18959,7 +18959,7 @@ items:
             forwardImpulse: 1
   wildfire:
     name: Wildfire
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -19073,7 +19073,7 @@ items:
             forwardImpulse: 1
   winter_grave:
     name: Winter Grave
-    category: Gun
+    category: Handgun
     rarity: 5
     bindsWhenEquipped: true
     combat:
@@ -19251,7 +19251,7 @@ items:
             forwardImpulse: 1
   zapper:
     name: Zapper
-    category: Gun
+    category: Handgun
     rarity: 1
     bindsWhenEquipped: true
     combat:

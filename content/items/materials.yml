@@ -130,23 +130,28 @@ items:
     locked: true
   crimsonite_deposit:
     name: Small Crimsonite Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 1
   crimsonite_deposit_1:
     name: Small Crimsonite Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 1
   crimsonite_deposit_2:
     name: Medium Crimsonite Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 2
   crimsonite_deposit_3:
     name: Large Crimsonite Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 3
   crimsonite_deposit_4:
     name: Shiny Crimsonite Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 4
   critter_carapace:
     name: Critter Carapace
@@ -166,23 +171,28 @@ items:
     locked: true
   dark_matter_deposit:
     name: Small Dark Matter Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 1
   dark_matter_deposit_1:
     name: Small Dark Matter Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 1
   dark_matter_deposit_2:
     name: Medium Dark Matter Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 2
   dark_matter_deposit_3:
     name: Large Dark Matter Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 3
   dark_matter_deposit_4:
     name: Shiny Dark Matter Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 4
   dark_shard:
     name: Dark Shard
@@ -399,23 +409,28 @@ items:
     locked: true
   luminite_deposit:
     name: Small Luminite Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 1
   luminite_deposit_1:
     name: Small Luminite Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 1
   luminite_deposit_2:
     name: Medium Luminite Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 2
   luminite_deposit_3:
     name: Large Luminite Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 3
   luminite_deposit_4:
     name: Shiny Luminite Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 4
   lump_of_coal:
     name: Lump of Coal
@@ -486,23 +501,28 @@ items:
     locked: true
   moonstone_deposit:
     name: Small Moonstone Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 1
   moonstone_deposit_1:
     name: Small Moonstone Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 1
   moonstone_deposit_2:
     name: Medium Moonstone Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 2
   moonstone_deposit_3:
     name: Large Moonstone Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 3
   moonstone_deposit_4:
     name: Shiny Moonstone Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 4
   mug_of_misery:
     name: Mug of Misery
@@ -824,23 +844,28 @@ items:
     locked: true
   valestone_deposit:
     name: Small Valestone Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 1
   valestone_deposit_1:
     name: Small Valestone Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 1
   valestone_deposit_2:
     name: Medium Valestone Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 2
   valestone_deposit_3:
     name: Large Valestone Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 3
   valestone_deposit_4:
     name: Shiny Valestone Deposit
-    category: MetaMineral
+    category: Mineral
+    subcategory: Deposit
     rarity: 4
   vile_seal:
     name: Vile Seal

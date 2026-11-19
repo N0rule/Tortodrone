@@ -84,7 +84,7 @@ items:
     bindsWhenEquipped: true
   almirian_crusader_helm:
     name: Almirian Crusader Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   ancient_armor_ward:
@@ -107,7 +107,7 @@ items:
         attackSpeed: -0.04
   ancient_plate_helm:
     name: Ancient Plate Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -166,7 +166,7 @@ items:
             forwardImpulse: 6
   angelic_helm:
     name: Angelic Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   angelic_raiment:
@@ -176,7 +176,7 @@ items:
     bindsWhenEquipped: true
   arcane_salamander_mask:
     name: Arcane Salamander Mask
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   arcane_salamander_suit:
@@ -224,7 +224,7 @@ items:
     bindsWhenEquipped: true
   ash_tail_cap:
     name: Ash Tail Cap
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   ash_tail_coat:
@@ -239,7 +239,7 @@ items:
     bindsWhenEquipped: true
   azure_guardian_helm:
     name: Azure Guardian Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   barbarous_thorn_shield:
@@ -299,7 +299,7 @@ items:
         speed: -0.04
   base_s0_d766e2f3f134:
     name: Base
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   black_kat_cloak:
@@ -318,7 +318,7 @@ items:
         speed: 0.04
   black_kat_cowl:
     name: Black Kat Cowl
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -332,7 +332,7 @@ items:
         speed: 0.04
   black_kat_hat:
     name: Black Kat Hat
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -346,7 +346,7 @@ items:
         chargeTime: 0.2
   black_kat_hood:
     name: Black Kat Hood
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -374,7 +374,7 @@ items:
         speed: 0.04
   black_kat_mask:
     name: Black Kat Mask
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -430,7 +430,7 @@ items:
     bindsWhenEquipped: true
   blazebreak_helm:
     name: Blazebreak Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   blazebreak_shield:
@@ -482,7 +482,7 @@ items:
     bindsWhenEquipped: true
   blizzbreaker_helm:
     name: Blizzbreaker Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   blizzbreaker_shield:
@@ -518,7 +518,7 @@ items:
         chargeTime: 0.08
   bombastic_demo_helm:
     name: Bombastic Demo Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   bombastic_demo_suit:
@@ -538,7 +538,7 @@ items:
     bindsWhenEquipped: true
   boosted_plate_helm:
     name: Boosted Plate Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -622,7 +622,7 @@ items:
     bindsWhenEquipped: true
   brute_jelly_helm:
     name: Brute Jelly Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   brute_jelly_mail:
@@ -692,7 +692,7 @@ items:
         chargeTime: 0.16
   chaos_cowl:
     name: Chaos Cowl
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -706,7 +706,7 @@ items:
         chargeTime: 0.16
   charged_quicksilver_helm:
     name: Charged Quicksilver Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   charged_quicksilver_mail:
@@ -721,7 +721,7 @@ items:
     bindsWhenEquipped: true
   chroma_mask:
     name: Chroma Mask
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   chroma_suit:
@@ -741,7 +741,7 @@ items:
     bindsWhenEquipped: true
   circuit_breaker_helm:
     name: Circuit Breaker Helm
-    category: Helm
+    category: Helmet
     rarity: 1
     bindsWhenEquipped: true
   circuit_breaker_shield:
@@ -774,7 +774,7 @@ items:
     bindsWhenEquipped: true
   cobalt_helm:
     name: Cobalt Helm
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   crest_of_almire:
@@ -802,7 +802,7 @@ items:
             forwardImpulse: 6
   crown_of_the_fallen:
     name: Crown of the Fallen
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -844,7 +844,7 @@ items:
             forwardImpulse: 6
   cyclops_cap:
     name: Cyclops Cap
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   dark_thorn_choker:
@@ -896,7 +896,7 @@ items:
         chargeTime: 0.08
   deadly_virulisk_mask:
     name: Deadly Virulisk Mask
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   deadly_virulisk_suit:
@@ -906,7 +906,7 @@ items:
     bindsWhenEquipped: true
   deadshot_chapeau:
     name: Deadshot Chapeau
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -927,17 +927,17 @@ items:
     bindsWhenEquipped: true
   def_100:
     name: Def 100
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   def_150:
     name: Def 150
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   def_50:
     name: Def 50
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   defender:
@@ -1014,12 +1014,12 @@ items:
     bindsWhenEquipped: true
   dev_modeltester_s0_f58c044d4ae5:
     name: (Dev) ModelTester
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   dev_nobody_s2299321176_726631f5675d:
     name: (Dev) Nobody
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   dev_nobody_s3453254647_3235caabf572:
@@ -1065,7 +1065,7 @@ items:
         delayAfterBreakMs: 8000
   dev_snipe:
     name: (Dev) Snipe
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   dev_translocator:
@@ -1091,12 +1091,12 @@ items:
     bindsWhenEquipped: true
   divine_veil:
     name: Divine Veil
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   dragon_scale_helm:
     name: Dragon Scale Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   dragon_scale_mail:
@@ -1134,7 +1134,7 @@ items:
             forwardImpulse: 6
   drake_scale_helm:
     name: Drake Scale Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   drake_scale_mail:
@@ -1177,7 +1177,7 @@ items:
     bindsWhenEquipped: true
   dread_skelly_mask:
     name: Dread Skelly Mask
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   dread_skelly_shield:
@@ -1220,7 +1220,7 @@ items:
     bindsWhenEquipped: true
   dusker_cap:
     name: Dusker Cap
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   dusker_coat:
@@ -1240,7 +1240,7 @@ items:
     bindsWhenEquipped: true
   elemental_hood:
     name: Elemental Hood
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   elite_bomb_focus_module:
@@ -1305,7 +1305,7 @@ items:
     bindsWhenEquipped: true
   emberbreak_helm:
     name: Emberbreak Helm
-    category: Helm
+    category: Helmet
     rarity: 1
     bindsWhenEquipped: true
   emberbreak_shield:
@@ -1338,7 +1338,7 @@ items:
     bindsWhenEquipped: true
   feral_kat_hood:
     name: Feral Kat Hood
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   feral_shell:
@@ -1380,7 +1380,7 @@ items:
     bindsWhenEquipped: true
   firebreak_helm:
     name: Firebreak Helm
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   firebreak_shield:
@@ -1408,7 +1408,7 @@ items:
             forwardImpulse: 6
   firefighter_helmet:
     name: Firefighter Helmet
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   firefly_bottle:
@@ -1446,7 +1446,7 @@ items:
     bindsWhenEquipped: true
   frostbreaker_helm:
     name: Frostbreaker Helm
-    category: Helm
+    category: Helmet
     rarity: 1
     bindsWhenEquipped: true
   frostbreaker_shield:
@@ -1474,7 +1474,7 @@ items:
             forwardImpulse: 6
   fused_demo_helm:
     name: Fused Demo Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -1529,32 +1529,32 @@ items:
     bindsWhenEquipped: true
   gm_helmet_bucket:
     name: GM Helmet, Bucket
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   gm_helmet_nose:
     name: GM Helmet, Nose
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   gm_helmet_nose_open:
     name: GM Helmet, Nose (Open)
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   gm_helmet_pith:
     name: GM Helmet, Pith
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   gm_helmet_ploomed:
     name: GM Helmet, Plumed
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   gm_helmet_winged:
     name: GM Helmet, Winged
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   golden_solstice_ring:
@@ -1702,7 +1702,7 @@ items:
             forwardImpulse: 6
   grey_feather_cowl:
     name: Grey Feather Cowl
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   grey_feather_mantle:
@@ -1772,16 +1772,17 @@ items:
     bindsWhenEquipped: true
   groundbreaker_helm:
     name: Groundbreaker Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   guardian:
     name: Guardian Shield
-    category: LockdownShield
+    category: Shield
+    subcategory: Lockdown
     rarity: 5
   gunslinger_hat:
     name: Gunslinger Hat
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -1840,37 +1841,37 @@ items:
         chargeTime: 0.08
   handgun_helm_base:
     name: Handgun Helm (Base)
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   handgun_helm_rarity_1:
     name: Handgun Helm (Rarity 1)
-    category: Helm
+    category: Helmet
     rarity: 1
     bindsWhenEquipped: true
   handgun_helm_rarity_2:
     name: Handgun Helm (Rarity 2)
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   handgun_helm_rarity_3:
     name: Handgun Helm (Rarity 3)
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   handgun_helm_rarity_4:
     name: Handgun Helm (Rarity 4)
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   handgun_helm_rarity_5:
     name: Handgun Helm (Rarity 5)
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   handgun_helm_rarity_5_alt:
     name: Handgun Helm (Rarity 5) (Alt)
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   heart_pendant:
@@ -1913,7 +1914,7 @@ items:
     bindsWhenEquipped: true
   heavenly_iron_helm:
     name: Heavenly Iron Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   heavy_armor_ward:
@@ -1923,7 +1924,7 @@ items:
     bindsWhenEquipped: true
   heavy_demo_helm:
     name: Heavy Demo Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -1944,7 +1945,7 @@ items:
     bindsWhenEquipped: true
   heavy_plate_helm:
     name: Heavy Plate Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -1995,7 +1996,7 @@ items:
             forwardImpulse: 6
   helmet_base:
     name: GM Helmet
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   hi_grade_katnip_pouch:
@@ -2120,7 +2121,7 @@ items:
             forwardImpulse: 6
   ice_queen_crown:
     name: Ice Queen Crown
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   ice_queen_mail:
@@ -2135,7 +2136,7 @@ items:
     bindsWhenEquipped: true
   icebreaker_helm:
     name: Icebreaker Helm
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   icebreaker_shield:
@@ -2168,7 +2169,7 @@ items:
     bindsWhenEquipped: true
   ignition_helm:
     name: Ignition Helm
-    category: Helm
+    category: Helmet
     rarity: 1
     bindsWhenEquipped: true
   impact_band:
@@ -2206,7 +2207,7 @@ items:
     bindsWhenEquipped: true
   ironmight_plate_helm:
     name: Ironmight Plate Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -2262,7 +2263,7 @@ items:
     bindsWhenEquipped: true
   jaws_of_megalodon:
     name: Jaws of Megalodon
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   jelly_band:
@@ -2272,7 +2273,7 @@ items:
     bindsWhenEquipped: true
   jelly_helm:
     name: Jelly Helm
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   jelly_mail:
@@ -2305,7 +2306,7 @@ items:
             forwardImpulse: 6
   justifier_hat:
     name: Justifier Hat
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -2329,7 +2330,7 @@ items:
         attackSpeed: 0.04
   kat_claw_cowl:
     name: Kat Claw Cowl
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -2337,7 +2338,7 @@ items:
         attackSpeed: 0.04
   kat_claw_hood:
     name: Kat Claw Hood
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -2353,7 +2354,7 @@ items:
         attackSpeed: 0.04
   kat_claw_mask:
     name: Kat Claw Mask
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -2377,7 +2378,7 @@ items:
         attackSpeed: 0.04
   kat_eye_cowl:
     name: Kat Eye Cowl
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -2385,7 +2386,7 @@ items:
         attackSpeed: 0.04
   kat_eye_hood:
     name: Kat Eye Hood
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -2401,7 +2402,7 @@ items:
         attackSpeed: 0.04
   kat_eye_mask:
     name: Kat Eye Mask
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -2425,7 +2426,7 @@ items:
         chargeTime: 0.08
   kat_hiss_cowl:
     name: Kat Hiss Cowl
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -2433,7 +2434,7 @@ items:
         chargeTime: 0.08
   kat_hiss_hood:
     name: Kat Hiss Hood
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -2449,7 +2450,7 @@ items:
         chargeTime: 0.08
   kat_hiss_mask:
     name: Kat Hiss Mask
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -2470,7 +2471,7 @@ items:
     bindsWhenEquipped: true
   mad_bomber_mask:
     name: Mad Bomber Mask
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -2491,12 +2492,12 @@ items:
     bindsWhenEquipped: true
   magic_hood:
     name: Magic Hood
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   magikat_hat:
     name: Magikat Hat
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   massive_impact_band:
@@ -2506,7 +2507,7 @@ items:
     bindsWhenEquipped: true
   mercurial_demo_helm:
     name: Mercurial Demo Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -2534,7 +2535,7 @@ items:
         speed: 0.04
   mercurial_helm:
     name: Mercurial Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -2567,7 +2568,7 @@ items:
     bindsWhenEquipped: true
   mighty_cobalt_helm:
     name: Mighty Cobalt Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   mighty_defender:
@@ -2650,7 +2651,7 @@ items:
         speed: -0.04
   mining_hat:
     name: Mining Hat
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   miracle_cloak:
@@ -2660,12 +2661,12 @@ items:
     bindsWhenEquipped: true
   miracle_hood:
     name: Miracle Hood
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   mirakat_hat:
     name: Mirakat Hat
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   misplaced_promissory_note:
@@ -2675,7 +2676,7 @@ items:
     bindsWhenEquipped: true
   nameless_hat:
     name: Nameless Hat
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -3432,12 +3433,12 @@ items:
     bindsWhenEquipped: true
   padded_cap:
     name: Padded Cap
-    category: Helm
+    category: Helmet
     rarity: 1
     bindsWhenEquipped: true
   padded_demo_helm:
     name: Padded Demo Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -3453,7 +3454,7 @@ items:
         chargeTime: 0.08
   padded_hunting_cap:
     name: Padded Hunting Cap
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   padded_hunting_coat:
@@ -3468,7 +3469,7 @@ items:
     bindsWhenEquipped: true
   pathfinder_helm:
     name: Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   penta_heart_pendant:
@@ -3533,7 +3534,7 @@ items:
         attackSpeed: 0.04
   plated_pathfinder_helm_falcon:
     name: Plated Falcon Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3541,7 +3542,7 @@ items:
         attackSpeed: 0.04
   plated_pathfinder_helm_firefly:
     name: Plated Firefly Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3549,7 +3550,7 @@ items:
         attackSpeed: 0.04
   plated_pathfinder_helm_grizzly:
     name: Plated Grizzly Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3557,7 +3558,7 @@ items:
         attackSpeed: 0.04
   plated_pathfinder_helm_snakebite:
     name: Plated Snakebite Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3597,7 +3598,7 @@ items:
         attackSpeed: 0.04
   plated_sentinel_helm_falcon:
     name: Plated Falcon Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3605,7 +3606,7 @@ items:
         attackSpeed: 0.04
   plated_sentinel_helm_firefly:
     name: Plated Firefly Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3613,7 +3614,7 @@ items:
         attackSpeed: 0.04
   plated_sentinel_helm_grizzly:
     name: Plated Grizzly Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3621,7 +3622,7 @@ items:
         attackSpeed: 0.04
   plated_sentinel_helm_snakebite:
     name: Plated Snakebite Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3661,7 +3662,7 @@ items:
         attackSpeed: 0.04
   plated_shade_helm_falcon:
     name: Plated Falcon Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3669,7 +3670,7 @@ items:
         attackSpeed: 0.04
   plated_shade_helm_firefly:
     name: Plated Firefly Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3677,7 +3678,7 @@ items:
         attackSpeed: 0.04
   plated_shade_helm_grizzly:
     name: Plated Grizzly Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3685,7 +3686,7 @@ items:
         attackSpeed: 0.04
   plated_shade_helm_snakebite:
     name: Plated Snakebite Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3748,7 +3749,7 @@ items:
         speed: -0.04
   proto_base_s0_ca1c982e3ab7:
     name: Proto (Base)
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   proto_base_s0_d5e8e33c6775:
@@ -3814,7 +3815,7 @@ items:
     bindsWhenEquipped: true
   purring_cap:
     name: Purring Cap
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   quick_draw_module:
@@ -3835,7 +3836,7 @@ items:
         attackSpeed: 0.04
   quicksilver_helm:
     name: Quicksilver Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   quicksilver_mail:
@@ -3845,7 +3846,7 @@ items:
     bindsWhenEquipped: true
   quilted_demo_helm:
     name: Quilted Demo Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -3861,7 +3862,7 @@ items:
         chargeTime: 0.08
   quilted_hunting_cap:
     name: Quilted Hunting Cap
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   quilted_hunting_coat:
@@ -3917,7 +3918,8 @@ items:
         attackSpeed: 0.12
   recon:
     name: Recon Cloak
-    category: LockdownShield
+    category: Shield
+    subcategory: Lockdown
     rarity: 5
   redwood_bracelet:
     name: Redwood Bracelet
@@ -3931,7 +3933,7 @@ items:
     bindsWhenEquipped: true
   rock_jelly_helm:
     name: Rock Jelly Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   rock_jelly_mail:
@@ -3964,17 +3966,17 @@ items:
             forwardImpulse: 6
   ronin_gasa:
     name: Ronin Gasa
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   rooster_helm:
     name: Rooster Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   rooster_king_helm:
     name: Rooster King Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   royal_jelly_band:
@@ -3984,7 +3986,7 @@ items:
     bindsWhenEquipped: true
   royal_jelly_crown:
     name: Royal Jelly Crown
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   royal_jelly_mail:
@@ -4053,7 +4055,7 @@ items:
         attackSpeed: 0.04
   sacred_ghost_helm_falcon:
     name: Sacred Falcon Ghost Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4062,7 +4064,7 @@ items:
         attackSpeed: 0.04
   sacred_ghost_helm_firefly:
     name: Sacred Firefly Ghost Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4071,7 +4073,7 @@ items:
         attackSpeed: 0.04
   sacred_ghost_helm_grizzly:
     name: Sacred Grizzly Ghost Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4080,7 +4082,7 @@ items:
         attackSpeed: 0.04
   sacred_ghost_helm_snakebite:
     name: Sacred Snakebite Ghost Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4125,7 +4127,7 @@ items:
         attackSpeed: 0.04
   sacred_guerrilla_helm_falcon:
     name: Sacred Falcon Guerrilla Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4134,7 +4136,7 @@ items:
         attackSpeed: 0.04
   sacred_guerrilla_helm_firefly:
     name: Sacred Firefly Guerrilla Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4143,7 +4145,7 @@ items:
         attackSpeed: 0.04
   sacred_guerrilla_helm_grizzly:
     name: Sacred Grizzly Guerrilla Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4152,7 +4154,7 @@ items:
         attackSpeed: 0.04
   sacred_guerrilla_helm_snakebite:
     name: Sacred Snakebite Guerrilla Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4197,7 +4199,7 @@ items:
         attackSpeed: 0.04
   sacred_hazard_helm_falcon:
     name: Sacred Falcon Hazard Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4206,7 +4208,7 @@ items:
         attackSpeed: 0.04
   sacred_hazard_helm_firefly:
     name: Sacred Firefly Hazard Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4215,7 +4217,7 @@ items:
         attackSpeed: 0.04
   sacred_hazard_helm_grizzly:
     name: Sacred Grizzly Hazard Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4224,7 +4226,7 @@ items:
         attackSpeed: 0.04
   sacred_hazard_helm_snakebite:
     name: Sacred Snakebite Hazard Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4269,7 +4271,7 @@ items:
         attackSpeed: 0.04
   sacred_hex_helm_falcon:
     name: Sacred Falcon Hex Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4278,7 +4280,7 @@ items:
         attackSpeed: 0.04
   sacred_hex_helm_firefly:
     name: Sacred Firefly Hex Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4287,7 +4289,7 @@ items:
         attackSpeed: 0.04
   sacred_hex_helm_grizzly:
     name: Sacred Grizzly Hex Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4296,7 +4298,7 @@ items:
         attackSpeed: 0.04
   sacred_hex_helm_snakebite:
     name: Sacred Snakebite Hex Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4341,7 +4343,7 @@ items:
         attackSpeed: 0.04
   sacred_keeper_helm_falcon:
     name: Sacred Falcon Keeper Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4350,7 +4352,7 @@ items:
         attackSpeed: 0.04
   sacred_keeper_helm_firefly:
     name: Sacred Firefly Keeper Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4359,7 +4361,7 @@ items:
         attackSpeed: 0.04
   sacred_keeper_helm_grizzly:
     name: Sacred Grizzly Keeper Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4368,7 +4370,7 @@ items:
         attackSpeed: 0.04
   sacred_keeper_helm_snakebite:
     name: Sacred Snakebite Keeper Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4413,7 +4415,7 @@ items:
         attackSpeed: 0.04
   sacred_pathfinder_helm_falcon:
     name: Sacred Falcon Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4422,7 +4424,7 @@ items:
         attackSpeed: 0.04
   sacred_pathfinder_helm_firefly:
     name: Sacred Firefly Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4431,7 +4433,7 @@ items:
         attackSpeed: 0.04
   sacred_pathfinder_helm_grizzly:
     name: Sacred Grizzly Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4440,7 +4442,7 @@ items:
         attackSpeed: 0.04
   sacred_pathfinder_helm_snakebite:
     name: Sacred Snakebite Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4485,7 +4487,7 @@ items:
         attackSpeed: 0.04
   sacred_sentinel_helm_falcon:
     name: Sacred Falcon Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4494,7 +4496,7 @@ items:
         attackSpeed: 0.04
   sacred_sentinel_helm_firefly:
     name: Sacred Firefly Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4503,7 +4505,7 @@ items:
         attackSpeed: 0.04
   sacred_sentinel_helm_grizzly:
     name: Sacred Grizzly Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4512,7 +4514,7 @@ items:
         attackSpeed: 0.04
   sacred_sentinel_helm_snakebite:
     name: Sacred Snakebite Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4557,7 +4559,7 @@ items:
         attackSpeed: 0.04
   sacred_shade_helm_falcon:
     name: Sacred Falcon Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4566,7 +4568,7 @@ items:
         attackSpeed: 0.04
   sacred_shade_helm_firefly:
     name: Sacred Firefly Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4575,7 +4577,7 @@ items:
         attackSpeed: 0.04
   sacred_shade_helm_grizzly:
     name: Sacred Grizzly Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4584,7 +4586,7 @@ items:
         attackSpeed: 0.04
   sacred_shade_helm_snakebite:
     name: Sacred Snakebite Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4634,7 +4636,7 @@ items:
         attackSpeed: 0.04
   sacred_wraith_helm_falcon:
     name: Sacred Falcon Wraith Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4643,7 +4645,7 @@ items:
         attackSpeed: 0.04
   sacred_wraith_helm_firefly:
     name: Sacred Firefly Wraith Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4652,7 +4654,7 @@ items:
         attackSpeed: 0.04
   sacred_wraith_helm_grizzly:
     name: Sacred Grizzly Wraith Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4661,7 +4663,7 @@ items:
         attackSpeed: 0.04
   sacred_wraith_helm_snakebite:
     name: Sacred Snakebite Wraith Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -4675,7 +4677,7 @@ items:
     bindsWhenEquipped: true
   salamander_mask:
     name: Salamander Mask
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   salamander_suit:
@@ -4773,7 +4775,7 @@ items:
     bindsWhenEquipped: true
   scary_skelly_mask:
     name: Scary Skelly Mask
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   scary_skelly_shield:
@@ -4811,12 +4813,12 @@ items:
     bindsWhenEquipped: true
   sentinel_helm:
     name: Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   seraphic_helm:
     name: Seraphic Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   seraphic_mail:
@@ -4831,7 +4833,7 @@ items:
     bindsWhenEquipped: true
   shade_helm:
     name: Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   shadow_thorn_choker:
@@ -4846,7 +4848,7 @@ items:
     bindsWhenEquipped: true
   shadowsun_stetson:
     name: Shadowsun Stetson
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   shining_ward:
@@ -4906,7 +4908,7 @@ items:
         attackSpeed: 0.12
   shroom_cap:
     name: Shroom Cap
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   silver_amulet:
@@ -4936,7 +4938,7 @@ items:
     bindsWhenEquipped: true
   sinister_skelly_mask:
     name: Sinister Skelly Mask
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   sinister_skelly_shield:
@@ -4979,7 +4981,7 @@ items:
     bindsWhenEquipped: true
   skelly_mask:
     name: Skelly Mask
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   skelly_shield:
@@ -5012,7 +5014,7 @@ items:
     bindsWhenEquipped: true
   skolver_cap:
     name: Skolver Cap
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   skolver_coat:
@@ -5032,12 +5034,12 @@ items:
     bindsWhenEquipped: true
   slot_prize:
     name: Slot Prize
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   snarbolax_cap:
     name: Snarbolax Cap
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   snarbolax_coat:
@@ -5067,7 +5069,7 @@ items:
     bindsWhenEquipped: true
   solid_cobalt_helm:
     name: Solid Cobalt Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   solid_impact_band:
@@ -5171,42 +5173,42 @@ items:
     bindsWhenEquipped: true
   spiral_crescent_helm_base:
     name: Spiral Crescent Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_crescent_helm_blue:
     name: Spiral Crescent Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_crescent_helm_gold:
     name: Spiral Crescent Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_crescent_helm_green:
     name: Spiral Crescent Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_crescent_helm_heavy:
     name: Spiral Crescent Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_crescent_helm_pink:
     name: Spiral Crescent Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_crescent_helm_purple:
     name: Spiral Crescent Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_crescent_helm_red:
     name: Spiral Crescent Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_cuirass_base:
@@ -5291,7 +5293,7 @@ items:
     bindsWhenEquipped: true
   spiral_demo_helm:
     name: Spiral Demo Helm
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
     modifiers:
@@ -5387,87 +5389,87 @@ items:
     bindsWhenEquipped: true
   spiral_hood_base:
     name: Spiral Hood
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_hood_blue:
     name: Spiral Hood
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_hood_gold:
     name: Spiral Hood
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_hood_green:
     name: Spiral Hood
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_hood_heavy:
     name: Spiral Hood
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_hood_pink:
     name: Spiral Hood
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_hood_purple:
     name: Spiral Hood
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_hood_red:
     name: Spiral Hood
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_pith_helm_base:
     name: Spiral Pith Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_pith_helm_blue:
     name: Spiral Pith Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_pith_helm_gold:
     name: Spiral Pith Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_pith_helm_green:
     name: Spiral Pith Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_pith_helm_heavy:
     name: Spiral Pith Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_pith_helm_pink:
     name: Spiral Pith Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_pith_helm_purple:
     name: Spiral Pith Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_pith_helm_red:
     name: Spiral Pith Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_plate_helm:
     name: Spiral Plate Helm
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
     modifiers:
@@ -5495,87 +5497,87 @@ items:
         attackSpeed: -0.04
   spiral_round_helm_base:
     name: Spiral Round Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_round_helm_blue:
     name: Spiral Round Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_round_helm_gold:
     name: Spiral Round Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_round_helm_green:
     name: Spiral Round Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_round_helm_heavy:
     name: Spiral Round Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_round_helm_pink:
     name: Spiral Round Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_round_helm_purple:
     name: Spiral Round Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_round_helm_red:
     name: Spiral Round Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_sallet_base:
     name: Spiral Sallet
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_sallet_blue:
     name: Spiral Sallet
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_sallet_gold:
     name: Spiral Sallet
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_sallet_green:
     name: Spiral Sallet
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_sallet_heavy:
     name: Spiral Sallet
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_sallet_pink:
     name: Spiral Sallet
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_sallet_purple:
     name: Spiral Sallet
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_sallet_red:
     name: Spiral Sallet
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_scale_helm:
     name: Spiral Scale Helm
-    category: Helm
+    category: Helmet
     rarity: 1
     bindsWhenEquipped: true
   spiral_scale_mail:
@@ -5585,47 +5587,47 @@ items:
     bindsWhenEquipped: true
   spiral_tailed_helm_base:
     name: Spiral Tailed Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_tailed_helm_blue:
     name: Spiral Tailed Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_tailed_helm_gold:
     name: Spiral Tailed Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_tailed_helm_green:
     name: Spiral Tailed Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_tailed_helm_heavy:
     name: Spiral Tailed Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_tailed_helm_pink:
     name: Spiral Tailed Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_tailed_helm_purple:
     name: Spiral Tailed Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   spiral_tailed_helm_red:
     name: Spiral Tailed Helm
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   starlit_demo_helm:
     name: Starlit Demo Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -5641,7 +5643,7 @@ items:
         chargeTime: 0.16
   starlit_hunting_cap:
     name: Starlit Hunting Cap
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   starlit_hunting_coat:
@@ -5734,7 +5736,8 @@ items:
             forwardImpulse: 6
   striker_s2798379043_059a8208ec90:
     name: Strike Booster
-    category: LockdownShield
+    category: Shield
+    subcategory: Lockdown
     rarity: 5
   sunset_duster:
     name: Sunset Duster
@@ -5746,7 +5749,7 @@ items:
         attackSpeed: 0.04
   sunset_stetson:
     name: Sunset Stetson
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
     modifiers:
@@ -5759,7 +5762,7 @@ items:
     bindsWhenEquipped: true
   surge_breaker_helm:
     name: Surge Breaker Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
   surge_breaker_shield:
@@ -5827,7 +5830,7 @@ items:
         chargeTime: 0.08
   sword_plus:
     name: Sword Plus
-    category: Helm
+    category: Helmet
     rarity: 0
     bindsWhenEquipped: true
   teddy_bear_buckler:
@@ -6133,7 +6136,7 @@ items:
     bindsWhenEquipped: true
   tri_guard_helm:
     name: Tri-Guard Helm
-    category: Helm
+    category: Helmet
     rarity: 1
     bindsWhenEquipped: true
   tri_heart_pendant:
@@ -6176,7 +6179,7 @@ items:
             forwardImpulse: 6
   valkyrie_helm:
     name: Valkyrie Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   valkyrie_mail:
@@ -6186,7 +6189,7 @@ items:
     bindsWhenEquipped: true
   virulisk_mask:
     name: Virulisk Mask
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   virulisk_suit:
@@ -6211,7 +6214,7 @@ items:
     bindsWhenEquipped: true
   vog_cub_cap:
     name: Vog Cub Cap
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -6241,7 +6244,7 @@ items:
         attackSpeed: -0.04
   volcanic_demo_helm:
     name: Volcanic Demo Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -6257,7 +6260,7 @@ items:
         chargeTime: 0.16
   volcanic_plate_helm:
     name: Volcanic Plate Helm
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -6308,7 +6311,7 @@ items:
             forwardImpulse: 6
   volcanic_salamander_mask:
     name: Volcanic Salamander Mask
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
   volcanic_salamander_suit:
@@ -6323,7 +6326,7 @@ items:
     bindsWhenEquipped: true
   volt_breaker_helm:
     name: Volt Breaker Helm
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   volt_breaker_shield:
@@ -6356,7 +6359,7 @@ items:
     bindsWhenEquipped: true
   warmaster_helm_1:
     name: Fractured Mask of Seerus
-    category: Helm
+    category: Helmet
     rarity: 1
     bindsWhenEquipped: true
     modifiers:
@@ -6365,7 +6368,7 @@ items:
         attackSpeed: 0.04
   warmaster_helm_2:
     name: Flawed Mask of Seerus
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6374,7 +6377,7 @@ items:
         attackSpeed: 0.04
   warmaster_helm_3:
     name: Perfect Mask of Seerus
-    category: Helm
+    category: Helmet
     rarity: 5
     bindsWhenEquipped: true
     modifiers:
@@ -6453,7 +6456,7 @@ items:
             forwardImpulse: 6
   wolver_cap:
     name: Wolver Cap
-    category: Helm
+    category: Helmet
     rarity: 2
     bindsWhenEquipped: true
   wolver_coat:
@@ -6495,7 +6498,7 @@ items:
         attackSpeed: 0.04
   woven_pathfinder_helm_falcon:
     name: Woven Falcon Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6503,7 +6506,7 @@ items:
         attackSpeed: 0.04
   woven_pathfinder_helm_firefly:
     name: Woven Firefly Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6511,7 +6514,7 @@ items:
         attackSpeed: 0.04
   woven_pathfinder_helm_grizzly:
     name: Woven Grizzly Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6519,7 +6522,7 @@ items:
         attackSpeed: 0.04
   woven_pathfinder_helm_snakebite:
     name: Woven Snakebite Pathfinder Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6559,7 +6562,7 @@ items:
         attackSpeed: 0.04
   woven_sentinel_helm_falcon:
     name: Woven Falcon Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6567,7 +6570,7 @@ items:
         attackSpeed: 0.04
   woven_sentinel_helm_firefly:
     name: Woven Firefly Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6575,7 +6578,7 @@ items:
         attackSpeed: 0.04
   woven_sentinel_helm_grizzly:
     name: Woven Grizzly Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6583,7 +6586,7 @@ items:
         attackSpeed: 0.04
   woven_sentinel_helm_snakebite:
     name: Woven Snakebite Sentinel Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6623,7 +6626,7 @@ items:
         attackSpeed: 0.04
   woven_shade_helm_falcon:
     name: Woven Falcon Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6631,7 +6634,7 @@ items:
         attackSpeed: 0.04
   woven_shade_helm_firefly:
     name: Woven Firefly Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6639,7 +6642,7 @@ items:
         attackSpeed: 0.04
   woven_shade_helm_grizzly:
     name: Woven Grizzly Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6647,7 +6650,7 @@ items:
         attackSpeed: 0.04
   woven_shade_helm_snakebite:
     name: Woven Snakebite Shade Helm
-    category: Helm
+    category: Helmet
     rarity: 3
     bindsWhenEquipped: true
     modifiers:
@@ -6660,7 +6663,7 @@ items:
     bindsWhenEquipped: true
   wyvern_scale_helm:
     name: Wyvern Scale Helm
-    category: Helm
+    category: Helmet
     rarity: 4
     bindsWhenEquipped: true
   wyvern_scale_mail:
