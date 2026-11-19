@@ -198,7 +198,7 @@ public final class TownStore {
         for(int n=0;n<(def.stackable()?1:count);n++){
             long id=WorldProfiles.allocate(c,"next-item-id",Long.MAX_VALUE);if(first==0)first=id;
             try(var s=c.prepareStatement("INSERT INTO inventory_items(item_id,world_id,slot,config,count,bound,bind_on_equip,permanent,level,heat_progress,variants) VALUES(?,?,?,?,?,?,?,?,?,?,?)")){
-                s.setLong(1,id);s.setInt(2,p.worldId());s.setString(3,def.slot().name());s.setString(4,config);s.setInt(5,def.stackable()?count:1);s.setBoolean(6,locked||def.locked());s.setBoolean(7,def.bindOnEquip());s.setBoolean(8,def.permanent());s.setInt(9,level);s.setFloat(10,heat);s.setString(11,Json.stringify(variants.stream().map(StarterCatalog.Model::name).toList()));s.executeUpdate();
+                s.setLong(1,id);s.setInt(2,p.worldId());s.setString(3,def.slot().persistedName());s.setString(4,config);s.setInt(5,def.stackable()?count:1);s.setBoolean(6,locked||def.locked());s.setBoolean(7,def.bindOnEquip());s.setBoolean(8,def.permanent());s.setInt(9,level);s.setFloat(10,heat);s.setString(11,Json.stringify(variants.stream().map(StarterCatalog.Model::name).toList()));s.executeUpdate();
             }
             InventoryExpiry.save(c,id,InventoryExpiry.deadline(def.expireDays()));
             try(var s=c.prepareStatement("INSERT INTO item_events(world_id,config,quantity,first_item_id,created_at) VALUES(?,?,?,?,?)")){s.setInt(1,p.worldId());s.setString(2,config);s.setInt(3,def.stackable()?count:1);s.setLong(4,id);s.setLong(5,System.currentTimeMillis());s.executeUpdate();}

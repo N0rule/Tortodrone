@@ -53,7 +53,7 @@ public final class SceneHealth {
         status.equipment(profile);
         int next=town.equipmentBonuses(profile,"").health();var defenses=new HashMap<String,String>();var shield=new HashMap<String,String>();
         for(var item:profile.items())if(item.equippedSlot()!=null&&GEAR.contains(item.equippedSlot())){
-            next+=Math.round(GearStats.value(content.stats(),item,"health-bonus"));
+            int vitapod=org.tortodrone.character.DungeonGear.healthBonus(item.config());next+=vitapod>0?vitapod:Math.round(GearStats.value(content.stats(),item,"health-bonus"));
             for(String type:List.of("normal","piercing","elemental","shadow")){
                 var target=item.equippedSlot()==2?shield:defenses;
                 String key="defense."+type;float value=Float.parseFloat(target.getOrDefault(key,"0"));

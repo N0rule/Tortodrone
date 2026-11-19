@@ -9,8 +9,10 @@ public record WorldProfile(int worldId, int accountId, int knightId, int crowns,
     public WorldProfile(int worldId,int accountId,int knightId,int crowns,int energy,long revision,List<Item> items){this(worldId,accountId,knightId,crowns,energy,revision,items,KnightProgress.RECRUIT);}
     public WorldProfile { items = List.copyOf(items);java.util.Objects.requireNonNull(progress);java.util.Objects.requireNonNull(town); }
     public enum Slot {
-        HELM, ARMOR, SWORD, GUN, SHIELD, BOMB, HELM_COSTUME, ARMOR_COSTUME, SHIELD_COSTUME, TRINKET, OTHER;
+        HELM, ARMOR, SWORD, GUN, SHIELD, BOMB, HELM_COSTUME, ARMOR_COSTUME, SHIELD_COSTUME, TRINKET, DUNGEON, OTHER;
         public boolean weapon() { return this==SWORD || this==GUN || this==BOMB; }
+        /** Schema 17 stores dungeon gear under the generic OTHER slot and overlays it on load. */
+        public String persistedName() { return this==DUNGEON?"OTHER":name(); }
         public boolean accepts(int index) {
             return switch(this) {
                 case HELM -> index==0||index==3;
@@ -21,10 +23,11 @@ public record WorldProfile(int worldId, int accountId, int knightId, int crowns,
                 case ARMOR_COSTUME -> index==4;
                 case SHIELD_COSTUME -> index==15;
                 case TRINKET -> index==10 || index==11;
+                case DUNGEON -> index==12;
                 case OTHER -> false;
             };
         }
-        public int initialIndex() { return switch(this) {case HELM->0;case ARMOR->1;case SHIELD->2;case SWORD,BOMB->6;case GUN->7;case HELM_COSTUME->3;case ARMOR_COSTUME->4;case SHIELD_COSTUME->15;case TRINKET->10;case OTHER->-1;}; }
+        public int initialIndex() { return switch(this) {case HELM->0;case ARMOR->1;case SHIELD->2;case SWORD,BOMB->6;case GUN->7;case HELM_COSTUME->3;case ARMOR_COSTUME->4;case SHIELD_COSTUME->15;case TRINKET->10;case DUNGEON->12;case OTHER->-1;}; }
     }
     public record Gift(int wrapperId,String wrapperName,String message,List<Item> contents) { public Gift{contents=List.copyOf(contents);} }
     public record Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot, boolean bound, boolean bindOnEquip, boolean starter, int count, boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants,List<String> additionalAccessories,boolean cursed,Gift gift,Long expiresAt) {

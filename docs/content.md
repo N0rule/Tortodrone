@@ -635,6 +635,12 @@ into `equipment[14]`; normal shields still use slot 2. Named loadouts save and
 restore slot 14. The slot is reserved for future PvP/arena gameplay; Lockdown item
 models remain unsupported until that path exists. No schema migration is required.
 
+**Dungeon gear:** Vitapods are passive slot-12 dungeon gear, not bag consumables.
+The slot is stored in `item.dungeon.<world>` metadata, each capsule tier adds 40
+maximum health, and equipping a lower-or-equal tier is refused while a better pod
+replaces the old one. The persisted inventory row stays in the generic `OTHER`
+database slot so schema 17 is unchanged.
+
 Explicit initialization/seed-version metadata makes seeding one-time. Restart,
 disabling all offers or intentionally clearing a managed catalog never reseeds it.
 Existing purchases remain in the original `town_purchases` ledger: lifetime purchase

@@ -248,30 +248,6 @@ Furni/Trophy/Boss Trophy/Vanaduke/3 - Scepter of Vanaduke,Prop,partial,"native i
 "Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
 "Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
 "Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
-Gear/Dungeon/Vitapod/Health +01,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +02,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +03,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +04,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +05,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +06,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +07,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +08,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +09,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +10,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +11,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +12,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +13,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +14,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +15,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +16,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +18,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +20,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +21,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +24,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +27,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +28,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +29,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Health +30,Dungeon,unusable,no item-use handler for Dungeon
 Gear/PvP/Lockdown/Guardian,LockdownShield,unusable,no item-use handler for LockdownShield
 Gear/PvP/Lockdown/Recon,LockdownShield,unusable,no item-use handler for LockdownShield
 Gear/PvP/Lockdown/Striker,LockdownShield,unusable,no item-use handler for LockdownShield

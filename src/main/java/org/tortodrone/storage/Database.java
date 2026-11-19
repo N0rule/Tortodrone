@@ -583,15 +583,31 @@ public final class Database {
             if(slot==null||slot!=14)try(var st=c.prepareStatement("DELETE FROM metadata WHERE key=? AND value=?")) {
                 st.setString(1,"item.pvp-shield."+profile.worldId());st.setLong(2,itemId);st.executeUpdate();
             }
+            // Slot 12 is the dungeon gear slot. The native client refuses a Vitapod whose
+            // capsule tier is not better than the equipped one, and replaces (removes) the old pod.
+            if(slot!=null&&slot==12&&item.slot()==WorldProfile.Slot.DUNGEON) {
+                int nextTier=org.tortodrone.character.DungeonGear.vitapodTier(item.config());
+                if(nextTier>0) {
+                    var current=profile.items().stream().filter(i->i.id()!=itemId&&Integer.valueOf(12).equals(i.equippedSlot())).findFirst().orElse(null);
+                    if(current!=null&&org.tortodrone.character.DungeonGear.vitapodTier(current.config())>=nextTier)
+                        throw new IOException("A better Vitapod is already equipped");
+                    if(current!=null&&org.tortodrone.character.DungeonGear.vitapodTier(current.config())>0)
+                        try(var st=c.prepareStatement("DELETE FROM inventory_items WHERE world_id=? AND item_id=?")){st.setInt(1,profile.worldId());st.setLong(2,current.id());st.executeUpdate();}
+                }
+            }
+            if(slot==null||slot!=12)try(var st=c.prepareStatement("DELETE FROM metadata WHERE key=? AND value=?")) {
+                st.setString(1,"item.dungeon."+profile.worldId());st.setLong(2,itemId);st.executeUpdate();
+            }
 
             if(slot!=null)try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=NULL WHERE world_id=? AND equipped_slot=?")){s.setInt(1,profile.worldId());s.setInt(2,slot);s.executeUpdate();}
             try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=?,bound=CASE WHEN ? IS NOT NULL AND bind_on_equip=1 THEN 1 ELSE bound END WHERE world_id=? AND item_id=?")){
-                if(slot==null||slot==8||slot==9||slot==14)s.setNull(1,Types.INTEGER);else s.setInt(1,slot);
+                if(slot==null||slot==8||slot==9||slot==12||slot==14)s.setNull(1,Types.INTEGER);else s.setInt(1,slot);
                 if(slot==null)s.setNull(2,Types.INTEGER);else s.setInt(2,slot);
                 s.setInt(3,profile.worldId());s.setLong(4,itemId);s.executeUpdate();
             }
             if(slot!=null&&(slot==8||slot==9))try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?)")){st.setString(1,"item.weapon-slot."+itemId);st.setInt(2,slot);st.executeUpdate();}
             if(slot!=null&&slot==14)try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){st.setString(1,"item.pvp-shield."+profile.worldId());st.setLong(2,itemId);st.executeUpdate();}
+            if(slot!=null&&slot==12)try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){st.setString(1,"item.dungeon."+profile.worldId());st.setLong(2,itemId);st.executeUpdate();}
             try(PreparedStatement s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
     }
     public WorldProfile administrativeEquipment(String username,String knight,int account,int world,long revision,long itemId,Integer slot,String grant,org.tortodrone.character.ItemCatalog catalog,org.tortodrone.town.TownCatalog rules)throws IOException {
@@ -662,7 +678,7 @@ public final class Database {
             }else try(var s=c.prepareStatement("INSERT INTO inventory_items(item_id,world_id,slot,config,bind_on_equip,count,permanent,bound,level,heat_progress,variants) VALUES(?,?,?,?,?,?,?,?,?,?,?)")) {
                 for(int i=0;i<instances;i++) {
                     long id=WorldProfiles.allocate(c,"next-item-id",Long.MAX_VALUE);if(i==0)first=id;
-                    s.setLong(1,id);s.setInt(2,profile.worldId());s.setString(3,entry.slot().name());s.setString(4,entry.config());s.setBoolean(5,entry.bindOnEquip());
+                    s.setLong(1,id);s.setInt(2,profile.worldId());s.setString(3,entry.slot().persistedName());s.setString(4,entry.config());s.setBoolean(5,entry.bindOnEquip());
                     s.setInt(6,entry.stackable()?quantity:1);s.setBoolean(7,entry.permanent());s.setBoolean(8,locked||entry.locked()||entry.permanent());
                     s.setInt(9,modifiers.level());s.setFloat(10,modifiers.heat());s.setString(11,org.tortodrone.resources.Json.stringify(modifiers.variants()));s.executeUpdate();
                     InventoryExpiry.save(c,id,InventoryExpiry.deadline(expireDays));

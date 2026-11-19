@@ -90,7 +90,11 @@ final class WorldProfiles {
         List<WorldProfile.Item> items = new ArrayList<>();
         try (PreparedStatement s = c.prepareStatement("SELECT * FROM inventory_items WHERE world_id=? ORDER BY item_id")) {
             s.setInt(1,worldId); try (ResultSet r = s.executeQuery()) {
-                while (r.next()) items.add(new WorldProfile.Item(r.getLong("item_id"),Slot.valueOf(r.getString("slot")),r.getString("config"),r.getString("accessory"),r.getInt("heat"),(Integer)r.getObject("equipped_slot"),r.getBoolean("bound"),r.getBoolean("bind_on_equip"),r.getBoolean("starter"),r.getInt("count"),r.getBoolean("permanent"),r.getInt("level"),r.getFloat("heat_progress"),TownStore.variants(r.getString("variants")),TownStore.strings(r.getString("accessories"))));
+                while (r.next()) {
+                    String config=r.getString("config");Slot slot=Slot.valueOf(r.getString("slot"));
+                    if(slot==Slot.OTHER&&org.tortodrone.character.DungeonGear.vitapodTier(config)>0)slot=Slot.DUNGEON;
+                    items.add(new WorldProfile.Item(r.getLong("item_id"),slot,config,r.getString("accessory"),r.getInt("heat"),(Integer)r.getObject("equipped_slot"),r.getBoolean("bound"),r.getBoolean("bind_on_equip"),r.getBoolean("starter"),r.getInt("count"),r.getBoolean("permanent"),r.getInt("level"),r.getFloat("heat_progress"),TownStore.variants(r.getString("variants")),TownStore.strings(r.getString("accessories"))));
+                }
             }
         }
         var expirations=InventoryExpiry.load(c,worldId);
@@ -106,6 +110,10 @@ final class WorldProfiles {
         long pvpShield=0;
         try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){s.setString(1,"item.pvp-shield."+worldId);try(var r=s.executeQuery()){if(r.next())pvpShield=r.getLong(1);}}
         if(pvpShield>0){long id=pvpShield;items.replaceAll(item->item.id()==id?item.withEquippedSlot(14):item);}
+        // Slot 12 is the client's dungeon gear slot; metadata keeps schema 17 unchanged.
+        long dungeonGear=0;
+        try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){s.setString(1,"item.dungeon."+worldId);try(var r=s.executeQuery()){if(r.next())dungeonGear=r.getLong(1);}}
+        if(dungeonGear>0){long id=dungeonGear;items.replaceAll(item->item.id()==id?item.withEquippedSlot(12):item);}
         var gifts=GiftStore.load(c,worldId);items.replaceAll(item->gifts.containsKey(item.id())?item.withGift(gifts.get(item.id())):item);
         int consumed;try(var s=c.prepareStatement("SELECT count(*) FROM town_consumed_starters WHERE world_id=?")){s.setInt(1,worldId);try(var r=s.executeQuery()){r.next();consumed=r.getInt(1);}}
         if(items.stream().filter(WorldProfile.Item::starter).count()+consumed!=5)throw new IOException("Incomplete starter inventory; restore the saved database");
