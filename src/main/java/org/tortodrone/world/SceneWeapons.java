@@ -26,7 +26,16 @@ public final class SceneWeapons {
     private Targets targets;
     public void targets(Targets value){targets=value;}
     private static final int MAX_ACTORS=512, MAX_EFFECTS=1024, MAX_RUNS=256;
-    private record Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId,GearStats.Damage damage,Object sceneSource) {
+    /** Custom forward-only Diskgun projectile policy. Normal shots pass through one enemy and
+     *  expire on the next; charged shots pass through every enemy until their fuse. */
+    private record PiercePolicy(int extraPierces,boolean singleProjectile,boolean forwardOnly) {
+        static final PiercePolicy NONE=new PiercePolicy(0,false,false);
+        static final PiercePolicy ONE=new PiercePolicy(1,true,true);
+        static final PiercePolicy ALL=new PiercePolicy(Integer.MAX_VALUE,true,true);
+        boolean pierces(){return extraPierces>0;}
+    }
+    private record Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId,GearStats.Damage damage,Object sceneSource,PiercePolicy pierce) {
+        Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId,GearStats.Damage damage,Object sceneSource){this(x,y,rotation,ownerId,ownerOid,shape,actorId,damage,sceneSource,PiercePolicy.NONE);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId,GearStats.Damage damage){this(x,y,rotation,ownerId,ownerOid,shape,actorId,damage,null);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId){this(x,y,rotation,ownerId,ownerOid,shape,actorId,GearStats.Damage.NONE);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape){this(x,y,rotation,ownerId,ownerOid,shape,ownerId);}
@@ -46,15 +55,17 @@ public final class SceneWeapons {
         }
     }
     private static final class Run {
-        final KnightCombat.AttackStart start;final FireCatalog.AttackFire attack;final int[] loops;final boolean[] done;final GearStats.Damage damage;
+        final KnightCombat.AttackStart start;final FireCatalog.AttackFire attack;final int[] loops;final boolean[] done;final GearStats.Damage damage;final PiercePolicy pierce;
         final Set<Integer> hit=new HashSet<>();
-        Run(KnightCombat.AttackStart start,FireCatalog.AttackFire attack,GearStats.Damage damage){this.start=start;this.attack=attack;this.damage=damage;loops=new int[attack.fireRefs().size()];done=new boolean[loops.length];}
+        Run(KnightCombat.AttackStart start,FireCatalog.AttackFire attack,GearStats.Damage damage,PiercePolicy pierce){this.start=start;this.attack=attack;this.damage=damage;this.pierce=pierce;loops=new int[attack.fireRefs().size()];done=new boolean[loops.length];}
     }
     private static final class Shot {
         final int id;final FireCatalog.ActorSpec spec;final Pose source;final int created;final float originX,originY,rotation;
         final IdentityHashMap<FireCatalog.Action,Set<Integer>> hits=new IdentityHashMap<>();
-        final int[] timers;float x,y,relativeX,relativeY;Object contactShape;int advanced,followId;int destroyed=Integer.MAX_VALUE,collided;boolean fizzle,returning;
-        Shot(int id,FireCatalog.ActorSpec spec,Pose pose,int created,float x,float y,float rotation){this.id=id;this.spec=spec;source=pose;this.created=created;originX=this.x=x;originY=this.y=y;this.rotation=rotation;advanced=created;timers=new int[spec.timers().size()];followId=spec.orbit()!=null&&spec.orbit().follow().equals("SOURCE")?pose.actorId:pose.ownerId;}
+        final PiercePolicy pierce;final Set<Integer> pierced=new HashSet<>();
+        final int[] timers;float x,y,relativeX,relativeY;Object contactShape;int advanced,followId;int destroyed=Integer.MAX_VALUE,collided,pierceRemaining;boolean fizzle,returning;
+        Shot(int id,FireCatalog.ActorSpec spec,Pose pose,int created,float x,float y,float rotation){this(id,spec,pose,created,x,y,rotation,PiercePolicy.NONE);}
+        Shot(int id,FireCatalog.ActorSpec spec,Pose pose,int created,float x,float y,float rotation,PiercePolicy pierce){this.id=id;this.spec=spec;source=pose;this.created=created;originX=this.x=x;originY=this.y=y;this.rotation=rotation;this.pierce=pierce;pierceRemaining=pierce.extraPierces();advanced=created;timers=new int[spec.timers().size()];followId=spec.orbit()!=null&&spec.orbit().follow().equals("SOURCE")?pose.actorId:pose.ownerId;}
         ActorState snapshot(){
             if(spec.nativeType().equals("AGENT"))return new ActorState(id,0,"",0,created,x,y,rotation,rotation,spec.flags(),0,created,spec.config(),false,null,null,
                 new SceneEntityState("Agent",destroyed,spec.speed(),spec.maxStep(),0,0,0,0,0,Integer.toString(id)));
@@ -85,16 +96,29 @@ public final class SceneWeapons {
     public void catalog(FireCatalog catalog){this.catalog=Objects.requireNonNull(catalog);}
     private java.util.function.BiFunction<Integer,KnightCombat.AttackStart,GearStats.Damage> damageModifiers=(owner,attack)->GearStats.Damage.NONE;
     public void damageModifiers(java.util.function.BiFunction<Integer,KnightCombat.AttackStart,GearStats.Damage> source){damageModifiers=Objects.requireNonNull(source);}
+    /** Unused client Diskguns rebuilt as forward-only sawguns. The recovered Fiery/Static
+     *  graphs are the old Mixer carrier/orbital prototype; use the corresponding normal
+     *  Mixer-disk graph so the shot shape is the final one, while the item's client-visible
+     *  Fire 3 / Shock 3 data stays unchanged. */
+    private static final Map<String,String> FORWARD_DISKGUNS=Map.of(
+        "Weapon/Handgun/Fiery Diskgun","Weapon/Handgun/Celestial Orbitgun",
+        "Weapon/Handgun/Static Diskgun","Weapon/Handgun/Overcharged Mixmaster");
+    private static PiercePolicy diskgunPolicy(String config,int activity){
+        if(!FORWARD_DISKGUNS.containsKey(config))return PiercePolicy.NONE;
+        return activity==KnightCombat.CHARGED?PiercePolicy.ALL:PiercePolicy.ONE;
+    }
     public void attack(int owner,KnightCombat.AttackStart start){
-        var attack=catalog.find(start.config(),start.activity());attack(owner,start,attack,damageModifiers.apply(owner,start));
+        var attack=catalog.find(FORWARD_DISKGUNS.getOrDefault(start.config(),start.config()),start.activity());
+        if(attack==null)attack=catalog.find(start.config(),start.activity());
+        attack(owner,start,attack,damageModifiers.apply(owner,start),diskgunPolicy(start.config(),start.activity()));
     }
     public void attack(int owner,KnightCombat.AttackStart start,FireCatalog.AttackFire attack){
-        attack(owner,start,attack,GearStats.Damage.NONE);
+        attack(owner,start,attack,GearStats.Damage.NONE,PiercePolicy.NONE);
     }
-    private void attack(int owner,KnightCombat.AttackStart start,FireCatalog.AttackFire attack,GearStats.Damage damage){
+    private void attack(int owner,KnightCombat.AttackStart start,FireCatalog.AttackFire attack,GearStats.Damage damage,PiercePolicy pierce){
         if(attack==null)return;
         var list=runs.computeIfAbsent(owner,k->new ArrayList<>());
-        if(list.size()<MAX_RUNS)list.add(new Run(start,attack,damage));
+        if(list.size()<MAX_RUNS)list.add(new Run(start,attack,damage,pierce));
     }
     public void cancel(int owner){runs.remove(owner);cooldowns.remove(owner);shots.values().removeIf(s->s.source.ownerId==owner);delayed.removeIf(d->d.source().ownerId==owner);}
     public void cancelAttacks(int owner){runs.remove(owner);}
@@ -163,7 +187,7 @@ public final class SceneWeapons {
                 // Shield actions execute on the server; the client does not prefire
                 // their guarded effects. A prediction owner would hide the bump VFX.
                 var pose=new Pose(actor.x(),actor.y(),actor.rotation(),actor.pet()==null?actor.id():actor.pet().knight(),
-                    run.start.activity()==KnightCombat.DEFENSE?0:actor.clientOid(),null,actor.id(),run.damage);
+                    run.start.activity()==KnightCombat.DEFENSE?0:actor.clientOid(),null,actor.id(),run.damage,null,run.pierce);
                 int cutoff=run.start.started()+run.start.clear();
                 if(actor.activityStarted()>run.start.started())cutoff=Math.min(cutoff,actor.activityStarted());
                 for(int i=0;i<run.loops.length;i++){
@@ -223,7 +247,7 @@ public final class SceneWeapons {
     private static boolean sourceBound(FireCatalog.ActorSpec spec){
         return spec.nativeType().equals("ACTOR")&&spec.fuse()==0&&spec.timers().isEmpty()&&spec.startup()==null&&spec.shutdown()==null&&spec.detonation()==null&&spec.attachment()==null&&spec.activation()==null&&spec.collisionMask()==0;
     }
-    private Pose shotPose(Shot shot){Object shape=shot.contactShape!=null?shot.contactShape:shot.spec.nativeType().equals("LASER")?new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Segment",Map.of("length",shot.spec.speed())):shot.spec.collisionShape();return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shape,shot.id,shot.source.damage,shot.source.sceneSource);}
+    private Pose shotPose(Shot shot){Object shape=shot.contactShape!=null?shot.contactShape:shot.spec.nativeType().equals("LASER")?new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Segment",Map.of("length",shot.spec.speed())):shot.spec.collisionShape();return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shape,shot.id,shot.source.damage,shot.source.sceneSource,shot.pierce);}
     private void advanceShot(Shot shot,int end,ActorState home){
         if(end<=shot.advanced)return;
         if(shot.spec.nativeType().equals("ORBITAL")){
@@ -250,6 +274,17 @@ public final class SceneWeapons {
     }
     private void impact(Shot shot,float x,float y,int stamp){
         int target=targets==null?0:targets.contactActor(x,y,shot.rotation,shot.source.ownerId,shot.spec.collisionShape(),shot.spec.collisionMask());
+        // Custom forward-only Diskgun saws: damage each enemy once, keep travelling, and
+        // stop after the authored pierce budget. Detonation is applied at the hit pose.
+        if(target!=0&&shot.pierce.pierces()){
+            if(!shot.pierced.add(target))return;
+            shot.x=x;shot.y=y;shot.contactShape=null;
+            detonate(shot,stamp);
+            if(shot.pierce.extraPierces()==Integer.MAX_VALUE)return;
+            if(shot.pierceRemaining==0)destroy(shot,stamp,false,false);
+            else shot.pierceRemaining--;
+            return;
+        }
         if(target!=0&&targets.attachable(target)){
             if(shot.spec.attachment()!=null&&shots.size()<MAX_ACTORS){
                 var victim=targets.actor(target);var spec=shot.spec.attachment();
@@ -312,8 +347,20 @@ public final class SceneWeapons {
         }
     }
     private static float spin(int elapsed,float speed,boolean reverse){int rate=speed==0?0:(int)(1000/speed);return rate==0?0:(reverse?-1:1)*(float)(2*Math.PI)*(elapsed%rate)/rate;}
-    private void destroy(Shot shot,int stamp,boolean fizzle){if(shot.destroyed!=Integer.MAX_VALUE)return;shot.destroyed=stamp;shot.fizzle=fizzle;
+    /** Keep the native orbital disk moving outward for its whole life instead of entering
+     *  the return/home phase authored at {@code outDuration}. */
+    private static FireCatalog.ActorSpec forwardOnly(FireCatalog.ActorSpec spec){
+        var o=spec.orbit();int out=Math.max(o.outDuration(),Math.max(spec.fuse(),o.lifespan()));
+        var orbit=new FireCatalog.OrbitSpec(o.radius(),o.angularSpeed(),o.startingRotation(),o.flightSpeed(),out,o.lifespan(),o.follow(),o.alternateSpin(),o.secondOrbitRadius(),o.secondSpeed(),o.secondStartingRotation());
+        return new FireCatalog.ActorSpec(spec.nativeType(),spec.config(),spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),orbit,spec.collisionMask(),spec.collisionShape(),spec.timers(),spec.shutdown(),spec.startup(),spec.attachment(),spec.activation(),spec.activatesAttachments());
+    }
+    private void destroy(Shot shot,int stamp,boolean fizzle){destroy(shot,stamp,fizzle,true);}
+    private void destroy(Shot shot,int stamp,boolean fizzle,boolean detonate){if(shot.destroyed!=Integer.MAX_VALUE)return;shot.destroyed=stamp;shot.fizzle=fizzle;
         if(shot.spec.shutdown()!=null)execute(shot.spec.shutdown(),shotPose(shot),stamp,0);
+        // Piercing saws apply their damage at each hit pose; an expiry/miss does not
+        // create an extra ground burst. Non-piercing shots retain the native fuse detonation.
+        if(detonate&&!shot.pierce.pierces())detonate(shot,stamp);}
+    private void detonate(Shot shot,int stamp){
         var detonation=catalog.detonation(shot.spec);
         // Stock BulletLogic executes the detonation even when its advancer marked
         // fuse expiry as FIZZLE. Tortofist's invisible carrier relies on this to
@@ -348,6 +395,8 @@ public final class SceneWeapons {
             for(int i=0;i<list.values().size();i++){pick-=((Number)list.values().get(i)).doubleValue();if(pick<0)return execute(action.children().get(i),source,stamp,depth+1,seed);}
             return false;
         }
+        if(action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED&&source.pierce.singleProjectile())
+            return action.children().isEmpty()||execute(action.children().getFirst(),source,stamp,depth+1,seed);
         if(action.kind()==FireCatalog.Kind.COMPOUND||action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED){boolean result=true;int index=0;
             for(var child:action.children()){boolean success=execute(child,source,stamp,depth+1,seed+(action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED?index++:0));result&=success;if(!success&&action.stopOnFailure())break;}return result;}
         if(action.kind()==FireCatalog.Kind.FAIL)return false;
@@ -399,10 +448,11 @@ public final class SceneWeapons {
                 var config=new org.tortodrone.character.StarterCatalog.Model(spec.config().name(),arguments);
                 spec=new FireCatalog.ActorSpec(spec.nativeType(),config,spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),spec.orbit(),spec.collisionMask(),spec.collisionShape(),spec.timers(),spec.shutdown(),spec.startup(),spec.attachment(),spec.activation(),spec.activatesAttachments());
             }
+            if(source.pierce.forwardOnly()&&spec.orbit()!=null)spec=forwardOnly(spec);
             float rc=(float)Math.cos(rotation),rs=(float)Math.sin(rotation);
             float ox=spec.offsetX()*rc-spec.offsetY()*rs,oy=spec.offsetX()*rs+spec.offsetY()*rc;
-            var controller=action.config()!=null&&action.config().name().equals("ServerSpawned")?new Pose(source.x,source.y,source.rotation,source.ownerId,0,source.shape,source.actorId,source.damage,source.sceneSource):source;
-            var shot=new Shot(allocateId(),spec,controller,stamp,x,y,rotation);
+            var controller=action.config()!=null&&action.config().name().equals("ServerSpawned")?new Pose(source.x,source.y,source.rotation,source.ownerId,0,source.shape,source.actorId,source.damage,source.sceneSource,source.pierce):source;
+            var shot=new Shot(allocateId(),spec,controller,stamp,x,y,rotation,source.pierce);
             shots.put(shot.id,shot);
             if(spec.startup()!=null)execute(spec.startup(),shotPose(shot),stamp,depth+1,seed);
             // Actor-born projectiles use the native offset directly. Sweeping

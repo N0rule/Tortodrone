@@ -414,6 +414,14 @@ depth-scaled and delayed actions; `SceneWeapons` schedules those graphs, while
 cannot safely describe those graphs. No decorative damage control or multiplier
 is accepted. Editing timing changes the existing action/effect schedule; it does
 not claim to replace every native animation or implement missing game logic.
+
+The Fiery and Static Diskguns deliberately deviate on the server. Their stock
+Fire 3 / Shock 3 damage, charge timing and item controls are unchanged, but the
+attack loads the native Mixer-disk projectile and spawns one disk instead of the
+authored volley: a normal shot is a small forward saw that damages two enemies
+and stops on the second, and a charged shot is a large forward saw that damages
+every enemy it crosses until its fuse. Neither disk enters the native return
+phase.
 Lockboxes and Prize Boxes retain their current indexed/grant support and opening
 limitations: this refactor adds no opening, loot selection or reward behavior.
 
