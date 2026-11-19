@@ -604,14 +604,27 @@ expose the local economy-administration API.
 
 A new database transactionally installs all **328** captured Depot offers from the
 read-only JAR resource `seeds/supply-depot.json` (seed version 1, pinned SHA-256).
-The exact ordered section from `0078b50` is retained, with its existing zero-based
-Tortodrone offer IDs, quantities, Energy prices, limits and featured flags.
+The exact ordered catalogue is retained, with its existing zero-based Tortodrone
+offer IDs, quantities, Energy prices and limits. The default shop is plain: no
+offer ships as featured or discounted, and the removed automatic daily-sale
+reconstruction is not replaced by another invention. Administrators can still
+create promotions and featured goods themselves.
 `sourcePrice=-1` records native item-property lookup; the stored Crown value is its
 resolved value, even when positive Energy is the currency selected by the client.
 The seed records provenance and derived support status. Nine indexed records have
 unsupported grant representations; they remain visible to administrators, disabled
 with exact support reasons. Catalog fidelity does not imply upgrade-item gameplay.
 No game installation, capture or network access is needed to create a database.
+
+**Rank availability:** the depot advertises official stock progressively, evaluated
+per session from the resolved item definition rather than the native path or
+display name. Sword, handgun, bomb, helm, armor and shield offers appear at 3-1 for
+1-star, 4-1 for 2-star, 5-2 for 3-star, 6-2 for 4-star and 8-2 for 5-star. Rarity,
+material, usable, accessory, key and ticket goods are always available. Sprite eggs
+sell from 3-1, matching the client's first sprite rank that requires knight rank
+(`ItemCodes.bvQ`). A purchase is refused when the offer was not advertised, so the
+same gate covers methods 4, 5, 6 and the quoted buy path. Administrators still see
+the full catalogue and its disabled records.
 
 Explicit initialization/seed-version metadata makes seeding one-time. Restart,
 disabling all offers or intentionally clearing a managed catalog never reseeds it.
@@ -643,24 +656,17 @@ is `~`; `promoDetail` carries `m.promo_hours_left|~N` below 36 hours, otherwise
 `DepotTimedGoods` countdown defaults. The quote retains the
 fixed expiry so countdown changes cannot invalidate a purchase.
 
-**Automatic daily Specials:** `DepotSpecials` overlays two equipment goods at noon
-Pacific, using the twelve recorded sale-day pairs stored as numeric facts in
-`seeds/depot-specials.tsv`. The native discount defaults and observed reset
-behavior are retained. Other dates use an explicitly **reconstructed**, restart-
-stable SHA-256 selection: one 150/500-Energy good and one 1,600/3,500-Energy good
-from the immutable seed, discounted 2–8% with a minimum 5-Energy reduction. This
-is not the historical interim RNG or a recovered official selection algorithm.
-Winter noon Pacific timing is also reconstructed; only daylight-time resets
-were captured. Calendar boundaries account for daylight-saving transitions.
+**Default Specials:** there are none. Earlier releases overlaid two captured or
+reconstructed discounted equipment goods at noon Pacific; that projection and its
+recorded sale file are removed. Uncatalogued days, disabled offers and edited
+offers are no longer given invented discounts. Featured status, sale pricing and
+promotion countdowns exist only while an administrator schedules a real promotion.
 
 SQLite remains authoritative for availability and prices. Disabled, temporary,
-removed, quantity-changed or repriced selected offers are not restored or rerolled.
-Administrator promotions override a selected automatic offer during their window;
-cancellation/expiration reveals that day's automatic sale if still eligible.
-No automatic promotion rows or schema changes are written. Negative promotion
-identities distinguish automatic sale windows in server-issued quotes, so a stale
-day's quote fails even if the replacement repeats its price. Player preview labels
-automatic offers and their expiration and explains the reconstruction policy.
+removed, quantity-changed or repriced offers are not restored or rerolled. No
+automatic promotion rows or schema changes are written. Existing databases that
+still carry the five seeded featured flags have those untouched rows cleared once;
+the capability itself stays available for administrator promotions.
 
 Times persist as Unix milliseconds UTC, **start inclusive, end exclusive**; the
 admin forms show the local timezone. Overlapping uncancelled windows for the same
@@ -670,8 +676,8 @@ hides a promotion-only offer). Effective offers are resolved on each catalog
 request and again inside purchase transactions, including after downtime/restart.
 Expired/changed displayed quotes cannot spend. The stock window can retain an old
 visual until its next supported catalog request/reopen; there is no invented push
-refresh. Promotion-specific binding and complete mission-rank gates remain
-unverified/unimplemented; ordinary non-costume level-equipment binding is retained.
+refresh. Promotion-specific binding remains unverified/unimplemented; ordinary
+non-costume level-equipment binding is retained.
 
 **Auctions:** player escrow, bids, fees, cancellation, watches, expiry and mail
 settlement stay durable and atomic. Existing native rounded 5% bid increments,

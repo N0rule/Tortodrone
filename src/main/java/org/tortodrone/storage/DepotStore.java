@@ -44,6 +44,7 @@ public final class DepotStore {
         }
         metadata(c,"supply-depot-initialized",1);
         metadata(c,"supply-depot-seed-version",legacy==null?0:legacy.version());
+        metadata(c,"supply-depot-defaults",2);
     }
     private static long revision(Connection c)throws SQLException {
         try(var s=c.createStatement();var r=s.executeQuery("SELECT value FROM metadata WHERE key='supply-depot-revision'")){return r.next()?r.getLong(1):0;}
@@ -53,6 +54,29 @@ public final class DepotStore {
     }
     public Snapshot snapshot()throws IOException {return database.read(c->{c.setAutoCommit(false);var result=load(c);c.commit();return result;});}
     public Snapshot catalog()throws IOException {return database.read(c->{c.setAutoCommit(false);var result=effective(c,System.currentTimeMillis());c.commit();return result;});}
+
+    /** Seeded featured flags shipped before the default shop became plain; none were administrator promotions. */
+    private record LegacyFeatured(int id,String item,int energy) { }
+    private static final List<LegacyFeatured> LEGACY_SEEDED_FEATURED=List.of(
+            new LegacyFeatured(0,"Upgrade/Heat Bonus (7 days)",1600),
+            new LegacyFeatured(1,"Upgrade/Heat Bonus (30 days)",5000),
+            new LegacyFeatured(2,"Upgrade/Trinket Slot",150),
+            new LegacyFeatured(3,"Ticket/Keys/Silver Key",750),
+            new LegacyFeatured(4,"Upgrade/Coin Bonus",300));
+    /** Existing databases only: retire untouched seeded featured flags exactly once. */
+    static void alignDefaults(Database database)throws IOException {
+        boolean pending=database.read(c->{try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key='supply-depot-defaults'")){try(var r=s.executeQuery()){return !r.next()||r.getInt(1)<2;}}});
+        if(!pending)return;
+        database.write(c->{
+            boolean changed=false;
+            for(var legacy:LEGACY_SEEDED_FEATURED)try(var s=c.prepareStatement("UPDATE town_depot_offers SET featured=0 WHERE id=? AND item=? AND energy=? AND featured=1 AND promotion_only=0")) {
+                s.setInt(1,legacy.id());s.setString(2,legacy.item());s.setInt(3,legacy.energy());changed|=s.executeUpdate()==1;
+            }
+            metadata(c,"supply-depot-defaults",2);
+            if(changed)advance(c,revision(c));
+            return null;
+        });
+    }
     static Snapshot load(Connection c)throws SQLException,IOException {
         try(var s=c.createStatement();var r=s.executeQuery("SELECT value FROM metadata WHERE key='supply-depot-initialized'")){if(!r.next()||r.getInt(1)!=1)throw new IOException("Supply Depot has not been initialized");}
         var offers=new ArrayList<Offer>();
@@ -66,10 +90,9 @@ public final class DepotStore {
         try(var s=c.prepareStatement("SELECT * FROM town_depot_promotions WHERE cancelled=0 AND starts<=? AND ends>? ORDER BY id")) {
             s.setLong(1,now);s.setLong(2,now);try(var r=s.executeQuery()){while(r.next()){var p=promotion(r);if(active.putIfAbsent(p.offerId(),p)!=null)throw new IOException("Conflicting Supply Depot promotions");}}
         }
-        var automatic=DepotSpecials.offers(base,now);
         var offers=new ArrayList<Offer>();for(var o:base.offers()) {
             var p=active.get(o.id());var g=o.good();boolean available=o.enabled()&&(!o.promotionOnly()||p!=null);
-            offers.add(p==null?automatic.getOrDefault(o.id(),new Offer(o.id(),g,o.featured(),available,o.promotionOnly())):new Offer(o.id(),new TownCatalog.Good(g.item(),g.count(),p.crowns(),p.energy(),g.limit(),"",0),o.featured()||p.featured(),available,o.promotionOnly(),p.referencePrice()==null?0:p.referencePrice(),p.referencePrice()!=null,p.id(),p.ends()));
+            offers.add(p==null?new Offer(o.id(),g,o.featured(),available,o.promotionOnly()):new Offer(o.id(),new TownCatalog.Good(g.item(),g.count(),p.crowns(),p.energy(),g.limit(),"",0),o.featured()||p.featured(),available,o.promotionOnly(),p.referencePrice()==null?0:p.referencePrice(),p.referencePrice()!=null,p.id(),p.ends()));
         }
         return new Snapshot(base.revision(),offers);
     }

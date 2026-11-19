@@ -52,7 +52,9 @@ public final class Database {
                     if(lock==null)throw new IOException("Stop the server before upgrading the database");requireCurrentVersion();
                 }catch(OverlappingFileLockException live){throw new IOException("Stop the server before upgrading the database",live);}
             }else requireCurrentVersion();
-            initialized=true;return;
+            initialized=true;
+            DepotStore.alignDefaults(this);
+            return;
         }
         if (deploymentLocked) initialize();
         else {

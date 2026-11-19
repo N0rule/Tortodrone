@@ -160,11 +160,9 @@ export async function mount(ctx) {
             [
                 'Availability',
                 (o) =>
-                    o.promotionId < 0
-                        ? 'Automatic Daily Special'
-                        : o.sale
-                          ? 'Promotion sale'
-                          : o.featured
+                    o.sale
+                        ? 'Promotion sale'
+                        : o.featured
                             ? 'Featured'
                             : 'Regular'
             ]
