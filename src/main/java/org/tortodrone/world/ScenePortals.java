@@ -63,6 +63,40 @@ public record ScenePortals(Map<String,Entrance> entrances,List<Trigger> triggers
         var p=new Properties();try(var in=Files.newInputStream(file)){p.load(in);}
         return load(p,layoutDigest,terrain);
     }
+    public static ScenePortals load(Properties p,String layoutDigest,MapCollision collision,int mask)throws IOException {
+        String format=required(p,"format");
+        if(!(format.equals("1")||format.equals("2"))||!layoutDigest.equalsIgnoreCase(required(p,"layout-sha256")))
+            throw new IOException("Portal metadata does not match its scene layout");
+        var entrances=new LinkedHashMap<String,Entrance>();var ids=new HashSet<Integer>();
+        for(String tag:list(p,"entrances")) {
+            if(!tag.matches("[A-Za-z0-9_-]{1,128}"))throw new IOException("Invalid entrance tag");
+            String prefix="entrance."+tag+".";
+            int id=positive(p,prefix+"id");float x=coordinate(p,prefix+"x"),y=coordinate(p,prefix+"y");
+            float rotation=coordinate(p,prefix+"rotation");
+            if(!ids.add(id)||!collision.clear(mask,x,y,PAWN_RADIUS)||Math.abs(rotation)>Math.PI)
+                throw new IOException("Invalid, duplicated or unwalkable portal entrance");
+            entrances.put(tag,new Entrance(id,x,y,rotation));
+        }
+        var triggers=new ArrayList<Trigger>();ids.clear();
+        for(String key:list(p,"triggers")) {
+            int id;try{id=Integer.parseInt(key);}catch(NumberFormatException e){throw new IOException("Invalid portal entry ID",e);}
+            if(id<=0||!ids.add(id))throw new IOException("Invalid or duplicated portal entry ID");
+            String prefix="trigger."+id+".";
+            int destination=positive(p,prefix+"scene");String tag=required(p,prefix+"entrance");
+            String shape=p.getProperty(prefix+"shape","").trim();
+            if(shape.isEmpty())shape="rectangle";
+            if(shape.equals("polygon")) {
+                if(!format.equals("2"))throw new IOException("Polygon triggers require metadata format 2");
+                List<Vertex> vertices=parseVertices(requiredLong(p,prefix+"vertices",4096));validatePolygon(vertices);
+                triggers.add(new Trigger(id,destination,tag,vertices.stream().map(Vertex::x).min(Float::compare).orElseThrow(),vertices.stream().map(Vertex::y).min(Float::compare).orElseThrow(),vertices.stream().map(Vertex::x).max(Float::compare).orElseThrow(),vertices.stream().map(Vertex::y).max(Float::compare).orElseThrow(),vertices));
+            } else if(shape.equals("rectangle")) {
+                float x=coordinate(p,prefix+"x"),y=coordinate(p,prefix+"y"),w=coordinate(p,prefix+"width"),h=coordinate(p,prefix+"height");
+                if(!(w>0)||!(h>0))throw new IOException("Invalid portal rectangle");
+                triggers.add(new Trigger(id,destination,tag,x-w/2,y-h/2,x+w/2,y+h/2));
+            } else throw new IOException("Unknown portal trigger shape: "+shape);
+        }
+        return new ScenePortals(entrances,triggers);
+    }
     public static ScenePortals load(Properties p,String layoutDigest,CollisionMap terrain)throws IOException {
         String format=required(p,"format");
         if(!(format.equals("1")||format.equals("2"))||!layoutDigest.equalsIgnoreCase(required(p,"layout-sha256")))

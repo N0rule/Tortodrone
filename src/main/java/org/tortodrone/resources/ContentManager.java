@@ -81,14 +81,15 @@ public final class ContentManager {
                 }
                 for(var actor:actors.entries())if(actor.spec().fields().containsKey("cycle")&&!actors.cycles().containsKey(actor.spec().text("cycle","")))throw new IOException("Actor references missing trap cycle: "+actor.key());
                 for(var conversation:actors.conversations().values())for(var node:conversation.nodes().values())for(var response:node.responses())if(!response.station().isEmpty()&&town!=null&&town.station(response.station())==null)throw new IOException("NPC references missing Town station: "+response.station());
+                int collisionMask=Math.round(actors.stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
                 MapCollision exact=null;
                 if(p.getProperty("exact-collision-sha256")!=null){
                     exact=MapCollision.read(nativeDir.resolve("collision.bin"));
                     if(!exact.layoutHash().equals(digest))throw new IOException(nativeDir+": exact collision layout hash mismatch");
-                    int mask=Math.round(actors.stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
-                    if(!exact.clear(mask,x,y,ScenePortals.PAWN_RADIUS))throw new IOException(folder.getValue()+": defaultSpawn is not clear in exact collision");
+                    if(!exact.clear(collisionMask,x,y,ScenePortals.PAWN_RADIUS))throw new IOException(folder.getValue()+": defaultSpawn is not clear in exact collision");
                 }
-                scenes.put(folder.getKey(),new SceneCatalog.MapScene(folder.getKey(),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,ScenePortals.load(prepared.portals(),digest,collision),actors,SceneCollision.load(nativeDir,digest),exact));
+                var portals=exact==null?ScenePortals.load(prepared.portals(),digest,collision):ScenePortals.load(prepared.portals(),digest,exact,collisionMask);
+                scenes.put(folder.getKey(),new SceneCatalog.MapScene(folder.getKey(),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,portals,actors,SceneCollision.load(nativeDir,digest),exact));
             }
             return SceneCatalog.of(scenes,entry);
         }catch(IllegalArgumentException invalid){throw new IOException(maps+": "+invalid.getMessage(),invalid);}

@@ -14,6 +14,7 @@ public final class SceneCollision {
     private final Set<Long> floorCells;
     private final List<Obstacle> floorShapes;
     private final List<Obstacle> obstacles;
+    private final Grid grid;
     private final boolean present;
 
     private SceneCollision(Map<Long,Integer> tiles, Set<Long> floorCells, List<Obstacle> obstacles,boolean present) {
@@ -24,6 +25,7 @@ public final class SceneCollision {
         this.floorCells=Set.copyOf(floorCells);
         this.floorShapes=List.copyOf(floorShapes);
         this.obstacles = List.copyOf(obstacles);
+        this.grid = new Grid(this.obstacles);
         this.present=present;
     }
 
@@ -79,7 +81,7 @@ public final class SceneCollision {
             Integer flags=tiles.get(key(cx,cy));
             if(flags!=null&&(flags&mask)!=0)result=result.deepest(penetration(rectangle(cx,cy,cx+1,cy+1),center,radius));
         }
-        for(var obstacle:obstacles)if((obstacle.mask&mask)!=0&&obstacle.bounds.near(x,y,radius))result=result.deepest(penetration(obstacle.geometry,center,radius));
+        for(var obstacle:grid.query(new Bounds(x-radius,y-radius,x+radius,y+radius)))if((obstacle.mask&mask)!=0&&obstacle.bounds.near(x,y,radius))result=result.deepest(penetration(obstacle.geometry,center,radius));
         return result;
     }
     private static Penetration penetration(Geom obstacle,Point center,float radius) {
@@ -243,7 +245,7 @@ public final class SceneCollision {
             Integer flags=tiles.get(key(cx,cy));
             if(flags!=null&&(flags&mask)!=0&&intersects(moving,rectangle(cx,cy,cx+1,cy+1)))return true;
         }
-        for(Obstacle obstacle:obstacles)if((obstacle.mask&mask)!=0&&intersects(moving,obstacle.geometry))return true;
+        for(Obstacle obstacle:grid.query(b))if((obstacle.mask&mask)!=0&&intersects(moving,obstacle.geometry))return true;
         return false;
     }
 
@@ -392,5 +394,45 @@ public final class SceneCollision {
     }
     private record Obstacle(int mask,Geom geometry,Bounds bounds) {
         private Obstacle(int mask,Geom geometry){this(mask,geometry,SceneCollision.bounds(geometry));}
+    }
+    /** Uniform 4-unit broadphase; a scene query touches only nearby placeables. */
+    private static final class Grid {
+        private static final float CELL = 4f;
+        private final float originX, originY;
+        private final int width, height;
+        private final List<List<Obstacle>> buckets;
+        Grid(List<Obstacle> obstacles) {
+            float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY;
+            for (Obstacle obstacle : obstacles) { minX = Math.min(minX, obstacle.bounds.minX); minY = Math.min(minY, obstacle.bounds.minY); }
+            if (!Float.isFinite(minX)) { originX = originY = 0; width = height = 1; buckets = List.of(List.of()); return; }
+            originX = minX - CELL; originY = minY - CELL;
+            float maxX = Float.NEGATIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY;
+            for (Obstacle obstacle : obstacles) { maxX = Math.max(maxX, obstacle.bounds.maxX); maxY = Math.max(maxY, obstacle.bounds.maxY); }
+            width = Math.max(1, (int) Math.ceil((maxX - minX) / CELL) + 2);
+            height = Math.max(1, (int) Math.ceil((maxY - minY) / CELL) + 2);
+            if ((long) width * height > 4_000_000) throw new IllegalArgumentException("Collision bounds are too large");
+            buckets = new ArrayList<>(width * height);
+            for (int i = 0; i < width * height; i++) buckets.add(new ArrayList<>());
+            for (Obstacle obstacle : obstacles) {
+                int x0 = Math.max(0, (int) Math.floor((obstacle.bounds.minX - originX) / CELL));
+                int x1 = Math.min(width - 1, (int) Math.floor((obstacle.bounds.maxX - originX) / CELL));
+                int y0 = Math.max(0, (int) Math.floor((obstacle.bounds.minY - originY) / CELL));
+                int y1 = Math.min(height - 1, (int) Math.floor((obstacle.bounds.maxY - originY) / CELL));
+                for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) buckets.get(y * width + x).add(obstacle);
+            }
+        }
+        List<Obstacle> query(Bounds bounds) {
+            int x0 = Math.max(0, (int) Math.floor((bounds.minX - originX) / CELL));
+            int x1 = Math.min(width - 1, (int) Math.floor((bounds.maxX - originX) / CELL));
+            int y0 = Math.max(0, (int) Math.floor((bounds.minY - originY) / CELL));
+            int y1 = Math.min(height - 1, (int) Math.floor((bounds.maxY - originY) / CELL));
+            if (x1 < x0 || y1 < y0) return List.of();
+            if (x0 == x1 && y0 == y1) return buckets.get(y0 * width + x0);
+            var result = new ArrayList<Obstacle>();
+            for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++)
+                for (Obstacle obstacle : buckets.get(y * width + x))
+                    if (obstacle.bounds.intersects(bounds) && !result.contains(obstacle)) result.add(obstacle);
+            return result;
+        }
     }
 }

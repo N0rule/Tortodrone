@@ -68,8 +68,10 @@ by `metadata.properties`. It contains:
 - map bounds.
 
 The runtime builds a uniform-grid broadphase from those shapes. A movement query touches only the
-shapes near the body; it does not scan the map. `walkability.gz` is retained as a compatibility
-and validation artifact and is **not** the movement path when `collision.bin` is present.
+shapes near the body; it does not scan the map. Portal entrances are validated against the same
+exact collision, and projectile/entity queries use the same broadphase rather than scanning every
+shape. `walkability.gz` is retained as a compatibility artifact and is **not** the movement path
+when `collision.bin` is present.
 
 ## Guarantees
 
