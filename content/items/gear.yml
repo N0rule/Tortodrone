@@ -200,7 +200,8 @@ items:
         attackSpeed: -0.04
   armor_base:
     name: GM Armor
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   armor_of_the_fallen:
@@ -299,7 +300,8 @@ items:
         speed: -0.04
   base_s0_d766e2f3f134:
     name: Base
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   black_kat_cloak:
@@ -1798,37 +1800,44 @@ items:
         attackSpeed: 0.04
   handgun_armor_base:
     name: Handgun Armor (Base)
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   handgun_armor_rarity_1:
     name: Handgun Armor (Rarity 1)
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 1
     bindsWhenEquipped: true
   handgun_armor_rarity_2:
     name: Handgun Armor (Rarity 2)
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 2
     bindsWhenEquipped: true
   handgun_armor_rarity_3:
     name: Handgun Armor (Rarity 3)
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 3
     bindsWhenEquipped: true
   handgun_armor_rarity_4:
     name: Handgun Armor (Rarity 4)
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 4
     bindsWhenEquipped: true
   handgun_armor_rarity_5:
     name: Handgun Armor (Rarity 5)
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   handgun_armor_rarity_5_alt:
     name: Handgun Armor (Rarity 5) (Alt)
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   handgun_focus_module:
@@ -1841,37 +1850,44 @@ items:
         chargeTime: 0.08
   handgun_helm_base:
     name: Handgun Helm (Base)
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   handgun_helm_rarity_1:
     name: Handgun Helm (Rarity 1)
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 1
     bindsWhenEquipped: true
   handgun_helm_rarity_2:
     name: Handgun Helm (Rarity 2)
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 2
     bindsWhenEquipped: true
   handgun_helm_rarity_3:
     name: Handgun Helm (Rarity 3)
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 3
     bindsWhenEquipped: true
   handgun_helm_rarity_4:
     name: Handgun Helm (Rarity 4)
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 4
     bindsWhenEquipped: true
   handgun_helm_rarity_5:
     name: Handgun Helm (Rarity 5)
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   handgun_helm_rarity_5_alt:
     name: Handgun Helm (Rarity 5) (Alt)
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   heart_pendant:
@@ -1996,7 +2012,8 @@ items:
             forwardImpulse: 6
   helmet_base:
     name: GM Helmet
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   hi_grade_katnip_pouch:
@@ -2770,7 +2787,8 @@ items:
             forwardImpulse: 6
   node_slime_base_s0_7c47c71256aa:
     name: Node Slime, Base
-    category: Shield
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   node_slime_blue_s3935208119_4f114f37b390:
@@ -3749,12 +3767,14 @@ items:
         speed: -0.04
   proto_base_s0_ca1c982e3ab7:
     name: Proto (Base)
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   proto_base_s0_d5e8e33c6775:
     name: Proto (Base)
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   proto_shield:
@@ -5093,7 +5113,8 @@ items:
         speed: 0.04
   spiral_brigandine_base:
     name: Spiral Brigandine
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_brigandine_blue:
@@ -5133,7 +5154,8 @@ items:
     bindsWhenEquipped: true
   spiral_cloak_base:
     name: Spiral Cloak
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_cloak_blue:
@@ -5173,7 +5195,8 @@ items:
     bindsWhenEquipped: true
   spiral_crescent_helm_base:
     name: Spiral Crescent Helm
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_crescent_helm_blue:
@@ -5213,7 +5236,8 @@ items:
     bindsWhenEquipped: true
   spiral_cuirass_base:
     name: Spiral Cuirass
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_cuirass_blue:
@@ -5253,7 +5277,8 @@ items:
     bindsWhenEquipped: true
   spiral_culet_base:
     name: Spiral Culet
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_culet_blue:
@@ -5309,7 +5334,8 @@ items:
         chargeTime: 0.08
   spiral_draped_armor_base:
     name: Spiral Draped Armor
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_draped_armor_blue:
@@ -5349,7 +5375,8 @@ items:
     bindsWhenEquipped: true
   spiral_flak_jacket_base:
     name: Spiral Flak Jacket
-    category: Armor
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_flak_jacket_blue:
@@ -5389,7 +5416,8 @@ items:
     bindsWhenEquipped: true
   spiral_hood_base:
     name: Spiral Hood
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_hood_blue:
@@ -5429,7 +5457,8 @@ items:
     bindsWhenEquipped: true
   spiral_pith_helm_base:
     name: Spiral Pith Helm
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_pith_helm_blue:
@@ -5497,7 +5526,8 @@ items:
         attackSpeed: -0.04
   spiral_round_helm_base:
     name: Spiral Round Helm
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_round_helm_blue:
@@ -5537,7 +5567,8 @@ items:
     bindsWhenEquipped: true
   spiral_sallet_base:
     name: Spiral Sallet
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_sallet_blue:
@@ -5587,7 +5618,8 @@ items:
     bindsWhenEquipped: true
   spiral_tailed_helm_base:
     name: Spiral Tailed Helm
-    category: Helmet
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   spiral_tailed_helm_blue:
@@ -5858,7 +5890,8 @@ items:
             forwardImpulse: 6
   teddy_bear_buckler_base_tech:
     name: Teddy Bear Buckler, Base Tech
-    category: Shield
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   teddy_bear_buckler_tech_azure:

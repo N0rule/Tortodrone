@@ -1,8 +1,8 @@
 items:
   aero_armor_base:
     name: Aero Armor
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   aero_armor_blue:
     name: Aero Armor, Blue
@@ -51,8 +51,8 @@ items:
     bindsWhenEquipped: true
   aero_armor_shadowbase:
     name: Aero Armor
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   aero_armor_shadowtech_blue:
     name: Aero Armor, ShadowTech Blue
@@ -121,8 +121,8 @@ items:
     bindsWhenEquipped: true
   aero_helm_base:
     name: Aero Helm, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   aero_helm_blue:
     name: Aero Helm, Blue
@@ -171,8 +171,8 @@ items:
     bindsWhenEquipped: true
   aero_helm_shadowbase:
     name: Aero Helm, ShadowBase
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   aero_helm_shadowtech_blue:
     name: Aero Helm, ShadowTech Blue
@@ -241,8 +241,8 @@ items:
     bindsWhenEquipped: true
   airbraker_shield_base:
     name: Airbraker Shield, Base
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   airbraker_shield_shadowtech_blue:
     name: Airbraker Shield, ShadowTech Blue
@@ -414,8 +414,8 @@ items:
         defendingSpeed: -0.5
   angelic_cuirass_base:
     name: Angelic Cuirass, Base
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   angelic_cuirass_blue:
     name: Angelic Cuirass, Blue
@@ -474,8 +474,8 @@ items:
     bindsWhenEquipped: true
   angelic_helmet_base:
     name: Angelic Helmet, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   angelic_helmet_blue:
     name: Angelic Helmet, Blue
@@ -558,8 +558,8 @@ items:
     subcategory: Armor
   arthro_pod_base:
     name: Arthro Pod
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   arthro_pod_cool:
     name: Arthro Pod, Cool
@@ -603,8 +603,8 @@ items:
     bindsWhenEquipped: true
   arthro_pod_recolor:
     name: Arthro Pod
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   arthro_pod_regal:
     name: Arthro Pod, Regal
@@ -628,8 +628,8 @@ items:
     bindsWhenEquipped: true
   astute_owlite_mask_base:
     name: Astute Owlite Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   astute_owlite_mask_blue:
     name: Astute Owlite Mask, Blue
@@ -688,8 +688,8 @@ items:
     bindsWhenEquipped: true
   astute_owlite_mask_swapped_base:
     name: Astute Owlite Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   astute_owlite_mask_volcanic:
     name: Astute Owlite Mask, Volcanic
@@ -738,60 +738,60 @@ items:
     bindsWhenEquipped: true
   base_bomb_mask:
     name: Base (Bomb Mask)
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   base_field_cap:
     name: Base (Field Cap)
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   base_halloween_mask:
     name: Base (Halloween Mask)
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   base_holiday_mask:
     name: Base (Holiday Mask)
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   base_monster_mask:
     name: Base (Monster Mask)
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   base_s0_3098830c779d:
     name: Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
   base_s0_38ada3db9df0:
     name: Shrouded Crest
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
     permanent: true
     locked: true
   base_s0_3dda1ab37c71:
     name: Obsidian Obstacle
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
     permanent: true
     locked: true
   base_s0_55351a26efa8:
     name: Base
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
   base_s0_8cb44a565da0:
     name: Base
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   base_s0_fe4517915a4a:
     name: Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   bat_slime_autumn:
     name: Bat Slime, Autumn
@@ -800,8 +800,8 @@ items:
     bindsWhenEquipped: true
   bat_slime_base:
     name: Bat Slime Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   bat_slime_cool:
     name: Bat Slime, Cool
@@ -850,8 +850,8 @@ items:
     bindsWhenEquipped: true
   bat_slime_recolor:
     name: Bat Slime Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   bat_slime_regal:
     name: Bat Slime, Regal
@@ -880,8 +880,8 @@ items:
     bindsWhenEquipped: true
   battle_boar_helmet_base:
     name: Battle Boar Helmet, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   battle_boar_helmet_blue:
     name: Battle Boar Helmet, Blue
@@ -950,8 +950,8 @@ items:
     bindsWhenEquipped: true
   battle_boar_suit_base:
     name: Battle Boar Suit, Base
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   battle_boar_suit_blue:
     name: Battle Boar Suit, Blue
@@ -1015,8 +1015,8 @@ items:
     bindsWhenEquipped: true
   beach_hat_base:
     name: Floppy Beach Hat
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   beach_hat_shadowtech_blue:
     name: Beach Hat, ShadowTech Blue
@@ -1120,8 +1120,8 @@ items:
     bindsWhenEquipped: true
   bio_coat_base:
     name: Bio Coat
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   bio_coat_tech_azure:
     name: Bio Coat, Tech Azure
@@ -1165,8 +1165,8 @@ items:
     bindsWhenEquipped: true
   bio_helm_base:
     name: Bio Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   bio_helm_tech_azure:
     name: Bio Helm, Tech Azure
@@ -1210,8 +1210,8 @@ items:
     bindsWhenEquipped: true
   boater_base:
     name: Boater
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   boater_shadowtech_blue:
     name: Boater, ShadowTech Blue
@@ -1330,8 +1330,8 @@ items:
     bindsWhenEquipped: true
   brigandine_base:
     name: Spiral Brigandine
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   brigandine_blazing:
     name: Brigandine, Blazing
@@ -1555,8 +1555,8 @@ items:
     bindsWhenEquipped: true
   buccaneer_bicorne_base:
     name: Buccaneer Bicorne, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   buccaneer_bicorne_blue:
     name: Buccaneer Bicorne, Blue
@@ -1615,8 +1615,8 @@ items:
     bindsWhenEquipped: true
   buccaneer_bicorne_shadowbase:
     name: Buccaneer Bicorne, ShadowBase
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   buccaneer_bicorne_shadowtech_azure:
     name: Buccaneer Bicorne, ShadowTech Azure
@@ -1665,8 +1665,8 @@ items:
     bindsWhenEquipped: true
   budding_coat_base:
     name: Budding Coat
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   budding_coat_tech_azure:
     name: Budding Coat, Tech Azure
@@ -1710,8 +1710,8 @@ items:
     bindsWhenEquipped: true
   budding_helm_base:
     name: Budding Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   budding_helm_tech_azure:
     name: Budding Helm, Tech Azure
@@ -1755,8 +1755,8 @@ items:
     bindsWhenEquipped: true
   captain_coat_base:
     name: Captain Coat
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   captain_coat_blue:
     name: Captain Coat, Blue
@@ -1765,8 +1765,8 @@ items:
     bindsWhenEquipped: true
   captain_coat_booched_base:
     name: Booched Captain Coat
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   captain_coat_booched_blue:
     name: Captain Coat Booched, Blue
@@ -1850,8 +1850,8 @@ items:
     bindsWhenEquipped: true
   captain_coat_hook_base:
     name: Captain Coat & Hook
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   captain_coat_hook_blue:
     name: Captain Coat Hook, Blue
@@ -1905,8 +1905,8 @@ items:
     bindsWhenEquipped: true
   captain_coat_pegleg_base:
     name: Captain Coat & Pegleg
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   captain_coat_pegleg_blue:
     name: Captain Coat Pegleg, Blue
@@ -1980,8 +1980,8 @@ items:
     bindsWhenEquipped: true
   captain_coat_shadowbase:
     name: Captain Coat
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   captain_coat_shadowtech_azure:
     name: Captain Coat, ShadowTech Azure
@@ -2030,8 +2030,8 @@ items:
     bindsWhenEquipped: true
   casting_cone_base:
     name: Casting Cone
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   casting_cone_cool:
     name: Casting Cone, Cool
@@ -2070,8 +2070,8 @@ items:
     bindsWhenEquipped: true
   casting_cone_recolor:
     name: Casting Cone
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   casting_cone_regal:
     name: Casting Cone, Regal
@@ -2185,8 +2185,8 @@ items:
     bindsWhenEquipped: true
   charming_cap_base:
     name: Charming Cap
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   charming_cap_cool:
     name: Charming Cap, Cool
@@ -2225,8 +2225,8 @@ items:
     bindsWhenEquipped: true
   charming_cap_recolor:
     name: Charming Cap
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   charming_cap_regal:
     name: Charming Cap, Regal
@@ -2280,8 +2280,8 @@ items:
     bindsWhenEquipped: true
   chef_coat_s0_3fb4bc5cfe38:
     name: Chef Coat
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   chef_coat_s3593493472_9ee5e3c8e236:
     name: Chef Coat
@@ -2324,8 +2324,8 @@ items:
     bindsWhenEquipped: true
   chef_hat_s0_08c34deef885:
     name: Chef Hat
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   chef_hat_s2605179817_a20edf8644a2:
     name: Chef Hat
@@ -2366,8 +2366,8 @@ items:
     bindsWhenEquipped: true
   cloak_base:
     name: Cloak
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   cloak_blazing:
     name: Cloak, Blazing
@@ -2596,15 +2596,15 @@ items:
     bindsWhenEquipped: true
   clock_blocker_anniversary:
     name: Clock Blocker, Anniversary
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
     permanent: true
     locked: true
   clock_blocker_base:
     name: Clock Blocker
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
     permanent: true
     locked: true
@@ -2724,8 +2724,8 @@ items:
         defendingSpeed: -0.5
   clock_blocker_recolor:
     name: Clock Blocker, Recolor
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   clock_blocker_regal:
     name: Clock Blocker, Regal
@@ -2785,8 +2785,8 @@ items:
         defendingSpeed: -0.5
   clockworks_armor_base:
     name: Clockworks Armor
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   clockworks_armor_clockworks:
     name: Clockworks Armor, Clockworks
@@ -2830,8 +2830,8 @@ items:
     bindsWhenEquipped: true
   clockworks_armor_recolor:
     name: Clockworks Armor
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   clockworks_armor_regal:
     name: Clockworks Armor, Regal
@@ -2870,8 +2870,8 @@ items:
     bindsWhenEquipped: true
   crescent_helm_base:
     name: Crescent Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   crescent_helm_blazing:
     name: Crescent Helm, Blazing
@@ -3075,8 +3075,8 @@ items:
     bindsWhenEquipped: true
   crow_slime_base:
     name: Crow Slime Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   crow_slime_cool:
     name: Crow Slime, Cool
@@ -3125,8 +3125,8 @@ items:
     bindsWhenEquipped: true
   crow_slime_recolor:
     name: Crow Slime Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   crow_slime_regal:
     name: Crow Slime, Regal
@@ -3165,8 +3165,8 @@ items:
     bindsWhenEquipped: true
   cuirass_base:
     name: Spiral Cuirass
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   cuirass_blazing:
     name: Cuirass, Blazing
@@ -3405,8 +3405,8 @@ items:
     bindsWhenEquipped: true
   culet_base:
     name: Spiral Culet
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   culet_blazing:
     name: Culet, Blazing
@@ -3695,8 +3695,8 @@ items:
     bindsWhenEquipped: true
   deconstruction_helm_base:
     name: Deconstruction Helm, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   deconstruction_helm_clockworks:
     name: Deconstruction Helm, Clockworks
@@ -3740,8 +3740,8 @@ items:
     bindsWhenEquipped: true
   deconstruction_helm_recolor:
     name: Deconstruction Helm, Recolor
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   deconstruction_helm_regal:
     name: Deconstruction Helm, Regal
@@ -3765,8 +3765,8 @@ items:
     bindsWhenEquipped: true
   deconstruction_rig_base:
     name: Deconstruction Rig
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   deconstruction_rig_clockworks:
     name: Deconstruction Rig, Clockworks
@@ -3810,8 +3810,8 @@ items:
     bindsWhenEquipped: true
   deconstruction_rig_recolor:
     name: Deconstruction Rig
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   deconstruction_rig_regal:
     name: Deconstruction Rig, Regal
@@ -3850,8 +3850,8 @@ items:
     bindsWhenEquipped: true
   down_puffer_base:
     name: Down Puffer
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   down_puffer_blue:
     name: Down Puffer, Blue
@@ -3900,13 +3900,13 @@ items:
     bindsWhenEquipped: true
   down_puffer_recolor_base:
     name: Down Puffer
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   down_puffer_recolor_shadowbase:
     name: Down Puffer
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   down_puffer_red:
     name: Down Puffer, Red
@@ -3960,8 +3960,8 @@ items:
     bindsWhenEquipped: true
   down_puffer_unzipped_base:
     name: Down Puffer (Unzipped)
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   down_puffer_unzipped_blue:
     name: Down Puffer Unzipped, Blue
@@ -4005,13 +4005,13 @@ items:
     bindsWhenEquipped: true
   down_puffer_unzipped_recolor_base:
     name: Down Puffer (Unzipped)
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   down_puffer_unzipped_recolor_shadowbase:
     name: Down Puffer (Unzipped)
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   down_puffer_unzipped_red:
     name: Down Puffer Unzipped, Red
@@ -4090,8 +4090,8 @@ items:
     bindsWhenEquipped: true
   draped_armor_base:
     name: Draped Armor
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   draped_armor_blazing:
     name: Draped Armor, Blazing
@@ -4525,8 +4525,8 @@ items:
     bindsWhenEquipped: true
   flak_jacket_base:
     name: Flak Jacket
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   flak_jacket_blazing:
     name: Flak Jacket, Blazing
@@ -4740,8 +4740,8 @@ items:
     bindsWhenEquipped: true
   fowl_cloak_base:
     name: Fowl Cloak, Base
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   fowl_cloak_black:
     name: Fowl Cloak, Black
@@ -4770,8 +4770,8 @@ items:
     bindsWhenEquipped: true
   fowl_cowl_base:
     name: Fowl Cowl
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   fowl_cowl_black:
     name: Fowl Cowl, Black
@@ -4805,8 +4805,8 @@ items:
     bindsWhenEquipped: true
   fox_slime_base:
     name: Fox Slime Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   fox_slime_cool:
     name: Fox Slime, Cool
@@ -4855,8 +4855,8 @@ items:
     bindsWhenEquipped: true
   fox_slime_recolor:
     name: Fox Slime Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   fox_slime_regal:
     name: Fox Slime, Regal
@@ -4940,8 +4940,8 @@ items:
     bindsWhenEquipped: true
   fur_cap_base:
     name: Fur Cap
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   fur_cap_blazing:
     name: Fur Cap, Blazing
@@ -5165,8 +5165,8 @@ items:
     bindsWhenEquipped: true
   fur_coat_base:
     name: Fur Coat
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   fur_coat_blazing:
     name: Fur Coat, Blazing
@@ -5405,8 +5405,8 @@ items:
     bindsWhenEquipped: true
   grate_plate_helm_base:
     name: Grate Plate Helm, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   grate_plate_helm_clockworks:
     name: Grate Plate Helm, Clockworks
@@ -5450,8 +5450,8 @@ items:
     bindsWhenEquipped: true
   grate_plate_helm_recolor:
     name: Grate Plate Helm, Recolor
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   grate_plate_helm_regal:
     name: Grate Plate Helm, Regal
@@ -5475,8 +5475,8 @@ items:
     bindsWhenEquipped: true
   great_defender_base:
     name: Great Defender
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   great_defender_blazing:
     name: Great Defender, Blazing
@@ -5564,8 +5564,8 @@ items:
         defendingSpeed: -0.5
   great_defender_recolor:
     name: Great Defender, Recolor
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   great_defender_slumber:
     name: Great Defender, Slumber
@@ -5624,8 +5624,8 @@ items:
     subcategory: Armor
   gremlin_helm:
     name: Gremlin Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   gremlin_helm_blue:
     name: Gremlin Helm, Blue
@@ -5683,8 +5683,8 @@ items:
     subcategory: Armor
   gremlin_suit_base:
     name: Gremlin Suit, Base
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   gremlin_suit_blue:
     name: Gremlin Suit, Blue
@@ -5752,8 +5752,8 @@ items:
     bindsWhenEquipped: true
   gunpuppy_helm:
     name: Gunpuppy Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   gunpuppy_helm_blue:
     name: Gunpuppy Helm, Blue
@@ -5802,8 +5802,8 @@ items:
     bindsWhenEquipped: true
   harlequin_cowl_base:
     name: Harlequin Doll Cowl
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   harlequin_cowl_cool:
     name: Harlequin Cowl, Cool
@@ -5842,8 +5842,8 @@ items:
     bindsWhenEquipped: true
   harlequin_cowl_recolor:
     name: Harlequin Doll Cowl
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   harlequin_cowl_regal:
     name: Harlequin Cowl, Regal
@@ -5877,8 +5877,8 @@ items:
     bindsWhenEquipped: true
   harlequin_doll_base:
     name: Harlequin Doll Costume
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   harlequin_doll_cool:
     name: Harlequin Doll, Cool
@@ -5917,8 +5917,8 @@ items:
     bindsWhenEquipped: true
   harlequin_doll_recolor:
     name: Harlequin Doll Costume
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   harlequin_doll_regal:
     name: Harlequin Doll, Regal
@@ -5962,8 +5962,8 @@ items:
     bindsWhenEquipped: true
   hex_visor_base:
     name: Hex Visor
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   hex_visor_cool:
     name: Hex Visor, Cool
@@ -6007,8 +6007,8 @@ items:
     bindsWhenEquipped: true
   hex_visor_recolor:
     name: Hex Visor
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   hex_visor_regal:
     name: Hex Visor, Regal
@@ -6032,8 +6032,8 @@ items:
     bindsWhenEquipped: true
   hexoskeleton_base:
     name: Hexoskeleton
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   hexoskeleton_cool:
     name: Hexoskeleton, Cool
@@ -6077,8 +6077,8 @@ items:
     bindsWhenEquipped: true
   hexoskeleton_recolor:
     name: Hexoskeleton
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   hexoskeleton_regal:
     name: Hexoskeleton, Regal
@@ -6102,8 +6102,8 @@ items:
     bindsWhenEquipped: true
   hive_helm_base:
     name: Hive Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   hive_helm_cool:
     name: Hive Helm, Cool
@@ -6147,8 +6147,8 @@ items:
     bindsWhenEquipped: true
   hive_helm_recolor:
     name: Hive Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   hive_helm_regal:
     name: Hive Helm, Regal
@@ -6212,8 +6212,8 @@ items:
     bindsWhenEquipped: true
   hololite_helm_base:
     name: Hololite Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   hololite_helm_cool:
     name: Hololite Helm, Cool
@@ -6252,8 +6252,8 @@ items:
     bindsWhenEquipped: true
   hololite_helm_recolor:
     name: Hololite Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   hololite_helm_regal:
     name: Hololite Helm, Regal
@@ -6446,8 +6446,8 @@ items:
     bindsWhenEquipped: true
   hood_base:
     name: Hood
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   hood_blazing:
     name: Hood, Blazing
@@ -6764,8 +6764,8 @@ items:
     bindsWhenEquipped: true
   jaws_of_megalodon_base:
     name: Jaws of Megalodon, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   jaws_of_megalodon_blue:
     name: Jaws of Megalodon, Blue
@@ -6844,13 +6844,13 @@ items:
     bindsWhenEquipped: true
   lite_base:
     name: Hololite Shield
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   lite_infantry_plate_base:
     name: Lite Infantry Plate
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   lite_infantry_plate_cool:
     name: Lite Infantry Plate, Cool
@@ -6889,8 +6889,8 @@ items:
     bindsWhenEquipped: true
   lite_infantry_plate_recolor:
     name: Lite Infantry Plate
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   lite_infantry_plate_regal:
     name: Lite Infantry Plate, Regal
@@ -6914,8 +6914,8 @@ items:
     bindsWhenEquipped: true
   lite_recolor:
     name: Hololite Shield
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   love_puppy:
     name: Love Puppy
@@ -6938,8 +6938,8 @@ items:
     bindsWhenEquipped: true
   magister_robe_base:
     name: Magister Robe
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   magister_robe_cool:
     name: Magister Robe, Cool
@@ -6978,8 +6978,8 @@ items:
     bindsWhenEquipped: true
   magister_robe_recolor:
     name: Magister Robe
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   magister_robe_regal:
     name: Magister Robe, Regal
@@ -7018,8 +7018,8 @@ items:
     bindsWhenEquipped: true
   mechaknight_helm_base:
     name: Mechaknight Helm, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   mechaknight_helm_blue:
     name: Mechaknight Helm, Blue
@@ -7078,8 +7078,8 @@ items:
     bindsWhenEquipped: true
   mechaknight_suit_base:
     name: MechaKnight Suit, Base
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   mechaknight_suit_blue:
     name: Mechaknight Suit, Blue
@@ -7168,8 +7168,8 @@ items:
     bindsWhenEquipped: true
   night_cap_pith_base:
     name: Sleepy Night Cap
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   night_cap_pith_blue:
     name: Night Cap, Pith Blue
@@ -7263,8 +7263,8 @@ items:
     bindsWhenEquipped: true
   night_cap_round_base:
     name: Snooze Night Cap
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   night_cap_round_blue:
     name: Night Cap, Round Blue
@@ -7363,8 +7363,8 @@ items:
     bindsWhenEquipped: true
   night_cap_sallet_base:
     name: Lucid Night Cap
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   night_cap_sallet_blue:
     name: Night Cap, Sallet Blue
@@ -7458,8 +7458,8 @@ items:
     bindsWhenEquipped: true
   night_cap_tailed_base:
     name: Dreamer Night Cap
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   night_cap_tailed_blue:
     name: Night Cap, Tailed Blue
@@ -7572,13 +7572,13 @@ items:
     bindsWhenEquipped: true
   node_slime_base_s0_01a96dc4a9be:
     name: Node Slime, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   node_slime_base_s0_fba91e066beb:
     name: Node Slime, Base
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   node_slime_blue_s1502234395_c4826438bf45:
     name: Node Slime, Blue
@@ -7890,18 +7890,18 @@ items:
     locked: true
   obsidian_s0_07e03c41746b:
     name: Obsidian
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   obsidian_s0_42ac25541320:
     name: Obsidian
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   onesie_base:
     name: Onesie
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   onesie_blue:
     name: Onesie, Blue
@@ -8005,8 +8005,8 @@ items:
     bindsWhenEquipped: true
   owlite_robe_base:
     name: Owlite Robe
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   owlite_robe_blue:
     name: Owlite Robe, Blue
@@ -8065,8 +8065,8 @@ items:
     bindsWhenEquipped: true
   owlite_robe_swapped_base:
     name: Owlite Robe
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   owlite_robe_volcanic:
     name: Owlite Robe, Volcanic
@@ -8125,8 +8125,8 @@ items:
     bindsWhenEquipped: true
   pith_helm_base:
     name: Spiral Pith Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   pith_helm_blazing:
     name: Pith Helm, Blazing
@@ -8375,8 +8375,8 @@ items:
     bindsWhenEquipped: true
   plate_helm_base:
     name: Plate Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   plate_helm_blazing:
     name: Plate Helm, Blazing
@@ -8600,8 +8600,8 @@ items:
     bindsWhenEquipped: true
   plate_mail_base:
     name: Plate Mail
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   plate_mail_blazing:
     name: Plate Mail, Blazing
@@ -8900,8 +8900,8 @@ items:
     bindsWhenEquipped: true
   pollinator_plate_base:
     name: Pollinator Plate
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   pollinator_plate_cool:
     name: Pollinator Plate, Cool
@@ -8945,8 +8945,8 @@ items:
     bindsWhenEquipped: true
   pollinator_plate_recolor:
     name: Pollinator Plate
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   pollinator_plate_regal:
     name: Pollinator Plate, Regal
@@ -8980,8 +8980,8 @@ items:
     bindsWhenEquipped: true
   pullover_base:
     name: Pullover
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   pullover_blue:
     name: Pullover, Blue
@@ -9030,8 +9030,8 @@ items:
     bindsWhenEquipped: true
   pullover_shadowbase:
     name: Pullover
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   pullover_shadowtech_azure:
     name: Pullover, ShadowTech Azure
@@ -9130,8 +9130,8 @@ items:
     bindsWhenEquipped: true
   rabbit_slime_base:
     name: Rabbit Slime Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   rabbit_slime_cool:
     name: Rabbit Slime, Cool
@@ -9190,8 +9190,8 @@ items:
     bindsWhenEquipped: true
   rabbit_slime_recolor:
     name: Rabbit Slime Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   rabbit_slime_regal:
     name: Rabbit Slime, Regal
@@ -9255,8 +9255,8 @@ items:
     bindsWhenEquipped: true
   raider_helm_base:
     name: Raider Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   raider_helm_blue:
     name: Raider Helm, Blue
@@ -9335,8 +9335,8 @@ items:
     bindsWhenEquipped: true
   raider_tunic_base:
     name: Raider Tunic
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   raider_tunic_blue:
     name: Raider Tunic, Blue
@@ -9425,8 +9425,8 @@ items:
     bindsWhenEquipped: true
   raiment_base:
     name: Raiment
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   raiment_blazing:
     name: Raiment, Blazing
@@ -9694,8 +9694,8 @@ items:
     subcategory: Helm
   rogue_lite_cuirass_base:
     name: Rogue Lite Cuirass
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   rogue_lite_cuirass_cool:
     name: Rogue Lite Cuirass, Cool
@@ -9734,8 +9734,8 @@ items:
     bindsWhenEquipped: true
   rogue_lite_cuirass_recolor:
     name: Rogue Lite Cuirass, Recolor
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   rogue_lite_cuirass_regal:
     name: Rogue Lite Cuirass, Regal
@@ -9759,8 +9759,8 @@ items:
     bindsWhenEquipped: true
   roly_poly_base:
     name: Roly-Poly
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   roly_poly_cool:
     name: Roly-Poly, Cool
@@ -9804,8 +9804,8 @@ items:
     bindsWhenEquipped: true
   roly_poly_recolor:
     name: Roly-Poly
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   roly_poly_regal:
     name: Roly-Poly, Regal
@@ -9829,8 +9829,8 @@ items:
     bindsWhenEquipped: true
   ronin_gasa_base:
     name: Ronin Gasa, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   ronin_gasa_blue:
     name: Ronin Gasa, Blue
@@ -9904,8 +9904,8 @@ items:
     bindsWhenEquipped: true
   round_helm_base:
     name: Round Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   round_helm_blazing:
     name: Round Helm, Blazing
@@ -10138,8 +10138,8 @@ items:
     bindsWhenEquipped: true
   sagacious_owlite_mask_base:
     name: Sagacious Owlite Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   sagacious_owlite_mask_blue:
     name: Sagacious Owlite Mask, Blue
@@ -10198,8 +10198,8 @@ items:
     bindsWhenEquipped: true
   sagacious_owlite_mask_swapped_base:
     name: Sagacious Owlite Mask
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   sagacious_owlite_mask_volcanic:
     name: Sagacious Owlite Mask, Volcanic
@@ -10223,8 +10223,8 @@ items:
     bindsWhenEquipped: true
   sallet_base:
     name: Spiral Sallet
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   sallet_blazing:
     name: Sallet, Blazing
@@ -10463,8 +10463,8 @@ items:
     bindsWhenEquipped: true
   scale_helm_base:
     name: Scale Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   scale_helm_blazing:
     name: Scale Helm, Blazing
@@ -10708,8 +10708,8 @@ items:
     bindsWhenEquipped: true
   scale_mail_base:
     name: Scale Mail
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   scale_mail_blazing:
     name: Scale Mail, Blazing
@@ -10983,8 +10983,8 @@ items:
     bindsWhenEquipped: true
   shroom_cap_base:
     name: Shroom Cap, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   shroom_cap_blue:
     name: Shroom Cap, Blue
@@ -11084,8 +11084,8 @@ items:
         speed: 0.5
   sniped_buccaneer_bicorne_base:
     name: Sniped Buccaneer Bicorne, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   sniped_buccaneer_bicorne_blue:
     name: Sniped Buccaneer Bicorne, Blue
@@ -11144,8 +11144,8 @@ items:
     bindsWhenEquipped: true
   snow_hat_base:
     name: Snow Hat
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   snow_hat_blue:
     name: Snow Hat, Blue
@@ -11189,8 +11189,8 @@ items:
     bindsWhenEquipped: true
   snow_hat_pompom_base:
     name: Pompom Snow Hat
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   snow_hat_pompom_blue:
     name: Snow Hat Pompom, Blue
@@ -11234,13 +11234,13 @@ items:
     bindsWhenEquipped: true
   snow_hat_pompom_recolor_base:
     name: Pompom Snow Hat
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   snow_hat_pompom_recolor_shadowbase:
     name: Pompom Snow Hat
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   snow_hat_pompom_red:
     name: Snow Hat Pompom, Red
@@ -11304,13 +11304,13 @@ items:
     bindsWhenEquipped: true
   snow_hat_recolor_base:
     name: Snow Hat
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   snow_hat_recolor_shadowbase:
     name: Snow Hat
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   snow_hat_red:
     name: Snow Hat, Red
@@ -11369,8 +11369,8 @@ items:
     bindsWhenEquipped: true
   sorcerer_robe_base:
     name: Sorcerer Robe
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   sorcerer_robe_cool:
     name: Sorcerer Robe, Cool
@@ -11409,8 +11409,8 @@ items:
     bindsWhenEquipped: true
   sorcerer_robe_recolor:
     name: Sorcerer Robe
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   sorcerer_robe_regal:
     name: Sorcerer Robe, Regal
@@ -11434,8 +11434,8 @@ items:
     bindsWhenEquipped: true
   spell_book_base:
     name: Spell Book
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   spell_book_cool:
     name: Spell Book, Cool
@@ -11474,8 +11474,8 @@ items:
     bindsWhenEquipped: true
   spell_book_recolor:
     name: Spell Book
-    category: Costume
-    subcategory: Shield
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   spell_book_regal:
     name: Spell Book, Regal
@@ -11504,8 +11504,8 @@ items:
     bindsWhenEquipped: true
   spiraltail_mail_base:
     name: Spiraltail Mail, Base
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   spiraltail_mail_blue:
     name: Spiraltail Mail, Blue
@@ -11569,8 +11569,8 @@ items:
     bindsWhenEquipped: true
   spiraltail_mask_base:
     name: Spiraltail Mask, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   spiraltail_mask_blue:
     name: Spiraltail Mask, Blue
@@ -11701,8 +11701,8 @@ items:
     bindsWhenEquipped: true
   stranger_cap_base:
     name: Stranger Cap, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   stranger_cap_blue:
     name: Stranger Cap, Blue
@@ -11811,8 +11811,8 @@ items:
     bindsWhenEquipped: true
   stranger_helm:
     name: Stranger Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   stranger_helm_blue:
     name: Stranger Helm, Blue
@@ -11881,8 +11881,8 @@ items:
     bindsWhenEquipped: true
   stranger_robe_base:
     name: Stranger Robe, Base
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   stranger_robe_blue:
     name: Stranger Robe, Blue
@@ -12006,28 +12006,28 @@ items:
     bindsWhenEquipped: true
   swimsuit_base:
     name: Swimsuit, Base
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   swimsuit_trunks:
     name: Swimsuit, Trunks
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   swimsuit_trunks_recolor:
     name: Swimsuit, Trunks (Recolor)
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   swimsuit_wrap:
     name: Swimsuit, Wrap
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   swimsuit_wrap_recolor:
     name: Swimsuit, Wrap (Recolor)
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   tabard_of_the_black_rose:
     name: Tabard of the Black Rose
@@ -12126,8 +12126,8 @@ items:
     bindsWhenEquipped: true
   tailed_helm_base:
     name: Spiral Tailed Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   tailed_helm_blazing:
     name: Tailed Helm, Blazing
@@ -12356,8 +12356,8 @@ items:
     bindsWhenEquipped: true
   tick_tock_top_base:
     name: Tick Tock Top, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   tick_tock_top_clockworks:
     name: Tick Tock Top, Clockworks
@@ -12401,8 +12401,8 @@ items:
     bindsWhenEquipped: true
   tick_tock_top_recolor:
     name: Tick Tock Top, Recolor
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   tick_tock_top_regal:
     name: Tick Tock Top, Regal
@@ -12440,20 +12440,20 @@ items:
     locked: true
   torto_skull_base:
     name: Tortodrone Skull
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
     permanent: true
     locked: true
   tortodrone_armor:
     name: Tortodrone Armor
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   tortodrone_helm:
     name: Tortodrone Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   toxic_bombhead_mask:
     name: Toxic Bombhead Mask
@@ -12462,8 +12462,8 @@ items:
     bindsWhenEquipped: true
   toy_soldier_cap_base:
     name: Toy Soldier Cap
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   toy_soldier_cap_blue_coat:
     name: Toy Soldier Cap, Blue Coat
@@ -12502,8 +12502,8 @@ items:
     bindsWhenEquipped: true
   toy_soldier_cap_recolor:
     name: Toy Soldier Cap
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   toy_soldier_cap_red_coat:
     name: Toy Soldier Cap, Red Coat
@@ -12532,8 +12532,8 @@ items:
     bindsWhenEquipped: true
   toy_soldier_coat_base:
     name: Toy Soldier Coat
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   toy_soldier_coat_blue_coat:
     name: Toy Soldier Coat, Blue Coat
@@ -12577,8 +12577,8 @@ items:
     bindsWhenEquipped: true
   toy_soldier_coat_recolor:
     name: Toy Soldier Coat
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   toy_soldier_coat_red_coat:
     name: Toy Soldier Coat, Red Coat
@@ -12607,8 +12607,8 @@ items:
     bindsWhenEquipped: true
   toy_soldier_crown_base:
     name: Toy Soldier Crown
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   toy_soldier_crown_blue_coat:
     name: Toy Soldier Crown, Blue Coat
@@ -12652,8 +12652,8 @@ items:
     bindsWhenEquipped: true
   toy_soldier_crown_recolor:
     name: Toy Soldier Crown
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   toy_soldier_crown_red_coat:
     name: Toy Soldier Crown, Red Coat
@@ -12682,8 +12682,8 @@ items:
     bindsWhenEquipped: true
   trojan_armor:
     name: Warden Armor
-    category: Costume
-    subcategory: Armor
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   trojan_armor_blazing:
     name: Trojan Armor, Blazing
@@ -12792,8 +12792,8 @@ items:
     bindsWhenEquipped: true
   trojan_helm:
     name: Trojan Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   trojan_helm_blazing:
     name: Trojan Helm, Blazing
@@ -13052,8 +13052,8 @@ items:
     bindsWhenEquipped: true
   valiant_visor_base:
     name: Valiant Visor
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   valiant_visor_cool:
     name: Valiant Visor, Cool
@@ -13092,8 +13092,8 @@ items:
     bindsWhenEquipped: true
   valiant_visor_recolor:
     name: Valiant Visor
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   valiant_visor_regal:
     name: Valiant Visor, Regal
@@ -13152,8 +13152,8 @@ items:
     bindsWhenEquipped: true
   winged_helm_base:
     name: Winged Helm
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   winged_helm_blazing:
     name: Winged Helm, Blazing
@@ -13437,8 +13437,8 @@ items:
     bindsWhenEquipped: true
   wolver_mask_base:
     name: Wolver Mask, Base
-    category: Costume
-    subcategory: Helm
+    category: Internal
+    subcategory: Base
     bindsWhenEquipped: true
   wolver_mask_blue:
     name: Wolver Mask, Blue

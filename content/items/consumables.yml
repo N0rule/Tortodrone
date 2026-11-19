@@ -51,20 +51,20 @@ items:
     rarity: 0
   base_s0_58de781ad315:
     name: Base
-    category: Pickup
-    subcategory: Capsule
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   base_s0_8e89f285fb65:
     name: Base
-    category: Pickup
-    subcategory: Capsule
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   base_s0_b891d800c425:
     name: Base
-    category: Pickup
-    subcategory: Vial
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   blazing_speed:
@@ -91,8 +91,8 @@ items:
     rarity: 0
   curse_base:
     name: Curse Vial
-    category: Pickup
-    subcategory: Vial
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   curse_s1478405226_f08f659aa4a7:
@@ -163,8 +163,8 @@ items:
     stackable: true
   fire_base:
     name: Fire Vial
-    category: Pickup
-    subcategory: Vial
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   fire_vial:
@@ -199,8 +199,8 @@ items:
     stackable: true
   freeze_base:
     name: Freeze Vial
-    category: Pickup
-    subcategory: Vial
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   freeze_vial:
@@ -331,8 +331,8 @@ items:
     stackable: true
   poison_base:
     name: Poison Vial
-    category: Pickup
-    subcategory: Vial
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   poison_vial:
@@ -385,8 +385,8 @@ items:
     stackable: true
   shock_base:
     name: Shock Vial
-    category: Pickup
-    subcategory: Vial
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   shock_vial:
@@ -413,8 +413,8 @@ items:
     stackable: true
   sleep_base:
     name: Sleep Vial
-    category: Pickup
-    subcategory: Vial
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   sleep_vial:
@@ -443,8 +443,8 @@ items:
     stackable: true
   status_base:
     name: Curse Vial
-    category: Pickup
-    subcategory: Vial
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   stun:
@@ -455,8 +455,8 @@ items:
     stackable: true
   stun_base:
     name: Stun Vial
-    category: Pickup
-    subcategory: Vial
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   stun_vial:

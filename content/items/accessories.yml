@@ -356,8 +356,8 @@ items:
     stackable: true
   ankle:
     name: Ankle
-    category: Accessory
-    subcategory: 'Armor: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   ankle_booster_blue:
     name: Ankle Booster, Blue
@@ -896,8 +896,8 @@ items:
     subcategory: Accessory Recover
   arms:
     name: Arms
-    category: Accessory
-    subcategory: 'Armor: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   ashtail_slippers:
     name: Ashtail Slippers
@@ -966,8 +966,8 @@ items:
     stackable: true
   aura_s0_e688b7c11095:
     name: Aura
-    category: Accessory
-    subcategory: 'Armor: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   aura_s1834284145_9610bd40530b:
     name: Aura
@@ -1039,13 +1039,13 @@ items:
     stackable: true
   back_s0_37f4c89a61a4:
     name: Back
-    category: Accessory
-    subcategory: 'Helm: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   back_s0_7850e19d737f:
     name: Back
-    category: Accessory
-    subcategory: 'Armor: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   bar_tennas_cool:
     name: Bar'tennas, Cool
@@ -1230,35 +1230,35 @@ items:
   base_custom_colors:
     name: Base, Custom Colors
     category: Internal
-    subcategory: Parts
+    subcategory: Base
     stackable: true
   base_s0_137f8c3d5a29:
     name: Base
     category: Internal
-    subcategory: Dev
+    subcategory: Base
     stackable: true
   base_s0_268d094cee28:
     name: Base
     category: Internal
-    subcategory: Accessory Recover
+    subcategory: Base
   base_s0_62c86bde10ea:
     name: Base
-    category: Accessory
-    subcategory: 'Helm: Top'
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_872f9f193cfc:
     name: Base
-    category: Accessory
-    subcategory: 'Armor: Front'
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_a2760b9a33fb:
     name: Base
     category: Internal
-    subcategory: Accessory Remove
+    subcategory: Base
   base_s0_fac9543d98c1:
     name: Base
     category: Internal
-    subcategory: Parts
+    subcategory: Base
     stackable: true
   bat_slime_wings_autumn:
     name: Bat Slime Wings, Autumn
@@ -2627,8 +2627,8 @@ items:
     stackable: true
   brow:
     name: Brow
-    category: Accessory
-    subcategory: 'Helm: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   bug_tennas_cool:
     name: Bug'tennas, Cool
@@ -5967,8 +5967,8 @@ items:
     stackable: true
   footstep_aura:
     name: Footstep Aura
-    category: Accessory
-    subcategory: 'Armor: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   fox_slime_tail_autumn:
     name: Fox Slime Tail, Autumn
@@ -6147,13 +6147,13 @@ items:
     stackable: true
   front_s0_470a9f7213a8:
     name: Front
-    category: Accessory
-    subcategory: 'Armor: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   front_s0_ff33758cdb85:
     name: Front
-    category: Accessory
-    subcategory: 'Helm: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   game_face_blue:
     name: Game Face, Blue
@@ -12767,8 +12767,8 @@ items:
     stackable: true
   rear:
     name: Rear
-    category: Accessory
-    subcategory: 'Armor: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   rebreather_blue:
     name: Rebreather, Blue
@@ -14217,8 +14217,8 @@ items:
     stackable: true
   side:
     name: Side
-    category: Accessory
-    subcategory: 'Helm: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   side_blade_amethyst:
     name: Side Blade, Amethyst
@@ -16137,8 +16137,8 @@ items:
     stackable: true
   top:
     name: Top
-    category: Accessory
-    subcategory: 'Helm: Parts'
+    category: Internal
+    subcategory: Base
     stackable: true
   top_gear_clockworks:
     name: Top Gear, Clockworks

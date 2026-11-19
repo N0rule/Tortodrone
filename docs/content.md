@@ -194,7 +194,9 @@ broad editing family; `category` and optional `subcategory` are administrative
 labels, independent of the native Java class and equipment slot. The labels follow
 the unmodified client's Arsenal tabs and use the native type only as their source.
 For example, `aggro_aura` has category `Accessory` and subcategory `Armor: Aura`
-while retaining native AccessoryTicket serialization. Display labels may repeat. Editing `name` changes
+while retaining native AccessoryTicket serialization. Display labels may repeat.
+Abstract authoring placeholders (names `Base`/`Base (…)` or native configs containing
+`/Parts/`) are grouped under `Internal` / `Base`. Editing `name` changes
 administrator discovery only: the unchanged client still localizes its native
 item configuration. It does not support an item-name override in this record.
 

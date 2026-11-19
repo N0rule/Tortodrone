@@ -142,8 +142,8 @@ items:
     rarity: 3
   anniversary_base:
     name: Anniversary Base
-    category: Usable
-    subcategory: Prize Box
+    category: Internal
+    subcategory: Base
   anniversary_prize_box:
     name: Anniversary Prize Box
     category: Usable
@@ -288,281 +288,289 @@ items:
     rarity: 5
   base_actor:
     name: Base (Actor)
-    category: Furnishing
-    subcategory: Parts
+    category: Internal
+    subcategory: Base
     stackable: true
   base_knight_statue:
     name: Base (Knight statue)
-    category: Furnishing
-    subcategory: Knight Statue
+    category: Internal
+    subcategory: Base
   base_modelprop:
     name: Base (ModelProp)
-    category: Furnishing
-    subcategory: Parts
+    category: Internal
+    subcategory: Base
   base_placeable:
     name: Base (Placeable)
-    category: Furnishing
-    subcategory: Parts
+    category: Internal
+    subcategory: Base
     stackable: true
   base_prop:
     name: Base (Prop)
-    category: Furnishing
-    subcategory: Parts
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_045eccaf0fa9:
     name: Base
-    category: Furnishing
-    subcategory: Chair
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_056159bf0c8d:
     name: Base
-    category: Battle Sprite
-    subcategory: Egg
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   base_s0_0a8112aaeed9:
     name: Base
-    category: Rarity
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   base_s0_10e524c9fb2f:
     name: Slime Lockbox
-    category: Usable
-    subcategory: Lockbox
+    category: Internal
+    subcategory: Base
   base_s0_1658f1c87b30:
     name: Base
-    category: Furnishing
-    subcategory: Lighting
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_19fe979ba735:
     name: Base
-    category: Furnishing
-    subcategory: Lighting
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_21a46380ed43:
     name: Base
-    category: Furnishing
-    subcategory: Pet
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_2567ad01344d:
     name: Base
-    category: Ticket
-    subcategory: Guild Hall Theme
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_261268ae13fd:
     name: Base
-    category: Furnishing
-    subcategory: Pet
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_293608b0b6f2:
     name: Base
-    category: Furnishing
-    subcategory: Bench
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_327f1d5b4576:
     name: Charred Bench
-    category: Furnishing
-    subcategory: Bench
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_3adef484c6a8:
     name: Curious Mewkat
-    category: Furnishing
-    subcategory: Pet
+    category: Internal
+    subcategory: Base
     rarity: 5
     stackable: true
   base_s0_3ffb0fe97674:
     name: Wandering Snipe
-    category: Furnishing
-    subcategory: Pet
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_48b0c747149d:
     name: Base
-    category: Furnishing
-    subcategory: Drawer
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_4a3665f9f414:
     name: Flying Snipe
-    category: Furnishing
-    subcategory: Pet
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_4c1f0aba8117:
     name: Base
-    category: Usable
-    subcategory: Height
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_5224010f7f99:
     name: Base
-    category: Furnishing
-    subcategory: Feature
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_555575083392:
     name: Base
-    category: Pickup
-    subcategory: Present
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_s0_55b108f6d6bd:
     name: Base
-    category: Furnishing
-    subcategory: Lighting
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_588630e6788c:
     name: Base
-    category: Furnishing
-    subcategory: Lighting
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_5b319204b8ac:
     name: Base
-    category: Furnishing
-    subcategory: Chest
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_748bf63c9493:
     name: Base
-    category: Ticket
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_764d61b24405:
     name: Base
-    category: Furnishing
-    subcategory: Pet
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_7709cc00b52b:
     name: Base
-    category: Furnishing
-    subcategory: Clutter
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_7e0c0952770d:
     name: Base
-    category: Pickup
-    subcategory: Vitapod
+    category: Internal
+    subcategory: Base
     rarity: 0
   base_s0_7e2524930b43:
     name: Base
-    category: Token
+    category: Internal
+    subcategory: Base
     stackable: true
     locked: true
   base_s0_869f22d17ebd:
     name: Base
-    category: Furnishing
-    subcategory: Pet
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_8fddcfd3f756:
     name: Base
-    category: Furnishing
-    subcategory: Pet
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_9188ba2a662f:
     name: Base
-    category: Rarity
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   base_s0_a6ce566ac2ea:
     name: Base
-    category: Furnishing
-    subcategory: Pet
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_a72a73b43549:
     name: Lazy Snipe
-    category: Furnishing
-    subcategory: Pet
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_a7e2745bfdf0:
     name: Base
-    category: Ticket
-    subcategory: Guild Bond
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_ab745f1d7fe0:
     name: Companion Prize Box
-    category: Usable
-    subcategory: Prize Box
+    category: Internal
+    subcategory: Base
   base_s0_ad83abdd27a9:
     name: Base
-    category: Furnishing
-    subcategory: Trophy
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_b4fbc0ba3a35:
     name: Base
-    category: Furnishing
-    subcategory: Table
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_bac35bb371fd:
     name: Base
-    category: Furnishing
-    subcategory: Lighting
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_d2a8307f8c99:
     name: Base
-    category: Ticket
-    subcategory: Guild Hall Theme
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_d5da4f9a00a6:
     name: Base
-    category: Furnishing
-    subcategory: Chair
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_d6da20835e9d:
     name: Base
-    category: Furnishing
-    subcategory: Chair
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_d959c866131e:
     name: Base
-    category: Furnishing
-    subcategory: Bed
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_da69b85b4d9b:
     name: Base
-    category: Rarity
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   base_s0_db1c68404321:
     name: Base
-    category: Ticket
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_ddc2be581745:
     name: Base
-    category: Usable
-    subcategory: Eye
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_df61f5b2970c:
     name: Base
-    category: Usable
-    subcategory: Personal Color
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_e143ba9c04ca:
     name: Base
-    category: Usable
-    subcategory: Wrapping Paper
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_e1dbd374411c:
     name: Base
-    category: Usable
-    subcategory: Prize Box
+    category: Internal
+    subcategory: Base
   base_s0_e6434f65c542:
     name: Base
-    category: Usable
-    subcategory: Gift Box
+    category: Internal
+    subcategory: Base
   base_s0_f40bbd54794f:
     name: Base
-    category: Furnishing
-    subcategory: Shelf
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_f4cce62ff005:
     name: Base
-    category: Furnishing
-    subcategory: Wardrobe
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_f979814d708c:
     name: Base
-    category: Ticket
+    category: Internal
+    subcategory: Base
     stackable: true
   base_s0_fa0bfb31e7f8:
     name: Base
-    category: Ticket
+    category: Internal
+    subcategory: Base
     stackable: true
   base_specialprop:
     name: Base (SpecialProp)
-    category: Furnishing
-    subcategory: Parts
+    category: Internal
+    subcategory: Base
     stackable: true
   battle_boar_box:
     name: Battle Boar Box
@@ -978,7 +986,8 @@ items:
     stackable: true
   casino_vip_base:
     name: Golden Slime Casino C.U.B.E. Club Membership
-    category: Artifact
+    category: Internal
+    subcategory: Base
     locked: true
   cautery_sword_recipe:
     name: Cautery Sword Recipe
@@ -1354,8 +1363,8 @@ items:
     locked: true
   corner_base:
     name: Corner, Base
-    category: Furnishing
-    subcategory: Counter
+    category: Internal
+    subcategory: Base
     rarity: 1
     stackable: true
   cozy_prize_box:
@@ -1901,8 +1910,8 @@ items:
     stackable: true
   equinox_base:
     name: Equinox Base
-    category: Usable
-    subcategory: Prize Box
+    category: Internal
+    subcategory: Base
   equinox_prize_box:
     name: Equinox Prize Box
     category: Usable
@@ -2104,8 +2113,8 @@ items:
     rarity: 1
   firework:
     name: Firework
-    category: Usable
-    subcategory: Confetti / Emote
+    category: Internal
+    subcategory: Base
     stackable: true
   firo_driver_recipe:
     name: Firo Driver Recipe
@@ -2314,8 +2323,8 @@ items:
     stackable: true
   gear_base:
     name: Gear Base
-    category: Ticket
-    subcategory: Variant
+    category: Internal
+    subcategory: Base
     stackable: true
   gigawatt_pulsar_recipe:
     name: Gigawatt Pulsar Recipe
@@ -2782,8 +2791,8 @@ items:
     subcategory: Upgrade
   heat_bonus_s0_d4fba5a33e1c:
     name: Heat Bonus
-    category: Usable
-    subcategory: Upgrade
+    category: Internal
+    subcategory: Base
   heat_bonus_s909083618_3f30bba58f51:
     name: Heat Amplifier
     category: Usable
@@ -3078,8 +3087,8 @@ items:
     stackable: true
   item_1unit_base:
     name: 1unit, Base
-    category: Furnishing
-    subcategory: Counter
+    category: Internal
+    subcategory: Base
     rarity: 1
     stackable: true
   item_1unit_stack_a:
@@ -4794,7 +4803,8 @@ items:
     rarity: 0
   recon_module_base:
     name: Recon Module Base
-    category: Artifact
+    category: Internal
+    subcategory: Base
     permanent: true
     locked: true
   recon_module_citadel:
@@ -6485,8 +6495,8 @@ items:
     rarity: 0
   sword_gun_base:
     name: Sword Gun Base
-    category: Ticket
-    subcategory: Variant
+    category: Internal
+    subcategory: Base
     stackable: true
   table_charred:
     name: Charred Table
@@ -6737,8 +6747,8 @@ items:
     locked: true
   variant_base:
     name: Variant Base
-    category: Usable
-    subcategory: Lockbox
+    category: Internal
+    subcategory: Base
   variants_1:
     name: 1 Variant Ticket
     category: Ticket
@@ -6922,8 +6932,8 @@ items:
     stackable: true
   weapon_base:
     name: Weapon Base
-    category: Ticket
-    subcategory: Variant
+    category: Internal
+    subcategory: Base
     stackable: true
   weapon_slot:
     name: Weapon Slot Upgrade

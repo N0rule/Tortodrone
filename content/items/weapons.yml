@@ -961,199 +961,238 @@ items:
           allowMovementInput: true
   base_2_hit_slow:
     name: Base (2 Hit Slow)
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_3_hit:
     name: Base (3 Hit)
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_3_hit_icon:
     name: Base (3 Hit) (Icon)
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_5_hit:
     name: Base (5 Hit)
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   base_alchemer:
     name: Base (Alchemer)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_alchemer_wand:
     name: Base (Alchemer) (Wand)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_ascended_calibur:
     name: Ascended Calibur
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 4
     bindsWhenEquipped: true
   base_auto_shell:
     name: Base (Auto Shell)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_auto_shell_1_shot:
     name: Base (Auto Shell) (1 Shot)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_calibur:
     name: Calibur
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 2
     bindsWhenEquipped: true
   base_catalyzer_gun:
     name: Base (Catalyzer Gun)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_catalyzer_gun_arg_modify:
     name: Base (Catalyzer Gun) (Arg Modify)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_chargeonly:
     name: Base (ChargeOnly)
-    category: Bomb
+    category: Internal
+    subcategory: Base
     rarity: 3
     bindsWhenEquipped: true
   base_chemical:
     name: Base (Chemical)
-    category: Bomb
+    category: Internal
+    subcategory: Base
     rarity: 3
     bindsWhenEquipped: true
   base_deadly_charcoaler:
     name: Deadly Charcoaler
-    category: Bomb
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   base_furious_fork:
     name: Furious Fork
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   base_heavy_shell:
     name: Base (Heavy Shell)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_heavy_shell_1_shot:
     name: Base (Heavy Shell) (1 Shot)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_heavy_shell_animated:
     name: Base (Heavy Shell) (Animated)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_leviathan_blade:
     name: Leviathan Blade
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   base_pulse_gun:
     name: Base (Pulse Gun)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_pulse_gun_charged_attack:
     name: Base (Pulse Gun) (Charged Attack)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_relic:
     name: Base (Relic)
-    category: Bomb
+    category: Internal
+    subcategory: Base
     rarity: 3
     bindsWhenEquipped: true
   base_revolver_shell:
     name: Base (Revolver Shell)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_rocket_ham:
     name: Base (Rocket Ham)
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
     permanent: true
     locked: true
   base_s0_b8b04801c776:
     name: Base
-    category: Bomb
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_s0_bfa5bdacdf95:
     name: Base
-    category: Bomb
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_s0_bfa896109f49:
     name: Base
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_saber:
     name: Base (Saber)
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_shard:
     name: Base (Shard)
-    category: Bomb
+    category: Internal
+    subcategory: Base
     rarity: 3
     bindsWhenEquipped: true
   base_shard_promo:
     name: Base (Shard) (Promo)
-    category: Bomb
+    category: Internal
+    subcategory: Base
     rarity: 3
     bindsWhenEquipped: true
   base_simple:
     name: Base (Simple)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_simple_bladed:
     name: Base (Simple) (Bladed)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_spiral_soaker:
     name: Spiral Soaker
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   base_spur:
     name: Base (Spur)
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_tempered_calibur:
     name: Tempered Calibur
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 3
     bindsWhenEquipped: true
   base_tortafist:
     name: Base (Tortafist)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   base_twin_diskgun:
     name: Base (Twin Diskgun)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   base_twin_mixer:
     name: Base (Twin Mixer)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 0
     bindsWhenEquipped: true
   beast_basher:
@@ -7344,7 +7383,8 @@ items:
             actionEndsAfterMs: 1239
   ice_axe_base:
     name: Ice Axe
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   ice_axe_tech_azure:
@@ -9149,7 +9189,8 @@ items:
             actionEndsAfterMs: 1239
   node_slime_base_s0_db5f4e334a0c:
     name: Node Slime, Base
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   node_slime_blue_s77211544_a23ce188c093:
@@ -10722,7 +10763,8 @@ items:
           allowMovementInput: true
   owlite_wand_base:
     name: Owlite Wand
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   owlite_wand_blue:
@@ -11527,7 +11569,8 @@ items:
             allowMovementInput: true
   piggy_banker_base:
     name: Piggy Banker
-    category: Bomb
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   piggy_banker_grey:
@@ -11753,7 +11796,8 @@ items:
           allowMovementInput: true
   pollinator_base:
     name: Pollinator
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   pollinator_tech_violet:
@@ -15908,7 +15952,8 @@ items:
             forwardImpulse: 1
   sweet_dreams_base_tech:
     name: Sweet Dreams, Base Tech
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   sweet_dreams_tech_azure:
@@ -16692,17 +16737,20 @@ items:
             allowMovementInput: true
   tortafist_rank3:
     name: Tortafist (Rank3)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 3
     bindsWhenEquipped: true
   tortafist_rank4:
     name: Tortafist (Rank4)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 4
     bindsWhenEquipped: true
   tortafist_rank5:
     name: Tortafist (Rank5)
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   toxic_atomizer:
@@ -17473,7 +17521,8 @@ items:
             forwardImpulse: 1
   untimely_scythe_base_leviathan_blade:
     name: Scythe
-    category: Sword
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   untimely_scythe_shadow:
@@ -17849,7 +17898,8 @@ items:
             allowMovementInput: true
   virulent_seedling_base:
     name: Virulent Seedling
-    category: Bomb
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   virulent_seedling_tech_azure:
@@ -18231,7 +18281,8 @@ items:
             forwardImpulse: 1
   wanderer_s_wand_base:
     name: Wanderer's Wand
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   wanderer_s_wand_cool:
@@ -18551,7 +18602,8 @@ items:
           allowMovementInput: true
   wanderer_s_wand_recolor:
     name: Wanderer's Wand
-    category: Handgun
+    category: Internal
+    subcategory: Base
     rarity: 5
     bindsWhenEquipped: true
   wanderer_s_wand_regal:

@@ -7,7 +7,8 @@ items:
     locked: true
   base_s0_eb56b63a41f6:
     name: Base
-    category: Material
+    category: Internal
+    subcategory: Base
     rarity: 0
     stackable: true
   beast_scale:
