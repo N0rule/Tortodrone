@@ -24,9 +24,9 @@ final class ReadableItemExport {
             var nativeRow=map(o,"item");String config=text(nativeRow.get("config"),"config");var e=items.find(config);String id=items.referenceId(e);
             var b=new LinkedHashMap<String,Object>();for(String k:List.of("config","stockId","type","slot","nameKey","variant","seed","expireDays"))b.put(k,nativeRow.get(k));if(nativeRow.containsKey("auctionGroup"))b.put("auctionGroup",nativeRow.get("auctionGroup"));b.put("equipment",gear.containsKey(config));bindings.put(id,b);
             var args=map(nativeRow.get("modelArguments"),"arguments");if(!args.isEmpty())arguments.put(config,args);
-            var row=new LinkedHashMap<String,Object>();row.put("name",items.displayName(e));row.put("category",items.hasLabels(e)?items.category(e):category(e));
+            var row=new LinkedHashMap<String,Object>();String displayName=items.displayName(e);row.put("name",displayName);row.put("category",items.hasLabels(e)?items.category(e):category(e,displayName));
             if(items.hasLabels(e)) {if(!items.subcategory(e).isEmpty())row.put("subcategory",items.subcategory(e));}
-            else {String subcategory=subcategory(e);if(!subcategory.isEmpty())row.put("subcategory",subcategory);}
+            else {String subcategory=subcategory(e,displayName);if(!subcategory.isEmpty())row.put("subcategory",subcategory);}
             ItemFields.put(row,"rarity",e.rarity());ItemFields.put(row,"bindsWhenEquipped",e.bindOnEquip());ItemFields.put(row,"stackable",e.stackable());ItemFields.put(row,"permanent",e.permanent());ItemFields.put(row,"locked",e.locked());
             var weapon=source.weapons().find(config);if(weapon!=null)row.put("combat",ReadableCombat.weapon(weapon,e.type()));
             var shield=source.weapons().findShield(config);if(shield!=null)row.put("shield",ReadableCombat.shield(shield));
@@ -41,7 +41,8 @@ final class ReadableItemExport {
         Files.writeString(internal.resolve("item-bindings.json"),Json.stringify(Map.of("format","tortodrone-item-bindings","version",1,"items",bindings))+"\n",StandardOpenOption.CREATE_NEW);
         Files.writeString(internal.resolve("item-arguments.json"),Json.stringify(arguments)+"\n",StandardOpenOption.CREATE_NEW);return items;
     }
-    private static String category(ItemCatalog.Entry e) {
+    private static String category(ItemCatalog.Entry e,String displayName) {
+        if(placeholder(e.config(),displayName))return "Internal";
         if(e.type().equals("AccessoryTicket")) {
             String[] p=e.config().split("/");
             if(p.length>1&&p[0].equals("Accessory"))return switch(p[1]) {case "Helm","Armor"->"Accessory";case "Recover","Remove","Dev","Parts"->"Internal";default->"Accessory";};
@@ -58,8 +59,9 @@ final class ReadableItemExport {
             default->e.type();
         };
     }
-    private static String subcategory(ItemCatalog.Entry e) {
+    private static String subcategory(ItemCatalog.Entry e,String displayName) {
         String type=e.type(),config=e.config();
+        if(placeholder(config,displayName))return "Base";
         if(type.equals("AccessoryTicket")) {
             String[] p=config.split("/");
             if(p.length>2&&p[0].equals("Accessory"))return switch(p[1]) {case "Helm"->"Helm: "+p[2];case "Armor"->"Armor: "+p[2];case "Recover"->"Accessory Recover";case "Remove"->"Accessory Remove";case "Dev"->"Dev";case "Parts"->"Parts";default->"";};
@@ -76,6 +78,9 @@ final class ReadableItemExport {
             case "SpriteEgg"->"Egg";case "Harness"->"Harness";case "Capsule"->"Capsule";case "Vial"->"Vial";
             case "InstantAction"->"Crown/Heart/Heat";case "Dungeon"->"Vitapod";case "Present"->"Present";default->"";
         };
+    }
+    private static boolean placeholder(String config,String displayName) {
+        return displayName.equals("Base")||displayName.startsWith("Base (")||config.contains("/Parts/");
     }
     private static boolean key(ItemCatalog.Entry e) {
         String name=e.config().substring(e.config().lastIndexOf('/')+1);
