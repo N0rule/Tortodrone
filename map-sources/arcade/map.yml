@@ -1,0 +1,9 @@
+id: 3
+name: Haven|Arcade
+type: town
+zone-id: 1
+zone-name: "%town:m.haven"
+defaultSpawn: from_town_square_north
+instances: 1
+spawn-x: 3.5
+spawn-y: -4

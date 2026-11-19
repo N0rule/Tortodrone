@@ -7,7 +7,12 @@ import java.util.concurrent.TimeUnit;
 public final class StockTools {
     public static void main(String[] args) throws Exception {
         if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|scene|haven|town|town-check|recipes|craft-check game-directory [arguments]");
-        Path project = Path.of("").toAbsolutePath(), game = Path.of(args[1]).toAbsolutePath();
+        Path project = Path.of("").toAbsolutePath();
+        Path game = args[1].equals("-")
+            ? org.tortodrone.server.SteamClientLocator.find(org.tortodrone.server.SteamClientLocator.roots(
+                Path.of(System.getProperty("user.home")), System.getProperty("os.name"), System.getenv()))
+                .orElseThrow(() -> new IOException("Spiral Knights was not found; pass its install directory"))
+            : Path.of(args[1]).toAbsolutePath();
         if (!Files.isRegularFile(game.resolve("code/projectx-pcode.jar"))) throw new IOException("Missing installed stock game JAR");
         String fixture;
         var sources=new ArrayList<Path>();
@@ -268,6 +273,13 @@ public final class StockTools {
                 fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
                 sources.add(project.resolve("scripts/compat/ScenePackExport.java"));
                 sources.add(project.resolve("scripts/compat/HavenSceneExport.java"));
+            }
+            case "collision" -> {
+                if(args.length<4)throw new IllegalArgumentException("collision expects game-directory maps-root [--force]");
+                fixture="SceneCollisionTool";fixtureArgs.addAll(Arrays.asList(args).subList(2,args.length));
+                sources.add(project.resolve("scripts/SceneCollisionTool.java"));
+                sources.add(project.resolve("scripts/CollisionPackExport.java"));
+                sources.add(project.resolve("scripts/compat/SceneCollisionExport.java"));
             }
             case "scene" -> {
                 int count=args.length-(args[args.length-1].equals("--content")?1:0);

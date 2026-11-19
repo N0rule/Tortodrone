@@ -1,0 +1,9 @@
+id: 318
+name: The Champions
+type: level
+zone-id: 1
+zone-name: "%town:m.haven"
+defaultSpawn: level_start
+instances: 1
+spawn-x: 0.5
+spawn-y: -7.5

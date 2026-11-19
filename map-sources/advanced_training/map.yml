@@ -5,3 +5,5 @@ zone-id: 1
 zone-name: "%town:m.haven"
 defaultSpawn: level_start
 instances: 1
+spawn-x: 5.5
+spawn-y: -12.5

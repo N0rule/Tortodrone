@@ -28,11 +28,17 @@ is a design decision and is not invented.
 ## Commands
 
 ```bash
+./gradlew generateNativeCollision   # derive static collision + collision.bin from every map's scene.dat
 ./gradlew compileMapsFromSource -PgameDir=/path/to/read-only-game [-PreplaceMaps]
-./gradlew generateCollision        # compile collision.bin for maps that already carry native static collision
+./gradlew generateCollision         # recompute collision.bin from existing static-collision.properties
 ./gradlew validateContent
 ./gradlew build
 ```
+
+`generateNativeCollision` discovers the Steam install through the same locator the WebUI artwork
+step uses; `-PgameDir` overrides it. It never rewrites portals, actors or YAML — it only adds
+collision to maps that already exist. Use it for the bundled maps; use `compileMapsFromSource`
+for a new `.dat` source.
 
 `compileMapsFromSource` invokes the stock exporter for each `map-sources/*/scene.dat`, installs the
 map into the build deployment, and compiles `collision.bin`. `-PreplaceMaps` is for disposable
@@ -76,13 +82,16 @@ and validation artifact and is **not** the movement path when `collision.bin` is
 
 ## Current status
 
+All nine bundled maps now carry generated exact collision:
+
 | Maps | Exact collision |
 | --- | --- |
-| advanced_training, crash_site, rescue_camp | generated and used |
-| haven, bazaar, garrison, arcade, laboratory, hall_of_heroes | still on the sampled grid until their native static collision is generated with a game directory |
+| haven, bazaar, arcade, garrison, rescue_camp, advanced_training, crash_site, laboratory, hall_of_heroes | generated and used |
 
-The second row is the remaining migration work; it needs the client catalogue to run the stock
-collision exporter. It is not a format limitation.
+`collision.bin` is 276 KiB for all nine maps in total. The sampled grid remains in the files as a
+compatibility/validation artifact but is not the movement path. A generated town map validates
+against the full deployment; portals whose destination scene is absent are dropped and reported
+rather than published as dead travel edges.
 
 ## Scaling to 500+ maps
 

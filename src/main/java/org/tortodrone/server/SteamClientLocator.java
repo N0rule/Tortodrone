@@ -6,11 +6,11 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 /** Bounded, read-only discovery; never launches Steam or crawls an entire drive. */
-final class SteamClientLocator {
+public final class SteamClientLocator {
     private static final Pattern LIBRARY = Pattern.compile("\"(?:path|[0-9]+)\"\\s*\"((?:\\\\.|[^\"\\\\])*)\"");
     private static final Pattern INSTALL = Pattern.compile("\"installdir\"\\s*\"((?:\\\\.|[^\"\\\\])*)\"");
 
-    static List<Path> roots(Path home, String os, Map<String,String> environment) {
+    public static List<Path> roots(Path home, String os, Map<String,String> environment) {
         var roots = new LinkedHashSet<Path>();
         String supplied = environment.get("STEAM_PATH");
         if (supplied != null && !supplied.isBlank()) roots.add(Path.of(supplied));
@@ -30,7 +30,7 @@ final class SteamClientLocator {
         return List.copyOf(roots);
     }
 
-    static Optional<Path> find(List<Path> roots) {
+    public static Optional<Path> find(List<Path> roots) {
         var libraries = new LinkedHashSet<Path>(roots);
         for (Path root : roots) {
             for (String name : List.of("steamapps/libraryfolders.vdf", "config/libraryfolders.vdf")) {
@@ -60,7 +60,7 @@ final class SteamClientLocator {
         return Optional.empty();
     }
 
-    static Optional<Path> client(Path path) {
+    public static Optional<Path> client(Path path) {
         try {
             Path root = path.toRealPath();
             return Files.isRegularFile(root.resolve("code/projectx-pcode.jar")) && Files.isDirectory(root.resolve("rsrc"))

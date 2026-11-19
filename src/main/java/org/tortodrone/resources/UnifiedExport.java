@@ -106,7 +106,11 @@ final class UnifiedExport {
         String defaultSpawn=entrances.keySet().stream().filter(tag->{var e=mapUnchecked(entrances.get(tag));return Float.parseFloat(e.get("x").toString())==Float.parseFloat(descriptor.getProperty("spawn-x"))&&Float.parseFloat(e.get("y").toString())==Float.parseFloat(descriptor.getProperty("spawn-y"))&&Math.abs(Double.parseDouble(e.get("facing").toString())-Math.toDegrees(Float.parseFloat(descriptor.getProperty("spawn-rotation","0"))))<.00001;}).findFirst().orElse(null);
         if(defaultSpawn==null){defaultSpawn="default_spawn";if(entrances.containsKey(defaultSpawn))throw new IOException("Ambiguous default_spawn entrance");entrances.put(defaultSpawn,Map.of("x",Float.parseFloat(descriptor.getProperty("spawn-x")),"y",Float.parseFloat(descriptor.getProperty("spawn-y")),"facing",Math.toDegrees(Float.parseFloat(descriptor.getProperty("spawn-rotation","0")))));}
         var triggers=new LinkedHashMap<String,Object>();var geometry=new LinkedHashMap<String,Object>();
-        for(String id:portals.getProperty("triggers","").split(","))if(!id.isBlank()){var raw=section(portals,"trigger."+id+".");int destination=Integer.parseInt(raw.remove("scene"));String entrance=raw.remove("entrance");triggers.put(id,Map.of("destination",names.containsKey(destination)?names.get(destination):destination,"entrance",entrance));geometry.put(id,raw);}
+        for(String id:portals.getProperty("triggers","").split(","))if(!id.isBlank()){var raw=section(portals,"trigger."+id+".");int destination=Integer.parseInt(raw.remove("scene"));String entrance=raw.remove("entrance");
+            // A portal to a scene this deployment does not serve cannot be validated and must not
+            // become a dead travel edge. Keep the geometry in the report, not in portals.yml.
+            if(!names.containsKey(destination)){report.add("portal "+id+" dropped: destination scene "+destination+" is not in the map set");continue;}
+            triggers.put(id,Map.of("destination",names.get(destination),"entrance",entrance));geometry.put(id,raw);}
         bindings.put("portals",geometry);write(target.resolve("portals.yml"),Map.of("entrances",entrances,"portals",triggers));
         var npcs=new LinkedHashMap<String,Object>();for(String id:original.getProperty("dialogues","").split(","))if(!id.isBlank())npcs.put(id,exportNpc(original,id,target));bindings.put("npcs",npcs);
         Files.writeString(nativeDir.resolve("bindings.json"),Json.stringify(bindings),StandardOpenOption.CREATE_NEW);

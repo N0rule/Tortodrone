@@ -129,7 +129,8 @@ public final class SceneCatalog {
             for(var portal:scene.portals().triggers()) {
                 var destination=scenes.get(portal.destination());
                 if(destination==null||!destination.portals().entrances().containsKey(portal.entrance()))
-                    throw new IOException("Portal destination scene or entrance is unavailable");
+                    throw new IOException("Portal from scene "+scene.id()+" to "+portal.destination()
+                        +" entrance "+portal.entrance()+" is unavailable");
                 var entrance=destination.portals().entrances().get(portal.entrance());
                 if(destination.portals().triggers().stream().anyMatch(t->t.intersects(entrance.x(),entrance.y())))
                     throw new IOException("Portal arrival would immediately trigger another transfer");

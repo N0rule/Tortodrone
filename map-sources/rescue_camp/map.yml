@@ -1,0 +1,9 @@
+id: 217
+name: Rescue Camp|Before Night Falls
+type: town
+zone-id: 16777221
+zone-name: "%town:m.rescue_camp_state_1"
+defaultSpawn: default_spawn
+instances: 1
+spawn-x: 0.5
+spawn-y: -0.5

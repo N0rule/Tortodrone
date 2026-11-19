@@ -8,7 +8,7 @@ import static org.tortodrone.support.TestWire.check;
 public final class MapCollisionContentTest {
     public static void main(String[] args) throws Exception {
         var content = ContentManager.load(Path.of(""));
-        for (int id : new int[]{294, 398, 217}) {
+        for (int id : new int[]{1, 2, 3, 217, 294, 318, 398, 445, 30893}) {
             var scene = content.scenes().scene(id);
             check(scene.exactCollision() != null, "exact collision is loaded for scene " + id);
             check(scene.exactCollision().shapeCount() > 0, "scene " + id + " keeps native shapes");

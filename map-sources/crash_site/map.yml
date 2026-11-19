@@ -1,0 +1,9 @@
+id: 398
+name: The Crash Site|Waking in a New World
+type: level
+zone-id: 50332041
+zone-name: "%dungeon:m.tutorial_b"
+defaultSpawn: level_start
+instances: 1
+spawn-x: -21
+spawn-y: -69.5

@@ -107,13 +107,20 @@ val compileMapsFromSource = tasks.register<JavaExec>("compileMapsFromSource") {
     workingDir = projectDir
     val gameDirectory = providers.gradleProperty("gameDir").getOrElse("")
     val replace = providers.gradleProperty("replaceMaps").isPresent
-    doFirst {
-        if (gameDirectory.isBlank()) throw GradleException("Specify -PgameDir (a read-only Spiral Knights install)")
-    }
     args = buildList {
         add(gameDirectory); add("map-sources"); add(publicOutput.asFile.absolutePath)
         if (replace) add("--replace")
     }
+}
+val generateNativeCollision = tasks.register<JavaExec>("generateNativeCollision") {
+    group = "build setup"
+    description = "Derive static collision and collision.bin from each map's native scene.dat; never changes portals."
+    classpath = buildTools.runtimeClasspath
+    javaLauncher.set(launcher25)
+    mainClass.set("StockTools")
+    workingDir = projectDir
+    val gameDirectory = providers.gradleProperty("gameDir").getOrElse("-")
+    args = listOf("collision", gameDirectory, "content/maps", "--force")
 }
 val generateCollision = tasks.register<JavaExec>("generateCollision") {
     group = "build setup"

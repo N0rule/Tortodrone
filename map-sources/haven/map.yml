@@ -1,0 +1,9 @@
+id: 1
+name: Haven|Town Square
+type: town
+zone-id: 1
+zone-name: "%town:m.haven"
+defaultSpawn: default_spawn
+instances: 1
+spawn-x: 1
+spawn-y: -30.5

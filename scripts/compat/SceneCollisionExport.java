@@ -69,22 +69,22 @@ public final class SceneCollisionExport {
             out.add("C;"+f(center.x)+";"+f(center.y)+";"+f(radius));return;
         }
         if(type.endsWith(".g")){
-            Vector2f center=(Vector2f)invoke(shape,"aew");out.add("C;"+f(center.x)+";"+f(center.y)+";0.0");return;
+            Vector2f center=(Vector2f)invokeAny(shape,new String[]{"aew","afn"});out.add("C;"+f(center.x)+";"+f(center.y)+";0.0");return;
         }
         if(type.endsWith(".h")){
             int n=((Number)invoke(shape,"getVertexCount")).intValue();if(n<2||n>MAX_VERTICES)throw new IOException("Invalid native polygon size: "+n);
-            var values=new StringBuilder(n==2?"D":"P");for(int j=0;j<n;j++){Vector2f v=(Vector2f)invoke(shape,"gL",int.class,j);values.append(';').append(f(v.x)).append(';').append(f(v.y));}if(n==2)values.append(';').append(f(gate.tA().x)).append(';').append(f(gate.tA().y)).append(';').append(f(gate.tB().x)).append(';').append(f(gate.tB().y));out.add(values.toString());return;
+            var values=new StringBuilder(n==2?"D":"P");for(int j=0;j<n;j++){Vector2f v=(Vector2f)invokeAny(shape,new String[]{"gL","gU"},int.class,j);values.append(';').append(f(v.x)).append(';').append(f(v.y));}if(n==2)values.append(';').append(f(gate.tA().x)).append(';').append(f(gate.tA().y)).append(';').append(f(gate.tB().x)).append(';').append(f(gate.tB().y));out.add(values.toString());return;
         }
         if(type.endsWith(".i")){
-            Vector2f a=(Vector2f)invoke(shape,"aer"),b=(Vector2f)invoke(shape,"aes");
+            Vector2f a=(Vector2f)invokeAny(shape,new String[]{"aer","afi"}),b=(Vector2f)invokeAny(shape,new String[]{"aes","afj"});
             out.add("K;"+f(a.x)+";"+f(a.y)+";"+f(b.x)+";"+f(b.y)+";0.0");return;
         }
         if(type.endsWith(".a")){
-            Vector2f a=(Vector2f)invoke(shape,"aer"),b=(Vector2f)invoke(shape,"aes");float radius=number(field(shape,"radius"));
+            Vector2f a=(Vector2f)invokeAny(shape,new String[]{"aer","afi"}),b=(Vector2f)invokeAny(shape,new String[]{"aes","afj"});float radius=number(field(shape,"radius"));
             out.add("K;"+f(a.x)+";"+f(a.y)+";"+f(b.x)+";"+f(b.y)+";"+f(radius));return;
         }
         if(type.endsWith(".c")){
-            Shape[] children=(Shape[])invoke(shape,"aeu");if(children.length>MAX_VERTICES)throw new IOException("Invalid native compound shape size");
+            Shape[] children=(Shape[])invokeAny(shape,new String[]{"aeu","afl"});if(children.length>MAX_VERTICES)throw new IOException("Invalid native compound shape size");
             for(Shape child:children)geometry(child,out,depth+1,shape.afo());return;
         }
         throw new IOException("Unsupported native collision shape class: "+type);
@@ -94,6 +94,14 @@ public final class SceneCollisionExport {
             for(int i=0,j=0;i<args.length;i+=2,j++){types[j]=(Class<?>)args[i];actual[j]=args[i+1];}
             Method method=target.getClass().getMethod(name,types);return method.invoke(target,actual);
         }catch(ReflectiveOperationException e){throw new IOException("Cannot read native collision shape",e);}
+    }
+    /** The obfuscated accessor names move between client builds; both measured names are tried. */
+    private static Object invokeAny(Object target,String[] names,Object... args)throws IOException{
+        ReflectiveOperationException last=null;
+        for(String name:names)try{return invoke(target,name,args);}catch(IOException failure){
+            if(failure.getCause() instanceof ReflectiveOperationException reflective)last=reflective;
+        }
+        throw new IOException("Cannot read native collision shape",last);
     }
     private static Object field(Object target,String name)throws IOException{
         try{Field field=target.getClass().getField(name);return field.get(target);}catch(ReflectiveOperationException e){throw new IOException("Cannot read native collision shape field "+name,e);}
