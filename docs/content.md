@@ -696,9 +696,21 @@ acknowledgement follow a reconstructed notification behavior.
 
 Native time-left categories use approximate 5-minute, 1-hour, 4-hour and
 24-hour boundaries; a two-day listing is Very Long, matching the observed
-`AuctionManager.timeLeft` behavior. Exact last-minute extension duration and
-destructive 30-day mail purging remain evidence blocked. The historical
-five-minute extension is explicitly interim and is not enabled here.
+`AuctionManager.timeLeft` behavior. Exact last-minute extension duration remains
+evidence blocked. The historical five-minute extension is explicitly interim
+and is not enabled here.
+
+**Mail retention:** every inbox letter is deleted 30 days after it was sent.
+Unaccepted player-to-player attachments (items, crowns and energy) are returned
+to the sender as a new postmaster letter before the original is deleted;
+Auction House, system and staff letters are deleted with their attachments.
+A returned letter receives a fresh 30-day window and is never returned again.
+Purged mail is not recoverable through the game or WebUI administration.
+Reading a letter does not accept its attachment. The 30-day deletion is
+documented by the stock wiki and the 2011-06-09 release note; the exact
+returned-letter wording and the read/unread distinction remain assumptions.
+Mail older than the native 500-row inbox view is retained until that retention
+window ends, so it can be hidden without being deleted.
 
 ## Native map import
 

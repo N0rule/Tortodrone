@@ -31,7 +31,8 @@ Type a message without a slash command to speak in the current scene.
 
 Use the **Social** panel’s **Add Friend** action, or choose **Befriend** from a
 knight’s menu, to send a friend request with an optional message. The recipient
-accepts it in mail, or deletes the request to decline. Accepted friends appear
+accepts it in mail, or deletes the request to decline; an unanswered request
+expires with its 30-day mail letter. Accepted friends appear
 in both knights’ lists, with online/offline status and their current scene;
 the lists survive reconnects and server restarts. Choose **Unfriend** from a
 friend’s menu to remove the friendship from both lists. The limit is 250 friends

@@ -36,7 +36,7 @@ public final class MailCampaignTest {
             check(letter.subject().equals("%uplink:~Supply drop") && letter.body().equals("%uplink:~Two gels for the road."), "staff text is stored as a tainted literal inside the uplink bundle");
             check(letter.sender().equals(" 6") && letter.nativeType() == 3, "system sender and SYSTEM mail type");
             check(letter.crowns() == 25 && letter.energy() == 5 && letter.items().size() == 1 && letter.items().getFirst().count() == 2, "crowns, energy and the gift stack travel with the letter");
-            check(letter.items().getFirst().expiresAt() == null, "mail gifts do not expire in the inbox");
+            check(letter.items().getFirst().expiresAt() == null, "staff gifts carry no item timer before they are claimed");
 
             check(!campaigns.deliver(alice) && inbox(db, alice).stream().filter(m -> m.subject().endsWith("Supply drop")).count() == 1,
                 "a second visit never duplicates the gift");
@@ -147,7 +147,7 @@ public final class MailCampaignTest {
             int postWorld = upgraded.worldProfile(postAccount, postKnight.id(), 1).worldId();
             check(upgradedHouse.campaigns().deliver(postWorld) && inbox(upgraded, postWorld).stream().anyMatch(m -> m.subject().endsWith("Supply drop")), "a freshly upgraded database still delivers active campaigns");
             check(inbox(upgraded, midWorld).stream().anyMatch(m -> m.subject().endsWith("Direct gift")), "direct offline mail survives the explicit upgrade");
-            System.out.println("PASS: admin mail campaigns store literal text, gifts, crowns and energy; deliver once per knight including late knights; honour windows and cancellation; send direct offline mail with no inbox expiry; apply stock item expiry on claim; deliver an optional welcome once; survive schema 16 to 17 and claim native mail");
+            System.out.println("PASS: admin mail campaigns store literal text, gifts, crowns and energy; deliver once per knight including late knights; honour windows and cancellation; send direct offline mail with no item timer until claim; apply stock item expiry on claim; deliver an optional welcome once; survive schema 16 to 17 and claim native mail");
         } finally {
             try (var paths = Files.walk(home)) { for (var path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path); }
         }

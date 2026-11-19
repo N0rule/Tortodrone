@@ -17,6 +17,10 @@ public final class AuctionHouse {
     private static final float[] MULTIPLIERS={.5f,.6f,.75f,1,0,0,0,0,0,0};
     /** ServerObject mail fees from the archive: a letter costs 25, any attachment adds 75. */
     public static final int MAIL_FEE=25,MAIL_ATTACH_FEE=75;
+    /** Stock mail retention: every inbox letter is deleted 30 days after it was sent. */
+    static final long MAIL_RETENTION_MS=30L*24*60*60*1000;
+    private static final int MAIL_PURGE_BATCH=500;
+    private static final String RETURNED_MAIL_SENDER="Postmaster";
     private static final int MAX_MAIL_ATTACHMENTS=14;
     public static int listingFee(int rarity,int count,int duration,int bid,int buy){long base=(long)count*RARITY_FEES[Math.clamp(rarity,0,5)];return (int)Math.ceil(Math.max(base,Math.max(wonFee(bid),wonFee(buy/20)))*MULTIPLIERS[duration]);}
     public static int wonFee(int crowns){return Math.max(0,(int)Math.ceil(crowns*.1f));}
@@ -151,7 +155,51 @@ public final class AuctionHouse {
             try(var s=c.prepareStatement("UPDATE town_auctions SET cancelled=1,expires=? WHERE id=? AND ended=0")){s.setLong(1,System.currentTimeMillis());s.setLong(2,id);s.executeUpdate();}settle(c,id);
         }return require(c,id,0);});
     }
-    public void settleExpired()throws IOException{database.write(c->{sweep(c);return null;});}
+    public void settleExpired()throws IOException{database.write(c->{sweep(c);purgeExpiredMail(c,System.currentTimeMillis(),MAIL_PURGE_BATCH);return null;});}
+    /** One bounded retention batch for the scheduler and storage regressions. */
+    int expireMail()throws IOException{return database.write(c->purgeExpiredMail(c,System.currentTimeMillis(),MAIL_PURGE_BATCH));}
+    private int purgeExpiredMail(Connection c,long now,int limit)throws SQLException,IOException{
+        var rows=new ArrayList<ExpiredMail>(limit);
+        try(var s=c.prepareStatement("SELECT id,world_id,subject,body,crowns,energy,attachments,sender,mail_type,claimed FROM town_mail WHERE sent<=? ORDER BY id LIMIT ?")){
+            s.setLong(1,now-MAIL_RETENTION_MS);s.setInt(2,limit);
+            try(var r=s.executeQuery()){while(r.next())rows.add(expired(r));}
+        }
+        return purge(c,rows,now);
+    }
+    private int purgeWorldMail(Connection c,int world,long now)throws SQLException,IOException{
+        var rows=new ArrayList<ExpiredMail>();
+        try(var s=c.prepareStatement("SELECT id,world_id,subject,body,crowns,energy,attachments,sender,mail_type,claimed FROM town_mail WHERE world_id=? AND sent<=? ORDER BY id")){
+            s.setInt(1,world);s.setLong(2,now-MAIL_RETENTION_MS);
+            try(var r=s.executeQuery()){while(r.next())rows.add(expired(r));}
+        }
+        return purge(c,rows,now);
+    }
+    private static ExpiredMail expired(ResultSet r)throws SQLException{return new ExpiredMail(r.getLong("id"),r.getInt("world_id"),r.getString("subject"),r.getString("body"),r.getInt("crowns"),r.getInt("energy"),r.getString("attachments"),r.getInt("sender"),r.getInt("mail_type"),r.getBoolean("claimed"));}
+    /** Unaccepted player attachments go back to the sender; every other letter is deleted. */
+    private int purge(Connection c,List<ExpiredMail> rows,long now)throws SQLException,IOException{
+        var touched=new HashSet<Integer>();
+        for(var row:rows){
+            if(returnable(c,row)){
+                try(var s=c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,crowns,energy,attachments,sender,sender_label,mail_type) VALUES(?,?,?,?,?,?,?,?,?,3)")){
+                    s.setInt(1,row.sender());s.setLong(2,now);s.setString(3,row.subject());s.setString(4,row.body());s.setInt(5,row.crowns());s.setInt(6,row.energy());s.setString(7,row.attachments());s.setInt(8,-2);s.setString(9,RETURNED_MAIL_SENDER);s.executeUpdate();
+                }
+                touched.add(row.sender());
+            }
+            try(var s=c.prepareStatement("DELETE FROM town_mail WHERE id=? AND world_id=?")){s.setLong(1,row.id());s.setInt(2,row.world());if(s.executeUpdate()!=1)throw new IOException("Mail changed");}
+            FriendStore.deletedMail(c,row.id());touched.add(row.world());
+        }
+        for(int world:touched)TownStore.touch(c,world);
+        return rows.size();
+    }
+    private static boolean returnable(Connection c,ExpiredMail mail)throws SQLException{
+        if(mail.type()!=4||mail.claimed()||mail.sender()<=0)return false;
+        if(mail.crowns()<=0&&mail.energy()<=0&&(mail.attachments()==null||mail.attachments().isBlank()))return false;
+        if(!worldExists(c,mail.sender()))return false;
+        if(mail.attachments()!=null&&!mail.attachments().isBlank())try{decodeItems(mail.attachments());}catch(IOException corrupt){return false;}
+        return true;
+    }
+    private static boolean worldExists(Connection c,int world)throws SQLException{try(var s=c.prepareStatement("SELECT 1 FROM world_characters WHERE world_id=?")){s.setInt(1,world);try(var r=s.executeQuery()){return r.next();}}}
+    private record ExpiredMail(long id,int world,String subject,String body,int crowns,int energy,String attachments,int sender,int type,boolean claimed) { }
     public record Delivery(long id,int recipient,int crowns,boolean item,boolean claimed) { }
     public List<Delivery> deliveries(long auction)throws IOException{
         return database.read(c->{var result=new ArrayList<Delivery>();try(var s=c.prepareStatement("SELECT id,world_id,crowns,item IS NOT NULL,claimed FROM town_mail WHERE auction=? ORDER BY id")){s.setLong(1,auction);try(var r=s.executeQuery()){while(r.next())result.add(new Delivery(r.getLong(1),r.getInt(2),r.getInt(3),r.getBoolean(4),r.getBoolean(5)));}}return List.copyOf(result);});
@@ -172,7 +220,7 @@ public final class AuctionHouse {
         try(var s=c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,crowns,item,auction) VALUES(?,?,?,?,?,?,?)")){s.setInt(1,world);s.setLong(2,System.currentTimeMillis());s.setString(3,"%uplink:"+subject);s.setString(4,"%uplink:"+body);s.setInt(5,crowns);s.setString(6,item==null?null:encode(item));s.setLong(7,auction);s.executeUpdate();}TownStore.touch(c,world);
     }
     public TownStore.Result mail(int account,int knight,long auth,int method,List<Object> args)throws IOException{
-        return database.write(c->{var p=WorldProfiles.load(c,account,knight,auth);sweep(c);campaigns.deliver(c,p.worldId());Object result=null;
+        return database.write(c->{var p=WorldProfiles.load(c,account,knight,auth);long now=System.currentTimeMillis();sweep(c);purgeWorldMail(c,p.worldId(),now);campaigns.deliver(c,p.worldId());Object result=null;
             if(method==5)deliver(c,p,(SessionDecoder.SentMail)args.getFirst());
             else if(method==6){long[] ids=(long[])args.getFirst();var messages=loadMail(c,p.worldId());result=ids==null?messages:messages.stream().filter(m->java.util.stream.LongStream.of(ids).anyMatch(id->id==m.id())).toList();}
             else if(method==11){long[] ids=(long[])args.getFirst();for(long id:ids)try(var s=c.prepareStatement("UPDATE town_mail SET is_read=1 WHERE id=? AND world_id=?")){s.setLong(1,id);s.setInt(2,p.worldId());s.executeUpdate();}}
