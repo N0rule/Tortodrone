@@ -143,12 +143,24 @@ monsters:
   startup rather than being ignored. The overlay is validated now; its knobs are applied by
   the later archetype phase.
 
-The validator already understands a prepared `Monster` placement carrying
-`monster-type: <id>`: it rejects an unknown or unsupported id, a non-monster actor, or an
-actor config that differs from the catalogue type. Map YAML does not expose that field yet;
-placement resolution and the existing Crash Site/Laboratory migration belong to the next
-roadmap phase. Until then the runtime still uses the prepared scene specs, and no spawn
-command or gameplay behaviour is provided here.
+The validator and scene loader understand a prepared `Monster` placement carrying
+`monster-type: <id>`. Validation rejects an unknown or unsupported id, a non-monster
+actor, or an actor config that differs from the catalogue type. At load time the reference
+expands into the type's prepared attack graph and timing while the placement keeps its
+native identity, geometry, health, speed and any explicit tuning field; the reference
+itself is removed before the runtime sees the spec. The laboratory Companion Cube is
+migrated this way (`actors.yml` alias `companion_cube_1_1`), preserving its committed
+attack timings and `attack.0.blended: false` override. The exporter also surfaces
+`monster-movement` and `attack.*.impulse-*` metadata that the older placement omitted;
+those fields are not read by the current engine. `attack.*.blended` is read (attack-time
+rotation), so the placement keeps the committed value until a gameplay-reviewed change
+adopts the native one.
+
+The three Crash Site `Monster`-kind placements are scripted tutorial Spiral Knights.
+They have no `DescriptionConfig.Monster` roster entry, so they cannot become catalogue
+types without inventing client data; they remain embedded prepared specs with their
+scripted behaviour. No spawn command or new gameplay behaviour is provided by this
+resolution step.
 
 ## Source and derivation
 

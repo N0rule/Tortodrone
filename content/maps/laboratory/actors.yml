@@ -1,4 +1,6 @@
 # Overrides only. Native actor identities/defaults: native/bindings.json (actorAliases).
 # Example existing actor alias: alchemy_1
 # Position uses game units; facing uses degrees; attackIntervalMs uses milliseconds.
-actors: {}
+actors:
+  companion_cube_1_1:
+    monster-type: companion_cube

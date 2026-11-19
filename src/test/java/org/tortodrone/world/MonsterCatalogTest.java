@@ -107,6 +107,16 @@ public final class MonsterCatalogTest {
             var wrongActor = new TreeMap<>(fields);
             wrongActor.put("config", "Character/Other");
             expectSceneRefusal(catalog, new SceneContent.Spec(wrongActor), "actor identity differs from catalogue");
+
+            var placement = new TreeMap<>(fields);
+            placement.put("health", "999");
+            var expanded = catalog.expand(new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(placement))), Map.of()));
+            var expandedSpec = expanded.entries().getFirst().spec();
+            check(!expandedSpec.fields().containsKey("monster-type"), "type reference is consumed during expansion");
+            check(expandedSpec.text("health", "").equals("999"), "per-placement tuning overrides the catalogue spec");
+            check(expandedSpec.text("attack.0.land", "").equals("777"), "the catalogue contributes prepared attack fields");
+            try { catalog.expand(new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(missing))), Map.of())); throw new AssertionError("Unknown type expanded"); }
+            catch (IOException expected) { }
         } finally {
             try (var paths = Files.walk(temporary)) {
                 for (var path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
@@ -137,6 +147,7 @@ public final class MonsterCatalogTest {
         spec.put("kind", "Monster");
         spec.put("native-type", "com.threerings.projectx.dungeon.data.actor.Monster");
         spec.put("health", "120");
+        spec.put("attack.0.land", "777");
         type.put("spec", spec);
         var types = new LinkedHashMap<String, Object>();
         types.put(id, type);

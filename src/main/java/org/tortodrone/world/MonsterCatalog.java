@@ -182,6 +182,32 @@ public final class MonsterCatalog {
         }
     }
 
+    /**
+     * Expand type-backed placements into the prepared fields the scene runtime reads.
+     *
+     * <p>The catalogue supplies the native attack graph and timing; the placement keeps its
+     * identity, geometry, health and any explicit tuning override. References are validated before
+     * this runs, and are removed so no later consumer mistakes the reference for a prepared field.
+     */
+    public SceneContent expand(SceneContent content) throws IOException {
+        var entries = new ArrayList<SceneContent.Entry>(content.entries().size());
+        for (var entry : content.entries()) {
+            String id = entry.spec().text("monster-type", "");
+            if (id.isEmpty()) { entries.add(entry); continue; }
+            MonsterType type = spawnable(id);
+            if (!"Monster".equals(entry.spec().text("kind", "")))
+                throw new IOException("monster-type requires a Monster actor: " + entry.key());
+            if (!type.configs().contains(entry.spec().text("config", "")))
+                throw new IOException("Actor config differs from catalogue type " + id + ": " + entry.key());
+            var fields = new TreeMap<>(type.spec());
+            fields.putAll(entry.spec().fields());
+            fields.remove("monster-type");
+            entries.add(new SceneContent.Entry(entry.key(), entry.x(), entry.y(), entry.rotation(),
+                new SceneContent.Spec(fields)));
+        }
+        return content.withEntries(entries);
+    }
+
     private static int integer(Object value, String where) throws IOException {
         if (!(value instanceof Number number)) throw new IOException(where + ": expected an integer");
         try { return new BigDecimal(number.toString()).intValueExact(); }

@@ -87,6 +87,7 @@ public final class ContentManager {
         }
         for(var actor:actors.entries())if(actor.spec().fields().containsKey("cycle")&&!actors.cycles().containsKey(actor.spec().text("cycle","")))throw new IOException("Actor references missing trap cycle: "+actor.key());
         monsters.validateScene(folder.getFileName().toString(),actors);
+        actors=monsters.expand(actors);
         for(var conversation:actors.conversations().values())for(var node:conversation.nodes().values())for(var response:node.responses())if(!response.station().isEmpty()&&town!=null&&town.station(response.station())==null)throw new IOException("NPC references missing Town station: "+response.station());
         int collisionMask=Math.round(actors.stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
         MapCollision exact=null;

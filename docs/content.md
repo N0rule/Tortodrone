@@ -533,6 +533,12 @@ not rounded. Advanced existing flat fields (for example `child.health` or `cycle
 remain supported; unknown fields, duplicate alias/native references and identity
 changes fail validation. Do not edit internal bindings to create new gameplay.
 
+A placed `Monster` actor also accepts the verified flat field `monster-type: <catalogue id>`.
+The catalogue supplies its native attack graph and timings; the placement still owns
+identity, geometry, health, speed and any tuning override. Unknown or unsupported types,
+non-monster actors and actor/type mismatches fail startup. Existing attacks remain embedded
+until a placement is migrated; the laboratory Companion Cube is the first migrated example.
+
 Optional `mechanics.yml` contains each map's own rules. Native `destination.*`
 markers moved to immutable bindings: travel uses the single editable arrival in
 `portals.yml`. The retained markers are scene metadata, not a second travel control.

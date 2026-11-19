@@ -71,6 +71,10 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
         SceneActorTemplates.validate(entries,actorTemplates);
     }
     public static SceneContent empty(){return new SceneContent(List.of(),Map.of());}
+    /** Replace actor entries while retaining every other prepared scene table. */
+    public SceneContent withEntries(List<Entry> replacement){
+        return new SceneContent(replacement,scales,conversations,stats,items,cycles,statuses,mapIcons,actorTemplates);
+    }
     /** Prepared monster spawn fields omit the native config's impulse level. Restore the
      * installed client's level from the shared table so damage impulses respect it. */
     public Spec actor(Spec spec){

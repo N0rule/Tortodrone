@@ -84,10 +84,13 @@ public final class MapYaml {
             semantic(edits,"monster",Map.of("health",values.containsKey("child.health")?"child.health":"health","attackIntervalMs",values.containsKey("child.attack-interval")?"child.attack-interval":"attack-interval"));
             values.putAll(edits);
             var allowed=map(bindings.get("actorFields"),"actor fields");var names=list(allowed.get(id),"actor fields "+id);
-            for(String field:values.keySet())if(!names.contains(field))throw new IOException(folder+": unknown or immutable actor field "+id+"."+field);
+            boolean monsterActor="Monster".equals(fixed.get("kind"));
+            for(String field:values.keySet())if(!names.contains(field)&&!(monsterActor&&field.equals("monster-type")))throw new IOException(folder+": unknown or immutable actor field "+id+"."+field);
             var types=map(map(bindings.get("actorTypes"),"actor types").get(id),"actor types "+id);
             for(var value:values.entrySet()) {
-                String field=value.getKey(),type=text(types.get(field),"actor field type");
+                String field=value.getKey();
+                if(monsterActor&&field.equals("monster-type")){text(value.getValue(),folder+" actor "+id+"."+field);continue;}
+                String type=text(types.get(field),"actor field type");
                 if(type.equals("number")){float n=decimal(value.getValue(),folder+" actor "+id+"."+field);if((field.equals("health")||field.equals("child.health"))&&n<0)throw new IOException("Actor health must be nonnegative: "+id);}
                 else if(type.equals("boolean"))flag(value.getValue(),field);else text(value.getValue(),field);
             }
