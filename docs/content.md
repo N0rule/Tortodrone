@@ -971,6 +971,39 @@ a graphical client. Captures and client assets are not distributed.
 Confetti's original focused coverage also includes the public Auction counter;
 the item graphical scenario does not exercise auction rendering.
 
+## Instant, spawn-actor and lift items
+
+Arsenal → Usable → Use also runs native `InstantAction`, `SpawnActor` and `Lift`
+definitions. The server checks ownership, authentication and inventory revision,
+consumes exactly one item and applies the prepared effect in the same committed
+use. A refused revision, an unowned instance, a gift or an expired item fails
+without consuming anything. The stock activity plays first; damage, shock or
+departure interrupts the pending effect, and an accepted use is not refunded.
+
+Hearts use their authored native `Heal current` values (40, 80, 120 and 10,000)
+on the activating knight. Using a heart at full health still starts the ordinary
+hand-raising activity, but the use is not consumed and no health changes. Lethal
+Damage applies the native 100,000 `DamageTarget` to the user. Its second native
+action, `UnlockAchievement CASINO_WHAMMIE`, remains unavailable because this
+server has no achievement persistence, so Lethal Damage is only partially
+supported.
+
+Spawn-actor items place the item's configured actor as an inert static prop at
+the user's position. This covers the four prepared bucket/pillow/pie-pan items
+whose inner native spawn reference is null; no projectile, monster or scripted
+actor is inferred. Lift items create the native carryable lift and reuse the
+existing carry, throw and landing path.
+
+Crowns, Arena Autotarget Off, the Lockdown shields and the Mystery Lockbox stay
+disabled. Their installed native definitions are a no-op `FireEffect`, an
+`ActionConfig.None`, arena-only gear and an empty reward graph respectively, so
+enabling them would either consume an item for nothing or invent behavior the
+client does not supply. Guild bonds, hall/theme/environment tickets, member and
+storage upgrades, and furniture items remain unusable: guild halls, guild
+storage and design rooms are not served, and the native upgrade tickets are
+guild-hall props. The [item support matrix](item-support.csv) records each
+remaining group and its evidence.
+
 ## Lockboxes and Prize Boxes
 
 The current content set enables **243 explicitly labeled approximation pools**,
