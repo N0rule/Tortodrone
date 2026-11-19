@@ -140,8 +140,9 @@ monsters:
 - `activation-radius` 1–512, `leash-radius` 1–1024; leash may not be smaller than activation.
 - `think` is `dormant`, `alert` or `engaged`; `archetype` is a lowercase policy id.
 - Unknown type ids, duplicate keys, unknown fields and identity/stat/timing fields fail
-  startup rather than being ignored. The overlay is validated now; its knobs are applied by
-  the later archetype phase.
+  startup rather than being ignored. `activation-radius` is applied to type-backed placements
+  now; `leash-radius`, `think` and `archetype` are validated but applied by the later
+  lifecycle and archetype phases.
 
 The validator and scene loader understand a prepared `Monster` placement carrying
 `monster-type: <id>`. Validation rejects an unknown or unsupported id, a non-monster
@@ -171,6 +172,25 @@ scene-fire actions. `SceneEntities.Entity` keeps only per-instance mutable state
 activity, targets, paths, status and timers), so spawning many copies of one type does not
 repeat graph parsing and cannot leak combat state between instances. The cache uses weak
 keys, so it holds nothing after a scene's content is released.
+
+## Activation and think ladder
+
+Combat monsters are scheduled in three bands: `DORMANT`, `ALERT` and `ENGAGED`.
+Dormant monsters remain in the scene and stay published to nearby clients, but skip
+pursuit, pathing and attacks until an active player comes within their activation
+radius. An alert monster reacquires a target every 250 ms; an engaged monster runs the
+full per-tick movement and attack path. Dormant decisions use a stable id-staggered
+1.0–2.0 s interval, while every tick still performs one cheap distance check so a
+player who steps into range is noticed immediately.
+
+A prepared monster may set `activation-radius` (world units); the default is 32. Damage
+is authoritative: any landed hit forces `ENGAGED` for five seconds even without a
+nearby player. Wander and party-follow behaviours are authored motion rather than
+combat pursuit, so they keep their previous every-tick integration. Scripted tutorial
+actors and an already-started attack sequence are never paused by the ladder.
+
+The per-scene awake cap and leash are part of the later wave lifecycle work; this
+phase only schedules existing placements.
 
 ## Source and derivation
 

@@ -200,6 +200,10 @@ public final class MonsterCatalog {
             if (!type.configs().contains(entry.spec().text("config", "")))
                 throw new IOException("Actor config differs from catalogue type " + id + ": " + entry.key());
             var fields = new TreeMap<>(type.spec());
+            var tuning = overrides.get(id);
+            // The overlay owns scheduling only. Placement fields still win over type defaults.
+            if (tuning != null && tuning.activationRadius() != null)
+                fields.put("activation-radius", Float.toString(tuning.activationRadius()));
             fields.putAll(entry.spec().fields());
             fields.remove("monster-type");
             entries.add(new SceneContent.Entry(entry.key(), entry.x(), entry.y(), entry.rotation(),

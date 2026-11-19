@@ -25,6 +25,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
     }
     private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","EntryState","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift","TerritoryProp");
+    /** No player inside this radius and no recent damage leaves a combat monster dormant. */
+    static final float DEFAULT_ACTIVATION_RADIUS=32;
+    /** Damage wakes a monster even when it was hit outside every activation radius. */
+    static final int DAMAGE_ENGAGE_MILLIS=5000;
     private static final class Entity {
         final int id,created;final SceneContent.Spec spec;final SceneContent.Entry binding;
         final String kind;final StarterCatalog.Model config;final Entity pad;
@@ -61,6 +65,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         /** A wait-move-rotate script whose Condition step waits for its activate signal. */
         boolean scriptActivated;
         int target,nextAcquire,nextAttack,nextSwitch,nextHeal,carrier,owner,ownerOid,thrownAt,faction,detonateAt,affectedType,affectedTime;float z;int[] excluded;
+        /** Activation scheduling; combat work is skipped while DORMANT. */
+        SceneMonsterBand band=SceneMonsterBand.DORMANT;
+        int nextThink,engagedUntil;
         List<ScenePathing.Point> path=List.of();float pathX,pathY;int nextPath;
         SceneLiftState.Point dropPoint;
         SceneContent.Spec vial;String cycle;Set<String> fired=new HashSet<>();
@@ -80,7 +87,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final Map<Integer,Integer> hazardHits=new HashMap<>();
         final Set<Integer> refusedPickups=new HashSet<>();
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
-            spec=content.actor(spec);this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;
+            spec=content.actor(spec);this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;nextThink=Integer.MIN_VALUE;
             if(spec.fields().containsKey("door-increments")){
                 doorIncrements=spec.integer("door-increments",0);
                 if(!spec.text("kind","").equals("Door")||doorIncrements<1||doorIncrements>1_000_000)throw new IllegalArgumentException("Invalid native door counter");
@@ -379,6 +386,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public SceneContent.Spec specification(int id){var e=entities.get(id);return e==null||e.destroyed!=Integer.MAX_VALUE?null:e.spec;}
     /** Test seam: the immutable parsed behaviour shared by every instance of this spec. */
     PreparedActor prepared(int id){var e=entities.get(id);return e==null?null:e.prepared;}
+    /** Test seam: current activation band for a live entity. */
+    SceneMonsterBand band(int id){var e=entities.get(id);return e==null?null:e.band;}
     public ActorState station(String kind){return entities.values().stream().filter(e->e.spec.text("town-kind","").equals(kind)&&e.destroyed==Integer.MAX_VALUE).map(Entity::snapshot).findFirst().orElse(null);}
     /** Called only after the scene validates the knight's interaction intent. */
     public void openArsenal(int id,int stamp){
@@ -591,7 +600,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->{if(e.health>0)hurt(e,(float)amount,stamp,false,false);},amount->{if(e.health>0)e.health=Math.min(e.maximumHealth,e.health+(float)amount*e.status.state().modifiers().heal());});
                 if(e.program!=null)scriptedProgram(e,stamp,elapsed);
                 else if(e.script!=null)scriptedMovement(e,stamp,elapsed);
-                else if(e.health==0)e.status.clear();else {if(e.status.state().modifiers().canMove())advanceImpulse(e,stamp);else e.impulse=null;move(e,stamp,elapsed,players);}
+                else if(e.health==0)e.status.clear();else {
+                    if(e.status.state().modifiers().canMove())advanceImpulse(e,stamp);else e.impulse=null;
+                    // Idle wander and party follow are authored motion, not combat pursuit,
+                    // and keep their every-tick integration without players.
+                    if(e.wander!=null||e.follow!=null){e.band=SceneMonsterBand.ENGAGED;move(e,stamp,elapsed,players);}
+                    else think(e,stamp,elapsed,players);
+                }
             }
             if(e.kind.equals("DungeonLift"))lift(e,stamp,elapsed,players);
             if(e.activity==1&&stamp-e.activityStarted>=e.spec.integer("react-time",0)||e.activity==3&&stamp-e.activityStarted>=e.spec.integer("activate-time",0))e.activity=0;
@@ -933,6 +948,35 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var victim=entities.get(target.id());if(victim==null)return Float.POSITIVE_INFINITY;
         var body=victim.pawnShape==null?SceneCollision.pawnShape(victim.spec,victim.shape):victim.pawnShape;
         return body.at(victim.x,victim.y,victim.rotation).distance(x,y);
+    }
+    /** Activation ladder: cheap distance decisions gate the full pursuit/attack tick. */
+    private void think(Entity e,int stamp,float elapsed,List<ActorState> occupants){
+        // An authored attack sequence, including chains, must finish even if the target leaves.
+        if(e.activity>=4){e.band=SceneMonsterBand.ENGAGED;e.nextThink=stamp;move(e,stamp,elapsed,occupants);return;}
+        float nearest=Float.POSITIVE_INFINITY;
+        for(var player:occupants)if(playerActive.test(player.id())&&playerTargetable.test(player.id()))
+            nearest=Math.min(nearest,(float)Math.hypot(player.x()-e.x,player.y()-e.y));
+        float radius=Math.max(1,e.spec.number("activation-radius",DEFAULT_ACTIVATION_RADIUS));
+        boolean forced=stamp<e.engagedUntil;
+        // A dormant monster still watches for an approaching player every tick; the
+        // cadence below only decides when it reacquires and how often it re-checks.
+        if(e.band==SceneMonsterBand.DORMANT&&(nearest<=radius||forced)){e.band=SceneMonsterBand.ALERT;e.nextThink=stamp;}
+        boolean think=stamp>=e.nextThink;
+        if(think){
+            SceneMonsterBand next=nearest<=radius
+                ?(e.target!=0||e.activity>=4?SceneMonsterBand.ENGAGED:SceneMonsterBand.ALERT)
+                :forced?SceneMonsterBand.ENGAGED:SceneMonsterBand.DORMANT;
+            if(next==SceneMonsterBand.DORMANT&&e.band!=SceneMonsterBand.DORMANT){
+                e.target=0;e.targetMode=null;e.targetModeUpdate=false;e.path=List.of();e.flags&=~18;
+            }
+            e.band=next;e.nextThink=stamp+next.thinkInterval(e.id);
+        }
+        if(e.band==SceneMonsterBand.DORMANT)return;
+        // Alert only reacquires on its think cadence; an owned attack or an engaged
+        // target keeps the unchanged every-tick integration.
+        if(e.band==SceneMonsterBand.ALERT&&!think)return;
+        move(e,stamp,elapsed,occupants);
+        if(e.target!=0){e.band=SceneMonsterBand.ENGAGED;e.nextThink=stamp;}
     }
     private void move(Entity e,int stamp,float elapsed,List<ActorState> occupants){
         var players=targetCandidates(e,occupants);
@@ -1555,6 +1599,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.kind.equals("Monster")){
                 amount+=e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0){
                     int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp,SceneDamage.reacts(accepted),SceneDamage.major(accepted));
+                    // Being hit is authoritative: a dormant monster wakes even with no player nearby.
+                    e.band=SceneMonsterBand.ENGAGED;e.nextThink=stamp;e.engagedUntil=stamp+DAMAGE_ENGAGE_MILLIS;
                     if(e.targeting!=null&&targetCandidates(e,players).stream().anyMatch(p->p.id()==owner&&targetActive(p))&&(e.victims.containsKey(owner)||e.victims.size()<256)){
                         var previous=e.victims.getOrDefault(owner,new Entity.Threat(0,0));
                         e.victims.put(owner,new Entity.Threat(Math.min(1_000_000,previous.hits()+1),Math.min(1_000_000_000f,previous.damage()+dealt)));e.nextAcquire=stamp;

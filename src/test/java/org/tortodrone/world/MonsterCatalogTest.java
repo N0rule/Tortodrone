@@ -54,6 +54,15 @@ public final class MonsterCatalogTest {
             check(tuned.override("fixture_melee").activationRadius() == 12f, "overlay activation radius loads");
             check(tuned.override("fixture_melee").leashRadius() == 20f, "overlay leash radius loads");
             check(tuned.override("fixture_melee").think().equals("alert"), "overlay think band loads");
+            var tunedPlacement = new TreeMap<>(tuned.type("fixture_melee").spec());
+            tunedPlacement.put("monster-type", "fixture_melee");
+            var tunedExpanded = tuned.expand(new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0,
+                new SceneContent.Spec(tunedPlacement))), Map.of())).entries().getFirst().spec();
+            check(Float.parseFloat(tunedExpanded.text("activation-radius", "")) == 12f, "overlay activation radius reaches the prepared spec");
+            tunedPlacement.put("activation-radius", "7");
+            var placementWins = tuned.expand(new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0,
+                new SceneContent.Spec(tunedPlacement))), Map.of())).entries().getFirst().spec();
+            check(placementWins.text("activation-radius", "").equals("7"), "explicit placement activation radius wins over the overlay");
             Files.writeString(overrides, "monsters:\n  missing_type:\n    activation-radius: 12\n");
             refuse(temporary, "unknown override type");
             Files.writeString(overrides, "monsters:\n  fixture_melee:\n    health: 999\n");
