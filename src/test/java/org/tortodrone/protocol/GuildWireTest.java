@@ -64,6 +64,33 @@ public final class GuildWireTest {
         check(wire.type(changes).equals("com.threerings.util.StreamableArrayList"), "guild delta list");
         int count = changes.readInt();
         check(count >= 1, "a removed member emits at least one event");
-        System.out.println("PASS: guild object, roster entries and removal delta follow the client's field order");
+
+        var expansionWire = new TestWire();
+        var expansion = expansionWire.frame(new SessionCodec().expansionDialog(9, 42, List.of(0, 1), false, 0.25f, 1_700_000_000_000L));
+        check(expansionWire.type(expansion).equals(TestWire.NET + "EventNotification") && expansion.readShort() == -1
+            && expansionWire.type(expansion).equals(TestWire.DOB + "CompoundEvent") && expansion.readInt() == 9,
+            "expansion window envelope");
+        check(expansionWire.type(expansion).equals("com.threerings.util.StreamableArrayList") && expansion.readInt() == 2,
+            "expansion window replaces the scene dialog");
+        check(expansionWire.type(expansion).equals(TestWire.DOB + "AttributeChangedEvent") && expansion.readInt() == 9
+            && expansionWire.string(expansion).equals("sceneDialogCreated")
+            && expansionWire.type(expansion).equals("java.lang.Long") && expansion.readLong() == 1_700_000_000_000L,
+            "expansion window creation stamp");
+        check(expansionWire.type(expansion).equals(TestWire.DOB + "AttributeChangedEvent") && expansion.readInt() == 9
+            && expansionWire.string(expansion).equals("sceneDialog"), "expansion window is the scene dialog");
+        check(expansionWire.type(expansion).equals("com.threerings.projectx.guild.data.ExpansionDialogInfo"),
+            "expansion window class");
+        expansion.readShort(); expansion.readShort(); expansion.readFloat(); expansion.readShort(); expansion.readShort();
+        check(expansion.readShort() == 0 && expansion.readShort() == 0, "null portrait model and animation");
+        check(expansionWire.string(expansion) == null && expansionWire.string(expansion) == null, "null portrait name and title");
+        check(expansion.readInt() == 42, "expansion window echoes the guild");
+        check(expansionWire.type(expansion).equals("java.util.HashSet") && expansion.readInt() == 2, "installed expansion set");
+        check(expansionWire.type(expansion).equals("com.threerings.projectx.guild.data.HallExpansion")
+            && expansion.readByte() == 0, "expansion ordinal streams first");
+        check(expansionWire.type(expansion).equals("com.threerings.projectx.guild.data.HallExpansion")
+            && expansion.readByte() == 1, "expansion ordinal streams second");
+        check(!expansion.readBoolean(), "not in default");
+        check(expansion.readFloat() == 0.25f && expansion.available() == 0, "remaining upkeep share");
+        System.out.println("PASS: guild object, roster entries, removal delta and expansion window follow the client's field order");
     }
 }

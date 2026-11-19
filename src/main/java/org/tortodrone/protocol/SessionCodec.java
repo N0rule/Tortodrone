@@ -1764,6 +1764,45 @@ public final class SessionCodec {
             attribute(out,player,"guildId",o->value(o,0));
             attribute(out,player,"guildOid",o->value(o,0));});
     }
+    /** The Expand Guild Hall window (id 19 reply), pushed at the caller's {@code sceneDialog}. */
+    public byte[] expansionDialog(int player,long guildId,List<Integer> expansions,boolean inDefault,
+            float prorate,long created)throws IOException {
+        return frame(out->{eventHeader(out,"CompoundEvent",player);type(out,WireTypes.ARRAY_LIST);out.writeInt(2);
+            attribute(out,player,"sceneDialogCreated",o->value(o,created));
+            attribute(out,player,"sceneDialog",o->{
+                type(o,"com.threerings.projectx.guild.data.ExpansionDialogInfo");
+                dialogBase(o);
+                o.writeShort(0);o.writeShort(0); // model, animation
+                string(o,null);string(o,null); // name, title
+                o.writeInt((int)guildId);
+                hallExpansions(o,expansions);
+                o.writeBoolean(inDefault);
+                o.writeFloat(prorate);
+            });});
+    }
+    /** The themes / environments window (id 20 reply), pushed at the caller's {@code sceneDialog}. */
+    public byte[] hallGlobalDialog(int player,long guildId,int type,List<Integer> expansions,
+            String current,long created)throws IOException {
+        return frame(out->{eventHeader(out,"CompoundEvent",player);type(out,WireTypes.ARRAY_LIST);out.writeInt(2);
+            attribute(out,player,"sceneDialogCreated",o->value(o,created));
+            attribute(out,player,"sceneDialog",o->{
+                type(o,"com.threerings.projectx.guild.data.HallGlobalDialogInfo");
+                dialogBase(o);
+                o.writeShort(0);o.writeShort(0);
+                string(o,null);string(o,null);
+                o.writeInt((int)guildId);
+                type(o,"com.threerings.projectx.guild.data.HallGlobalType");o.writeByte(type);
+                hallExpansions(o,expansions);
+                string(o,current==null?"":current);
+            });});
+    }
+    private static void dialogBase(DataOutputStream out)throws IOException {
+        out.writeShort(0);out.writeShort(0);out.writeFloat(0);out.writeShort(0);out.writeShort(0);
+    }
+    private void hallExpansions(DataOutputStream out,List<Integer> expansions)throws IOException {
+        type(out,"java.util.HashSet");out.writeInt(expansions.size());
+        for(int expansion:expansions){type(out,"com.threerings.projectx.guild.data.HallExpansion");out.writeByte(expansion);}
+    }
     /** A guild record page: {@code entryCount} is the filter's total, not the page size. */
     public byte[] guildLog(short request,int oid,org.tortodrone.storage.GuildStore.Page page)throws IOException {
         return frame(out->{eventHeader(out,"InvocationResponseEvent",oid);out.writeShort(request);out.writeByte(1);out.writeBoolean(true);out.writeInt(1);

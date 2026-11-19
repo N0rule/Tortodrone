@@ -409,8 +409,16 @@ final class WorldSession implements AutoCloseable {
                     guilds.setHallOpen(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),(Boolean)a.get(1));}
                 case 18->{requireArgs(a,2,Integer.class,String.class);changed=true;
                     guilds.setMotd(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),(String)a.get(1));}
-                case 19->throw new IOException("Guild hall expansions are not available on this server.");
-                case 20->throw new IOException("Guild hall themes are not available on this server.");
+                case 19->{requireArgs(a,1,Integer.class);
+                    var view=guildView;if(view==null||view.guild().id()!=(Integer)a.get(0))throw new IOException("m.access_denied");
+                    long now=System.currentTimeMillis();
+                    float prorate=view.guild().upkeepTime()<=now?0f:Math.min(1f,(view.guild().upkeepTime()-now)/604_800_000f);
+                    output.send(()->codec.expansionDialog(oid,view.guild().id(),view.expansions(),view.guild().inDefault(),prorate,now));}
+                case 20->{requireArgs(a,2,Integer.class,SessionDecoder.EnumValue.class);
+                    var view=guildView;if(view==null||view.guild().id()!=(Integer)a.get(0))throw new IOException("m.access_denied");
+                    int type=((SessionDecoder.EnumValue)a.get(1)).ordinal();
+                    String current=type==0?view.guild().theme():view.guild().environment();
+                    output.send(()->codec.hallGlobalDialog(oid,view.guild().id(),type,view.expansions(),current,System.currentTimeMillis()));}
                 case 21->throw new IOException("Guild halls are not available on this server yet.");
                 case 22->{requireArgs(a,1,Integer.class);changed=true;
                     var withdrawn=guilds.withdrawEnergy(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0));
