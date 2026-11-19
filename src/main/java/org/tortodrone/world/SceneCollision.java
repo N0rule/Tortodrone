@@ -168,6 +168,30 @@ public final class SceneCollision {
         }catch(IllegalArgumentException outOfRange){return false;}
     }
 
+    /** Builds the projectile/entity view from the single compiled collision artifact. */
+    public static SceneCollision fromMapCollision(MapCollision source) {
+        var tiles=new HashMap<Long,Integer>(Math.max(16,source.tileCount()*4/3));
+        var keys=source.tileKeys();var masks=source.tileMasks();
+        for(int i=0;i<keys.length;i++)tiles.put(keys[i],masks[i]);
+        var floors=new HashSet<Long>(Math.max(16,source.floorKeys().length*4/3));
+        for(long key:source.floorKeys())floors.add(key);
+        var floorShapes=new ArrayList<Obstacle>();var obstacles=new ArrayList<Obstacle>();
+        for(var shape:source.shapes()){
+            var geometry=convert(shape.geometry());
+            var obstacle=new Obstacle(shape.mask(),shape.source(),geometry,bounds(geometry));
+            if(shape.mask()==0)floorShapes.add(obstacle);else obstacles.add(obstacle);
+        }
+        return new SceneCollision(tiles,floors,floorShapes,obstacles,true);
+    }
+    private static Geom convert(MapCollision.Geom geometry) {
+        if(geometry instanceof MapCollision.Circle c)return new Circle(new Point(c.center().x(),c.center().y()),c.radius());
+        if(geometry instanceof MapCollision.Capsule c)return new Capsule(new Point(c.a().x(),c.a().y()),new Point(c.b().x(),c.b().y()),c.radius());
+        if(geometry instanceof MapCollision.Polygon p)return new Polygon(p.points().stream().map(point->new Point(point.x(),point.y())).toList());
+        var rail=(MapCollision.Rail)geometry;
+        return new Rail(new Point(rail.a().x(),rail.a().y()),new Point(rail.b().x(),rail.b().y()),
+            new Bounds(rail.gate().minX(),rail.gate().minY(),rail.gate().maxX(),rail.gate().maxY()));
+    }
+
     /** Loads an optional prepared collision file and verifies it belongs to this scene layout. */
     public static SceneCollision load(Path folder, String layoutHash) throws IOException {
         Path file = folder.resolve("static-collision.properties");

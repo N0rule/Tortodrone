@@ -78,6 +78,8 @@ public final class MapImport {
         var collision=org.tortodrone.world.MapCollision.fromProperties(staticCollision);
         Path output=nativeDir.resolve("collision.bin");collision.write(output,hash);
         metadata.setProperty("sha256.collision.bin",ContentFiles.digest(output));
+        metadata.remove("sha256.static-collision.properties");
+        Files.delete(staticCollision);
         Files.delete(nativeDir.resolve("metadata.properties"));
         UnifiedExport.store(nativeDir.resolve("metadata.properties"),metadata);
     }

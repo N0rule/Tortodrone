@@ -95,7 +95,7 @@ public final class ContentManager {
         if(exact==null)throw new IOException(folder+": exact collision.bin is required; run generateNativeCollision");
         var collision=CollisionMap.exact(exact,collisionMask,ScenePortals.PAWN_RADIUS);
         var portals=ScenePortals.load(prepared.portals(),digest,collision);
-        return new SceneCatalog.MapScene(Integer.parseInt(p.getProperty("scene-id")),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,portals,actors,SceneCollision.load(nativeDir,digest),exact);
+        return new SceneCatalog.MapScene(Integer.parseInt(p.getProperty("scene-id")),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,portals,actors,SceneCollision.fromMapCollision(exact),exact);
     }
     private static void requireItem(org.tortodrone.character.ItemCatalog items,String config)throws IOException{if(items.find(config)==null)throw new IOException("Combat references missing item: "+config);}
     static Map<String,String> inputs(Path root)throws IOException {

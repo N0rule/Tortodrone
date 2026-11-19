@@ -40,6 +40,12 @@ public final class SceneCollisionTool {
                 scene.init(manager);
                 SceneCollisionExport.export(manager, scene, nativeDir);
                 CollisionPackExport.export(folder);
+                Files.deleteIfExists(staticCollision);
+                var metadata = nativeDir.resolve("metadata.properties");
+                var props = new java.util.Properties();
+                try (var in = Files.newInputStream(metadata)) { props.load(in); }
+                props.remove("sha256.static-collision.properties");
+                try (var out = Files.newOutputStream(metadata)) { props.store(out, "Generated exact collision"); }
                 count++;
             }
         }

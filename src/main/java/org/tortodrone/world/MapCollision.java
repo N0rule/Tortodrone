@@ -32,17 +32,17 @@ public final class MapCollision {
         }
     }
 
-    private sealed interface Geom permits Circle, Capsule, Polygon, Rail { }
-    private record Point(float x, float y) { }
-    private record Circle(Point center, float radius) implements Geom { }
-    private record Capsule(Point a, Point b, float radius) implements Geom { }
-    private record Polygon(List<Point> points) implements Geom { }
-    private record Rail(Point a, Point b, Bounds gate) implements Geom { }
-    private record Bounds(float minX, float minY, float maxX, float maxY) {
+    sealed interface Geom permits Circle, Capsule, Polygon, Rail { }
+    record Point(float x, float y) { }
+    record Circle(Point center, float radius) implements Geom { }
+    record Capsule(Point a, Point b, float radius) implements Geom { }
+    record Polygon(List<Point> points) implements Geom { }
+    record Rail(Point a, Point b, Bounds gate) implements Geom { }
+    record Bounds(float minX, float minY, float maxX, float maxY) {
         boolean intersects(Bounds o) { return minX <= o.maxX && maxX >= o.minX && minY <= o.maxY && maxY >= o.minY; }
         boolean contains(float x, float y) { return x >= minX && x <= maxX && y >= minY && y <= maxY; }
     }
-    private record Shape(int id, int mask, int source, Geom geometry, Bounds bounds) { }
+    record Shape(int id, int mask, int source, Geom geometry, Bounds bounds) { }
 
     private final long[] tileKeys;
     private final int[] tileMasks;
@@ -64,6 +64,10 @@ public final class MapCollision {
     }
 
     public String layoutHash() { return layoutHash; }
+    long[] tileKeys(){return tileKeys.clone();}
+    int[] tileMasks(){return tileMasks.clone();}
+    long[] floorKeys(){return floorKeys.clone();}
+    List<Shape> shapes(){return shapes;}
     public int shapeCount() { return shapes.size(); }
     public int tileCount() { return tileKeys.length; }
     Bounds bounds() { return bounds; }

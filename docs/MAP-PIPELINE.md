@@ -56,21 +56,21 @@ content/maps/<name>/
     collision.bin
     bindings.json
     metadata.properties
-    static-collision.properties   # native source for collision.bin
-    walkability.gz                # legacy fallback, not used when collision.bin exists
 ```
 
 `collision.bin` is versioned, gzip-compressed, and pinned to `sha256(scene.dat)` by its header and
 by `metadata.properties`. It contains:
 
 - exact 1-unit tile masks and floor cells,
-- native placeable shapes (circle, capsule, polygon, rail) with masks and stable ids,
+- native placeable shapes (circle, capsule, polygon, rail) with masks, source entry ids and
+  stable ids,
 - map bounds.
 
 The runtime builds a uniform-grid broadphase from those shapes. A movement query touches only the
 shapes near the body; it does not scan the map. Portal entrances are validated against the same
 exact collision, and projectile/entity queries use the same broadphase rather than scanning every
-shape. `walkability.gz` is not generated or read by the unified pipeline.
+shape. `walkability.gz` and `static-collision.properties` are not generated or read by the
+unified pipeline; `collision.bin` is the only collision artifact.
 
 ## Guarantees
 
