@@ -83,8 +83,14 @@ final class NamedLoadouts {
         }
         try(var s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=NULL WHERE world_id=?")){s.setInt(1,p.worldId());s.executeUpdate();}
         try(var s=c.prepareStatement("DELETE FROM metadata WHERE key IN(SELECT 'item.weapon-slot.'||item_id FROM inventory_items WHERE world_id=?)")){s.setInt(1,p.worldId());s.executeUpdate();}
+        try(var s=c.prepareStatement("DELETE FROM metadata WHERE key=?")){s.setString(1,"item.pvp-shield."+p.worldId());s.executeUpdate();}
         for(int slot=0;slot<16;slot++) {
             long id=saved.equipment().get(slot);if(id==0)continue;
+            if(slot==14) {
+                try(var s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=NULL,bound=CASE WHEN bind_on_equip=1 THEN 1 ELSE bound END WHERE world_id=? AND item_id=?")){s.setInt(1,p.worldId());s.setLong(2,id);if(s.executeUpdate()!=1)throw new IOException("Saved item changed");}
+                try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){s.setString(1,"item.pvp-shield."+p.worldId());s.setLong(2,id);s.executeUpdate();}
+                continue;
+            }
             try(var s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=?,bound=CASE WHEN bind_on_equip=1 THEN 1 ELSE bound END WHERE world_id=? AND item_id=?")) {
                 if(slot==8||slot==9)s.setNull(1,Types.INTEGER);else s.setInt(1,slot);s.setInt(2,p.worldId());s.setLong(3,id);if(s.executeUpdate()!=1)throw new IOException("Saved item changed");
             }

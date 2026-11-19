@@ -578,14 +578,20 @@ public final class Database {
             try(var st=c.prepareStatement("DELETE FROM metadata WHERE key IN (SELECT 'item.weapon-slot.'||item_id FROM inventory_items WHERE world_id=?) AND (key=? OR value=?)")) {
                 st.setInt(1,profile.worldId());st.setString(2,"item.weapon-slot."+itemId);if(slot==null)st.setNull(3,Types.INTEGER);else st.setInt(3,slot);st.executeUpdate();
             }
+            // Slot 14 is metadata-backed because the schema-17 equipped_slot CHECK predates
+            // the client's PvP shield slot. Moving the item elsewhere clears its old value.
+            if(slot==null||slot!=14)try(var st=c.prepareStatement("DELETE FROM metadata WHERE key=? AND value=?")) {
+                st.setString(1,"item.pvp-shield."+profile.worldId());st.setLong(2,itemId);st.executeUpdate();
+            }
 
             if(slot!=null)try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=NULL WHERE world_id=? AND equipped_slot=?")){s.setInt(1,profile.worldId());s.setInt(2,slot);s.executeUpdate();}
             try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=?,bound=CASE WHEN ? IS NOT NULL AND bind_on_equip=1 THEN 1 ELSE bound END WHERE world_id=? AND item_id=?")){
-                if(slot==null||slot==8||slot==9)s.setNull(1,Types.INTEGER);else s.setInt(1,slot);
+                if(slot==null||slot==8||slot==9||slot==14)s.setNull(1,Types.INTEGER);else s.setInt(1,slot);
                 if(slot==null)s.setNull(2,Types.INTEGER);else s.setInt(2,slot);
                 s.setInt(3,profile.worldId());s.setLong(4,itemId);s.executeUpdate();
             }
             if(slot!=null&&(slot==8||slot==9))try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?)")){st.setString(1,"item.weapon-slot."+itemId);st.setInt(2,slot);st.executeUpdate();}
+            if(slot!=null&&slot==14)try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){st.setString(1,"item.pvp-shield."+profile.worldId());st.setLong(2,itemId);st.executeUpdate();}
             try(PreparedStatement s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
     }
     public WorldProfile administrativeEquipment(String username,String knight,int account,int world,long revision,long itemId,Integer slot,String grant,org.tortodrone.character.ItemCatalog catalog,org.tortodrone.town.TownCatalog rules)throws IOException {

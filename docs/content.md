@@ -629,6 +629,12 @@ sell from 3-1, matching the client's first sprite rank that requires knight rank
 same gate covers methods 4, 5, 6 and the quoted buy path. Administrators still see
 the full catalogue and every rank tier.
 
+**PvP shield slot:** the client's PvP shield uses equipment slot 14, which schema 17
+predates. Tortodrone stores it in `item.pvp-shield.<world>` metadata and overlays it
+into `equipment[14]`; normal shields still use slot 2. Named loadouts save and
+restore slot 14. The slot is reserved for future PvP/arena gameplay; Lockdown item
+models remain unsupported until that path exists. No schema migration is required.
+
 Explicit initialization/seed-version metadata makes seeding one-time. Restart,
 disabling all offers or intentionally clearing a managed catalog never reseeds it.
 Existing purchases remain in the original `town_purchases` ledger: lifetime purchase

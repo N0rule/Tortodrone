@@ -15,7 +15,7 @@ public record WorldProfile(int worldId, int accountId, int knightId, int crowns,
             return switch(this) {
                 case HELM -> index==0||index==3;
                 case ARMOR -> index==1||index==4;
-                case SHIELD -> index==2||index==15;
+                case SHIELD -> index==2||index==14||index==15; // 14 is the client's PvP shield slot
                 case SWORD, GUN, BOMB -> index>=6 && index<=9;
                 case HELM_COSTUME -> index==3;
                 case ARMOR_COSTUME -> index==4;

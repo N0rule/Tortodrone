@@ -44,7 +44,12 @@ public final class GearSupportTest {
                 profile=db.equip(account,1,1,id,expected.slot().initialIndex());
                 check(profile.items().stream().anyMatch(i->i.id()==id&&Integer.valueOf(expected.slot().initialIndex()).equals(i.equippedSlot())),"grants and equips: "+expected.config());
             }
-            System.out.println("PASS: 15 formerly unsupported native gear items grant, keep their real slots and equip");
+            var scarlet=items.require("Gear/Shield/Scarlet Shield");
+            var profile=db.worldProfile(account,1,1);
+            long id=profile.items().stream().filter(i->i.config().equals(scarlet.config())).findFirst().orElseThrow().id();
+            profile=db.equip(account,1,1,id,14);
+            check(profile.items().stream().anyMatch(i->i.id()==id&&Integer.valueOf(14).equals(i.equippedSlot())),"PvP shield slot 14 persists a normal shield");
+            System.out.println("PASS: 15 formerly unsupported native gear items grant, keep their real slots and equip; PvP shield slot 14 persists");
         }finally{ContentFixture.delete(root);}
     }
 }

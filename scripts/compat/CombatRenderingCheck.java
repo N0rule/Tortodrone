@@ -146,6 +146,10 @@ public final class CombatRenderingCheck {
             }
             return;
         }
+        if(args.length==2&&args[0].equals("--seed-manual")){
+            seed(Path.of(args[1]));
+            System.exit(0);
+        }
         if(args.length==2&&(args[0].equals("--seed-equipment")||args[0].equals("--seed-items")||args[0].equals("--seed-multiplayer")||args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot")||args[0].equals("--seed-forge"))){
             seed(Path.of(args[1]));
             if(args[0].equals("--seed-equipment"))seedEquipment(Path.of(args[1]));

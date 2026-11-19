@@ -102,6 +102,10 @@ final class WorldProfiles {
             s.setInt(1,worldId);try(var r=s.executeQuery()){while(r.next()){int slot=r.getInt(2);if(slot!=8&&slot!=9)throw new IOException("Invalid bonus weapon slot");bonusSlots.put(r.getLong(1),slot);}}
         }
         items.replaceAll(item->bonusSlots.containsKey(item.id())?item.withEquippedSlot(bonusSlots.get(item.id())):item);
+        // Slot 14 is the client's PvP shield slot; metadata keeps schema 17 unchanged.
+        long pvpShield=0;
+        try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){s.setString(1,"item.pvp-shield."+worldId);try(var r=s.executeQuery()){if(r.next())pvpShield=r.getLong(1);}}
+        if(pvpShield>0){long id=pvpShield;items.replaceAll(item->item.id()==id?item.withEquippedSlot(14):item);}
         var gifts=GiftStore.load(c,worldId);items.replaceAll(item->gifts.containsKey(item.id())?item.withGift(gifts.get(item.id())):item);
         int consumed;try(var s=c.prepareStatement("SELECT count(*) FROM town_consumed_starters WHERE world_id=?")){s.setInt(1,worldId);try(var r=s.executeQuery()){r.next();consumed=r.getInt(1);}}
         if(items.stream().filter(WorldProfile.Item::starter).count()+consumed!=5)throw new IOException("Incomplete starter inventory; restore the saved database");

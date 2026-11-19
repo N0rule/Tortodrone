@@ -118,7 +118,9 @@ public final class CheckCombatRendering {
             }
             var seed = new ArrayList<>(base);
             seed.addAll(List.of("CombatRenderingCheck", mailCampaignOnly?"--seed-mail":campStory?"--seed-camp":freshOpening?"--seed-opening":equipmentGroups?"--seed-equipment":itemsOnly?"--seed-items":multiplayerOnly?"--seed-multiplayer":boxesOnly?"--seed-boxes":depotOnly?"--seed-depot":readyRoomForgeOnly?"--seed-forge":"--seed", scratch.resolve("data").toString()));
-            run(seed, "seed", 45, scratch);
+            if(manual)seed.set(seed.size()-2,"--seed-manual");
+            run(seed, "seed", manual?120:45, scratch);
+            if(manual)writeManualPrefs(scratch);
 
             Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui","--skip-client-assets"), serverLog, scratch);
             server.getOutputStream().close();
@@ -208,6 +210,17 @@ public final class CheckCombatRendering {
         }
     }
 
+    private static void writeManualPrefs(Path sandbox)throws IOException {
+        // The client reads its control scheme from the disposable Java preference root.
+        Path prefs=sandbox.resolve("home/prefs/.java/.userPrefs/projectx/prefs.xml");
+        Files.createDirectories(prefs.getParent());
+        Files.writeString(prefs,"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
+                +"<!DOCTYPE map SYSTEM \"http://java.sun.com/dtd/preferences.dtd\">\n"
+                +"<map MAP_XML_VERSION=\"1.0\">\n"
+                +"  <entry key=\"control_scheme\" value=\"WASD_MOVE\"/>\n"
+                +"</map>\n");
+        System.out.println("MANUAL: control scheme WASD_MOVE");
+    }
     private static List<String> graphicsBase(Path game, Path app, Path sandbox) {
         return new ArrayList<>(List.of(executable("java"), "--enable-native-access=ALL-UNNAMED",
             "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED",
