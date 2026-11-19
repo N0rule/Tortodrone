@@ -458,6 +458,30 @@ stopped and retain your original data. Old path-keyed item definitions are accep
 only by the migration reader; mixed layouts fail startup. Legacy pack deployments
 still use `ContentMigration`, whose exporter emits this same readable format.
 
+### Client/server item gaps
+
+The readable item catalog can contain definitions imported from an older client
+capture. The installed client build `20261110044614` has no `ItemConfig` for the
+five server-only entries below, so they cannot be rendered or equipped:
+
+| Config | Display name | Type |
+|---|---|---|
+| `Weapon/Handgun/Fiery Diskgun` | Fiery Diskgun | Handgun |
+| `Weapon/Handgun/Static Diskgun` | Static Diskgun | Handgun |
+| `Weapon/Handgun/Celestial Orbitgun (OLD)` | Celestial Orbitgun (OLD) | Handgun |
+| `Weapon/Handgun/Overcharged Mixmaster (OLD)` | Overcharged Mixmaster (OLD) | Handgun |
+| `Weapon/Sword/Amputator (Calibur)` | Amputator | Sword |
+
+They stay in the pinned item, combat, progression and fire catalogs so the
+existing catalog hash and migration history remain stable. Treat them as legacy
+reference data, not supported content, and do not grant them to players. The
+machine-readable record with stock IDs, live keys and fire activities is
+`docs/orphaned-items.json`.
+
+The reverse gap also exists: 99 client item definitions, mostly recolored
+accessories and costumes plus a few upgrades, are not in the server catalog yet.
+The same manifest records that list for future import work.
+
 ## Map identity, actors, portals and traps
 
 `map.yml` preserves the native ID and type, provides readable administration
