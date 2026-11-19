@@ -69,6 +69,9 @@ final class WorldSession implements AutoCloseable {
     private Short forcedReceiver;
     private record PortalMove(SceneRegistry.Instance destination,ScenePortals.Entrance entrance) { }
     private PortalMove portalMove;
+    /** Stock town commands may arrive from the loading screen or Ready Room; replay the
+     *  native destination request once the scene has subscribed and accepted enteredPlace. */
+    private SessionDecoder.Invocation pendingTravel;
     private FloorReport floorReport;
     private SceneSimulation.FloorAdvanceRequest openingAdvance;
     private boolean openingDropStarted,openingPayoutWarning;
@@ -1238,7 +1241,17 @@ final class WorldSession implements AutoCloseable {
             if(readyRoom&&!returnRequested)output.send(()->codec.forceDestination(oid,receiver,ReadyRoom.ZONE,ReadyRoom.SCENE));
             else output.send(() -> codec.forceScene(oid, receiver,destination));
             forcedReceiver = receiver;
+            flushPendingTravel();
         }
+    }
+
+    /** Replay a town destination command that arrived before the scene was ready. */
+    private synchronized void flushPendingTravel()throws IOException {
+        if(pendingTravel==null||closed||!selected()||readyRoom||!entered||!subscribed
+            ||forcedReceiver==null||portalMove!=null||deferredMove!=null)return;
+        var request=pendingTravel;pendingTravel=null;
+        log.debug("Replaying queued town destination after scene entry");
+        invocation(request);
     }
 
     synchronized boolean invocation(SessionDecoder.Invocation request) throws IOException {
@@ -1256,7 +1269,17 @@ final class WorldSession implements AutoCloseable {
         if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==7){
             if(args.size()!=2||!(args.get(0) instanceof String destination)||!(args.get(1) instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ResultMarshaller"))throw new SessionDecoder.Rejected("Invalid town destination request");
             try{
-                if(!selected()||!entered||!subscribed||forcedReceiver==null||portalMove!=null)throw new IOException("Finish entering this scene first");characters.worldProfile(knight.name(),authRevision,profile);
+                if(!selected())throw new IOException("Select a knight first");
+                if(!entered||!subscribed||forcedReceiver==null||portalMove!=null||readyRoom){
+                    if(pendingTravel!=null&&pendingTravel!=request&&pendingTravel.arguments().getLast() instanceof SessionDecoder.Listener old) {
+                        short oldId=old.requestId();output.send(()->codec.invocationFailure(oid,oldId,"Travel request replaced"));
+                    }
+                    pendingTravel=request;
+                    log.debug("Queued town destination; destination="+destination+"; entered="+entered+"; subscribed="+subscribed
+                        +"; receiver="+forcedReceiver+"; portal="+(portalMove!=null)+"; readyRoom="+readyRoom);
+                    return true;
+                }
+                characters.worldProfile(knight.name(),authRevision,profile);
                 SceneCatalog.MapScene map=null;ScenePortals.Entrance entrance=null;AlchemyDestination alchemy=null;
                 if(destination.equals("move_alchemy_machine")){
                     alchemy=selectAlchemy();if(alchemy!=null){entrance=alchemy.entrance();map=scene.map();}
@@ -1804,6 +1827,7 @@ final class WorldSession implements AutoCloseable {
         for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&candidate.eligible(profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
         if(auctionAfterArrival){auctionAfterArrival=false;try{openAuction();}catch(IOException refused){unavailable(refused.getMessage());}}
         persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
+        flushPendingTravel();
     }
 
     private record AlchemyDestination(String key,ScenePortals.Entrance entrance) { }
