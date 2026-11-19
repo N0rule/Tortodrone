@@ -1,0 +1,7 @@
+id: 294
+name: Advanced Training Hall
+type: training
+zone-id: 1
+zone-name: "%town:m.haven"
+defaultSpawn: level_start
+instances: 1

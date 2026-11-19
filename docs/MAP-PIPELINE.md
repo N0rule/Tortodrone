@@ -1,0 +1,93 @@
+# Map pipeline
+
+Maps are **development inputs**, not runtime imports. A release build ships the compiled maps in
+`content/maps`; the server never runs the compiler.
+
+## Source layout
+
+```text
+map-sources/
+  advanced_training/
+    scene.dat            # the only binary input
+    map.yml              # identity and the facts a scene cannot state
+```
+
+```yaml
+id: 294
+name: Advanced Training Hall
+type: training
+zone-id: 1
+zone-name: "%town:m.haven"
+defaultSpawn: level_start
+instances: 1
+```
+
+`zone-id` and `zone-name` are the two values a cached scene does not establish. Routing (`link`)
+is a design decision and is not invented.
+
+## Commands
+
+```bash
+./gradlew compileMapsFromSource -PgameDir=/path/to/read-only-game [-PreplaceMaps]
+./gradlew generateCollision        # compile collision.bin for maps that already carry native static collision
+./gradlew validateContent
+./gradlew build
+```
+
+`compileMapsFromSource` invokes the stock exporter for each `map-sources/*/scene.dat`, installs the
+map into the build deployment, and compiles `collision.bin`. `-PreplaceMaps` is for disposable
+build output only; an existing deployment map is refused without it.
+
+## Generated artifacts
+
+```text
+content/maps/<name>/
+  map.yml
+  portals.yml
+  actors.yml
+  native/
+    scene.dat
+    collision.bin
+    bindings.json
+    metadata.properties
+    static-collision.properties   # native source for collision.bin
+    walkability.gz                # legacy fallback, not used when collision.bin exists
+```
+
+`collision.bin` is versioned, gzip-compressed, and pinned to `sha256(scene.dat)` by its header and
+by `metadata.properties`. It contains:
+
+- exact 1-unit tile masks and floor cells,
+- native placeable shapes (circle, capsule, polygon, rail) with masks and stable ids,
+- map bounds.
+
+The runtime builds a uniform-grid broadphase from those shapes. A movement query touches only the
+shapes near the body; it does not scan the map. `walkability.gz` is retained as a compatibility
+and validation artifact and is **not** the movement path when `collision.bin` is present.
+
+## Guarantees
+
+- The compiler refuses a scene whose spawn is not on a supported floor or is blocked.
+- Collision is tied to the scene hash; a changed `.dat` cannot silently reuse old collision.
+- `validateContent` fails if a map carries native static collision without a generated
+  `collision.bin`.
+- No map behaviour is invented: unsupported actors, actions and portal geometry are reported by
+  the exporter and remain absent.
+
+## Current status
+
+| Maps | Exact collision |
+| --- | --- |
+| advanced_training, crash_site, rescue_camp | generated and used |
+| haven, bazaar, garrison, arcade, laboratory, hall_of_heroes | still on the sampled grid until their native static collision is generated with a game directory |
+
+The second row is the remaining migration work; it needs the client catalogue to run the stock
+collision exporter. It is not a format limitation.
+
+## Scaling to 500+ maps
+
+- One compact binary per map; no per-map bitmap is required at runtime.
+- Collision is loaded per map and indexed once; queries are grid-local.
+- `scene.dat` and `collision.bin` are hash-checked and immutable after compilation.
+- The compiler is fail-closed, so a large batch either publishes a consistent map or refuses it
+  before the release is assembled.
