@@ -93,10 +93,10 @@ All nine bundled maps now carry generated exact collision:
 | --- | --- |
 | haven, bazaar, arcade, garrison, rescue_camp, advanced_training, crash_site, laboratory, hall_of_heroes | generated and used |
 
-`collision.bin` is 276 KiB for all nine maps in total. The sampled grid remains in the files as a
-compatibility/validation artifact but is not the movement path. A generated town map validates
-against the full deployment; portals whose destination scene is absent are dropped and reported
-rather than published as dead travel edges.
+`collision.bin` is 276 KiB for all nine maps in total. `walkability.gz` is no longer required by the unified loader: when `collision.bin` is present the
+runtime collision view is exact for movement, portal entrances, entities and projectile sweeps. A
+generated town map validates against the full deployment; portals whose destination scene is
+absent are dropped and reported rather than published as dead travel edges.
 
 ## Scaling to 500+ maps
 

@@ -75,8 +75,7 @@ public final class ContentManager {
         var prepared=MapYaml.prepare(folder,shared,items);var p=prepared.descriptor();Path nativeDir=prepared.nativeDirectory();
         byte[] layout=Files.readAllBytes(nativeDir.resolve("scene.dat"));
         if(layout.length<16||layout.length>900_000||layout[0]!=(byte)0xfa||layout[1]!=(byte)0xce||layout[2]!=(byte)0xaf||layout[3]!=0x0e)throw new IOException(nativeDir+": invalid native scene header/size");
-        var collision=CollisionMap.read(nativeDir.resolve("walkability.gz"));
-        float x=Float.parseFloat(p.getProperty("spawn-x")),y=Float.parseFloat(p.getProperty("spawn-y"));if(!collision.walkable(x,y))throw new IOException(folder+": defaultSpawn is not walkable");
+        float x=Float.parseFloat(p.getProperty("spawn-x")),y=Float.parseFloat(p.getProperty("spawn-y"));
         int instances=Integer.parseInt(p.getProperty("instances"));if(instances<1||instances>16)throw new IOException("instances must be from 1 to 16");
         String digest=p.getProperty("scene-sha256");
         var actors=SceneContent.load(prepared.content(),digest);
@@ -93,7 +92,11 @@ public final class ContentManager {
             if(!exact.layoutHash().equals(digest))throw new IOException(nativeDir+": exact collision layout hash mismatch");
             if(!exact.clear(collisionMask,x,y,ScenePortals.PAWN_RADIUS))throw new IOException(folder+": defaultSpawn is not clear in exact collision");
         }
-        var portals=exact==null?ScenePortals.load(prepared.portals(),digest,collision):ScenePortals.load(prepared.portals(),digest,exact,collisionMask);
+        var collision=exact==null
+            ? CollisionMap.read(nativeDir.resolve("walkability.gz"))
+            : CollisionMap.exact(exact,collisionMask,ScenePortals.PAWN_RADIUS);
+        if(exact==null&&!collision.walkable(x,y))throw new IOException(folder+": defaultSpawn is not walkable");
+        var portals=ScenePortals.load(prepared.portals(),digest,collision);
         return new SceneCatalog.MapScene(Integer.parseInt(p.getProperty("scene-id")),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,portals,actors,SceneCollision.load(nativeDir,digest),exact);
     }
     private static void requireItem(org.tortodrone.character.ItemCatalog items,String config)throws IOException{if(items.find(config)==null)throw new IOException("Combat references missing item: "+config);}
