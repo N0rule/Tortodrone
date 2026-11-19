@@ -110,7 +110,7 @@ case $scenario in
 esac
 
 if [ -z "$game" ]; then
-    game=${HOME:-/root}/.local/share/Steam/steamapps/common/Spiral Knights
+    game="${HOME:-/root}/.local/share/Steam/steamapps/common/Spiral Knights"
 fi
 if [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; then
     echo "graphical-test: a display is required; the fixture runs the stock client fullscreen" >&2

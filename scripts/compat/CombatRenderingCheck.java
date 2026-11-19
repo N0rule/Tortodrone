@@ -617,6 +617,8 @@ public final class CombatRenderingCheck {
     private int tutorialPartyHealth=-1;
     private final Map<Integer,Float> tutorialMonsterHealth=new HashMap<>();
     private float tutorialLastX,tutorialLastY;
+    private long tutorialStageAt,tutorialEndDialogAt,tutorialAmbushAt,tutorialRouteFailAt;
+    private boolean tutorialExitStarted;
     private static final float[][] TUTORIAL_WALK={{-21,-60},{-1.5f,-69},{-9.5f,-49},{-13,-29},{-26,-21},{-22.5f,-12},{-7.5f,-10},{-4.5f,-4},{-3.5f,7.5f},{-3.5f,16.5f},{8.5f,39.5f},{7.5f,50.5f},{11.5f,57.5f}};
     private void tutorialPlayTick(View view,long now)throws Exception {
         if(view.sceneId()==1){if(stage!=6){stage=6;started=now;capture("haven-arrival");}if(now-started>5_000_000_000L){
@@ -648,10 +650,21 @@ public final class CombatRenderingCheck {
         }
         if(app.CZ().sceneDialog instanceof com.threerings.projectx.data.ConversationDialogInfo info){
             flags(view,0);String key=info.name+":"+info.message;
-            if(!key.equals(tutorialDialog)&&now>=tutorialResponseAt){tutorialDialog=key;tutorialResponseAt=now+750_000_000L;capture("tutorial-dialog-"+tutorialWaypoint+"-"+Math.abs(key.hashCode()));System.out.println("DIALOG: "+key);info.conversationService.f(0,new Confirm());}
+            if(!key.equals(tutorialDialog)&&now>=tutorialResponseAt){tutorialDialog=key;tutorialResponseAt=now+750_000_000L;capture("tutorial-dialog-"+tutorialWaypoint+"-"+Math.abs(key.hashCode()));System.out.println("DIALOG: "+key);
+                if(info.message.equals("m.tut_warden_1a")&&tutorialAmbushAt==0)tutorialAmbushAt=now;
+                if(info.message.equals("m.tut_warden_3a")){tutorialEndDialogAt=now;System.out.println("CHECK: post-Giant Warden conversation; the authored door end opens five seconds later");}
+                info.conversationService.f(0,new Confirm());}
             return;
         }
         if(tutorialProgressAt==0){capture("crash-site-entrance");tutorialProgressAt=now;tutorialLastX=own.tG().x;tutorialLastY=own.tG().y;}
+        else if(tutorialLastX!=0||tutorialLastY!=0){
+            // A scripted conversation can move the knight to its speaker. Restart route
+            // planning from wherever the server placed it instead of counting the jump as
+            // a stall against the old route's progress clock.
+            double jump=Math.hypot(own.tG().x-tutorialLastX,own.tG().y-tutorialLastY);
+            if(jump>2.5){System.out.println("NAV: scripted move "+tutorialLastX+","+tutorialLastY+" -> "+own.tG());tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;tutorialRouteRetryAt=0;}
+        }
+        tutorialLastX=own.tG().x;tutorialLastY=own.tG().y;
         for(var actor:authoritative.values()){
             if(actor.MX().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")){
                 tutorialBoss=actor.vD();
@@ -704,21 +717,29 @@ public final class CombatRenderingCheck {
         }
         if(stage==3&&tutorialWaypoint<TUTORIAL_WALK.length){
             var target=TUTORIAL_WALK[tutorialWaypoint];
-            if(tutorialWalk(view,own,target[0],target[1],now)){System.out.println("WALK: "+tutorialWaypoint+" -> "+own.tG());tutorialWaypoint++;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;}
+            boolean last=tutorialWaypoint==TUTORIAL_WALK.length-1;
+            // The final waypoint is the ambush trigger field: once its conversation has
+            // fired the authored encounter is running and standing on the exact center is
+            // no longer required (helpers and knights crowd it during the fight).
+            boolean reached=tutorialWalk(view,own,target[0],target[1],now)||last&&tutorialAmbushAt!=0;
+            if(reached){System.out.println("WALK: "+tutorialWaypoint+" -> "+own.tG());tutorialWaypoint++;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;}
             return;
         }
         if(stage==3){
             var boss=authoritative.values().stream().filter(a->a.MX().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")).findFirst().orElse(null);
             if(boss==null){
-                if(tutorialBoss!=0&&!tutorialHelperDamage.isEmpty()){stage=5;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("ironwood-giant-removed");return;}
-                if(now-started>90_000_000_000L)throw new AssertionError("Original conversation did not spawn Giant");return;
+                if(tutorialBoss!=0&&!tutorialHelperDamage.isEmpty()){stage=5;tutorialStageAt=now;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("ironwood-giant-removed");return;}
+                // The encounter starts with the ambush conversation, so measure the spawn
+                // budget from there rather than from scene entry (which includes the walk).
+                long ambushRef=tutorialAmbushAt!=0?tutorialAmbushAt:started;
+                if(now-ambushRef>90_000_000_000L)throw new AssertionError("Original conversation did not spawn Giant");return;
             }
             tutorialBoss=boss.vD();
             boolean near=Math.hypot(boss.tG().x-own.tG().x,boss.tG().y-own.tG().y)<6;
             if(near||tutorialWalk(view,own,boss.tG().x,boss.tG().y-1.75f,now)){flags(view,0);stage=4;tutorialCombatAt=tutorialGiantProgressAt=now;tutorialGiantHealth=monsterHealth(boss);capture("ironwood-giant-encounter");}return;
         }
         if(stage==4){var boss=authoritative.get(tutorialBoss);
-            if(boss==null){stage=5;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("ironwood-giant-removed");return;}
+            if(boss==null){stage=5;tutorialStageAt=now;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("ironwood-giant-removed");return;}
             moveToward(view,boss.tG().x-own.tG().x,boss.tG().y-own.tG().y,false);
             boolean guard=tutorialGiantDamage&&boss instanceof com.threerings.projectx.dungeon.data.actor.Monster monster
                 &&(monster.aeM()==4||monster.aeM()==5&&lastStamp-monster.aeN()<2800);
@@ -727,7 +748,23 @@ public final class CombatRenderingCheck {
             if(!(giantHealth>=tutorialGiantHealth)){tutorialGiantHealth=giantHealth;tutorialGiantProgressAt=now;}
             if(now-tutorialGiantProgressAt>120_000_000_000L)throw new AssertionError("Giant fight stalled for 120 s; health="+giantHealth);return;
         }
-        if(stage==5){float[][] exit={{13.5f,70},{13.5f,90.5f},{13,96.5f}};
+        if(stage==5){
+            // The authored post-Giant sequence owns the knight for ~10.7 s: its removal
+            // handler destroys the supports, ends the knights, then runs the closing Warden
+            // conversation and finally signals "open" on "door end" five seconds later.
+            // Idle through all of that instead of racing the script into a closed gate.
+            if(tutorialEndDialogAt==0){
+                flags(view,0);
+                if(now-tutorialStageAt>60_000_000_000L)throw new AssertionError("Post-Giant Warden conversation never arrived");
+                return;
+            }
+            if(!tutorialExitStarted){
+                if(now-tutorialEndDialogAt<6_000_000_000L){flags(view,0);return;}
+                tutorialExitStarted=true;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;
+                tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;tutorialRepathAt=0;tutorialRouteRetryAt=0;
+                System.out.println("EXIT: authored Giant sequence settled; walking to the portal from "+own.tG());
+            }
+            float[][] exit={{13.5f,70},{13.5f,90.5f},{13,96.5f}};
             if(tutorialWaypoint<exit.length){if(tutorialWalk(view,own,exit[tutorialWaypoint][0],exit[tutorialWaypoint][1],now)){tutorialWaypoint++;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("tutorial-exit-walk-"+tutorialWaypoint);}}
             else {flags(view,0);var root=app.getRoot();for(int i=0;i<root.getWindowCount();i++)if(root.getWindow(i) instanceof com.threerings.projectx.dungeon.client.EndOfLevelWindow report)report.cd(true);}
         }
@@ -750,12 +787,22 @@ public final class CombatRenderingCheck {
                     for(var obstacle:authoritative.values())if(obstacle.vD()!=own.vD()){
                         var spec=tutorialSpecs.get(obstacle.MX().getName());
                         if(spec==null||(spec.integer("collision-flags",0)&mask)==0||spec.text("damage-action","").equals("destroy")||Set.of("TimedBlock","StoneBlock").contains(spec.text("kind",""))||spec.text("kind","").equals("Door")&&obstacle.bT(2))continue;
+                        // A scripted reposition can leave the knight overlapping a door or a
+                        // helper's footprint. Ignore anything already covering the pawn so
+                        // the escape route is plannable; the server still owns collision.
+                        if(spec.contains(obstacle.tG().x,obstacle.tG().y,obstacle.tH(),own.tG().x,own.tG().y,org.tortodrone.world.ScenePortals.PAWN_RADIUS))continue;
                         if(spec.contains(obstacle.tG().x,obstacle.tG().y,obstacle.tH(),px,py,org.tortodrone.world.ScenePortals.PAWN_RADIUS))return false;
                     }
                 }return true;
             });tutorialNode=0;
             tutorialNoRoute=tutorialPath.isEmpty();
-            if(tutorialPath.isEmpty()){flags(view,0);tutorialRouteRetryAt=now+500_000_000L;if(!giantAlive()&&now-tutorialProgressAt>20_000_000_000L)throw new AssertionError("No collision route from "+own.tG()+" to "+x+","+y);return false;}
+            if(tutorialPath.isEmpty()){flags(view,0);tutorialRouteRetryAt=now+500_000_000L;
+                // Measure an unreachable destination from this attempt, not from the last
+                // improvement: combat resets the progress clock while the knight fights.
+                if(tutorialRouteFailAt==0)tutorialRouteFailAt=now;
+                if(!giantAlive()&&now-tutorialRouteFailAt>20_000_000_000L)throw new AssertionError("No collision route from "+own.tG()+" to "+x+","+y);
+                tutorialProgressAt=now;return false;}
+            tutorialRouteFailAt=0;
         }
         while(tutorialNode<tutorialPath.size()&&Math.hypot(own.tG().x-tutorialPath.get(tutorialNode).x(),own.tG().y-tutorialPath.get(tutorialNode).y())<.2)tutorialNode++;
         if(tutorialNode==tutorialPath.size()){tutorialPath=List.of();return false;}
@@ -1299,7 +1346,7 @@ public final class CombatRenderingCheck {
                 // A held gun press fires normally before entering charge. Only
                 // projectiles born after the required release activity qualify.
                 for(var actor:authoritative.values())if(activities.contains(action.required)
-                    &&!previousActors.contains(actor.vD())&&((com.threerings.tudey.data.actor.Active)actor).aeM()>=Math.max(actionStamp,requiredStarted)
+                    &&!previousActors.contains(actor.vD())&&actor.aeP()>=Math.max(actionStamp,requiredStarted)
                     &&Set.of("Bullet","Bomb","OrbitalBullet","CompoundOrbitalBullet").contains(actor.getClass().getSimpleName())
                     &&ownedProjectile(actor,action)){
                     var sprite=view.gk(actor.vD());
