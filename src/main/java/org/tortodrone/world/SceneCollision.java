@@ -74,14 +74,16 @@ public final class SceneCollision {
     public static Penetration penetration(Object shape,float shapeX,float shapeY,float rotation,float x,float y,float radius) {
         return pawnShape(shape).at(shapeX,shapeY,rotation).penetration(x,y,radius);
     }
-    public Penetration penetration(int mask,float x,float y,float radius) {
+    public Penetration penetration(int mask,float x,float y,float radius) { return penetration(mask,x,y,radius,java.util.Set.of()); }
+    public Penetration penetration(int mask,float x,float y,float radius,java.util.Set<Integer> disabled) {
         if(mask==0||isEmpty())return Penetration.NONE;
         var center=new Point(x,y);var result=Penetration.NONE;
         for(int cy=floor(y-radius);cy<=floor(y+radius);cy++)for(int cx=floor(x-radius);cx<=floor(x+radius);cx++){
             Integer flags=tiles.get(key(cx,cy));
             if(flags!=null&&(flags&mask)!=0)result=result.deepest(penetration(rectangle(cx,cy,cx+1,cy+1),center,radius));
         }
-        for(var obstacle:grid.query(new Bounds(x-radius,y-radius,x+radius,y+radius)))if((obstacle.mask&mask)!=0&&obstacle.bounds.near(x,y,radius))result=result.deepest(penetration(obstacle.geometry,center,radius));
+        for(var obstacle:grid.query(new Bounds(x-radius,y-radius,x+radius,y+radius)))
+            if((obstacle.mask&mask)!=0&&!disabled.contains(obstacle.source)&&obstacle.bounds.near(x,y,radius))result=result.deepest(penetration(obstacle.geometry,center,radius));
         return result;
     }
     private static Penetration penetration(Geom obstacle,Point center,float radius) {
@@ -194,7 +196,8 @@ public final class SceneCollision {
             String prefix="shape."+i+".";
             int mask=integer(p,prefix+"mask");
             if(mask==0)throw new IOException("Invalid static collision shape mask");
-            shapes.add(new Obstacle(mask,parseGeometry(required(p,prefix+"geometry"))));
+            int source=p.containsKey(prefix+"source")?integer(p,prefix+"source"):0;
+            var geometry=parseGeometry(required(p,prefix+"geometry"));shapes.add(new Obstacle(mask,source,geometry,bounds(geometry)));
         }
         int floorShapeCount=p.containsKey("floor-shape-count")?count(p,"floor-shape-count",MAX_SHAPES):0;
         var surfaces=new ArrayList<Obstacle>(floorShapeCount);
@@ -203,16 +206,18 @@ public final class SceneCollision {
     }
 
     /** Returns true when this actor-local shape clears native static geometry at the pose. */
-    public boolean clear(int mask,Object localShape,float x,float y,float rotation) {
+    public boolean clear(int mask,Object localShape,float x,float y,float rotation) { return clear(mask,localShape,x,y,rotation,java.util.Set.of()); }
+    public boolean clear(int mask,Object localShape,float x,float y,float rotation,java.util.Set<Integer> disabled) {
         if(mask==0 || isEmpty())return true;
         List<Geom> local;
         try { local=fromData(localShape,0); }
         catch(RuntimeException invalid) { return false; }
-        return clearAt(mask,local,x,y,rotation);
+        return clearAt(mask,local,x,y,rotation,disabled);
     }
 
     /** Samples a translated shape at 0.1-unit intervals to prevent projectile tunnelling. */
-    public boolean clearSegment(int mask,Object localShape,float fromX,float fromY,float toX,float toY,float rotation) {
+    public boolean clearSegment(int mask,Object localShape,float fromX,float fromY,float toX,float toY,float rotation) { return clearSegment(mask,localShape,fromX,fromY,toX,toY,rotation,java.util.Set.of()); }
+    public boolean clearSegment(int mask,Object localShape,float fromX,float fromY,float toX,float toY,float rotation,java.util.Set<Integer> disabled) {
         if(mask==0 || isEmpty())return true;
         double distance=Math.hypot(toX-fromX,toY-fromY);
         if(!Double.isFinite(distance)||distance>10_000)return false;
@@ -222,20 +227,20 @@ public final class SceneCollision {
         int steps=Math.max(1,(int)Math.ceil(distance/.1));
         for(int i=0;i<=steps;i++){
             float t=(float)i/steps;
-            if(!clearAt(mask,local,fromX+(toX-fromX)*t,fromY+(toY-fromY)*t,rotation))return false;
+            if(!clearAt(mask,local,fromX+(toX-fromX)*t,fromY+(toY-fromY)*t,rotation,disabled))return false;
         }
         return true;
     }
 
-    private boolean clearAt(int mask,List<Geom> local,float x,float y,float rotation){
+    private boolean clearAt(int mask,List<Geom> local,float x,float y,float rotation,java.util.Set<Integer> disabled){
         if(local.isEmpty()||!Float.isFinite(x)||!Float.isFinite(y)||!Float.isFinite(rotation))return false;
         float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
-        try{for(Geom geom:local)if(collides(mask,transform(geom,x,y,c,s,1)))return false;}
+        try{for(Geom geom:local)if(collides(mask,transform(geom,x,y,c,s,1),disabled))return false;}
         catch(RuntimeException invalid){return false;}
         return true;
     }
 
-    private boolean collides(int mask,Geom moving) {
+    private boolean collides(int mask,Geom moving,java.util.Set<Integer> disabled) {
         Bounds b=bounds(moving);
         if(Math.abs((double)b.minX)>1_000_000||Math.abs((double)b.minY)>1_000_000
                 ||Math.abs((double)b.maxX)>1_000_000||Math.abs((double)b.maxY)>1_000_000)return true;
@@ -245,7 +250,7 @@ public final class SceneCollision {
             Integer flags=tiles.get(key(cx,cy));
             if(flags!=null&&(flags&mask)!=0&&intersects(moving,rectangle(cx,cy,cx+1,cy+1)))return true;
         }
-        for(Obstacle obstacle:grid.query(b))if((obstacle.mask&mask)!=0&&intersects(moving,obstacle.geometry))return true;
+        for(Obstacle obstacle:grid.query(b))if((obstacle.mask&mask)!=0&&!disabled.contains(obstacle.source)&&intersects(moving,obstacle.geometry))return true;
         return false;
     }
 
@@ -392,8 +397,8 @@ public final class SceneCollision {
         boolean intersects(Bounds other){return maxX>=other.minX&&minX<=other.maxX&&maxY>=other.minY&&minY<=other.maxY;}
         boolean near(float x,float y,float radius){return x+radius>=minX&&x-radius<=maxX&&y+radius>=minY&&y-radius<=maxY;}
     }
-    private record Obstacle(int mask,Geom geometry,Bounds bounds) {
-        private Obstacle(int mask,Geom geometry){this(mask,geometry,SceneCollision.bounds(geometry));}
+    private record Obstacle(int mask,int source,Geom geometry,Bounds bounds) {
+        private Obstacle(int mask,Geom geometry){this(mask,0,geometry,SceneCollision.bounds(geometry));}
     }
     /** Uniform 4-unit broadphase; a scene query touches only nearby placeables. */
     private static final class Grid {

@@ -283,7 +283,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             var resolved=variableTargets(target,time,source,activator);if(resolved.isEmpty())return false;
             var point=scriptSource(resolved.getFirst(),time);if(point==null)return false;
             // Never accept a checkpoint outside the authoritative floor/collision.
-            if(!terrain.walkable(point.x(),point.y())||!walkable(point.x(),point.y(),point.id())||staticCollision.penetration(pawnCollisionMask,point.x(),point.y(),ScenePortals.PAWN_RADIUS).present())return false;
+            if(!terrain.walkable(point.x(),point.y())||!walkable(point.x(),point.y(),point.id())||staticCollision.penetration(pawnCollisionMask,point.x(),point.y(),ScenePortals.PAWN_RADIUS,disabledCollisionSources()).present())return false;
             entranceOverride=point;return true;
         });
         actions.sourceDestruction((time,source)->{
@@ -625,7 +625,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         for(int step=0;step<steps;step++){
             float x=e.x+(float)Math.cos(e.direction)*distance/steps,y=e.y+(float)Math.sin(e.direction)*distance/steps;
             boolean clear=staticCollision.isEmpty()||e.shape==null?terrain.walkableSegment(e.x,e.y,x,y):
-                staticCollision.clearSegment(flightMask,e.shape,e.x,e.y,x,y,e.rotation);
+                staticCollision.clearSegment(flightMask,e.shape,e.x,e.y,x,y,e.rotation,disabledCollisionSources());
             if(!clear){collided=true;break;}
             e.x=x;e.y=y;
             // Execute the landing action at the colliding substep. Keeping the
@@ -691,7 +691,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private boolean oilSpawnClear(float x,float y,float radius,int source){
         var circle=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.SHAPE_CIRCLE,Map.of("radius",radius));
-        if(staticCollision.isEmpty()?!terrain.walkable(x,y):!staticCollision.floorSupported(x,y)||!staticCollision.clear(3,circle,x,y,0))return false;
+        if(staticCollision.isEmpty()?!terrain.walkable(x,y):!staticCollision.floorSupported(x,y)||!staticCollision.clear(3,circle,x,y,0,disabledCollisionSources()))return false;
         for(var e:entities.values())if(e.id!=source&&e.destroyed==Integer.MAX_VALUE&&e.carrier==0
                 &&(e.config.name().equals("Bomb/Monster/Oil Slick")||(e.collisionFlags&3)!=0)
                 &&e.spec.contains(e.x,e.y,e.rotation,x,y,radius))return false;
@@ -1063,7 +1063,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return sight(e,e.x,e.y,tx,ty);
     }
     private boolean sight(Entity e,float x,float y,float tx,float ty){
-        if(!staticCollision.clearSegment(129,POINT,x,y,tx,ty,0))return false;
+        if(!staticCollision.clearSegment(129,POINT,x,y,tx,ty,0,disabledCollisionSources()))return false;
         int steps=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/.1));
         for(var obstacle:entities.values())if(obstacle!=e&&obstacle.destroyed==Integer.MAX_VALUE&&obstacle.carrier==0
                 &&(obstacle.collisionFlags&129)!=0&&!(obstacle.kind.equals("Door")&&(obstacle.flags&6)==2))
@@ -1073,7 +1073,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private boolean entitySegment(Entity mover,float x,float y,float tx,float ty){
         int mask=mover.spec.integer("collision-mask",pawnCollisionMask);
         if(staticCollision.isEmpty()||mover.shape==null){if(!terrain.walkableSegment(x,y,tx,ty))return false;}
-        else if(!staticCollision.floorSupported(tx,ty)||!staticCollision.clearSegment(mask,mover.shape,x,y,tx,ty,mover.rotation))return false;
+        else if(!staticCollision.floorSupported(tx,ty)||!staticCollision.clearSegment(mask,mover.shape,x,y,tx,ty,mover.rotation,disabledCollisionSources()))return false;
         int steps=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/.1));
         for(var obstacle:entities.values())if(obstacle!=mover&&obstacle.destroyed==Integer.MAX_VALUE&&obstacle.carrier==0
                 &&(obstacle.collisionFlags&mask)!=0&&!(obstacle.kind.equals("Door")&&(obstacle.flags&6)==2))
@@ -1091,7 +1091,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         for(int i=0;i<steps;i++){
             float nx=mover.x+dx,ny=mover.y+dy;
             boolean clear=staticCollision.isEmpty()||mover.shape==null?terrain.walkableSegment(mover.x,mover.y,nx,ny):
-                staticCollision.floorSupported(nx,ny)&&staticCollision.clearSegment(mask,mover.shape,mover.x,mover.y,nx,ny,mover.rotation);
+                staticCollision.floorSupported(nx,ny)&&staticCollision.clearSegment(mask,mover.shape,mover.x,mover.y,nx,ny,mover.rotation,disabledCollisionSources());
             if(!clear)break;
             for(var obstacle:entities.values()){
                 if(obstacle==mover||obstacle.destroyed!=Integer.MAX_VALUE||obstacle.carrier!=0
@@ -1572,7 +1572,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private boolean damageClear(StarterCatalog.Model region,float x,float y,float tx,float ty,int owner,int target){
         int mask=region.arguments().get("collision-mask") instanceof Number n?n.intValue():0;
         if(mask==0)return true;
-        if(!staticCollision.clearSegment(mask,POINT,x,y,tx,ty,0))return false;
+        if(!staticCollision.clearSegment(mask,POINT,x,y,tx,ty,0,disabledCollisionSources()))return false;
         int steps=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/.1));
         for(var obstacle:entities.values()){
             if(obstacle.id==owner||obstacle.id==target||obstacle.destroyed!=Integer.MAX_VALUE||obstacle.carrier!=0

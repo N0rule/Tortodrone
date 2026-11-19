@@ -305,6 +305,7 @@ public final class SceneSimulation {
             synchronized(SceneSimulation.this){check();
                 boolean loading=movement.activity()==TownMovement.LOADING;
                 movement.disabledCollision(entities.disabledCollisionSources());
+                weapons.disabledSources(entities.disabledCollisionSources());
                 boolean accepted=entered&&portal==null&&movement.accept(stamp,facing,heading,flags,actionChanged,sceneTime,now);
                 // Native DungeoneerLogic.finishedLoading arms INITIAL_INVULNERABILITY when the
                 // client's first input ends the loading pose; town knights receive none.

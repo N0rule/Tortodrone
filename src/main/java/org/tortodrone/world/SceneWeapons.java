@@ -78,9 +78,11 @@ public final class SceneWeapons {
     }
     private final CollisionMap terrain;
     private SceneCollision staticCollision=SceneCollision.empty();
+    private java.util.Set<Integer> disabledSources=java.util.Set.of();
     public void staticCollision(SceneCollision value){staticCollision=Objects.requireNonNull(value);}
+    public void disabledSources(java.util.Set<Integer> value){disabledSources=java.util.Set.copyOf(value);}
     private boolean clear(FireCatalog.ActorSpec spec,float fromX,float fromY,float toX,float toY,float rotation){
-        return staticCollision.isEmpty()||spec.collisionShape()==null?terrain.walkableSegment(fromX,fromY,toX,toY):staticCollision.clearSegment(spec.collisionMask(),spec.collisionShape(),fromX,fromY,toX,toY,rotation);
+        return staticCollision.isEmpty()||spec.collisionShape()==null?terrain.walkableSegment(fromX,fromY,toX,toY):staticCollision.clearSegment(spec.collisionMask(),spec.collisionShape(),fromX,fromY,toX,toY,rotation,disabledSources);
     }
     private final Map<Integer,List<Run>> runs=new HashMap<>();
     private final Map<Integer,Shot> shots=new LinkedHashMap<>();
