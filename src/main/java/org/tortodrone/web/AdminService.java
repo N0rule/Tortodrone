@@ -117,7 +117,7 @@ public final class AdminService implements AutoCloseable {
             for(var row:rows){
                 var map=(Map<String,Object>)row;
                 gifts.add(new MailCampaignStore.Gift((String)map.get("config"),((Number)map.get("count")).intValue(),
-                    Boolean.TRUE.equals(map.get("bound")),((Number)map.getOrDefault("expireDays",0)).intValue()));
+                    Boolean.TRUE.equals(map.get("bound"))));
             }
             return gifts;
         }catch(RuntimeException bad){throw new IOException("Invalid gift list",bad);}

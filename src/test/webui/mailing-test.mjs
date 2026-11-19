@@ -10,15 +10,15 @@ test('mailing status follows the delivery window and cancellation', () => {
     assert.equal(mailingStatus({ enabled: false, starts: now - 100, ends: now + 100 }, now), 'Cancelled');
 });
 
-test('mailing item serialization keeps counts, bound and expiry without mutating the draft', () => {
+test('mailing item serialization keeps counts and bound without mutating the draft', () => {
     const gifts = [
-        { config: 'Material/Gel Drop', count: 2, bound: true, expireDays: 7 },
+        { config: 'Material/Gel Drop', count: 2, bound: true },
         { config: 'Weapon/Sword/Calibur', count: 1, bound: false }
     ];
     const before = structuredClone(gifts);
     assert.equal(
         mailingItems(gifts),
-        '[{"config":"Material/Gel Drop","count":2,"bound":true,"expireDays":7},{"config":"Weapon/Sword/Calibur","count":1,"bound":false,"expireDays":0}]'
+        '[{"config":"Material/Gel Drop","count":2,"bound":true},{"config":"Weapon/Sword/Calibur","count":1,"bound":false}]'
     );
     assert.deepEqual(gifts, before, 'saving must not rewrite the open draft');
 });

@@ -25,7 +25,7 @@ public final class MailCampaignTest {
             var campaigns = house.campaigns();
             long now = System.currentTimeMillis();
 
-            var gift = new MailCampaignStore.Gift("Material/Gel Drop", 2, false, 7);
+            var gift = new MailCampaignStore.Gift("Material/Gel Drop", 2, false);
             var saved = campaigns.save(0, 0, now - 60_000, now + 86_400_000L, 6, null,
                 "Supply drop", "Two gels for the road.", 25, 5, List.of(gift));
             check(saved.id() > 0 && saved.enabled() && saved.delivered() == 0, "a campaign is saved with no deliveries");
@@ -36,8 +36,7 @@ public final class MailCampaignTest {
             check(letter.subject().equals("%uplink:~Supply drop") && letter.body().equals("%uplink:~Two gels for the road."), "staff text is stored as a tainted literal inside the uplink bundle");
             check(letter.sender().equals(" 6") && letter.nativeType() == 3, "system sender and SYSTEM mail type");
             check(letter.crowns() == 25 && letter.energy() == 5 && letter.items().size() == 1 && letter.items().getFirst().count() == 2, "crowns, energy and the gift stack travel with the letter");
-            long expiry = letter.items().getFirst().expiresAt() - now;
-            check(expiry > 6L * 86_400_000L && expiry < 8L * 86_400_000L, "gift expiry is relative to delivery, not campaign creation");
+            check(letter.items().getFirst().expiresAt() == null, "mail gifts do not expire in the inbox");
 
             check(!campaigns.deliver(alice) && inbox(db, alice).stream().filter(m -> m.subject().endsWith("Supply drop")).count() == 1,
                 "a second visit never duplicates the gift");
@@ -52,14 +51,14 @@ public final class MailCampaignTest {
             var claimed = db.worldProfile(aliceAccount, aliceKnight.id(), 1);
             check(claimed.crowns() >= 25 && claimed.energy() >= 5, "claiming credits the campaign crowns and energy");
             var gel = claimed.items().stream().filter(i -> i.config().equals("Material/Gel Drop")).findFirst().orElseThrow();
-            check(gel.count() == 2 && gel.expiresAt() != null && gel.expiresAt() > now + 6L * 86_400_000L, "claiming grants the timed gift stack");
+            check(gel.count() == 2 && gel.expiresAt() == null, "claiming a permanent gift leaves it permanent");
 
             long revision = campaigns.list().getFirst().updated();
             refused(() -> campaigns.save(saved.id(), revision - 1, now, now + 60_000, 6, null, "stale", "stale", 0, 0, List.of()));
             refused(() -> campaigns.save(0, 0, now, now, 6, null, "empty window", "body", 0, 0, List.of()));
             refused(() -> campaigns.save(0, 0, now, now + 60_000, 6, null, "x".repeat(51), "body", 0, 0, List.of()));
-            refused(() -> campaigns.save(0, 0, now, now + 60_000, 6, null, "bad gift", "body", 0, 0, List.of(new MailCampaignStore.Gift("Missing/Item", 1, false, 0))));
-            refused(() -> campaigns.save(0, 0, now, now + 60_000, 6, null, "too much", "body", 0, 0, List.of(new MailCampaignStore.Gift("Material/Gel Drop", 15, false, 0))));
+            refused(() -> campaigns.save(0, 0, now, now + 60_000, 6, null, "bad gift", "body", 0, 0, List.of(new MailCampaignStore.Gift("Missing/Item", 1, false))));
+            refused(() -> campaigns.save(0, 0, now, now + 60_000, 6, null, "too much", "body", 0, 0, List.of(new MailCampaignStore.Gift("Material/Gel Drop", 15, false))));
             check(campaigns.list().size() == 1, "refused saves leave the campaign list unchanged");
 
             var future = campaigns.save(0, 0, now + 60_000, now + 120_000, 6, null, "Later gift", "Not yet.", 0, 0, List.of());
@@ -100,12 +99,24 @@ public final class MailCampaignTest {
             check(!campaigns.deliverWelcome(offWorld, offKnight.createdAt()), "a disabled welcome never delivers");
 
             long direct = campaigns.sendTo(midWorld, 4, null, "Direct gift", "For you.", 3, 1,
-                List.of(new MailCampaignStore.Gift("Material/Gel Drop", 1, false, 0)));
+                List.of(new MailCampaignStore.Gift("Material/Gel Drop", 1, false)));
             check(direct > 0, "direct mail returns the inbox row id");
             var directLetter = inbox(db, midWorld).stream().filter(m -> m.subject().endsWith("Direct gift")).findFirst().orElseThrow();
             check(directLetter.crowns() == 3 && directLetter.energy() == 1 && directLetter.items().size() == 1,
                 "direct mail carries crowns, energy and gifts while the knight is offline");
             refused(() -> campaigns.sendTo(999_999, 6, null, "Nowhere", "Nobody.", 0, 0, List.of()));
+            int timedAccount = db.create("Timed", protection, false);
+            var timedKnight = new CharacterStore(db, timedAccount, "Timed", items).create(knight("Timed-Knight"));
+            int timedWorld = db.worldProfile(timedAccount, timedKnight.id(), 1).worldId();
+            campaigns.sendTo(timedWorld, 6, null, "Timed gift", "A temporary disguise.", 0, 0,
+                List.of(new MailCampaignStore.Gift("Costume/Helm/Trojan Disguise", 1, false)));
+            var timedLetter = inbox(db, timedWorld).stream().filter(m -> m.subject().endsWith("Timed gift")).findFirst().orElseThrow();
+            check(timedLetter.items().getFirst().expiresAt() == null, "a temporary item does not expire while it sits in mail");
+            house.mail(timedAccount, timedKnight.id(), 1, 2, List.of(timedLetter.id()));
+            var timed = db.worldProfile(timedAccount, timedKnight.id(), 1).items().stream()
+                .filter(i -> i.config().equals("Costume/Helm/Trojan Disguise")).findFirst().orElseThrow();
+            check(timed.expiresAt() != null && timed.expiresAt() > now + 29L * 86_400_000L,
+                "claiming applies the stock temporary-item expiry");
             var custom = campaigns.save(0, 0, now - 1000, now + 3_600_000, 4, "Server Team",
                 "Custom sender", "Sent by the staff team.", 0, 0, List.of());
             check(custom.senderLabel().equals("Server Team"), "a custom sender label is stored");
@@ -114,7 +125,7 @@ public final class MailCampaignTest {
             check(customLetter.nativeType() == 0 && customLetter.sender().equals("Server Team") && customLetter.subject().equals("Custom sender"), "custom sender mail uses ANNOUNCE plain text and the literal name");
             refused(() -> campaigns.save(0, 0, now, now + 60_000, 4, " Leading", "Invalid sender", "Body", 0, 0, List.of()));
             var giftWelcome = campaigns.saveWelcome(true, 5, "Aurora", "Welcome gift", "Take these.",
-                10, 5, List.of(new MailCampaignStore.Gift("Material/Gel Drop", 2, false, 7)));
+                10, 5, List.of(new MailCampaignStore.Gift("Material/Gel Drop", 2, false)));
             check(giftWelcome.crowns() == 10 && giftWelcome.gifts().size() == 1, "welcome mail stores rewards and gifts");
             int giftAccount = db.create("Gifted", protection, false);
             var giftKnight = new CharacterStore(db, giftAccount, "Gifted", items).create(knight("Gifted-Knight"));
@@ -136,7 +147,7 @@ public final class MailCampaignTest {
             int postWorld = upgraded.worldProfile(postAccount, postKnight.id(), 1).worldId();
             check(upgradedHouse.campaigns().deliver(postWorld) && inbox(upgraded, postWorld).stream().anyMatch(m -> m.subject().endsWith("Supply drop")), "a freshly upgraded database still delivers active campaigns");
             check(inbox(upgraded, midWorld).stream().anyMatch(m -> m.subject().endsWith("Direct gift")), "direct offline mail survives the explicit upgrade");
-            System.out.println("PASS: admin mail campaigns store literal text, gifts, crowns and energy; deliver once per knight including late knights; honour windows and cancellation; send direct offline mail; deliver an optional welcome once; survive schema 16 to 17 and claim native mail");
+            System.out.println("PASS: admin mail campaigns store literal text, gifts, crowns and energy; deliver once per knight including late knights; honour windows and cancellation; send direct offline mail with no inbox expiry; apply stock item expiry on claim; deliver an optional welcome once; survive schema 16 to 17 and claim native mail");
         } finally {
             try (var paths = Files.walk(home)) { for (var path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path); }
         }

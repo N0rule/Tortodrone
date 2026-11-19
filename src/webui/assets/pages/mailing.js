@@ -42,8 +42,7 @@ export function mailingItems(gifts) {
         gifts.map((gift) => ({
             config: gift.config,
             count: gift.count,
-            bound: !!gift.bound,
-            expireDays: gift.expireDays || 0
+            bound: !!gift.bound
         }))
     );
 }
@@ -434,27 +433,17 @@ export async function mount(ctx) {
                         max: 999,
                         step: 1
                     });
-                    const expiry = input('Expires after (days)', gift.expireDays, 'number', {
-                        min: 0,
-                        max: 3650,
-                        step: 1
-                    });
                     const bound = input('Bound on delivery', gift.bound, 'checkbox');
                     quantity.oninput = () => {
                         gift.count = Math.max(1, Math.min(999, Number(quantity.value) || 1));
                         updateUnits();
                         refreshPreview();
                     };
-                    expiry.oninput = () => {
-                        gift.expireDays = Math.max(0, Math.min(3650, Number(expiry.value) || 0));
-                        updateUnits();
-                    };
                     bound.onchange = () => (gift.bound = bound.checked);
                     const row = el('div', null, 'mail-gift');
                     row.append(
                         itemLine(definitions.get(gift.config), { config: gift.config }),
                         label('Quantity', quantity),
-                        label('Expires (days)', expiry),
                         label('Bound', bound),
                         button(
                             'Remove',
@@ -483,15 +472,14 @@ export async function mount(ctx) {
             (definition) => {
                 definitions.set(definition.config, definition);
                 const existing = draft.gifts.find(
-                    (gift) => gift.config === definition.config && !gift.bound && !gift.expireDays
+                    (gift) => gift.config === definition.config && !gift.bound
                 );
                 if (existing) existing.count = Math.min(999, existing.count + 1);
                 else
                     draft.gifts.push({
                         config: definition.config,
                         count: 1,
-                        bound: false,
-                        expireDays: 0
+                        bound: false
                     });
                 renderGifts();
                 refreshPreview();
@@ -517,7 +505,7 @@ export async function mount(ctx) {
             el('div', null, 'form-grid'),
             el(
                 'small',
-                'Up to 14 item units. Expiry is counted from delivery; 0 keeps the item permanent.',
+                'Up to 14 item units. Gifts stay in the inbox until claimed; stock item expiry applies after claiming.',
                 'muted'
             ),
             unitLabel,

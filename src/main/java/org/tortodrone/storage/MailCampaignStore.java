@@ -24,8 +24,8 @@ public final class MailCampaignStore {
     /** SystemSender ordinals that are meaningful for staff mail. */
     public static final List<Integer> SENDERS = List.of(4, 5, 6);
 
-    /** One gift template; the item is materialised per delivery so expiry is relative to it. */
-    public record Gift(String config, int count, boolean bound, int expireDays) { }
+    /** One gift template; the item is materialised per delivery and never expires in the inbox. */
+    public record Gift(String config, int count, boolean bound) { }
 
     public record Campaign(long id, long created, long updated, long starts, long ends,
             boolean enabled, int sender, String senderLabel, String subject, String body, int crowns,
@@ -343,11 +343,9 @@ public final class MailCampaignStore {
         for (var gift : gifts) {
             var entry = items.find(gift.config());
             if (entry == null || !entry.grantable()) continue;
-            var item = new WorldProfile.Item(0, entry.slot(), entry.config(), null, 0, null,
+            result.add(new WorldProfile.Item(0, entry.slot(), entry.config(), null, 0, null,
                 gift.bound(), entry.bindOnEquip(), false, gift.count(), entry.permanent(), 0, 0f,
-                List.of(), List.of());
-            if (gift.expireDays() > 0) item = item.withExpiration(now + gift.expireDays() * 86_400_000L);
-            result.add(item);
+                List.of(), List.of()));
         }
         return result;
     }
@@ -413,15 +411,14 @@ public final class MailCampaignStore {
         for (var gift : gifts) {
             if (gift == null || gift.config() == null || gift.config().isBlank()) throw new IOException("Choose a gift item");
             if (gift.count() < 1 || gift.count() > 999) throw new IOException("Gift quantities must be between 1 and 999");
-            if (gift.expireDays() < 0 || gift.expireDays() > 3650) throw new IOException("Gift expiry must be between 0 and 3650 days");
             var entry = items.find(gift.config());
             if (entry == null || !entry.grantable()) throw new IOException("Gift is not grantable: " + gift.config());
             units += gift.count();
             if (units > MAX_UNITS) throw new IOException("A mailing can carry at most " + MAX_UNITS + " item units");
-            String key = gift.config() + "\u0000" + gift.bound() + "\u0000" + gift.expireDays();
+            String key = gift.config() + "\u0000" + gift.bound();
             var prior = merged.get(key);
             merged.put(key, prior == null ? gift
-                : new Gift(prior.config(), prior.count() + gift.count(), prior.bound(), prior.expireDays()));
+                : new Gift(prior.config(), prior.count() + gift.count(), prior.bound()));
         }
         return List.copyOf(merged.values());
     }
@@ -429,8 +426,7 @@ public final class MailCampaignStore {
     private static String encodeGifts(List<Gift> gifts) throws IOException {
         var rows = new ArrayList<Map<String, Object>>(gifts.size());
         for (var gift : gifts) {
-            rows.add(Map.of("config", gift.config(), "count", gift.count(), "bound", gift.bound(),
-                "expireDays", gift.expireDays()));
+            rows.add(Map.of("config", gift.config(), "count", gift.count(), "bound", gift.bound()));
         }
         return Json.stringify(rows);
     }
@@ -444,7 +440,7 @@ public final class MailCampaignStore {
             for (var row : rows) {
                 var map = (Map<String, Object>) row;
                 gifts.add(new Gift((String) map.get("config"), ((Number) map.get("count")).intValue(),
-                    Boolean.TRUE.equals(map.get("bound")), ((Number) map.get("expireDays")).intValue()));
+                    Boolean.TRUE.equals(map.get("bound"))));
             }
             return List.copyOf(gifts);
         } catch (RuntimeException bad) {
