@@ -65,7 +65,7 @@ val serverJar = tasks.named<ShadowJar>("shadowJar") {
 val buildTools = sourceSets.create("buildTools") {
     java.setSrcDirs(listOf("scripts"))
     java.include("BuildTools.java", "BuildToolsTest.java", "StockTools.java", "ProcessCleanupTest.java",
-        "compat/CheckClientWorld.java", "compat/CheckCombatRendering.java")
+        "CollisionPackExport.java", "MapCompiler.java", "compat/CheckClientWorld.java", "compat/CheckCombatRendering.java")
     resources.setSrcDirs(emptyList<String>())
 }
 buildTools.compileClasspath += sourceSets.main.get().output + configurations.runtimeClasspath.get()
@@ -96,6 +96,34 @@ val validateContent = tasks.register<JavaExec>("validateContent") {
 }
 val prepareContent = preparation("prepareContent", "content").apply { configure { dependsOn(validateContent) } }
 preparation("prepareMaps", "maps")
+// Regenerate exact collision.bin from the pinned native static collision of every map that has it.
+val compileMapsFromSource = tasks.register<JavaExec>("compileMapsFromSource") {
+    group = "build setup"
+    description = "Compile map-sources/<name>/scene.dat + map.yml into the deployment; development only."
+    dependsOn(prepareContent, serverJar)
+    classpath = buildTools.runtimeClasspath
+    javaLauncher.set(launcher25)
+    mainClass.set("MapCompiler")
+    workingDir = projectDir
+    val gameDirectory = providers.gradleProperty("gameDir").getOrElse("")
+    val replace = providers.gradleProperty("replaceMaps").isPresent
+    doFirst {
+        if (gameDirectory.isBlank()) throw GradleException("Specify -PgameDir (a read-only Spiral Knights install)")
+    }
+    args = buildList {
+        add(gameDirectory); add("map-sources"); add(publicOutput.asFile.absolutePath)
+        if (replace) add("--replace")
+    }
+}
+val generateCollision = tasks.register<JavaExec>("generateCollision") {
+    group = "build setup"
+    description = "Compile exact collision.bin from native static-collision.properties; idempotent."
+    classpath = buildTools.runtimeClasspath
+    javaLauncher.set(launcher25)
+    mainClass.set("CollisionPackExport")
+    workingDir = projectDir
+    args("content/maps")
+}
 // Rebuild modern packs only from local hash-verified captured binaries. Publication is
 // explicit; neither a normal build nor a failed export may restore historical scenes.
 val prepareHaven = tasks.register<Exec>("prepareHaven") {

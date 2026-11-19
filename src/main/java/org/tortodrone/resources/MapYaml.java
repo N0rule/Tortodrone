@@ -50,6 +50,8 @@ public final class MapYaml {
         p.setProperty("instances",String.valueOf(integer(map.getOrDefault("instances",1),"instances")));
         p.setProperty("scene-sha256",nativeMetadata.getProperty("sha256.scene.dat"));p.setProperty("collision-sha256",nativeMetadata.getProperty("sha256.walkability.gz"));
         if(nativeMetadata.containsKey("sha256.static-collision.properties"))p.setProperty("static-collision-sha256",nativeMetadata.getProperty("sha256.static-collision.properties"));
+        if(nativeMetadata.containsKey("sha256.collision.bin"))p.setProperty("exact-collision-sha256",nativeMetadata.getProperty("sha256.collision.bin"));
+        else if(nativeMetadata.containsKey("sha256.static-collision.properties"))throw new IOException(nativeDir+": static collision exists without generated collision.bin; run generateCollision");
         String spawn=text(map.get("defaultSpawn"),"defaultSpawn");
         var portals=portals(folder,bindings,p.getProperty("scene-sha256"),spawn);
         String prefix="entrance."+spawn+".";

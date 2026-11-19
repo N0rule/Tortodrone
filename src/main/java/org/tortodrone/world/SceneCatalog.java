@@ -8,13 +8,16 @@ import java.util.*;
 /** External immutable map packs. Templates are distinct from runtime place objects. */
 public final class SceneCatalog {
     public record MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,
-            float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals,SceneContent content,SceneCollision staticCollision) {
+            float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals,SceneContent content,SceneCollision staticCollision,MapCollision exactCollision) {
+        public MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals,SceneContent content,SceneCollision staticCollision){
+            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,content,staticCollision,null);
+        }
         public MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals,SceneContent content){
-            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,content,SceneCollision.empty());
+            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,content,SceneCollision.empty(),null);
         }
         public MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,
                 float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals) {
-            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,SceneContent.empty());
+            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,SceneContent.empty(),SceneCollision.empty(),null);
         }
         public MapScene { layout=layout.clone(); }
         @Override public byte[] layout(){return layout.clone();}
@@ -98,9 +101,19 @@ public final class SceneCatalog {
             var collision=CollisionMap.read(folder.resolve("walkability.gz"));
             float x=coordinate(p,"spawn-x"),y=coordinate(p,"spawn-y");
             if(!collision.walkable(x,y))throw new IOException("Map spawn is not walkable: "+id);
+            MapCollision exact=null;
+            if(Files.exists(folder.resolve("collision.bin"))){
+                String expected=required(p,"collision-sha256");
+                String actual=org.tortodrone.resources.ContentFiles.digest(folder.resolve("collision.bin"));
+                if(!expected.equals(actual))throw new IOException("Collision checksum mismatch: "+id);
+                exact=MapCollision.read(folder.resolve("collision.bin"));
+                if(!Objects.equals(exact.layoutHash(),required(p,"scene-sha256")))throw new IOException("Collision layout hash mismatch: "+id);
+                int mask=Math.round(SceneContent.load(folder,required(p,"scene-sha256")).stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
+                if(!exact.clear(mask,x,y,ScenePortals.PAWN_RADIUS))throw new IOException("Map spawn is not clear in exact collision: "+id);
+            }
             var scene=new MapScene(id,zone,required(p,"zone-name"),required(p,"name"),required(p,"image"),kind,
                 integer(p,"version"),x,y,rotation(p),number(p,"instances",1,16),collision,layout,
-                ScenePortals.load(folder,required(p,"scene-sha256"),collision),SceneContent.load(folder,required(p,"scene-sha256")),SceneCollision.load(folder,required(p,"scene-sha256")));
+                ScenePortals.load(folder,required(p,"scene-sha256"),collision),SceneContent.load(folder,required(p,"scene-sha256")),SceneCollision.load(folder,required(p,"scene-sha256")),exact);
             if(scenes.putIfAbsent(id,scene)!=null)throw new IOException("Duplicate scene ID");
         }
         return scenes;
