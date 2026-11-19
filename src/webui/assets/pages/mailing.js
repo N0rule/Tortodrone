@@ -263,8 +263,7 @@ export async function mount(ctx) {
             counts[mailingStatus(campaign, data.now)]++;
             delivered += campaign.delivered;
         }
-        summary.replaceChildren(
-            panel(
+        const summaryPanel = panel(
                 'Delivery status',
                 guidance,
                 toolbar(
@@ -290,8 +289,9 @@ export async function mount(ctx) {
                               'empty'
                           )
                       ])
-            )
-        );
+            );
+        summaryPanel.classList.add('stack');
+        summary.replaceChildren(summaryPanel);
     }
 
     function renderWelcome() {
@@ -322,7 +322,9 @@ export async function mount(ctx) {
         content.push(
             toolbar(button('Edit welcome mail', () => compose('welcome', welcome), 'secondary'))
         );
-        welcomeHost.replaceChildren(panel('New knight welcome mail', ...content));
+        const card = panel('New knight welcome mail', ...content);
+        card.classList.add('stack');
+        welcomeHost.replaceChildren(card);
     }
 
     async function compose(mode, record = null) {
@@ -395,7 +397,7 @@ export async function mount(ctx) {
             fill();
             node.append(recipientPanel);
         }
-        if (mode === 'welcome') header.append(label('Enabled', enabled));
+        const enabledRow = mode === 'welcome' ? toolbar(label('Enabled', enabled)) : null;
         if (mode === 'campaign') header.append(label('Starts', starts), label('Ends', ends));
         header.append(
             label('From', sender),
@@ -509,7 +511,7 @@ export async function mount(ctx) {
             )
         );
         const split = messagePanel.querySelector('.mail-compose-split');
-        split.append(label('Body', body), previewHost);
+        split.append(label('Body', body), label('Preview', previewHost));
         const attachments = panel(
             'Attachments',
             el('div', null, 'form-grid'),
@@ -524,6 +526,9 @@ export async function mount(ctx) {
         );
         const extras = attachments.querySelector('.form-grid');
         extras.append(label('Crowns', crowns), label('Energy', energy));
+        messagePanel.classList.add('stack');
+        attachments.classList.add('stack');
+        if (enabledRow) node.append(enabledRow);
         node.append(header, messagePanel, attachments);
 
         const initial = JSON.stringify(snapshot());
