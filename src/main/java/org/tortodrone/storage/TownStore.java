@@ -30,9 +30,19 @@ public final class TownStore {
             s.execute("CREATE TABLE town_equipped(world_id INTEGER PRIMARY KEY REFERENCES world_characters(world_id) ON DELETE CASCADE,sprite INTEGER NOT NULL DEFAULT 0)");
             AuctionSchema.create(c);
             MailCampaignStore.initialize(c);
-            s.execute("CREATE TABLE town_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,sent INTEGER NOT NULL,subject TEXT NOT NULL,body TEXT NOT NULL,crowns INTEGER NOT NULL DEFAULT 0,item TEXT,claimed INTEGER NOT NULL DEFAULT 0,is_read INTEGER NOT NULL DEFAULT 0,auction INTEGER REFERENCES town_auctions(id),sender INTEGER,sender_label TEXT,energy INTEGER NOT NULL DEFAULT 0 CHECK(energy BETWEEN 0 AND 2147483647),attachments TEXT,mail_type INTEGER NOT NULL DEFAULT 3 CHECK(mail_type BETWEEN 0 AND 4))");
+            s.execute("CREATE TABLE town_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,sent INTEGER NOT NULL,subject TEXT NOT NULL,body TEXT NOT NULL,crowns INTEGER NOT NULL DEFAULT 0,item TEXT,claimed INTEGER NOT NULL DEFAULT 0,is_read INTEGER NOT NULL DEFAULT 0,auction INTEGER REFERENCES town_auctions(id),sender INTEGER,sender_label TEXT,energy INTEGER NOT NULL DEFAULT 0 CHECK(energy BETWEEN 0 AND 2147483647),attachments TEXT,mail_type INTEGER NOT NULL DEFAULT 3 CHECK(mail_type BETWEEN 0 AND 4),guild_invite_id INTEGER NOT NULL DEFAULT 0,guild_invite_name TEXT)");
             s.execute("CREATE TABLE town_auction_bids(auction INTEGER NOT NULL REFERENCES town_auctions(id),world_id INTEGER NOT NULL REFERENCES world_characters(world_id),watching INTEGER NOT NULL DEFAULT 0,has_bid INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(auction,world_id))");
             knightRenameClock(c);
+            guildMailColumns(c);
+        }
+    }
+    /** Schema 18 adds the guild invitation carrier; idempotent for fresh and upgraded databases. */
+    static void guildMailColumns(Connection c)throws SQLException{
+        for(String[] column:new String[][]{{"guild_invite_id","INTEGER NOT NULL DEFAULT 0"},{"guild_invite_name","TEXT"}}){
+            try(var check=c.createStatement();var r=check.executeQuery("SELECT 1 FROM pragma_table_info('town_mail') WHERE name='"+column[0]+"'")){
+                if(r.next())continue;
+            }
+            try(var s=c.createStatement()){s.execute("ALTER TABLE town_mail ADD COLUMN "+column[0]+" "+column[1]);}
         }
     }
     /** Stored thirty-day rename clock; 0 means the knight has never been renamed. Idempotent:

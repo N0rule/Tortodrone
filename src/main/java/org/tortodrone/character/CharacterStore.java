@@ -21,6 +21,7 @@ public final class CharacterStore {
     public org.tortodrone.storage.StyleStore styles()throws IOException{if(database==null)throw new IOException("Styles require SQLite storage");return new org.tortodrone.storage.StyleStore(database,catalog);}
     public org.tortodrone.storage.AuctionHouse auction(org.tortodrone.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Auctions require SQLite storage");return new org.tortodrone.storage.AuctionHouse(database,catalog,rules);}
     public org.tortodrone.storage.TownStore town(org.tortodrone.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Town operations require SQLite storage");return new org.tortodrone.storage.TownStore(database,catalog,rules);}
+    public org.tortodrone.storage.GuildStore guilds()throws IOException{if(database==null)throw new IOException("Guilds require SQLite storage");return new org.tortodrone.storage.GuildStore(database);}
     public org.tortodrone.storage.BoxOpeningService boxes(org.tortodrone.loot.BoxCatalog boxes)throws IOException {
         if(database==null)throw new IOException("Box opening requires SQLite storage");
         return new org.tortodrone.storage.BoxOpeningService(database,catalog,boxes);

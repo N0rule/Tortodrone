@@ -22,7 +22,8 @@ public final class SessionServiceTableTest {
             Map.entry(SessionCodec.BILLING_SERVICE, "com.threerings.projectx.billing.data.BillingMarshaller"),
             Map.entry(SessionCodec.EVENT_LOG_SERVICE, "com.threerings.projectx.data.EventLogMarshaller"),
             Map.entry(SessionCodec.LOVE_SERVICE, "com.threerings.projectx.love.data.LoveMarshaller"),
-            Map.entry(SessionCodec.STEAM_SERVICE, "com.threerings.projectx.partner.data.SteamMarshaller"));
+            Map.entry(SessionCodec.STEAM_SERVICE, "com.threerings.projectx.partner.data.SteamMarshaller"),
+            Map.entry(SessionCodec.GUILD_SERVICE, "com.threerings.projectx.guild.data.GuildMarshaller"));
         for (var service : expected.entrySet()) {
             check(service.getKey() > 0 && service.getKey() <= SessionCodec.SERVICES.size(),
                 "service handle is within the bootstrap table: " + service.getValue());
@@ -31,7 +32,7 @@ public final class SessionServiceTableTest {
         }
         check(new HashSet<>(SessionCodec.SERVICES).size() == SessionCodec.SERVICES.size(),
             "bootstrap service table has distinct marshallers");
-        check(SessionCodec.SERVICES.size() == 20, "current bootstrap service count");
+        check(SessionCodec.SERVICES.size() == 21, "current bootstrap service count");
         System.out.println("PASS: bootstrap service handles derive from one ordered table");
     }
 }

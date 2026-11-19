@@ -30,16 +30,23 @@ public final class AuctionState {
      */
     public record Mail(long id,int world,long sent,String subject,String body,int crowns,int energy,
             List<WorldProfile.Item> items,boolean claimed,boolean read,int friendWorld,String friendName,
-            int senderRef,int type,String senderName) {
+            int senderRef,int type,String senderName,long guildInviteId,String guildInviteName) {
         public Mail {
             items=List.copyOf(items);
             if(type<0||type>4)throw new IllegalArgumentException("Invalid mail type");
+        }
+        public Mail(long id,int world,long sent,String subject,String body,int crowns,int energy,
+                List<WorldProfile.Item> items,boolean claimed,boolean read,int friendWorld,String friendName,
+                int senderRef,int type,String senderName) {
+            this(id,world,sent,subject,body,crowns,energy,items,claimed,read,friendWorld,friendName,
+                senderRef,type,senderName,0,null);
         }
         public Mail(long id,int world,long sent,String subject,String body,int crowns,WorldProfile.Item item,
                 boolean claimed,boolean read,int friendWorld,String friendName) {
             this(id,world,sent,subject,body,crowns,0,item==null?List.of():List.of(item),claimed,read,friendWorld,friendName,0,3,null);
         }
         public boolean friendRequest(){return friendWorld>0;}
+        public boolean guildInvite(){return guildInviteId>0;}
         /** First attachment, kept for auction and legacy callers. Player mail can carry more. */
         public WorldProfile.Item item(){return items.isEmpty()?null:items.getFirst();}
         public String sender(){
@@ -50,7 +57,7 @@ public final class AuctionState {
             if(senderRef<0)return " "+(-senderRef);
             return " 7";
         }
-        /** Friend requests keep their own wire type; all other mail carries the stored kind. */
-        public int nativeType(){return friendRequest()?1:type;}
+        /** Friend requests and guild invitations keep their own wire type. */
+        public int nativeType(){return friendRequest()?1:guildInvite()?2:type;}
     }
 }

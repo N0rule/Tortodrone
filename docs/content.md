@@ -883,7 +883,7 @@ stock client. No proprietary assets/captures belong in Git.
 ## Upgrading
 
 The current database schema is **17**. A database on known predecessor schemas
-9–16 requires an **explicit offline upgrade candidate**; normal startup refuses
+9–17 requires an **explicit offline upgrade candidate**; normal startup refuses
 those versions and all unknown versions, leaving saved state unchanged. Never
 reset the database or regenerate keys.
 
@@ -1224,7 +1224,7 @@ before publishing the immutable content snapshot.
 
 ### Transactions, persistence and verification
 
-The opening service uses the existing schema-17 SQLite database with **no schema
+The opening service uses the existing schema-18 SQLite database with **no schema
 change or new inventory**. One `BEGIN IMMEDIATE` transaction rechecks account,
 knight, authentication revision and expected inventory revision, resolves the
 owned box and chosen key, selects and validates rewards, projects capacity after

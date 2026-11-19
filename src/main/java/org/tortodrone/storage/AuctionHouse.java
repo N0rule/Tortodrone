@@ -232,10 +232,16 @@ public final class AuctionHouse {
                 }
             }TownStore.touch(c,p.worldId());return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),result);});
     }
-    private static boolean hasAttachment(AuctionState.Mail mail){return !mail.items().isEmpty()||mail.crowns()>0||mail.energy()>0;}
+    private static boolean hasAttachment(AuctionState.Mail mail){return mail.guildInvite()||!mail.items().isEmpty()||mail.crowns()>0||mail.energy()>0;}
     private void claim(Connection c,WorldProfile p,AuctionState.Mail mail)throws SQLException,IOException {
         if(mail.claimed())throw new IOException("%uplink:b.accepted");
         if(mail.friendRequest())FriendStore.accept(c,p.worldId(),mail);
+        if(mail.guildInvite()){
+            String name;try(var s=c.prepareStatement("SELECT k.name FROM world_characters w JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id WHERE w.world_id=?")){
+                s.setInt(1,p.worldId());try(var r=s.executeQuery()){if(!r.next())throw new IOException("m.internal_error");name=r.getString(1);}
+            }
+            GuildStore.acceptInvite(c,p.worldId(),mail.guildInviteId(),mail.guildInviteName(),name);
+        }
         TownStore.credit(c,p.worldId(),mail.crowns(),mail.energy());
         long now=System.currentTimeMillis();
         for(var item:mail.items())if(item!=null&&!item.expired(now))grant(c,p,item);
@@ -309,7 +315,8 @@ public final class AuctionHouse {
                 held.addAll(decodeItems(r.getString("attachments")));
                 messages.add(new AuctionState.Mail(r.getLong("id"),world,r.getLong("sent"),r.getString("subject"),r.getString("body"),
                     r.getInt("crowns"),r.getInt("energy"),held,r.getBoolean("claimed"),r.getBoolean("is_read"),
-                    r.getInt("friend_world"),r.getString("friend_name"),r.getInt("sender"),r.getInt("mail_type"),r.getString("sender_name")));
+                    r.getInt("friend_world"),r.getString("friend_name"),r.getInt("sender"),r.getInt("mail_type"),r.getString("sender_name"),
+                    r.getLong("guild_invite_id"),r.getString("guild_invite_name")));
             }}
         }
         return List.copyOf(messages);

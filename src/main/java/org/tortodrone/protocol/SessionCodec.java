@@ -59,7 +59,9 @@ public final class SessionCodec {
         "com.threerings.projectx.love.data.LoveMarshaller",
         // A steam-aliased session resolves the stock SteamDirector partner service from the
         // bootstrap during logon; an inert registration keeps that observer from throwing.
-        "com.threerings.projectx.partner.data.SteamMarshaller");
+        "com.threerings.projectx.partner.data.SteamMarshaller",
+        // Guild operations. Appended last so every earlier bootstrap index is unchanged.
+        "com.threerings.projectx.guild.data.GuildMarshaller");
     public static final int KNIGHT_SERVICE = serviceId("com.threerings.projectx.data.KnightMarshaller");
     public static final int CHAT_SERVICE = serviceId("com.threerings.crowd.chat.data.ChatMarshaller");
     public static final int SCENE_SERVICE = serviceId("com.threerings.whirled.data.SceneMarshaller");
@@ -81,6 +83,7 @@ public final class SessionCodec {
     public static final int EVENT_LOG_SERVICE = serviceId("com.threerings.projectx.data.EventLogMarshaller");
     public static final int LOVE_SERVICE = serviceId("com.threerings.projectx.love.data.LoveMarshaller");
     public static final int STEAM_SERVICE = serviceId("com.threerings.projectx.partner.data.SteamMarshaller");
+    public static final int GUILD_SERVICE = serviceId("com.threerings.projectx.guild.data.GuildMarshaller");
     private static int serviceId(String className) {
         int index = SERVICES.indexOf(className);
         if (index < 0) throw new IllegalStateException("Missing bootstrap service: " + className);
@@ -582,9 +585,13 @@ public final class SessionCodec {
     }
 
     public byte[] selected(int oid, Knight knight, WorldProfile profile) throws IOException {
+        return selected(oid,knight,profile,null);
+    }
+    public byte[] selected(int oid, Knight knight, WorldProfile profile,
+            org.tortodrone.storage.GuildStore.Guild guild) throws IOException {
         return frame(out -> {
             eventHeader(out,"CompoundEvent",oid);
-            type(out,WireTypes.ARRAY_LIST); out.writeInt(23);
+            type(out,WireTypes.ARRAY_LIST); out.writeInt(23+(guild==null?0:3));
             attribute(out,oid,"knight",o -> name(o,knight.name()));
             attribute(out,oid,"color",o -> value(o,256 | knight.color()));
             attribute(out,oid,"eye",o -> { type(o,WireTypes.EYE_TYPE);o.writeByte(knight.eye()); });
@@ -608,8 +615,15 @@ public final class SessionCodec {
             attribute(out,oid,"stats",o->{type(o,"com.threerings.stats.data.StatSet");o.writeInt(0);});
             attribute(out,oid,"pawnId",o -> value(o,profile.worldId()));
             attribute(out,oid,"knightId",o -> value(o,profile.worldId()));
+            if(guild!=null){
+                attribute(out,oid,"guild",o -> name(o,guild.name()));
+                attribute(out,oid,"guildId",o -> value(o,(int)guild.id()));
+                attribute(out,oid,"guildOid",o -> value(o,guildOid(guild.id())));
+            }
         });
     }
+    /** Guild objects live in their own stable OID range, above scene/trade identities. */
+    public static int guildOid(long guildId){return 1_000_000+Math.toIntExact(guildId);}
     /** Whole native set after a durable commit, also used when activating a saved knight. */
     public byte[] knightMemories(int oid,java.util.Set<String> names)throws IOException {
         var sorted=names.stream().sorted().toList();if(sorted.size()>256)throw new IOException("Too many knight memories");
@@ -1679,6 +1693,95 @@ public final class SessionCodec {
             type(out, PREFIX + "UnsubscribeResponse");
             out.writeShort(messageId);
             out.writeInt(objectId);
+        });
+    }
+
+    // ---- guild object and its roster (GuildObject fields stream in client declaration order)
+
+    public static final int GUILD_PEER_SERVICE=28,GUILD_CHAT_SERVICE=29;
+
+    /** Full {@code GuildObject} after a subscribe; {@code messageId} is the request's. */
+    public byte[] guild(short message,org.tortodrone.storage.GuildStore.View view)throws IOException {
+        return frame(out->{objectHeader(out,message,"com.threerings.projectx.guild.data.GuildObject",
+            guildOid(view.guild().id()));guildBody(out,view);});
+    }
+    private void guildBody(DataOutputStream out,org.tortodrone.storage.GuildStore.View view)throws IOException {
+        var guild=view.guild();
+        type(out,"com.threerings.projectx.guild.data.GuildPeerMarshaller");out.writeInt(guildOid(guild.id()));out.writeInt(GUILD_PEER_SERVICE);
+        type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(guildOid(guild.id()));out.writeInt(GUILD_CHAT_SERVICE);
+        out.writeInt((int)guild.id());
+        name(out,guild.name());
+        out.writeLong(guild.formed());
+        type(out,WireTypes.DSET);out.writeInt(view.members().size());
+        for(var member:view.members())guildMember(out,member);
+        out.writeInt(0);out.writeInt(0); // hallSceneId, designSceneId: no hall scene is authored yet
+        string(out,guild.motd());
+        out.writeBoolean(guild.hallOpen());
+        out.writeInt(guild.energy());
+        out.writeInt(guild.upkeepCost());
+        out.writeLong(guild.upkeepTime());
+        out.writeBoolean(guild.inDefault());
+        type(out,"java.util.HashSet");out.writeInt(0); // attributes: the guild shop is not served
+        out.writeInt(guild.memberLimit());
+    }
+    private void guildMember(DataOutputStream out,org.tortodrone.storage.GuildStore.Member member)throws IOException {
+        type(out,"com.threerings.projectx.guild.data.GuildMemberEntry");
+        name(out,member.name());
+        out.writeInt(member.worldId());
+        type(out,"com.threerings.projectx.social.data.Whereabouts$Offline");out.writeLong(member.lastSession());
+        out.writeByte(member.rank());
+        out.writeInt(member.commandOrder());
+        out.writeLong(member.joined());
+    }
+    /** Compound of attribute and roster changes; the client subscribes to both. */
+    public byte[] guildChanges(org.tortodrone.storage.GuildStore.View before,
+            org.tortodrone.storage.GuildStore.View after)throws IOException {
+        var events=new ArrayList<Writer>();int oid=guildOid(after.guild().id());
+        var g0=before.guild();var g1=after.guild();
+        if(!g0.name().equals(g1.name()))events.add(o->attribute(o,oid,"name",v->name(v,g1.name())));
+        if(!g0.motd().equals(g1.motd()))events.add(o->attribute(o,oid,"motd",v->string(v,g1.motd())));
+        if(g0.hallOpen()!=g1.hallOpen())events.add(o->attribute(o,oid,"hallOpen",v->v.writeBoolean(g1.hallOpen())));
+        if(g0.energy()!=g1.energy())events.add(o->attribute(o,oid,"energy",v->v.writeInt(g1.energy())));
+        if(g0.upkeepCost()!=g1.upkeepCost())events.add(o->attribute(o,oid,"upkeepCost",v->v.writeInt(g1.upkeepCost())));
+        if(g0.upkeepTime()!=g1.upkeepTime())events.add(o->attribute(o,oid,"upkeepTime",v->v.writeLong(g1.upkeepTime())));
+        if(g0.inDefault()!=g1.inDefault())events.add(o->attribute(o,oid,"inDefault",v->v.writeBoolean(g1.inDefault())));
+        var old=new java.util.HashMap<String,org.tortodrone.storage.GuildStore.Member>();
+        for(var member:before.members())old.put(member.name(),member);
+        var current=new java.util.HashSet<String>();
+        for(var member:after.members()){
+            current.add(member.name());var previous=old.get(member.name());
+            if(previous==null||previous.rank()!=member.rank()||previous.commandOrder()!=member.commandOrder())
+                events.add(o->{partyEntry(o,oid,"members",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");guildMember(o,member);});
+        }
+        for(var member:before.members())if(!current.contains(member.name()))
+            events.add(o->{partyEntry(o,oid,"members","EntryRemovedEvent");name(o,member.name());});
+        return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,WireTypes.ARRAY_LIST);out.writeInt(events.size());for(var event:events)event.write(out);});
+    }
+    /** The knight is no longer in a guild: clear the three PlayerObject fields the client reads. */
+    public byte[] guildCleared(int player)throws IOException {
+        return frame(out->{eventHeader(out,"CompoundEvent",player);type(out,WireTypes.ARRAY_LIST);out.writeInt(3);
+            attribute(out,player,"guild",o->name(o,null));
+            attribute(out,player,"guildId",o->value(o,0));
+            attribute(out,player,"guildOid",o->value(o,0));});
+    }
+    /** A guild record page: {@code entryCount} is the filter's total, not the page size. */
+    public byte[] guildLog(short request,int oid,org.tortodrone.storage.GuildStore.Page page)throws IOException {
+        return frame(out->{eventHeader(out,"InvocationResponseEvent",oid);out.writeShort(request);out.writeByte(1);out.writeBoolean(true);out.writeInt(1);
+            type(out,"com.threerings.projectx.guild.data.GuildLogPage");out.writeInt(page.entryCount());
+            type(out,"java.util.ArrayList");out.writeInt(page.entries().size());
+            for(var entry:page.entries()){
+                type(out,"com.threerings.projectx.guild.data.GuildLogEntry");
+                out.writeLong(entry.id());
+                type(out,"com.threerings.projectx.guild.data.GuildLogEntry$Type");out.writeByte(entry.type());
+                string(out,entry.knightName());
+                out.writeLong(entry.when());
+                var args=entry.args();
+                if(args==null||args.isEmpty())out.writeShort(0);
+                else{type(out,"[Ljava.lang.String;");out.writeInt(args.size());
+                    out.writeShort((args.size()+7)/8);
+                    for(int i=0;i<args.size();i+=8){int mask=0;for(int j=i;j<Math.min(i+8,args.size());j++)mask|=1<<(j-i);out.writeByte(mask);}
+                    for(String arg:args)out.writeUTF(arg);}
+            }
         });
     }
 

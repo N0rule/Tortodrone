@@ -112,6 +112,9 @@ final class ClientSession {
                                 world.subscribe(request.messageId());
                             } else if(world.ownsInteriorParty(request.objectId())) {
                                 world.subscribeInteriorParty(request.messageId());
+                            } else if(world.ownsGuild(request.objectId())) {
+                                try{world.subscribeGuild(request.messageId());}
+                                catch(IOException unavailable){output.send(()->outgoing.subscriptionFailure(request.messageId(),request.objectId(),unavailable.getMessage()));}
                             } else {
                                 output.send(() -> outgoing.subscriptionFailure(request.messageId(), request.objectId(), "No such object"));
                                 log.debug("Subscription to unknown object rejected");
@@ -125,6 +128,7 @@ final class ClientSession {
                             if(world.ownsTrade(request.objectId()))world.unsubscribeTrade(request.objectId());
                             if(request.objectId()==SessionCodec.EXCHANGE_OID)world.unsubscribeExchange();
                             world.unsubscribeInteriorParty(request.objectId());world.unsubscribeChannel(request.objectId());
+                            world.unsubscribeGuild(request.objectId());
                             output.send(() -> outgoing.unsubscribe(request.messageId(), request.objectId()));
                         }
                         case "LogoffRequest" -> {
@@ -202,6 +206,7 @@ final class ClientSession {
                 log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
                     + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());
             }
+            if(world.guildInvocation(invocation))return;
             if(world.auctionInvocation(invocation))return;
             if(world.townInvocation(invocation)){
                 if(world.takeRenameDisconnect()){world.close();output.disconnect();}
