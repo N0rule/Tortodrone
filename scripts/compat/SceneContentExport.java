@@ -885,8 +885,8 @@ public final class SceneContentExport {
         return result;
     }
 
-    private static void writeActor(ConfigManager cm, Map<String, String> out, String prefix,
-                                   ConfigReference<ActorConfig> reference) throws Exception {
+    static void writeActor(ConfigManager cm, Map<String, String> out, String prefix,
+                           ConfigReference<ActorConfig> reference) throws Exception {
         ActorConfig config = reference.a(cm, ActorConfig.class);
         if (config == null) throw new IOException("Unresolved actor " + reference.getName());
         Object original = config.al(cm);
@@ -1024,7 +1024,7 @@ public final class SceneContentExport {
                 ||!out.getOrDefault(prefix+"attack.0.clear","").equals("1852")||!out.getOrDefault(prefix+"attack.0.land","").equals("769"))throw new IOException("No-loot sentry native stationary/attack footprint changed: speed="+out.get(prefix+"speed")+", targeted-speed="+out.get(prefix+"targeted-speed")+", clear="+out.get(prefix+"attack.0.clear")+", land="+out.get(prefix+"attack.0.land")+", heads="+(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster m?Arrays.stream(m.attacks).map(a->a==null||a.ref==null?"none":a.ref.getName()).toList():List.of()));
         }
         // Startup-state rules are option-keyed and resolved per placement above; never copied verbatim.
-        for(String key:rules.stringPropertyNames())if(key.startsWith(rulePrefix)&&!key.startsWith(rulePrefix+"startup-state."))out.put(prefix+key.substring(rulePrefix.length()),rules.getProperty(key));
+        if(rules!=null)for(String key:rules.stringPropertyNames())if(key.startsWith(rulePrefix)&&!key.startsWith(rulePrefix+"startup-state."))out.put(prefix+key.substring(rulePrefix.length()),rules.getProperty(key));
         String appended=out.get(prefix+"append-tags");
         if(appended!=null)out.put(prefix+"tags",out.getOrDefault(prefix+"tags","")+(out.getOrDefault(prefix+"tags","").isBlank()?"":",")+appended);
         writeMechanism(cm,out,prefix,reference,original);

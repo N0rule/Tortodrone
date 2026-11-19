@@ -248,22 +248,18 @@ Furni/Trophy/Boss Trophy/Vanaduke/3 - Scepter of Vanaduke,Prop,partial,"native i
 "Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
 "Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
 "Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
-Gear/PvP/Lockdown/Guardian,LockdownShield,unusable,no item-use handler for LockdownShield
-Gear/PvP/Lockdown/Recon,LockdownShield,unusable,no item-use handler for LockdownShield
-Gear/PvP/Lockdown/Striker,LockdownShield,unusable,no item-use handler for LockdownShield
+Gear/PvP/Lockdown/Guardian,LockdownShield,disabled,"requires Lockdown PvP mode and arena classes, unavailable on this server"
+Gear/PvP/Lockdown/Recon,LockdownShield,disabled,"requires Lockdown PvP mode and arena classes, unavailable on this server"
+Gear/PvP/Lockdown/Striker,LockdownShield,disabled,"requires Lockdown PvP mode and arena classes, unavailable on this server"
 Gear/Shield/(Dev) Nuke-Pave,Shield,partial,unimplemented action Delayed
 Gear/Shield/(Dev) Translocator,Shield,partial,unimplemented action Delayed; unrestored action condition
-Instant/Arena Autotarget Off,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Crown/Copper Crown,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Crown/Copper-Silver Crown,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Crown/Gold Crown,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Crown/Silver Crown,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Crown/Silver-Gold Crown,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Heart/Heart 1,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Heart/Heart 2,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Heart/Heart 3,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Heart/Heart Full,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Lethal Damage,InstantAction,unusable,no item-use handler for InstantAction
+Instant/Arena Autotarget Off,InstantAction,disabled,native ActionConfig.None; no arena autotarget state exists on this server
+Instant/Crown/Copper Crown,InstantAction,disabled,native use action is a no-op FireEffect; crowns are pickup/drop debug items
+Instant/Crown/Copper-Silver Crown,InstantAction,disabled,native use action is a no-op FireEffect; crowns are pickup/drop debug items
+Instant/Crown/Gold Crown,InstantAction,disabled,native use action is a no-op FireEffect; crowns are pickup/drop debug items
+Instant/Crown/Silver Crown,InstantAction,disabled,native use action is a no-op FireEffect; crowns are pickup/drop debug items
+Instant/Crown/Silver-Gold Crown,InstantAction,disabled,native use action is a no-op FireEffect; crowns are pickup/drop debug items
+Instant/Lethal Damage,InstantAction,partial,native self-damage supported; UnlockAchievement CASINO_WHAMMIE is unavailable
 Pickup/Capsule/Artillery Beacon,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
 Pickup/Capsule/Auto Turret Kit,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
 Pickup/Capsule/Blazing Speed,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
@@ -625,13 +621,6 @@ Upgrade/Prize Box/WinterTech Prize Box,Lockbox,partial,native opening with docum
 Upgrade/Prize Box/Winterfest Present,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Winterfest Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Wizard Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
-Upgrade/Rename Guild,RenameGuild,unusable,no item-use handler for RenameGuild
-Usable/Bloon Bucket,SpawnActor,unusable,no item-use handler for SpawnActor
-Usable/Flawed Snowball,Lift,unusable,no item-use handler for Lift
-"Usable/Flawed Snowball, Yellow",Lift,unusable,no item-use handler for Lift
-Usable/Pile O Pillows,SpawnActor,unusable,no item-use handler for SpawnActor
-Usable/Punkin Pie Pan,SpawnActor,unusable,no item-use handler for SpawnActor
-Usable/Snow Bucket,SpawnActor,unusable,no item-use handler for SpawnActor
 Weapon/Handgun/Biohazard,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md
 Weapon/Handgun/Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md
 Weapon/Handgun/Celestial Orbitgun,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md

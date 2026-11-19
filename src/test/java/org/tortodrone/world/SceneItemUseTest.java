@@ -10,7 +10,9 @@ import static org.tortodrone.support.TestWire.check;
 /** Delayed capsule actions follow the owned use activity, including combat interruptions. */
 public final class SceneItemUseTest {
     public static void main(String[] args)throws Exception {
-        var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);
+        var catalog=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps"));
+        var map=catalog.scene(294);
+        var haven=catalog.scene(1);
         var capsule=map.content().items().get("Pickup/Capsule/Health Capsule");
         try(var fixture=new Fixture(map)) {
             var before=fixture.simulation.snapshot();int started;
@@ -104,7 +106,48 @@ public final class SceneItemUseTest {
                 check(!fixture.member.useItem(-6,map.content().items().get(name)),"stripped or unsupported gameplay graph is refused before consumption: "+name);
             check(fixture.member.takeUsedItems().isEmpty(),"unsupported capsule actions consume no items");
         }
-        System.out.println("PASS: delayed healing/buffs/Remedy consumption, duplicate refusal, hurt/shock cancellation and animated-item interruption");
+        check(map.content().items().containsKey("Instant/Heart/Heart 1"),"the global item-use catalogue reaches every scene");
+        check(haven.content().items().containsKey("Instant/Heart/Heart 1"),"towns receive owned item-use definitions too");
+        check(haven.content().items().values().stream().noneMatch(item->item.text("kind","").equals("vial")||item.text("kind","").equals("capsule")),
+            "towns keep no native pickup catalogue, so the party hasPickups flag stays false");
+        try(var fixture=new Fixture(map)){
+            var heart=map.content().items().get("Instant/Heart/Heart 1");int[] payments={0};
+            check(heart.text("config","").equals("Instant/Heart/Heart 1"),"prepared item uses carry their native item config for the use activity");
+            fixture.hit(damage(100,false));
+            check(fixture.member.health().current()==100,"heart fixture starts injured");
+            var used=fixture.member.useOwnedItem(7001,heart,()->{payments[0]++;return Boolean.TRUE;});
+            check(used.consumed()&&payments[0]==1,"owned heart charges exactly one unit");
+            check(fixture.member.health().current()==140,"native Heart 1 restores 40 health");
+        }
+        try(var fixture=new Fixture(map)){
+            var heart=map.content().items().get("Instant/Heart/Heart 3");int[] payments={0};
+            var used=fixture.member.useOwnedItem(7002,heart,()->{payments[0]++;return Boolean.TRUE;});
+            check(!used.consumed()&&payments[0]==0,"full-health heart is accepted without consuming the item");
+            check(fixture.member.health().current()==200,"full-health heart changes nothing");
+        }
+        try(var fixture=new Fixture(map)){
+            var lethal=map.content().items().get("Instant/Lethal Damage");int[] payments={0};
+            var used=fixture.member.useOwnedItem(7003,lethal,()->{payments[0]++;return Boolean.TRUE;});
+            check(used.consumed()&&payments[0]==1,"Lethal Damage charges its one native self-damage use");
+            check(fixture.member.health().current()==0,"Lethal Damage applies the native 100000 self-damage");
+        }
+        try(var fixture=new Fixture(map)){
+            var bucket=map.content().items().get("Usable/Bloon Bucket");String actorConfig=bucket.text("actor.config","");
+            var used=fixture.member.useOwnedItem(7004,bucket,()->Boolean.TRUE);
+            var spawned=fixture.simulation.snapshot().actors().stream()
+                .filter(a->a.entity()!=null&&a.entity().kind().equals("Actor")&&a.config().name().equals(actorConfig)).findFirst().orElse(null);
+            check(used.consumed()&&spawned!=null&&spawned.x()==5.5f&&spawned.y()==-12.5f,"spawn-actor item places its native static prop at the knight");
+        }
+        try(var fixture=new Fixture(map)){
+            var snowball=map.content().items().get("Usable/Flawed Snowball");
+            var used=fixture.member.useOwnedItem(7005,snowball,()->Boolean.TRUE);
+            var carried=fixture.simulation.snapshot().actors().stream()
+                .filter(a->a.entity()!=null&&a.entity().kind().equals("Lift")).findFirst().orElse(null);
+            check(used.consumed()&&carried!=null&&carried.entity().lift()!=null,"lift item creates the native carryable snowball");
+            check(carried.entity().nativeClass().equals("com.threerings.projectx.data.actor.Lift"),"item lift uses the non-dungeon native Lift class");
+            check(carried.x()==5.5f&&carried.y()==-12.5f,"carried item lift follows the knight");
+        }
+        System.out.println("PASS: delayed healing/buffs/Remedy consumption, owned hearts/lethal/spawn/lift items, duplicate refusal, hurt/shock cancellation and animated-item interruption");
     }
     private static Object damage(int amount,boolean react) {
         return new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",1,"amount",(float)amount,"shouldReact",react));

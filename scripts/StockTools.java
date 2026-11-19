@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 /** Read-only installed-client exporters/checks, with disposable home/preferences and Java 25 compilation. */
 public final class StockTools {
     public static void main(String[] args) throws Exception {
-        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|scene|haven|town|town-check|recipes|craft-check game-directory [arguments]");
+        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|item-use|scene|haven|town|town-check|recipes|craft-check game-directory [arguments]");
         Path project = Path.of("").toAbsolutePath();
         Path game = args[1].equals("-")
             ? org.tortodrone.server.SteamClientLocator.find(org.tortodrone.server.SteamClientLocator.roots(
@@ -96,6 +96,11 @@ public final class StockTools {
                 if(args.length!=3)throw new IllegalArgumentException("item-actions expects game-directory fresh-output-file");
                 fixture="SceneItemExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 for(String source:List.of("SceneItemExport","SceneContentExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
+            case "item-use" -> {
+                if(args.length!=3)throw new IllegalArgumentException("item-use expects game-directory fresh-output-file");
+                fixture="ItemUseExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                for(String source:List.of("ItemUseExport","SceneItemExport","SceneContentExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
             }
             case "gear-stats-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("gear-stats-check expects game-directory");fixture="GearStatsCompatibility";

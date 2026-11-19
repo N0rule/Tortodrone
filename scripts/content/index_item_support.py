@@ -29,6 +29,9 @@ def unsupported(action,reasons,reconstructed):
         for timer in actor.get('timers',[]):unsupported(timer['action'],reasons,reconstructed);unsupported(timer.get('endAction'),reasons,reconstructed)
 for attack in fires:
     for ref in attack['fireRefs']:unsupported(ref['action'],weapons[attack['weapon']],reconstructions[attack['weapon']])
+use_file=a.content/'_internal/item-use.json'
+uses=json.loads(use_file.read_text())['items'] if use_file.exists() else {}
+use_kinds={name:definition.get('kind','') for name,definition in uses.items()}
 prepared={}
 action_file=a.content/'_internal/item-actions.json'
 capsule_actions=set(json.loads(action_file.read_text())['actions']) if action_file.exists() else set()
@@ -66,7 +69,7 @@ for item in items:
     elif name in styles:pass
     elif kind=='Upgrade' and name in upgrades:
         if name=='Upgrade/Coin Bonus':state='partial';reasons.append('native timed activation/extension and bonus synchronization; Coliseum rewards unavailable')
-    elif kind=='RenameKnight':pass
+    elif kind in {'RenameKnight','RenameGuild'}:pass
     elif kind=='WrappingPaper':
         if not data.get('giftBox'):reasons.append('no resolved gift box')
     elif kind=='GiftBox':pass  # Filled boxes are created by wrapping, then transferred/unwrapped natively.
@@ -88,6 +91,22 @@ for item in items:
     elif kind in {'Vial','Capsule'}:
         if name not in prepared:reasons.append('no prepared scene item-use definition')
         elif kind=='Capsule' and prepared[name]<=0 and name not in capsule_actions:state='partial';reasons.append('native action graph is incomplete or unsupported in the supported scenes')
+    elif kind in {'SpawnActor','Lift'}:
+        expected='lift' if kind=='Lift' else 'spawn-actor'
+        if name not in use_kinds:reasons.append('no prepared item-use definition')
+        elif use_kinds[name]!=expected:reasons.append('prepared item-use kind mismatch')
+    elif kind=='InstantAction':
+        prepared_kind=use_kinds.get(name)
+        if prepared_kind=='heal':pass
+        elif prepared_kind=='lethal':
+            state='partial';reasons.append('native self-damage supported; UnlockAchievement CASINO_WHAMMIE is unavailable')
+        elif name.startswith('Instant/Crown/'):
+            state='disabled';reasons.append('native use action is a no-op FireEffect; crowns are pickup/drop debug items')
+        elif name=='Instant/Arena Autotarget Off':
+            state='disabled';reasons.append('native ActionConfig.None; no arena autotarget state exists on this server')
+        else:reasons.append('no item-use handler for InstantAction')
+    elif kind=='LockdownShield':
+        state='disabled';reasons.append('requires Lockdown PvP mode and arena classes, unavailable on this server')
     else:reasons.append('no item-use handler for '+kind)
     if reasons:rows.append([name,kind,state,'; '.join(reasons)])
 a.output.parent.mkdir(parents=True,exist_ok=True)

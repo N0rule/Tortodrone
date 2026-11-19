@@ -199,6 +199,49 @@ public final class SceneSimulation {
             health.curseItem(id,stamp);if(!health.alive()){usedItems.add(id);updateLife(stamp);return true;}
             pendingItem=id;itemLand=stamp+spec.integer("delay",0);itemSpec=spec;return true;
         }}
+        /** Outcome of a persistent owned-item use; a native full-health heart is accepted
+         *  without a payment and is therefore not consumed. */
+        public record ItemUse<T>(boolean consumed,T payment) { }
+        /** Validate, charge and apply one persistent bag item while the scene lock is held.
+         *  Payment is committed only after the effect can be applied, and an item entity is
+         *  reclaimed when the transaction is refused. */
+        public <T> ItemUse<T> useOwnedItem(long id,SceneContent.Spec spec,RevivePayment<T> payment)throws java.io.IOException {synchronized(SceneSimulation.this){
+            check();if(!entered||portal!=null||!health.alive()||pendingItem!=0||lift!=0||usedItems.contains(id))throw new java.io.IOException("e.not_use_busy");
+            String kind=spec.text("kind","");int stamp=SceneClock.now();
+            switch(kind){
+                case "heal" -> {
+                    int heal=spec.integer("heal",0);if(heal<=0)throw new java.io.IOException("m.internal_error");
+                    if(!movement.useItem(new org.tortodrone.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))throw new java.io.IOException("e.not_use_busy");
+                    if(health.state().current()>=health.state().maximum())return new ItemUse<>(false,null);
+                    T result=payment.commit();health.heal(heal);return new ItemUse<>(true,result);
+                }
+                case "lethal" -> {
+                    Object damage;
+                    try{damage=FireCatalog.valueJson(spec.text("damage",""));}catch(java.io.IOException invalid){throw new java.io.IOException("m.internal_error",invalid);}
+                    if(!movement.useItem(new org.tortodrone.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))throw new java.io.IOException("e.not_use_busy");
+                    T result=payment.commit();var hit=health.hit(damage,stamp);
+                    if(hit.amount()>0)feedback(new SceneCombatEvent(0,stamp,appearance.id(),hit.feedback(),0,movement.x(),movement.y(),movement.rotation(),"NORMAL"));
+                    updateLife(stamp);return new ItemUse<>(true,result);
+                }
+                case "spawn-actor" -> {
+                    if(!movement.useItem(new org.tortodrone.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))throw new java.io.IOException("e.not_use_busy");
+                    int actor=entities.spawnItemActor(actor(),spec.section("actor."),stamp);
+                    if(actor==0)throw new java.io.IOException("e.not_use_busy");
+                    T result;
+                    try{result=payment.commit();}catch(java.io.IOException|RuntimeException failed){entities.discard(actor);throw failed;}
+                    return new ItemUse<>(true,result);
+                }
+                case "lift" -> {
+                    if(!movement.useLift(stamp))throw new java.io.IOException("e.not_use_busy");
+                    int carried=entities.liftItem(actor(),spec.section("lift."),stamp);
+                    if(carried==0){movement.resetInput(stamp);throw new java.io.IOException("e.not_use_busy");}
+                    T result;
+                    try{result=payment.commit();}catch(java.io.IOException|RuntimeException failed){entities.discard(carried);movement.resetInput(stamp);throw failed;}
+                    lift=carried;return new ItemUse<>(true,result);
+                }
+                default -> throw new java.io.IOException("m.internal_error");
+            }
+        }}
         /** Server-only notification after a committed item/economy operation. */
         public void effect(org.tortodrone.character.StarterCatalog.Model effect){synchronized(SceneSimulation.this){
             check();if(entered&&portal==null)weapons.effect(effect,actor(),SceneClock.now());

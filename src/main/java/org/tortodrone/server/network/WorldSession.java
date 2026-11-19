@@ -1591,6 +1591,24 @@ final class WorldSession implements AutoCloseable {
                 if(confettiReplies.size()>256)confettiReplies.remove(confettiReplies.keySet().iterator().next());
                 return true;
             }
+            var persistent=held==null?null:scene.map().content().items().get(held.config());
+            if(persistent!=null&&Set.of("heal","lethal","spawn-actor","lift").contains(persistent.text("kind",""))){
+                try{
+                    var current=characters.worldProfile(knight.name(),authRevision,profile);
+                    if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                    var store=characters.town(scenes.town());
+                    var outcome=membership.useOwnedItem(id,persistent,
+                        ()->store.useItem(characters.accountId(),knight.id(),authRevision,current.revision(),id));
+                    confettiReplies.put(token,new ConfettiReply(id,null));
+                    if(outcome.consumed())townChanged(outcome.payment(),false);
+                    output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+                }catch(CharacterStore.Refused|IOException failure){
+                    confettiReplies.putIfAbsent(token,new ConfettiReply(id,failure.getMessage()));
+                    output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));
+                }
+                if(confettiReplies.size()>256)confettiReplies.remove(confettiReplies.keySet().iterator().next());
+                return true;
+            }
             var item=temporaryItems.get(id);var spec=item==null||!selected()?null:scene.map().content().items().get(item.config());
             if(spec!=null&&membership.useItem(id,spec))output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             else output.send(()->codec.invocationFailure(oid,listener.requestId(),"That item cannot be used now"));return true;
