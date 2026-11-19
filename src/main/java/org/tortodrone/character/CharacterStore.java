@@ -311,10 +311,26 @@ public final class CharacterStore {
             && !value.contains("..") && !value.contains("\\") && !value.startsWith("/");
     }
     private static String canonical(String name) { return name.toLowerCase(Locale.ROOT); }
+    /** Stock knight-name policy: 4-18 ASCII letters, at most two single hyphens between
+     *  two-letter parts, no run of more than two identical letters. */
     public static String nameError(String name) {
-        if (name == null || name.length() < 3) return "Knight names need at least three letters";
-        if (name.length() > 16) return "Knight names may contain at most sixteen characters";
-        if (!name.matches("[A-Za-z]+(?:-[A-Za-z]+)*")) return "Use letters with optional single hyphens in the knight name";
+        if (name == null || name.length() < 4) return "Knight names need at least four letters";
+        if (name.length() > 18) return "Knight names may contain at most eighteen characters";
+        int hyphens = 0, letters = 0, repeats = 0;
+        char previous = 0;
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (c >= 'A' && c <= 'Z') c = (char) (c + ('a' - 'A'));
+            if (c >= 'a' && c <= 'z') {
+                repeats = c == previous ? repeats + 1 : 1;
+                if (repeats > 2) return "Knight names cannot repeat a letter more than twice";
+                letters++;
+            } else if (c == '-') {
+                if (++hyphens > 2 || letters < 2 || i + 2 >= name.length()) return "Use single hyphens between parts with at least two letters";
+                letters = 0;
+            } else return "Use only letters and single hyphens in the knight name";
+            previous = c;
+        }
         return null;
     }
     public static final class Refused extends Exception { Refused(String message) { super(message); } }

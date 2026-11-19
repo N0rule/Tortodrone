@@ -20,7 +20,7 @@ public final class CharacterStoreTest {
             var db = new Database(directory,false);
             var saved = db.rosterState(1);
             refused(() -> store.create(choices("saved-knight")), "already in use");
-            refused(() -> store.create(choices("x")), "three letters");
+            refused(() -> store.create(choices("x")), "four letters");
             refused(() -> store.create(new Knight(0, "Bad-Choice", "../helm", "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 0)), "appearance");
             TestWire.check(saved.equals(db.rosterState(1)), "rejections preserve existing save");
             CharacterStore restored = store(directory);

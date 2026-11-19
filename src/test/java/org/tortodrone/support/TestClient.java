@@ -199,7 +199,7 @@ public final class TestClient {
         check(wire.type(failure).equals(PREFIX + "EventNotification") && failure.readShort() == -1, "creation event response");
         check(wire.type(failure).equals(TestWire.DOB + "InvocationResponseEvent") && failure.readInt() == clientOid
             && failure.readShort() == 24 && failure.readByte() == 0, "creation failure callback correlation");
-        check(failure.readBoolean() && failure.readInt() == 1 && wire.object(failure).equals("~Knight names need at least three letters"), "invalid creation does not mutate roster");
+        check(failure.readBoolean() && failure.readInt() == 1 && wire.object(failure).equals("~Knight names need at least four letters"), "invalid creation does not mutate roster");
         TestWire.end(failure);
 
         // Batched upstream messages share the same class table and individual request IDs.

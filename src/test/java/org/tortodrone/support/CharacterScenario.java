@@ -70,7 +70,7 @@ public final class CharacterScenario {
             creation(peer, writer, "Changed-Knight", "Missing-Knight", (short) 66);
             confirmation(peer, wire, oid, (short) 66, "No such knight");
             creation(peer, writer, "x", "Renamed-Knight", (short) 67);
-            confirmation(peer, wire, oid, (short) 67, "Knight names need at least three letters");
+            confirmation(peer, wire, oid, (short) 67, "Knight names need at least four letters");
             deletion(peer, writer, "Missing-Knight", (short) 68);
             confirmation(peer, wire, oid, (short) 68, "No such knight");
             writer.send(peer.getOutputStream(), out -> {

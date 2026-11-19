@@ -19,6 +19,10 @@ public final class CharacterManagementStoreTest {
             try(var accounts=new AccountStore(directory,false,org.tortodrone.character.ItemCatalog.starter())){accounts.create("Alice","alice-password".toCharArray());}
             var db=new Database(directory,false);
             CharacterStore store = new CharacterStore(db,1,"Alice");
+            for(String valid:List.of("Abcd","Ab-Cd","Abcde-Fghij-Klmno","Abcdefghijklmnopqr","Abba"))
+                TestWire.check(CharacterStore.nameError(valid)==null,"stock-valid knight name accepted: "+valid);
+            for(String invalid:List.of("Abc","Abcdefghijklmnopqrs","A-Bcd","Abc-D","Abc--Def","Abc-Def-Ghi-Jkl","Abbbb","Abc Def","Ab1c"))
+                TestWire.check(CharacterStore.nameError(invalid)!=null,"stock-invalid knight name refused: "+invalid);
             Knight first = store.create(choices("First-Knight"));
             store.create(choices("Other-Knight"));
             store.create(choices("Third-Knight"));
@@ -30,7 +34,7 @@ public final class CharacterManagementStoreTest {
             var saved = db.rosterState(1);
             refused(() -> store.update("Renamed-Knight", choices("other-knight")), "already in use");
             refused(() -> store.update("Missing-Knight", choices("New-Knight")), "No such knight");
-            refused(() -> store.update("Renamed-Knight", choices("x")), "three letters");
+            refused(() -> store.update("Renamed-Knight", choices("x")), "four letters");
             refused(() -> store.update("Renamed-Knight", new Knight(0, "Renamed-Knight", "../bad", "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 0)), "appearance");
             refused(() -> store.delete("Missing-Knight"), "No such knight");
             refused(() -> store.delete(null), "No such knight");
