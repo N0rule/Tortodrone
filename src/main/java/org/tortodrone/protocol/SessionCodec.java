@@ -218,7 +218,7 @@ public final class SessionCodec {
             var tutorial=soloInteriors?SceneRegistry.system().tutorial():null;
             var registry=soloInteriors?SceneRegistry.system():null;
             var openingGate=registry==null?null:registry.openingGate(org.tortodrone.character.OpeningMission.ANCIENT_GENERATOR);
-            var towns=registry==null?java.util.List.<org.tortodrone.world.SceneCatalog.MapScene>of():registry.catalog().scenes().stream().filter(m->m.town()&&(m.id()==registry.entry().map().id()||m.id()==217||m.id()==218)).toList();
+            var towns=registry==null?java.util.List.<org.tortodrone.world.SceneCatalog.MapScene>of():registry.catalog().towns().stream().filter(m->m.id()==registry.entry().map().id()||m.id()==217||m.id()==218).toList();
             if(soloInteriors){type(out,WireTypes.DSET);out.writeInt(towns.size());for(var town:towns)townSummary(out,town);}
             else emptyDSet(out);
             if(soloInteriors) {
@@ -1013,7 +1013,7 @@ public final class SessionCodec {
             type(out,scene.map().configType());string(out,scene.map().image());
             if(zone) {
                 type(out,"com.threerings.whirled.zone.data.ZoneSummary");out.writeInt(scene.map().zone());name(out,scene.map().zoneName());
-                var summaries=catalog.scenes().stream().filter(s->s.zone()==scene.map().zone()).toList();
+                var summaries=catalog.zoneScenes(scene.map().zone());
                 type(out,"[Lcom.threerings.whirled.zone.data.SceneSummary;");out.writeInt(summaries.size());
                 for(var summary:summaries){
                     type(out,"com.threerings.whirled.zone.data.SceneSummary");out.writeInt(summary.id());string(out,summary.name());

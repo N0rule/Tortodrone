@@ -1184,7 +1184,7 @@ final class WorldSession implements AutoCloseable {
     }
 
     synchronized boolean selected() { return knight != null; }
-    boolean hasInteriors(){return scenes.catalog().scenes().stream().anyMatch(map->!map.town());}
+    boolean hasInteriors(){return scenes.catalog().hasNonTown();}
     synchronized boolean ownsScene(int oid) { return selected() && !readyRoom && scene.oid()==oid; }
     synchronized boolean ownsInteriorParty(int target){return selected()&&!readyRoom&&scenes.parties().owns(partyMember,target);}
     /** Cross-session friend follow only reads the peer's stable party seat under its own monitor. */
@@ -1306,7 +1306,7 @@ final class WorldSession implements AutoCloseable {
         long selectionStarted=System.nanoTime();
         if(closed||socket.isClosed())throw new IOException("Session is closed");
         if (selected()) throw new IOException("A character is already selected; reconnect to change characters");
-        if(scenes.catalog().scenes().isEmpty())throw new IOException("Maps are unavailable; install default maps and restart the server");
+        if(scenes.catalog().isEmpty())throw new IOException("Maps are unavailable; install default maps and restart the server");
         gameMaster=roles.gameMaster();
         inspectionHidden=characters.inspectionHidden(authRevision);
         // Picker edits/deletes use this same account lock around their online check and save.
@@ -1319,7 +1319,7 @@ final class WorldSession implements AutoCloseable {
             var choice = characters.roster().stream().filter(k -> k.id() == loaded.knightId())
                 .findFirst().orElseThrow(() -> new IOException("No such knight"));
             int saved=characters.lastTownScene(choice.id(),authRevision);
-            int destination=scenes.catalog().scenes().stream().filter(map->map.id()==saved&&map.town())
+            int destination=scenes.catalog().towns().stream().filter(map->map.id()==saved)
                 .mapToInt(SceneCatalog.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
             if(loaded.progress().crashSiteIncomplete()){
                 if(scenes.tutorial()==null)throw new IOException("The opening adventure is unavailable; please try again later");
@@ -1437,8 +1437,8 @@ final class WorldSession implements AutoCloseable {
                     alchemy=selectAlchemy();if(alchemy!=null){entrance=alchemy.entrance();map=scene.map();}
                 }
                 if(destination.equals("haven"))map=scenes.catalog().entry();
-                if(map==null)for(var candidate:scenes.catalog().scenes())if(candidate.name().equals("%town:m."+destination)||candidate.id()==switch(destination){case "training"->294;case "lab"->30893;case "hoh"->318;default->-1;}){map=candidate;break;}
-                if(map==null&&destination.matches("[a-zA-Z0-9_-]{1,96}"))for(var candidate:scenes.catalog().scenes())if(candidate.town()){
+                if(map==null)for(var candidate:scenes.catalog().towns())if(candidate.name().equals("%town:m."+destination)||candidate.id()==switch(destination){case "training"->294;case "lab"->30893;case "hoh"->318;default->-1;}){map=candidate;break;}
+                if(map==null&&destination.matches("[a-zA-Z0-9_-]{1,96}"))for(var candidate:scenes.catalog().towns()){
                     String prefix="destination."+destination+".";var stats=candidate.content().stats();if(!stats.containsKey(prefix+"x"))continue;
                     float x=stats.get(prefix+"x"),y=stats.get(prefix+"y");if(!candidate.collision().walkable(x,y))continue;
                     if(candidate.portals().triggers().stream().anyMatch(t->t.intersects(x,y)))continue;
@@ -1664,7 +1664,7 @@ final class WorldSession implements AutoCloseable {
                     var returnScene=scene;
                     if(!scene.map().town()){
                         int saved=characters.lastTownScene(knight.id(),authRevision);
-                        int permanent=scenes.catalog().scenes().stream().filter(map->map.id()==saved&&map.town())
+                        int permanent=scenes.catalog().towns().stream().filter(map->map.id()==saved)
                             .mapToInt(SceneCatalog.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
                         returnScene=scenes.destination(permanent,profile.worldId());
                     }

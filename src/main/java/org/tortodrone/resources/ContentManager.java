@@ -22,7 +22,7 @@ public final class ContentManager {
             return;
         }
         if(args.length!=1)throw new IllegalArgumentException("Usage: ContentManager /deployment, or --actors /deployment map_name");
-        var c=load(Path.of(args[0]));System.out.println("PASS: unified content; "+c.scenes().scenes().size()+" maps, "+c.items().entries().size()+" items, "+c.weapons().weapons().size()+" weapons");
+        var c=load(Path.of(args[0]));var all=c.scenes().scenes();System.out.println("PASS: unified content; "+all.size()+" maps, "+c.items().entries().size()+" items, "+c.weapons().weapons().size()+" weapons");
     }
     public static ContentRegistry load(Path deployment)throws IOException {
         return load(deployment,org.tortodrone.config.ServerSettings.read(org.tortodrone.config.ServerSettings.defaultPath(deployment)));
@@ -66,9 +66,9 @@ public final class ContentManager {
             var folders=MapYaml.folders(maps);
             Path startFolder=maps.resolve(start);Integer entry=folders.entrySet().stream().filter(e->e.getValue().equals(startFolder)).map(Map.Entry::getKey).findFirst().orElseThrow(()->new IOException("startup-map is missing: "+start));
             Path shared=maps.getParent().resolve("shared");
-            var scenes=new TreeMap<Integer,SceneCatalog.MapScene>();
-            for(var folder:folders.entrySet())scenes.put(folder.getKey(),loadMap(folder.getValue(),shared,town,items));
-            return SceneCatalog.of(scenes,entry);
+            var entryScene=loadMap(startFolder,shared,town,items);
+            if(!entryScene.town())throw new IOException("Entry scene must be a town");
+            return SceneCatalog.lazy(folders,entry,entryScene,folder->loadMap(folder,shared,town,items));
         }catch(IllegalArgumentException invalid){throw new IOException(maps+": "+invalid.getMessage(),invalid);}
     }
     private static SceneCatalog.MapScene loadMap(Path folder,Path shared,org.tortodrone.town.TownCatalog town,org.tortodrone.character.ItemCatalog items)throws IOException {

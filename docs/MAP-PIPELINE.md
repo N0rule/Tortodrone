@@ -102,5 +102,8 @@ absent are dropped and reported rather than published as dead travel edges.
 - One compact binary per map; no per-map bitmap is required at runtime.
 - Collision is loaded per map and indexed once; queries are grid-local.
 - `scene.dat` and `collision.bin` are hash-checked and immutable after compilation.
+- A `SceneCatalog` indexes all map ids from metadata and loads a map body on first use. Only the
+  entry scene (plus the tutorial/opening maps the registry explicitly asks for) is loaded at
+  startup; `validateContent` still forces every map and validates the full portal graph.
 - The compiler is fail-closed, so a large batch either publishes a consistent map or refuses it
   before the release is assembled.

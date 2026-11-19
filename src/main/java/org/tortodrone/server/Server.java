@@ -113,7 +113,7 @@ public final class Server {
         org.tortodrone.world.SceneRegistry.install(scenes);
         var catalog=content.items();
         for(String warning:content.warnings())log.warn(warning);
-        log.info("Unified content: "+content.scenes().scenes().size()+" maps, "+content.items().entries().size()+" items");
+        log.info("Unified content: "+content.scenes().sceneCount()+" maps, "+content.items().entries().size()+" items");
         content.resources().forEach((name,resource)->log.debug("Content "+name+": "+resource.pack()+" / "+resource.path()));
         InetAddress address = InetAddress.getByName(settings.bind());
         try (ServerSocket listener = new ServerSocket()) {
@@ -130,7 +130,7 @@ public final class Server {
                 });
                 accounts.watchSessions();
                 log.info("Database: SQLite WAL; schema="+org.tortodrone.storage.Database.SCHEMA_VERSION);
-                log.info("Loaded " + scenes.catalog().scenes().size() + " maps, "
+                log.info("Loaded " + scenes.catalog().sceneCount() + " maps, "
                     + catalog.entries().size() + " items, " + accounts.list().size() + " accounts");
                 listener.bind(new InetSocketAddress(address, settings.port()));
                 log.debug("Public key: " + keys.resolve("public.txt"));

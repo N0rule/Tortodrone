@@ -56,6 +56,7 @@ public final class SceneCatalog {
     public MapScene entry(){return entryScene;}
     /** Counts without forcing lazy bodies. */
     public int sceneCount(){return paths!=null?paths.size():scenes.size();}
+    public int loadedCount(){synchronized(scenes){return scenes.size();}}
     public boolean isEmpty(){return sceneCount()==0;}
     /** Town templates only; a lazy catalog loads those few and leaves dungeons on disk. */
     public List<MapScene> towns(){
@@ -63,6 +64,24 @@ public final class SceneCatalog {
         if(paths==null)return scenes.values().stream().filter(MapScene::town).toList();
         for(var entry:paths.entrySet())try{if(isTown(entry.getValue()))result.add(scene(entry.getKey()));}
         catch(IOException failure){throw new java.io.UncheckedIOException(failure);}
+        return List.copyOf(result);
+    }
+    /** Zone ids from lightweight metadata; no scene body is loaded. */
+    public java.util.Set<Integer> zoneIds(){
+        var result=new java.util.TreeSet<Integer>();
+        if(paths==null){for(var map:scenes.values())result.add(map.zone());return result;}
+        for(Path folder:paths.values())try{var p=properties(folder.resolve("native/metadata.properties"));result.add(Integer.parseInt(p.getProperty("zone-id")));}
+        catch(Exception failure){throw new IllegalStateException("Invalid map metadata: "+folder,failure);}
+        return java.util.Collections.unmodifiableSet(result);
+    }
+    /** Scenes in one zone only; used by chat channels and zone summaries. */
+    public List<MapScene> zoneScenes(int zone){
+        if(paths==null)return scenes.values().stream().filter(map->map.zone()==zone).toList();
+        var result=new ArrayList<MapScene>();
+        for(var entry:paths.entrySet())try{
+            var p=properties(entry.getValue().resolve("native/metadata.properties"));
+            if(Integer.parseInt(p.getProperty("zone-id"))==zone)result.add(scene(entry.getKey()));
+        }catch(Exception failure){throw new IllegalStateException("Invalid map metadata: "+entry.getValue(),failure);}
         return List.copyOf(result);
     }
     public boolean hasNonTown(){

@@ -53,7 +53,7 @@ public final class ServerControl {
     long nextSessionId() {return ids.incrementAndGet();}
     public synchronized Snapshot snapshot() {
         long uptime=startedAt==null?0:Math.max(0,((stoppedNanos==0?System.nanoTime():stoppedNanos)-startedNanos)/1000000000);
-        return new Snapshot(version,state,endpoint,startedAt,uptime,scenes==null?0:scenes.catalog().scenes().size(),itemCount,
+        return new Snapshot(version,state,endpoint,startedAt,uptime,scenes==null?0:scenes.catalog().sceneCount(),itemCount,
             sessions.snapshots(),scenes==null?List.of():scenes.statuses(),scenes==null?List.of():scenes.catalog().scenes(),RuntimeMetrics.capture(),failure);
     }
     public synchronized boolean awaitStart(boolean persistent) throws InterruptedException {

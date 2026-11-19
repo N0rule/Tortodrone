@@ -53,6 +53,7 @@ public final class SceneRegistry {
     public WeaponCatalog weapons(){return weapons;}
     public void weapons(WeaponCatalog catalog){weapons=Objects.requireNonNull(catalog);}
     private final Map<Integer,List<Instance>> instances=new HashMap<>();
+    private int nextOid=10;
     private record InteriorKey(int scene,int worldId){}
     private final Map<InteriorKey,Instance> interiors=new HashMap<>();
     private final Map<Instance,Set<Integer>> interiorLeases=new IdentityHashMap<>();
@@ -66,20 +67,27 @@ public final class SceneRegistry {
     public int channelType(int oid){for(int base:channelZones.values()){if(oid==base)return 6;if(oid==base+1)return 7;}return -1;}
     public SceneChat channel(int oid){var channel=channels.get(oid);if(channel==null)throw new IllegalArgumentException("Unknown chat channel");return channel;}
     public SceneRegistry(SceneCatalog catalog) {
-        this.catalog=catalog;tutorial=TutorialRoute.available(catalog);generator=OpeningGate.available(catalog,org.tortodrone.character.OpeningMission.ANCIENT_GENERATOR);int oid=10;
+        this.catalog=catalog;tutorial=TutorialRoute.available(catalog);generator=OpeningGate.available(catalog,org.tortodrone.character.OpeningMission.ANCIENT_GENERATOR);
         int chatOid=1_500_000_000;
-        for(int zone:catalog.scenes().stream().map(SceneCatalog.MapScene::zone).distinct().sorted().toList()) {
+        for(int zone:catalog.zoneIds()) {
             channelZones.put(zone,chatOid);channels.put(chatOid,new SceneChat());channels.put(chatOid+1,new SceneChat());chatOid+=2;
         }
         for(int id=140;id<500;id++)interiorOids.add(id);
-        if(catalog.scenes().isEmpty())return;
-        // Keep the entry object's identity stable for existing clients; other templates are ordered.
-        var ordered=new ArrayList<>(catalog.scenes());ordered.remove(catalog.entry());ordered.add(0,catalog.entry());
-        for(var map:ordered) {
-            var copies=new ArrayList<Instance>();
-            for(int i=0;i<map.instances();i++)copies.add(new Instance(oid++,i,map,0,tutorial));
-            instances.put(map.id(),List.copyOf(copies));
+        if(catalog.isEmpty())return;
+        try{ensure(catalog.entry().id());}catch(java.io.IOException failure){throw new IllegalStateException(failure);}
+    }
+    /** Creates a template's instances on first travel; 500-map catalogs never load every body at boot. */
+    private synchronized List<Instance> ensure(int scene)throws IOException {
+        var copies=instances.get(scene);
+        if(copies!=null)return copies;
+        var map=catalog.scene(scene);
+        var created=new ArrayList<Instance>(map.instances());
+        for(int i=0;i<map.instances();i++){
+            var instance=new Instance(nextOid++,i,map,0,tutorial);
+            instance.simulation().fires(fires);instance.simulation().petFires(petFires);instance.simulation().town(town);
+            created.add(instance);
         }
+        copies=List.copyOf(created);instances.put(scene,copies);return copies;
     }
     public SceneCatalog catalog(){return catalog;}
     /** Inspect only an already allocated instance; release this monitor before entering simulation. */
@@ -106,8 +114,8 @@ public final class SceneRegistry {
     }
     public Instance entry(){return instances.get(catalog.entry().id()).get(0);}
     public Instance instance(int scene,int index)throws IOException {
-        var copies=instances.get(scene);
-        if(copies==null||index<0||index>=copies.size())throw new IOException("Scene instance is not available");return copies.get(index);
+        var copies=ensure(scene);
+        if(index<0||index>=copies.size())throw new IOException("Scene instance is not available");return copies.get(index);
     }
     public synchronized Instance destination(int scene,int worldId)throws IOException {
         return destination(scene,worldId,null);
@@ -129,7 +137,7 @@ public final class SceneRegistry {
             var oid=interiorOids.pollFirst();if(oid==null){if(assigned)parties.leaveTraining(member);throw new IOException("Interior capacity is full; try again later");}
             var created=new Instance(oid,0,map,owner,tutorial);created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
         }
-        return instance(scene,Math.floorMod(worldId,instances.get(scene).size()));
+        return instance(scene,Math.floorMod(worldId,ensure(scene).size()));
     }
     public synchronized void release(Instance scene,int worldId) {
         if(scene==null||scene.map().town())return;
