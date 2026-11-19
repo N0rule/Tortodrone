@@ -133,21 +133,6 @@ val generateCollision = tasks.register<JavaExec>("generateCollision") {
 }
 // Rebuild modern packs only from local hash-verified captured binaries. Publication is
 // explicit; neither a normal build nor a failed export may restore historical scenes.
-val prepareHaven = tasks.register<Exec>("prepareHaven") {
-    group = "build setup"
-    description = "Rebuild modern Haven into a fresh staging directory using local captured scenes and stock configurations."
-    workingDir = projectDir
-    dependsOn(serverJar)
-    val gameDirectory = providers.gradleProperty("gameDir").getOrElse("")
-    val capturedScenes = providers.gradleProperty("capturedScenes").getOrElse("")
-    val output = providers.gradleProperty("havenOutput").getOrElse(publicOutput.dir("haven-export").asFile.absolutePath)
-    commandLine(launcher25.get().executablePath.asFile.absolutePath,"scripts/StockTools.java",
-        "haven",gameDirectory,capturedScenes,output)
-    doFirst {
-        if(gameDirectory.isBlank() || capturedScenes.isBlank())
-            throw GradleException("Specify -PgameDir and -PcapturedScenes (verified local <scene-id>.dat files); output must be fresh")
-    }
-}
 val buildWebui = tasks.register<Sync>("buildWebui") {
     // Locally extracted artwork is not a build input and must survive frontend updates.
     preserve { include("assets/game/**", "client-artwork.skipped") }

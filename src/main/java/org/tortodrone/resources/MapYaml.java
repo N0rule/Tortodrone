@@ -48,7 +48,7 @@ public final class MapYaml {
         if(!kind.equals(p.getProperty("kind")))throw new IOException(folder+": native scene type cannot be changed");
         text(map.get("name"),"name");text(map.get("zone"),"zone");
         p.setProperty("instances",String.valueOf(integer(map.getOrDefault("instances",1),"instances")));
-        p.setProperty("scene-sha256",nativeMetadata.getProperty("sha256.scene.dat"));if(nativeMetadata.containsKey("sha256.walkability.gz"))p.setProperty("collision-sha256",nativeMetadata.getProperty("sha256.walkability.gz"));
+        p.setProperty("scene-sha256",nativeMetadata.getProperty("sha256.scene.dat"));
         if(nativeMetadata.containsKey("sha256.static-collision.properties"))p.setProperty("static-collision-sha256",nativeMetadata.getProperty("sha256.static-collision.properties"));
         if(nativeMetadata.containsKey("sha256.collision.bin"))p.setProperty("exact-collision-sha256",nativeMetadata.getProperty("sha256.collision.bin"));
         else if(nativeMetadata.containsKey("sha256.static-collision.properties"))throw new IOException(nativeDir+": static collision exists without generated collision.bin; run generateCollision");

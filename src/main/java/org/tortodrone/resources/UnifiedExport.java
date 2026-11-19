@@ -63,10 +63,10 @@ final class UnifiedExport {
         ReadableItemExport.write(new ItemYaml.Definitions(registry.items().withDisplayNames(names),registry.weapons(),registry.equipment()),content);
     }
     public void exportMap(Path source,Path target,Map<Integer,String> names,Map<String,Object> cycles,Map<String,Object> statuses,Map<String,Object> combat)throws IOException {
-        var supported=Set.of("scene.dat","walkability.gz","static-collision.properties","collision.bin","map.properties","content.properties","portals.properties","import-source-report.txt");
+        var supported=Set.of("scene.dat","collision.bin","map.properties","content.properties","portals.properties","import-source-report.txt");
         try(var paths=Files.list(source)){for(Path file:paths.toList()){ContentFiles.regular(file);if(!supported.contains(file.getFileName().toString()))throw new IOException("Unsupported map file requires explicit migration review: "+file);}}
         var descriptor=ContentFiles.properties(source.resolve("map.properties"));Path nativeDir=target.resolve("native");Files.createDirectories(nativeDir);
-        for(String name:List.of("scene.dat","walkability.gz","static-collision.properties","collision.bin"))if(Files.exists(source.resolve(name)))Files.copy(source.resolve(name),nativeDir.resolve(name));
+        for(String name:List.of("scene.dat","collision.bin"))if(Files.exists(source.resolve(name)))Files.copy(source.resolve(name),nativeDir.resolve(name));
         var original=Files.exists(source.resolve("content.properties"))?readProperties(source.resolve("content.properties")):new Properties();
         var bindings=new LinkedHashMap<String,Object>();var mechanics=new LinkedHashMap<String,Object>();var editableMechanics=new LinkedHashMap<String,Object>();
         var nativeActors=new LinkedHashMap<String,Object>();var actorFields=new LinkedHashMap<String,Object>();var actorTypes=new LinkedHashMap<String,Object>();var actors=new LinkedHashMap<String,Object>();
@@ -115,7 +115,7 @@ final class UnifiedExport {
         var npcs=new LinkedHashMap<String,Object>();for(String id:original.getProperty("dialogues","").split(","))if(!id.isBlank())npcs.put(id,exportNpc(original,id,target));bindings.put("npcs",npcs);
         Files.writeString(nativeDir.resolve("bindings.json"),Json.stringify(bindings),StandardOpenOption.CREATE_NEW);
         var metadata=new Properties();for(String key:List.of("scene-id","zone-id","zone-name","name","image","kind","version"))metadata.setProperty(key,descriptor.getProperty(key));
-        for(String name:List.of("scene.dat","walkability.gz","static-collision.properties","collision.bin","bindings.json"))if(Files.exists(nativeDir.resolve(name)))metadata.setProperty("sha256."+name,ContentFiles.digest(nativeDir.resolve(name)));
+        for(String name:List.of("scene.dat","collision.bin","bindings.json"))if(Files.exists(nativeDir.resolve(name)))metadata.setProperty("sha256."+name,ContentFiles.digest(nativeDir.resolve(name)));
         store(nativeDir.resolve("metadata.properties"),metadata);
         var map=new LinkedHashMap<String,Object>();map.put("id",Integer.parseInt(descriptor.getProperty("scene-id")));map.put("name",readable(descriptor.getProperty("name")));map.put("type",descriptor.getProperty("kind"));map.put("zone",names.getOrDefault(Integer.parseInt(descriptor.getProperty("zone-id")),descriptor.getProperty("zone-id")));map.put("defaultSpawn",defaultSpawn);map.put("instances",Integer.parseInt(descriptor.getProperty("instances")));write(target.resolve("map.yml"),map);
     }

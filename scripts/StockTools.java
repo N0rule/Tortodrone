@@ -18,31 +18,10 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
-            case "scene-tables-check" -> {
-                fixture="SceneTableCompatibility";
-                for(String source:List.of("SceneTableCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
-            }
-            case "construct-enemies-check", "opening-sentries-check" -> {
-                if(args.length!=2)throw new IllegalArgumentException(args[0]+" expects game-directory");
-                fixture="TutorialEnemyCompatibility";fixtureArgs.add(args[0].equals("opening-sentries-check")?"sentries":"constructs");
-                for(String source:List.of("TutorialEnemyCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
-            }
-            case "party-platform-check" -> {
-                fixture="PartyPlatformCompatibility";
-                for(String source:List.of("PartyPlatformCompatibility","FireCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
-            }
-            case "entry-state-check" -> {
+                                                case "entry-state-check" -> {
                 fixture="EntryStateCompatibility";for(String source:List.of("EntryStateCompatibility","FireCompatibility"))sources.add(project.resolve("scripts/compat/"+source+".java"));
             }
-            case "generator-script-check" -> {
-                if(args.length!=3)throw new IllegalArgumentException("generator-script-check expects game-directory original-exported-337-directory");
-                fixture="GeneratorScriptCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
-            }
-            case "gameplay-effects-check" -> {
-                fixture="GameplayEffectCompatibility";
-                for(String source:List.of("GameplayEffectCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
-            }
-            case "scene-entry-inspect" -> {
+                                    case "scene-entry-inspect" -> {
                 if(args.length<4)throw new IllegalArgumentException("scene-entry-inspect expects game-directory original-scene entry-keys...");
                 fixture="SceneEntryInspect";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.addAll(Arrays.asList(args).subList(3,args.length));
                 sources.add(project.resolve("scripts/compat/SceneEntryInspect.java"));sources.add(project.resolve("scripts/compat/OpeningMissionCompatibility.java"));
@@ -103,37 +82,12 @@ public final class StockTools {
                 if(args.length==3)fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 for(String source:List.of("SceneActionCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
             }
-            case "tutorial-enemy-check" -> {
-                if(args.length!=2)throw new IllegalArgumentException("tutorial-enemy-check expects game-directory");fixture="TutorialEnemyCompatibility";
-                for(String source:List.of("TutorialEnemyCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
-            }
-            case "party-check" -> fixture="PartyCompatibility";
+                        case "party-check" -> fixture="PartyCompatibility";
             case "tutorial-squad-check" -> {
                 if(args.length!=3)throw new IllegalArgumentException("tutorial-squad-check expects game-directory deployment-with-original-tutorial");
                 fixture="org.tortodrone.world.TutorialSquadCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());sources.add(project.resolve("scripts/compat/TutorialSquadCompatibility.java"));
             }
-            case "tutorial-heat-check" -> {
-                if(args.length!=3)throw new IllegalArgumentException("tutorial-heat-check expects game-directory exported-original-scene-398");
-                fixture="TutorialHeatCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
-                sources.add(project.resolve("scripts/compat/TutorialHeatCompatibility.java"));sources.add(project.resolve("scripts/compat/FireCompatibility.java"));
-            }
-            case "tutorial-conversation-check" -> {
-                if(args.length!=4)throw new IllegalArgumentException("tutorial-conversation-check expects game-directory archived-tutorial-scene exported-tutorial-directory");
-                fixture="org.tortodrone.world.TutorialConversationCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
-                sources.add(project.resolve("scripts/compat/TutorialConversationCompatibility.java"));
-            }
-            case "tutorial-exit-check" -> {
-                if(args.length!=4)throw new IllegalArgumentException("tutorial-exit-check expects game-directory archived-tutorial-scene exported-or-imported-tutorial-directory");
-                fixture="org.tortodrone.world.TutorialExitCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
-                sources.add(project.resolve("scripts/compat/TutorialExitCompatibility.java"));
-            }
-            case "tutorial-opening-check" -> {
-                if(args.length!=4)throw new IllegalArgumentException("tutorial-opening-check expects game-directory archived-tutorial-scene exported-tutorial-directory");
-                fixture="org.tortodrone.world.TutorialOpeningCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
-                sources.add(project.resolve("scripts/compat/TutorialOpeningCompatibility.java"));
-                sources.add(project.resolve("scripts/compat/TutorialExitCompatibility.java"));
-            }
-            case "tutorial-floor-check" -> {
+                                                            case "tutorial-floor-check" -> {
                 if(args.length!=3)throw new IllegalArgumentException("tutorial-floor-check expects game-directory disposable-deployment-with-original-maps");
                 fixture="org.tortodrone.server.network.TutorialFloorCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 sources.add(project.resolve("scripts/compat/TutorialFloorCompatibility.java"));
@@ -247,12 +201,7 @@ public final class StockTools {
                 if(args.length!=2)throw new IllegalArgumentException("craft-check expects game-directory");fixture="CraftCompatibility";
                 sources.add(project.resolve("scripts/compat/CraftCompatibility.java"));
             }
-            case "training-check" -> {
-                if(args.length!=2)throw new IllegalArgumentException("training-check expects game-directory");fixture="TrainingCompatibility";
-                fixtureArgs.clear();fixtureArgs.add(project.resolve("content/maps/advanced_training").toString());
-                sources.add(project.resolve("scripts/compat/TrainingCompatibility.java"));sources.add(project.resolve("scripts/compat/FireCompatibility.java"));
-            }
-            case "statuses" -> {
+                        case "statuses" -> {
                 if(args.length!=3)throw new IllegalArgumentException("statuses expects game-directory fresh-output-file");fixture="StatusRuntimeExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 for(String source:List.of("StatusRuntimeExport","SceneStatusExport","ScenePlayerStatsExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
             }
@@ -266,15 +215,7 @@ public final class StockTools {
                 fixture="TownSceneExport";fixtureArgs.add(args[2].equals("--accessories")?args[2]:Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
                 sources.add(project.resolve("scripts/compat/TownSceneExport.java"));
             }
-            case "haven" -> {
-                if(args.length!=4)throw new IllegalArgumentException("haven expects game-directory scene-source-directory fresh-output-directory");
-                fixture="HavenSceneExport";
-                fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
-                fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
-                sources.add(project.resolve("scripts/compat/ScenePackExport.java"));
-                sources.add(project.resolve("scripts/compat/HavenSceneExport.java"));
-            }
-            case "collision" -> {
+                        case "collision" -> {
                 if(args.length<4)throw new IllegalArgumentException("collision expects game-directory maps-root [--force]");
                 fixture="SceneCollisionTool";fixtureArgs.addAll(Arrays.asList(args).subList(2,args.length));
                 sources.add(project.resolve("scripts/SceneCollisionTool.java"));
