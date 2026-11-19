@@ -364,6 +364,7 @@ More diagnostic guidance is in [Operations](docs/operations.md#diagnosis). Logs 
 | [Operations](docs/operations.md) | Hosting, WebUI security, backups, updates, and troubleshooting |
 | [Commands](docs/commands.md) | Console and player/GM command syntax |
 | [Content](docs/content.md) | Opening playtests, maps, items, and content editing |
+| [Enemy roster](docs/enemies.md) | Stock monster families and enemy names |
 | [Development](docs/development.md) | Focused tests, packaging, and client compatibility checks |
 | [Tools](scripts/README.md) | Importers, exporters, and diagnostic tools |
 | [Architecture](docs/architecture.md) | Identity, storage, protocol, and simulation boundaries |
