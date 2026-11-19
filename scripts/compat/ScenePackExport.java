@@ -28,39 +28,12 @@ public final class ScenePackExport {
         float targetX=explicitSpawn?Float.parseFloat(args[5]):Float.NaN;
         float targetY=explicitSpawn?Float.parseFloat(args[6]):Float.NaN;
         Entrance entrance=defaultEntrance(scene,manager,explicitSpawn,targetX,targetY);
-        var coords=scene.aew();if(coords.isEmpty())throw new IOException("No static tiles");
-        int minX=coords.stream().mapToInt(c->c.x).min().orElseThrow()-1;
-        int minY=coords.stream().mapToInt(c->c.y).min().orElseThrow()-1;
-        int maxX=coords.stream().mapToInt(c->c.x).max().orElseThrow()+2;
-        int maxY=coords.stream().mapToInt(c->c.y).max().orElseThrow()+2;
-        int width=Math.multiplyExact(maxX-minX,4)+1,height=Math.multiplyExact(maxY-minY,4)+1;
-        if((long)width*height>4_000_000)throw new IOException("Scene collision bounds are too large");
-        var actor=new com.threerings.projectx.data.actor.Knight(new ConfigReference<>("Character/PC/Default"),1,0,new Vector2f(0,0),0);
-        actor.init(manager);
-        var config=manager.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Default").al(manager);
-        var shape=config.shape.adH();var bits=new BitSet(width*height);
-        if(!explicitSpawn){targetX=entrance.x;targetY=entrance.y;}
+        float targetX=args.length==7?Float.parseFloat(args[5]):entrance.x;
+        float targetY=args.length==7?Float.parseFloat(args[6]):entrance.y;
         if(!Float.isFinite(targetX)||!Float.isFinite(targetY))throw new IOException("Invalid spawn");
         float spawnX=targetX,spawnY=targetY;
-        for(int row=0;row<height;row++)for(int col=0;col<width;col++) {
-            float x=minX+col*.25f,y=minY+row*.25f;
-            if(!Float.isFinite(scene.q(x,y,Float.NaN))
-                    ||scene.a(actor,shape.d(new Transform2D(new Vector2f(x,y),0))))continue;
-            bits.set(row*width+col);
-        }
-        int spawnCol=Math.round((spawnX-minX)*4),spawnRow=Math.round((spawnY-minY)*4);
-        if(spawnCol<0||spawnCol>=width||spawnRow<0||spawnRow>=height||!bits.get(spawnRow*width+spawnCol)
-                ||!Float.isFinite(scene.q(spawnX,spawnY,Float.NaN))
-                ||scene.a(actor,shape.d(new Transform2D(new Vector2f(spawnX,spawnY),0))))
-            throw new IOException("Native or requested spawn is not walkable at "+spawnX+","+spawnY+" (native entrance "+entrance.id+"); refusing an invented arrival");
-        // Stage only after all configuration/collision validation succeeds.
         Files.createDirectories(out);
         Files.write(out.resolve("scene.dat"),layout);
-        try(var stream=new DataOutputStream(new GZIPOutputStream(Files.newOutputStream(out.resolve("walkability.gz"))))) {
-            stream.writeInt(0x54445731);stream.writeInt(width);stream.writeInt(height);
-            stream.writeFloat(minX);stream.writeFloat(minY);stream.writeFloat(.25f);
-            stream.write(Arrays.copyOf(bits.toByteArray(),(width*height+7)/8));
-        }
         var p=new Properties();p.setProperty("kind",kind);p.setProperty("scene-id",Integer.toString(scene.sceneId));
         p.setProperty("zone-id",args[3]);p.setProperty("zone-name",args[4]);p.setProperty("name",scene.name);
         p.setProperty("version",Integer.toString(scene.version));
@@ -70,20 +43,20 @@ public final class ScenePackExport {
         p.setProperty("spawn-rotation",Float.toString(entrance.rotation));
         p.setProperty("spawn-x",Float.toString(spawnX));p.setProperty("spawn-y",Float.toString(spawnY));
         p.setProperty("scene-sha256",digest(out.resolve("scene.dat")));
-        p.setProperty("collision-sha256",digest(out.resolve("walkability.gz")));
-        if(content||kind.equals("training")){
-            SceneContentExport.export(Path.of(args[0]),manager,scene,out);
-            SceneCollisionExport.export(manager,scene,out);
-            p.setProperty("static-collision-sha256",digest(out.resolve("static-collision.properties")));
-            p.setProperty("content-sha256",digest(out.resolve("content.properties")));
-        }
+        SceneContentExport.export(Path.of(args[0]),manager,scene,out);
+        SceneCollisionExport.export(manager,scene,out);
+        p.setProperty("static-collision-sha256",digest(out.resolve("static-collision.properties")));
+        p.setProperty("content-sha256",digest(out.resolve("content.properties")));
+        var exact=org.tortodrone.world.MapCollision.fromProperties(out.resolve("static-collision.properties"));
+        int mask=Math.round(org.tortodrone.world.SceneContent.DEFAULT_PLAYER_COLLISION_MASK);
+        if(!exact.clear(mask,spawnX,spawnY,org.tortodrone.world.ScenePortals.PAWN_RADIUS))
+            throw new IOException("Native or requested spawn is not clear at "+spawnX+","+spawnY+" (native entrance "+entrance.id+"); refusing an invented arrival");
         writeProperties(out.resolve("map.properties"),p);
         // Mission returns use the town's real entrance too (powered Camp 218/5158).
         // Retain the native identity for the same movement handshake as level arrivals.
         writePortals(out,digest(out.resolve("scene.dat")),entrance,scene,manager);
-        System.out.println("PASS: kind="+kind+" scene="+scene.sceneId+" version="+scene.version+
-            " samples="+bits.cardinality()+" spawn="+spawnX+","+spawnY+
-            (" entrance="+entrance.id+" yaw="+entrance.rotation));
+        System.out.println("PASS: kind="+kind+" scene="+scene.sceneId+" version="+scene.version
+            +" spawn="+spawnX+","+spawnY+(" entrance="+entrance.id+" yaw="+entrance.rotation));
     }
     private static String sceneKind(TudeySceneConfig config)throws IOException {
         if(config instanceof com.threerings.projectx.dungeon.data.TrainingSceneConfig training&&"training".equals(training.getType()))return "training";
@@ -118,7 +91,8 @@ public final class ScenePackExport {
     private static void writePortals(Path out,String layoutDigest,Entrance entrance,
             TudeySceneModel scene,ConfigManager manager)throws IOException {
         var p=new Properties();p.setProperty("format","2");p.setProperty("layout-sha256",layoutDigest);
-        var collision=org.tortodrone.world.CollisionMap.read(out.resolve("walkability.gz"));
+        var exact=org.tortodrone.world.MapCollision.fromProperties(out.resolve("static-collision.properties"));
+        int mask=Math.round(org.tortodrone.world.SceneContent.DEFAULT_PLAYER_COLLISION_MASK);
         var entrances=new TreeMap<String,Entrance>();
         for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)){
             if(!entry.placeable.getName().equals("Dynamic/Portal/Destination"))continue;
@@ -127,7 +101,7 @@ public final class ScenePackExport {
             var position=entry.transform.tK();var rotation=entry.transform.tL();
             float yaw=(float)Math.atan2(2f*(rotation.w*rotation.z+rotation.x*rotation.y),
                 1f-2f*(rotation.y*rotation.y+rotation.z*rotation.z));
-            if(!collision.walkable(position.x,position.y)){System.out.println("SKIP unwalkable native portal entrance: "+tag);continue;}
+            if(!exact.clear(mask,position.x,position.y,org.tortodrone.world.ScenePortals.PAWN_RADIUS)){System.out.println("SKIP unwalkable native portal entrance: "+tag);continue;}
             if(entrances.putIfAbsent(tag,new Entrance(((Number)entry.getKey()).intValue(),position.x,position.y,yaw))!=null)
                 throw new IOException("Duplicate native portal destination tag: "+tag);
         }

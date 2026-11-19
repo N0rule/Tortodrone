@@ -70,8 +70,7 @@ by `metadata.properties`. It contains:
 The runtime builds a uniform-grid broadphase from those shapes. A movement query touches only the
 shapes near the body; it does not scan the map. Portal entrances are validated against the same
 exact collision, and projectile/entity queries use the same broadphase rather than scanning every
-shape. `walkability.gz` is retained as a compatibility artifact and is **not** the movement path
-when `collision.bin` is present.
+shape. `walkability.gz` is not generated or read by the unified pipeline.
 
 ## Guarantees
 
@@ -93,8 +92,8 @@ All nine bundled maps now carry generated exact collision:
 | --- | --- |
 | haven, bazaar, arcade, garrison, rescue_camp, advanced_training, crash_site, laboratory, hall_of_heroes | generated and used |
 
-`collision.bin` is 276 KiB for all nine maps in total. `walkability.gz` is no longer required by the unified loader: when `collision.bin` is present the
-runtime collision view is exact for movement, portal entrances, entities and projectile sweeps. A
+`collision.bin` is 276 KiB for all nine maps in total. `walkability.gz` is no longer required or generated: `collision.bin` is mandatory, and the runtime
+collision view is exact for movement, portal entrances, entities and projectile sweeps. A
 generated town map validates against the full deployment; portals whose destination scene is
 absent are dropped and reported rather than published as dead travel edges.
 

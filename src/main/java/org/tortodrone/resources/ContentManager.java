@@ -92,10 +92,8 @@ public final class ContentManager {
             if(!exact.layoutHash().equals(digest))throw new IOException(nativeDir+": exact collision layout hash mismatch");
             if(!exact.clear(collisionMask,x,y,ScenePortals.PAWN_RADIUS))throw new IOException(folder+": defaultSpawn is not clear in exact collision");
         }
-        var collision=exact==null
-            ? CollisionMap.read(nativeDir.resolve("walkability.gz"))
-            : CollisionMap.exact(exact,collisionMask,ScenePortals.PAWN_RADIUS);
-        if(exact==null&&!collision.walkable(x,y))throw new IOException(folder+": defaultSpawn is not walkable");
+        if(exact==null)throw new IOException(folder+": exact collision.bin is required; run generateNativeCollision");
+        var collision=CollisionMap.exact(exact,collisionMask,ScenePortals.PAWN_RADIUS);
         var portals=ScenePortals.load(prepared.portals(),digest,collision);
         return new SceneCatalog.MapScene(Integer.parseInt(p.getProperty("scene-id")),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,portals,actors,SceneCollision.load(nativeDir,digest),exact);
     }
