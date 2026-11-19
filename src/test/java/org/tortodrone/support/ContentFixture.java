@@ -30,9 +30,9 @@ public final class ContentFixture {
         for(var folder:MapYaml.folders(Path.of("content/maps")).entrySet()) {
             String name=folder.getValue().getFileName().toString();Path out=target.resolve("maps/"+name);Files.createDirectories(out);
             var prepared=MapYaml.prepare(folder.getValue(),Path.of("content/shared"),snapshot.items());
-            for(String file:List.of("scene.dat","walkability.gz","static-collision.properties"))if(Files.exists(prepared.nativeDirectory().resolve(file)))Files.copy(prepared.nativeDirectory().resolve(file),out.resolve(file));
+            for(String file:List.of("scene.dat","collision.bin"))if(Files.exists(prepared.nativeDirectory().resolve(file)))Files.copy(prepared.nativeDirectory().resolve(file),out.resolve(file));
             store(out.resolve("content.properties"),prepared.content());store(out.resolve("portals.properties"),prepared.portals());
-            var descriptor=prepared.descriptor();descriptor.setProperty("content-sha256",ContentFiles.digest(out.resolve("content.properties")));store(out.resolve("map.properties"),descriptor);resources.put("scene."+folder.getKey(),"maps/"+name);
+            var descriptor=prepared.descriptor();descriptor.setProperty("content-sha256",ContentFiles.digest(out.resolve("content.properties")));descriptor.setProperty("collision-sha256",ContentFiles.digest(out.resolve("collision.bin")));descriptor.remove("static-collision-sha256");store(out.resolve("map.properties"),descriptor);resources.put("scene."+folder.getKey(),"maps/"+name);
         }
         var entry=new Properties();entry.setProperty("entry-scene",Integer.toString(snapshot.scenes().entry().id()));store(target.resolve("maps/catalog.properties"),entry);
         var manifest=new Properties();manifest.setProperty("format","1");manifest.setProperty("engine-format","1");manifest.setProperty("id","vanilla");manifest.setProperty("version","1.0.0");

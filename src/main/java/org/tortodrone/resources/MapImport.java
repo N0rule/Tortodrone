@@ -24,7 +24,7 @@ public final class MapImport {
         Path root=deployment.toAbsolutePath().normalize(),target=root.resolve("content/maps/"+name);ContentFiles.safe(source);ContentFiles.safe(target);
         if(Files.exists(target,LinkOption.NOFOLLOW_LINKS)&&!replace)throw new IOException("Map already exists; no replacement performed: "+name);
         var p=ContentFiles.properties(source.resolve("map.properties"));
-        for(var file:Map.of("scene.dat","scene-sha256","walkability.gz","collision-sha256","content.properties","content-sha256","static-collision.properties","static-collision-sha256").entrySet())
+        for(var file:Map.of("scene.dat","scene-sha256","collision.bin","collision-sha256","content.properties","content-sha256","static-collision.properties","static-collision-sha256").entrySet())
             if(p.containsKey(file.getValue())&&!ContentFiles.digest(source.resolve(file.getKey())).equals(p.getProperty(file.getValue())))throw new IOException("Prepared native map fingerprint differs: "+file.getKey());
         Path lockFile=root.resolve("data/server.lock");ContentFiles.safe(lockFile);
         try(var channel=Files.exists(lockFile)?FileChannel.open(lockFile,StandardOpenOption.WRITE):null;var lock=channel==null?null:channel.tryLock()) {

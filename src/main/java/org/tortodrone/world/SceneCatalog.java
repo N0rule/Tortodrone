@@ -167,27 +167,22 @@ public final class SceneCatalog {
             byte[] layout=checked(folder,"scene.dat",required(p,"scene-sha256"),900_000);
             if(layout.length<16 || layout[0]!=(byte)0xfa || layout[1]!=(byte)0xce || layout[2]!=(byte)0xaf || layout[3]!=0x0e)
                 throw new IOException("Invalid archived scene header");
-            checked(folder,"walkability.gz",required(p,"collision-sha256"),1024*1024);
             if(p.containsKey("content-sha256"))checked(folder,"content.properties",required(p,"content-sha256"),SceneContent.MAX_BYTES);
             else if(Files.exists(folder.resolve("content.properties")))throw new IOException("Scene content requires a pinned checksum");
-            if(p.containsKey("static-collision-sha256"))checked(folder,"static-collision.properties",required(p,"static-collision-sha256"),4_000_000);
-            else if(Files.exists(folder.resolve("static-collision.properties")))throw new IOException("Static collision requires a pinned checksum");
-            var collision=CollisionMap.read(folder.resolve("walkability.gz"));
+            Path collisionFile=folder.resolve("collision.bin");
+            if(!Files.isRegularFile(collisionFile))throw new IOException("Map has no compiled collision.bin: "+id);
+            String expected=required(p,"collision-sha256");
+            if(!expected.equals(org.tortodrone.resources.ContentFiles.digest(collisionFile)))throw new IOException("Collision checksum mismatch: "+id);
+            MapCollision exact=MapCollision.read(collisionFile);
+            if(!Objects.equals(exact.layoutHash(),required(p,"scene-sha256")))throw new IOException("Collision layout hash mismatch: "+id);
             float x=coordinate(p,"spawn-x"),y=coordinate(p,"spawn-y");
-            if(!collision.walkable(x,y))throw new IOException("Map spawn is not walkable: "+id);
-            MapCollision exact=null;
-            if(Files.exists(folder.resolve("collision.bin"))){
-                String expected=required(p,"collision-sha256");
-                String actual=org.tortodrone.resources.ContentFiles.digest(folder.resolve("collision.bin"));
-                if(!expected.equals(actual))throw new IOException("Collision checksum mismatch: "+id);
-                exact=MapCollision.read(folder.resolve("collision.bin"));
-                if(!Objects.equals(exact.layoutHash(),required(p,"scene-sha256")))throw new IOException("Collision layout hash mismatch: "+id);
-                int mask=Math.round(SceneContent.load(folder,required(p,"scene-sha256")).stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
-                if(!exact.clear(mask,x,y,ScenePortals.PAWN_RADIUS))throw new IOException("Map spawn is not clear in exact collision: "+id);
-            }
+            var content=SceneContent.load(folder,required(p,"scene-sha256"));
+            int mask=Math.round(content.stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
+            if(!exact.clear(mask,x,y,ScenePortals.PAWN_RADIUS))throw new IOException("Map spawn is not clear in exact collision: "+id);
+            var collision=CollisionMap.exact(exact,mask,ScenePortals.PAWN_RADIUS);
             var scene=new MapScene(id,zone,required(p,"zone-name"),required(p,"name"),required(p,"image"),kind,
                 integer(p,"version"),x,y,rotation(p),number(p,"instances",1,16),collision,layout,
-                ScenePortals.load(folder,required(p,"scene-sha256"),collision),SceneContent.load(folder,required(p,"scene-sha256")),SceneCollision.load(folder,required(p,"scene-sha256")),exact);
+                ScenePortals.load(folder,required(p,"scene-sha256"),collision),content,SceneCollision.fromMapCollision(exact),exact);
             if(scenes.putIfAbsent(id,scene)!=null)throw new IOException("Duplicate scene ID");
         }
         return scenes;
