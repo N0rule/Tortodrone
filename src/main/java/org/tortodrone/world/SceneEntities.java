@@ -162,24 +162,26 @@ public final class SceneEntities implements SceneWeapons.Targets {
      *  executes: {@code Pot (Base)} {@code land} runs DamageRegionFromPoint with damage
      *  [Status(Ailment), DepthScale PC/Damage/Base/Default (flags 2)] and region expansion
      *  = Blast Radius, then the per-variant Extra Action spawns ground hazards (Fire Pot one
-     *  ScorcherTorch, Damage {flags 2, Fire 1.0/80, ULTRA/MODERATE}, toggled by its Lifetime
+     *  ScorcherTorch, Damage {flags 2, Fire 1.0/100, ULTRA/MODERATE}, toggled by its Lifetime
      *  argument's served choice to a 6 Second cleanup fuse while the streamed Lifetime argument
      *  renders the flame for its authored 4 seconds; Oil Pot nine Oil Slick patches).
      *  Damage stops at 4 seconds conservatively: stripped handler conditions do not establish
      *  the native damage cutoff. Cleanup must never extend the active damage region.
      *  Pots without an entry below stay inert. */
     private record Pot(float blast,StarterCatalog.Model ailment,Object hazardDamage,String hazardConfig,float hazardRadius,int hazardLifetime) { }
+    /** The capture separates the pot smash ailment from the torch hazard. The direct
+     *  torch carries Fire with Power 100; the smash keeps the previously authored 80. */
+    private static StarterCatalog.Model fireStatus(int power){
+        return new StarterCatalog.Model("Fire",Map.of(
+            "Chance",1f,"Power",power,
+            "Status Chance",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_CHANCE,"ULTRA",5),
+            "Status Power",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_POWER,"MODERATE",2)));
+    }
     private static final Map<String,Pot> POTS=Map.of(
         "Dynamic/Lift Objects/Clay Pot",new Pot(.5f,null,null,null,0,0),
-        "Dynamic/Lift Objects/Fire Pot",new Pot(1f,new StarterCatalog.Model("Fire",Map.of(
-                "Chance",1f,"Power",80,
-                "Status Chance",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_CHANCE,"ULTRA",5),
-                "Status Power",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_POWER,"MODERATE",2))),
+        "Dynamic/Lift Objects/Fire Pot",new Pot(1f,fireStatus(80),
             new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.DAMAGE_STATUS,Map.of(
-                "flags",2,"statusCondition",new StarterCatalog.Model("Fire",Map.of(
-                    "Chance",1f,"Power",80,
-                    "Status Chance",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_CHANCE,"ULTRA",5),
-                    "Status Power",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_POWER,"MODERATE",2))))),
+                "flags",2,"statusCondition",fireStatus(100))),
             "Bomb/Monster/ScorcherTorch",1f,6000),
         "Dynamic/Lift Objects/Oil Pot",new Pot(1f,null,null,"Bomb/Monster/Oil Slick",.45f,15000));
 
@@ -698,10 +700,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private void lightOil(Entity oil,int stamp){
         if(oil.ignited)return;
         oil.ignited=true;
-        var fire=new StarterCatalog.Model("Fire (Scaled)",Map.of(
-            "Status Chance",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_CHANCE,"ULTRA",5),
-            "Status Power",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_POWER,"MODERATE",2)));
-        var damage=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.DAMAGE_STATUS,Map.of("statusCondition",fire,"flags",7));
+        // Capture: oil-ignited torches use Fire (Scaled), flags 1, Chance 0.0 / Power 0.
+        var fire=new StarterCatalog.Model("Fire (Scaled)",Map.of("Chance",0f,"Power",0));
+        var damage=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.DAMAGE_STATUS,Map.of("statusCondition",fire,"flags",1));
         hazard("Bomb/Monster/ScorcherTorch",damage,1f,4000,
             Map.of("config.argument.Lifetime","string|2 Seconds","config.argument.Nature","string|Neutral","hazard-active-lifetime","2000"),oil.x,oil.y,stamp).owner=oil.owner;
     }
