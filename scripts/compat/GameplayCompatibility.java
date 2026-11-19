@@ -58,8 +58,10 @@ public final class GameplayCompatibility {
         // Existing persisted auction mail is normalized on publication as well as new mail.
         var mail=new AuctionState.Mail(1,42,1,"%auction:s.auction_cancelled|%item:"+def.nameKey(),"%auction:m.auction_cancelled",0,null,false,false,0,"");
         append(bytes,codec.townResult(1001,(short)3,mail,empty));
-        var staff=new AuctionState.Mail(2,42,1,"%uplink:~Welcome, knights","%uplink:~Two gels for the road.\n— Spiral HQ",25,0,List.of(),false,true,0,"",-6,3,"");
+        var staff=new AuctionState.Mail(2,42,1,"Welcome, knights","Two gels for the road.\n— Tortodrone Staff",25,0,List.of(),false,true,0,"",-6,0,"Tortodrone Staff");
         append(bytes,codec.townResult(1001,(short)4,staff,empty));
+        var systemStaff=new AuctionState.Mail(3,42,1,"%uplink:~System welcome","%uplink:~A system letter.",0,0,List.of(),false,true,0,"",-6,3,"");
+        append(bytes,codec.townResult(1001,(short)5,systemStaff,empty));
         var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.ql();in.ql();
         var player=new PlayerObject();player.loadouts=new DSet<>(List.of(new com.threerings.projectx.data.Loadout("")));
         apply(in,player);check(player.loadouts.size()==2&&!player.loadouts.f("battle").pvp,"native entry add refreshes live loadouts");
@@ -94,8 +96,12 @@ public final class GameplayCompatibility {
         for(String key:List.of("s.auction_cancelled","m.auction_cancelled","s.auction_incomplete","m.auction_incomplete","s.auction_complete","m.auction_complete","s.bid_complete","m.bid_complete","s.bid_cancelled","m.bid_cancelled","s.bid_outbid","m.bid_outbid"))check(messages.gE("uplink").gC(key),"original auction mail template exists: "+key);
         check(received.g(messages.gE("uplink")).equals("Your auction cancelled: "+name)&&!received.h(messages.gE("uplink")).contains("m.auction_cancelled"),"native auction mail resolves original subject, item name and body");
         var staffReply=(InvocationResponseEvent)((EventNotification)in.ql()).yn();var staffMail=(ReceivedMail)staffReply.yh()[0];
-        check(staffMail.g(messages.gE("uplink")).equals("Welcome, knights")&&staffMail.h(messages.gE("uplink")).equals("Two gels for the road.\n— Spiral HQ"),"admin literal staff mail renders exactly through the uplink bundle");
-        check(staffMail.sender instanceof com.threerings.util.Name&&staffMail.sender.toString().equals(" 6"),"admin staff mail reports the Spiral HQ system sender");
+        check(staffMail.g(messages.gE("uplink")).equals("Welcome, knights")&&staffMail.h(messages.gE("uplink")).equals("Two gels for the road.\n— Tortodrone Staff"),"custom-sender staff mail keeps its plain text");
+        check(staffMail.sender instanceof com.threerings.util.Name&&staffMail.sender.toString().equals("Tortodrone Staff"),"admin staff mail carries a custom literal sender name");
+        check(staffMail.attachment!=null,"custom staff mail keeps its crown attachment");
+        var systemReply=(InvocationResponseEvent)((EventNotification)in.ql()).yn();var systemMail=(ReceivedMail)systemReply.yh()[0];
+        check(systemMail.g(messages.gE("uplink")).equals("System welcome")&&systemMail.h(messages.gE("uplink")).equals("A system letter."),"system-sender staff mail resolves its tainted literal through the uplink bundle");
+        check(systemMail.sender.toString().equals(" 6"),"system staff mail keeps its Spiral HQ sender identity");
         check(in.available()==0,"no trailing bytes or missing native fields");
         System.out.println("PASS: retail loadout DSet events/PvP, arsenal entry/policy, interaction icons, warp/invulnerability deltas, dialogue and auction-mail localization");
     }

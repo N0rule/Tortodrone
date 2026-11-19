@@ -1,4 +1,4 @@
-import { el, input, select, toolbar, button, text, download } from '../ui.js';
+import { el, input, select, toolbar, button, text, download, time as clockTime } from '../ui.js';
 /** Retains bounded output and appends only new rows. Scroll and controls have stable identity. */
 export function logStream({ commands = [] } = {}) {
     const node = el('div', null, 'stack'),
@@ -60,11 +60,7 @@ export function logStream({ commands = [] } = {}) {
                 let line = cache.get(id);
                 if (!line) {
                     line = el('div', null, 'terminal-line ' + row.level);
-                    const time = el(
-                        'time',
-                        new Date(row.timestamp).toLocaleTimeString([], { hour12: false }),
-                        'log-time'
-                    );
+                    const time = el('time', clockTime(row.timestamp), 'log-time');
                     time.dateTime = row.timestamp;
                     const level = el('span', row.level, 'log-level');
                     const message = el('span', row.message ?? row.line, 'log-message');

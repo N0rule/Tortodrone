@@ -98,9 +98,9 @@ public final class AdminService implements AutoCloseable {
             case "auction-create"->{return accounts.auctions().scheduleFeatured(p.text("config"),p.positive("quantity"),p.integer("bid"),p.integer("buy"),p.integer("stock"),p.number("starts"),p.number("expires"));}
             case "auction-cancel"->{return accounts.auctions().cancel(p.number("id"));}
             case "auction-settle"->accounts.auctions().settleExpired();
-            case "mail-save"->{return accounts.auctions().campaigns().save(p.number("id"),p.number("revision"),p.number("starts"),p.number("ends"),p.integer("sender"),p.text("subject"),p.text("body"),p.integer("crowns"),p.integer("energy"),gifts(p.text("items")));}
-            case "mail-send"->{var target=accounts.worldProfile(p.text("username"),p.text("knight"));return Map.of("id",accounts.auctions().campaigns().sendTo(target.worldId(),p.integer("sender"),p.text("subject"),p.text("body"),p.integer("crowns"),p.integer("energy"),gifts(p.text("items"))),"worldId",target.worldId());}
-            case "mail-welcome-save"->{return accounts.auctions().campaigns().saveWelcome(p.flag("enabled"),p.integer("sender"),p.optional("subject"),p.optional("body"));}
+            case "mail-save"->{return accounts.auctions().campaigns().save(p.number("id"),p.number("revision"),p.number("starts"),p.number("ends"),p.integer("sender"),p.optional("senderLabel"),p.text("subject"),p.text("body"),p.integer("crowns"),p.integer("energy"),gifts(p.text("items")));}
+            case "mail-send"->{var target=accounts.worldProfile(p.text("username"),p.text("knight"));return Map.of("id",accounts.auctions().campaigns().sendTo(target.worldId(),p.integer("sender"),p.optional("senderLabel"),p.text("subject"),p.text("body"),p.integer("crowns"),p.integer("energy"),gifts(p.text("items"))),"worldId",target.worldId());}
+            case "mail-welcome-save"->{return accounts.auctions().campaigns().saveWelcome(p.flag("enabled"),p.integer("sender"),p.optional("senderLabel"),p.optional("subject"),p.optional("body"),p.integer("crowns"),p.integer("energy"),gifts(p.text("items")));}
             case "mail-cancel"->{return accounts.auctions().campaigns().cancel(p.number("id"),p.number("revision"));}
             case "news-save"->{return news.save(p.text("yaml"),p.text("revision"));}
             case "news-visual-save"->{return news.saveCatalog(p.text("catalog"),p.text("revision"));}

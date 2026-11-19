@@ -41,7 +41,13 @@ const shapes = {
     remove: 'M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7'
 };
 export function symbol(name) {
-    const key = name.startsWith('slot-') || name === 'brand' ? name : 'nav-' + name;
+    // Packs exported before nav-mailing existed carried the stock mail glyph as
+    // nav-logs. Treat that pack as legacy: mailing borrows it, while Logs falls
+    // back to its document glyph instead of showing a second mail icon.
+    const legacyMailPack = !masks['nav-mailing'] && !originals['nav-mailing'];
+    if (name === 'logs' && legacyMailPack) return fallback(name);
+    const actual = name === 'mailing' && legacyMailPack ? 'logs' : name;
+    const key = actual.startsWith('slot-') || actual === 'brand' ? actual : 'nav-' + actual;
     const prepared = asset(masks[key]),
         original = asset(originals[key]);
     if (prepared || original) return nativeSymbol(prepared || original, name, !!prepared);

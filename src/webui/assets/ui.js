@@ -98,7 +98,36 @@ export const compact = (value) =>
     new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(
         value
     );
-export const date = (value) => (value ? new Date(value).toLocaleString() : '—');
+const preferredLocale = (() => {
+    if (typeof navigator === 'undefined') return 'en-GB';
+    const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
+    const language = languages[0] || 'en-GB';
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    // Browsers often report en-US regardless of the machine region. Outside the
+    // Americas, prefer the day-first/24-hour form the user asked for.
+    return /^en[-_]US$/i.test(language) && !zone.startsWith('America/') ? 'en-GB' : language;
+})();
+const dateFormat = new Intl.DateTimeFormat(preferredLocale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23'
+});
+const calendarFormat = new Intl.DateTimeFormat(preferredLocale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+});
+const timeFormat = new Intl.DateTimeFormat(preferredLocale, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23'
+});
+export const date = (value) => (value ? dateFormat.format(new Date(value)) : '—');
+export const time = (value) => (value ? timeFormat.format(new Date(value)) : '—');
+export const calendarDate = (value = Date.now()) => calendarFormat.format(new Date(value));
 export function duration(seconds) {
     seconds = Math.max(0, seconds);
     return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m ${Math.floor(seconds % 60)}s`;

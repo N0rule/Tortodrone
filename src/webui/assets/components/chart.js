@@ -1,4 +1,4 @@
-import { el, text } from '../ui.js';
+import { el, text, time } from '../ui.js';
 const NS = 'http://www.w3.org/2000/svg';
 export function nearestSample(samples, time) {
     if (!samples.length) return -1;
@@ -60,7 +60,7 @@ export function chart(title, unit, series) {
         if (!s) return;
         text(
             readout,
-            `${new Date(s.time).toLocaleTimeString()} · ` +
+            `${time(s.time)} · ` +
                 series
                     .map((v) => {
                         const n = v.value(s, index, samples);
@@ -149,10 +149,7 @@ export function chart(title, unit, series) {
                     [values.at(-1), 580, 'end']
                 ]) {
                     const label = svg('text', { x, y: 181, 'text-anchor': anchor });
-                    label.textContent = new Date(value.time).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
+                    label.textContent = time(value.time);
                     grid.push(label);
                 }
             lines.replaceChildren(...grid);

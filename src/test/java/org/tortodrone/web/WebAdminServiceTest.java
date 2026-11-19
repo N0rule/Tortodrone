@@ -99,7 +99,7 @@ public final class WebAdminServiceTest {
                 refused(()->write(service,"mail-cancel","id",campaign.id(),"revision",campaign.updated()));
                 var offline=(Map<?,?>)write(service,"mail-send","username","Alice","knight","Alice-Knight","sender",6,"subject","Offline gift","body","For later","crowns",3,"energy",1,"items","[]");
                 check(((Number)offline.get("worldId")).intValue()==accounts.worldProfile("Alice","Alice-Knight").worldId(),"WebUI direct mail resolves an offline knight");
-                var welcome=(MailCampaignStore.Welcome)write(service,"mail-welcome-save","enabled",true,"sender",6,"subject","Welcome","body","Hello");
+                var welcome=(MailCampaignStore.Welcome)write(service,"mail-welcome-save","enabled",true,"sender",6,"subject","Welcome","body","Hello","crowns",0,"energy",0,"items","[]");
                 check(welcome.enabled()&&welcome.subject().equals("Welcome"),"WebUI welcome mail save");
                 var refreshedMail=(Map<?,?>)service.read("mail",new AdminService.Input(Map.of()));
                 check(((MailCampaignStore.Welcome)refreshedMail.get("welcome")).enabled(),"WebUI mail read includes the welcome letter");

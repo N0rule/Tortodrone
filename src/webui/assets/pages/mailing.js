@@ -16,7 +16,7 @@ import {
 import { DataTable } from '../components/table.js';
 import { openDialog, confirm as confirmAction } from '../components/dialog.js';
 import { itemPicker } from '../components/item-picker.js';
-import { itemLine } from '../components/items.js';
+import { currency, itemLine } from '../components/items.js';
 
 const SENDERS = [
     ['6', 'Spiral HQ'],
@@ -24,6 +24,8 @@ const SENDERS = [
     ['4', 'Spiral Knights Support']
 ];
 const senderName = (sender) => SENDERS.find(([id]) => Number(id) === sender)?.[1] || `System ${sender}`;
+const displaySender = (value) =>
+    value.senderLabel?.trim() ? value.senderLabel.trim() : senderName(value.sender);
 const units = (gifts) => gifts.reduce((total, gift) => total + Number(gift.count || 0), 0);
 const unitCount = (value) => `${value} unit${value === 1 ? '' : 's'}`;
 
@@ -51,25 +53,87 @@ function statusBadge(campaign, now) {
     return badge(status, status === 'Active' ? 'good' : status === 'Scheduled' ? 'gold' : '');
 }
 
-function preview(subject, body, sender, crowns, energy) {
+function giftsLine(gifts, definitions) {
+    if (!gifts.length) return null;
+    const node = el('div', null, 'mail-attachments');
+    for (const gift of gifts) {
+        const line = itemLine(definitions.get(gift.config), { config: gift.config });
+        line.append(el('small', `×${gift.count}`));
+        node.append(line);
+    }
+    return node;
+}
+
+function preview(message, definitions) {
     const node = el('div', null, 'mail-preview');
     node.append(
         el('small', 'Uplink message', 'muted'),
-        el('strong', subject.trim() || 'Subject preview', 'mail-subject'),
-        el('p', body.trim() || 'Your message will appear here.', 'mail-body'),
+        el('strong', message.subject.trim() || 'Subject preview', 'mail-subject'),
+        el('p', message.body.trim() || 'Your message will appear here.', 'mail-body'),
         toolbar(
-            el('span', senderName(Number(sender)), 'muted'),
-            ...(crowns ? [el('span', `${crowns} crowns`, 'muted')] : []),
-            ...(energy ? [el('span', `${energy} energy`, 'muted')] : [])
+            el('span', displaySender(message), 'muted'),
+            ...(message.crowns > 0 ? [currency('crowns', message.crowns)] : []),
+            ...(message.energy > 0 ? [currency('energy', message.energy)] : [])
         )
     );
+    const gifts = giftsLine(message.gifts || [], definitions);
+    if (gifts) node.append(gifts);
     return node;
+}
+
+function draftOf(mode, campaign) {
+    if (mode === 'welcome') {
+        const welcome = campaign;
+        return {
+            enabled: welcome.enabled,
+            enabledAt: welcome.enabledAt,
+            sender: welcome.sender,
+            senderLabel: welcome.senderLabel || '',
+            subject: welcome.subject,
+            body: welcome.body,
+            crowns: welcome.crowns,
+            energy: welcome.energy,
+            gifts: welcome.gifts.map((gift) => ({ ...gift })),
+            recipient: ''
+        };
+    }
+    if (mode === 'campaign' && campaign) {
+        return {
+            id: campaign.id,
+            revision: campaign.updated,
+            sender: campaign.sender,
+            senderLabel: campaign.senderLabel || '',
+            subject: campaign.subject,
+            body: campaign.body,
+            starts: campaign.starts,
+            ends: campaign.ends,
+            crowns: campaign.crowns,
+            energy: campaign.energy,
+            gifts: campaign.gifts.map((gift) => ({ ...gift })),
+            recipient: ''
+        };
+    }
+    return {
+        id: 0,
+        revision: 0,
+        enabled: false,
+        sender: 6,
+        senderLabel: '',
+        subject: '',
+        body: '',
+        starts: Date.now(),
+        ends: Date.now() + 30 * 86_400_000,
+        crowns: 0,
+        energy: 0,
+        gifts: [],
+        recipient: ''
+    };
 }
 
 export async function mount(ctx) {
     let data = await ctx.request('mail');
     const definitions = new Map(),
-        node = el('div', null, 'stack'),
+        node = el('div', null, 'stack mail-page'),
         summary = el('div', null, 'stack'),
         welcomeHost = el('div'),
         guidance = el(
@@ -84,9 +148,11 @@ export async function mount(ctx) {
     };
 
     const loadDefinitions = async (campaigns) => {
-        const missing = [
+        const configs = [
             ...new Set(campaigns.flatMap((campaign) => campaign.gifts.map((gift) => gift.config)))
-        ].filter((config) => !definitions.has(config));
+        ];
+        if (data.welcome) configs.push(...data.welcome.gifts.map((gift) => gift.config));
+        const missing = [...new Set(configs)].filter((config) => !definitions.has(config));
         await Promise.all(
             missing.map(async (config) => {
                 try {
@@ -106,17 +172,17 @@ export async function mount(ctx) {
                     const cell = el('div', null, 'mail-subject-cell');
                     cell.append(
                         el('strong', campaign.subject),
-                        el('small', campaign.body.replace(/\s+/g, ' ').slice(0, 90), 'muted')
+                        el(
+                            'small',
+                            campaign.body.replace(/\s+/g, ' ').slice(0, 90),
+                            'muted'
+                        )
                     );
                     return cell;
                 },
                 (campaign) => campaign.subject
             ],
-            [
-                'Sender',
-                (campaign) => senderName(campaign.sender),
-                (campaign) => senderName(campaign.sender)
-            ],
+            ['Sender', displaySender, displaySender],
             [
                 'Delivery window',
                 (campaign) => {
@@ -156,15 +222,15 @@ export async function mount(ctx) {
                 'Crowns / energy',
                 (campaign) =>
                     toolbar(
-                        el('span', `${campaign.crowns} crowns`),
-                        el('span', `${campaign.energy} energy`)
+                        currency('crowns', campaign.crowns),
+                        currency('energy', campaign.energy)
                     ),
                 (campaign) => campaign.crowns + campaign.energy
             ]
         ],
         {
             actions: (get) => [
-                button('Edit', () => compose(get()), 'secondary', () => get().enabled),
+                button('Edit', () => compose('campaign', get()), 'secondary', () => get().enabled),
                 button(
                     'Cancel',
                     () =>
@@ -188,6 +254,7 @@ export async function mount(ctx) {
             ]
         }
     );
+    table.node.classList.add('mail-table');
 
     function renderSummary() {
         const counts = { Active: 0, Scheduled: 0, Ended: 0, Cancelled: 0 };
@@ -204,7 +271,10 @@ export async function mount(ctx) {
                     ...Object.entries(counts).map(([name, count]) =>
                         badge(`${count} ${name.toLowerCase()}`, name === 'Active' ? 'good' : '')
                     ),
-                    badge(`${delivered.toLocaleString()} letter${delivered === 1 ? '' : 's'} delivered`, 'gold')
+                    badge(
+                        `${delivered.toLocaleString()} letter${delivered === 1 ? '' : 's'} delivered`,
+                        'gold'
+                    )
                 ),
                 el(
                     'small',
@@ -226,151 +296,77 @@ export async function mount(ctx) {
 
     function renderWelcome() {
         const welcome = data.welcome;
-        welcomeHost.replaceChildren(
-            panel(
-                'New knight welcome mail',
-                el(
-                    'small',
-                    'Optional. Only knights created while this is enabled receive it; existing knights are not mailed. It arrives once, on the knight’s first visit. Disabling stops new copies but keeps eligibility for knights created while it was enabled.',
-                    'muted'
-                ),
-                toolbar(
-                    badge(
-                        welcome.enabled ? 'Enabled' : 'Disabled',
-                        welcome.enabled ? 'good' : ''
-                    ),
-                    el(
-                        'span',
-                        welcome.enabled
-                            ? `Applies to knights created after ${date(welcome.enabledAt)}`
-                            : welcome.enabledAt
-                              ? `Stopped ${date(welcome.disabledAt)}; knights created while it was enabled still receive it`
-                              : 'New knights receive no automatic mail',
-                        'muted'
-                    )
-                ),
-                ...(welcome.enabled
-                    ? [
-                          el('strong', welcome.subject),
-                          el(
-                              'p',
-                              welcome.body.replace(/\s+/g, ' ').length > 240
-                                  ? welcome.body.replace(/\s+/g, ' ').slice(0, 240) + '…'
-                                  : welcome.body.replace(/\s+/g, ' '),
-                              'muted'
-                          )
-                      ]
-                    : []),
-                toolbar(button('Edit welcome mail', editWelcome, 'secondary'))
-            )
-        );
-    }
-
-    function editWelcome() {
-        const welcome = data.welcome;
-        const enabled = input('Enable welcome mail', welcome.enabled, 'checkbox');
-        const sender = select('Sender', SENDERS, String(welcome.sender));
-        const subject = input('Subject', welcome.subject);
-        subject.maxLength = 50;
-        const body = input('Body', welcome.body, 'textarea');
-        body.rows = 6;
-        body.maxLength = 8096;
-        const form = el('div', null, 'form-grid');
-        form.append(
-            label('Enabled', enabled),
-            label('Sender', sender),
-            label('Subject', subject),
-            label('Body', body)
-        );
-        form.lastElementChild.classList.add('wide');
-        const content = el('div', null, 'stack');
-        content.append(
+        const status = welcome.enabled
+            ? `Applies to knights created after ${date(welcome.enabledAt)}`
+            : welcome.enabledAt
+              ? `Stopped ${date(welcome.disabledAt)}; knights created while it was enabled still receive it`
+              : 'New knights receive no automatic mail';
+        const content = [
             el(
                 'small',
-                'Enabling starts a new eligibility clock. Existing knights are not mailed, and a copy already delivered is never removed.',
+                'Optional. Only knights created while this is enabled receive it; existing knights are not mailed. It arrives once, on the knight’s first visit. Disabling stops new copies but keeps eligibility for knights created while it was enabled.',
                 'muted'
             ),
-            form
+            toolbar(badge(welcome.enabled ? 'Enabled' : 'Disabled', welcome.enabled ? 'good' : ''), el('span', status, 'muted'))
+        ];
+        if (welcome.subject || welcome.body || welcome.gifts.length)
+            content.push(
+                preview(
+                    {
+                        ...welcome,
+                        senderLabel: welcome.senderLabel
+                    },
+                    definitions
+                )
+            );
+        content.push(
+            toolbar(button('Edit welcome mail', () => compose('welcome', welcome), 'secondary'))
         );
-        openDialog({
-            title: 'New knight welcome mail',
-            description: welcome.enabled
-                ? `Currently enabled for knights created after ${date(welcome.enabledAt)}.`
-                : welcome.enabledAt
-                  ? `Disabled since ${date(welcome.disabledAt)}. Knights created while it was enabled still receive it.`
-                  : 'Disabled. New knights receive no automatic mail.',
-            content,
-            submit: 'Save welcome mail',
-            notifySaved: false,
-            isDirty: () =>
-                enabled.checked !== welcome.enabled ||
-                Number(sender.value) !== welcome.sender ||
-                subject.value !== welcome.subject ||
-                body.value !== welcome.body,
-            after: () => refresh(),
-            onSubmit: async () => {
-                if (enabled.checked && !subject.value.trim()) throw new Error('Subject is required.');
-                if (enabled.checked && !body.value.trim()) throw new Error('Body is required.');
-                await api.change('mail-welcome-save', {
-                    enabled: enabled.checked,
-                    sender: Number(sender.value),
-                    subject: subject.value,
-                    body: body.value
-                });
-                changed(enabled.checked ? 'Welcome mail enabled.' : 'Welcome mail disabled.');
-            }
-        });
+        welcomeHost.replaceChildren(panel('New knight welcome mail', ...content));
     }
 
-    async function compose(campaign, direct = false) {
-        if (direct) roster = null;
-        const draft = campaign
-            ? {
-                  id: campaign.id,
-                  revision: campaign.updated,
-                  subject: campaign.subject,
-                  body: campaign.body,
-                  sender: campaign.sender,
-                  starts: campaign.starts,
-                  ends: campaign.ends,
-                  crowns: campaign.crowns,
-                  energy: campaign.energy,
-                  gifts: campaign.gifts.map((gift) => ({ ...gift })),
-                  recipient: ''
-              }
-            : {
-                  id: 0,
-                  revision: 0,
-                  subject: '',
-                  body: '',
-                  sender: 6,
-                  starts: Date.now(),
-                  ends: Date.now() + 30 * 86_400_000,
-                  crowns: 0,
-                  energy: 0,
-                  gifts: [],
-                  recipient: ''
-              };
-        const rows = direct ? await rosterRows() : [];
-        if (direct && !rows.length) throw new Error('Create a knight before sending direct mail.');
+    async function compose(mode, record = null) {
+        if (mode === 'direct') roster = null;
+        const rows = mode === 'direct' ? await rosterRows() : [];
+        if (mode === 'direct' && !rows.length)
+            throw new Error('Create a knight before sending direct mail.');
+        const draft = draftOf(mode, record);
         const node = el('div', null, 'stack'),
-            form = el('div', null, 'form-grid'),
+            header = el('div', null, 'form-grid'),
             gifts = el('div', null, 'stack'),
             unitLabel = el('small', '', 'muted');
+        const enabled = mode === 'welcome' ? input('Enable welcome mail', draft.enabled, 'checkbox') : null;
         const subject = input('Subject', draft.subject);
         subject.maxLength = 50;
         const body = input('Body', draft.body, 'textarea');
-        body.rows = 7;
+        body.rows = 12;
         body.maxLength = 8096;
         const sender = select('Sender', SENDERS, String(draft.sender));
-        const starts = input('Starts', localDate(draft.starts), 'datetime-local');
-        const ends = input('Ends', localDate(draft.ends), 'datetime-local');
+        const customSender = input('Custom sender (optional)', draft.senderLabel);
+        customSender.maxLength = 40;
+        customSender.placeholder = 'Overrides the system sender name';
+        const starts = mode === 'campaign' ? input('Starts', localDate(draft.starts), 'datetime-local') : null;
+        const ends = mode === 'campaign' ? input('Ends', localDate(draft.ends), 'datetime-local') : null;
         const crowns = input('Crowns', draft.crowns, 'number', { min: 0, max: 2147483647, step: 1 });
         const energy = input('Energy', draft.energy, 'number', { min: 0, max: 2147483647, step: 1 });
         let filter, target;
-        if (direct) {
+        if (mode === 'direct') {
             filter = input('Filter knights');
             target = select('Knight', [], '');
+            const countLabel = el('small', '', 'muted');
+            const recipientPanel = panel(
+                'To',
+                el(
+                    'small',
+                    'Written straight to this knight’s inbox; offline knights read it when they return.',
+                    'muted'
+                ),
+                el('div', null, 'form-grid'),
+                countLabel
+            );
+            recipientPanel.classList.add('stack');
+            const recipientForm = recipientPanel.querySelector('.form-grid');
+            recipientForm.append(label('Filter', filter), label('Knight', target));
             const fill = () => {
                 const query = filter.value.trim().toLowerCase();
                 const matches = rows.filter((row) =>
@@ -396,47 +392,37 @@ export async function mount(ctx) {
                 text(countLabel, `${matches.length} knight${matches.length === 1 ? '' : 's'}`);
             };
             filter.oninput = fill;
-            const countLabel = el('small', '', 'muted');
-            const recipientPanel = panel(
-                'Recipient',
-                el(
-                    'small',
-                    'The letter is written straight to this knight’s inbox; offline knights read it when they return.',
-                    'muted'
-                ),
-                el('div', null, 'form-grid'),
-                countLabel
-            );
-            recipientPanel.classList.add('stack');
-            const recipientForm = recipientPanel.querySelector('.form-grid');
-            recipientForm.append(label('Filter', filter), label('Knight', target));
-            node.append(recipientPanel);
             fill();
+            node.append(recipientPanel);
         }
-        form.append(
-            label('Subject', subject),
-            label('Sender', sender),
-            ...(direct ? [] : [label('Starts', starts), label('Ends', ends)]),
-            label('Crowns', crowns),
-            label('Energy', energy),
-            label('Body', body)
+        if (mode === 'welcome') header.append(label('Enabled', enabled));
+        if (mode === 'campaign') header.append(label('Starts', starts), label('Ends', ends));
+        header.append(
+            label('From', sender),
+            label('Custom sender', customSender),
+            label('Subject', subject)
         );
-        form.lastElementChild.classList.add('wide');
+        subject.parentElement.classList.add('wide');
 
-        let shown = preview(draft.subject, draft.body, draft.sender, draft.crowns, draft.energy);
-        const updatePreview = () => {
-            shown.replaceWith(
-                (shown = preview(
-                    subject.value,
-                    body.value,
-                    sender.value,
-                    Number(crowns.value || 0),
-                    Number(energy.value || 0)
-                ))
+        let previewHost = preview(draft, definitions);
+        const refreshPreview = () => {
+            const next = preview(
+                {
+                    subject: subject.value,
+                    body: body.value,
+                    sender: Number(sender.value),
+                    senderLabel: customSender.value,
+                    crowns: Number(crowns.value || 0),
+                    energy: Number(energy.value || 0),
+                    gifts: draft.gifts
+                },
+                definitions
             );
+            previewHost.replaceWith(next);
+            previewHost = next;
         };
-        for (const control of [subject, body, sender, crowns, energy])
-            control.addEventListener('input', updatePreview);
+        for (const control of [subject, body, sender, customSender, crowns, energy])
+            control.addEventListener('input', refreshPreview);
 
         function renderGifts() {
             gifts.replaceChildren(
@@ -455,6 +441,7 @@ export async function mount(ctx) {
                     quantity.oninput = () => {
                         gift.count = Math.max(1, Math.min(999, Number(quantity.value) || 1));
                         updateUnits();
+                        refreshPreview();
                     };
                     expiry.oninput = () => {
                         gift.expireDays = Math.max(0, Math.min(3650, Number(expiry.value) || 0));
@@ -472,6 +459,7 @@ export async function mount(ctx) {
                             () => {
                                 draft.gifts.splice(index, 1);
                                 renderGifts();
+                                refreshPreview();
                             },
                             'quiet'
                         )
@@ -496,22 +484,35 @@ export async function mount(ctx) {
                     (gift) => gift.config === definition.config && !gift.bound && !gift.expireDays
                 );
                 if (existing) existing.count = Math.min(999, existing.count + 1);
-                else draft.gifts.push({ config: definition.config, count: 1, bound: false, expireDays: 0 });
+                else
+                    draft.gifts.push({
+                        config: definition.config,
+                        count: 1,
+                        bound: false,
+                        expireDays: 0
+                    });
                 renderGifts();
+                refreshPreview();
             },
             { grantable: true }
         );
         renderGifts();
-        const fields = panel(
-            'Message',
-            el('small', 'Subject and body are shown as written. Up to 50 and 8,096 characters.', 'muted'),
-            form,
-            shown
-        );
         const pickerDetails = el('details');
         pickerDetails.append(el('summary', 'Add a gift item'), picker.node);
-        const giftPanel = panel(
-            'Gifts',
+        const messagePanel = panel(
+            'Message',
+            el('div', null, 'mail-compose-split'),
+            el(
+                'small',
+                'Subject and body are shown as written. Up to 50 and 8,096 characters.',
+                'muted'
+            )
+        );
+        const split = messagePanel.querySelector('.mail-compose-split');
+        split.append(label('Body', body), previewHost);
+        const attachments = panel(
+            'Attachments',
+            el('div', null, 'form-grid'),
             el(
                 'small',
                 'Up to 14 item units. Expiry is counted from delivery; 0 keeps the item permanent.',
@@ -521,59 +522,78 @@ export async function mount(ctx) {
             gifts,
             pickerDetails
         );
-        node.append(fields, giftPanel);
+        const extras = attachments.querySelector('.form-grid');
+        extras.append(label('Crowns', crowns), label('Energy', energy));
+        node.append(header, messagePanel, attachments);
+
+        const initial = JSON.stringify(snapshot());
+        function snapshot() {
+            return [
+                mode === 'welcome' ? enabled.checked : '',
+                mode === 'direct' ? target.value : '',
+                subject.value,
+                body.value,
+                Number(sender.value),
+                customSender.value.trim(),
+                starts?.value || '',
+                ends?.value || '',
+                Number(crowns.value || 0),
+                Number(energy.value || 0),
+                draft.gifts
+            ];
+        }
         openDialog({
-            title: direct ? 'Send mail to a knight' : campaign ? 'Edit mailing' : 'New mailing',
-            description: direct
-                ? 'Delivered immediately to the selected knight, whether they are online or offline.'
-                : campaign
-                  ? 'Knights who already received this mailing keep the old letter.'
-                  : 'Save first, then every knight receives it once while the window is open.',
+            title:
+                mode === 'welcome'
+                    ? 'Welcome mail'
+                    : mode === 'direct'
+                      ? 'Send mail to a knight'
+                      : record
+                        ? 'Edit mailing'
+                        : 'New mailing',
+            description:
+                mode === 'welcome'
+                    ? 'Sent once to knights created while it is enabled.'
+                    : mode === 'direct'
+                      ? 'Delivered immediately to the selected knight, whether they are online or offline.'
+                      : record
+                        ? 'Knights who already received this mailing keep the old letter.'
+                        : 'Save first, then every knight receives it once while the window is open.',
             content: node,
             notifySaved: false,
-            submit: direct ? 'Send mail' : campaign ? 'Save mailing' : 'Create mailing',
-            isDirty: () =>
-                JSON.stringify([
-                    direct ? target.value : '',
-                    subject.value,
-                    body.value,
-                    Number(sender.value),
-                    direct ? '' : starts.value,
-                    direct ? '' : ends.value,
-                    Number(crowns.value || 0),
-                    Number(energy.value || 0),
-                    draft.gifts
-                ]) !==
-                JSON.stringify([
-                    draft.recipient,
-                    draft.subject,
-                    draft.body,
-                    draft.sender,
-                    direct ? '' : localDate(draft.starts),
-                    direct ? '' : localDate(draft.ends),
-                    draft.crowns,
-                    draft.energy,
-                    campaign ? campaign.gifts : []
-                ]),
+            submit:
+                mode === 'welcome'
+                    ? 'Save welcome mail'
+                    : mode === 'direct'
+                      ? 'Send mail'
+                      : record
+                        ? 'Save mailing'
+                        : 'Create mailing',
+            isDirty: () => JSON.stringify(snapshot()) !== initial,
             dispose: () => picker.dispose(),
             after: () => refresh(),
             onSubmit: async () => {
-                if (!subject.value.trim()) throw new Error('Subject is required.');
-                if (!body.value.trim()) throw new Error('Body is required.');
+                const requiresText = mode !== 'welcome' || enabled.checked || draft.enabledAt;
+                if (requiresText && !subject.value.trim()) throw new Error('Subject is required.');
+                if (requiresText && !body.value.trim()) throw new Error('Body is required.');
                 if (units(draft.gifts) > 14) throw new Error('A mailing can carry at most 14 item units.');
                 const values = {
                     sender: Number(sender.value),
+                    senderLabel: customSender.value,
                     subject: subject.value,
                     body: body.value,
                     crowns: Math.max(0, Number(crowns.value) || 0),
                     energy: Math.max(0, Number(energy.value) || 0),
                     items: mailingItems(draft.gifts)
                 };
-                if (direct) {
+                if (mode === 'direct') {
                     if (!target.value) throw new Error('Choose a knight.');
                     const [username, knight] = target.value.split('|');
                     await api.change('mail-send', { ...values, username, knight });
                     changed(`Mail queued for ${knight}. It is waiting even while they are offline.`);
+                } else if (mode === 'welcome') {
+                    await api.change('mail-welcome-save', { ...values, enabled: enabled.checked });
+                    changed(enabled.checked ? 'Welcome mail saved.' : 'Welcome mail disabled.');
                 } else {
                     const start = new Date(starts.value).getTime(),
                         end = new Date(ends.value).getTime();
@@ -587,7 +607,7 @@ export async function mount(ctx) {
                         starts: start,
                         ends: end
                     });
-                    changed(campaign ? 'Mailing saved.' : 'Mailing created.');
+                    changed(record ? 'Mailing saved.' : 'Mailing created.');
                 }
                 picker.dispose();
             }
@@ -612,8 +632,8 @@ export async function mount(ctx) {
         panel(
             'Mailings',
             toolbar(
-                button('New mailing', () => compose(null)),
-                button('Send to knight', () => compose(null, true), 'secondary')
+                button('New mailing', () => compose('campaign')),
+                button('Send to knight', () => compose('direct'), 'secondary')
             ),
             table.node
         )

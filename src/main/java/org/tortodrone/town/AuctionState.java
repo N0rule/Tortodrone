@@ -43,9 +43,11 @@ public final class AuctionState {
         /** First attachment, kept for auction and legacy callers. Player mail can carry more. */
         public WorldProfile.Item item(){return items.isEmpty()?null:items.getFirst();}
         public String sender(){
+            // A stored label (staff mail) or a joined knight name displays literally;
+            // only negative system-sender ordinals carry a localized stock name.
+            if(senderName!=null&&!senderName.isEmpty())return senderName;
             if(friendRequest())return friendName;
             if(senderRef<0)return " "+(-senderRef);
-            if(senderRef>0)return senderName;
             return " 7";
         }
         /** Friend requests keep their own wire type; all other mail carries the stored kind. */

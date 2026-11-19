@@ -1,6 +1,6 @@
 import { symbol as uiSymbol } from './components/symbols.js';
 import { api } from './api.js';
-import { $, el, button, text, notify, report } from './ui.js';
+import { $, el, button, text, notify, report, calendarDate } from './ui.js';
 import { route, go } from './router.js';
 import { loadAssets } from './components/items.js';
 import { dialogDirty, closeDialog } from './components/dialog.js';
@@ -360,10 +360,7 @@ document.addEventListener('visibilitychange', () => {
     if (!document.hidden && api.session) refresh();
 });
 preferences();
-text(
-    $('#clock'),
-    new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
-);
+text($('#clock'), calendarDate());
 await loadAssets();
 try {
     await api.restore();

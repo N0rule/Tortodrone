@@ -254,7 +254,7 @@ public final class AuctionHouse {
     public MailCampaignStore campaigns(){return campaigns;}
     static List<AuctionState.Mail> loadMail(Connection c,int world)throws SQLException,IOException {
         var messages=new ArrayList<AuctionState.Mail>();
-        try(var s=c.prepareStatement("SELECT m.*,r.value AS friend_world,k.name AS friend_name,s.name AS sender_name FROM town_mail m LEFT JOIN metadata r ON r.key='social.request.'||m.id LEFT JOIN world_characters fw ON fw.world_id=r.value LEFT JOIN knights k ON k.account_id=fw.account_id AND k.id=fw.knight_id LEFT JOIN world_characters sw ON sw.world_id=m.sender LEFT JOIN knights s ON s.account_id=sw.account_id AND s.id=sw.knight_id WHERE m.world_id=? ORDER BY m.sent DESC,m.id DESC LIMIT 500")) {
+        try(var s=c.prepareStatement("SELECT m.*,r.value AS friend_world,k.name AS friend_name,COALESCE(m.sender_label,s.name) AS sender_name FROM town_mail m LEFT JOIN metadata r ON r.key='social.request.'||m.id LEFT JOIN world_characters fw ON fw.world_id=r.value LEFT JOIN knights k ON k.account_id=fw.account_id AND k.id=fw.knight_id LEFT JOIN world_characters sw ON sw.world_id=m.sender LEFT JOIN knights s ON s.account_id=sw.account_id AND s.id=sw.knight_id WHERE m.world_id=? ORDER BY m.sent DESC,m.id DESC LIMIT 500")) {
             s.setInt(1,world);try(var r=s.executeQuery()){while(r.next()){
                 var held=new ArrayList<WorldProfile.Item>();
                 if(r.getString("item")!=null)held.add(decode(r.getString("item")));

@@ -8,6 +8,7 @@ import {
     button,
     heat,
     text,
+    date,
     details,
     facts,
     badge,
@@ -352,7 +353,7 @@ export async function inspectItem(def, item, fixed, writable = false) {
             ],
             [
                 'Expiration',
-                item.expiresAt ? new Date(item.expiresAt).toLocaleString() : 'Permanent'
+                item.expiresAt ? date(item.expiresAt) : 'Permanent'
             ],
             ['Accessories', attached.length ? `${attached.length} attached` : 'None']
         ])
