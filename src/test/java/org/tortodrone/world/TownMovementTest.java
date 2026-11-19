@@ -8,18 +8,9 @@ public final class TownMovementTest {
     private static CollisionMap corridor;
     private static TownMovement movement(){return new TownMovement(corridor,0,-8,0);}
     public static void main(String[] args)throws Exception {
-        var fixture=java.nio.file.Files.createTempFile("tortodrone-movement-corridor-",".gz");
-        try {
-            // Timing/pose assertions use a controlled corridor; map geometry is verified separately.
-            int width=145,height=9;var clear=new java.util.BitSet(width*height);
-            for(int y=1;y<height-1;y++)for(int x=1;x<width-1;x++)clear.set(y*width+x);
-            try(var out=new java.io.DataOutputStream(new java.util.zip.GZIPOutputStream(java.nio.file.Files.newOutputStream(fixture)))) {
-                out.writeInt(0x54445731);out.writeInt(width);out.writeInt(height);
-                out.writeFloat(-1);out.writeFloat(-9);out.writeFloat(.25f);
-                out.write(java.util.Arrays.copyOf(clear.toByteArray(),(width*height+7)/8));
-            }
-            corridor=CollisionMap.read(fixture);verify();hurt();boxes();teleport();rapidInventory();
-        } finally {java.nio.file.Files.deleteIfExists(fixture);}
+        // Timing/pose assertions use a controlled exact corridor; real map geometry is verified separately.
+        corridor=TestCollision.corridor(-2,-10,36,11);
+        verify();hurt();boxes();teleport();rapidInventory();
     }
     private static void teleport(){
         var player=movement();player.resetInput(1000);

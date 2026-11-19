@@ -10,13 +10,7 @@ import static org.tortodrone.support.TestWire.check;
 /** Runs the authoritative movement integrator against the live carried-lift collision query. */
 public final class LiftBarrierMovementTest {
     public static void main(String[] args)throws Exception {
-        Path grid=Files.createTempFile("tortodrone-lift-corridor-",".gz");
-        try{
-            int size=81;byte[] bits=new byte[(size*size+7)/8];Arrays.fill(bits,(byte)255);
-            try(var out=new DataOutputStream(new GZIPOutputStream(Files.newOutputStream(grid)))){
-                out.writeInt(0x54445731);out.writeInt(size);out.writeInt(size);out.writeFloat(-10);out.writeFloat(-10);out.writeFloat(.25f);out.write(bits);
-            }
-            var terrain=CollisionMap.read(grid);
+        var terrain=TestCollision.floor(-10,-10,81,81);
             monsters(terrain);
             for(boolean open:new boolean[]{false,true})for(float speed:new float[]{1,20})for(float heading:new float[]{0,.2f,-.2f}){
                 var door=new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Door","config","Fixture",
@@ -39,7 +33,6 @@ public final class LiftBarrierMovementTest {
                 var dropped=movement(terrain,entities,actor(other.id(),-2,2.5f),1);walk(dropped,0,2400,800);check(dropped.x()>0,"drop immediately releases remaining carrier away from the resting lift");
             }
             System.out.println("PASS: authoritative lift-barrier movement, open/closed, high speed/diagonal, drop/throw and independent carriers");
-        }finally{Files.delete(grid);}
     }
     private static void monsters(CollisionMap terrain)throws Exception {
         for(int barrierMask:new int[]{1,64,8192})for(boolean open:new boolean[]{false,true}){
