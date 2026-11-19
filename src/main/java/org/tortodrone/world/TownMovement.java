@@ -168,14 +168,17 @@ public final class TownMovement {
     private java.util.function.BiFunction<Float,Float,SceneCollision.Penetration> dynamicPenetration=(x,y)->SceneCollision.Penetration.NONE;
     private SceneCollision staticCollision=SceneCollision.empty();
     private MapCollision exactCollision;
+    private java.util.Set<Integer> disabledCollision=java.util.Set.of();
     private int collisionMask=43;
     private static final Object PAWN_SHAPE=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.SHAPE_CIRCLE,
         java.util.List.of(new FireCatalog.FieldValue("radius","float",ScenePortals.PAWN_RADIUS)));
     public void staticCollision(SceneCollision geometry,int mask){staticCollision=java.util.Objects.requireNonNull(geometry);collisionMask=mask;}
     /** Prefer the compiled exact collision; the sampled grid is only a legacy fallback. */
     public void exactCollision(MapCollision geometry,int mask){exactCollision=java.util.Objects.requireNonNull(geometry);collisionMask=mask;}
+    /** Source entry ids whose native statics are currently open/destroyed (doors, blocks). */
+    public void disabledCollision(java.util.Set<Integer> sources){disabledCollision=java.util.Set.copyOf(sources);}
     private boolean walkable(float toX,float toY){
-        if(exactCollision!=null)return exactCollision.clearSegment(collisionMask,x,y,toX,toY,ScenePortals.PAWN_RADIUS);
+        if(exactCollision!=null)return exactCollision.clearSegment(collisionMask,x,y,toX,toY,ScenePortals.PAWN_RADIUS,disabledCollision);
         if(staticCollision.isEmpty())return terrain.walkable(toX,toY);
         if(!staticCollision.floorSupported(toX,toY)||!staticCollision.clearSegment(collisionMask,PAWN_SHAPE,x,y,toX,toY,0))return false;
         int steps=Math.max(1,(int)Math.ceil(Math.hypot(toX-x,toY-y)/.1));
@@ -228,7 +231,7 @@ public final class TownMovement {
     /** Relocate the existing pawn; retain the input watermark to discard pre-warp frames. */
     public boolean teleport(float toX,float toY,float facing,int stamp) {
         if(!Float.isFinite(toX)||!Float.isFinite(toY)||!Float.isFinite(facing)||portal!=null||dead()
-                ||(exactCollision!=null?!exactCollision.clear(collisionMask,toX,toY,ScenePortals.PAWN_RADIUS):!terrain.walkable(toX,toY))
+                ||(exactCollision!=null?!exactCollision.clear(collisionMask,toX,toY,ScenePortals.PAWN_RADIUS,disabledCollision):!terrain.walkable(toX,toY))
                 ||exactCollision==null&&!staticCollision.isEmpty()&&(!staticCollision.floorSupported(toX,toY)
                     ||staticCollision.penetration(collisionMask,toX,toY,ScenePortals.PAWN_RADIUS).present())
                 ||!dynamicCollision.test(toX,toY)||dynamicPenetration.apply(toX,toY).present()
@@ -359,7 +362,7 @@ public final class TownMovement {
     }
     private SceneCollision.Penetration staticPenetration(float x,float y){
         if(exactCollision==null)return staticCollision.penetration(collisionMask,x,y,ScenePortals.PAWN_RADIUS);
-        var p=exactCollision.penetration(collisionMask,x,y,ScenePortals.PAWN_RADIUS);
+        var p=exactCollision.penetration(collisionMask,x,y,ScenePortals.PAWN_RADIUS,disabledCollision);
         return p.present()?new SceneCollision.Penetration(p.x(),p.y()):SceneCollision.Penetration.NONE;
     }
     private void move(float dx,float dy){
@@ -372,7 +375,7 @@ public final class TownMovement {
         for(int attempt=0;attempt<3;attempt++){
             var penetration=staticPenetration(nx,ny).deepest(dynamicPenetration.apply(nx,ny));
             if(!penetration.present()){
-                boolean floor=exactCollision!=null?exactCollision.clearSegment(collisionMask,x,y,nx,ny,ScenePortals.PAWN_RADIUS)
+                boolean floor=exactCollision!=null?exactCollision.clearSegment(collisionMask,x,y,nx,ny,ScenePortals.PAWN_RADIUS,disabledCollision)
                     :staticCollision.isEmpty()?terrain.walkableSegment(x,y,nx,ny):staticCollision.floorSupported(nx,ny);
                 if(floor&&dynamicCollision.test(nx,ny)){x=nx;y=ny;return;}
                 break;

@@ -1417,6 +1417,18 @@ public final class SceneEntities implements SceneWeapons.Targets {
      *  closed, which was the reported gradual penetration; matching the client server-side ends
      *  it. A lift at rest releases the pawn again, and an open barrier (open flag set) blocks
      *  nobody. */
+    /** Source ids whose static collision must be ignored because the entity is open or destroyed. */
+    public java.util.Set<Integer> disabledCollisionSources(){
+        var result=new java.util.HashSet<Integer>();
+        for(var e:entities.values()){
+            if(e.collisionFlags==0)continue;
+            boolean disabled=e.destroyed!=Integer.MAX_VALUE
+                ||e.kind.equals("Door")&&(e.flags&6)==2;
+            if(!disabled)continue;
+            try{result.add(Integer.parseInt(e.binding.key()));}catch(NumberFormatException ignored){}
+        }
+        return java.util.Set.copyOf(result);
+    }
     public SceneCollision.Penetration penetration(float x,float y,int ignore){
         boolean carrying=ignore!=0&&entities.values().stream().anyMatch(e->e.kind.equals("DungeonLift")
             &&e.carrier==ignore&&e.destroyed==Integer.MAX_VALUE);

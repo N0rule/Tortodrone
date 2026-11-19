@@ -65,34 +65,36 @@ public final class ContentManager {
         try {
             var folders=MapYaml.folders(maps);
             Path startFolder=maps.resolve(start);Integer entry=folders.entrySet().stream().filter(e->e.getValue().equals(startFolder)).map(Map.Entry::getKey).findFirst().orElseThrow(()->new IOException("startup-map is missing: "+start));
+            Path shared=maps.getParent().resolve("shared");
             var scenes=new TreeMap<Integer,SceneCatalog.MapScene>();
-            for(var folder:folders.entrySet()) {
-                var prepared=MapYaml.prepare(folder.getValue(),maps.getParent().resolve("shared"),items);var p=prepared.descriptor();Path nativeDir=prepared.nativeDirectory();
-                byte[] layout=Files.readAllBytes(nativeDir.resolve("scene.dat"));
-                if(layout.length<16||layout.length>900_000||layout[0]!=(byte)0xfa||layout[1]!=(byte)0xce||layout[2]!=(byte)0xaf||layout[3]!=0x0e)throw new IOException(nativeDir+": invalid native scene header/size");
-                var collision=CollisionMap.read(nativeDir.resolve("walkability.gz"));
-                float x=Float.parseFloat(p.getProperty("spawn-x")),y=Float.parseFloat(p.getProperty("spawn-y"));if(!collision.walkable(x,y))throw new IOException(folder.getValue()+": defaultSpawn is not walkable");
-                int instances=Integer.parseInt(p.getProperty("instances"));if(instances<1||instances>16)throw new IOException("instances must be from 1 to 16");
-                String digest=p.getProperty("scene-sha256");
-                var actors=SceneContent.load(prepared.content(),digest);
-                for(var cycle:actors.cycles().entrySet()) {
-                    var spec=cycle.getValue();for(String field:List.of("up","down","warn","offset")){float v=spec.number(field,0);if(!Float.isFinite(v)||v<0||v>600_000)throw new IOException("Invalid trap cycle "+cycle.getKey()+"."+field);}
-                    if(!actors.cycles().containsKey(spec.text("inverse",cycle.getKey())))throw new IOException("Missing inverse trap cycle: "+cycle.getKey());
-                }
-                for(var actor:actors.entries())if(actor.spec().fields().containsKey("cycle")&&!actors.cycles().containsKey(actor.spec().text("cycle","")))throw new IOException("Actor references missing trap cycle: "+actor.key());
-                for(var conversation:actors.conversations().values())for(var node:conversation.nodes().values())for(var response:node.responses())if(!response.station().isEmpty()&&town!=null&&town.station(response.station())==null)throw new IOException("NPC references missing Town station: "+response.station());
-                int collisionMask=Math.round(actors.stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
-                MapCollision exact=null;
-                if(p.getProperty("exact-collision-sha256")!=null){
-                    exact=MapCollision.read(nativeDir.resolve("collision.bin"));
-                    if(!exact.layoutHash().equals(digest))throw new IOException(nativeDir+": exact collision layout hash mismatch");
-                    if(!exact.clear(collisionMask,x,y,ScenePortals.PAWN_RADIUS))throw new IOException(folder.getValue()+": defaultSpawn is not clear in exact collision");
-                }
-                var portals=exact==null?ScenePortals.load(prepared.portals(),digest,collision):ScenePortals.load(prepared.portals(),digest,exact,collisionMask);
-                scenes.put(folder.getKey(),new SceneCatalog.MapScene(folder.getKey(),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,portals,actors,SceneCollision.load(nativeDir,digest),exact));
-            }
+            for(var folder:folders.entrySet())scenes.put(folder.getKey(),loadMap(folder.getValue(),shared,town,items));
             return SceneCatalog.of(scenes,entry);
         }catch(IllegalArgumentException invalid){throw new IOException(maps+": "+invalid.getMessage(),invalid);}
+    }
+    private static SceneCatalog.MapScene loadMap(Path folder,Path shared,org.tortodrone.town.TownCatalog town,org.tortodrone.character.ItemCatalog items)throws IOException {
+        var prepared=MapYaml.prepare(folder,shared,items);var p=prepared.descriptor();Path nativeDir=prepared.nativeDirectory();
+        byte[] layout=Files.readAllBytes(nativeDir.resolve("scene.dat"));
+        if(layout.length<16||layout.length>900_000||layout[0]!=(byte)0xfa||layout[1]!=(byte)0xce||layout[2]!=(byte)0xaf||layout[3]!=0x0e)throw new IOException(nativeDir+": invalid native scene header/size");
+        var collision=CollisionMap.read(nativeDir.resolve("walkability.gz"));
+        float x=Float.parseFloat(p.getProperty("spawn-x")),y=Float.parseFloat(p.getProperty("spawn-y"));if(!collision.walkable(x,y))throw new IOException(folder+": defaultSpawn is not walkable");
+        int instances=Integer.parseInt(p.getProperty("instances"));if(instances<1||instances>16)throw new IOException("instances must be from 1 to 16");
+        String digest=p.getProperty("scene-sha256");
+        var actors=SceneContent.load(prepared.content(),digest);
+        for(var cycle:actors.cycles().entrySet()) {
+            var spec=cycle.getValue();for(String field:List.of("up","down","warn","offset")){float v=spec.number(field,0);if(!Float.isFinite(v)||v<0||v>600_000)throw new IOException("Invalid trap cycle "+cycle.getKey()+"."+field);}
+            if(!actors.cycles().containsKey(spec.text("inverse",cycle.getKey())))throw new IOException("Missing inverse trap cycle: "+cycle.getKey());
+        }
+        for(var actor:actors.entries())if(actor.spec().fields().containsKey("cycle")&&!actors.cycles().containsKey(actor.spec().text("cycle","")))throw new IOException("Actor references missing trap cycle: "+actor.key());
+        for(var conversation:actors.conversations().values())for(var node:conversation.nodes().values())for(var response:node.responses())if(!response.station().isEmpty()&&town!=null&&town.station(response.station())==null)throw new IOException("NPC references missing Town station: "+response.station());
+        int collisionMask=Math.round(actors.stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
+        MapCollision exact=null;
+        if(p.getProperty("exact-collision-sha256")!=null){
+            exact=MapCollision.read(nativeDir.resolve("collision.bin"));
+            if(!exact.layoutHash().equals(digest))throw new IOException(nativeDir+": exact collision layout hash mismatch");
+            if(!exact.clear(collisionMask,x,y,ScenePortals.PAWN_RADIUS))throw new IOException(folder+": defaultSpawn is not clear in exact collision");
+        }
+        var portals=exact==null?ScenePortals.load(prepared.portals(),digest,collision):ScenePortals.load(prepared.portals(),digest,exact,collisionMask);
+        return new SceneCatalog.MapScene(Integer.parseInt(p.getProperty("scene-id")),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,portals,actors,SceneCollision.load(nativeDir,digest),exact);
     }
     private static void requireItem(org.tortodrone.character.ItemCatalog items,String config)throws IOException{if(items.find(config)==null)throw new IOException("Combat references missing item: "+config);}
     static Map<String,String> inputs(Path root)throws IOException {

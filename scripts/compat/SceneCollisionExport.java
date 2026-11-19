@@ -40,7 +40,7 @@ public final class SceneCollisionExport {
             Shape shape=entry.ay(cm);if(shape==null)throw new IOException("Colliding placeable has no native shape");
             var geometries=new ArrayList<String>();
             try{geometry(shape,geometries,0,shape.afo());}catch(IOException invalid){throw new IOException("Collision at entry "+entry.getKey()+" ("+entry.placeable.getName()+"): "+invalid.getMessage(),invalid);}
-            for(String geometry:geometries)shapes.add(mask+";"+geometry);
+            for(String geometry:geometries)shapes.add(entry.getKey()+";"+mask+";"+geometry);
             if(shapes.size()>MAX_SHAPES)throw new IOException("Too many native placeable collision shapes");
         }
         String digest=sha256(layout);var lines=new ArrayList<String>();
@@ -52,8 +52,11 @@ public final class SceneCollisionExport {
         i=0;for(Cell cell:cells.values()){
             String prefix="tile."+(i++)+".";lines.add(prefix+"x="+cell.x);lines.add(prefix+"y="+cell.y);lines.add(prefix+"mask="+cell.mask);
         }
-        i=0;for(String value:shapes){int split=value.indexOf(';');String prefix="shape."+(i++)+".";
-            lines.add(prefix+"mask="+value.substring(0,split));lines.add(prefix+"geometry="+value.substring(split+1));
+        i=0;for(String value:shapes){int first=value.indexOf(';'),second=value.indexOf(';',first+1);String prefix="shape."+(i++)+".";
+            if(first<0||second<0)throw new IOException("Invalid exported collision shape");
+            lines.add(prefix+"source="+value.substring(0,first));
+            lines.add(prefix+"mask="+value.substring(first+1,second));
+            lines.add(prefix+"geometry="+value.substring(second+1));
         }
         Collections.sort(lines);String text=String.join("\n",lines)+"\n";
         if(text.getBytes(StandardCharsets.UTF_8).length>MAX_BYTES)throw new IOException("Static collision metadata exceeds 4 MiB");

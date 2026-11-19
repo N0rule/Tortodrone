@@ -19,7 +19,7 @@ import java.util.zip.GZIPOutputStream;
  */
 public final class MapCollision {
     private static final int MAGIC = 0x54444d43; // "TDMC"
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
     private static final int MAX_TILES = 1_000_000, MAX_FLOORS = 1_000_000, MAX_SHAPES = 100_000;
     private static final int MAX_BYTES = 16 * 1024 * 1024;
     private static final float GRID = 4f;
@@ -42,7 +42,7 @@ public final class MapCollision {
         boolean intersects(Bounds o) { return minX <= o.maxX && maxX >= o.minX && minY <= o.maxY && maxY >= o.minY; }
         boolean contains(float x, float y) { return x >= minX && x <= maxX && y >= minY && y <= maxY; }
     }
-    private record Shape(int id, int mask, Geom geometry, Bounds bounds) { }
+    private record Shape(int id, int mask, int source, Geom geometry, Bounds bounds) { }
 
     private final long[] tileKeys;
     private final int[] tileMasks;
@@ -80,11 +80,13 @@ public final class MapCollision {
     }
 
     /** True when a circle can stand at (x,y) without touching a walk-masked tile or shape. */
-    public boolean clear(int mask, float x, float y, float radius) {
+    public boolean clear(int mask, float x, float y, float radius) { return clear(mask, x, y, radius, Set.of()); }
+    public boolean clear(int mask, float x, float y, float radius, Set<Integer> disabled) {
         if (!valid(x, y) || !Float.isFinite(radius) || radius < 0) return false;
         if (!floorSupported(x, y)) return false;
         if (tileHit(mask, x, y, radius)) return false;
         for (Shape shape : grid.query(x, y, radius)) {
+            if (shape.source != 0 && disabled.contains(shape.source)) continue;
             if ((shape.mask & mask) != 0 && circleIntersects(shape.geometry, x, y, radius)) return false;
         }
         return true;
@@ -92,6 +94,9 @@ public final class MapCollision {
 
     /** Sweeps a circle from (fromX,fromY) to (toX,toY); broadphase candidates are collected once. */
     public boolean clearSegment(int mask, float fromX, float fromY, float toX, float toY, float radius) {
+        return clearSegment(mask, fromX, fromY, toX, toY, radius, Set.of());
+    }
+    public boolean clearSegment(int mask, float fromX, float fromY, float toX, float toY, float radius, Set<Integer> disabled) {
         if (!valid(fromX, fromY) || !valid(toX, toY) || !Float.isFinite(radius) || radius < 0) return false;
         float distance = (float) Math.hypot(toX - fromX, toY - fromY);
         if (!Float.isFinite(distance) || distance > 10_000) return false;
@@ -104,6 +109,7 @@ public final class MapCollision {
             float t = (float) i / steps, x = fromX + (toX - fromX) * t, y = fromY + (toY - fromY) * t;
             if (!floorSupported(x, y) || tileHit(mask, x, y, radius)) return false;
             for (Shape shape : candidates) {
+                if (shape.source != 0 && disabled.contains(shape.source)) continue;
                 if ((shape.mask & mask) != 0 && circleIntersects(shape.geometry, x, y, radius)) return false;
             }
         }
@@ -111,7 +117,8 @@ public final class MapCollision {
     }
 
     /** Minimum translation that moves the circle out of walk geometry, or NONE. */
-    public Penetration penetration(int mask, float x, float y, float radius) {
+    public Penetration penetration(int mask, float x, float y, float radius) { return penetration(mask, x, y, radius, Set.of()); }
+    public Penetration penetration(int mask, float x, float y, float radius, Set<Integer> disabled) {
         if (!valid(x, y) || !Float.isFinite(radius) || radius < 0) return new Penetration(0, 0);
         var result = Penetration.NONE;
         int minX = floorInt(x - radius), maxX = floorInt(x + radius), minY = floorInt(y - radius), maxY = floorInt(y + radius);
@@ -122,6 +129,7 @@ public final class MapCollision {
                 result = result.deepest(aabbPenetration(cx, cy, x, y, radius));
         }
         for (Shape shape : grid.query(x, y, radius)) {
+            if (shape.source != 0 && disabled.contains(shape.source)) continue;
             if ((shape.mask & mask) != 0) result = result.deepest(penetration(shape.geometry, x, y, radius));
         }
         return result;
@@ -157,13 +165,13 @@ public final class MapCollision {
             String prefix = "shape." + i + ".";
             var geometry = parseGeometry(required(p, prefix + "geometry"));
             int mask = integer(p, prefix + "mask");
-            shapes.add(new Shape(i, mask, geometry, bounds(geometry)));
+            shapes.add(new Shape(i, mask, integer(p, prefix + "source", 0), geometry, bounds(geometry)));
             include(extent, bounds(geometry));
         }
         int surfaces = p.containsKey("floor-shape-count") ? integer(p, "floor-shape-count") : 0;
         for (int i = 0; i < surfaces; i++) {
             var geometry = parseGeometry(required(p, "floor-shape." + i + ".geometry"));
-            shapes.add(new Shape(shapeCount + i, 0, geometry, bounds(geometry)));
+            shapes.add(new Shape(shapeCount + i, 0, 0, geometry, bounds(geometry)));
             include(extent, bounds(geometry));
         }
         for (int i = 0; i < tileKeys.length; i++) {
@@ -198,6 +206,12 @@ public final class MapCollision {
         try { return Integer.parseInt(required(p, key)); }
         catch (NumberFormatException e) { throw new IOException("Invalid static collision " + key, e); }
     }
+    private static int integer(Properties p, String key, int fallback) throws IOException {
+        String value = p.getProperty(key);
+        if (value == null) return fallback;
+        try { return Integer.parseInt(value); }
+        catch (NumberFormatException e) { throw new IOException("Invalid static collision " + key, e); }
+    }
     private static String required(Properties p, String key) throws IOException {
         String value = p.getProperty(key);
         if (value == null) throw new IOException("Missing static collision " + key);
@@ -230,7 +244,9 @@ public final class MapCollision {
     public static MapCollision read(Path file) throws IOException {
         if (Files.size(file) > MAX_BYTES) throw new IOException("Collision file is too large");
         try (var in = new DataInputStream(new GZIPInputStream(Files.newInputStream(file)))) {
-            if (in.readInt() != MAGIC || in.readInt() != VERSION) throw new IOException("Unsupported collision format");
+            if (in.readInt() != MAGIC) throw new IOException("Unsupported collision format");
+            int version = in.readInt();
+            if (version < 1 || version > VERSION) throw new IOException("Unsupported collision format");
             String hash = readHash(in);
             float minX = in.readFloat(), minY = in.readFloat(), maxX = in.readFloat(), maxY = in.readFloat();
             var bounds = new Bounds(minX, minY, maxX, maxY);
@@ -244,8 +260,9 @@ public final class MapCollision {
             var shapes = new ArrayList<Shape>(shapeCount);
             for (int i = 0; i < shapeCount; i++) {
                 int id = in.readInt(), mask = in.readInt();
+                int source = version >= 2 ? in.readInt() : 0;
                 Geom geometry = readGeometry(in);
-                shapes.add(new Shape(id, mask, geometry, bounds(geometry)));
+                shapes.add(new Shape(id, mask, source, geometry, bounds(geometry)));
             }
             return new MapCollision(tileKeys, tileMasks, floorKeys, shapes, bounds, hash);
         }
@@ -265,7 +282,7 @@ public final class MapCollision {
             for (long key : floorKeys) out.writeLong(key);
             out.writeInt(shapes.size());
             for (Shape shape : shapes) {
-                out.writeInt(shape.id); out.writeInt(shape.mask); writeGeometry(out, shape.geometry);
+                out.writeInt(shape.id); out.writeInt(shape.mask); out.writeInt(shape.source); writeGeometry(out, shape.geometry);
             }
         }
     }

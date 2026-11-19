@@ -28,16 +28,71 @@ public final class SceneCatalog {
         // for our once-per-entry Emergency Revive and subsequent paid revival flow.
         public String configType(){return "com.threerings.projectx."+(town()?"town.data.TownSceneConfig":"dungeon.data.LevelSceneConfig");}
     }
+    @FunctionalInterface public interface Loader { MapScene load(Path folder)throws IOException; }
     private final NavigableMap<Integer,MapScene> scenes;
+    private final Map<Integer,Path> paths;
+    private final Loader loader;
+    private final MapScene entryScene;
     private final int entry;
     private SceneCatalog(NavigableMap<Integer,MapScene> scenes,int entry) {
-        this.scenes=Collections.unmodifiableNavigableMap(scenes);this.entry=entry;
+        this.scenes=Collections.synchronizedNavigableMap(new TreeMap<>(scenes));
+        this.paths=null;this.loader=null;this.entry=entry;this.entryScene=scenes.get(entry);
+    }
+    private SceneCatalog(Map<Integer,Path> paths,int entry,MapScene entryScene,Loader loader) {
+        this.scenes=Collections.synchronizedNavigableMap(new TreeMap<>());this.scenes.put(entry,entryScene);
+        this.paths=Map.copyOf(paths);this.loader=Objects.requireNonNull(loader);this.entry=entry;this.entryScene=entryScene;
+    }
+    /** Loads map bodies on first use; ids remain addressable and the entry scene is already open. */
+    public static SceneCatalog lazy(Map<Integer,Path> paths,int entry,MapScene entryScene,Loader loader) {
+        return new SceneCatalog(paths,entry,entryScene,loader);
     }
     public MapScene scene(int id)throws IOException {
-        var scene=scenes.get(id);if(scene==null)throw new IOException("Scene is not available");return scene;
+        synchronized(scenes){var scene=scenes.get(id);if(scene!=null)return scene;}
+        Path folder=paths==null?null:paths.get(id);
+        if(folder==null)throw new IOException("Scene is not available");
+        var loaded=loader.load(folder);
+        synchronized(scenes){return scenes.computeIfAbsent(id,key->loaded);}
     }
-    public MapScene entry(){return scenes.get(entry);}
-    public List<MapScene> scenes(){return List.copyOf(scenes.values());}
+    public MapScene entry(){return entryScene;}
+    /** Counts without forcing lazy bodies. */
+    public int sceneCount(){return paths!=null?paths.size():scenes.size();}
+    public boolean isEmpty(){return sceneCount()==0;}
+    /** Town templates only; a lazy catalog loads those few and leaves dungeons on disk. */
+    public List<MapScene> towns(){
+        var result=new ArrayList<MapScene>();
+        if(paths==null)return scenes.values().stream().filter(MapScene::town).toList();
+        for(var entry:paths.entrySet())try{if(isTown(entry.getValue()))result.add(scene(entry.getKey()));}
+        catch(IOException failure){throw new java.io.UncheckedIOException(failure);}
+        return List.copyOf(result);
+    }
+    public boolean hasNonTown(){
+        if(paths==null)return scenes.values().stream().anyMatch(map->!map.town());
+        for(Path folder:paths.values())try{if(!isTown(folder))return true;}catch(IOException failure){throw new java.io.UncheckedIOException(failure);}
+        return false;
+    }
+    public MapScene town(int id)throws IOException {
+        if(paths!=null&&!isTown(paths.getOrDefault(id,Path.of(""))))return null;
+        var map=scene(id);return map.town()?map:null;
+    }
+    public MapScene townByName(String name)throws IOException {
+        for(var map:towns())if(map.name().equals(name))return map;
+        return null;
+    }
+    private static boolean isTown(Path folder)throws IOException {
+        if(folder.toString().isEmpty()||!Files.isRegularFile(folder.resolve("native/metadata.properties")))return false;
+        var p=properties(folder.resolve("native/metadata.properties"));
+        return "town".equals(p.getProperty("kind"));
+    }
+    public List<MapScene> scenes(){
+        if(paths!=null){
+            for(int id:paths.keySet())try{scene(id);}catch(IOException failure){throw new java.io.UncheckedIOException(failure);}
+            // Full-catalog validation is deliberate: startup stays lazy, but tools and tests that
+            // ask for every scene still prove the portal graph before a release is published.
+            try{synchronized(scenes){SceneCatalog.of(new TreeMap<>(scenes),entry);}}
+            catch(IOException failure){throw new java.io.UncheckedIOException(failure);}
+        }
+        synchronized(scenes){return List.copyOf(scenes.values());}
+    }
     public static SceneCatalog empty(){return new SceneCatalog(new TreeMap<>(),0);}
     public static SceneCatalog load(Path directory)throws IOException {
         if(!Files.exists(directory.resolve("catalog.properties"))&&Files.isDirectory(directory)) {

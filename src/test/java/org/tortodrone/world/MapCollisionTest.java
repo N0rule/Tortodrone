@@ -26,6 +26,7 @@ public final class MapCollisionTest {
             p.setProperty("tile.0.mask", "1");
             p.setProperty("shape-count", "1");
             p.setProperty("shape.0.mask", "1");
+            p.setProperty("shape.0.source", "123");
             p.setProperty("shape.0.geometry", "P;0.5;-1.5;1.5;-1.5;1.5;-0.5;0.5;-0.5");
             try (var out = Files.newOutputStream(properties)) { p.store(out, "test"); }
 
@@ -36,6 +37,8 @@ public final class MapCollisionTest {
             check(collision.clear(43, .5f, .5f, .33f), "open cell is clear");
             check(!collision.clear(43, 2.5f, .5f, .33f), "wall tile blocks");
             check(!collision.clear(43, 1.0f, -1.0f, .33f), "polygon obstacle blocks");
+            check(collision.clear(43, 1.0f, -1.0f, .33f, Set.of(123)),
+                "a source-marked door/block shape can be disabled when it opens");
             check(!collision.clearSegment(43, -1f, .5f, 4f, .5f, .33f), "segment crossing wall is blocked");
             check(collision.clearSegment(43, -1f, .5f, 1f, .5f, .33f), "short clear segment passes");
             var pen = collision.penetration(43, 2.5f, .5f, .33f);

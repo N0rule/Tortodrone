@@ -81,6 +81,9 @@ when `collision.bin` is present.
   `collision.bin`.
 - No map behaviour is invented: unsupported actors, actions and portal geometry are reported by
   the exporter and remain absent.
+- Every exported placeable shape carries its source entry id. When a door opens or a block is
+  destroyed, the movement query ignores that source's static shape and the entity's dynamic
+  penetration takes over.
 
 ## Current status
 
