@@ -1247,8 +1247,8 @@ final class WorldSession implements AutoCloseable {
 
     /** Replay a town destination command that arrived before the scene was ready. */
     private synchronized void flushPendingTravel()throws IOException {
-        if(pendingTravel==null||closed||!selected()||readyRoom||!entered||!subscribed
-            ||forcedReceiver==null||portalMove!=null||deferredMove!=null)return;
+        if(pendingTravel==null||closed||!selected()||forcedReceiver==null||portalMove!=null||deferredMove!=null)return;
+        if(!readyRoom&&(!entered||!subscribed))return;
         var request=pendingTravel;pendingTravel=null;
         log.debug("Replaying queued town destination after scene entry");
         invocation(request);
@@ -1270,7 +1270,7 @@ final class WorldSession implements AutoCloseable {
             if(args.size()!=2||!(args.get(0) instanceof String destination)||!(args.get(1) instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ResultMarshaller"))throw new SessionDecoder.Rejected("Invalid town destination request");
             try{
                 if(!selected())throw new IOException("Select a knight first");
-                if(!entered||!subscribed||forcedReceiver==null||portalMove!=null||readyRoom){
+                if(forcedReceiver==null||portalMove!=null||(!readyRoom&&(!entered||!subscribed))){
                     if(pendingTravel!=null&&pendingTravel!=request&&pendingTravel.arguments().getLast() instanceof SessionDecoder.Listener old) {
                         short oldId=old.requestId();output.send(()->codec.invocationFailure(oid,oldId,"Travel request replaced"));
                     }
@@ -1297,6 +1297,14 @@ final class WorldSession implements AutoCloseable {
                 if(entrance==null)entrance=new ScenePortals.Entrance(1,map.spawnX(),map.spawnY(),map.spawnRotation());
                 if(!next.simulation().placement(entrance.x(),entrance.y()))throw new IOException("Destination is blocked");
                 if(destination.equals("move_auction"))auctionSource(next);
+                if(readyRoom){
+                    auctionAfterArrival=destination.equals("move_auction");
+                    short receiver=forcedReceiver;
+                    enterScene(next,entrance);
+                    if(alchemy!=null)alchemyTarget=alchemy.key();
+                    output.send(()->codec.forceScene(oid,receiver,next));output.send(()->codec.townResult(oid,listener.requestId(),"",profile));
+                    return true;
+                }
                 if(next==scene){
                     if(!membership.teleport(entrance.x(),entrance.y(),entrance.rotation()))throw new IOException("Destination is blocked or the knight is busy");
                     if(alchemy!=null)alchemyTarget=alchemy.key();
@@ -1314,10 +1322,17 @@ final class WorldSession implements AutoCloseable {
         if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==11){
             if(!args.isEmpty())throw new SessionDecoder.Rejected("Invalid haven request");
             try{
-                if(!selected()||!entered||!subscribed||forcedReceiver==null||portalMove!=null)throw new IOException("Finish entering this scene first");characters.worldProfile(knight.name(),authRevision,profile);
+                if(!selected()||forcedReceiver==null||portalMove!=null)throw new IOException("Finish entering this scene first");characters.worldProfile(knight.name(),authRevision,profile);
                 var map=scenes.catalog().entry();var next=destination(map.id());
-                if(next==scene)throw new IOException("You are already in that scene");
                 var entrance=new ScenePortals.Entrance(1,map.spawnX(),map.spawnY(),map.spawnRotation());
+                if(readyRoom){
+                    short receiver=forcedReceiver;
+                    enterScene(next,entrance);
+                    output.send(()->codec.forceScene(oid,receiver,next));
+                    return true;
+                }
+                if(!entered||!subscribed)throw new IOException("Finish entering this scene first");
+                if(next==scene)throw new IOException("You are already in that scene");
                 closeConversation();closeTownDialog();portalMove=new PortalMove(next,entrance);departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();short receiver=forcedReceiver;
                 output.send(()->codec.forceScene(oid,receiver,next));
             }catch(CharacterStore.Refused|IOException refused){unavailable(refused.getMessage());}
@@ -1527,21 +1542,7 @@ final class WorldSession implements AutoCloseable {
             var next=portalMove==null?destination(target):portalMove.destination();
             if(portalMove!=null&&next!=portalMove.destination())throw new IOException("Finish the current portal journey first");
             if(!scenes.authorized(next,profile.worldId(),partyMember))throw new IOException("Party membership changed");
-            if(next!=scene||portalMove!=null||readyRoom) {
-                closeConversation();
-                if(!temporaryItems.isEmpty()){var before=visibleProfile();temporaryItems.clear();output.send(()->codec.itemChanges(oid,knight,before,profile));publishQuickbar();}
-                leaveChat();
-                subscribed=entered=false;sceneGeneration++;occupantClients=Map.of();occupantRoles=Map.of();lastSnapshot=null;
-                reference=acknowledge=0;alchemyTarget=null;departedSceneOid=scene.oid();if(membership!=null)membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
-                readyRoom=returnRequested=false;
-                arrival=portalMove==null?null:portalMove.entrance();portalMove=null;
-                created=SceneClock.now();attach();
-                monitorScene();
-                // Arriving comlinks are delivered behind the move response (see completeMove),
-                // before the client can answer enteredPlace from inside its loading screen.
-                arrivalComlink=null;
-                for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&candidate.eligible(profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
-            }
+            if(next!=scene||portalMove!=null||readyRoom) enterScene(next,portalMove==null?null:portalMove.entrance());
             int party=partyOid();
             // The stock PartyDirector resubscribes on every partyOid event,
             // even when its value is unchanged. Existing HUD listeners retain
@@ -1568,6 +1569,25 @@ final class WorldSession implements AutoCloseable {
             var pending=arrivalComlink;arrivalComlink=null;
             try{openComlink(pending,true);deliveredComlink=pending;}catch(IOException unavailable){arrivalComlink=pending;}
         }
+    }
+
+    /** Install the destination scene before the client acknowledges its move. The Ready Room
+     *  uses the same path so a native `/training`, `/alc` or `/haven` command can leave it
+     *  directly instead of first entering the saved town. */
+    private void enterScene(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException {
+        closeConversation();closeTownDialog();
+        if(!temporaryItems.isEmpty()){var before=visibleProfile();temporaryItems.clear();output.send(()->codec.itemChanges(oid,knight,before,profile));publishQuickbar();}
+        leaveChat();
+        subscribed=entered=false;sceneGeneration++;occupantClients=Map.of();occupantRoles=Map.of();lastSnapshot=null;
+        reference=acknowledge=0;alchemyTarget=null;departedSceneOid=scene.oid();if(membership!=null)membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
+        readyRoom=returnRequested=false;
+        arrival=entrance;portalMove=null;
+        created=SceneClock.now();attach();
+        monitorScene();
+        // Arriving comlinks are delivered behind the move response (see completeMove),
+        // before the client can answer enteredPlace from inside its loading screen.
+        arrivalComlink=null;
+        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&candidate.eligible(profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
     }
 
     private record AdminLocation(SceneRegistry.Instance scene,int world,String name,float x,float y,float rotation) { }

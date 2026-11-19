@@ -49,7 +49,18 @@ public final class TravelQueueTest {
                 world.close();
                 check(pending(world)==null,"closing the session releases the queued request");
             }
-            System.out.println("PASS: early town destination is queued and replayed after scene entry");
+            // The native commands also work while the client-local Ready Room is open.
+            var readySocket=new RecordingSocket();
+            try(var output=new SessionOutput(readySocket);var world=new WorldSession(readySocket,characters,output,
+                    new SessionCodec(items),1002,1,m->{},scenes)) {
+                world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0),true);
+                check(readyRoom(world),"the session is staged in the client-local Ready Room");
+                world.invocation(destination("training"));
+                check(pending(world)==null,"Ready Room /training is not deferred to Haven");
+                check(!readyRoom(world)&&sceneMap(world)==294,"Ready Room /training installs the Training Hall directly");
+                check(portalMove(world)==null,"Ready Room travel attaches the destination without a portal wait");
+            }
+            System.out.println("PASS: early destination is queued after entry and travels directly from the Ready Room");
         } finally {
             try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}
         }
@@ -64,6 +75,13 @@ public final class TravelQueueTest {
     }
     private static Object portalMove(WorldSession world)throws Exception {
         Field field=WorldSession.class.getDeclaredField("portalMove");field.setAccessible(true);return field.get(world);
+    }
+    private static boolean readyRoom(WorldSession world)throws Exception {
+        Field field=WorldSession.class.getDeclaredField("readyRoom");field.setAccessible(true);return field.getBoolean(world);
+    }
+    private static int sceneMap(WorldSession world)throws Exception {
+        Field field=WorldSession.class.getDeclaredField("scene");field.setAccessible(true);
+        return ((SceneRegistry.Instance)field.get(world)).map().id();
     }
     private static SceneRegistry.Instance destination(Object move)throws Exception {
         return (SceneRegistry.Instance)move.getClass().getMethod("destination").invoke(move);
