@@ -127,7 +127,7 @@ public final class SceneCatalog {
     /** Unified content groups map folders by type; legacy packs keep flat templates. */
     private static boolean unifiedMaps(Path directory)throws IOException {
         if(!Files.isDirectory(directory))return false;
-        for(String category:List.of("town","training","level")) {
+        for(String category:org.tortodrone.resources.MapYaml.CATEGORIES) {
             Path folder=directory.resolve(category);
             if(!Files.isDirectory(folder))continue;
             try(var paths=Files.list(folder)) {

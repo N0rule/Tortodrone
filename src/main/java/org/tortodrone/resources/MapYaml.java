@@ -20,7 +20,7 @@ public final class MapYaml {
             for(Path categoryFolder:list) {
                 ContentFiles.safe(categoryFolder);
                 String category=categoryFolder.getFileName().toString();
-                if(!Files.isDirectory(categoryFolder)||!CATEGORIES.contains(category))throw new IOException("Maps must be grouped under town, training or level: "+categoryFolder);
+                if(!Files.isDirectory(categoryFolder)||!CATEGORIES.contains(category))throw new IOException("Maps must be grouped under town, training or level; remove the legacy flat map folder: "+categoryFolder);
                 try(var paths=Files.list(categoryFolder)) {
                     for(Path folder:paths.sorted().toList()) {
                         ContentFiles.safe(folder);

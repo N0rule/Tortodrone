@@ -10,7 +10,7 @@ config/
   server.yml                 listener, limits, logs, startup-map
   combat.yml                 dodgeCooldownMs
 content/
-  maps/<map>/
+  maps/<type>/<map>/         type is town, training or level and must match map.yml
     map.yml                  readable identity, default entrance, instance count
     portals.yml              arrivals and travel destinations
     actors.yml               supported placed actor properties
@@ -38,6 +38,7 @@ content/
     statuses.yml
     combat.yml               shared numeric balance and sparse gear defenses
     news/news.yml            Uplink News packs and their images
+  missions/                  imported stock mission, group and prestige definitions
   _internal/                 item bindings/arguments, Town defaults, fire graphs, provenance
 plugins/README.md            reservation only; no plugin loader
 src/ scripts/ docs/ gradle/   implementation, import tools, docs and build system

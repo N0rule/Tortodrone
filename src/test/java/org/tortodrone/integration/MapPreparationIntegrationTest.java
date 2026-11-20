@@ -34,6 +34,11 @@ public final class MapPreparationIntegrationTest {
             try(var channel=FileChannel.open(lockFile,StandardOpenOption.WRITE);var lock=channel.lock()){run("content",output,false);check(!Files.exists(missing)&&Files.readString(metadata).equals(olderMetadata),"held deployment lock blocks content and generated metadata copies");}
             run("content",output,true);
             check(Files.mismatch(metadata,Path.of("content/_internal/default-source.properties"))==-1,"metadata refresh succeeds after releasing deployment lease");
+            Path flat=output.resolve("maps/haven/map.yml");Files.createDirectories(flat.getParent());Files.copy(output.resolve("maps/town/haven/map.yml"),flat);
+            run("content",output,true);
+            check(!Files.exists(output.resolve("maps/haven"))&&Files.exists(output.resolve("maps/town/haven/map.yml")),"retired flat map layout removes the unchanged file and its empty folder");
+            Files.createDirectories(flat.getParent());Files.writeString(flat,Files.readString(output.resolve("maps/town/haven/map.yml"))+"# owner edit\n");byte[] flatEdit=Files.readAllBytes(flat);
+            run("content",output,false);check(Arrays.equals(flatEdit,Files.readAllBytes(flat)),"customized legacy map folder still refuses removal");deleteDirectory(output.resolve("maps/haven"));
             Path legacyDepot=home.resolve("legacy-depot/content");Files.createDirectories(legacyDepot.resolve("town"));Files.createDirectories(legacyDepot.getParent().resolve("data"));Files.writeString(legacyDepot.getParent().resolve("data/tortodrone.db"),"fixture marker, never opened");Files.writeString(legacyDepot.resolve("town/shops.yml"),"catalogs: []\ndepot: []\n");run("content",legacyDepot,false);check(Files.readString(legacyDepot.resolve("town/shops.yml")).contains("depot:"),"preparation cannot erase the legacy catalog before explicit migration");
             Path retired=output.resolve("maps/town/haven/npcs/town21.yml");Files.copy(output.resolve("maps/town/haven/npcs/plinkop.yml"),retired);run("content",output,true);check(!Files.exists(retired),"known unchanged renamed NPC defaults retire without duplicate bindings");
             Files.copy(output.resolve("maps/town/haven/npcs/plinkop.yml"),retired);Files.writeString(retired,Files.readString(retired)+"# customized retired NPC\n");byte[] retiredEdit=Files.readAllBytes(retired);run("content",output,false);check(Arrays.equals(retiredEdit,Files.readAllBytes(retired))&&!Files.exists(output.getParent().resolve("content-updates")),"customized renamed NPC refuses replacement without review files");Files.delete(retired);
@@ -41,6 +46,10 @@ public final class MapPreparationIntegrationTest {
             Path maps=home.resolve("maps-only");run("maps",maps,true);check(Files.exists(maps.resolve("town/haven/map.yml"))&&!Files.exists(maps.resolve("items")),"maps-only preparation copies map-local content");
             System.out.println("PASS: offline unified deployment, generated manifest refresh, owner edits, lock refusal, legacy upgrade refusal and maps-only output");
         }finally{ContentFixture.delete(home);}
+    }
+    private static void deleteDirectory(Path directory)throws Exception {
+        if(!Files.exists(directory))return;
+        try(var paths=Files.walk(directory)){for(Path path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}
     }
     private static void run(String command,Path output,boolean success)throws Exception {
         var process=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"-cp",System.getProperty("java.class.path"),"BuildTools",command,output.toString()).redirectErrorStream(true).start();

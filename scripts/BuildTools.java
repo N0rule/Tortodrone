@@ -101,9 +101,17 @@ public final class BuildTools {
                     } finally { Files.deleteIfExists(temporary); }
                 } else copyMissing(copy.source,copy.target);
             }
-            for(var removal:removals)Files.delete(removal.target);
+            for(var removal:removals){Files.delete(removal.target);pruneEmpty(removal.target.getParent(),output);}
         }
         System.out.println("Prepared "+(mapsOnly?"maps":"content")+": " + (mapsOnly?mapSource:contentSource) + " -> " + output);
+    }
+    /** Remove directories emptied by retirement, so a renamed layout leaves no stale folders. */
+    private static void pruneEmpty(Path directory,Path stop)throws IOException {
+        for(Path current=directory;current!=null&&current.startsWith(stop)&&!current.equals(stop);current=current.getParent()) {
+            if(Files.isSymbolicLink(current)||!Files.isDirectory(current,LinkOption.NOFOLLOW_LINKS))return;
+            try(var entries=Files.list(current)){if(entries.findAny().isPresent())return;}
+            Files.deleteIfExists(current);
+        }
     }
     static Path inferDeploymentRoot(Path output) {
         Path normalized=output.toAbsolutePath().normalize();
