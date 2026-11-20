@@ -1,5 +1,20 @@
 # Hand-authored monster scheduling knobs only.
 # Native stats, damage, speed and attack timing come from the client export and are refused here.
 # Known keys: activation-radius (1..512), leash-radius (1..1024, >= activation-radius),
-# think (dormant|alert|engaged), archetype (lower_snake/kebab policy id).
-monsters: {}
+# think (dormant|alert|engaged), archetype (kebab-case policy id).
+#
+# The generated catalogue assigns the ordinary roles from the native action graph. These six
+# encounters are the explicitly listed boss-scripted escape hatch; the cap is enforced at load.
+monsters:
+  darkfire_lord_vanaduke:
+    archetype: boss-scripted
+  lord_vanaduke:
+    archetype: boss-scripted
+  margrel:
+    archetype: boss-scripted
+  roarmulus_twins:
+    archetype: boss-scripted
+  royal_jelly:
+    archetype: boss-scripted
+  snarbolax:
+    archetype: boss-scripted

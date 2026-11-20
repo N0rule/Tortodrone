@@ -103,18 +103,18 @@ public final class MonsterRosterExport {
         type.put("config", name);
         type.put("display", display);
         type.put("family", family);
-        type.put("archetype", archetype(matching.isEmpty() ? null : matching.getFirst().monster));
+        type.put("archetype", "stationary");
         type.put("supported", false);
         type.put("capabilities", List.of());
         type.put("unsupported", List.of("no-actor-config"));
         type.put("configs", matching.stream().map(actor -> actor.config).toList());
         if (matching.isEmpty()) return new Row(name, family, display, type);
         var unsupported = new TreeSet<String>();
-        Map<String, String> supportedSpec = null;
+        Map<String, String> supportedSpec = null, chosenSpec = null;
         String canonical = matching.getFirst().config;
-        var chosen = matching.getFirst();
         for (var candidate : matching) {
             var spec = export(manager, candidate);
+            if (chosenSpec == null) chosenSpec = spec;
             var failures = new TreeSet<String>();
             canonicalize(spec);
             for (var field : spec.entrySet()) {
@@ -129,15 +129,15 @@ public final class MonsterRosterExport {
             }
             if (failures.isEmpty()) {
                 supportedSpec = spec;
+                chosenSpec = spec;
                 canonical = candidate.config;
-                chosen = candidate;
                 unsupported.clear();
                 break;
             }
             unsupported.addAll(failures);
         }
         type.put("supported", supportedSpec != null);
-        type.put("archetype", archetype(chosen.monster));
+        type.put("archetype", archetype(chosenSpec));
         type.put("actor", canonical);
         type.put("unsupported", List.copyOf(unsupported));
         if (includeSpec && supportedSpec != null) type.put("spec", supportedSpec);
@@ -301,10 +301,41 @@ public final class MonsterRosterExport {
         return value;
     }
 
-    private static String archetype(DungeonActorConfig.Monster monster) {
-        if (monster == null) return "melee-chaser";
-        if (monster.attacks == null || monster.attacks.length == 0) return "stationary";
+    /**
+     * Derive a scheduling archetype from the exported native action graph. The graph decides the
+     * role; no name, family or hand-authored stat participates. Unsupported types cannot spawn,
+     * but still receive the closest classification their partial export supports.
+     */
+    private static String archetype(Map<String, String> spec) {
+        if (spec == null || spec.getOrDefault("attacks", "").isBlank()) return "stationary";
+        boolean[] flags = new boolean[3]; // projectile, bomb, summon
+        for (var entry : spec.entrySet()) {
+            String key = entry.getKey();
+            if (!key.startsWith("attack.") || !key.endsWith(".action")) continue;
+            try {
+                scanArchetype(Json.parse(entry.getValue(), 64), flags);
+            } catch (IOException ignored) {
+                // A failed action export cannot contribute a role; the remaining slots still can.
+            }
+        }
+        if (flags[2]) return "summoner";
+        if (flags[1]) return "bomber";
+        if (flags[0]) return "ranged-kiter";
         return "melee-chaser";
+    }
+
+    private static void scanArchetype(Object node, boolean[] flags) {
+        if (!(node instanceof Map<?, ?> action)) return;
+        Object kind = action.get("kind");
+        if ("EMIT_PROJECTILE".equals(kind)) {
+            flags[0] = true;
+            if (action.get("actor") instanceof Map<?, ?> actor && "BOMB".equals(actor.get("nativeType")))
+                flags[1] = true;
+        }
+        if ("SPAWN_ACTOR".equals(kind) || "SPAWN_FACING".equals(kind) || "RANDOM_TRANSLATED".equals(kind))
+            flags[2] = true;
+        if (action.get("children") instanceof List<?> children)
+            for (var child : children) scanArchetype(child, flags);
     }
 
     private static String summary(Map<String, Object> types) {

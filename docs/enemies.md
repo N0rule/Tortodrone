@@ -134,15 +134,16 @@ monsters:
     activation-radius: 12
     leash-radius: 20
     think: alert
-    archetype: melee-chaser
+    archetype: bomber
 ```
 
 - `activation-radius` 1–512, `leash-radius` 1–1024; leash may not be smaller than activation.
-- `think` is `dormant`, `alert` or `engaged`; `archetype` is a lowercase policy id.
+- `think` is `dormant`, `alert` or `engaged`; it sets the minimum band the monster may
+  occupy (damage and proximity can still raise it). `archetype` is one of the six known
+  scheduling policies; an unknown id fails startup.
 - Unknown type ids, duplicate keys, unknown fields and identity/stat/timing fields fail
-  startup rather than being ignored. `activation-radius` is applied to type-backed placements
-  now; `leash-radius`, `think` and `archetype` are validated but applied by the later
-  lifecycle and archetype phases.
+  startup rather than being ignored. All four keys reach type-backed placements; an explicit
+  field on the placement still wins over the overlay.
 
 The validator and scene loader understand a prepared `Monster` placement carrying
 `monster-type: <id>`. Validation rejects an unknown or unsupported id, a non-monster
@@ -178,28 +179,58 @@ keys, so it holds nothing after a scene's content is released.
 Combat monsters are scheduled in three bands: `DORMANT`, `ALERT` and `ENGAGED`.
 Dormant monsters remain in the scene and stay published to nearby clients, but skip
 pursuit, pathing and attacks until an active player comes within their activation
-radius. An alert monster reacquires a target every 250 ms; an engaged monster runs the
-full per-tick movement and attack path. Dormant decisions use a stable id-staggered
-1.0–2.0 s interval, while every tick still performs one cheap distance check so a
-player who steps into range is noticed immediately.
+radius. An alert monster reacquires a target on its policy cadence (250 ms for the
+default melee policy); an engaged monster runs the full per-tick movement and attack
+path. Dormant decisions use a stable id-staggered interval, while every tick still
+performs one cheap distance check so a player who steps into range is noticed
+immediately.
 
-A prepared monster may set `activation-radius` (world units); the default is 32. Damage
-is authoritative: any landed hit forces `ENGAGED` for five seconds even without a
-nearby player. Wander and party-follow behaviours are authored motion rather than
-combat pursuit, so they keep their previous every-tick integration. Scripted tutorial
-actors and an already-started attack sequence are never paused by the ladder.
+A prepared monster may set `activation-radius` (world units); otherwise the default
+comes from its archetype (32 for melee). Damage is authoritative: any landed hit
+forces `ENGAGED` for five seconds even without a nearby player. Wander and
+party-follow behaviours are authored motion rather than combat pursuit, so they keep
+their previous every-tick integration. Scripted tutorial actors and an already-started
+attack sequence are never paused by the ladder.
 
 At most 32 monsters are engaged at once. The cap is a server-side safety valve: already
 engaged monsters keep running, damage still wakes its target, and a voluntary transition
 waits in `ALERT` instead of starting pursuit.
+
+## Archetypes
+
+Every catalogue type carries one of six scheduling policies. An archetype contains only
+activation radius, optional leash, think cadences and pursuit re-planning; it never
+contains attacks, damage, speeds or timings. The exported native action graph remains the
+sole source of behaviour.
+
+| Policy | Activation | Leash | Dormant (ms) | Alert (ms) | Engaged (ms) | Repath (ms) |
+|---|---:|---:|---|---:|---:|---:|
+| `melee-chaser` (default) | 32 | none | 1000–1999 | 250 | 50 | none |
+| `ranged-kiter` | 40 | none | 1200–2199 | 200 | 50 | none |
+| `bomber` | 20 | 24 | 1200–2199 | 250 | 50 | 250 |
+| `summoner` | 48 | none | 1400–2399 | 300 | 50 | 500 |
+| `stationary` | 20 | none | 1000–1999 | 500 | 50 | none |
+| `boss-scripted` | 64 | none | 1000–1999 | 100 | 25 | none |
+
+The generated catalogue assigns policies deterministically from the exported action
+graph, not from names or hand-authored stats: a type with no attacks is `stationary`; a
+native actor spawn makes it a `summoner`; a bomb projectile makes it a `bomber`; any other
+projectile makes it `ranged-kiter`; everything else is `melee-chaser`. Unknown policy ids
+are rejected when the catalogue or overlay is parsed.
+
+`boss-scripted` is applied only through `overrides.yml` and is capped at six types. The
+shipped list is Darkfire Lord Vanaduke, Lord Vanaduke, Margrel, Roarmulus Twins, Royal
+Jelly and Snarbolax; a seventh would refuse startup. `MonsterArchetypeTest` checks the six
+policies, one wake/cadence check per policy, the generated assignment and the boss cap.
 
 ## Leash and despawn
 
 A monster with `leash-radius` leaves combat once it is farther than that distance from
 its placement anchor: it drops its target, walks back along a bounded path and regains
 `leash-heal` health per second while returning. Damage overrides the leash for the
-normal five-second damage grace, so a hit monster answers first. Both fields are opt-in;
-scene placements without them keep their previous pursuit range.
+normal five-second damage grace, so a hit monster answers first. Leashing is opt-in:
+an archetype may supply a default (only `bomber` currently does), and otherwise a scene
+placement without the field keeps its previous pursuit range.
 
 Waves and generation changes despawn without running death actions. The same cleanup
 cancels the actor's queued source actions, clears status and paths, drops claims and

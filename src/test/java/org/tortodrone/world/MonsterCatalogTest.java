@@ -49,15 +49,18 @@ public final class MonsterCatalogTest {
             catch (IOException expected) { }
 
             var overrides = temporary.resolve("overrides.yml");
-            Files.writeString(overrides, "monsters:\n  fixture_melee:\n    activation-radius: 12\n    leash-radius: 20\n    think: alert\n    archetype: melee-chaser\n");
+            Files.writeString(overrides, "monsters:\n  fixture_melee:\n    activation-radius: 12\n    leash-radius: 20\n    think: alert\n    archetype: ranged-kiter\n");
             var tuned = MonsterCatalog.load(temporary);
             check(tuned.override("fixture_melee").activationRadius() == 12f, "overlay activation radius loads");
             check(tuned.override("fixture_melee").leashRadius() == 20f, "overlay leash radius loads");
             check(tuned.override("fixture_melee").think().equals("alert"), "overlay think band loads");
+            check(tuned.archetype(tuned.type("fixture_melee")).id().equals("ranged-kiter"),
+                "overlay archetype overrides the generated role");
             var tunedPlacement = new TreeMap<>(tuned.type("fixture_melee").spec());
             tunedPlacement.put("monster-type", "fixture_melee");
             var tunedExpanded = tuned.expand(new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0,
                 new SceneContent.Spec(tunedPlacement))), Map.of())).entries().getFirst().spec();
+            check(tunedExpanded.text("archetype", "").equals("ranged-kiter"), "overlay archetype reaches the prepared spec");
             check(Float.parseFloat(tunedExpanded.text("activation-radius", "")) == 12f, "overlay activation radius reaches the prepared spec");
             check(Float.parseFloat(tunedExpanded.text("leash-radius", "")) == 20f, "overlay leash radius reaches the prepared spec");
             tunedPlacement.put("activation-radius", "7");

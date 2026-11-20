@@ -32,8 +32,8 @@ public record MonsterType(
             throw new IllegalArgumentException("Invalid monster description config");
         if (actor != null && (actor.isBlank() || actor.length() > 512))
             throw new IllegalArgumentException("Invalid monster actor config");
-        if (archetype == null || archetype.isBlank() || archetype.length() > 64)
-            throw new IllegalArgumentException("Invalid monster archetype");
+        if (!MonsterArchetype.known(archetype))
+            throw new IllegalArgumentException("Invalid monster archetype: " + archetype);
         configs = List.copyOf(configs);
         if (supported && (actor == null || !configs.contains(actor)))
             throw new IllegalArgumentException("Supported monster actor is not one of its native configs: " + id);

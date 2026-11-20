@@ -25,8 +25,6 @@ public final class SceneEntities implements SceneWeapons.Targets {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
     }
     private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","EntryState","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift","TerritoryProp");
-    /** No player inside this radius and no recent damage leaves a combat monster dormant. */
-    static final float DEFAULT_ACTIVATION_RADIUS=32;
     /** Damage wakes a monster even when it was hit outside every activation radius. */
     static final int DAMAGE_ENGAGE_MILLIS=5000;
     /** Reuse a clear line of sight briefly; damage or a moved target invalidates it. */
@@ -122,6 +120,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
         /** Activation scheduling; combat work is skipped while DORMANT. */
         SceneMonsterBand band=SceneMonsterBand.DORMANT;
         int nextThink,engagedUntil;
+        /** Scheduling policy; prepared specs may override its radii but not its identity. */
+        final MonsterArchetype archetype;
+        final SceneMonsterBand minimumBand;
+        final float activationRadius;
         /** Placement anchor for leash return; wave spawns use their authored anchor. */
         final float homeX,homeY,leashRadius,leashHeal;
         boolean returning;
@@ -189,8 +191,15 @@ public final class SceneEntities implements SceneWeapons.Targets {
             // must cover all three so a cell lookup never misses a real contact.
             spatialExtent=Math.max(shapeExtent,Math.max(pawnRadius,boundsExtent));
             homeX=binding.x();homeY=binding.y();
-            // Leashing is opt-in per placement; default maps keep their historical pursuit range.
-            float configuredLeash=spec.number("leash-radius",0);
+            archetype=MonsterArchetype.of(spec.text("archetype",MonsterArchetype.DEFAULT_ID));
+            minimumBand=switch(spec.text("think","dormant")){
+                case "alert"->SceneMonsterBand.ALERT;case "engaged"->SceneMonsterBand.ENGAGED;default->SceneMonsterBand.DORMANT;};
+            float configuredActivation=spec.fields().containsKey("activation-radius")
+                ?spec.number("activation-radius",0):archetype.activationRadius();
+            activationRadius=Float.isFinite(configuredActivation)&&configuredActivation>=1?configuredActivation:1;
+            // Leashing is opt-in per placement; an archetype may supply a default.
+            float configuredLeash=spec.fields().containsKey("leash-radius")
+                ?spec.number("leash-radius",0):archetype.leashRadius();
             leashRadius=Float.isFinite(configuredLeash)&&configuredLeash>0?configuredLeash:0;
             float configuredHeal=spec.number("leash-heal",0);
             leashHeal=Float.isFinite(configuredHeal)&&configuredHeal>0?configuredHeal:0;
@@ -495,6 +504,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
     PreparedActor prepared(int id){var e=entities.get(id);return e==null?null:e.prepared;}
     /** Test seam: current activation band for a live entity. */
     SceneMonsterBand band(int id){var e=entities.get(id);return e==null?null:e.band;}
+    /** Test seam: effective scheduling policy for a live entity. */
+    MonsterArchetype archetype(int id){var e=entities.get(id);return e==null?null:e.archetype;}
+    /** Test seam: effective activation radius for a live entity. */
+    float activationRadius(int id){var e=entities.get(id);return e==null?0:e.activationRadius;}
+    /** Test seam: effective leash radius for a live entity (zero means unleased). */
+    float leashRadius(int id){var e=entities.get(id);return e==null?0:e.leashRadius;}
     /** Test seam: A* searches admitted in the most recent tick. */
     int pathSearches(){return pathBudget.granted();}
     int pathQueued(){return pathBudget.queued();}
@@ -770,12 +785,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             throw new java.io.IOException("The scene already has "+alive+" live monsters; the limit is "+MAX_ALIVE_MONSTERS);
         if((long)entities.size()+pendingActors.size()+count>=4096||(long)nextId+count>Integer.MAX_VALUE)
             throw new java.io.IOException("The scene has no room for new actors");
-        var fields=new TreeMap<>(type.spec());
-        var tuning=monsters.override(type.id());
-        if(tuning!=null){
-            if(tuning.activationRadius()!=null)fields.put("activation-radius",Float.toString(tuning.activationRadius()));
-            if(tuning.leashRadius()!=null)fields.put("leash-radius",Float.toString(tuning.leashRadius()));
-        }
+        var fields=monsters.fields(type);
         var points=new ArrayList<ScenePathing.Point>(count);
         for(int index=0;index<count;index++){
             float angle=(float)(Math.PI*2*index/count);
@@ -840,12 +850,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         MonsterType type;
         try{type=monsters.spawnable(wave.group.typeId());}
         catch(java.io.IOException refused){throw new IllegalStateException("Wave type became unavailable: "+wave.group.typeId(),refused);}
-        var fields=new TreeMap<>(type.spec());
-        var tuning=monsters.override(type.id());
-        if(tuning!=null){
-            if(tuning.activationRadius()!=null)fields.put("activation-radius",Float.toString(tuning.activationRadius()));
-            if(tuning.leashRadius()!=null)fields.put("leash-radius",Float.toString(tuning.leashRadius()));
-        }
+        var fields=monsters.fields(type);
         var anchor=wave.group.anchors().get(wave.spawned%wave.group.anchors().size());
         var binding=new SceneContent.Entry("wave:"+wave.group.id()+":"+(wave.spawned+1),anchor.x(),anchor.y(),0,new SceneContent.Spec(fields));
         var entity=spawn(binding,binding.spec(),null,stamp);
@@ -1211,7 +1216,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.path.isEmpty()||!entitySegment(e,e.x,e.y,e.path.getFirst().x(),e.path.getFirst().y())){
                 if(!pathBudget.acquire(e.id))return;
                 e.path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
-                e.pathX=tx;e.pathY=ty;e.nextPath=stamp+Math.max(50,e.spec.integer("acquisition-interval",0));
+                e.pathX=tx;e.pathY=ty;e.nextPath=stamp+Math.max(50,Math.max(e.spec.integer("acquisition-interval",0),e.archetype.repathMillis()));
             }
             while(!e.path.isEmpty()&&Math.hypot(e.path.getFirst().x()-e.x,e.path.getFirst().y()-e.y)<.05)e.path=e.path.subList(1,e.path.size());
             if(e.path.isEmpty())return;
@@ -1231,7 +1236,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         float nearest=Float.POSITIVE_INFINITY;
         for(var player:occupants)if(playerActive.test(player.id())&&playerTargetable.test(player.id()))
             nearest=Math.min(nearest,(float)Math.hypot(player.x()-e.x,player.y()-e.y));
-        float radius=Math.max(1,e.spec.number("activation-radius",DEFAULT_ACTIVATION_RADIUS));
+        float radius=e.activationRadius;
         boolean forced=stamp<e.engagedUntil;
         if(e.leashRadius>0&&!forced&&e.band!=SceneMonsterBand.DORMANT
                 &&Math.hypot(e.x-e.homeX,e.y-e.homeY)>e.leashRadius){
@@ -1246,6 +1251,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
             SceneMonsterBand next=nearest<=radius
                 ?(e.target!=0||e.activity>=4?SceneMonsterBand.ENGAGED:SceneMonsterBand.ALERT)
                 :forced?SceneMonsterBand.ENGAGED:SceneMonsterBand.DORMANT;
+            // An explicit think override is a floor: an ambusher may stay alert, never asleep.
+            if(next.ordinal()<e.minimumBand.ordinal())next=e.minimumBand;
             // The engaged cap is a safety valve for badly authored maps. Already-engaged
             // monsters keep running; a new voluntary transition waits in ALERT. Damage
             // remains authoritative and still wakes the target.
@@ -1256,7 +1263,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 e.target=0;e.targetMode=null;e.targetModeUpdate=false;e.path=List.of();e.flags&=~18;
             }
             if(next==SceneMonsterBand.ENGAGED&&e.band!=SceneMonsterBand.ENGAGED)engagedAtTickStart++;
-            e.band=next;e.nextThink=stamp+next.thinkInterval(e.id);
+            e.band=next;e.nextThink=stamp+next.thinkInterval(e.id,e.archetype);
         }
         if(e.band==SceneMonsterBand.DORMANT)return;
         // Alert only reacquires on its think cadence; an owned attack or an engaged
@@ -1382,7 +1389,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 e.path=target.entity()!=null&&e.targeting!=null?
                     ScenePathing.region(e.x,e.y,(x,y)->Math.max(targetDistance(x,y,target)-attackRange,sight(e,x,y,target.x(),target.y())?0:.01f),(x,y,nx,ny)->entitySegment(e,x,y,nx,ny)):
                     ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));e.pathX=tx;e.pathY=ty;
-                e.nextPath=stamp+Math.max(50,e.spec.integer("acquisition-interval",0));
+                e.nextPath=stamp+Math.max(50,Math.max(e.spec.integer("acquisition-interval",0),e.archetype.repathMillis()));
             }
             while(!e.path.isEmpty()&&Math.hypot(e.path.getFirst().x()-e.x,e.path.getFirst().y()-e.y)<.05)e.path=e.path.subList(1,e.path.size());
             if(e.path.isEmpty())return;

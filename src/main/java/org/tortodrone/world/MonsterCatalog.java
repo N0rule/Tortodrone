@@ -26,8 +26,8 @@ public final class MonsterCatalog {
         public Override {
             if (think != null && !Set.of("dormant", "alert", "engaged").contains(think))
                 throw new IllegalArgumentException("Unknown monster think band: " + think);
-            if (archetype != null && !archetype.matches("[a-z][a-z0-9-]{0,31}"))
-                throw new IllegalArgumentException("Invalid monster archetype: " + archetype);
+            if (archetype != null && !MonsterArchetype.known(archetype))
+                throw new IllegalArgumentException("Unknown monster archetype: " + archetype);
         }
     }
 
@@ -50,6 +50,31 @@ public final class MonsterCatalog {
     public int size() { return types.size(); }
     public MonsterType type(String id) { return id == null ? null : types.get(id); }
     public Override override(String id) { return id == null ? null : overrides.get(id); }
+
+    /** Effective policy: the generated assignment unless the overlay names another one. */
+    public MonsterArchetype archetype(MonsterType type) {
+        Override tuning = override(type.id());
+        String id = tuning != null && tuning.archetype() != null ? tuning.archetype() : type.archetype();
+        return MonsterArchetype.of(id);
+    }
+
+    /**
+     * Runtime fields for a catalogue type: native prepared graph plus scheduling policy and
+     * the overlay's explicit knobs. A placement may still override any of these fields.
+     */
+    public TreeMap<String, String> fields(MonsterType type) {
+        var fields = new TreeMap<>(type.spec());
+        fields.put("archetype", archetype(type).id());
+        Override tuning = override(type.id());
+        if (tuning != null) {
+            if (tuning.activationRadius() != null)
+                fields.put("activation-radius", Float.toString(tuning.activationRadius()));
+            if (tuning.leashRadius() != null)
+                fields.put("leash-radius", Float.toString(tuning.leashRadius()));
+            if (tuning.think() != null) fields.put("think", tuning.think());
+        }
+        return fields;
+    }
 
     /** Resolve a spawn request, refusing unknown and unsupported types with a clear reason. */
     public MonsterType spawnable(String id) throws IOException {
@@ -130,6 +155,7 @@ public final class MonsterCatalog {
                 throw new IOException("Duplicate monster type: " + id);
         }
         if (types.isEmpty()) throw new IOException("Monster catalogue is empty");
+        checkScriptedBosses(types, Map.of());
         return new MonsterCatalog(types, Map.of(), generatedFrom);
     }
 
@@ -188,7 +214,24 @@ public final class MonsterCatalog {
                 throw new IOException(where + ": " + invalid.getMessage(), invalid);
             }
         }
+        checkScriptedBosses(types, declared);
         return new MonsterCatalog(types, declared, generatedFrom);
+    }
+
+    /** Keep the boss escape hatch explicitly bounded; overflow is a data error, not silence. */
+    private static void checkScriptedBosses(Map<String, MonsterType> types, Map<String, Override> overrides)
+            throws IOException {
+        var bosses = new ArrayList<String>();
+        for (var type : types.values()) {
+            var tuning = overrides.get(type.id());
+            String id = tuning != null && tuning.archetype() != null ? tuning.archetype() : type.archetype();
+            if (MonsterArchetype.BOSS_SCRIPTED_ID.equals(id)) bosses.add(type.id());
+        }
+        if (bosses.size() > MonsterArchetype.MAX_SCRIPTED_BOSSES) {
+            bosses.sort(String::compareTo);
+            throw new IOException("At most " + MonsterArchetype.MAX_SCRIPTED_BOSSES
+                + " boss-scripted monster types are supported: " + String.join(", ", bosses));
+        }
     }
 
     /** Validate type-backed placements of one prepared scene. */
@@ -226,13 +269,8 @@ public final class MonsterCatalog {
                 throw new IOException("monster-type requires a Monster actor: " + entry.key());
             if (!type.configs().contains(entry.spec().text("config", "")))
                 throw new IOException("Actor config differs from catalogue type " + id + ": " + entry.key());
-            var fields = new TreeMap<>(type.spec());
-            var tuning = overrides.get(id);
-            // The overlay owns scheduling only. Placement fields still win over type defaults.
-            if (tuning != null && tuning.activationRadius() != null)
-                fields.put("activation-radius", Float.toString(tuning.activationRadius()));
-            if (tuning != null && tuning.leashRadius() != null)
-                fields.put("leash-radius", Float.toString(tuning.leashRadius()));
+            // The overlay and archetype own scheduling only. Placement fields still win.
+            var fields = fields(type);
             fields.putAll(entry.spec().fields());
             fields.remove("monster-type");
             entries.add(new SceneContent.Entry(entry.key(), entry.x(), entry.y(), entry.rotation(),
