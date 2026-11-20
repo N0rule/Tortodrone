@@ -44,6 +44,14 @@ public final class SceneCollision {
             float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             return new PawnShape(parts.stream().map(part->transform(part.geometry,x,y,c,s,1)).toList());
         }
+        /** Rotation-invariant bounding radius for broadphase indexing: the farthest part corner. */
+        public float extent(){
+            float extent=0;
+            for(var part:parts){var bounds=part.bounds;
+                extent=Math.max(extent,(float)Math.hypot(Math.max(Math.abs(bounds.minX),Math.abs(bounds.maxX)),
+                    Math.max(Math.abs(bounds.minY),Math.abs(bounds.maxY))));}
+            return extent;
+        }
         public Penetration penetration(float x,float y,float radius){
             var center=new Point(x,y);var result=Penetration.NONE;
             for(var part:parts)if(part.bounds.near(x,y,radius))result=result.deepest(SceneCollision.penetration(part.geometry,center,radius));

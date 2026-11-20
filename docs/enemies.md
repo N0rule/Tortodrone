@@ -204,6 +204,26 @@ place, so the monster retries on a later tick and never searches more often than
 existing 50 ms floor. Deferred ids wait in a bounded 128-entry burst queue; overflow
 drops and counts the oldest request instead of growing without limit.
 
+## Spatial index
+
+Perception and collision queries use a per-scene uniform grid with two-world-unit cells
+instead of scanning every actor. Every live entity is bucketed under its conservative
+extent (the farthest pawn-shape corner, pawn radius or bounds corner), so a lookup can
+never miss a real contact. Moving actors are re-bucketed when they cross a cell, and
+`statusPulse` widens its candidate box by the largest indexed extent. Candidates are
+returned in entity insertion order, preserving the old linear-scan tie breaks.
+
+The grid backs the four hot scans: sight blockers, `entitySegment` and `moveEntity`
+obstacles, and status pulse targets. `SpatialIndexDifferentialTest` replays identically
+seeded scenes through the indexed and linear paths on every bundled map and asserts
+bit-identical actor state, path counters and a scripted status pulse. The linear scan
+remains available behind a package-private constructor flag for that harness and for a
+one-release rollback; production scenes always use the grid.
+
+`MonsterPerfTest` measures the published budgets on the largest bundled map. A dormant
+64-monster population costs about 0.05 ms per tick. A dense arena of 64 engaged monsters
+with eight players stays near 5 ms p99, with no path search once the target is reachable.
+
 ## Source and derivation
 
 - Family/enemy names come from the shipped `rsrc/config/description.dat`
