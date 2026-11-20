@@ -54,6 +54,9 @@ public final class MonsterPathBudgetTest {
         world.advance(stamp, List.of(player));
         check(world.pathSearches() == ScenePathBudget.PER_TICK, "a burst is clipped to four searches on the first tick");
         check(world.pathQueued() == 4, "the four denied pursuers wait in the scene queue");
+        var firstMetrics = world.metrics();
+        check(firstMetrics.pathSearches() == ScenePathBudget.PER_TICK && firstMetrics.pathQueued() == 4,
+            "scene metrics expose the same admitted and queued searches");
         var before = new HashMap<Integer, float[]>();
         for (var actor : world.actors())
             if (actor.entity().kind().equals("Monster")) before.put(actor.id(), new float[]{actor.x(), actor.y()});

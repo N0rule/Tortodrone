@@ -107,6 +107,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         SceneTargeting.Mode targetMode;boolean targetModeUpdate,idleAttackDone;float targetRotation;
         final SceneWander wander;
         final SceneFollow follow;
+        /** Catalogue type id for wave/admin spawns; blank for a directly placed monster. */
+        String monsterType="";
         int nextFollow,followTarget;
         ScenePickupState pickupState;
         final Map<Integer,SceneAttackMotion> attackMotion;
@@ -296,6 +298,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private int nextId=1_000_000_000,lastStamp;
     private long entityOrder;
     private final ScenePathBudget pathBudget=new ScenePathBudget();
+    private final MonsterMetrics monsterMetrics=new MonsterMetrics();
     private final SpatialIndex spatial=new SpatialIndex();
     private final boolean spatialQuery;
     private final java.util.random.RandomGenerator random;
@@ -434,8 +437,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
     /** Insertion assigns the deterministic order the spatial query returns candidates in. */
     private void insert(Entity entity){
         entity.order=++entityOrder;entities.put(entity.id,entity);spatial.add(entity);
+        if(entity.kind.equals("Monster"))monsterMetrics.spawned();
     }
-    private void unlink(Entity entity){entities.remove(entity.id);spatial.remove(entity);}
+    private void unlink(Entity entity){
+        if(entity.kind.equals("Monster")&&entities.remove(entity.id)!=null)monsterMetrics.despawned();
+        spatial.remove(entity);
+    }
     private Entity spawn(SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,int stamp){
         String nativeType=spec.text("native-type","");String kind=nativeType.substring(nativeType.lastIndexOf('.')+1);
         if(!SUPPORTED.contains(kind))throw new IllegalArgumentException("Unsupported prepared scene actor: "+kind);
@@ -510,6 +517,18 @@ public final class SceneEntities implements SceneWeapons.Targets {
     float activationRadius(int id){var e=entities.get(id);return e==null?0:e.activationRadius;}
     /** Test seam: effective leash radius for a live entity (zero means unleased). */
     float leashRadius(int id){var e=entities.get(id);return e==null?0:e.leashRadius;}
+    /** Read-only counters for one scene; gauges are computed from live monsters. */
+    MonsterMetrics.Snapshot metrics(){
+        int total=0,awake=0,engaged=0;var byType=new TreeMap<String,Integer>();
+        for(var e:entities.values())if(e.kind.equals("Monster")&&e.destroyed==Integer.MAX_VALUE){
+            total++;
+            if(e.band!=SceneMonsterBand.DORMANT)awake++;
+            if(e.band==SceneMonsterBand.ENGAGED)engaged++;
+            byType.merge(e.monsterType.isBlank()?"placed":e.monsterType,1,Integer::sum);
+        }
+        return monsterMetrics.snapshot(total,awake,engaged,byType,pathBudget.queued(),pathBudget.dropped());
+    }
+    void tickDuration(long nanos){monsterMetrics.tick(nanos);}
     /** Test seam: A* searches admitted in the most recent tick. */
     int pathSearches(){return pathBudget.granted();}
     int pathQueued(){return pathBudget.queued();}
@@ -802,7 +821,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         try{
             for(var point:points){
                 var binding=new SceneContent.Entry("admin:"+nextId,point.x(),point.y(),rotation,new SceneContent.Spec(fields));
-                created.add(spawn(binding,binding.spec(),null,stamp));
+                var entity=spawn(binding,binding.spec(),null,stamp);entity.monsterType=type.id();
+                created.add(entity);
             }
         }catch(RuntimeException failed){
             for(var entity:created)despawn(entity);
@@ -854,7 +874,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var anchor=wave.group.anchors().get(wave.spawned%wave.group.anchors().size());
         var binding=new SceneContent.Entry("wave:"+wave.group.id()+":"+(wave.spawned+1),anchor.x(),anchor.y(),0,new SceneContent.Spec(fields));
         var entity=spawn(binding,binding.spec(),null,stamp);
-        entity.waveId=wave.group.id();
+        entity.waveId=wave.group.id();entity.monsterType=type.id();
     }
     private void dropWave(Wave wave){
         for(var entity:List.copyOf(entities.values()))if(wave.group.id().equals(entity.waveId))despawn(entity);
@@ -1216,6 +1236,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.path.isEmpty()||!entitySegment(e,e.x,e.y,e.path.getFirst().x(),e.path.getFirst().y())){
                 if(!pathBudget.acquire(e.id))return;
                 e.path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
+                monsterMetrics.searched(e.path.isEmpty());
                 e.pathX=tx;e.pathY=ty;e.nextPath=stamp+Math.max(50,Math.max(e.spec.integer("acquisition-interval",0),e.archetype.repathMillis()));
             }
             while(!e.path.isEmpty()&&Math.hypot(e.path.getFirst().x()-e.x,e.path.getFirst().y()-e.y)<.05)e.path=e.path.subList(1,e.path.size());
@@ -1389,6 +1410,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 e.path=target.entity()!=null&&e.targeting!=null?
                     ScenePathing.region(e.x,e.y,(x,y)->Math.max(targetDistance(x,y,target)-attackRange,sight(e,x,y,target.x(),target.y())?0:.01f),(x,y,nx,ny)->entitySegment(e,x,y,nx,ny)):
                     ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));e.pathX=tx;e.pathY=ty;
+                monsterMetrics.searched(e.path.isEmpty());
                 e.nextPath=stamp+Math.max(50,Math.max(e.spec.integer("acquisition-interval",0),e.archetype.repathMillis()));
             }
             while(!e.path.isEmpty()&&Math.hypot(e.path.getFirst().x()-e.x,e.path.getFirst().y()-e.y)<.05)e.path=e.path.subList(1,e.path.size());

@@ -48,7 +48,14 @@ export async function mount(ctx) {
         );
     const metrics = el('div', null, 'metric-strip'),
         counters = [];
-    for (const title of ['Online players', 'Active scenes', 'Listener uptime', 'Database health']) {
+    for (const title of [
+        'Online players',
+        'Active scenes',
+        'Listener uptime',
+        'Database health',
+        'Live monsters',
+        'Engaged monsters'
+    ]) {
         const n = el('div', null, 'metric'),
             value = el('strong'),
             sub = el('small');
@@ -86,6 +93,24 @@ export async function mount(ctx) {
     const charts = el('div', null, 'two-columns');
     charts.append(cpu.node, memory.node, population.node, activity.node);
     const diagnostics = details('Database operations and runtime details', {});
+    const monsters = new DataTable(
+        [
+            ['Scene', (r) => r.name],
+            ['State', (r) => r.state],
+            ['Players', (r) => r.players],
+            ['Live', (r) => r.monsters.total],
+            ['Awake', (r) => r.monsters.awake],
+            ['Engaged', (r) => r.monsters.engaged],
+            ['Spawned', (r) => r.monsters.spawned],
+            ['Despawned', (r) => r.monsters.despawned],
+            ['Path searches', (r) => r.monsters.pathSearches],
+            ['Queued', (r) => r.monsters.pathQueued],
+            ['Dropped', (r) => r.monsters.pathDropped],
+            ['Path failures', (r) => r.monsters.pathFailures],
+            ['Tick p99', (r) => r.monsters.tickP99Millis.toFixed(2), (r) => r.monsters.tickP99Millis]
+        ],
+        { key: (r) => `${r.templateId}:${r.instanceId}`, pageSize: 8 }
+    );
     const warnings = new DataTable(
         [
             ['Time', (r) => date(r.timestamp), (r) => r.timestamp],
@@ -99,6 +124,7 @@ export async function mount(ctx) {
         metrics,
         toolbar(range, el('small', 'Measured every 5 seconds · retained in memory for 1 hour')),
         charts,
+        panel('Scene monster runtime', monsters.node),
         panel('Recent warnings and errors', warnings.node),
         diagnostics
     );
@@ -120,6 +146,11 @@ export async function mount(ctx) {
         text(counters[2][1], s.failure || '');
         text(counters[3][0], s.database.failures ? 'Review' : 'Available');
         text(counters[3][1], `${s.accounts} accounts`);
+        text(counters[4][0], s.scenes.reduce((a, v) => a + v.monsters.total, 0));
+        text(counters[4][1], 'live in active scenes');
+        text(counters[5][0], s.scenes.reduce((a, v) => a + v.monsters.engaged, 0));
+        text(counters[5][1], 'full pursuit and attack');
+        monsters.update(s.scenes);
         for (const c of [cpu, memory, population, activity]) c.update(history);
         warnings.update(logs.filter((r) => ['WARN', 'ERROR'].includes(r.level)).reverse());
         const signature = JSON.stringify(s.database);

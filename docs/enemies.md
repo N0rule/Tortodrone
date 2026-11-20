@@ -256,6 +256,63 @@ phase exposes the controller to scene code; it does not add a YAML wave format.
 despawn cleanup. `MonsterLeashTest` covers disengagement, return-home, healing and the
 damage override.
 
+## Authoring encounters
+
+A catalogue-backed placement adds `monster-type` to an existing actor alias; the native
+binding supplies position, rotation and identity:
+
+```yaml
+actors:
+  companion_cube_1_1:
+    monster-type: companion_cube
+```
+
+Validation rejects an unknown or unsupported type, a non-monster actor and a config that does
+not belong to the selected type. The type supplies the native attack graph, timing and default
+archetype; the placement keeps its position, rotation and any explicit tuning field. Do not copy
+attack graphs or stats into a map. Scripted tutorial actors are the only embedded exception and
+cannot be promoted to catalogue types without new client data.
+
+Runtime waves are code/controller state, not YAML. A `MonsterGroup` requires a catalogue type,
+one to sixteen walkable anchors, `total`, `maxAlive`, a spawn interval, an optional respawn delay,
+an optional cleared signal and the scene generation that owns it. `addWave` validates the type
+and every anchor before creating an actor. Keep `maxAlive` at or below the scene cap of 64 and
+expect at most 32 simultaneously engaged monsters and four wave spawns per tick.
+
+Administrative spawns use the same catalogue path. `/spawn` and the stock F3 Actor Spawner accept
+a type id, the native description config or a unique native actor config; a request is validated
+as a whole, GM permission is rechecked and town scenes refuse spawning.
+
+Before shipping an encounter, verify:
+
+- every referenced type is supported in `content/monsters/catalog.json`;
+- anchors are walkable and outside static collision;
+- `maxAlive` is deliberate and total spawn volume is bounded;
+- overrides contain scheduling keys only, and `boss-scripted` is limited to the six listed types;
+- a focused test covers the new scene and the stock client loads it without a validation error.
+
+## Observability
+
+Each active scene keeps monotonic spawn/despawn and path counters plus a bounded 256-sample tick
+window. `SceneSimulation.metrics()` and `/admin/api/status` expose:
+
+| Field | Meaning |
+|---|---|
+| `total` / `awake` / `engaged` | Current monster population by scheduling band |
+| `byType` | Live population per catalogue type (`placed` for direct placements) |
+| `spawned` / `despawned` | Lifetime counters, including wave and admin spawns |
+| `pathSearches` / `pathQueued` / `pathDropped` | Admitted, waiting and overflowed A* requests |
+| `pathFailures` | Admitted searches that returned no route |
+| `tickP50Millis` / `tickP99Millis` | Recent simulation tick duration percentiles |
+
+The WebUI overview shows one row per active scene and aggregate live/engaged counts; viewers can
+read it without administrator rights. At debug level the server also logs one summary line per
+scene every 30 seconds. The counters are observational only: they never change scheduling,
+spawn or path decisions. `MonsterSoakTest` runs 64 monsters and eight observers for thirty
+simulated minutes, then drains the generation and checks that caps, population groups and
+spawn/despawn counters stayed consistent. The measured run completes in a few seconds on a
+development machine; treat the printed ticks/second as a smoke signal, not a hardware benchmark.
+
 ## Administrative spawns
 
 `/spawn` and the stock F3 **Actor Spawner** use the same catalogue-backed entry point as

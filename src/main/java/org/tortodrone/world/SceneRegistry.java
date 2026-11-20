@@ -99,7 +99,8 @@ public final class SceneRegistry {
         }
         return target==null?null:target.simulation().companion(knight);
     }
-    public record Status(int templateId,int instanceId,String name,int players,String state) { }
+    public record Status(int templateId,int instanceId,String name,int players,String state,
+            MonsterMetrics.Snapshot monsters) { }
     public synchronized List<Status> statuses() {
         var result=new ArrayList<Status>();
         // Interior templates are instantiated per owner; their unused prototype is not active.
@@ -110,7 +111,8 @@ public final class SceneRegistry {
     }
     private static Status status(Instance instance) {
         int players=instance.simulation().playerCount();
-        return new Status(instance.map().id(),instance.oid(),instance.map().name(),players,players==0?"Idle":"Active");
+        return new Status(instance.map().id(),instance.oid(),instance.map().name(),players,
+            players==0?"Idle":"Active",instance.simulation().metrics());
     }
     public Instance entry(){return instances.get(catalog.entry().id()).get(0);}
     public Instance instance(int scene,int index)throws IOException {

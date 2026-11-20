@@ -470,6 +470,7 @@ public final class SceneSimulation {
     private Throwable tickFailure;
     private Snapshot previous;
     private long tickCount;
+    private int lastMetricLog;
     private final List<SceneContent.Entry> arsenalZones;
     public synchronized boolean placement(float x,float y){
         var map=instance.map();
@@ -632,6 +633,8 @@ public final class SceneSimulation {
     public synchronized int playerCount(){return members.size();}
     public synchronized ActorState defaultEntrance(){return entities.defaultEntrance();}
     public synchronized long tickCount(){return tickCount;}
+    /** Read-only monster/path counters for this scene instance. */
+    public synchronized MonsterMetrics.Snapshot metrics(){return entities.metrics();}
     /** Scheduled executors otherwise hide exceptions in their cancelled future. */
     public synchronized Throwable failure(){return tickFailure;}
     private Snapshot capture(int stamp,Snapshot baseline) {
@@ -661,6 +664,7 @@ public final class SceneSimulation {
         previous=null;
     }
     private void tick() {
+        long tickStarted=System.nanoTime();
         Snapshot publication;List<Consumer<Snapshot>> recipients;
         synchronized(this) {
             if(timer==null)return;
@@ -707,6 +711,18 @@ public final class SceneSimulation {
             entities.advance(stamp,players);var sources=new ArrayList<>(players);for(var member:members.values()){var pet=member.petActor();if(pet!=null)sources.add(pet);}weapons.advance(stamp,sources);
             combatEvents.removeIf(event->stamp-event.timestamp()>5000);
             publication=capture(stamp,previous);previous=publication;tickCount++;
+            entities.tickDuration(System.nanoTime()-tickStarted);
+            if(stamp-lastMetricLog>=30_000){
+                lastMetricLog=stamp;
+                var m=entities.metrics();
+                System.getLogger(SceneSimulation.class.getName()).log(System.Logger.Level.DEBUG,
+                    "Scene metrics: template="+instance.map().id()+" instance="+instance.oid()
+                    +" total="+m.total()+" awake="+m.awake()+" engaged="+m.engaged()
+                    +" byType="+m.byType()+" paths="+m.pathSearches()+" queued="+m.pathQueued()
+                    +" dropped="+m.pathDropped()+" failures="+m.pathFailures()
+                    +" spawned="+m.spawned()+" despawned="+m.despawned()
+                    +" tickP99="+String.format(java.util.Locale.ROOT,"%.2f",m.tickP99Millis())+"ms");
+            }
             recipients=members.values().stream().filter(m->m.entered).map(m->m.publish).toList();
         }
         // No simulation lock is held across callbacks, including detach/travel races.
