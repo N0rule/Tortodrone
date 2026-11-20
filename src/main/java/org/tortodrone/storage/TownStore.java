@@ -304,6 +304,10 @@ public final class TownStore {
     static void requireGameMaster(Connection c,int account,long auth)throws SQLException,IOException{
         try(var st=c.prepareStatement("SELECT game_master FROM accounts WHERE id=? AND auth_revision=?")){st.setInt(1,account);st.setLong(2,auth);try(var r=st.executeQuery()){if(!r.next()||!r.getBoolean(1))throw new IOException("Game Master permission required");}}
     }
+    /** Read-only recheck for tools whose effect is not a town mutation. */
+    public void requireGameMaster(int account,long auth)throws IOException {
+        database.read(c->{requireGameMaster(c,account,auth);return null;});
+    }
     public Result loadout(int account,int knight,long auth,String name,boolean save)throws IOException {
         return change(account,knight,auth,(c,p)->{if(save)NamedLoadouts.save(c,p,name);else NamedLoadouts.equip(c,p,name,rules);return null;});
     }

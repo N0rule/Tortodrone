@@ -224,6 +224,12 @@ Sprite IDs come from `/sprite_list`. Skill, power and ultimate indices use the n
 | `/sound` | `/sound` | Toggle client sound volume. |
 | `/dump (actors sprites influences)` | `/dump actors` | Dump client scene diagnostics to the client log; native developer permissions apply. |
 
+### GM monster spawning
+
+The stock `/spawn` command and the F3 **Actor Spawner** call the same server admin method. Both resolve a native actor config name (for example `Character/NPC/Monster/Beast/Wolver/Ash Tail/Ash Tail 1`) through `content/monsters/catalog.json`; the server never accepts arbitrary config fields. The same reference also accepts a catalogue type id such as `ash_tail`, but the unmodified client resolves `/spawn` names before sending, so chat and the panel normally use the native name.
+
+Spawns are refused outside a level scene, for unknown or unsupported types (the reason lists the failing actions), when the scene already has 64 live monsters, and when the requested position, count or radius is invalid. A batch is all-or-nothing. Game Master permission is rechecked from storage on every call, independent of the client menu. `MonsterSpawnAdminTest` covers resolution, caps and rollback; `AdminServiceTest` covers the stock admin dispatch and authorization.
+
 ### GM tools not available yet
 
 These require runtime systems, event definitions, or a dedicated administration backend that has not been implemented. They remain explicit placeholders rather than reporting fake success.
@@ -251,7 +257,6 @@ Examples containing `<...>` need a verified definition from that missing system;
 | `/reboot minutes message` | `/reboot 5 Scheduled maintenance` | Cluster/node lifecycle control. Use the local server console for shutdown. |
 | `/rename_guild <old name> : <new name>` | `/rename_guild <old-name> : <new-name>` | Guild ownership and persistence. |
 | `/revoke_gift <account name> name attr value attr value...` | `/revoke_gift Alice <gift-config>` | Administrative gift-revocation records. |
-| `/spawn name attr value attr value...` | `/spawn <actor-config>` | Persistent actor spawning and native actor configuration resolution. |
 | `/toggle <flag>` | `/toggle invincible` | Native status flags, including `fast`, `invisible`, `stealth` and `invincible`. |
 | `/toggle_progress <flag>` | `/toggle_progress tier_2_access` | Native progression flags, including tier access and wearable rarity. |
 | `/unlock_achievement <account name> <achievement name>` | `/unlock_achievement Alice <achievement-name>` | Achievement definitions and persistence. |

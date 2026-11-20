@@ -59,6 +59,33 @@ public final class MonsterCatalog {
         return type;
     }
 
+    /**
+     * Resolve an administrative reference without accepting arbitrary config data. Catalogue
+     * ids are exact; legacy chat and the stock panel may also use a native description or actor
+     * config name, which is matched only when exactly one catalogue type owns it.
+     */
+    public MonsterType resolveSpawnable(String reference) throws IOException {
+        if (reference == null || reference.isBlank() || reference.length() > 512)
+            throw new IOException("Enter a monster type ID");
+        MonsterType exact = types.get(reference);
+        if (exact != null) {
+            exact.requireSpawnable();
+            return exact;
+        }
+        var matches = new ArrayList<MonsterType>();
+        for (var type : types.values())
+            if (type.config().equals(reference) || reference.equals(type.actor())
+                    || type.configs().contains(reference))
+                matches.add(type);
+        if (matches.isEmpty()) throw new IOException("Unknown monster type: " + reference);
+        if (matches.size() > 1)
+            throw new IOException("Ambiguous monster type reference " + reference + ": "
+                + String.join(", ", matches.stream().map(MonsterType::id).toList()));
+        MonsterType resolved = matches.getFirst();
+        resolved.requireSpawnable();
+        return resolved;
+    }
+
     /** Load {@code content/monsters}; an absent folder means no catalogue was prepared. */
     public static MonsterCatalog load(Path folder) throws IOException {
         if (!Files.exists(folder)) return empty();

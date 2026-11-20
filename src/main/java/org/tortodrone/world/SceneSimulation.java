@@ -479,6 +479,10 @@ public final class SceneSimulation {
             &&!entities.penetration(x,y,0).present()
             &&map.portals().triggers().stream().noneMatch(t->t.intersects(x,y));
     }
+    /** Authorized GM spawn; creation stays under the simulation lock and never does I/O. */
+    public synchronized int spawnMonsters(String reference,float x,float y,float rotation,int count,float radius)throws java.io.IOException {
+        return entities.spawnMonsters(reference,x,y,rotation,count,radius,SceneClock.now());
+    }
     public SceneSimulation(SceneRegistry.Instance instance){this.instance=Objects.requireNonNull(instance);
         arsenalZones=instance.map().content().entries().stream().filter(e->e.spec().flag("arsenal-zone",false)).toList();
         entities=new SceneEntities(instance.map().content(),instance.map().collision(),instance.map().staticCollision(),new Random(),true,SceneClock.now(),instance.map().monsters());

@@ -88,6 +88,8 @@ public final class AdminServiceTest {
                     List.of("Gear/Shield/Proto Shield", new SessionDecoder.Listener(
                         "com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller", (short) 11))));
                 response(staffFrames, staffSocket, (short) 11, (byte) 0, "Placeholder: this admin tool is not implemented yet");
+                world.admin(spriteInvoke(49,(short)13,new SessionDecoder.ConfigReference("fixture_wave",Map.of())));
+                response(staffFrames,staffSocket,(short)13,(byte)0,"Monsters can only be spawned in a level scene");
                 check(staff.worldProfile(knight.name(), 1).items().stream().filter(i -> !i.starter()).count() == 5,
                     "refused admin operations grant nothing");
                 world.admin(spriteInvoke(17,(short)60,123));response(staffFrames,staffSocket,(short)60,(byte)1,null);
@@ -97,6 +99,10 @@ public final class AdminServiceTest {
                 world.admin(spriteInvoke(44,(short)62,99,0));response(staffFrames,staffSocket,(short)62,(byte)0,"Rank must be 1–10 and subrank 1–4");
                 gearCommands(world,staffFrames,staffSocket,staff,knight,database);
                 spriteCommands(world,staffFrames,staffSocket,staff,knight,accounts,database,scenes);
+                accounts.setGameMaster("Master",false);
+                world.admin(spriteInvoke(49,(short)14,new SessionDecoder.ConfigReference("fixture_wave",Map.of())));
+                response(staffFrames,staffSocket,(short)14,(byte)0,"Game Master permission required");
+                accounts.setGameMaster("Master",true);
             }
             // A second stock session after a reconnect still owns the granted item.
             Socket reconnect = new RecordingSocket();

@@ -1834,7 +1834,7 @@ final class WorldSession implements AutoCloseable {
         SessionDecoder.Listener listener=args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener last)?null:last;
         String failure=null;
         int method=request.method();
-        if(method!=1&&method!=5&&method!=17&&method!=44&&method!=7&&method!=8&&method!=41&&method!=42&&method!=23&&method!=45&&method!=46&&method!=47) {
+        if(method!=1&&method!=5&&method!=17&&method!=44&&method!=7&&method!=8&&method!=41&&method!=42&&method!=23&&method!=45&&method!=46&&method!=47&&method!=49) {
             // Unknown tools must not leave the stock dashboard waiting for a callback.
             String reason=roles.gameMaster()?"Placeholder: this admin tool is not implemented yet":"Game Master permission required";
             if(listener!=null){short id=listener.requestId();output.send(()->codec.invocationFailure(oid,id,reason));}
@@ -1873,9 +1873,45 @@ final class WorldSession implements AutoCloseable {
                 if(method==23)output.send(()->codec.townResult(oid,listener.requestId(),result.result(),profile));else output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return;
         }
+        if(method==49){
+            // Stock ActorSpawner and /spawn both call ProjectXAdminMarshaller.b(ConfigReference,
+            // callback), id 49 in the installed build. The argument is a config reference only.
+            if(args.size()!=2||!(args.getFirst() instanceof SessionDecoder.ConfigReference reference))throw new SessionDecoder.Rejected("Invalid monster spawn request");
+            try{
+                requireAdminReady();
+                characters.town(scenes.town()).requireGameMaster(characters.accountId(),authRevision);
+                var location=adminLocation();
+                if(location.scene().map().town())throw new IOException("Monsters can only be spawned in a level scene");
+                int count=1;float radius=0;
+                for(var entry:reference.arguments().entrySet()){
+                    if(!Set.of("count","radius").contains(entry.getKey()))
+                        throw new IOException("Monster spawn accepts only count and radius");
+                    if(entry.getKey().equals("count"))count=adminInteger(entry.getValue(),"count");
+                    else radius=adminNumber(entry.getValue(),"radius");
+                }
+                location.scene().simulation().spawnMonsters(reference.name(),location.x(),location.y(),location.rotation(),count,radius);
+                log.info("Spawned monster; knightId="+profile.worldId()+"; type="+reference.name()+"; count="+count);
+                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
+            return;
+        }
         failure=method==7?createItem(args):adminSprite(method,args);
         if(failure==null)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
         else {String reason=failure;output.send(()->codec.invocationFailure(oid,listener.requestId(),reason));}
+    }
+
+    private static int adminInteger(Object value,String name)throws IOException{
+        if(!(value instanceof Number number))throw new IOException(name+" must be an integer");
+        double parsed=number.doubleValue();
+        if(!Double.isFinite(parsed)||parsed!=Math.rint(parsed)||parsed<Integer.MIN_VALUE||parsed>Integer.MAX_VALUE)
+            throw new IOException(name+" must be an integer");
+        return (int)parsed;
+    }
+    private static float adminNumber(Object value,String name)throws IOException{
+        if(!(value instanceof Number number))throw new IOException(name+" must be a number");
+        float parsed=number.floatValue();
+        if(!Float.isFinite(parsed))throw new IOException(name+" must be a number");
+        return parsed;
     }
 
     private String adminSprite(int method,List<Object> args)throws IOException{

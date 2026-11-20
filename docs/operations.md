@@ -180,7 +180,7 @@ Account create/password and destructive deletion require interactive password/co
 
 The WebUI supports account/knight browsing and searchable inventory, item grants, quantity/removal confirmation and balance changes; equipped, starter and permanent item protections apply. For headless administration, enter `help` or `help account create` in the running server console. Game accounts remain separate from WebUI accounts.
 
-A saved GM can use the original client's F3 dashboard **ItemCreator** (other tools unsupported); server-side role checks still apply. Tortodrone adds no GM chat commands, so ordinary players' leading `!` stays normal chat. Do not assume local admin commands also work inside the game; item grants run through the WebUI or the server console.
+A saved GM can use the original client's F3 dashboard **ItemCreator** and **Actor Spawner** (other tools unsupported); server-side role checks still apply. Tortodrone adds no GM chat commands, so ordinary players' leading `!` stays normal chat. Do not assume local admin commands also work inside the game; item grants run through the WebUI or the server console.
 
 ## Data safety, updates and release builds
 

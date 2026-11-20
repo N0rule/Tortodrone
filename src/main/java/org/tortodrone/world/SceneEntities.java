@@ -38,6 +38,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     static final int MAX_ALIVE_MONSTERS=64;
     static final int MAX_ENGAGED_MONSTERS=32;
     static final int MAX_WAVE_SPAWNS_PER_TICK=4;
+    /** Administrative spawns use the same ring policy as a wave, never an unbounded radius. */
+    static final float MAX_ADMIN_SPAWN_RADIUS=128;
     private static final class SpatialIndex {
         private final Map<Long,List<Entity>> cells=new HashMap<>();
         /** Largest inserted extent; queries widen by it instead of rescanning the scene. */
@@ -748,6 +750,55 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 throw new IllegalArgumentException("Monster group anchor is blocked: "+anchor);
         }
         waves.put(group.id(),new Wave(group));
+    }
+    /**
+     * Spawn catalogue-backed monsters for an authorized administrator. The complete request is
+     * validated before insertion, so an unknown/unsupported type, blocked position or room/cap
+     * refusal never leaves a partial group behind. This is the same creation path as scene
+     * placement and waves.
+     */
+    public int spawnMonsters(String reference,float x,float y,float rotation,int count,float radius,int stamp)throws java.io.IOException {
+        if(count<1||count>MAX_ALIVE_MONSTERS)
+            throw new java.io.IOException("Count must be between 1 and "+MAX_ALIVE_MONSTERS);
+        if(!Float.isFinite(radius)||radius<0||radius>MAX_ADMIN_SPAWN_RADIUS)
+            throw new java.io.IOException("Radius must be between 0 and "+MAX_ADMIN_SPAWN_RADIUS);
+        if(!Float.isFinite(x)||!Float.isFinite(y)||!Float.isFinite(rotation))
+            throw new java.io.IOException("Invalid monster spawn position");
+        MonsterType type=monsters.resolveSpawnable(reference);
+        int alive=liveMonsters();
+        if(alive+count>MAX_ALIVE_MONSTERS)
+            throw new java.io.IOException("The scene already has "+alive+" live monsters; the limit is "+MAX_ALIVE_MONSTERS);
+        if((long)entities.size()+pendingActors.size()+count>=4096||(long)nextId+count>Integer.MAX_VALUE)
+            throw new java.io.IOException("The scene has no room for new actors");
+        var fields=new TreeMap<>(type.spec());
+        var tuning=monsters.override(type.id());
+        if(tuning!=null){
+            if(tuning.activationRadius()!=null)fields.put("activation-radius",Float.toString(tuning.activationRadius()));
+            if(tuning.leashRadius()!=null)fields.put("leash-radius",Float.toString(tuning.leashRadius()));
+        }
+        var points=new ArrayList<ScenePathing.Point>(count);
+        for(int index=0;index<count;index++){
+            float angle=(float)(Math.PI*2*index/count);
+            float px=x+(count==1?0:radius*(float)Math.cos(angle));
+            float py=y+(count==1?0:radius*(float)Math.sin(angle));
+            if(!terrain.walkable(px,py))
+                throw new java.io.IOException("Spawn position is outside walkable terrain");
+            if(!staticCollision.isEmpty()&&(!staticCollision.floorSupported(px,py)
+                    ||staticCollision.penetration(pawnCollisionMask,px,py,ScenePortals.PAWN_RADIUS).present()))
+                throw new java.io.IOException("Spawn position is blocked");
+            points.add(new ScenePathing.Point(px,py));
+        }
+        var created=new ArrayList<Entity>(count);
+        try{
+            for(var point:points){
+                var binding=new SceneContent.Entry("admin:"+nextId,point.x(),point.y(),rotation,new SceneContent.Spec(fields));
+                created.add(spawn(binding,binding.spec(),null,stamp));
+            }
+        }catch(RuntimeException failed){
+            for(var entity:created)despawn(entity);
+            throw failed;
+        }
+        return created.size();
     }
     /** Current scene generation. A wave created for an older generation is dropped, never replayed. */
     public long generation(){return generation;}

@@ -225,6 +225,22 @@ phase exposes the controller to scene code; it does not add a YAML wave format.
 despawn cleanup. `MonsterLeashTest` covers disengagement, return-home, healing and the
 damage override.
 
+## Administrative spawns
+
+`/spawn` and the stock F3 **Actor Spawner** use the same catalogue-backed entry point as
+waves. They accept a catalogue type id, its native description config or one of its native
+actor configs; the server resolves the reference inside the generated catalogue, so no
+arbitrary config, JSON or free-form field ever reaches an actor. Unsupported types are
+refused with their failing action list, and the unmodified client normally sends the native
+actor config name because it resolves `/spawn` names before the request leaves the client.
+
+A request is validated as a whole before any actor is created: unknown types, blocked or
+non-walkable positions, an out-of-range count or radius, and the 64-live-monster scene cap
+all refuse without a partial batch. GM permission is rechecked from storage on each call,
+independently of the client dashboard. `MonsterSpawnAdminTest` covers catalogue/native-name
+resolution, all-or-nothing creation and the caps; `AdminServiceTest` covers dispatch,
+authorization and the level-scene rule.
+
 ## Perception and path budget
 
 A clear line of sight is reused for at most 150 ms, or until the target moves more than
