@@ -1,0 +1,3957 @@
+# Imported prestige missions; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_anniversary_r3:
+    name: Prestige/Special/Anniversary/Anniversary Rank 3
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice (T1)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Anniversary
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    cardImage: ui/mission/images/cards/images/creepcakes_clockworks.png
+    missionProps: Prestige/Rank 3, Gate
+  p_anniversary_r4:
+    name: Prestige/Special/Anniversary/Anniversary Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice (T2)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Anniversary
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    cardImage: ui/mission/images/cards/images/creepcakes_clockworks.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_anniversary_r6:
+    name: Prestige/Special/Anniversary/Anniversary Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice (T2)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Anniversary
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    cardImage: ui/mission/images/cards/images/creepcakes_clockworks.png
+    missionProps: Prestige/Rank 6, Gate
+  p_anniversary_r7:
+    name: Prestige/Special/Anniversary/Anniversary Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice (T3)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Anniversary
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    cardImage: ui/mission/images/cards/images/creepcakes_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_anniversary_r9:
+    name: Prestige/Special/Anniversary/Anniversary Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice (T3)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Anniversary
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    cardImage: ui/mission/images/cards/images/creepcakes_clockworks.png
+    missionProps: Prestige/Rank 9, Gate
+  p_anniversary_shock_r3:
+    name: Prestige/Special/Anniversary/Anniversary Shock Rank 3
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice (T1)
+    - difficulty: MEDIUM
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice
+    - difficulty: HARD
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Anniversary
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    briefing: b.p_anniversary_shock_r3
+    cardImage: ui/mission/images/cards/images/currentcakes_clockworks.png
+    missionProps: Prestige/Rank 3, Gate
+  p_anniversary_shock_r4:
+    name: Prestige/Special/Anniversary/Anniversary Shock Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Compound)
+        arguments:
+          Entries:
+            entries:
+            - spawnTable:
+                name: Treasure/Event/Anniversary/Cake Slice (T2)
+            - spawnTable:
+                name: Treasure/Event/Anniversary/Cake Slice
+    - difficulty: MEDIUM
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice
+    - difficulty: HARD
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Anniversary
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    briefing: b.p_anniversary_shock_r3
+    cardImage: ui/mission/images/cards/images/currentcakes_clockworks.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_anniversary_shock_r6:
+    name: Prestige/Special/Anniversary/Anniversary Shock Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Compound)
+        arguments:
+          Entries:
+            entries:
+            - spawnTable:
+                name: Treasure/Event/Anniversary/Cake Slice (T2)
+            - spawnTable:
+                name: Treasure/Event/Anniversary/Cake Slice
+    - difficulty: MEDIUM
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice
+    - difficulty: HARD
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Anniversary
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    briefing: b.p_anniversary_shock_r3
+    cardImage: ui/mission/images/cards/images/currentcakes_clockworks.png
+    missionProps: Prestige/Rank 6, Gate
+  p_anniversary_shock_r7:
+    name: Prestige/Special/Anniversary/Anniversary Shock Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Compound)
+        arguments:
+          Entries:
+            entries:
+            - spawnTable:
+                name: Treasure/Event/Anniversary/Cake Slice (T3)
+            - spawnTable:
+                name: Treasure/Event/Anniversary/Cake Slice
+    - difficulty: MEDIUM
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice
+    - difficulty: HARD
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Anniversary
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    briefing: b.p_anniversary_shock_r3
+    cardImage: ui/mission/images/cards/images/currentcakes_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_anniversary_shock_r9:
+    name: Prestige/Special/Anniversary/Anniversary Shock Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Compound)
+        arguments:
+          Entries:
+            entries:
+            - spawnTable:
+                name: Treasure/Event/Anniversary/Cake Slice (T3)
+            - spawnTable:
+                name: Treasure/Event/Anniversary/Cake Slice
+    - difficulty: MEDIUM
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice
+    - difficulty: HARD
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Anniversary
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    briefing: b.p_anniversary_shock_r3
+    cardImage: ui/mission/images/cards/images/currentcakes_clockworks.png
+    missionProps: Prestige/Rank 9, Gate
+  p_apocrea_r4:
+    name: Prestige/Special/Shroud of Apocrea/Apocrea Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Apocrea
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    cardImage: ui/mission/images/cards/images/harvester.png
+  p_apocrea_r6:
+    name: Prestige/Special/Shroud of Apocrea/Apocrea Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Apocrea
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    cardImage: ui/mission/images/cards/images/harvester.png
+  p_apocrea_r7:
+    name: Prestige/Special/Shroud of Apocrea/Apocrea Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Apocrea
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    cardImage: ui/mission/images/cards/images/harvester.png
+  p_apocrea_r9:
+    name: Prestige/Special/Shroud of Apocrea/Apocrea Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Apocrea
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    cardImage: ui/mission/images/cards/images/harvester.png
+  p_fast_advancement:
+    name: Prestige/Fast Advancement (PREVIEW ONLY)
+    type: prestige
+    deployment: PREVIEW
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 1
+      maxRank: 11
+    cardImage: ui/mission/images/cards/images/creepcakes_clockworks.png
+    missionProps: Prestige/Rank 3, Gate
+  p_fiend_test_t1:
+    name: Prestige/Fiend Test T1 (PREVIEW ONLY)
+    type: prestige
+    deployment: NONE
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 1
+      maxRank: 11
+    briefing: b.p_fiend_test_t1
+    cardImage: ui/mission/images/cards/images/fiends3_clockworks.png
+    missionProps: Prestige/Rank 3, Gate
+  p_fiend_test_t2:
+    name: Prestige/Fiend Test T2 (PREVIEW ONLY)
+    type: prestige
+    deployment: NONE
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 1
+      maxRank: 11
+    briefing: b.p_fiend_test_t1
+    cardImage: ui/mission/images/cards/images/fiends3_clockworks.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_fiend_test_t3:
+    name: Prestige/Fiend Test T3 (PREVIEW ONLY)
+    type: prestige
+    deployment: NONE
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 1
+      maxRank: 11
+    briefing: b.p_fiend_test_t1
+    cardImage: ui/mission/images/cards/images/fiends3_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_ghost_machine_r4:
+    name: Prestige/Special/Danger Missions/Ghosts in the Machine, Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1348297200000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/gitm_dangermission.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_ghost_machine_r6:
+    name: Prestige/Special/Danger Missions/Ghosts in the Machine, Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1348297200000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/gitm_dangermission.png
+    missionProps: Prestige/Rank 6, Gate
+  p_ghost_machine_r7:
+    name: Prestige/Special/Danger Missions/Ghosts in the Machine, Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1348297200000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/gitm_dangermission.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_ghost_machine_r9:
+    name: Prestige/Special/Danger Missions/Ghosts in the Machine, Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1348297200000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/gitm_dangermission.png
+    missionProps: Prestige/Rank 9, Gate
+  p_halloween_r3:
+    name: Prestige/Special/Halloween/Halloween Rank 3
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: true
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: event
+      event: Dark Harvest
+    cardImage: ui/mission/images/cards/images/punkin_king.png
+    missionProps: Prestige/Rank 3, Gate
+  p_halloween_r4:
+    name: Prestige/Special/Halloween/Halloween Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: true
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: event
+      event: Dark Harvest
+    cardImage: ui/mission/images/cards/images/punkin_king.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_halloween_r6:
+    name: Prestige/Special/Halloween/Halloween Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: true
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: event
+      event: Dark Harvest
+    cardImage: ui/mission/images/cards/images/punkin_king.png
+    missionProps: Prestige/Rank 6, Gate
+  p_halloween_r7:
+    name: Prestige/Special/Halloween/Halloween Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: true
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: event
+      event: Dark Harvest
+    cardImage: ui/mission/images/cards/images/punkin_king.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_halloween_r9:
+    name: Prestige/Special/Halloween/Halloween Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: true
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: event
+      event: Dark Harvest
+    cardImage: ui/mission/images/cards/images/punkin_king.png
+    missionProps: Prestige/Rank 9, Gate
+  p_heart_of_ice_r4:
+    name: Prestige/Special/Danger Missions/Heart of Ice, Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1348210800000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/maulos_dangermission.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_heart_of_ice_r6:
+    name: Prestige/Special/Danger Missions/Heart of Ice, Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1348210800000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/maulos_dangermission.png
+    missionProps: Prestige/Rank 6, Gate
+  p_heart_of_ice_r7:
+    name: Prestige/Special/Danger Missions/Heart of Ice, Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1348210800000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/maulos_dangermission.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_heart_of_ice_r9:
+    name: Prestige/Special/Danger Missions/Heart of Ice, Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1348210800000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/maulos_dangermission.png
+    missionProps: Prestige/Rank 9, Gate
+  p_legion_almire_r4:
+    name: Prestige/Special/Danger Missions/Legion of Almire, Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1348124400000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/broken_dangermission.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_legion_almire_r6:
+    name: Prestige/Special/Danger Missions/Legion of Almire, Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1348124400000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/broken_dangermission.png
+    missionProps: Prestige/Rank 6, Gate
+  p_legion_almire_r7:
+    name: Prestige/Special/Danger Missions/Legion of Almire, Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1348124400000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/broken_dangermission.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_legion_almire_r9:
+    name: Prestige/Special/Danger Missions/Legion of Almire, Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1348124400000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/broken_dangermission.png
+    missionProps: Prestige/Rank 9, Gate
+  p_moorcroft1_r4:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 1 Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '1'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1377068400000
+        interval: 3d
+    briefing: b.p_moorcroft1
+    cardImage: ui/mission/images/cards/images/blackkat1_clockworks.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_moorcroft1_r6:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 1 Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '2'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1377068400000
+        interval: 3d
+    briefing: b.p_moorcroft1
+    cardImage: ui/mission/images/cards/images/blackkat1_clockworks.png
+    missionProps: Prestige/Rank 6, Gate
+  p_moorcroft1_r7:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 1 Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '3'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1377068400000
+        interval: 3d
+    briefing: b.p_moorcroft1
+    cardImage: ui/mission/images/cards/images/blackkat1_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_moorcroft1_r9:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 1 Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '4'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1377068400000
+        interval: 3d
+    briefing: b.p_moorcroft1
+    cardImage: ui/mission/images/cards/images/blackkat1_clockworks.png
+    missionProps: Prestige/Rank 9, Gate
+  p_moorcroft2_r4:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 2 Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '1'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1377154800000
+        interval: 3d
+    briefing: b.p_moorcroft2
+    cardImage: ui/mission/images/cards/images/blackkat2_clockworks.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_moorcroft2_r6:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 2 Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '2'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1377154800000
+        interval: 3d
+    briefing: b.p_moorcroft2
+    cardImage: ui/mission/images/cards/images/blackkat2_clockworks.png
+    missionProps: Prestige/Rank 6, Gate
+  p_moorcroft2_r7:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 2 Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '3'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1377154800000
+        interval: 3d
+    briefing: b.p_moorcroft2
+    cardImage: ui/mission/images/cards/images/blackkat2_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_moorcroft2_r9:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 2 Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '4'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1377154800000
+        interval: 3d
+    briefing: b.p_moorcroft2
+    cardImage: ui/mission/images/cards/images/blackkat2_clockworks.png
+    missionProps: Prestige/Rank 9, Gate
+  p_moorcroft3_r4:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 3 Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '1'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1377241200000
+        interval: 3d
+    briefing: b.p_moorcroft3
+    cardImage: ui/mission/images/cards/images/blackkat3_clockworks.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_moorcroft3_r6:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 3 Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '2'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1377241200000
+        interval: 3d
+    briefing: b.p_moorcroft3
+    cardImage: ui/mission/images/cards/images/blackkat3_clockworks.png
+    missionProps: Prestige/Rank 6, Gate
+  p_moorcroft3_r7:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 3 Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '3'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: event
+      event: Black Kat
+    - type: schedule
+      schedule:
+        refTime: 1377241200000
+        interval: 3d
+    briefing: b.p_moorcroft3
+    cardImage: ui/mission/images/cards/images/blackkat3_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_moorcroft3_r9:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 3 Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '4'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1377241200000
+        interval: 3d
+    briefing: b.p_moorcroft3
+    cardImage: ui/mission/images/cards/images/blackkat3_clockworks.png
+    missionProps: Prestige/Rank 9, Gate
+  p_r3_gate_beast:
+    name: Prestige/Rank 3/Gate/Beast
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325404800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/wolver_clocksky.png
+    missionProps: Prestige/Rank 3, Gate
+  p_r3_gate_construct:
+    name: Prestige/Rank 3/Gate/Construct
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325577600000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/scuttlebot_clockworks.png
+    missionProps: Prestige/Rank 3, Gate
+  p_r3_gate_fiend:
+    name: Prestige/Rank 3/Gate/Fiend
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325750400000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/devilites_clockworks.png
+    missionProps: Prestige/Rank 3, Gate
+  p_r3_gate_gremlin:
+    name: Prestige/Rank 3/Gate/Gremlin
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325664000000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/gremcon3_decon.png
+    missionProps: Prestige/Rank 3, Gate
+  p_r3_gate_slime:
+    name: Prestige/Rank 3/Gate/Slime
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325491200000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/lichen_nightsky.png
+    missionProps: Prestige/Rank 3, Gate
+  p_r3_gate_undead:
+    name: Prestige/Rank 3/Gate/Undead
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325836800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/spookat_castle.png
+    missionProps: Prestige/Rank 3, Gate
+  p_r3_kit:
+    name: Prestige/Rank 3/Exchange/Compact Supply Kit
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Supply Pack, Compact
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325577600000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 3, Exchange
+  p_r3_kit_2:
+    name: Prestige/Rank 3/Exchange/Compact Supply Kit (2)
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Supply Pack, Compact
+        count: 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325750400000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 3, Exchange
+  p_r3_mat_0:
+    name: Prestige/Rank 3/Exchange/Material 0 Star (2)
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 0
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325404800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 3, Exchange
+  p_r3_mat_01:
+    name: Prestige/Rank 3/Exchange/Material 0, 1 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 0
+          arguments:
+            Count: '2'
+      - recipes:
+        - name: Mission/Mat 1
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325836800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 3, Exchange
+  p_r3_mat_1:
+    name: Prestige/Rank 3/Exchange/Material 1 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 1
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325664000000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 3, Exchange
+  p_r3_min:
+    name: Prestige/Rank 3/Exchange/Mineral
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mineral
+          arguments:
+            Count: '10'
+        choose: 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1325491200000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 3, Exchange
+  p_r4_gate_beast:
+    name: Prestige/Rank 4,5/Gate/Beast
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325404800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/wolver_clocksky.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_r4_gate_construct:
+    name: Prestige/Rank 4,5/Gate/Construct
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325577600000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/scuttlebot_clockworks.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_r4_gate_fiend:
+    name: Prestige/Rank 4,5/Gate/Fiend
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325750400000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/devilites_clockworks.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_r4_gate_gremlin:
+    name: Prestige/Rank 4,5/Gate/Gremlin
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325664000000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/gremcon3_decon.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_r4_gate_slime:
+    name: Prestige/Rank 4,5/Gate/Slime
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325491200000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/lichen_nightsky.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_r4_gate_undead:
+    name: Prestige/Rank 4,5/Gate/Undead
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325836800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/spookat_castle.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_r4_kit:
+    name: Prestige/Rank 4,5/Exchange/Compact Supply Kit (2)
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Supply Pack, Compact
+        count: 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325577600000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 4, 5, Exchange
+  p_r4_kit_2:
+    name: Prestige/Rank 4,5/Exchange/Standard Supply Kit
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Supply Pack, Standard
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325836800000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 4, 5, Exchange
+  p_r4_mat_0:
+    name: Prestige/Rank 4,5/Exchange/Material 0 Star (3)
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 0
+          arguments:
+            Count: '1'
+        choose: 3
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325404800000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 4, 5, Exchange
+  p_r4_mat_012:
+    name: Prestige/Rank 4,5/Exchange/Material 0, 1, 2 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 0
+          arguments:
+            Count: '3'
+      - recipes:
+        - name: Mission/Mat 1
+          arguments:
+            Count: '2'
+      - recipes:
+        - name: Mission/Mat 2
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1326096000000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 4, 5, Exchange
+  p_r4_mat_1:
+    name: Prestige/Rank 4,5/Exchange/Material 1 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 1
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325750400000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 4, 5, Exchange
+  p_r4_mat_2:
+    name: Prestige/Rank 4,5/Exchange/Material 2 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 2
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325923200000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 4, 5, Exchange
+  p_r4_min:
+    name: Prestige/Rank 4,5/Exchange/Mineral
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mineral
+          arguments:
+            Count: '15'
+        choose: 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325491200000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 4, 5, Exchange
+  p_r4_weap_1:
+    name: Prestige/Rank 4,5/Exchange/Weapon 1 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Weap Bomb 1
+        - name: Mission/Weap Handgun 1
+        - name: Mission/Weap Sword 1
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1325664000000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 4, 5, Exchange
+  p_r4_weap_2:
+    name: Prestige/Rank 4,5/Exchange/Weapon 2 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Weap Bomb 2
+        - name: Mission/Weap Handgun 2
+        - name: Mission/Weap Sword 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1326009600000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 4, 5, Exchange
+  p_r6_gate_beast:
+    name: Prestige/Rank 6/Gate/Beast
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325404800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/wolver_clocksky.png
+    missionProps: Prestige/Rank 6, Gate
+  p_r6_gate_construct:
+    name: Prestige/Rank 6/Gate/Construct
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325577600000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/scuttlebot_clockworks.png
+    missionProps: Prestige/Rank 6, Gate
+  p_r6_gate_fiend:
+    name: Prestige/Rank 6/Gate/Fiend
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325750400000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/devilites_clockworks.png
+    missionProps: Prestige/Rank 6, Gate
+  p_r6_gate_gremlin:
+    name: Prestige/Rank 6/Gate/Gremlin
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325664000000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/gremcon3_decon.png
+    missionProps: Prestige/Rank 6, Gate
+  p_r6_gate_slime:
+    name: Prestige/Rank 6/Gate/Slime
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325491200000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/lichen_nightsky.png
+    missionProps: Prestige/Rank 6, Gate
+  p_r6_gate_undead:
+    name: Prestige/Rank 6/Gate/Undead
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325836800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/spookat_castle.png
+    missionProps: Prestige/Rank 6, Gate
+  p_r6_kit:
+    name: Prestige/Rank 6/Exchange/Standard Supply Kit
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Supply Pack, Standard
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325577600000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 6, Exchange
+  p_r6_kit_2:
+    name: Prestige/Rank 6/Exchange/Standard Supply Kit (2)
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Supply Pack, Standard
+        count: 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325923200000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 6, Exchange
+  p_r6_mat_1:
+    name: Prestige/Rank 6/Exchange/Material 1 Star (3)
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 1
+          arguments:
+            Count: '1'
+        choose: 3
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325404800000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 6, Exchange
+  p_r6_mat_123:
+    name: Prestige/Rank 6/Exchange/Material 1, 2, 3 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 1
+          arguments:
+            Count: '3'
+      - recipes:
+        - name: Mission/Mat 2
+          arguments:
+            Count: '2'
+      - recipes:
+        - name: Mission/Mat 3
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1326009600000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 6, Exchange
+  p_r6_mat_2:
+    name: Prestige/Rank 6/Exchange/Material 2 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 2
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325664000000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 6, Exchange
+  p_r6_mat_3:
+    name: Prestige/Rank 6/Exchange/Material 3 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 3
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325836800000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 6, Exchange
+  p_r6_min:
+    name: Prestige/Rank 6/Exchange/Mineral
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mineral
+          arguments:
+            Count: '20'
+        choose: 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325491200000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 6, Exchange
+  p_r6_weap_2:
+    name: Prestige/Rank 6/Exchange/Weapon 2 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Weap Bomb 2
+        - name: Mission/Weap Handgun 2
+        - name: Mission/Weap Sword 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1325750400000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 6, Exchange
+  p_r6_weap_3:
+    name: Prestige/Rank 6/Exchange/Weapon 3 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Weap Bomb 3
+        - name: Mission/Weap Handgun 3
+        - name: Mission/Weap Sword 3
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1326096000000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 6, Exchange
+  p_r7_gate_beast:
+    name: Prestige/Rank 7, 8/Gate/Beast
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325404800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/wolver_clocksky.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_r7_gate_construct:
+    name: Prestige/Rank 7, 8/Gate/Construct
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325577600000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/scuttlebot_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_r7_gate_fiend:
+    name: Prestige/Rank 7, 8/Gate/Fiend
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325750400000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/devilites_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_r7_gate_gremlin:
+    name: Prestige/Rank 7, 8/Gate/Gremlin
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325664000000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/gremcon3_decon.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_r7_gate_slime:
+    name: Prestige/Rank 7, 8/Gate/Slime
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325491200000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/lichen_nightsky.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_r7_gate_undead:
+    name: Prestige/Rank 7, 8/Gate/Undead
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325836800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/spookat_castle.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_r7_kit:
+    name: Prestige/Rank 7, 8/Exchange/Standard Supply Kit (2)
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Supply Pack, Standard
+        count: 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325577600000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 7, 8, Exchange
+  p_r7_kit_2:
+    name: Prestige/Rank 7, 8/Exchange/Deluxe Supply Kit
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Supply Pack, Deluxe
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325923200000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 7, 8, Exchange
+  p_r7_mat_2:
+    name: Prestige/Rank 7, 8/Exchange/Material 2 Star (3)
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 2
+          arguments:
+            Count: '1'
+        choose: 3
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325404800000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 7, 8, Exchange
+  p_r7_mat_234:
+    name: Prestige/Rank 7, 8/Exchange/Material 2, 3, 4 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 2
+          arguments:
+            Count: '3'
+      - recipes:
+        - name: Mission/Mat 3
+          arguments:
+            Count: '2'
+      - recipes:
+        - name: Mission/Mat 4
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1326009600000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 7, 8, Exchange
+  p_r7_mat_3:
+    name: Prestige/Rank 7, 8/Exchange/Material 3 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 3
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325664000000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 7, 8, Exchange
+  p_r7_mat_4:
+    name: Prestige/Rank 7, 8/Exchange/Material 4 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 4
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325836800000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 7, 8, Exchange
+  p_r7_min:
+    name: Prestige/Rank 7, 8/Exchange/Mineral
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mineral
+          arguments:
+            Count: '20'
+        choose: 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325491200000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 7, 8, Exchange
+  p_r7_weap_3:
+    name: Prestige/Rank 7, 8/Exchange/Weapon 3 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Weap Bomb 3
+        - name: Mission/Weap Handgun 3
+        - name: Mission/Weap Sword 3
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325750400000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 7, 8, Exchange
+  p_r7_weap_4:
+    name: Prestige/Rank 7, 8/Exchange/Weapon 4 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Weap Bomb 4
+        - name: Mission/Weap Handgun 4
+        - name: Mission/Weap Sword 4
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1326096000000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 7, 8, Exchange
+  p_r9_gate_beast:
+    name: Prestige/Rank 9/Gate/Beast
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325404800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/wolver_clocksky.png
+    missionProps: Prestige/Rank 9, Gate
+  p_r9_gate_construct:
+    name: Prestige/Rank 9/Gate/Construct
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325577600000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/scuttlebot_clockworks.png
+    missionProps: Prestige/Rank 9, Gate
+  p_r9_gate_fiend:
+    name: Prestige/Rank 9/Gate/Fiend
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325750400000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/devilites_clockworks.png
+    missionProps: Prestige/Rank 9, Gate
+  p_r9_gate_gremlin:
+    name: Prestige/Rank 9/Gate/Gremlin
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325664000000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/gremcon3_decon.png
+    missionProps: Prestige/Rank 9, Gate
+  p_r9_gate_slime:
+    name: Prestige/Rank 9/Gate/Slime
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325491200000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/lichen_nightsky.png
+    missionProps: Prestige/Rank 9, Gate
+  p_r9_gate_undead:
+    name: Prestige/Rank 9/Gate/Undead
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325836800000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/spookat_castle.png
+    missionProps: Prestige/Rank 9, Gate
+  p_r9_kit:
+    name: Prestige/Rank 9/Exchange/Deluxe Supply Kit
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Supply Pack, Deluxe
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325577600000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 9, Exchange
+  p_r9_kit_2:
+    name: Prestige/Rank 9/Exchange/Deluxe Supply Kit (2)
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Supply Pack, Deluxe
+        count: 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325923200000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 9, Exchange
+  p_r9_mat_3:
+    name: Prestige/Rank 9/Exchange/Material 3 Star (3)
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 3
+          arguments:
+            Count: '1'
+        choose: 3
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325404800000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 9, Exchange
+  p_r9_mat_345:
+    name: Prestige/Rank 9/Exchange/Material 3, 4, 5 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 3
+          arguments:
+            Count: '3'
+      - recipes:
+        - name: Mission/Mat 4
+          arguments:
+            Count: '2'
+      - recipes:
+        - name: Mission/Mat 5
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1326009600000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 9, Exchange
+  p_r9_mat_4:
+    name: Prestige/Rank 9/Exchange/Material 4 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 4
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325664000000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 9, Exchange
+  p_r9_mat_5:
+    name: Prestige/Rank 9/Exchange/Material 5 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 5
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325836800000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 9, Exchange
+  p_r9_min:
+    name: Prestige/Rank 9/Exchange/Mineral
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mineral
+          arguments:
+            Count: '20'
+        choose: 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325491200000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 9, Exchange
+  p_r9_weap_4:
+    name: Prestige/Rank 9/Exchange/Weapon 4 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Weap Bomb 4
+        - name: Mission/Weap Handgun 4
+        - name: Mission/Weap Sword 4
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325750400000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 9, Exchange
+  p_r9_weap_5:
+    name: Prestige/Rank 9/Exchange/Weapon 5 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Weap Bomb 5
+        - name: Mission/Weap Handgun 5
+        - name: Mission/Weap Sword 5
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1326096000000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 9, Exchange
+  p_shared_space:
+    name: Prestige/Shared Space
+    type: prestige
+    deployment: DEV
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 1
+      maxRank: 11
+    cardImage: ui/mission/images/cards/images/creepcakes_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_teasermission_1:
+    name: Prestige/TEASER mission
+    type: prestige
+    deployment: DEV
+    support: true
+    priority: 6
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 1
+      maxRank: 11
+    cardImage: ui/mission/images/cards/images/thwacker2_clockworks.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_testmission_1:
+    name: Prestige/internal TEST mission
+    type: prestige
+    deployment: DEV
+    support: true
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 1
+      maxRank: 11
+    cardImage: ui/mission/images/cards/images/creepcakes_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_tortodrone_r4:
+    name: Prestige/Special/Tortodrone Event/Tortodrone Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 10
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: event
+      event: Tortodrone
+    cardImage: ui/mission/images/cards/images/tortodrone-aggro_clockworks.png
+  p_tortodrone_r6:
+    name: Prestige/Special/Tortodrone Event/Tortodrone Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 10
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: event
+      event: Tortodrone
+    cardImage: ui/mission/images/cards/images/tortodrone-aggro_clockworks.png
+  p_tortodrone_r7:
+    name: Prestige/Special/Tortodrone Event/Tortodrone Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 10
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: event
+      event: Tortodrone
+    cardImage: ui/mission/images/cards/images/tortodrone-aggro_clockworks.png
+  p_tortodrone_r9:
+    name: Prestige/Special/Tortodrone Event/Tortodrone Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 10
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: event
+      event: Tortodrone
+    cardImage: ui/mission/images/cards/images/tortodrone-aggro_clockworks.png
+  p_toxic_plant_r4:
+    name: Prestige/Special/Danger Missions/Toxic Plant, Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1348038000000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/toxicplant_dangermission.png
+    missionProps: Prestige/Rank 4, 5, Gate
+  p_toxic_plant_r6:
+    name: Prestige/Special/Danger Missions/Toxic Plant, Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1348038000000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/toxicplant_dangermission.png
+    missionProps: Prestige/Rank 6, Gate
+  p_toxic_plant_r7:
+    name: Prestige/Special/Danger Missions/Toxic Plant, Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1348038000000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/toxicplant_dangermission.png
+    missionProps: Prestige/Rank 7, 8, Gate
+  p_toxic_plant_r9:
+    name: Prestige/Special/Danger Missions/Toxic Plant, Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1348038000000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/toxicplant_dangermission.png
+    missionProps: Prestige/Rank 9, Gate
+  p_winterfest2_r3:
+    name: Prestige/Special/Winterfest/Winterfest 2 Rank 3
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 9
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1386748800000
+        interval: 2d
+    briefing: b.p_winterfest_r3
+    cardImage: ui/mission/images/cards/images/winterfest.png
+  p_winterfest2_r4:
+    name: Prestige/Special/Winterfest/Winterfest 2 Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 9
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1386748800000
+        interval: 2d
+    briefing: b.p_winterfest_r3
+    cardImage: ui/mission/images/cards/images/winterfest.png
+  p_winterfest2_r6:
+    name: Prestige/Special/Winterfest/Winterfest 2 Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 9
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1386748800000
+        interval: 2d
+    briefing: b.p_winterfest_r3
+    cardImage: ui/mission/images/cards/images/winterfest.png
+  p_winterfest2_r7:
+    name: Prestige/Special/Winterfest/Winterfest 2 Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 9
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1386748800000
+        interval: 2d
+    briefing: b.p_winterfest_r3
+    cardImage: ui/mission/images/cards/images/winterfest.png
+  p_winterfest2_r9:
+    name: Prestige/Special/Winterfest/Winterfest 2 Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 9
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1386748800000
+        interval: 2d
+    briefing: b.p_winterfest_r3
+    cardImage: ui/mission/images/cards/images/winterfest.png
+  p_winterfest_danger_r7:
+    name: Prestige/Special/Winterfest Danger Mission/Winterfest DM Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 10
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    cardImage: ui/mission/images/cards/images/grinchlin_dangermission.png
+  p_winterfest_danger_r9:
+    name: Prestige/Special/Winterfest Danger Mission/Winterfest DM Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 10
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    cardImage: ui/mission/images/cards/images/grinchlin_dangermission.png
+  p_winterfest_r3:
+    name: Prestige/Special/Winterfest/Winterfest Rank 3
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 9
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 3
+      maxRank: 4
+    - type: schedule
+      schedule:
+        refTime: 1386662400000
+        interval: 2d
+    cardImage: ui/mission/images/cards/images/winterfest.png
+  p_winterfest_r4:
+    name: Prestige/Special/Winterfest/Winterfest Rank 4,5
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 9
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 4
+      maxRank: 6
+    - type: schedule
+      schedule:
+        refTime: 1386662400000
+        interval: 2d
+    cardImage: ui/mission/images/cards/images/winterfest.png
+  p_winterfest_r6:
+    name: Prestige/Special/Winterfest/Winterfest Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 9
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: schedule
+      schedule:
+        refTime: 1386662400000
+        interval: 2d
+    cardImage: ui/mission/images/cards/images/winterfest.png
+  p_winterfest_r7:
+    name: Prestige/Special/Winterfest/Winterfest Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 9
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1386662400000
+        interval: 2d
+    cardImage: ui/mission/images/cards/images/winterfest.png
+  p_winterfest_r9:
+    name: Prestige/Special/Winterfest/Winterfest Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 9
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1386662400000
+        interval: 2d
+    cardImage: ui/mission/images/cards/images/winterfest.png
+  prestige_gate:
+    name: Examples/Prestige Gate
+    type: prestige
+    deployment: NONE
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 10
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1334818800000
+        interval: 5d
+  prestige_gate_2:
+    name: Examples/Prestige Gate 2
+    type: prestige
+    deployment: NONE
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 10
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1328169600000
+        interval: 5d
+  prestige_gate_3:
+    name: Examples/Prestige Gate 3
+    type: prestige
+    deployment: NONE
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 10
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1328256000000
+        interval: 5d
+  prestige_gate_4:
+    name: Examples/Prestige Gate 4
+    type: prestige
+    deployment: NONE
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 10
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1328342400000
+        interval: 5d
+  prestige_gate_5:
+    name: Examples/Prestige Gate 5
+    type: prestige
+    deployment: NONE
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 10
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1328428800000
+        interval: 5d

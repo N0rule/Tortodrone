@@ -15,7 +15,7 @@ public final class MonsterCatalogParityTest {
 
     public static void main(String[] args) throws Exception {
         var catalog = MonsterCatalog.load(Path.of("content/monsters"));
-        var prepared = MapYaml.prepare(Path.of("content/maps/laboratory"), Path.of("content/shared"));
+        var prepared = MapYaml.prepare(Path.of("content/maps/level/laboratory"), Path.of("content/shared"));
         var content = SceneContent.load(prepared.content(), prepared.descriptor().getProperty("scene-sha256"));
         var entry = content.entries().stream()
             .filter(candidate -> candidate.spec().text("monster-type", "").equals("companion_cube"))

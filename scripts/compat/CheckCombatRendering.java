@@ -78,7 +78,7 @@ public final class CheckCombatRendering {
             copyTree(deployment.resolve("config"),scratch.resolve("config"));
             Files.deleteIfExists(scratch.resolve("config/server.yml"));
             Path maps = scratch.resolve("content");
-            if(dialogueOnly){Path npc=maps.resolve("maps/advanced_training/npcs/konway.yml");var yaml=Yaml.read(npc);var dialogue=Yaml.map(yaml.get("dialogue"),"dialogue");var nodes=Yaml.map(dialogue.get("nodes"),"nodes");Yaml.map(nodes.get("part 1a"),"node").put("text","Thanks! I'm off to explore now.");Files.delete(npc);Yaml.write(npc,yaml);}
+            if(dialogueOnly){Path npc=maps.resolve("maps/training/advanced_training/npcs/konway.yml");var yaml=Yaml.read(npc);var dialogue=Yaml.map(yaml.get("dialogue"),"dialogue");var nodes=Yaml.map(dialogue.get("nodes"),"nodes");Yaml.map(nodes.get("part 1a"),"node").put("text","Thanks! I'm off to explore now.");Files.delete(npc);Yaml.write(npc,yaml);}
             requireMaps(maps);
             if(arsenalBlinkOnly)arsenalBlinkFixture(maps);
             if(healthOnly)healthFixture(maps);
@@ -234,16 +234,16 @@ public final class CheckCombatRendering {
     }
 
     private static void requireMaps(Path maps) throws IOException {
-        for (String name : List.of("haven", "arcade", "bazaar", "garrison", "advanced_training", "laboratory", "hall_of_heroes")) {
-            if (!Files.isDirectory(maps.resolve("maps").resolve(name)))
-                throw new IOException("Missing prepared scene map " + maps.resolve("maps").resolve(name));
+        for (String path : List.of("town/haven", "town/arcade", "town/bazaar", "town/garrison", "training/advanced_training", "level/laboratory", "level/hall_of_heroes")) {
+            if (!Files.isDirectory(maps.resolve("maps").resolve(path)))
+                throw new IOException("Missing prepared scene map " + maps.resolve("maps").resolve(path));
         }
     }
 
     /** Fixture placements are edited through the same map-local YAML as administrator content. */
     private static void hazardFixture(Path content)throws Exception { relocate(content,"hazards"); }
     private static void arsenalBlinkFixture(Path content)throws Exception {
-        Path map=content.resolve("maps/advanced_training"),file=map.resolve("actors.yml");
+        Path map=content.resolve("maps/training/advanced_training"),file=map.resolve("actors.yml");
         var prepared=MapYaml.prepare(map,content.resolve("shared"));var yaml=Yaml.read(file);var actors=Yaml.map(yaml.get("actors"),"actors");
         float x=Float.parseFloat(prepared.descriptor().getProperty("spawn-x")),y=Float.parseFloat(prepared.descriptor().getProperty("spawn-y"));
         var bindings=Yaml.map(Json.parseCatalog(Files.readString(map.resolve("native/bindings.json"))),"bindings");inheritFixtureActors(bindings,actors);
@@ -257,7 +257,7 @@ public final class CheckCombatRendering {
     }
     private static void healthFixture(Path content)throws Exception { relocate(content,"health"); }
     private static void relocate(Path content,String kind)throws Exception {
-        Path map=content.resolve("maps/advanced_training"),file=map.resolve("actors.yml");
+        Path map=content.resolve("maps/training/advanced_training"),file=map.resolve("actors.yml");
         var prepared=MapYaml.prepare(map,content.resolve("shared"));var yaml=Yaml.read(file);var actors=Yaml.map(yaml.get("actors"),"actors");
         float x=Float.parseFloat(prepared.descriptor().getProperty("spawn-x")),y=Float.parseFloat(prepared.descriptor().getProperty("spawn-y"));int pot=0;boolean pad=false,capsule=false;
         var bindings=Yaml.map(Json.parseCatalog(Files.readString(map.resolve("native/bindings.json"))),"bindings");var nativeActors=Yaml.map(bindings.get("actors"),"actors");
@@ -276,7 +276,7 @@ public final class CheckCombatRendering {
     }
     private static void vortexShieldFixture(Path content)throws Exception { vortexShieldFixture(content,false); }
     private static void vortexShieldFixture(Path content,boolean multiplayer)throws Exception {
-        Path map=content.resolve("maps/advanced_training"),file=map.resolve("actors.yml"),bindingFile=map.resolve("native/bindings.json");
+        Path map=content.resolve("maps/training/advanced_training"),file=map.resolve("actors.yml"),bindingFile=map.resolve("native/bindings.json");
         var prepared=MapYaml.prepare(map,content.resolve("shared"));var props=prepared.content();
         String prefix=Arrays.stream(props.getProperty("entries").split(",")).map(id->"entry."+id+".child.")
             .filter(key->props.getProperty(key+"kind","").equals("Monster")).findFirst().orElseThrow();

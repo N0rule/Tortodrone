@@ -41,7 +41,12 @@ final class UnifiedExport {
             int id=MigrationPackLoader.sceneId(e.getKey());String name=e.getValue().path().getFileName().toString();if(!name.matches("[a-z][a-z0-9_]{0,63}"))name="scene_"+id;
             if(!usedNames.add(name))throw new IOException("Duplicate source map folder name requires review: "+name);names.put(id,name);
         }
-        for(var entry:registry.resources().entrySet())if(entry.getKey().startsWith("scene."))exportMap(entry.getValue().path(),content.resolve("maps/"+names.get(MigrationPackLoader.sceneId(entry.getKey()))),names,cycles,statuses,combat);
+        for(var entry:registry.resources().entrySet())if(entry.getKey().startsWith("scene.")) {
+            Path source=entry.getValue().path();
+            String kind=ContentFiles.properties(source.resolve("map.properties")).getProperty("kind","");
+            if(!MapYaml.CATEGORIES.contains(kind))throw new IOException("Unsupported map type for "+source+": "+kind);
+            exportMap(source,content.resolve("maps/"+kind+"/"+names.get(MigrationPackLoader.sceneId(entry.getKey()))),names,cycles,statuses,combat);
+        }
         write(content.resolve("shared/combat.yml"),Map.of("properties",group(combat)));
         write(content.resolve("shared/trap-cycles.yml"),Map.of("cycles",groupCycles(cycles)));write(content.resolve("shared/statuses.yml"),Map.of("properties",statuses));
         ContentPresentation.compact(content);

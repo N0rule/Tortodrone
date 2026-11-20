@@ -63,7 +63,7 @@ public final class MapCompiler {
                 throw new IOException(name + ": type must be town, training or level");
             if (!zoneId.matches("[1-9][0-9]{0,9}")) throw new IOException(name + ": zone-id is required");
             if (!zoneName.startsWith("%")) throw new IOException(name + ": zone-name must be a bundle key such as %town:m.haven");
-            Path target = deploymentRoot.resolve("content/maps/" + name);
+            Path target = deploymentRoot.resolve("content/maps/" + type + "/" + name);
             if (Files.exists(target) && !replace)
                 throw new IOException("Map already exists; pass --replace for a disposable build output: " + target);
             String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
@@ -75,7 +75,7 @@ public final class MapCompiler {
             }
             if (replace) command.add("--replace");
             run(command);
-            var pack = deploymentRoot.resolve("content/maps/" + name);
+            var pack = deploymentRoot.resolve("content/maps/" + type + "/" + name);
             CollisionPackExport.export(pack);
             var report = new StringBuilder()
                 .append("source=").append(root.resolve(name)).append('\n')

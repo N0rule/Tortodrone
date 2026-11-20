@@ -11,8 +11,8 @@ public final class ContentManager {
     public static void main(String[] args)throws IOException {
         if(args.length==3&&args[0].equals("--actors")) {
             if(!args[2].matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid map name");
-            Path folder=Path.of(args[1]).resolve("content/maps").resolve(args[2]);
-            MapYaml.prepare(folder,folder.getParent().getParent().resolve("shared"));
+            Path maps=Path.of(args[1]).resolve("content/maps"),folder=MapYaml.folder(maps,args[2]);
+            MapYaml.prepare(folder,maps.getParent().resolve("shared"));
             var bindings=Yaml.map(Json.parseCatalog(Files.readString(folder.resolve("native/bindings.json"))),"bindings");
             var actors=Yaml.map(bindings.get("actors"),"actors");
             for(var alias:new TreeMap<>(Yaml.map(bindings.getOrDefault("actorAliases",Map.of()),"aliases")).entrySet()) {
@@ -22,7 +22,7 @@ public final class ContentManager {
             return;
         }
         if(args.length!=1)throw new IllegalArgumentException("Usage: ContentManager /deployment, or --actors /deployment map_name");
-        var c=load(Path.of(args[0]));var all=c.scenes().scenes();System.out.println("PASS: unified content; "+all.size()+" maps, "+c.items().entries().size()+" items, "+c.weapons().weapons().size()+" weapons");
+        var c=load(Path.of(args[0]));var all=c.scenes().scenes();System.out.println("PASS: unified content; "+all.size()+" maps, "+c.items().entries().size()+" items, "+c.weapons().weapons().size()+" weapons, "+c.missions().size()+" missions");
     }
     public static ContentRegistry load(Path deployment)throws IOException {
         return load(deployment,org.tortodrone.config.ServerSettings.read(org.tortodrone.config.ServerSettings.defaultPath(deployment)));
@@ -45,6 +45,8 @@ public final class ContentManager {
             var townData=TownYaml.data(content.resolve("town"),definitions.items());TownYaml.references(townData,definitions.items());
             var town=org.tortodrone.town.TownCatalog.fromData(townData);
             var presentation=PresentationCatalog.load(content.resolve("shared/presentation.yml"));
+            var missions=MissionYaml.load(content.resolve("missions"));
+            if(missions.size()==0)warnings.add("Mission catalogue is missing; mission definitions cannot be served");
             var monsters=MonsterCatalog.load(content.resolve("monsters"));
             if(monsters.size()==0)warnings.add("Monster catalogue is missing; monster spawns cannot resolve type ids");
             var catalog=loadMaps(content.resolve("maps"),settings.startupMap(),town,definitions.items(),monsters);
@@ -55,7 +57,7 @@ public final class ContentManager {
             for(var item:definitions.equipment().entries())requireItem(definitions.items(),item.config());
             for(var fire:fires.entries())if(!controls.contains(fire.weaponConfig().toLowerCase(Locale.ROOT)))throw new IOException("Fire graph has no weapon/shield controls: "+fire.weaponConfig());
             if(!before.equals(inputs(root)))throw new IOException("Content changed during startup loading; restart with stable input files");
-            return new ContentRegistry(List.of(),Map.of(),catalog,definitions.items(),definitions.weapons(),definitions.equipment(),fires,warnings,town,pet,news,boxes,presentation);
+            return new ContentRegistry(List.of(),Map.of(),catalog,definitions.items(),definitions.weapons(),definitions.equipment(),fires,warnings,town,pet,news,boxes,presentation,missions);
         }catch(IllegalArgumentException invalid){throw new IOException("Invalid unified content: "+invalid.getMessage(),invalid);}
     }
     /** Map-only preparation for import/native compatibility tools; runtime uses the full snapshot. */
@@ -66,7 +68,8 @@ public final class ContentManager {
     private static SceneCatalog loadMaps(Path maps,String start,org.tortodrone.town.TownCatalog town,org.tortodrone.character.ItemCatalog items,MonsterCatalog monsters)throws IOException {
         try {
             var folders=MapYaml.folders(maps);
-            Path startFolder=maps.resolve(start);Integer entry=folders.entrySet().stream().filter(e->e.getValue().equals(startFolder)).map(Map.Entry::getKey).findFirst().orElseThrow(()->new IOException("startup-map is missing: "+start));
+            var startEntry=folders.entrySet().stream().filter(e->e.getValue().getFileName().toString().equals(start)).findFirst().orElseThrow(()->new IOException("startup-map is missing: "+start));
+            Path startFolder=startEntry.getValue();Integer entry=startEntry.getKey();
             Path shared=maps.getParent().resolve("shared");
             var entryScene=loadMap(startFolder,shared,town,items,monsters);
             if(!entryScene.town())throw new IOException("Entry scene must be a town");

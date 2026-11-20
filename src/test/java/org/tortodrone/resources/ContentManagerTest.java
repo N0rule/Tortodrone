@@ -26,7 +26,7 @@ public final class ContentManagerTest {
         Path home=Files.createTempDirectory("tortodrone-unified-test-");
         try {
             ContentFixture.copy(Path.of("content"),home.resolve("content"));ContentFixture.copy(Path.of("config"),home.resolve("config"));
-            Path npc=home.resolve("content/maps/advanced_training/npcs/konway.yml");String original=Files.readString(npc);
+            Path npc=home.resolve("content/maps/training/advanced_training/npcs/konway.yml");String original=Files.readString(npc);
             check(original.contains("Welcome to our advanced training hall."),"verified English default is readable beside its map");
             Files.writeString(npc,original.replace("Welcome to our advanced training hall.","An arbitrary new sentence."));
             failure(()->MapYaml.prepare(npc.getParent().getParent(),home.resolve("content/shared")),"literal dialogue text is unsupported");
@@ -36,13 +36,13 @@ public final class ContentManagerTest {
             Path weaponFile=home.resolve("content/items/weapons.yml");var weaponYaml=Yaml.read(weaponFile);var weaponRows=Yaml.map(weaponYaml.get("items"),"weapons");
             var weaponRow=weaponRows.entrySet().stream().filter(e->{try{return Yaml.map(e.getValue(),"weapon").containsKey("combat");}catch(IOException bad){throw new UncheckedIOException(bad);}}).findFirst().orElseThrow();
             var controls=Yaml.map(Yaml.map(Yaml.map(weaponRow.getValue(),"weapon").get("combat"),"combat").get("charge"),"charge");int oldCharge=Yaml.integer(controls.get("fullChargeAfterMs"),"fullChargeAfterMs");controls.put("fullChargeAfterMs",oldCharge+123);Files.delete(weaponFile);Yaml.write(weaponFile,weaponYaml);
-            Path actorFile=home.resolve("content/maps/advanced_training/actors.yml");var actorYaml=Yaml.read(actorFile);var actorRows=Yaml.map(actorYaml.get("actors"),"actors");
-            var bindings=Yaml.map(Json.parseCatalog(Files.readString(home.resolve("content/maps/advanced_training/native/bindings.json"))),"bindings");
+            Path actorFile=home.resolve("content/maps/training/advanced_training/actors.yml");var actorYaml=Yaml.read(actorFile);var actorRows=Yaml.map(actorYaml.get("actors"),"actors");
+            var bindings=Yaml.map(Json.parseCatalog(Files.readString(home.resolve("content/maps/training/advanced_training/native/bindings.json"))),"bindings");
             var inherited=Yaml.map(bindings.get("actorDefaults"),"defaults");var aliases=Yaml.map(bindings.get("actorAliases"),"aliases");
             String nativeActor=inherited.entrySet().stream().filter(e->{try{return Yaml.map(e.getValue(),"actor").containsKey("child.health");}catch(IOException bad){throw new UncheckedIOException(bad);}}).findFirst().orElseThrow().getKey();
             String alias=aliases.entrySet().stream().filter(e->e.getValue().equals(nativeActor)).findFirst().orElseThrow().getKey();
             actorRows.put(alias,Map.of("monster",Map.of("health",31)));Files.delete(actorFile);Yaml.write(actorFile,actorYaml);
-            Path portalEdit=home.resolve("content/maps/advanced_training/portals.yml");var portalYaml=Yaml.read(portalEdit);var portalRows=Yaml.map(portalYaml.get("portals"),"portals");Yaml.map(portalRows.values().iterator().next(),"portal").put("entrance","from_bazaar_east");Files.delete(portalEdit);Yaml.write(portalEdit,portalYaml);
+            Path portalEdit=home.resolve("content/maps/training/advanced_training/portals.yml");var portalYaml=Yaml.read(portalEdit);var portalRows=Yaml.map(portalYaml.get("portals"),"portals");Yaml.map(portalRows.values().iterator().next(),"portal").put("entrance","from_bazaar_east");Files.delete(portalEdit);Yaml.write(portalEdit,portalYaml);
             Path shopFile=home.resolve("content/town/shops.yml");check(!Yaml.read(shopFile).containsKey("depot"),"Depot is not YAML configuration");
             Path recipeFile=home.resolve("content/town/recipes.yml");var recipes=Yaml.read(recipeFile);var recipeRow=Yaml.map(Yaml.list(recipes.get("recipes"),"recipes").getFirst(),"recipe");var costs=new ArrayList<Object>(Yaml.list(recipeRow.get("crowns"),"crowns"));int oldCost=Yaml.integer(costs.getFirst(),"crowns");costs.set(0,oldCost+1);recipeRow.put("crowns",costs);Files.delete(recipeFile);Yaml.write(recipeFile,recipes);
             Path serverConfig=home.resolve("config/server.yml");Files.writeString(serverConfig,Files.readString(serverConfig).replace("startup-map: haven","startup-map: bazaar"));
@@ -59,12 +59,12 @@ public final class ContentManagerTest {
             Files.writeString(npc,original.replace("next: part 2a","next: absent"));
             failure(()->{var p=MapYaml.prepare(npc.getParent().getParent(),home.resolve("content/shared"));SceneContent.load(p.content(),p.descriptor().getProperty("scene-sha256"));},"Broken conversation jump");
             Files.writeString(npc,original);
-            Path portal=home.resolve("content/maps/advanced_training/portals.yml");String portals=Files.readString(portal);
+            Path portal=home.resolve("content/maps/training/advanced_training/portals.yml");String portals=Files.readString(portal);
             Files.writeString(portal,portals.replace("destination: haven","destination: absent_map"));failure(()->loadAll(home),"absent_map");Files.writeString(portal,portals);
-            Path nativeFile=home.resolve("content/maps/advanced_training/native/bindings.json");String nativeText=Files.readString(nativeFile);Files.writeString(nativeFile,nativeText+" ");failure(()->MapYaml.prepare(npc.getParent().getParent(),home.resolve("content/shared")),"fingerprint");Files.writeString(nativeFile,nativeText);
+            Path nativeFile=home.resolve("content/maps/training/advanced_training/native/bindings.json");String nativeText=Files.readString(nativeFile);Files.writeString(nativeFile,nativeText+" ");failure(()->MapYaml.prepare(npc.getParent().getParent(),home.resolve("content/shared")),"fingerprint");Files.writeString(nativeFile,nativeText);
             Path gear=home.resolve("content/items/materials.yml");var yaml=Yaml.read(gear);var definitions=Yaml.map(yaml.get("items"),"items");var first=definitions.entrySet().iterator().next();var item=Yaml.map(first.getValue(),"item");item.put("stockId","invalid");Files.delete(gear);Yaml.write(gear,yaml);failure(()->ContentManager.load(home),"stockId");item.remove("stockId");Files.delete(gear);Yaml.write(gear,yaml);
             check(baseline.items().entries().size()==9355&&baseline.scenes().scene(294).content().conversations().get(konway.actor()).equals(konway),"failed loads never mutate an existing snapshot");
-            Path mapFile=home.resolve("content/maps/advanced_training/map.yml");String mapText=Files.readString(mapFile);Files.writeString(mapFile,mapText.replace("id: 294","id: 1"));failure(()->MapYaml.folders(home.resolve("content/maps")),"Duplicate");Files.writeString(mapFile,mapText);
+            Path mapFile=home.resolve("content/maps/training/advanced_training/map.yml");String mapText=Files.readString(mapFile);Files.writeString(mapFile,mapText.replace("id: 294","id: 1"));failure(()->MapYaml.folders(home.resolve("content/maps")),"Duplicate");Files.writeString(mapFile,mapText);
             Path misc=home.resolve("content/items/misc.yml");String miscOriginal=Files.readString(misc);var miscYaml=Yaml.read(misc);Yaml.map(miscYaml.get("items"),"items").put(first.getKey(),item);Files.delete(misc);Yaml.write(misc,miscYaml);failure(()->ContentManager.load(home),"duplicate item ID");Files.writeString(misc,miscOriginal);
             var town=TownYaml.data(home.resolve("content/town"));var recipe=Yaml.map(Yaml.list(town.get("recipes"),"recipes").getFirst(),"recipe");recipe.put("item","Missing/Item");failure(()->TownYaml.references(town,baseline.items()),"missing item");
             Path bad=home.resolve("invalid.yml");

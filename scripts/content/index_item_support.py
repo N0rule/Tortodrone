@@ -35,7 +35,7 @@ use_kinds={name:definition.get('kind','') for name,definition in uses.items()}
 prepared={}
 action_file=a.content/'_internal/item-actions.json'
 capsule_actions=set(json.loads(action_file.read_text())['actions']) if action_file.exists() else set()
-for scene in (a.content/'maps').glob('*/native/bindings.json'):
+for scene in (a.content/'maps').glob('*/*/native/bindings.json'):
     props=json.loads(scene.read_text())['mechanics']
     for key,name in props.items():
         if re.fullmatch(r'item\.\d+\.config',key):prepared[name]=float(props.get(key[:-6]+'heal','0'))

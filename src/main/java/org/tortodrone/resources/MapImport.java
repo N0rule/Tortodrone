@@ -21,9 +21,11 @@ public final class MapImport {
     }
     public static void install(Path source,Path deployment,String name,Path game,boolean replace)throws IOException {
         if(!name.matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Map name must match [a-z][a-z0-9_]{0,63}");
-        Path root=deployment.toAbsolutePath().normalize(),target=root.resolve("content/maps/"+name);ContentFiles.safe(source);ContentFiles.safe(target);
-        if(Files.exists(target,LinkOption.NOFOLLOW_LINKS)&&!replace)throw new IOException("Map already exists; no replacement performed: "+name);
         var p=ContentFiles.properties(source.resolve("map.properties"));
+        String kind=p.getProperty("kind","");
+        if(!MapYaml.CATEGORIES.contains(kind))throw new IOException("Unsupported map type: "+kind);
+        Path root=deployment.toAbsolutePath().normalize(),target=root.resolve("content/maps/"+kind+"/"+name);ContentFiles.safe(source);ContentFiles.safe(target);
+        if(Files.exists(target,LinkOption.NOFOLLOW_LINKS)&&!replace)throw new IOException("Map already exists; no replacement performed: "+name);
         for(var file:Map.of("scene.dat","scene-sha256","collision.bin","collision-sha256","content.properties","content-sha256","static-collision.properties","static-collision-sha256").entrySet())
             if(p.containsKey(file.getValue())&&!ContentFiles.digest(source.resolve(file.getKey())).equals(p.getProperty(file.getValue())))throw new IOException("Prepared native map fingerprint differs: "+file.getKey());
         Path lockFile=root.resolve("data/server.lock");ContentFiles.safe(lockFile);
@@ -40,7 +42,7 @@ public final class MapImport {
                 var cycles=flat(map(read(staging.resolve("content/shared/trap-cycles.yml")).get("cycles"),"cycles"));
                 var combat=flat(map(read(staging.resolve("content/shared/combat.yml")).get("properties"),"combat"));
                 var statuses=new LinkedHashMap<>(map(read(staging.resolve("content/shared/statuses.yml")).get("properties"),"statuses"));
-                Path prepared=staging.resolve("content/maps/"+name);if(Files.exists(prepared))ContentMigration.delete(prepared);var exporter=new UnifiedExport(game);exporter.exportMap(source,prepared,names,cycles,statuses,combat);
+                Path prepared=staging.resolve("content/maps/"+kind+"/"+name);if(Files.exists(prepared))ContentMigration.delete(prepared);var exporter=new UnifiedExport(game);exporter.exportMap(source,prepared,names,cycles,statuses,combat);
                 // New shared presets stay local to the imported map, preserving the deployment's
                 // existing source of truth and allowing publication with one directory rename.
                 var sharedCycles=flat(map(read(root.resolve("content/shared/trap-cycles.yml")).get("cycles"),"cycles"));var sharedCombat=flat(map(read(root.resolve("content/shared/combat.yml")).get("properties"),"combat"));var sharedStatuses=map(read(root.resolve("content/shared/statuses.yml")).get("properties"),"statuses");
@@ -59,6 +61,7 @@ public final class MapImport {
                 if(!initialInputs.equals(ContentManager.inputs(root)))throw new IOException("Deployment content/config changed during import; no map published");
                 Path backup=null;
                 try{
+                    Files.createDirectories(target.getParent());
                     if(Files.exists(target)){backup=staging.resolveSibling(staging.getFileName()+"-backup");Files.move(target,backup,StandardCopyOption.ATOMIC_MOVE);}
                     Files.move(prepared,target,StandardCopyOption.ATOMIC_MOVE);
                 }catch(IOException failure){
