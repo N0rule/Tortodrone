@@ -225,10 +225,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
             pawnMinY=spec.number("bounds-min-y",-spec.number("height",0)/2);pawnMaxY=spec.number("bounds-max-y",spec.number("height",0)/2);
             pawnShape=collisionFlags==0?null:SceneCollision.pawnShape(spec,shape);
             float shapeExtent=pawnShape!=null?pawnShape.extent():0;
-            float boundsExtent=(float)Math.hypot(Math.max(Math.abs(pawnMinX),Math.abs(pawnMaxX)),Math.max(Math.abs(pawnMinY),Math.abs(pawnMaxY)));
+            // Non-colliding actors (for example a Global music block) carry sentinel bounds
+            // that are not geometry. Only colliding entities contribute bounds to the index.
+            float boundsExtent=collisionFlags==0?0:(float)Math.hypot(Math.max(Math.abs(pawnMinX),Math.abs(pawnMaxX)),Math.max(Math.abs(pawnMinY),Math.abs(pawnMaxY)));
             // Every query that scans an entity uses its radius, bounds or shape; the index
             // must cover all three so a cell lookup never misses a real contact.
             spatialExtent=Math.max(shapeExtent,Math.max(pawnRadius,boundsExtent));
+            if(!Float.isFinite(spatialExtent)||spatialExtent<0)throw new IllegalArgumentException("Invalid prepared actor spatial extent: "+binding.key());
             homeX=binding.x();homeY=binding.y();
             archetype=MonsterArchetype.of(spec.text("archetype",MonsterArchetype.DEFAULT_ID));
             minimumBand=switch(spec.text("think","dormant")){

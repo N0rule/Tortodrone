@@ -80,6 +80,17 @@ public final class SpatialIndexDifferentialTest {
                 spawn[0] + (float) (Math.cos(angle) * radius), spawn[1] + (float) (Math.sin(angle) * radius), 0,
                 new SceneContent.Spec(block)));
         }
+        // Native cosmetic Global blocks carry sentinel bounds that are not geometry. Their
+        // infinite hypot must never become an index extent or the whole scene fails to load.
+        var global = new HashMap<String, String>(Map.ofEntries(
+            Map.entry("native-type", "com.threerings.projectx.dungeon.data.actor.Block"),
+            Map.entry("kind", "Block"), Map.entry("config", "Fixture/GlobalMusic"),
+            Map.entry("shape", "Global"),
+            Map.entry("bounds-min-x", "-3.4028235E38"), Map.entry("bounds-max-x", "3.4028235E38"),
+            Map.entry("bounds-min-y", "-3.4028235E38"), Map.entry("bounds-max-y", "3.4028235E38"),
+            Map.entry("collision-flags", "0"), Map.entry("collision-mask", "0"),
+            Map.entry("tags", "music")));
+        entries.add(new SceneContent.Entry("spatial-global", spawn[0], spawn[1], 0, new SceneContent.Spec(global)));
         return base.withEntries(entries);
     }
 

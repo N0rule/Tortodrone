@@ -456,7 +456,9 @@ are copied without regeneration, preserving custom names/categories/IDs byte for
 byte. Review `item-migration.txt`, then install the candidate content/config while
 stopped and retain your original data. Old path-keyed item definitions are accepted
 only by the migration reader; mixed layouts fail startup. Legacy pack deployments
-still use `ContentMigration`, whose exporter emits this same readable format.
+still use `ContentMigration`, whose exporter emits this same readable format and
+copies the generated `content/monsters` catalogue so type-backed placements and
+monster spawns stay resolvable.
 
 ### Client/server item gaps
 

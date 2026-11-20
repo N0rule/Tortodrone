@@ -8,7 +8,9 @@ import org.tortodrone.character.ItemCatalog;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
 
-/** Golden compiled defaults from 0078b50, plus sparse edits and immutable identity failures. */
+/** Golden compiled defaults from 0078b50, plus sparse edits and immutable identity failures.
+ * Laboratory 30893 adopted the catalogue-backed Companion Cube attack graph (pinned by
+ * MonsterCatalogParityTest), so its hash reflects that deliberate replacement. */
 public final class SparseContentTest {
     public static void main(String[] args)throws Exception {
         Path root=Files.createTempDirectory("tortodrone-sparse-");
@@ -33,6 +35,23 @@ public final class SparseContentTest {
                         historical.setProperty(key,(String)mechanics.get(key));
                     }
                 }
+                // Owned instant, spawn-actor and lift definitions are another deliberate
+                // additive import. Their items and use fields have dedicated regressions;
+                // keep the 0078b50 scene baseline independent of them.
+                var useRoot=Yaml.map(Json.parseCatalog(Files.readString(Path.of("content/_internal/item-use.json"))),"item uses");
+                Set<Object> useConfigs=new HashSet<>(Yaml.map(useRoot.get("items"),"item use definitions").keySet());
+                var importedIndexes=new HashSet<String>();var remainingIndexes=new ArrayList<String>();
+                for(String index:historical.getProperty("items","").split(",")){
+                    if(index.isBlank())continue;
+                    if(useConfigs.contains(historical.getProperty("item."+index+".config","")))importedIndexes.add(index);
+                    else remainingIndexes.add(index);
+                }
+                for(String index:importedIndexes){String prefix="item."+index+".";historical.keySet().removeIf(raw->raw.toString().startsWith(prefix));}
+                if(remainingIndexes.isEmpty())historical.remove("items");else historical.setProperty("items",String.join(",",remainingIndexes));
+                // Catalogue-backed monster placements are verified by MonsterCatalogParityTest.
+                // The type reference is consumed at load and never reaches the runtime spec;
+                // keep it out of the inherited scene baseline.
+                historical.keySet().removeIf(raw->raw.toString().matches("entry\\.[^.]++\\.monster-type"));
                 // Leveled combat/variant stats are an explicit additive import. Keep
                 // the 0078b50 scene/actor baseline independent of these new tables.
                 historical.keySet().removeIf(raw->{String key=raw.toString();return key.startsWith("gear.table.")
@@ -65,7 +84,12 @@ public final class SparseContentTest {
                 check(hash(historical).equals(sceneGolden.get(map.getKey().toString())),"inherited scene properties unchanged outside explicit corrections: "+map.getKey());
                 check(hash(prepared.portals()).equals(catalogGolden.get("portals."+map.getKey())),"portal identity/coordinates/precise headings unchanged: "+map.getKey());
                 var edits=Yaml.map(Yaml.read(map.getValue().resolve("actors.yml")).get("actors"),"actors");
-                check(edits.equals(map.getKey().toString().equals("1")?Map.of("base_2",Map.of("facing",0)):Map.of()),"actor YAML contains only the deliberate auction-facing correction");
+                var expectedEdits=switch(map.getKey().toString()){
+                    case "1"->Map.of("base_2",Map.of("facing",0));
+                    case "30893"->Map.of("companion_cube_1_1",Map.of("monster-type","companion_cube"));
+                    default->Map.of();
+                };
+                check(edits.equals(expectedEdits),"actor YAML contains only the deliberate auction-facing and catalogue-type corrections");
             }
             ContentFixture.copy(Path.of("content"),root.resolve("content"));ContentFixture.copy(Path.of("config"),root.resolve("config"));
             for(String resource:List.of("town-definitions.json","statuses.json")) {

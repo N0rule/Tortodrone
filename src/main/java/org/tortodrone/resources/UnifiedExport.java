@@ -12,13 +12,16 @@ import static org.tortodrone.resources.Yaml.*;
 final class UnifiedExport {
     private final List<String> report=new ArrayList<>();
     private final Path game;
+    private final Path catalogue;
     private final Map<String,Properties> bundles=new HashMap<>();
-    public UnifiedExport(Path game){this.game=game;}
+    public UnifiedExport(Path game){this(game,null);}
+    public UnifiedExport(Path game,Path catalogue){this.game=game;this.catalogue=catalogue;}
     public List<String> report(){return List.copyOf(report);}
     public void export(ContentRegistry registry,Path target,ServerSettings settings)throws IOException {
         ContentFiles.safe(target);if(Files.exists(target,LinkOption.NOFOLLOW_LINKS))throw new IOException("Candidate already exists: "+target);
         Files.createDirectories(target);
         Path content=target.resolve("content"),internal=content.resolve("_internal");Files.createDirectories(internal);
+        if(catalogue!=null){copy(catalogue,content.resolve("monsters"));report.add("Copied the generated monster catalogue from "+catalogue);}
         // Keep machine fire/action graphs intact; YAML never pretends to replace engine behavior.
         for(String key:List.of("fires","pet-fires")) {
             var resource=registry.resources().get(key);
@@ -188,4 +191,9 @@ final class UnifiedExport {
     @SuppressWarnings("unchecked")private static Map<String,Object> mapUnchecked(Object v){return (Map<String,Object>)v;}
     private static Properties readProperties(Path file)throws IOException {ContentFiles.regular(file);int limit=file.getFileName().toString().equals("content.properties")?org.tortodrone.world.SceneContent.MAX_BYTES:4_000_000;if(Files.size(file)>limit)throw new IOException("Scene content exceeds size limit");var p=new Properties();try(var in=Files.newInputStream(file)){p.load(in);}return p;}
     public static void store(Path file,Properties values)throws IOException {Files.createDirectories(file.getParent());var out=new ByteArrayOutputStream();values.store(out,null);var lines=out.toString(java.nio.charset.StandardCharsets.ISO_8859_1).lines().filter(line->!line.startsWith("#")).sorted().toList();Files.writeString(file,String.join("\n",lines)+"\n",java.nio.charset.StandardCharsets.ISO_8859_1,StandardOpenOption.CREATE_NEW);}
+    private static void copy(Path source,Path target)throws IOException {
+        ContentFiles.safe(source);
+        try(var paths=Files.walk(source)){for(Path path:paths.sorted().toList()){Path out=target.resolve(source.relativize(path));
+            if(Files.isDirectory(path))Files.createDirectories(out);else{ContentFiles.regular(path);Files.copy(path,out);}}}
+    }
 }

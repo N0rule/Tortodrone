@@ -27,7 +27,7 @@ public final class ContentMigration {
             Files.createDirectories(target.getParent());Path staging=Files.createTempDirectory(target.getParent(),".content-migration-");
             Path prepared=staging.resolve("candidate");
             try {
-                new UnifiedExport(game).export(content,prepared,settings);
+                new UnifiedExport(game,newDeploymentCatalogue()).export(content,prepared,settings);
                 Path custom=root.resolve("content/custom/packs");
                 if(Files.exists(custom))try(var dirs=Files.list(custom)) {for(Path path:dirs.sorted().toList())if(Files.isDirectory(path)&&content.packs().stream().noneMatch(p->p.id().equals(path.getFileName().toString())))throw new IOException("Unselected custom pack requires explicit migration/conflict review: "+path);}
                 ContentManager.load(prepared);Files.move(prepared,target,StandardCopyOption.ATOMIC_MOVE);
@@ -37,6 +37,19 @@ public final class ContentMigration {
     private static FileLock acquire(FileChannel channel)throws IOException {
         if(channel==null)return null;try{var lock=channel.tryLock();if(lock!=null)return lock;}catch(OverlappingFileLockException held){ }
         throw new IOException("Server is running; stop it before content migration");
+    }
+    /** The generated catalogue ships beside this JAR, not in the legacy packs being converted. */
+    private static Path newDeploymentCatalogue()throws IOException {
+        try {
+            Path source=Path.of(ContentMigration.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            Path deployment=Files.isDirectory(source)?source:source.getParent();
+            if(deployment!=null){Path catalogue=deployment.resolve("content/monsters");if(Files.isDirectory(catalogue))return catalogue;}
+        } catch(java.net.URISyntaxException invalid) {
+            throw new IOException("Cannot locate the new content directory",invalid);
+        }
+        Path fallback=Path.of("content/monsters");
+        if(Files.isDirectory(fallback))return fallback;
+        throw new IOException("The generated monster catalogue is missing; run ContentMigration from the new deployment");
     }
     static void delete(Path root)throws IOException {if(Files.exists(root))try(var files=Files.walk(root)){for(Path p:files.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}}
 }
