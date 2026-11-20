@@ -16,6 +16,7 @@ public record SceneEntityState(String kind,int destroyed,float speed,float maxSt
         case "Stranger" -> "com.threerings.projectx.data.actor.Stranger";
         case "EntryState" -> "com.threerings.tudey.data.actor.EntryState";
         case "TerritoryProp" -> "com.threerings.projectx.dungeon.arena.data.actor.TerritoryProp";
+        case "Lift" -> "com.threerings.projectx.data.actor.Lift";
         case "Monster","Generator","Door","Switch","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift" -> "com.threerings.projectx.dungeon.data.actor."+kind;
         default -> throw new IllegalArgumentException("Unsupported scene actor: "+kind);
     };}

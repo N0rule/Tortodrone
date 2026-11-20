@@ -135,6 +135,36 @@ public final class MapYaml {
                 }
             }
         }
+        Path itemUse=shared.getParent().resolve("_internal/item-use.json");
+        if(Files.exists(itemUse)){
+            var root=ItemYaml.json(itemUse);fields(root,itemUse.toString(),"format","items");
+            if(integer(root.get("format"),"item use format")!=1)throw new IOException("Unknown item use format");
+            var uses=map(root.get("items"),"item use definitions");
+            var indexes=new LinkedHashMap<String,String>();var itemOrder=new ArrayList<String>();int next=0;
+            for(String index:content.getProperty("items","").split(",")){
+                if(index.isBlank())continue;itemOrder.add(index);
+                int value;
+                try{value=Integer.parseInt(index);}catch(NumberFormatException invalid){throw new IOException("Invalid scene item index: "+index,invalid);}
+                if(value<0)throw new IOException("Invalid scene item index: "+index);
+                next=Math.max(next,value+1);indexes.putIfAbsent(content.getProperty("item."+index+".config",""),index);
+            }
+            for(var entry:uses.entrySet()){
+                String config=entry.getKey(),index=indexes.get(config);var definition=map(entry.getValue(),"item use "+config);
+                String useKind=text(definition.get("kind"),"item use kind");if(!Set.of("heal","lethal","spawn-actor","lift").contains(useKind))throw new IOException("Unsupported item use kind: "+config+" "+useKind);
+                if(index==null){index=Integer.toString(next++);indexes.put(config,index);itemOrder.add(index);content.setProperty("item."+index+".config",config);}
+                else{
+                    String existing=content.getProperty("item."+index+".kind","");
+                    if(!existing.isBlank()&&!existing.equals(useKind))throw new IOException(folder+": scene item "+config+" already has a different prepared kind");
+                }
+                properties(content,"item."+index+".",definition);
+                // The catalogue key is the native item config used by the use activity.
+                content.setProperty("item."+index+".config",config);
+                var fields=new TreeMap<String,String>();String itemPrefix="item."+index+".";
+                for(String key:content.stringPropertyNames())if(key.startsWith(itemPrefix))fields.put(key.substring(itemPrefix.length()),content.getProperty(key));
+                SceneEntities.validateItemUse(new SceneContent.Spec(fields));
+            }
+            content.setProperty("items",String.join(",",itemOrder));
+        }
         var mechanics=Files.exists(folder.resolve("mechanics.yml"))?read(folder.resolve("mechanics.yml")):Map.<String,Object>of("properties",Map.of());fields(mechanics,folder+" mechanics","properties");
         var local=map(mechanics.get("properties"),"mechanics");var allowedMechanics=list(bindings.get("mechanicFields"),"mechanic fields");
         for(String field:local.keySet())if(!allowedMechanics.contains(field))throw new IOException(folder+": unknown mechanic field "+field);

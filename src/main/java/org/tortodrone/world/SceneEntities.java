@@ -24,7 +24,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
     }
-    private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","EntryState","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift","TerritoryProp");
+    private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","EntryState","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift","Lift","TerritoryProp");
+    private static boolean liftKind(String kind){return kind.equals("DungeonLift")||kind.equals("Lift");}
     /** Damage wakes a monster even when it was hit outside every activation radius. */
     static final int DAMAGE_ENGAGE_MILLIS=5000;
     /** Reuse a clear line of sight briefly; damage or a moved target invalidates it. */
@@ -81,6 +82,42 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         void clear(){cells.clear();reach=0;}
     }
+    /** Validate one prepared item-use definition before a scene exposes it to play. */
+    public static void validateItemUse(SceneContent.Spec spec)throws java.io.IOException{
+        switch(spec.text("kind","")){
+            case "heal" -> {int heal=spec.integer("heal",0);if(heal<=0||heal>1_000_000)throw new java.io.IOException("Invalid prepared item heal");}
+            case "lethal" -> {
+                String damage=spec.text("damage","");if(damage.isBlank())throw new java.io.IOException("Missing prepared item damage");
+                try{FireCatalog.valueJson(damage);}catch(java.io.IOException invalid){throw new java.io.IOException("Invalid prepared item damage",invalid);}
+            }
+            case "spawn-actor" -> {
+                String type=spec.text("actor.native-type","");String simple=type.substring(type.lastIndexOf('.')+1);
+                if(!SUPPORTED.contains(simple)||spec.text("actor.config","").isBlank())throw new java.io.IOException("Unsupported prepared item actor: "+type);
+            }
+            case "lift" -> {
+                String type=spec.text("lift.native-type","");String simple=type.substring(type.lastIndexOf('.')+1);
+                if(!liftKind(simple)||!spec.flag("lift.can-throw",false)||spec.text("lift.config-json",spec.text("lift.config","")).isBlank())
+                    throw new java.io.IOException("Unsupported prepared item lift: "+type);
+            }
+            default -> throw new java.io.IOException("Unsupported prepared item use: "+spec.text("kind",""));
+        }
+    }
+    /** Spawn the static prop authored by a native actor-item use. */
+    public int spawnItemActor(ActorState player,SceneContent.Spec actor,int stamp){
+        if(entities.size()+pendingActors.size()>=4096)return 0;
+        var spec=new SceneContent.Spec(new TreeMap<>(actor.fields()));
+        var binding=new SceneContent.Entry("item:"+nextId,player.x(),player.y(),player.rotation(),spec);
+        var entity=spawn(binding,spec,null,stamp);entity.faction=0;return entity.id;
+    }
+    /** Create and carry the lift authored by a native lift-item use. */
+    public int liftItem(ActorState player,SceneContent.Spec lift,int stamp){
+        if(entities.size()+pendingActors.size()>=4096)return 0;
+        var binding=new SceneContent.Entry("item:"+nextId,player.x(),player.y(),player.rotation(),lift);
+        var entity=spawn(binding,lift,null,stamp);
+        if(!carry(entity.id,player,stamp)){unlink(entity);return 0;}return entity.id;
+    }
+    /** Reclaim an item entity whose payment transaction was refused. */
+    public void discard(int id){var entity=entities.get(id);if(entity!=null)unlink(entity);}
     private static final class Entity {
         final int id,created;final SceneContent.Spec spec;final SceneContent.Entry binding;
         final String kind;final StarterCatalog.Model config;final Entity pad;
@@ -241,7 +278,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         ActorState snapshot(){return new ActorState(id,0,"",0,created,x,y,rotation,direction,flags,activity,activityStarted,config,false,null,null,
             new SceneEntityState(kind,destroyed,speed,pawnRadius,
                 maximumHealth>0?health/maximumHealth:-1,state,stateEntered,count,hitTime,binding.key(),
-                kind.equals("DungeonLift")?new SceneLiftState(z,faction,excluded,dropPoint):null,status.state(),affectedType,affectedTime,entrySource(),pickupState));}
+                liftKind(kind)?new SceneLiftState(z,faction,excluded,dropPoint):null,status.state(),affectedType,affectedTime,entrySource(),pickupState));}
     }
     /** Native collision bit 1 << 13 ("lift" in the 2026 mask.properties registry): the served
      *  Lift Barriers state exactly this bit, and the 2026 lift base adds it to thrown and
@@ -440,7 +477,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(entity.kind.equals("Monster"))monsterMetrics.spawned();
     }
     private void unlink(Entity entity){
-        if(entity.kind.equals("Monster")&&entities.remove(entity.id)!=null)monsterMetrics.despawned();
+        if(entities.remove(entity.id)!=null&&entity.kind.equals("Monster"))monsterMetrics.despawned();
         spatial.remove(entity);
     }
     private Entity spawn(SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,int stamp){
@@ -539,7 +576,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(props!=null)for(var prop:props)if(prop.state==0)setSwitch(prop,1,stamp);
     }
     public boolean carry(int id,ActorState player,int stamp){
-        var e=entities.get(id);if(e==null||!e.kind.equals("DungeonLift")||e.destroyed!=Integer.MAX_VALUE||(e.flags&6)!=0)return false;
+        var e=entities.get(id);if(e==null||!liftKind(e.kind)||e.destroyed!=Integer.MAX_VALUE||(e.flags&6)!=0)return false;
         e.carrier=e.owner=player.id();e.ownerOid=player.clientOid();e.dropPoint=null;e.flags|=4;return true;
     }
     public int vial(ActorState player,SceneContent.Spec item,int stamp){
@@ -620,7 +657,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public int interactionDuration(int id){var e=entities.get(id);return e==null?670:e.spec.integer("interaction-duration",Set.of("Talk","Shop").contains(interactionAction(e))?1667:670);}
     private String interactionAction(Entity e){
         String station=e.spec.text("town-kind","");
-        String fallback=e.kind.equals("DungeonLift")?"Lift":
+        String fallback=liftKind(e.kind)?"Lift":
             content.conversations().containsKey(e.spec.text("dialogue",e.config.name()))?"Talk":
             Set.of("OpenShop","OpenDepot","OpenAuction").contains(station)?"Shop":"Interact";
         return e.spec.text("interaction-action",fallback);
@@ -631,9 +668,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     /** Carried keys can address only a compatible closed door in this scene. */
     public InteractionState interaction(float x,float y,float rotation,int owner,int lift){
         var carried=lift==0?null:entities.get(lift);
-        boolean key=carried!=null&&carried.destroyed==Integer.MAX_VALUE&&carried.carrier==owner&&carried.kind.equals("DungeonLift")&&carried.spec.text("actionable-signal","").equals("gold_unlock");
+        boolean key=carried!=null&&carried.destroyed==Integer.MAX_VALUE&&carried.carrier==owner&&liftKind(carried.kind)&&carried.spec.text("actionable-signal","").equals("gold_unlock");
         Entity nearest=null;float best=Float.POSITIVE_INFINITY;
-        for(var e:entities.values())if((key?e.kind.equals("Door")&&e.spec.text("door-lock","").equals("gold")&&(e.flags&2)==0:e.interactive||e.kind.equals("DungeonLift")&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
+        for(var e:entities.values())if((key?e.kind.equals("Door")&&e.spec.text("door-lock","").equals("gold")&&(e.flags&2)==0:e.interactive||liftKind(e.kind)&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
             float ox=e.spec.number("interaction-offset-x",.7f),oy=e.spec.number("interaction-offset-y",0);
             float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             float distance=(float)Math.hypot(x+ox*c-oy*s-e.x,y+ox*s+oy*c-e.y);
@@ -754,7 +791,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     else think(e,stamp,elapsed,players);
                 }
             }
-            if(e.kind.equals("DungeonLift"))lift(e,stamp,elapsed,players);
+            if(liftKind(e.kind))lift(e,stamp,elapsed,players);
             if(e.activity==1&&stamp-e.activityStarted>=e.spec.integer("react-time",0)||e.activity==3&&stamp-e.activityStarted>=e.spec.integer("activate-time",0))e.activity=0;
         }
         for(var e:List.copyOf(entities.values()))for(var pulse:e.status.takePulses())statusPulse(e.id,pulse,e.x,e.y,stamp);
@@ -1529,7 +1566,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             }
         }else if(mode.equals("pressure")){
             boolean pressed=players.stream().anyMatch(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS))
-                ||entities.values().stream().anyMatch(other->other.kind.equals("DungeonLift")&&Arrays.asList(other.spec.text("tags","").split(",")).contains(e.spec.text("pressure-tag",""))&&other.carrier==0&&other.destroyed==Integer.MAX_VALUE
+                ||entities.values().stream().anyMatch(other->liftKind(other.kind)&&Arrays.asList(other.spec.text("tags","").split(",")).contains(e.spec.text("pressure-tag",""))&&other.carrier==0&&other.destroyed==Integer.MAX_VALUE
                     &&e.spec.contains(e.x,e.y,e.rotation,other.x,other.y,other.spec.number("radius",0)));
             int state=pressed?2:0;
             if(state!=e.state)setSwitch(e,state,stamp);
@@ -1824,7 +1861,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return java.util.Set.copyOf(result);
     }
     public SceneCollision.Penetration penetration(float x,float y,int ignore){
-        boolean carrying=ignore!=0&&entities.values().stream().anyMatch(e->e.kind.equals("DungeonLift")
+        boolean carrying=ignore!=0&&entities.values().stream().anyMatch(e->liftKind(e.kind)
             &&e.carrier==ignore&&e.destroyed==Integer.MAX_VALUE);
         var result=SceneCollision.Penetration.NONE;
         for(var e:entities.values()){
@@ -1900,7 +1937,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             for(var player:players){float dx=player.x()-x,dy=player.y()-y;
                 boolean hit=defined instanceof FireCatalog.DataValue?SceneShape.intersects(defined,dx*c+dy*s,-dx*s+dy*c,ScenePortals.PAWN_RADIUS+expansion):Math.hypot(dx,dy)<=ScenePortals.PAWN_RADIUS+expansion;
-                int sourceId=source==null?owner:source.kind.equals("Monster")?owner:(source.kind.equals("DungeonLift")||source.kind.equals("Bomb"))?source.owner:0;
+                int sourceId=source==null?owner:source.kind.equals("Monster")?owner:(liftKind(source.kind)||source.kind.equals("Bomb"))?source.owner:0;
                 if(hit&&damageClear(region,x,y,player.x(),player.y(),owner,player.id())&&(hitOnce==null||hitOnce.add(player.id()))){
                     // One trap action can cover several occupants. Record each
                     // hit here so the next sensor cannot damage them again on
@@ -1955,7 +1992,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     }
                     applyImpulse(e,region,x,y,rotation,stamp);
                     if(e.health==0)e.status.clear();
-                    int sourceId=source!=null&&(source.kind.equals("DungeonLift")||source.kind.equals("Bomb"))?source.owner:owner;
+                    int sourceId=source!=null&&(liftKind(source.kind)||source.kind.equals("Bomb"))?source.owner:owner;
                     // Native MonsterLogic promotes the damage summary's performance (weak against
                     // the target's defenses, strong into them) by the dealt fraction of its health.
                     String tier=SceneDamage.performance(accepted,content,new SceneContent.Spec(defense),multiplier,gear,relative);

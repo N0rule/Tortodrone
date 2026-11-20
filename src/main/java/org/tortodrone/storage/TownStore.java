@@ -145,6 +145,18 @@ public final class TownStore {
             consume(c,p,item,1);return held.config();
         });
     }
+    /** Consume one owned scene-usable item; the scene applies its prepared effect under
+     *  the same lock, so a refused revision or item leaves both sides unchanged. */
+    public Result useItem(int account,int knight,long auth,long revision,long item)throws IOException{
+        return change(account,knight,auth,(c,p)->{
+            if(p.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
+            var held=owned(p,item);
+            var definition=items.find(held.config());
+            if(definition==null||!Set.of("InstantAction","SpawnActor","Lift").contains(definition.type())
+                    ||held.gift()!=null||held.expired(System.currentTimeMillis()))throw new IOException("m.internal_error");
+            consume(c,p,item,1);return held.config();
+        });
+    }
     /** Native PartyMarshaller.revive: -1 spends one owned Spark; a positive approval buys its use. */
     public Result revive(int account,int knight,long auth,int approvedCost)throws IOException{
         if(approvedCost < -1)throw new IOException("m.costupdate");

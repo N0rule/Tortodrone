@@ -1095,7 +1095,11 @@ public final class SessionCodec {
             type(out,WireTypes.DSET);out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyStatus(out,member);
             emptyCollection(out);out.writeShort(0); // Native party spawn is unset; the scene owns arrival.
             out.writeInt(mission?1:0);out.writeInt(scene.map().zone());out.writeInt(scene.map().town()?scene.oid():0); // depth, zone, instance
-            out.writeBoolean(!tutorial&&(automatic||managed||training||!scene.map().content().items().isEmpty()));out.writeLong(0);
+            // hasPickups enables the native quickbar/level HUD. Only a scene's own
+            // vial/capsule catalogue counts; the global owned-item uses are not pickups.
+            boolean pickups=scene.map().content().items().values().stream()
+                .anyMatch(item->item.text("kind","").equals("vial")||item.text("kind","").equals("capsule"));
+            out.writeBoolean(!tutorial&&(automatic||managed||training||pickups));out.writeLong(0);
             out.writeShort(0);out.writeInt(tutorial||mission?1:managed||automatic?PartyRegistry.CAPACITY:training?8:1);out.writeInt(mission?opening.gate().id():tutorial?org.tortodrone.world.TutorialRoute.GATE:0);
             type(out,"com.threerings.projectx.dungeon.data.LevelPartyMarshaller");out.writeInt(partyOid);out.writeInt(LEVEL_PARTY_SERVICE);
             type(out,WireTypes.DIFFICULTY);out.writeByte(mission?opening.difficultyOrdinal():tutorial?1:0);
@@ -1575,6 +1579,7 @@ public final class SessionCodec {
             case "Block" -> out.writeInt(e.hitTime());
             case "Block$Stateful" -> {out.writeInt(e.hitTime());out.writeInt(e.state());out.writeInt(e.stateEntered());}
             case "DungeonLift" -> {out.writeFloat(e.maxStep());out.writeFloat(a.direction());out.writeFloat(e.lift()==null?0:e.lift().z());dropPoint(out,e.lift());out.writeInt(e.lift()==null?0:e.lift().faction());primitiveInts(out,e.lift()==null?null:e.lift().excluded());}
+            case "Lift" -> {out.writeFloat(e.maxStep());out.writeFloat(a.direction());out.writeFloat(e.lift()==null?0:e.lift().z());dropPoint(out,e.lift());}
             case "Pickup" -> {primitiveInts(out,null);primitiveInts(out,e.pickup()==null?null:new int[]{e.pickup().playerOid(),e.pickup().activated()});}
             case "Trap" -> {type(out,"com.threerings.projectx.dungeon.data.actor.Trap$State");out.writeByte(e.state());out.writeInt(e.stateEntered());}
             case "Bomb" -> {out.writeInt(0);out.writeInt(0);out.writeFloat(org.tortodrone.world.ProjectileState.UNSPECIFIED_Z);}
@@ -1596,10 +1601,10 @@ public final class SessionCodec {
             out.writeByte(mask);out.writeByte(mask>>>8);
             if(e.kind().equals("Monster"))out.writeByte(mask>>>16);
         }else{
-            mask|=(e.kind().equals("Switch")||e.kind().equals("EntryState"))?0xc0:(e.kind().equals("Actor")||e.kind().equals("Bomb"))?0:e.kind().equals("DungeonLift")?0x7c0:e.kind().equals("Block$Stateful")?0xe0:0x20;
+            mask|=(e.kind().equals("Switch")||e.kind().equals("EntryState"))?0xc0:(e.kind().equals("Actor")||e.kind().equals("Bomb"))?0:e.kind().equals("DungeonLift")?0x7c0:e.kind().equals("Lift")?0x1c0:e.kind().equals("Block$Stateful")?0xe0:0x20;
             if(e.kind().equals("Trap"))mask|=0x40;
             if(e.kind().equals("Pickup")&&e.pickup()!=null)mask|=0x40;
-            out.writeByte(mask);if(e.kind().equals("DungeonLift"))out.writeByte(mask>>>8);
+            out.writeByte(mask);if(e.kind().equals("DungeonLift")||e.kind().equals("Lift"))out.writeByte(mask>>>8);
         }
         out.writeInt(e.destroyed());vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());
         if(e.active()){
@@ -1613,6 +1618,7 @@ public final class SessionCodec {
             case "Block$Stateful" -> {out.writeInt(e.hitTime());out.writeInt(e.state());out.writeInt(e.stateEntered());}
             case "DungeonLift" -> {out.writeFloat(a.direction());out.writeFloat(e.lift()==null?0:e.lift().z());dropPoint(out,e.lift());out.writeInt(e.lift()==null?0:e.lift().faction());
                 int[] ids=e.lift()==null?null:e.lift().excluded();if(ids==null)out.writeShort(0);else{type(out,"[I");out.writeInt(ids.length);for(int id:ids)out.writeInt(id);}}
+            case "Lift" -> {out.writeFloat(a.direction());out.writeFloat(e.lift()==null?0:e.lift().z());dropPoint(out,e.lift());}
             case "Trap" -> {type(out,"com.threerings.projectx.dungeon.data.actor.Trap$State");out.writeByte(e.state());out.writeInt(e.stateEntered());}
             case "Actor","Bomb" -> { }
             default -> throw new IOException("Unsupported prepared actor delta");
