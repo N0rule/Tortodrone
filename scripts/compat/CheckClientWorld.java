@@ -125,8 +125,8 @@ public final class CheckClientWorld {
             server.destroy();
             if (!server.waitFor(5, TimeUnit.SECONDS)) throw new IOException("Temporary server did not stop");
             Path prepared=args.length==2?Path.of(args[1]).toAbsolutePath():project.resolve("build/content/maps");
-            if(args.length==2||Files.isDirectory(prepared.resolve("advanced_training"))
-                    &&Files.isDirectory(prepared.resolve("laboratory"))&&Files.isDirectory(prepared.resolve("hall_of_heroes"))) {
+            if(args.length==2||Files.isDirectory(prepared.resolve("training/advanced_training"))
+                    &&Files.isDirectory(prepared.resolve("level/laboratory"))&&Files.isDirectory(prepared.resolve("level/hall_of_heroes"))) {
                 if(args.length==2) {
                     Path current=scratch.resolve("content/maps");try(var paths=Files.walk(current)){for(Path p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}
                     copyTree(prepared,current);
@@ -144,7 +144,7 @@ public final class CheckClientWorld {
             List<String> seed = new ArrayList<>(base);
             seed.addAll(List.of("AccountConnectionCheck", "seed", scratch.resolve("data").toString()));
             run(seed,"seed-reconnect","",15);
-            Path descriptor = scratch.resolve("content/maps/haven/map.yml");
+            Path descriptor = scratch.resolve("content/maps/town/haven/map.yml");
             var properties=Yaml.read(descriptor);properties.put("instances",2);Files.delete(descriptor);Yaml.write(descriptor,properties);
             Path isolatedLog = scratch.resolve("isolated-server.log");
             Process isolated = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui"), isolatedLog);

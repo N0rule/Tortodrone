@@ -1,0 +1,163 @@
+# Imported mission prestige/crown properties; regenerate with scripts/content/import_missions.py.
+
+properties:
+  Dev/Example:
+    name: Dev/Example
+    prestigeLow: 20
+    prestigeAvg: 40
+    prestigeHigh: 90
+    prestigeMax: 150
+  Dev/Rank 1-1:
+    name: Dev/Rank 1-1
+    crownCost: 50
+    prestigeLow: 5
+    prestigeAvg: 10
+    prestigeHigh: 15
+    prestigeMax: 20
+  Dev/Rank 1-2:
+    name: Dev/Rank 1-2
+    crownCost: 50
+    prestigeLow: 10
+    prestigeAvg: 20
+    prestigeHigh: 30
+    prestigeMax: 40
+  Expansion/Expansion Tier 1:
+    name: Expansion/Expansion Tier 1
+    prestigeLow: 15
+    prestigeAvg: 30
+    prestigeHigh: 45
+    prestigeMax: 60
+  Expansion/Expansion Tier 2:
+    name: Expansion/Expansion Tier 2
+    prestigeLow: 30
+    prestigeAvg: 60
+    prestigeHigh: 90
+    prestigeMax: 120
+  Expansion/Expansion Tier 3:
+    name: Expansion/Expansion Tier 3
+    prestigeLow: 45
+    prestigeAvg: 90
+    prestigeHigh: 135
+    prestigeMax: 180
+  Hidden/Hidden:
+    name: Hidden/Hidden
+  Prestige/Rank 3, Exchange:
+    name: Prestige/Rank 3, Exchange
+    prestigeLow: 20
+    prestigeAvg: 40
+    prestigeHigh: 60
+    prestigeMax: 100
+  Prestige/Rank 3, Gate:
+    name: Prestige/Rank 3, Gate
+    prestigeLow: 15
+    prestigeAvg: 30
+    prestigeHigh: 45
+    prestigeMax: 60
+  Prestige/Rank 4, 5, Exchange:
+    name: Prestige/Rank 4, 5, Exchange
+    prestigeLow: 35
+    prestigeAvg: 70
+    prestigeHigh: 105
+    prestigeMax: 175
+  Prestige/Rank 4, 5, Gate:
+    name: Prestige/Rank 4, 5, Gate
+    prestigeLow: 25
+    prestigeAvg: 50
+    prestigeHigh: 75
+    prestigeMax: 100
+  Prestige/Rank 6, Exchange:
+    name: Prestige/Rank 6, Exchange
+    prestigeLow: 40
+    prestigeAvg: 80
+    prestigeHigh: 120
+    prestigeMax: 200
+  Prestige/Rank 6, Gate:
+    name: Prestige/Rank 6, Gate
+    prestigeLow: 30
+    prestigeAvg: 60
+    prestigeHigh: 90
+    prestigeMax: 120
+  Prestige/Rank 7, 8, Exchange:
+    name: Prestige/Rank 7, 8, Exchange
+    prestigeLow: 50
+    prestigeAvg: 100
+    prestigeHigh: 150
+    prestigeMax: 250
+  Prestige/Rank 7, 8, Gate:
+    name: Prestige/Rank 7, 8, Gate
+    prestigeLow: 40
+    prestigeAvg: 80
+    prestigeHigh: 120
+    prestigeMax: 160
+  Prestige/Rank 9, Exchange:
+    name: Prestige/Rank 9, Exchange
+    prestigeLow: 60
+    prestigeAvg: 120
+    prestigeHigh: 180
+    prestigeMax: 300
+  Prestige/Rank 9, Gate:
+    name: Prestige/Rank 9, Gate
+    prestigeLow: 45
+    prestigeAvg: 90
+    prestigeHigh: 135
+    prestigeMax: 180
+  Rank/Rank 1:
+    name: Rank/Rank 1
+    prestigeLow: 5
+    prestigeAvg: 10
+    prestigeHigh: 15
+    prestigeMax: 20
+  Rank/Rank 10:
+    name: Rank/Rank 10
+    prestigeLow: 50
+    prestigeAvg: 100
+    prestigeHigh: 150
+    prestigeMax: 200
+  Rank/Rank 2:
+    name: Rank/Rank 2
+    prestigeLow: 10
+    prestigeAvg: 20
+    prestigeHigh: 30
+    prestigeMax: 40
+  Rank/Rank 3:
+    name: Rank/Rank 3
+    prestigeLow: 15
+    prestigeAvg: 30
+    prestigeHigh: 45
+    prestigeMax: 60
+  Rank/Rank 4:
+    name: Rank/Rank 4
+    prestigeLow: 20
+    prestigeAvg: 40
+    prestigeHigh: 60
+    prestigeMax: 80
+  Rank/Rank 5:
+    name: Rank/Rank 5
+    prestigeLow: 25
+    prestigeAvg: 50
+    prestigeHigh: 75
+    prestigeMax: 100
+  Rank/Rank 6:
+    name: Rank/Rank 6
+    prestigeLow: 30
+    prestigeAvg: 60
+    prestigeHigh: 90
+    prestigeMax: 120
+  Rank/Rank 7:
+    name: Rank/Rank 7
+    prestigeLow: 35
+    prestigeAvg: 70
+    prestigeHigh: 105
+    prestigeMax: 140
+  Rank/Rank 8:
+    name: Rank/Rank 8
+    prestigeLow: 40
+    prestigeAvg: 80
+    prestigeHigh: 120
+    prestigeMax: 160
+  Rank/Rank 9:
+    name: Rank/Rank 9
+    prestigeLow: 45
+    prestigeAvg: 90
+    prestigeHigh: 135
+    prestigeMax: 180

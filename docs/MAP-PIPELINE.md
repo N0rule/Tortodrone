@@ -1,7 +1,8 @@
 # Map pipeline
 
 Maps are **development inputs**, not runtime imports. A release build ships the compiled maps in
-`content/maps`; the server never runs the compiler.
+`content/maps`; the server never runs the compiler. Deployment maps are grouped by their
+`type` (`town`, `training` or `level`), so a map's folder and its `map.yml` type must agree.
 
 ## Source layout
 
@@ -47,7 +48,7 @@ build output only; an existing deployment map is refused without it.
 ## Generated artifacts
 
 ```text
-content/maps/<name>/
+content/maps/<type>/<name>/
   map.yml
   portals.yml
   actors.yml

@@ -30,11 +30,11 @@ public final class ContentMigrationTest {
             Files.createDirectories(root.resolve("content/custom/packs/unselected"));Files.writeString(root.resolve("content/custom/packs/unselected/owner"),"review me");failure(()->ContentMigration.migrate(root,home.resolve("conflict"),null));check(!Files.exists(home.resolve("conflict")),"unselected custom content requires explicit conflict review");
             // Import a real, compatible training fixture into a deployment where that native ID
             // is absent. The original ID and models are retained; only the folder name changes.
-            var portals=Yaml.read(candidate.resolve("content/maps/haven/portals.yml"));var triggers=Yaml.map(portals.get("portals"),"portals");triggers.entrySet().removeIf(e->{try{return Yaml.map(e.getValue(),"portal").get("destination").equals("scene_294");}catch(IOException invalid){throw new UncheckedIOException(invalid);}});
-            Path portalFile=candidate.resolve("content/maps/haven/portals.yml");Files.delete(portalFile);Yaml.write(portalFile,portals);ContentFixture.delete(candidate.resolve("content/maps/scene_294"));
+            var portals=Yaml.read(candidate.resolve("content/maps/town/haven/portals.yml"));var triggers=Yaml.map(portals.get("portals"),"portals");triggers.entrySet().removeIf(e->{try{return Yaml.map(e.getValue(),"portal").get("destination").equals("scene_294");}catch(IOException invalid){throw new UncheckedIOException(invalid);}});
+            Path portalFile=candidate.resolve("content/maps/town/haven/portals.yml");Files.delete(portalFile);Yaml.write(portalFile,portals);ContentFixture.delete(candidate.resolve("content/maps/training/scene_294"));
             MapImport.install(ContentFixture.path("maps/advanced_training"),candidate,"imported_training",null);
-            check(ContentManager.load(candidate).scenes().scene(294).version()==359&&Files.exists(candidate.resolve("content/maps/imported_training/npcs/konway.yml")),"validated compatible map imports without a content pack");
-            check(Files.readString(candidate.resolve("content/maps/imported_training/native/import-report.txt")).contains("Supported actors="),"import reports supported and unresolved behavior explicitly");
+            check(ContentManager.load(candidate).scenes().scene(294).version()==359&&Files.exists(candidate.resolve("content/maps/training/imported_training/npcs/konway.yml")),"validated compatible map imports without a content pack");
+            check(Files.readString(candidate.resolve("content/maps/training/imported_training/native/import-report.txt")).contains("Supported actors="),"import reports supported and unresolved behavior explicitly");
             failure(()->MapImport.install(ContentFixture.path("maps/advanced_training"),candidate,"imported_training",null));
             failure(()->MapImport.install(ContentFixture.path("maps/advanced_training"),candidate,"../escape",null));
             System.out.println("PASS: migration retains catalogs/Town/pets, source data and config bytes; conflicts/locks/destinations refused; compatible native import validates and publishes once");

@@ -10,18 +10,38 @@ import static org.tortodrone.resources.Yaml.*;
 public final class MapYaml {
     private MapYaml() { }
     public record Prepared(Properties descriptor,Properties portals,Properties content,Path nativeDirectory) { }
+    /** Scene types double as the required category folder under content/maps. */
+    public static final Set<String> CATEGORIES=Set.of("town","training","level");
     public static Map<Integer,Path> folders(Path maps)throws IOException {
         ContentFiles.safe(maps);if(!Files.isDirectory(maps))throw new IOException("Missing maps: "+maps);
-        var result=new TreeMap<Integer,Path>();
-        try(var paths=Files.list(maps)) {
-            var list=paths.sorted().toList();if(list.size()>64)throw new IOException("Too many map folders");
-            for(Path folder:list) {
-                ContentFiles.safe(folder);if(!Files.isDirectory(folder)||!folder.getFileName().toString().matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid map folder: "+folder);
-                int id=integer(read(folder.resolve("map.yml")).get("id"),folder+": id");
-                if(id<=0||result.putIfAbsent(id,folder)!=null)throw new IOException("Duplicate or invalid map ID: "+id);
+        var result=new TreeMap<Integer,Path>();int count=0;
+        try(var categories=Files.list(maps)) {
+            var list=categories.sorted().toList();if(list.size()>CATEGORIES.size())throw new IOException("Unexpected entry in map categories: "+maps);
+            for(Path categoryFolder:list) {
+                ContentFiles.safe(categoryFolder);
+                String category=categoryFolder.getFileName().toString();
+                if(!Files.isDirectory(categoryFolder)||!CATEGORIES.contains(category))throw new IOException("Maps must be grouped under town, training or level: "+categoryFolder);
+                try(var paths=Files.list(categoryFolder)) {
+                    for(Path folder:paths.sorted().toList()) {
+                        ContentFiles.safe(folder);
+                        if(!Files.isDirectory(folder)||!folder.getFileName().toString().matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid map folder: "+folder);
+                        if(++count>64)throw new IOException("Too many map folders");
+                        var map=read(folder.resolve("map.yml"));
+                        int id=integer(map.get("id"),folder+": id");
+                        String type=text(map.get("type"),folder+": type");
+                        if(!CATEGORIES.contains(type))throw new IOException(folder+": unsupported map type "+type);
+                        if(!category.equals(type))throw new IOException(folder+": map type "+type+" must live under "+type+"/");
+                        if(id<=0||result.putIfAbsent(id,folder)!=null)throw new IOException("Duplicate or invalid map ID: "+id);
+                    }
+                }
             }
         }
         return Collections.unmodifiableMap(result);
+    }
+    /** Resolve a map folder by its deployment name regardless of category. */
+    public static Path folder(Path maps,String name)throws IOException {
+        return folders(maps).values().stream().filter(folder->folder.getFileName().toString().equals(name)).findFirst()
+            .orElseThrow(()->new IOException("Map folder is missing: "+name));
     }
     public static Prepared prepare(Path folder,Path shared)throws IOException {return prepare(folder,shared,null);}
     public static Prepared prepare(Path folder,Path shared,org.tortodrone.character.ItemCatalog items)throws IOException {
@@ -184,6 +204,14 @@ public final class MapYaml {
         content.setProperty("dialogues",String.join(",",new TreeSet<>(seen)));
         return new Prepared(p,portals,content,nativeDir);
     }
+    /** Destination names are filesystem-local; resolve them across the map category folders. */
+    private static Path destinationFolder(Path folder,String name)throws IOException {
+        Path direct=folder.getParent().resolve(name);
+        if(Files.isRegularFile(direct.resolve("map.yml")))return direct;
+        Path maps=folder.getParent().getParent();
+        for(String category:CATEGORIES){Path candidate=maps.resolve(category).resolve(name);if(Files.isRegularFile(candidate.resolve("map.yml")))return candidate;}
+        throw new IOException(folder+": destination map is missing: "+name);
+    }
     private static void semantic(Map<String,Object> edits,String group,Map<String,String> fields)throws IOException {
         if(!edits.containsKey(group))return;var values=map(edits.remove(group),"actor "+group);
         for(var value:values.entrySet()) {
@@ -217,7 +245,7 @@ public final class MapYaml {
             Object destination=v.get("destination");int scene;
             if(destination instanceof Number)scene=integer(destination,"destination");
             else {String name=text(destination,"destination");if(!name.matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid destination map name: "+name);
-                scene=integer(read(folder.getParent().resolve(name).resolve("map.yml")).get("id"),"destination ID");}
+                scene=integer(read(destinationFolder(folder,name).resolve("map.yml")).get("id"),"destination ID");}
             p.setProperty(prefix+"scene",Integer.toString(scene));p.setProperty(prefix+"entrance",text(v.get("entrance"),"entrance"));
         }
         p.setProperty("triggers",String.join(",",nativeIds));

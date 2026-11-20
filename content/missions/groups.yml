@@ -1,0 +1,9 @@
+# Imported mission groups; regenerate with scripts/content/import_missions.py.
+
+groups:
+  operation_crimson_hammer:
+    deployment: PRODUCTION
+    purchase: true
+    name: Operation Crimson Hammer
+    id: operation_crimson_hammer
+    cardImage: ui/mission/images/cards/images/crimson_hammer.png

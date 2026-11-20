@@ -54,8 +54,9 @@ Nine maps ship in total. The seven town/interior maps are `haven` (1), `bazaar` 
 There are 9,355 indexed original item definitions, 386 weapon controls and 123
 shields. Indexed content does not establish gameplay support. The implementation
 still has the limits described in [Architecture](architecture.md) and the
-[stock support index](item-support.csv); general missions, dungeon AI, rewards,
-random vendor stock and many original actions remain incomplete.
+[stock support index](item-support.csv); mission definitions are catalogued below, but
+dungeon mission runs, objective progress, reward granting, random vendor stock and many
+original actions remain incomplete.
 
 ## Configuration and validation
 
@@ -142,7 +143,7 @@ is accepted as a fallback but must agree with the shared port when both are conf
 
 ## NPC dialogue
 
-Open `content/maps/advanced_training/npcs/konway.yml`. Its actual opening text is:
+Open `content/maps/training/advanced_training/npcs/konway.yml`. Its actual opening text is:
 
 ```yaml
 id: konway
@@ -483,6 +484,30 @@ machine-readable record with stock IDs, live keys and fire activities is
 The reverse gap also exists: 99 client item definitions, mostly recolored
 accessories and costumes plus a few upgrades, are not in the server catalog yet.
 The same manifest records that list for future import work.
+
+## Missions
+
+`content/missions/` holds the complete stock mission catalogue, split by implementation
+(`rank.yml`, `prestige.yml`, `expansion.yml`, `hidden.yml`) plus `groups.yml` and
+`properties.yml`. It is generated from the client's exported `mission.xml`,
+`mission_group.xml` and `mission_property.xml`; every id, rank pair, reward reference,
+restriction and prestige range is retained. Startup checks cross-file references and
+rejects unknown fields or malformed data.
+
+The catalogue exposes definition data and the rank-board helpers only: descending
+priority with a stable id tie break, completed-card removal and `needMission`
+prerequisite gating. Dungeon mission runs, objective progress, reward granting,
+conversation hand-in and the mission UI are not implemented. A deployment without
+`content/missions/` keeps an empty catalogue and logs a startup warning.
+
+The checked-in import contains 273 missions (108 rank, 147 prestige, 3 expansion and
+15 hidden), one group and 27 properties. Refresh it deterministically with:
+
+```sh
+python3 scripts/content/import_missions.py --source /path/to/exported/config
+# Verify without writing:
+python3 scripts/content/import_missions.py --source /path/to/exported/config --check
+```
 
 ## Map identity, actors, portals and traps
 

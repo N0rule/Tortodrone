@@ -116,17 +116,25 @@ public final class SceneCatalog {
     }
     public static SceneCatalog empty(){return new SceneCatalog(new TreeMap<>(),0);}
     public static SceneCatalog load(Path directory)throws IOException {
-        if(!Files.exists(directory.resolve("catalog.properties"))&&Files.isDirectory(directory)) {
-            try(var paths=Files.list(directory)) {
-                if(paths.anyMatch(p->Files.exists(p.resolve("map.yml")))) {
-                    Path deployment=directory.toAbsolutePath().getParent().getParent();
-                    String start=org.tortodrone.config.ServerSettings.read(org.tortodrone.config.ServerSettings.defaultPath(deployment)).startupMap();
-                    return org.tortodrone.resources.ContentManager.loadMaps(directory,start,null);
-                }
-            }
+        if(!Files.exists(directory.resolve("catalog.properties"))&&unifiedMaps(directory)) {
+            Path deployment=directory.toAbsolutePath().getParent().getParent();
+            String start=org.tortodrone.config.ServerSettings.read(org.tortodrone.config.ServerSettings.defaultPath(deployment)).startupMap();
+            return org.tortodrone.resources.ContentManager.loadMaps(directory,start,null);
         }
         var settings=properties(directory.resolve("catalog.properties"));
         return load(folders(directory),number(settings,"entry-scene",1,Integer.MAX_VALUE));
+    }
+    /** Unified content groups map folders by type; legacy packs keep flat templates. */
+    private static boolean unifiedMaps(Path directory)throws IOException {
+        if(!Files.isDirectory(directory))return false;
+        for(String category:List.of("town","training","level")) {
+            Path folder=directory.resolve(category);
+            if(!Files.isDirectory(folder))continue;
+            try(var paths=Files.list(folder)) {
+                if(paths.anyMatch(p->Files.isRegularFile(p.resolve("map.yml"))))return true;
+            }
+        }
+        return false;
     }
     /** Compatibility/import boundary; runtime versioned packs register scenes in their manifest. */
     public static Map<Integer,Path> folders(Path directory)throws IOException {

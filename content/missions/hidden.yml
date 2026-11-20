@@ -1,0 +1,252 @@
+# Imported hidden missions; regenerate with scripts/content/import_missions.py.
+
+missions:
+  hall_of_heroes_0:
+    name: Hidden/Hall of Heroes
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    restrictions: []
+    missionProps: Hidden/Hidden
+  lab_0:
+    name: Hidden/Lab Closed
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions: []
+    missionProps: Hidden/Hidden
+  lab_1:
+    name: Hidden/Lab 1
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: laboratory_visit
+    missionProps: Hidden/Hidden
+  lab_2:
+    name: Hidden/Lab 2
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: mission_sprite_1
+    missionProps: Hidden/Hidden
+  lab_3:
+    name: Hidden/Lab 3
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: mission_sprite_2
+    missionProps: Hidden/Hidden
+  lab_4:
+    name: Hidden/Lab 4
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: mission_sprite_3
+    missionProps: Hidden/Hidden
+  lab_5:
+    name: Hidden/Lab Complete
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: the_collector
+    missionProps: Hidden/Hidden
+  lab_default:
+    name: Hidden/Lab Default
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: choose_your_sprite
+    missionProps: Hidden/Hidden
+  lab_firestorm_citadel:
+    name: Hidden/Lab Firestorm Citadel Complete
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: king_of_ashes
+    missionProps: Hidden/Hidden
+  lab_new_threat:
+    name: Hidden/Lab A New Threat
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: new_threat
+    missionProps: Hidden/Hidden
+  lab_roarmulus_twins:
+    name: Hidden/Lab Roarmulus Twins Complete
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: built_to_destroy
+    missionProps: Hidden/Hidden
+  lab_royal_jelly:
+    name: Hidden/Lab Royal Jelly Complete
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: sovereign_slime
+    missionProps: Hidden/Hidden
+  lab_snarbolax:
+    name: Hidden/Lab Snarbolax Complete
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: shadow_beast
+    missionProps: Hidden/Hidden
+  pseudoplayer_test:
+    name: PseudoPlayer Gate Mission
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    restrictions: []
+  tutorial_mission:
+    name: Tutorial/Tutorial Mission
+    type: hidden
+    deployment: DEV
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Tutorial/Tutorial Mission
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions: []
+    missionProps: Hidden/Hidden
