@@ -204,6 +204,8 @@ public final class MonsterCatalog {
             // The overlay owns scheduling only. Placement fields still win over type defaults.
             if (tuning != null && tuning.activationRadius() != null)
                 fields.put("activation-radius", Float.toString(tuning.activationRadius()));
+            if (tuning != null && tuning.leashRadius() != null)
+                fields.put("leash-radius", Float.toString(tuning.leashRadius()));
             fields.putAll(entry.spec().fields());
             fields.remove("monster-type");
             entries.add(new SceneContent.Entry(entry.key(), entry.x(), entry.y(), entry.rotation(),

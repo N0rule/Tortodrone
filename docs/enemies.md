@@ -189,8 +189,41 @@ nearby player. Wander and party-follow behaviours are authored motion rather tha
 combat pursuit, so they keep their previous every-tick integration. Scripted tutorial
 actors and an already-started attack sequence are never paused by the ladder.
 
-The per-scene awake cap and leash are part of the later wave lifecycle work; this
-phase only schedules existing placements.
+At most 32 monsters are engaged at once. The cap is a server-side safety valve: already
+engaged monsters keep running, damage still wakes its target, and a voluntary transition
+waits in `ALERT` instead of starting pursuit.
+
+## Leash and despawn
+
+A monster with `leash-radius` leaves combat once it is farther than that distance from
+its placement anchor: it drops its target, walks back along a bounded path and regains
+`leash-heal` health per second while returning. Damage overrides the leash for the
+normal five-second damage grace, so a hit monster answers first. Both fields are opt-in;
+scene placements without them keep their previous pursuit range.
+
+Waves and generation changes despawn without running death actions. The same cleanup
+cancels the actor's queued source actions, clears status and paths, drops claims and
+lifts, and removes the actor before the next publication, so no status pulse, action or
+effect can resolve against it afterwards.
+
+## Waves
+
+Waves are scene runtime state, never catalogue data. `MonsterGroup` names a catalogue
+type, one to sixteen anchors, `total`, `maxAlive`, an `intervalMs` between spawns, an
+optional `respawnDelayMs`, an optional `onCleared` signal and the scene generation it
+belongs to. `SceneEntities.addWave` validates the type and anchors before creating any
+actor, so unknown or unsupported types refuse the whole group instead of half-spawning.
+
+Runtime policy caps one scene at 64 live monsters, 32 engaged monsters and four wave
+spawns per tick. A group never exceeds `maxAlive` even when `total` is larger, waits for
+`respawnDelayMs` after a death, and latches `onCleared` once its total has spawned and
+every actor is down. Each group carries the generation it was created for;
+`SceneEntities.generation(next)` drops stale groups and their actors immediately. This
+phase exposes the controller to scene code; it does not add a YAML wave format.
+
+`MonsterWaveTest` covers concurrency, total, the spawn-rate cap, generation drop and
+despawn cleanup. `MonsterLeashTest` covers disengagement, return-home, healing and the
+damage override.
 
 ## Perception and path budget
 

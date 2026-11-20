@@ -34,6 +34,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
     static final float SIGHT_CACHE_DISTANCE=.5f;
     /** Uniform broadphase cell for entity collision/perception queries. */
     static final float SPATIAL_CELL=2;
+    /** Server-side wave policy; enforced here, never trusted from a client. */
+    static final int MAX_ALIVE_MONSTERS=64;
+    static final int MAX_ENGAGED_MONSTERS=32;
+    static final int MAX_WAVE_SPAWNS_PER_TICK=4;
     private static final class SpatialIndex {
         private final Map<Long,List<Entity>> cells=new HashMap<>();
         /** Largest inserted extent; queries widen by it instead of rescanning the scene. */
@@ -116,6 +120,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
         /** Activation scheduling; combat work is skipped while DORMANT. */
         SceneMonsterBand band=SceneMonsterBand.DORMANT;
         int nextThink,engagedUntil;
+        /** Placement anchor for leash return; wave spawns use their authored anchor. */
+        final float homeX,homeY,leashRadius,leashHeal;
+        boolean returning;
+        /** Non-null when a wave controller owns this monster. */
+        String waveId;
         /** Cached line of sight from the current position to a recent target point. */
         int sightStamp=Integer.MIN_VALUE;float sightX,sightY;boolean sightResult;
         /** Spatial-index bookkeeping, kept in entity insertion order for deterministic queries. */
@@ -177,6 +186,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
             // Every query that scans an entity uses its radius, bounds or shape; the index
             // must cover all three so a cell lookup never misses a real contact.
             spatialExtent=Math.max(shapeExtent,Math.max(pawnRadius,boundsExtent));
+            homeX=binding.x();homeY=binding.y();
+            // Leashing is opt-in per placement; default maps keep their historical pursuit range.
+            float configuredLeash=spec.number("leash-radius",0);
+            leashRadius=Float.isFinite(configuredLeash)&&configuredLeash>0?configuredLeash:0;
+            float configuredHeal=spec.number("leash-heal",0);
+            leashHeal=Float.isFinite(configuredHeal)&&configuredHeal>0?configuredHeal:0;
             speed=spec.number("speed",0);
             faction=spec.integer("faction",0);
             if(kind.equals("TerritoryProp")){
@@ -273,6 +288,17 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final SpatialIndex spatial=new SpatialIndex();
     private final boolean spatialQuery;
     private final java.util.random.RandomGenerator random;
+    /** Catalogue for wave spawns; an empty catalogue refuses every type id. */
+    private final MonsterCatalog monsters;
+    private final Map<String,Wave> waves=new LinkedHashMap<>();
+    private long generation=1;
+    private int engagedAtTickStart;
+    private static final class Wave {
+        final MonsterGroup group;
+        int spawned,previousAlive,nextSpawn=Integer.MIN_VALUE;
+        boolean cleared;
+        Wave(MonsterGroup group){this.group=group;}
+    }
     private record Link(Entity entity,int stamp,boolean ghost) { }
     private final ArrayDeque<Link> links=new ArrayDeque<>();
     /** A knight hit; impulse is the region's DamageImpulse, applied only if the hit lands. */
@@ -333,7 +359,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     /** Explicit creation stamp so the differential harness can replay identical instances. */
     SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision,java.util.random.RandomGenerator random,boolean spatialQuery,int stamp){
-        this.random=Objects.requireNonNull(random);this.spatialQuery=spatialQuery;
+        this(content,terrain,staticCollision,random,spatialQuery,stamp,MonsterCatalog.empty());
+    }
+    SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision,java.util.random.RandomGenerator random,boolean spatialQuery,int stamp,MonsterCatalog monsters){
+        this.random=Objects.requireNonNull(random);this.spatialQuery=spatialQuery;this.monsters=Objects.requireNonNull(monsters);
         this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);pawnCollisionMask=Math.round(content.stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
         var rules=new ArrayList<SceneActions.Rule>();var anchorKeys=new HashSet<String>();
         for(var binding:content.entries()){
@@ -587,6 +616,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         for(int count=pendingActors.size();count>0;count--){var entity=pendingActors.removeFirst();insert(entity);}
         var players=occupants.stream().filter(p->p.activity()!=TownMovement.DYING&&p.activity()!=TownMovement.DEAD&&p.activity()!=TownMovement.RESURRECT).toList();
         this.players=players;
+        engagedAtTickStart=(int)entities.values().stream().filter(e->e.kind.equals("Monster")&&e.destroyed==Integer.MAX_VALUE&&e.band==SceneMonsterBand.ENGAGED).count();
+        advanceWaves(stamp);
         for(var station:arsenalProps.entrySet()){
             var zone=station.getKey();
             // Proximity retains an interacted station; it must not open a closed one.
@@ -700,6 +731,87 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         actions.advance(stamp);
         if(!effectSources.isEmpty())effectSources.keySet().retainAll(actions.workSources());
+    }
+    /** Register a wave for this scene generation. Unknown or unsupported types fail here,
+     *  before any actor is created. */
+    public void addWave(MonsterGroup group){
+        Objects.requireNonNull(group);
+        if(group.generation()!=generation)throw new IllegalArgumentException("Monster group belongs to a stale scene generation");
+        if(waves.containsKey(group.id()))throw new IllegalArgumentException("Duplicate monster group: "+group.id());
+        try{monsters.spawnable(group.typeId());}
+        catch(java.io.IOException refused){throw new IllegalArgumentException("Monster group "+group.id()+": "+refused.getMessage(),refused);}
+        for(var anchor:group.anchors()){
+            if(!terrain.walkable(anchor.x(),anchor.y()))
+                throw new IllegalArgumentException("Monster group anchor is outside walkable terrain: "+anchor);
+            if(!staticCollision.isEmpty()&&(!staticCollision.floorSupported(anchor.x(),anchor.y())
+                ||staticCollision.penetration(pawnCollisionMask,anchor.x(),anchor.y(),ScenePortals.PAWN_RADIUS).present()))
+                throw new IllegalArgumentException("Monster group anchor is blocked: "+anchor);
+        }
+        waves.put(group.id(),new Wave(group));
+    }
+    /** Current scene generation. A wave created for an older generation is dropped, never replayed. */
+    public long generation(){return generation;}
+    /** Move to a later scene generation, removing every wave and wave actor that cannot belong to it. */
+    public void generation(long next){
+        if(next<=generation)throw new IllegalArgumentException("Scene generation must move forward");
+        if(next==Long.MAX_VALUE)throw new IllegalArgumentException("Scene generation is exhausted");
+        for(var wave:List.copyOf(waves.values()))if(wave.group.generation()!=next)dropWave(wave);
+        generation=next;
+    }
+    int waveSpawned(String id){var wave=waves.get(id);return wave==null?0:wave.spawned;}
+    int waveAlive(String id){
+        int alive=0;
+        for(var e:entities.values())if(id.equals(e.waveId)&&e.kind.equals("Monster")&&e.destroyed==Integer.MAX_VALUE)alive++;
+        return alive;
+    }
+    boolean waveCleared(String id){var wave=waves.get(id);return wave!=null&&wave.cleared;}
+    int liveMonsters(){return (int)entities.values().stream().filter(e->e.kind.equals("Monster")&&e.destroyed==Integer.MAX_VALUE).count();}
+    private void advanceWaves(int stamp){
+        int spawnedThisTick=0;
+        for(var wave:List.copyOf(waves.values())){
+            if(wave.group.generation()!=generation){dropWave(wave);continue;}
+            int alive=waveAlive(wave.group.id());
+            if(alive<wave.previousAlive)wave.nextSpawn=Math.max(wave.nextSpawn,stamp+wave.group.respawnDelayMs());
+            wave.previousAlive=alive;
+            while(wave.spawned<wave.group.total()&&alive<wave.group.maxAlive()
+                    &&stamp>=wave.nextSpawn&&spawnedThisTick<MAX_WAVE_SPAWNS_PER_TICK
+                    &&liveMonsters()<MAX_ALIVE_MONSTERS){
+                spawnWaveMonster(wave,stamp);wave.spawned++;alive++;spawnedThisTick++;
+                wave.nextSpawn=stamp+wave.group.intervalMs();
+            }
+            if(!wave.cleared&&wave.spawned==wave.group.total()&&alive==0){
+                wave.cleared=true;
+                if(!wave.group.onCleared().isEmpty())actions.signal(wave.group.id(),wave.group.onCleared(),stamp,"wave:"+wave.group.id());
+            }
+        }
+    }
+    private void spawnWaveMonster(Wave wave,int stamp){
+        MonsterType type;
+        try{type=monsters.spawnable(wave.group.typeId());}
+        catch(java.io.IOException refused){throw new IllegalStateException("Wave type became unavailable: "+wave.group.typeId(),refused);}
+        var fields=new TreeMap<>(type.spec());
+        var tuning=monsters.override(type.id());
+        if(tuning!=null){
+            if(tuning.activationRadius()!=null)fields.put("activation-radius",Float.toString(tuning.activationRadius()));
+            if(tuning.leashRadius()!=null)fields.put("leash-radius",Float.toString(tuning.leashRadius()));
+        }
+        var anchor=wave.group.anchors().get(wave.spawned%wave.group.anchors().size());
+        var binding=new SceneContent.Entry("wave:"+wave.group.id()+":"+(wave.spawned+1),anchor.x(),anchor.y(),0,new SceneContent.Spec(fields));
+        var entity=spawn(binding,binding.spec(),null,stamp);
+        entity.waveId=wave.group.id();
+    }
+    private void dropWave(Wave wave){
+        for(var entity:List.copyOf(entities.values()))if(wave.group.id().equals(entity.waveId))despawn(entity);
+        waves.remove(wave.group.id());
+    }
+    /** Immediate removal without death actions; status, paths, claims and source effects are cleared. */
+    private void despawn(Entity entity){
+        actions.cancelSource("actor:"+entity.id);
+        entity.status.clear();entity.path=List.of();entity.impulse=null;entity.target=0;entity.targetMode=null;
+        entity.targetModeUpdate=false;entity.flags=0;entity.claim=0;entity.claimTaken=false;
+        entity.carrier=0;entity.owner=0;entity.ownerOid=0;
+        unlink(entity);
+        var removedVariables=logicVariables.remove("actor:"+entity.id);if(removedVariables!=null)variableCount-=removedVariables.size();
     }
     /** Secondary burn/spasm damage retains its collision mask and excludes the affected source. */
     public void statusPulse(int source,SceneStatus.Pulse pulse,float x,float y,int stamp){
@@ -1034,8 +1146,35 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var body=victim.pawnShape==null?SceneCollision.pawnShape(victim.spec,victim.shape):victim.pawnShape;
         return body.at(victim.x,victim.y,victim.rotation).distance(x,y);
     }
+    /** Leash return: drop combat intent, walk back to the placement anchor and heal on the way. */
+    private void returnHome(Entity e,int stamp,float elapsed){
+        e.band=SceneMonsterBand.ALERT;e.target=0;e.targetMode=null;e.targetModeUpdate=false;e.flags&=~18;
+        float dx=e.homeX-e.x,dy=e.homeY-e.y,distance=(float)Math.hypot(dx,dy);
+        if(distance<=.25f){e.returning=false;e.band=SceneMonsterBand.DORMANT;e.nextThink=stamp;e.path=List.of();e.flags&=~2;return;}
+        if(e.leashHeal>0&&e.health>0&&e.health<e.maximumHealth)
+            e.health=Math.min(e.maximumHealth,e.health+e.leashHeal*elapsed);
+        if(!e.status.state().modifiers().canMove())return;
+        float tx=e.homeX,ty=e.homeY;
+        if(!entitySegment(e,e.x,e.y,tx,ty)){
+            if(e.path.isEmpty()&&stamp<e.nextPath)return;
+            if(e.path.isEmpty()||!entitySegment(e,e.x,e.y,e.path.getFirst().x(),e.path.getFirst().y())){
+                if(!pathBudget.acquire(e.id))return;
+                e.path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
+                e.pathX=tx;e.pathY=ty;e.nextPath=stamp+Math.max(50,e.spec.integer("acquisition-interval",0));
+            }
+            while(!e.path.isEmpty()&&Math.hypot(e.path.getFirst().x()-e.x,e.path.getFirst().y()-e.y)<.05)e.path=e.path.subList(1,e.path.size());
+            if(e.path.isEmpty())return;
+            tx=e.path.getFirst().x();ty=e.path.getFirst().y();
+        }else e.path=List.of();
+        e.rotation=e.direction=(float)Math.atan2(ty-e.y,tx-e.x);
+        float step=Math.min((float)Math.hypot(tx-e.x,ty-e.y),e.speed*e.status.state().modifiers().speed()*elapsed);
+        if(moveEntity(e,e.x+(float)Math.cos(e.direction)*step,e.y+(float)Math.sin(e.direction)*step))e.flags|=2;
+        else e.flags&=~2;
+    }
     /** Activation ladder: cheap distance decisions gate the full pursuit/attack tick. */
     private void think(Entity e,int stamp,float elapsed,List<ActorState> occupants){
+        // Recent damage overrides the leash briefly: a hit monster answers before walking home.
+        if(e.returning){if(stamp<e.engagedUntil)e.returning=false;else{returnHome(e,stamp,elapsed);return;}}
         // An authored attack sequence, including chains, must finish even if the target leaves.
         if(e.activity>=4){e.band=SceneMonsterBand.ENGAGED;e.nextThink=stamp;move(e,stamp,elapsed,occupants);return;}
         float nearest=Float.POSITIVE_INFINITY;
@@ -1043,6 +1182,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
             nearest=Math.min(nearest,(float)Math.hypot(player.x()-e.x,player.y()-e.y));
         float radius=Math.max(1,e.spec.number("activation-radius",DEFAULT_ACTIVATION_RADIUS));
         boolean forced=stamp<e.engagedUntil;
+        if(e.leashRadius>0&&!forced&&e.band!=SceneMonsterBand.DORMANT
+                &&Math.hypot(e.x-e.homeX,e.y-e.homeY)>e.leashRadius){
+            e.returning=true;e.activity=0;e.fired.clear();e.path=List.of();
+            returnHome(e,stamp,elapsed);return;
+        }
         // A dormant monster still watches for an approaching player every tick; the
         // cadence below only decides when it reacquires and how often it re-checks.
         if(e.band==SceneMonsterBand.DORMANT&&(nearest<=radius||forced)){e.band=SceneMonsterBand.ALERT;e.nextThink=stamp;}
@@ -1051,17 +1195,31 @@ public final class SceneEntities implements SceneWeapons.Targets {
             SceneMonsterBand next=nearest<=radius
                 ?(e.target!=0||e.activity>=4?SceneMonsterBand.ENGAGED:SceneMonsterBand.ALERT)
                 :forced?SceneMonsterBand.ENGAGED:SceneMonsterBand.DORMANT;
+            // The engaged cap is a safety valve for badly authored maps. Already-engaged
+            // monsters keep running; a new voluntary transition waits in ALERT. Damage
+            // remains authoritative and still wakes the target.
+            if(next==SceneMonsterBand.ENGAGED&&e.band!=SceneMonsterBand.ENGAGED&&!forced
+                    &&engagedAtTickStart>=MAX_ENGAGED_MONSTERS)
+                next=SceneMonsterBand.ALERT;
             if(next==SceneMonsterBand.DORMANT&&e.band!=SceneMonsterBand.DORMANT){
                 e.target=0;e.targetMode=null;e.targetModeUpdate=false;e.path=List.of();e.flags&=~18;
             }
+            if(next==SceneMonsterBand.ENGAGED&&e.band!=SceneMonsterBand.ENGAGED)engagedAtTickStart++;
             e.band=next;e.nextThink=stamp+next.thinkInterval(e.id);
         }
         if(e.band==SceneMonsterBand.DORMANT)return;
         // Alert only reacquires on its think cadence; an owned attack or an engaged
         // target keeps the unchanged every-tick integration.
         if(e.band==SceneMonsterBand.ALERT&&!think)return;
+        if(e.band==SceneMonsterBand.ALERT&&engagedAtTickStart>=MAX_ENGAGED_MONSTERS)return;
         move(e,stamp,elapsed,occupants);
-        if(e.target!=0){e.band=SceneMonsterBand.ENGAGED;e.nextThink=stamp;}
+        if(e.target!=0){
+            if(e.band!=SceneMonsterBand.ENGAGED&&!forced&&engagedAtTickStart>=MAX_ENGAGED_MONSTERS){
+                e.target=0;e.targetMode=null;e.flags&=~18;return;
+            }
+            if(e.band!=SceneMonsterBand.ENGAGED)engagedAtTickStart++;
+            e.band=SceneMonsterBand.ENGAGED;e.nextThink=stamp;
+        }
     }
     private void move(Entity e,int stamp,float elapsed,List<ActorState> occupants){
         var players=targetCandidates(e,occupants);
@@ -1710,7 +1868,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 amount+=e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0){
                     int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp,SceneDamage.reacts(accepted),SceneDamage.major(accepted));
                     // Being hit is authoritative: a dormant monster wakes even with no player nearby.
-                    e.band=SceneMonsterBand.ENGAGED;e.nextThink=stamp;e.engagedUntil=stamp+DAMAGE_ENGAGE_MILLIS;e.sightStamp=Integer.MIN_VALUE;
+                    e.band=SceneMonsterBand.ENGAGED;e.nextThink=stamp;e.engagedUntil=stamp+DAMAGE_ENGAGE_MILLIS;e.sightStamp=Integer.MIN_VALUE;e.returning=false;
                     if(e.targeting!=null&&targetCandidates(e,players).stream().anyMatch(p->p.id()==owner&&targetActive(p))&&(e.victims.containsKey(owner)||e.victims.size()<256)){
                         var previous=e.victims.getOrDefault(owner,new Entity.Threat(0,0));
                         e.victims.put(owner,new Entity.Threat(Math.min(1_000_000,previous.hits()+1),Math.min(1_000_000_000f,previous.damage()+dealt)));e.nextAcquire=stamp;

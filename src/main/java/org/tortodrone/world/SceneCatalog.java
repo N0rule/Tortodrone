@@ -8,18 +8,18 @@ import java.util.*;
 /** External immutable map packs. Templates are distinct from runtime place objects. */
 public final class SceneCatalog {
     public record MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,
-            float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals,SceneContent content,SceneCollision staticCollision,MapCollision exactCollision) {
+            float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals,SceneContent content,SceneCollision staticCollision,MapCollision exactCollision,MonsterCatalog monsters) {
         public MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals,SceneContent content,SceneCollision staticCollision){
-            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,content,staticCollision,null);
+            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,content,staticCollision,null,MonsterCatalog.empty());
         }
         public MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals,SceneContent content){
-            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,content,SceneCollision.empty(),null);
+            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,content,SceneCollision.empty(),null,MonsterCatalog.empty());
         }
         public MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,
                 float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals) {
-            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,SceneContent.empty(),SceneCollision.empty(),null);
+            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,SceneContent.empty(),SceneCollision.empty(),null,MonsterCatalog.empty());
         }
-        public MapScene { layout=layout.clone(); }
+        public MapScene { layout=layout.clone();Objects.requireNonNull(monsters,"monsters"); }
         @Override public byte[] layout(){return layout.clone();}
         public boolean town(){return kind.equals("town");}
         /** TownSummary names a town-bundle key; ZoneSummary carries a qualified Name. */
@@ -184,7 +184,7 @@ public final class SceneCatalog {
             var collision=CollisionMap.exact(exact,mask,ScenePortals.PAWN_RADIUS);
             var scene=new MapScene(id,zone,required(p,"zone-name"),required(p,"name"),required(p,"image"),kind,
                 integer(p,"version"),x,y,rotation(p),number(p,"instances",1,16),collision,layout,
-                ScenePortals.load(folder,required(p,"scene-sha256"),collision),content,SceneCollision.fromMapCollision(exact),exact);
+                ScenePortals.load(folder,required(p,"scene-sha256"),collision),content,SceneCollision.fromMapCollision(exact),exact,MonsterCatalog.empty());
             if(scenes.putIfAbsent(id,scene)!=null)throw new IOException("Duplicate scene ID");
         }
         return scenes;

@@ -59,6 +59,7 @@ public final class MonsterCatalogTest {
             var tunedExpanded = tuned.expand(new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0,
                 new SceneContent.Spec(tunedPlacement))), Map.of())).entries().getFirst().spec();
             check(Float.parseFloat(tunedExpanded.text("activation-radius", "")) == 12f, "overlay activation radius reaches the prepared spec");
+            check(Float.parseFloat(tunedExpanded.text("leash-radius", "")) == 20f, "overlay leash radius reaches the prepared spec");
             tunedPlacement.put("activation-radius", "7");
             var placementWins = tuned.expand(new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0,
                 new SceneContent.Spec(tunedPlacement))), Map.of())).entries().getFirst().spec();
