@@ -328,6 +328,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final SceneCollision staticCollision;
     private final int pawnCollisionMask;
     private final Map<Integer,Entity> entities=new LinkedHashMap<>();
+    /** Interactive props, doors and lifts are the only entities an interaction scan reads. */
+    private final Set<Entity> interactionCandidates=new LinkedHashSet<>();
+    private static boolean interactionCandidate(Entity entity){return entity.interactive||liftKind(entity.kind)||entity.kind.equals("Door");}
     private final ArrayDeque<Entity> pendingActors=new ArrayDeque<>();
     private int sceneSpawnStamp,sceneSpawnCount;
     private record SpawnSource(SceneEntities scene,int id,int faction,String identity) { }
@@ -474,10 +477,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
     /** Insertion assigns the deterministic order the spatial query returns candidates in. */
     private void insert(Entity entity){
         entity.order=++entityOrder;entities.put(entity.id,entity);spatial.add(entity);
+        if(interactionCandidate(entity))interactionCandidates.add(entity);
         if(entity.kind.equals("Monster"))monsterMetrics.spawned();
     }
     private void unlink(Entity entity){
         if(entities.remove(entity.id)!=null&&entity.kind.equals("Monster"))monsterMetrics.despawned();
+        interactionCandidates.remove(entity);
         spatial.remove(entity);
     }
     private Entity spawn(SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,int stamp){
@@ -670,12 +675,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var carried=lift==0?null:entities.get(lift);
         boolean key=carried!=null&&carried.destroyed==Integer.MAX_VALUE&&carried.carrier==owner&&liftKind(carried.kind)&&carried.spec.text("actionable-signal","").equals("gold_unlock");
         Entity nearest=null;float best=Float.POSITIVE_INFINITY;
-        for(var e:entities.values())if((key?e.kind.equals("Door")&&e.spec.text("door-lock","").equals("gold")&&(e.flags&2)==0:e.interactive||liftKind(e.kind)&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
+        float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
+        for(var e:interactionCandidates)if((key?e.kind.equals("Door")&&e.spec.text("door-lock","").equals("gold")&&(e.flags&2)==0:e.interactive||liftKind(e.kind)&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
             float ox=e.spec.number("interaction-offset-x",.7f),oy=e.spec.number("interaction-offset-y",0);
-            float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
-            float distance=(float)Math.hypot(x+ox*c-oy*s-e.x,y+ox*s+oy*c-e.y);
+            float px=x+ox*c-oy*s,py=y+ox*s+oy*c;
+            float distance=(float)Math.hypot(px-e.x,py-e.y);
             float radius=e.spec.number("interaction-radius",.4f)+e.spec.number("interaction-expansion",0);
-            if(e.spec.contains(e.x,e.y,e.rotation,x+ox*c-oy*s,y+ox*s+oy*c,radius)&&distance<best){nearest=e;best=distance;}
+            if(e.spec.contains(e.x,e.y,e.rotation,px,py,radius)&&distance<best){nearest=e;best=distance;}
         }
         if(nearest==null)return null;
         String description=nearest.spec.text("description","");

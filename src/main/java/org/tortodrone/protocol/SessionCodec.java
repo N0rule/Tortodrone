@@ -21,6 +21,7 @@ import org.tortodrone.world.SceneRegistry;
 import org.tortodrone.world.SceneCatalog;
 import org.tortodrone.world.SceneEffect;
 import org.tortodrone.world.SceneCombatEvent;
+import org.tortodrone.world.SceneSimulation;
 import org.tortodrone.world.FireCatalog;
 import org.tortodrone.world.PartyRegistry;
 
@@ -94,8 +95,17 @@ public final class SessionCodec {
     private static final String PREFIX = WireTypes.NET_PREFIX;
     private final Map<String, Integer> classes = new HashMap<>();
     private final Map<String, Integer> interns = new HashMap<>();
+    /** Template mode records symbol positions instead of registering per-connection codes. */
+    private boolean templating;
+    private ArrayList<SceneSimulation.SceneFrame.Symbol> templateTypes, templateInterns;
+    /** Resolved codes for the template being published this tick; one entry is enough because a
+     * recipient materializes the same frame repeatedly before the next tick replaces it. */
+    private SceneSimulation.SceneFrame resolvedFrame;
+    private int[] resolvedCodes;
     private final ItemCatalog itemCatalog;
     public SessionCodec(){this(ItemCatalog.starter());}
+    /** Shared server catalogue; scene templates use it without a connection registry. */
+    public ItemCatalog catalog(){return itemCatalog;}
     public SessionCodec(ItemCatalog catalog) {
         itemCatalog=java.util.Objects.requireNonNull(catalog);
         // HandshakeCodec has already introduced these five downstream mappings.
@@ -577,6 +587,7 @@ public final class SessionCodec {
     }
 
     private void intern(DataOutputStream out, String value) throws IOException {
+        if(templating){templateInterns.add(new SceneSimulation.SceneFrame.Symbol(out.size(),value));out.writeShort(0);return;}
         Integer code = interns.get(value);
         if (code == null) {
             code = interns.size() + 1; interns.put(value, code);
@@ -1308,13 +1319,88 @@ public final class SessionCodec {
     public byte[] sceneDelta(int oid,int sceneOid,int acknowledge,short ping,int reference,int timestamp,
             short elapsed,List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline,boolean interior,List<SceneEffect> effects,List<SceneCombatEvent> combat)throws IOException {
         return frame(out -> {
-            type(out,PREFIX+"EventNotification");out.writeShort(-1);type(out,"com.threerings.tudey.dobj.SceneDeltaEvent");out.writeInt(oid);
-            out.writeInt(sceneOid);out.writeInt(acknowledge);out.writeShort(ping);out.writeInt(reference);out.writeInt(timestamp);out.writeShort(elapsed);
-            if(added.isEmpty())out.writeShort(0);else{type(out,WireTypes.ACTOR_ARRAY);out.writeInt(added.size());for(var a:added)actor(out,a,interior,oid);}
-            if(updated.isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.tudey.dobj.ActorDelta;");out.writeInt(updated.size());out.writeShort((updated.size()+7)/8);for(int i=0;i<updated.size();i+=8)out.writeByte((1<<Math.min(8,updated.size()-i))-1);for(var a:updated)actorDelta(out,a,baseline.get(a.id()),interior,oid);}
-            out.writeBoolean(true);out.writeInt(removed.length);for(int id:removed)out.writeInt(id);
-            if(effects.isEmpty()&&combat.isEmpty())out.writeShort(0);else {type(out,"[Lcom.threerings.tudey.data.effect.Effect;");out.writeInt(effects.size()+combat.size());for(var effect:effects)effect(out,effect);for(var damage:combat)effect(out,damage);}
+            sceneDeltaHeader(out,oid,sceneOid,acknowledge,ping,reference,timestamp,elapsed);
+            sceneDeltaActors(out,oid,added,updated,removed,baseline,interior,effects,combat);
         });
+    }
+    /** Encode the shared actor records once. The result keeps every class and interned string as
+     * a placeholder: the stock client and server each maintain a per-connection symbol table, so
+     * recipients materialize their own codes rather than reusing another session's bytes. */
+    public static SceneSimulation.SceneFrame sceneDeltaTemplate(ItemCatalog catalog,int sceneOid,int timestamp,
+            List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline,
+            boolean interior,List<SceneEffect> effects,List<SceneCombatEvent> combat)throws IOException {
+        var codec=new SessionCodec(catalog);
+        codec.templateTypes=new ArrayList<>();codec.templateInterns=new ArrayList<>();codec.templating=true;
+        try{
+            var body=new ByteArrayOutputStream(4096);
+            var out=new DataOutputStream(body);
+            codec.type(out,PREFIX+"EventNotification");out.writeShort(-1);codec.type(out,"com.threerings.tudey.dobj.SceneDeltaEvent");
+            int oidOffset=body.size();out.writeInt(0);
+            out.writeInt(sceneOid);
+            int acknowledgeOffset=body.size();out.writeInt(0);
+            int pingOffset=body.size();out.writeShort(0);
+            int referenceOffset=body.size();out.writeInt(0);
+            out.writeInt(timestamp);
+            int elapsedOffset=body.size();out.writeShort(0);
+            codec.sceneDeltaActors(out,0,added,updated,removed,baseline,interior,effects,combat);
+            out.flush();
+            if(body.size()+4>MAX_DOWNSTREAM_FRAME)throw new IOException("Session frame too large");
+            int total=body.size()+4;
+            byte[] template=new byte[total];
+            template[0]=(byte)(total>>>24);template[1]=(byte)(total>>>16);template[2]=(byte)(total>>>8);template[3]=(byte)total;
+            System.arraycopy(body.toByteArray(),0,template,4,body.size());
+            return new SceneSimulation.SceneFrame(template,4+oidOffset,4+acknowledgeOffset,4+pingOffset,
+                4+referenceOffset,4+elapsedOffset,shift(codec.templateTypes),shift(codec.templateInterns));
+        } finally {
+            codec.templating=false;codec.templateTypes=null;codec.templateInterns=null;
+        }
+    }
+    /** Frame body offsets become frame offsets once the four-byte length prefix is prepended. */
+    private static List<SceneSimulation.SceneFrame.Symbol> shift(List<SceneSimulation.SceneFrame.Symbol> symbols){
+        var shifted=new ArrayList<SceneSimulation.SceneFrame.Symbol>(symbols.size());
+        for(var symbol:symbols)shifted.add(new SceneSimulation.SceneFrame.Symbol(symbol.offset()+4,symbol.name()));
+        return List.copyOf(shifted);
+    }
+    /** Copy a shared template with this connection's codes and header fields. Returns null while
+     * the connection has not seen every symbol yet; the caller then encodes this tick directly,
+     * which also registers them for later ticks. Called with the encoder's output lock held, so
+     * the symbol maps cannot change underneath it. */
+    public byte[] materialize(SceneSimulation.SceneFrame frame,int oid,int acknowledge,short ping,int reference,short elapsed){
+        if(frame==null)return null;
+        int[] codes;
+        if(resolvedFrame==frame)codes=resolvedCodes;
+        else{
+            codes=new int[frame.types().size()+frame.interns().size()];
+            int index=0;
+            for(var symbol:frame.types()){var code=classes.get(symbol.name());if(code==null)return null;codes[index++]=code;}
+            for(var symbol:frame.interns()){var code=interns.get(symbol.name());if(code==null)return null;codes[index++]=code;}
+            resolvedFrame=frame;resolvedCodes=codes;
+        }
+        byte[] data=frame.template().clone();
+        integer(data,frame.oidOffset(),oid);integer(data,frame.acknowledgeOffset(),acknowledge);
+        data[frame.pingOffset()]=(byte)(ping>>>8);data[frame.pingOffset()+1]=(byte)ping;
+        integer(data,frame.referenceOffset(),reference);
+        data[frame.elapsedOffset()]=(byte)(elapsed>>>8);data[frame.elapsedOffset()+1]=(byte)elapsed;
+        int index=0;
+        for(int i=0;i<frame.types().size();i++)shortValue(data,frame.types().get(i).offset(),codes[index++]);
+        for(int i=0;i<frame.interns().size();i++)shortValue(data,frame.interns().get(i).offset(),codes[index++]);
+        return data;
+    }
+    private static void integer(byte[] data,int at,int value){
+        data[at]=(byte)(value>>>24);data[at+1]=(byte)(value>>>16);data[at+2]=(byte)(value>>>8);data[at+3]=(byte)value;
+    }
+    private static void shortValue(byte[] data,int at,int value){
+        data[at]=(byte)(value>>>8);data[at+1]=(byte)value;
+    }
+    private void sceneDeltaHeader(DataOutputStream out,int oid,int sceneOid,int acknowledge,short ping,int reference,int timestamp,short elapsed)throws IOException {
+        type(out,PREFIX+"EventNotification");out.writeShort(-1);type(out,"com.threerings.tudey.dobj.SceneDeltaEvent");out.writeInt(oid);
+        out.writeInt(sceneOid);out.writeInt(acknowledge);out.writeShort(ping);out.writeInt(reference);out.writeInt(timestamp);out.writeShort(elapsed);
+    }
+    private void sceneDeltaActors(DataOutputStream out,int observer,List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline,boolean interior,List<SceneEffect> effects,List<SceneCombatEvent> combat)throws IOException {
+        if(added.isEmpty())out.writeShort(0);else{type(out,WireTypes.ACTOR_ARRAY);out.writeInt(added.size());for(var a:added)actor(out,a,interior,observer);}
+        if(updated.isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.tudey.dobj.ActorDelta;");out.writeInt(updated.size());out.writeShort((updated.size()+7)/8);for(int i=0;i<updated.size();i+=8)out.writeByte((1<<Math.min(8,updated.size()-i))-1);for(var a:updated)actorDelta(out,a,baseline.get(a.id()),interior,observer);}
+        out.writeBoolean(true);out.writeInt(removed.length);for(int id:removed)out.writeInt(id);
+        if(effects.isEmpty()&&combat.isEmpty())out.writeShort(0);else {type(out,"[Lcom.threerings.tudey.data.effect.Effect;");out.writeInt(effects.size()+combat.size());for(var effect:effects)effect(out,effect);for(var damage:combat)effect(out,damage);}
     }
 
     private void eventHeader(DataOutputStream out,String kind,int oid)throws IOException {
@@ -1831,6 +1917,7 @@ public final class SessionCodec {
     }
 
     void type(DataOutputStream out, String name) throws IOException {
+        if(templating){templateTypes.add(new SceneSimulation.SceneFrame.Symbol(out.size(),name));out.writeShort(0);return;}
         Integer code = classes.get(name);
         if (code != null) {
             out.writeShort(code);

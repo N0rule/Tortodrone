@@ -20,15 +20,31 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
         private final Map<String,String> fields;
         // Definitions are shared by instances; decoded immutable references are safe to reuse.
         private final java.util.concurrent.ConcurrentMap<String,StarterCatalog.Model> models=new java.util.concurrent.ConcurrentHashMap<>();
+        // Hot loops (interaction, monster think) read the same authored numbers every tick.
+        private final java.util.concurrent.ConcurrentMap<String,Float> numbers=new java.util.concurrent.ConcurrentHashMap<>();
+        private final java.util.concurrent.ConcurrentMap<String,Integer> integers=new java.util.concurrent.ConcurrentHashMap<>();
+        private final java.util.concurrent.ConcurrentMap<String,Boolean> flags=new java.util.concurrent.ConcurrentHashMap<>();
         public Spec(Map<String,String> fields) { this.fields=Map.copyOf(fields); }
         public Map<String,String> fields(){return fields;}
         @Override public boolean equals(Object other){return other instanceof Spec spec&&fields.equals(spec.fields);}
         @Override public int hashCode(){return fields.hashCode();}
         @Override public String toString(){return "Spec[fields="+fields+"]";}
         public String text(String key,String fallback){return fields.getOrDefault(key,fallback);}
-        public float number(String key,float fallback){return fields.containsKey(key)?Float.parseFloat(fields.get(key)):fallback;}
-        public int integer(String key,int fallback){return fields.containsKey(key)?Integer.parseInt(fields.get(key)):fallback;}
-        public boolean flag(String key,boolean fallback){return fields.containsKey(key)?Boolean.parseBoolean(fields.get(key)):fallback;}
+        public float number(String key,float fallback){
+            String raw=fields.get(key);if(raw==null)return fallback;
+            Float cached=numbers.get(key);if(cached!=null)return cached;
+            float parsed=Float.parseFloat(raw);numbers.putIfAbsent(key,parsed);return parsed;
+        }
+        public int integer(String key,int fallback){
+            String raw=fields.get(key);if(raw==null)return fallback;
+            Integer cached=integers.get(key);if(cached!=null)return cached;
+            int parsed=Integer.parseInt(raw);integers.putIfAbsent(key,parsed);return parsed;
+        }
+        public boolean flag(String key,boolean fallback){
+            String raw=fields.get(key);if(raw==null)return fallback;
+            Boolean cached=flags.get(key);if(cached!=null)return cached;
+            boolean parsed=Boolean.parseBoolean(raw);flags.putIfAbsent(key,parsed);return parsed;
+        }
         public StarterCatalog.Model model(String key){
             String value=fields.get(key);if(value==null||value.equals("null"))return null;
             return models.computeIfAbsent(key,k->{try{return FireCatalog.modelJson(value);}catch(IOException invalid){throw new IllegalArgumentException("Invalid prepared reference: "+key,invalid);}});

@@ -2322,24 +2322,32 @@ final class WorldSession implements AutoCloseable {
     private synchronized void publish(Publication publication)throws IOException {
         var current=publication.snapshot();int stamp=current.timestamp();
         if(closed||!subscribed||!entered||scene!=publication.scene()||sceneGeneration!=publication.generation()||stamp-lastStamp<=0)return;
-        var delta=current.delta(lastSnapshot);
+        boolean interior=!scene.map().town();
+        var encoded=current.encoded(lastSnapshot,interior,
+            (frameDelta,frameEffects,frameCombat,frameInterior)->SessionCodec.sceneDeltaTemplate(codec.catalog(),
+                scene.oid(),stamp,frameDelta.added(),frameDelta.updated(),frameDelta.removed(),
+                frameDelta.baseline(),frameInterior,frameEffects,frameCombat));
+        var delta=encoded.delta();
         // Subscription already announces occupants; the first reliable delta has no baseline.
         var changedRoles=lastSnapshot==null?current.actors().stream().filter(a->occupantRoles.containsKey(a.id())&&occupantRoles.get(a.id())!=a.gameMaster()).toList():delta.changedRoles();
         if(!changedRoles.isEmpty())output.send(()->codec.occupantRoles(scene.oid(),changedRoles));
-        var clients=current.players().stream().collect(java.util.stream.Collectors.toMap(ActorState::id,ActorState::clientOid));
+        var clients=current.clientOids();
         if(!clients.equals(occupantClients)){
             output.send(()->codec.occupantChanges(scene.oid(),occupantClients,current.players()));
             occupantClients=clients;
         }
         occupantRoles=current.roles();
-        var effects=current.effectsSince(lastSnapshot);
-        var combat=current.combatEventsSince(lastSnapshot);
         short elapsed=(short)Math.max(1,Math.min(Short.MAX_VALUE,stamp-lastStamp));
-        output.send(()->codec.sceneDelta(oid,scene.oid(),acknowledge,ping,reference,stamp,elapsed,
-            delta.added(),delta.updated(),delta.removed(),delta.baseline(),!scene.map().town(),effects,combat));
-        var currentOwn=current.players().stream().filter(a->a.clientOid()==oid).findFirst().orElse(null);
+        var frame=encoded.frame();
+        // The first frame for a connection registers the symbols; later ones reuse the shared body.
+        output.send(()->{
+            var shared=codec.materialize(frame,oid,acknowledge,ping,reference,elapsed);
+            return shared!=null?shared:codec.sceneDelta(oid,scene.oid(),acknowledge,ping,reference,stamp,elapsed,
+                delta.added(),delta.updated(),delta.removed(),delta.baseline(),interior,encoded.effects(),encoded.combat());
+        });
+        var currentOwn=current.player(oid);
         var health=currentOwn==null?null:current.health(currentOwn.id());
-        var previousOwn=lastSnapshot==null?null:lastSnapshot.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
+        var previousOwn=lastSnapshot==null?null:lastSnapshot.actor(profile.worldId());
         Set<Long> previousCurse=previousOwn==null||previousOwn.sceneKnight()==null?Set.of():previousOwn.sceneKnight().status().cursedItems();
         Set<Long> currentCurse=currentOwn==null||currentOwn.sceneKnight()==null?Set.of():currentOwn.sceneKnight().status().cursedItems();
         if(!previousCurse.equals(currentCurse))output.send(()->codec.itemChanges(oid,knight,visibleProfile(previousCurse),visibleProfile(currentCurse)));
@@ -2366,7 +2374,7 @@ final class WorldSession implements AutoCloseable {
             var after=visibleProfile();output.send(()->codec.itemChanges(oid,knight,before,after));
             publishQuickbar();
         }
-        var own=current.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
+        var own=current.actor(profile.worldId());
         boolean arsenal=membership.arsenalZone();
         if(publishedArsenal==null||publishedArsenal!=arsenal){publishedArsenal=arsenal;output.send(()->codec.equipPolicy(oid,arsenal));}
         if(townDialog!=null&&tradeMember!=null&&townTradeGeneration!=tradeMember.dialogGeneration)closeTownDialog();

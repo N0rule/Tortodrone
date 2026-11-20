@@ -41,6 +41,21 @@ public final class SceneSimulation {
         public Delta { removed=removed.clone(); }
         @Override public int[] removed(){return removed.length==0?removed:removed.clone();}
     }
+    /** One encoded scene delta whose symbol references are left as placeholders. Both sides
+     * maintain a per-connection class/string registry, so the bytes may only be shared as a
+     * template: each recipient materializes them with its own codes, and a recipient that has
+     * not seen every symbol yet falls back to a direct per-connection encode. */
+    public record SceneFrame(byte[] template,int oidOffset,int acknowledgeOffset,int pingOffset,
+            int referenceOffset,int elapsedOffset,List<Symbol> types,List<Symbol> interns) {
+        public record Symbol(int offset,String name){ }
+    }
+    /** A snapshot's delta inputs together with their shared encoding. */
+    public record EncodedDelta(Delta delta,List<SceneEffect> effects,List<SceneCombatEvent> combat,SceneFrame frame) { }
+    /** Encode the shared body once; every recipient materializes it with its own symbol codes. */
+    @FunctionalInterface public interface DeltaEncoder {
+        SceneFrame encode(Delta delta,List<SceneEffect> effects,List<SceneCombatEvent> combat,boolean interior)throws java.io.IOException;
+    }
+    private record Encoded(EncodedDelta delta,Snapshot baseline,boolean interior) { }
     public static final class Snapshot {
         private final int timestamp;
         private final Object identity=new Object(), predecessor;
@@ -49,11 +64,16 @@ public final class SceneSimulation {
         private final List<SceneEffect> effects;
         private final List<SceneCombatEvent> combatEvents;
         private final Map<Integer,ActorState> byId;
+        private final Map<Integer,ActorState> byClientOid;
+        private final Map<Integer,Integer> clientOids;
         private final Set<Integer> occupants;
         private final Map<Integer,Boolean> roles;
         private final Map<Integer,ScenePortals.Trigger> portals;
         private final Map<Integer,SceneHealth.State> health;
+        private final long effectsLastSequence,combatLastSequence;
         private final Delta common, initial;
+        /** The last shared encoding, keyed by the recipient baseline and scene kind. */
+        private volatile Encoded encoded;
         private Snapshot(int stamp, List<ActorState> actors, List<SceneEffect> effects,List<SceneCombatEvent> combatEvents, Map<Integer,ScenePortals.Trigger> portals, Map<Integer,SceneHealth.State> health,Snapshot previous) {
             timestamp=stamp;this.actors=List.copyOf(actors);this.effects=List.copyOf(effects);
             players=this.actors.stream().filter(ActorState::player).toList();
@@ -61,8 +81,16 @@ public final class SceneSimulation {
             this.health=Map.copyOf(health);
             this.combatEvents=List.copyOf(combatEvents);
             var index=new LinkedHashMap<Integer,ActorState>();var permissions=new HashMap<Integer,Boolean>();
-            for(var actor:actors){index.put(actor.id(),actor);if(actor.player())permissions.put(actor.id(),actor.gameMaster());}
-            byId=Collections.unmodifiableMap(index);occupants=Set.copyOf(permissions.keySet());roles=Map.copyOf(permissions);
+            var clients=new HashMap<Integer,ActorState>();var clientIds=new HashMap<Integer,Integer>();
+            for(var actor:this.actors){index.put(actor.id(),actor);if(actor.player()){
+                permissions.put(actor.id(),actor.gameMaster());
+                clients.putIfAbsent(actor.clientOid(),actor);
+                clientIds.put(actor.id(),actor.clientOid());
+            }}
+            byId=Collections.unmodifiableMap(index);byClientOid=Map.copyOf(clients);clientOids=Map.copyOf(clientIds);
+            occupants=Set.copyOf(permissions.keySet());roles=Map.copyOf(permissions);
+            effectsLastSequence=this.effects.stream().mapToLong(SceneEffect::sequence).max().orElse(0);
+            combatLastSequence=this.combatEvents.stream().mapToLong(SceneCombatEvent::sequence).max().orElse(0);
             predecessor=previous==null?null:previous.identity;
             initial=new Delta(this.actors,List.of(),new int[0],List.of(),Map.of());
             common=previous==null?initial:calculate(previous);
@@ -70,9 +98,25 @@ public final class SceneSimulation {
         public int timestamp(){return timestamp;}
         public List<ActorState> actors(){return actors;}
         public List<ActorState> players(){return players;}
+        /** Direct lookups keep per-recipient publication O(1) instead of scanning every player. */
+        public ActorState actor(int id){return byId.get(id);}
+        public ActorState player(int clientOid){return byClientOid.get(clientOid);}
+        public Map<Integer,Integer> clientOids(){return clientOids;}
         public SceneHealth.State health(int actor){return health.get(actor);}
-        public List<SceneEffect> effectsSince(Snapshot previous){long last=previous==null?Long.MAX_VALUE:previous.effects.stream().mapToLong(SceneEffect::sequence).max().orElse(0);return effects.stream().filter(e->e.sequence()>last).toList();}
-        public List<SceneCombatEvent> combatEventsSince(Snapshot previous){long last=previous==null?Long.MAX_VALUE:previous.combatEvents.stream().mapToLong(SceneCombatEvent::sequence).max().orElse(0);return combatEvents.stream().filter(e->e.sequence()>last).toList();}
+        public List<SceneEffect> effectsSince(Snapshot previous){long last=previous==null?Long.MAX_VALUE:previous.effectsLastSequence;return effects.stream().filter(e->e.sequence()>last).toList();}
+        public List<SceneCombatEvent> combatEventsSince(Snapshot previous){long last=previous==null?Long.MAX_VALUE:previous.combatLastSequence;return combatEvents.stream().filter(e->e.sequence()>last).toList();}
+        /** Encode the delta once per baseline. Clients that received different baselines (coalesced
+         * activity frames) still get an exact delta; the cache only avoids duplicate work. */
+        public EncodedDelta encoded(Snapshot baseline,boolean interior,DeltaEncoder encoder)throws java.io.IOException{
+            var cached=encoded;
+            if(cached!=null&&cached.baseline==baseline&&cached.interior==interior)return cached.delta;
+            var delta=delta(baseline);
+            var effects=effectsSince(baseline);
+            var combat=combatEventsSince(baseline);
+            var result=new EncodedDelta(delta,effects,combat,encoder.encode(delta,effects,combat,interior));
+            encoded=new Encoded(result,baseline,interior);
+            return result;
+        }
         public Set<Integer> occupants(){return occupants;}
         public Map<Integer,Boolean> roles(){return roles;}
         public ScenePortals.Trigger portal(int actorId){return portals.get(actorId);}
@@ -690,7 +734,7 @@ public final class SceneSimulation {
     private void start() {
         if(timer!=null)return;
         tickFailure=null;
-        timer=Executors.newSingleThreadScheduledExecutor(r->{var thread=new Thread(r,"Scene-"+instance.oid());thread.setDaemon(true);return thread;});
+        timer=Executors.newSingleThreadScheduledExecutor(r->Thread.ofVirtual().name("Scene-"+instance.oid()).unstarted(r));
         // Never burst missed ticks. Integration uses actual elapsed scene time.
         timer.scheduleWithFixedDelay(()->{
             try{tick();}
