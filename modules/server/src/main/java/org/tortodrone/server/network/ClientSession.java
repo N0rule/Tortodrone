@@ -59,6 +59,7 @@ final class ClientSession {
         CharacterStore.Subscription subscription = null;
         WorldSession world=new WorldSession(socket,characters,output,outgoing,clientOid,authRevision,log,
             org.tortodrone.world.SceneRegistry.system(),session::gameMaster,welcomeMessage);
+        SessionInvocationRouter router=new SessionInvocationRouter(world,output,outgoing,log,clientOid);
         session.onInvalidated(world::close);
         try {
             byte[] body;
@@ -136,7 +137,7 @@ final class ClientSession {
                             log.debug("Client logged off");
                             return;
                         }
-                        case "ForwardEventRequest" -> handleEvent(output, outgoing, request.event(), clientOid, receivers, log, characters, subscription != null, authRevision,world);
+                        case "ForwardEventRequest" -> handleEvent(output, outgoing, request.event(), clientOid, receivers, log, characters, subscription != null, authRevision, world, router);
                         default -> throw new IllegalStateException("Unsupported session request");
                     }
                 }
@@ -148,10 +149,11 @@ final class ClientSession {
     }
 
     private static void handleEvent(SessionOutput output, SessionCodec outgoing, SessionDecoder.Event event,
-            int clientOid, Map<String, Short> receivers, SessionLog log, CharacterStore characters, boolean subscribed, long authRevision,WorldSession world) throws IOException {
+            int clientOid, Map<String, Short> receivers, SessionLog log, CharacterStore characters, boolean subscribed,
+            long authRevision, WorldSession world, SessionInvocationRouter router) throws IOException {
         if (event instanceof SessionDecoder.Compound compound) {
             if (compound.oid() != clientOid) throw new SessionDecoder.Rejected("Invalid compound event target");
-            for (var child : compound.events()) handleEvent(output, outgoing, child, clientOid, receivers, log, characters, subscribed, authRevision,world);
+            for (var child : compound.events()) handleEvent(output, outgoing, child, clientOid, receivers, log, characters, subscribed, authRevision, world, router);
         } else if(event instanceof SessionDecoder.Input input) {
             world.input(input);
         } else if (event instanceof SessionDecoder.Mutation mutation) {
@@ -188,79 +190,8 @@ final class ClientSession {
             }
             world.receiverChanged(receivers);
         } else if (event instanceof SessionDecoder.Invocation invocation) {
-            // The steam partner service must be claimed before the party dispatcher: stock party
-            // operations share its service number on party objects and reject listener-less shapes.
-            if(world.steamInvocation(invocation))return;
-            if(world.channelSpeak(invocation))return;
-            if(world.partyInvocation(invocation))return;
-            if(world.interiorPartyInvocation(invocation))return;
-            if(world.exchangeInvocation(invocation))return;
-            if(world.friendInvocation(invocation))return;
-            if(world.feedInvocation(invocation))return;
-            if(world.eventLogInvocation(invocation))return;
-            // Auction, uplink mail and the item forge leave through the early dispatcher below,
-            // which sits in front of the generic request logging, so they get their own line here.
-            if((invocation.service()==SessionCodec.AUCTION_SERVICE
-                    ||invocation.service()==SessionCodec.UPLINK_SERVICE&&invocation.method()!=7
-                    ||invocation.service()==SessionCodec.ITEM_SERVICE&&invocation.method()==8)){
-                String service = SessionCodec.SERVICES.get(invocation.service() - 1);
-                log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
-                    + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());
-            }
-            if(world.guildInvocation(invocation))return;
-            if(world.auctionInvocation(invocation))return;
-            if(world.townInvocation(invocation)){
-                if(world.takeRenameDisconnect()){world.close();output.disconnect();}
-                return;
-            }
-            if(world.conversationInvocation(invocation))return;
-            if(world.tradeInvocation(invocation))return;
-            if(world.departingScene(invocation.oid())&&invocation.service()==10
-                    &&invocation.method()==1&&invocation.arguments().isEmpty())return;
-            if((invocation.service()==org.tortodrone.core.world.SceneChat.SERVICE||invocation.service()==org.tortodrone.core.world.SceneChat.PARTY_SERVICE)&&invocation.oid()!=SessionCodec.INVOCATION_OID) {
-                world.speak(invocation);return;
-            }
-            if (world.ownsScene(invocation.oid()) && invocation.service()>=6 && invocation.service()<=11) {
-                if(invocation.service()==6&&invocation.method()==2){world.inspect(invocation);return;}
-                if (invocation.service() == 6 && invocation.method() == 3) {
-                    world.emote(invocation);return;
-                }
-                if (invocation.service() == 10 && invocation.method() == 1 && invocation.arguments().isEmpty()) {
-                    world.entered();
-                    return;
-                }
-                for(Object arg:invocation.arguments())if(arg instanceof SessionDecoder.Listener listener)output.send(()->outgoing.invocationFailure(clientOid,listener.requestId(),"Town operation is not available yet"));
-                return;
-            }
-            if (invocation.oid() != SessionCodec.INVOCATION_OID || invocation.service() > SessionCodec.SERVICES.size()) {
-                throw new SessionDecoder.Rejected("Invalid invocation target");
-            }
-            if(invocation.service()==SessionCodec.CHAT_SERVICE&&invocation.method()==1){world.away(invocation);return;}
-            if(invocation.service()==SessionCodec.CHAT_SERVICE&&invocation.method()==2){world.broadcast(invocation);return;}
-            if(invocation.service()==SessionCodec.CHAT_SERVICE&&invocation.method()==3){world.tell(invocation);return;}
-            if(invocation.service()==SessionCodec.ADMIN_SERVICE) {
-                if(invocation.oid()!=SessionCodec.INVOCATION_OID)
-                    throw new SessionDecoder.Rejected("Invalid admin invocation target");
-                if(!world.adminPeople(invocation))world.admin(invocation);return;
-            }
-            String service = SessionCodec.SERVICES.get(invocation.service() - 1);
-            log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
-                + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());
-            if(world.invocation(invocation))return;
-            if (invocation.service() == SessionCodec.KNIGHT_SERVICE && invocation.method() == 10) { world.hardware(invocation.arguments());return; }
-            if (invocation.service() == SessionCodec.KNIGHT_SERVICE && (invocation.method() == 3 || invocation.method() == 4 || invocation.method() == 5 || invocation.method() == 6)) {
-                characterRequest(output, outgoing, invocation, clientOid, log, characters, subscribed, authRevision,world,receivers);
-                return;
-            }
-            boolean answered=false;
-            for (Object argument : invocation.arguments()) {
-                if (argument instanceof SessionDecoder.Listener listener) {
-                    answered=true;
-                    String reason = "Placeholder: this server operation is not implemented yet";
-                    output.send(() -> outgoing.invocationFailure(clientOid, listener.requestId(), reason));
-                }
-            }
-            if(!answered)world.unavailable("Placeholder: this server operation is not implemented yet");
+            router.route(invocation, request -> characterRequest(output, outgoing, request, clientOid, log,
+                characters, subscribed, authRevision, world, receivers));
         }
     }
 
