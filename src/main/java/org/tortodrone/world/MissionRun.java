@@ -1,6 +1,9 @@
 package org.tortodrone.world;
 
 import java.util.*;
+import org.tortodrone.core.mission.MissionGates;
+import org.tortodrone.core.world.SceneElevator;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Server-issued solo mission attempt and its ordered floors.
  *

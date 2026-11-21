@@ -20,6 +20,7 @@ import org.tortodrone.support.*;
 import org.tortodrone.world.SceneRegistry;
 import org.tortodrone.core.Yaml;
 import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.world.ReadyRoom;
 
 /** Real TCP/AES/password logins and town movement against a disposable packaged server.
  * Header-only downstream reader: compatibility fixtures validate actor payloads separately. */
@@ -197,7 +198,7 @@ public final class LoadBenchmark {
         }
         // The stock client completes its Ready Room load, then requests its return-to-game
         // destination; that forceScene names the zone and template the zone move must carry.
-        writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",24);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(3);out.writeInt(5);out.writeByte(1);out.writeBoolean(true);out.writeInt(4);writer.type(out,"java.lang.Integer");out.writeInt(org.tortodrone.world.ReadyRoom.ZONE);writer.type(out,"java.lang.Integer");out.writeInt(org.tortodrone.world.ReadyRoom.SCENE);writer.type(out,"java.lang.Integer");out.writeInt(1);writer.type(out,"com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller");out.writeShort(24);});
+        writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",24);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(3);out.writeInt(5);out.writeByte(1);out.writeBoolean(true);out.writeInt(4);writer.type(out,"java.lang.Integer");out.writeInt(org.tortodrone.core.world.ReadyRoom.ZONE);writer.type(out,"java.lang.Integer");out.writeInt(org.tortodrone.core.world.ReadyRoom.SCENE);writer.type(out,"java.lang.Integer");out.writeInt(1);writer.type(out,"com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller");out.writeShort(24);});
         writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",25);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(3);out.writeInt(1);out.writeByte(11);out.writeBoolean(false);});
         int zone=-1,template=-1;var forceSeen=new StringBuilder();
         long forceDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);

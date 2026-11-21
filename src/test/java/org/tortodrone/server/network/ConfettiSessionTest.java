@@ -15,6 +15,7 @@ import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.Confetti;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.ActorState;
 
 /** Lightweight storage/session coverage; no external server or graphical client. */
 public final class ConfettiSessionTest {

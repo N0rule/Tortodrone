@@ -12,6 +12,8 @@ import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
 
 /** A configured death graph runs through the shared scene and the persistent reward transaction. */
 public final class DeathLootPipelineTest {

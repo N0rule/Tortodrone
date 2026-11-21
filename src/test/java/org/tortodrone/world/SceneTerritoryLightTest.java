@@ -2,6 +2,8 @@ package org.tortodrone.world;
 
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.SceneEntityState;
+import org.tortodrone.core.world.SceneContent;
 
 /** Native neutral lighting is a scene actor; this is not PvP territory control. */
 public final class SceneTerritoryLightTest {

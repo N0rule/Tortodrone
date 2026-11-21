@@ -5,8 +5,13 @@ import java.util.concurrent.*;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneEffect;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.CollisionMap;
 
 /** Synthetic area exercises the production tick and existing scene effect publication queue. */
 public final class ScriptedSceneEffectTest {

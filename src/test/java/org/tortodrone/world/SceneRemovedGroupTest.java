@@ -3,8 +3,9 @@ package org.tortodrone.world;
 import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.SceneContent;
 
 /** Native counter/latch semantics through production actor deaths on synthetic geometry. */
 public final class SceneRemovedGroupTest {

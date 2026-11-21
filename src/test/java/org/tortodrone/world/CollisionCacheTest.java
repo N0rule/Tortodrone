@@ -4,6 +4,9 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneCollision;
 
 /** Cached pawn geometry follows actual entity movement, rotation, ownership and destruction. */
 public final class CollisionCacheTest {

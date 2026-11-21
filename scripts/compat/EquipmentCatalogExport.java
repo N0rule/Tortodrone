@@ -6,10 +6,10 @@ import com.threerings.config.*;
 import com.threerings.projectx.item.config.*;
 import com.threerings.projectx.item.data.*;
 import org.tortodrone.character.*;
-import org.tortodrone.world.EquipmentCatalog;
-import org.tortodrone.world.EquipmentCatalog.Entry;
-import org.tortodrone.world.EquipmentCatalog.Modifiers;
-import org.tortodrone.world.EquipmentCatalog.WeaponClass;
+import org.tortodrone.core.world.EquipmentCatalog;
+import org.tortodrone.core.world.EquipmentCatalog.Entry;
+import org.tortodrone.core.world.EquipmentCatalog.Modifiers;
+import org.tortodrone.core.world.EquipmentCatalog.WeaponClass;
 import org.tortodrone.core.character.ItemCatalog;
 
 /** Exports stock numeric equipment-control modifiers, with no client assets. */

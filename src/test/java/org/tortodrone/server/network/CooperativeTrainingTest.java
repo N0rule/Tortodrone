@@ -19,6 +19,10 @@ import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.SceneChat;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** Three disposable authenticated sessions exercise actual invitation, travel, publication and exit paths. */
 public class CooperativeTrainingTest {

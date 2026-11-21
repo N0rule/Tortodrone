@@ -10,6 +10,9 @@ import com.threerings.presents.net.EventNotification;
 import com.threerings.tudey.dobj.SceneDeltaEvent;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.ProjectileState;
+import org.tortodrone.core.world.SceneEffect;
 
 /** Small stock-reader oracle for the actual emitted reference argument shapes. */
 public final class FireCompatibility {

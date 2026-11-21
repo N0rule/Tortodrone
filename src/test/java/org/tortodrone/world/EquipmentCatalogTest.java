@@ -5,6 +5,7 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.core.character.WorldProfile;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.EquipmentCatalog;
 
 public final class EquipmentCatalogTest {
     private static EquipmentCatalog.Entry entry(String config, WorldProfile.Slot slot, float value) {

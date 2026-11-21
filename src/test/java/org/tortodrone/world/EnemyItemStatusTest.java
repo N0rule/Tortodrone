@@ -5,6 +5,12 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneDamage;
+import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.core.world.CollisionMap;
 
 /** Real item graphs against instance-owned enemies; no accounts or client assets. */
 public final class EnemyItemStatusTest {

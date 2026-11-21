@@ -11,6 +11,7 @@ import org.tortodrone.core.Yaml;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.Confetti;
+import org.tortodrone.core.world.EquipmentCatalog;
 
 /** Deterministic export into a fresh item directory; no administrator files are replaced. */
 final class ReadableItemExport {

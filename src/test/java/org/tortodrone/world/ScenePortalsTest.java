@@ -5,6 +5,10 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.MapCollision;
+import org.tortodrone.core.world.CollisionMap;
 
 public final class ScenePortalsTest {
     public static void main(String[] args)throws Exception {

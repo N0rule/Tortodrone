@@ -6,10 +6,10 @@ import com.threerings.config.*;
 import com.threerings.projectx.dungeon.config.*;
 import com.threerings.projectx.item.config.*;
 import com.threerings.tudey.config.ActorConfig;
-import org.tortodrone.world.WeaponCatalog;
-import org.tortodrone.world.WeaponCatalog.Attack;
-import org.tortodrone.world.WeaponCatalog.Shield;
-import org.tortodrone.world.WeaponCatalog.Weapon;
+import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.core.world.WeaponCatalog.Attack;
+import org.tortodrone.core.world.WeaponCatalog.Shield;
+import org.tortodrone.core.world.WeaponCatalog.Weapon;
 
 /** Read-only exporter of stock combat timing/configuration references; emits no assets. */
 public final class WeaponCatalogExport {

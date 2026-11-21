@@ -2,10 +2,11 @@ package org.tortodrone.protocol;
 
 import java.util.*;
 import org.tortodrone.support.TestWire;
-import org.tortodrone.world.SceneCombatEvent;
+import org.tortodrone.core.world.SceneCombatEvent;
 
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.SceneEffect;
 
 /** Feedback/Damage must stream the current client's combat feedback layout verbatim: the party
  *  object's DamageEvent of the earlier clients is gone from the live client build (it crashes
@@ -56,7 +57,7 @@ public final class DamageFeedbackEffectTest {
         TestWire.end(in2);
         // Ordinary effects and combat feedback share one array, effects first.
         var wire3=new TestWire();
-        var outage=List.of(new org.tortodrone.world.SceneEffect(3,new org.tortodrone.core.character.StarterCatalog.Model("Effect/Outro",Map.of()),41500,0f,0f,0f,0,402,null));
+        var outage=List.of(new org.tortodrone.core.world.SceneEffect(3,new org.tortodrone.core.character.StarterCatalog.Model("Effect/Outro",Map.of()),41500,0f,0f,0f,0,402,null));
         var in3=wire3.frame(new SessionCodec().sceneDelta(2114,3002,0,(short)30,90,41500,(short)50,List.of(),List.of(),new int[0],Map.of(),false,outage,
             List.of(new SceneCombatEvent(2,41500,402,7,211,0,0,0,"NORMAL"))));
         check(wire3.type(in3).equals(TestWire.NET+"EventNotification")&&in3.readShort()==-1,"shared array envelope");

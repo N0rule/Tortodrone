@@ -15,7 +15,9 @@ import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.character.KnightMemory;
-import org.tortodrone.world.SceneConversation;
+import org.tortodrone.core.world.SceneConversation;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Production session/dialogue/SQLite acceptance from explicit post-floor checkpoints.
  * Camp 218 uses synthetic geometry; this does not exercise either mission floor. */

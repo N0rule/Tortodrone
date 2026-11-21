@@ -5,7 +5,7 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.core.mission.MissionCatalog;
 import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.world.MissionGates;
+import org.tortodrone.core.mission.MissionGates;
 
 /** v2 mission folders: domain equivalence with v1, layout marker and refusal rules. */
 public final class MissionV2Test {
@@ -93,8 +93,8 @@ public final class MissionV2Test {
         System.out.println("PASS: v2 mission folders match v1 domains, reject mixed/unknown trees and keep no file cap");
     }
 
-    private static Map<String,org.tortodrone.world.MissionGates.Gate> gates(MissionYaml.Definitions definitions) {
-        var result=new LinkedHashMap<String,org.tortodrone.world.MissionGates.Gate>();
+    private static Map<String,org.tortodrone.core.mission.MissionGates.Gate> gates(MissionYaml.Definitions definitions) {
+        var result=new LinkedHashMap<String,org.tortodrone.core.mission.MissionGates.Gate>();
         for(var gate:definitions.gates().gates())result.put(gate.missionId(),gate);
         return result;
     }

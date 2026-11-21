@@ -7,6 +7,14 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.AnimatedItems;
 import org.tortodrone.core.character.Confetti;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.PlayerEmotes;
+import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.MapCollision;
+import org.tortodrone.core.world.CollisionMap;
+import org.tortodrone.core.world.InputBits;
 
 /** Server-owned movement on the scene clock. Client frames never provide positions. */
 public final class TownMovement {

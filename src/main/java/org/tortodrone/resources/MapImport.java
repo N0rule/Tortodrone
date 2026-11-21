@@ -8,6 +8,7 @@ import static org.tortodrone.core.Yaml.*;
 import org.tortodrone.core.Json;
 import org.tortodrone.core.ContentFiles;
 import org.tortodrone.core.config.ServerSettings;
+import org.tortodrone.core.world.MapCollision;
 
 /** Transactional installation of a compatible, prepared native scene into the unified tree. */
 public final class MapImport {
@@ -84,7 +85,7 @@ public final class MapImport {
         var descriptor=ContentFiles.properties(descriptorFile);
         String hash=descriptor.getProperty("scene-sha256");
         if(hash==null)throw new IOException("Prepared map has no scene hash");
-        var collision=org.tortodrone.world.MapCollision.fromProperties(staticCollision);
+        var collision=org.tortodrone.core.world.MapCollision.fromProperties(staticCollision);
         Path output=prepared.resolve("collision.bin");collision.write(output,hash);
         descriptor.setProperty("collision-sha256",ContentFiles.digest(output));
         descriptor.remove("static-collision-sha256");

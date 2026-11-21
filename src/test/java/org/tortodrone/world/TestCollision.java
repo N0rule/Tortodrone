@@ -2,6 +2,10 @@ package org.tortodrone.world;
 
 import java.nio.file.*;
 import java.util.Properties;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.MapCollision;
+import org.tortodrone.core.world.CollisionMap;
 
 /** Synthetic exact collision for movement tests; no sampled grid is involved. */
 final class TestCollision {

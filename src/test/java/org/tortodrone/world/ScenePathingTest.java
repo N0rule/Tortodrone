@@ -3,6 +3,8 @@ package org.tortodrone.world;
 import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
 
 public final class ScenePathingTest {
     public static void main(String[] args)throws Exception {

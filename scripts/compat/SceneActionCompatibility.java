@@ -3,11 +3,14 @@ import java.util.*;
 import com.threerings.tudey.config.ActionConfig;
 import com.threerings.tudey.config.TargetConfig;
 import org.tortodrone.core.Json;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.KnightObjective;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.SceneEffect;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneMovementScript;
 
 /** Installed stock configuration classes -> allowlisted metadata -> authoritative scheduler. */
 public final class SceneActionCompatibility {
@@ -196,18 +199,18 @@ public final class SceneActionCompatibility {
         var squadSpawn=new ActionConfig.SpawnActor();squadSpawn.actor=new com.threerings.config.ConfigReference<>("Character/Scripted/Missions/Tutorial/Final Test/Knight Squad/Spiral Knight");
         squadSpawn.actor.ld().put("Goal","waypoint_sk1");squadSpawn.actor.ld().put("Wait",500);squadSpawn.actor.ld().put("End Orientation",(float)Math.PI/2);
         var squadAction=(SceneActions.Spawn)SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(squadSpawn,0,cm)));
-        var movement=org.tortodrone.world.SceneMovementScript.read(new org.tortodrone.world.SceneContent.Spec(squadAction.fields()));
+        var movement=org.tortodrone.core.world.SceneMovementScript.read(new org.tortodrone.core.world.SceneContent.Spec(squadAction.fields()));
         if(movement==null||!movement.goal().equals("waypoint_sk1")||movement.waitMillis()!=500||movement.rotation()!=(float)Math.PI/2)throw new AssertionError("Native nested Goal/Wait/End Orientation script bindings were lost");
         System.out.println("PASS: original squad script preserves nested Goal, Wait and final rotation without fabricating a combat policy");
         var feron=new ActionConfig.SpawnActor();feron.actor=new com.threerings.config.ConfigReference<>("Character/Scripted/Missions/Tutorial/Final Test/Knight Squad/Feron");feron.actor.ld().put("Goal","feron_goal");feron.actor.ld().put("Wait",750);
         var feronSpawn=(SceneActions.Spawn)SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(feron,0,cm)));
-        var feronMovement=org.tortodrone.world.SceneMovementScript.read(new org.tortodrone.world.SceneContent.Spec(feronSpawn.fields()));
+        var feronMovement=org.tortodrone.core.world.SceneMovementScript.read(new org.tortodrone.core.world.SceneContent.Spec(feronSpawn.fields()));
         if(feronMovement==null||feronMovement.rotation()!=4.712389f||feronMovement.waitMillis()!=750||!feronMovement.goal().equals("feron_goal"))throw new AssertionError("Feron's fixed native orientation was replaced by a missing parameter");
         var deferred=FireCatalogExport.readSceneAction(cm,recursive);
         if(deferred.kind()!=org.tortodrone.core.world.FireCatalog.Kind.SPAWN_SCENE_ACTOR||deferred.actor()!=null)throw new AssertionError("Scene actor embedded into projectile metadata");
         var templates=new TreeMap<String,String>();SceneContentExport.writeActorTemplates(cm,templates);
         var templateProperties=new Properties();templateProperties.putAll(templates);templateProperties.setProperty("format","1");templateProperties.setProperty("layout-sha256","native-fixture");
-        var cyclicContent=org.tortodrone.world.SceneContent.load(templateProperties,"native-fixture");
+        var cyclicContent=org.tortodrone.core.world.SceneContent.load(templateProperties,"native-fixture");
         if(cyclicContent.actorTemplates().size()<2||cyclicContent.actorTemplates().size()>128||cyclicContent.actorTemplates().values().stream().noneMatch(s->s.text("config","").endsWith("Unique/Parts/Downed Knight")))throw new AssertionError("Native companion cycle lost a definition");
         System.out.println("PASS: installed Feron Goal/Wait/fixed orientation and finite, validated native Unique Sword Knight/Downed Knight death-spawn definitions (other companion handlers not implemented)");
         if(FireCatalogExport.readSceneAction(cm,new ActionConfig.SpawnActor()).kind()!=org.tortodrone.core.world.FireCatalog.Kind.COMPOUND)throw new AssertionError("Refusal poisoned later action preparation");
@@ -274,7 +277,7 @@ public final class SceneActionCompatibility {
         if(args.length>1){
             var folder=java.nio.file.Path.of(args[1]);var properties=new Properties();
             try(var input=java.nio.file.Files.newInputStream(folder.resolve("map.properties"))){properties.load(input);}
-            var content=org.tortodrone.world.SceneContent.load(folder,properties.getProperty("scene-sha256"));
+            var content=org.tortodrone.core.world.SceneContent.load(folder,properties.getProperty("scene-sha256"));
             var finalPortal=content.entries().stream().filter(e->e.key().equals("1943")&&e.spec().flag("scene-sensor",false)).findFirst().orElseThrow();
             if(!SceneActions.rule(finalPortal).action().equals(new SceneActions.NextFloor()))throw new AssertionError("Original portal no longer performs NextFloor");
             System.out.println("PASS: original area 1943 retains its pawn intersection and native Activator NextFloor action; no destination is embedded in its graph");
@@ -346,7 +349,7 @@ public final class SceneActionCompatibility {
     private static void tagWire(Object tags,String[] expected)throws Exception {
         var model=new org.tortodrone.core.character.StarterCatalog.Model("Fixture",Map.of("Tags",tags));
         var codec=new org.tortodrone.protocol.SessionCodec();var bytes=new java.io.ByteArrayOutputStream();
-        var delta=codec.sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(),List.of(),new int[0],Map.of(),true,List.of(new org.tortodrone.world.SceneEffect(1,model,100,0,0,0,1001)));
+        var delta=codec.sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(),List.of(),new int[0],Map.of(),true,List.of(new org.tortodrone.core.world.SceneEffect(1,model,100,0,0,0,1001)));
         for(var frame:List.of(org.tortodrone.protocol.HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),org.tortodrone.protocol.HandshakeCodec.authenticationResponse((short)2,true,"fixture","Fixture"),delta))bytes.write(frame,4,frame.length-4);
         var reader=new com.threerings.io.v(new java.io.ByteArrayInputStream(bytes.toByteArray()));reader.ql();reader.ql();
         var event=(com.threerings.tudey.dobj.SceneDeltaEvent)((com.threerings.presents.net.EventNotification)reader.ql()).yn();

@@ -2,6 +2,9 @@ package org.tortodrone.world;
 
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.MonsterCatalog;
 
 /**
  * Phase 8 administrative spawn contract: catalogue-only resolution, all-or-nothing creation,

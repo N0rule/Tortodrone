@@ -3,7 +3,7 @@ import java.nio.file.*;
 import java.security.*;
 import java.util.*;
 import java.util.HexFormat;
-import org.tortodrone.world.MapCollision;
+import org.tortodrone.core.world.MapCollision;
 
 /** Build-time conversion: static-collision.properties -> collision.bin, pinned to the scene hash. */
 public final class CollisionPackExport {

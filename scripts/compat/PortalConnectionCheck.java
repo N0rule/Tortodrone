@@ -8,6 +8,7 @@ import com.threerings.whirled.data.SceneModel;
 import com.threerings.util.Name;
 import org.tortodrone.world.*;
 import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Unchanged stock input/receiver/move readers walk through both automatic town portals. */
 public final class PortalConnectionCheck {

@@ -1,6 +1,6 @@
 import java.io.*;
 import org.tortodrone.protocol.*;
-import org.tortodrone.world.ReadyRoom;
+import org.tortodrone.core.world.ReadyRoom;
 import com.threerings.presents.net.EventNotification;
 import com.threerings.presents.dobj.InvocationResponseEvent;
 import com.threerings.projectx.data.ReadyRoomSceneConfig;

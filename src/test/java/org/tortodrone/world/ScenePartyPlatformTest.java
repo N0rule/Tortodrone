@@ -4,7 +4,9 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
 
 /** Synthetic geometry; production intersection, state, action and checkpoint services. */
 public final class ScenePartyPlatformTest {

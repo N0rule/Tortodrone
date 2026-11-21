@@ -5,6 +5,10 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.CollisionMap;
 
 /**
  * Phase 4/6 service-level check. A dormant population must cost far less than half a

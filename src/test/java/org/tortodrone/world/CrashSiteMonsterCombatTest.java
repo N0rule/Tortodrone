@@ -7,8 +7,14 @@ import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** Bundled Crash Site monsters: native depth-0 defense and health, Proto hit values and the
  * MonsterLogic.shouldReact flinch rule through the production entity damage path. */

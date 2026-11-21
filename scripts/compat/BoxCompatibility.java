@@ -18,6 +18,8 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.KnightProgress;
 import org.tortodrone.core.character.Confetti;
 import org.tortodrone.core.loot.BoxDefinition;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneKnightState;
 
 /** Installed, unmodified ItemMarshaller and reader are the wire oracle; no client patching. */
 public final class BoxCompatibility {
@@ -74,8 +76,8 @@ public final class BoxCompatibility {
         var references=List.of(new StarterCatalog.Model("Upgrade/Prize Box/Dark Harvest Prize Box, Complete",Map.of()),
             new StarterCatalog.Model("Usable/Confetti, Dark Harvest",Map.of()),
             new StarterCatalog.Model("Costume/Recolor Sets/Helm/Crescent Helm/Crescent Helm, Nova",Map.of()));
-        var actor=new org.tortodrone.world.ActorState(42,10,"Test-Knight",256,100,0,0,-(float)Math.PI/2,0,0,265,1000,
-            new StarterCatalog.Model("Character/PC/Default",Map.of()),false,null,null,null,null,new org.tortodrone.world.SceneKnightState(references,0));
+        var actor=new org.tortodrone.core.world.ActorState(42,10,"Test-Knight",256,100,0,0,-(float)Math.PI/2,0,0,265,1000,
+            new StarterCatalog.Model("Character/PC/Default",Map.of()),false,null,null,null,null,new org.tortodrone.core.world.SceneKnightState(references,0));
         append(bytes,codec.sceneDelta(10,0,0,1000,List.of(actor),List.of(),new int[0]));
         append(bytes,codec.sceneDelta(10,0,1000,1050,List.of(),List.of(actor),new int[0]));
         var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.ql();in.ql();

@@ -3,6 +3,8 @@ package org.tortodrone.world;
 import java.util.Map;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Disposable scheduler fault, independent of native assets and player data. */
 public final class SceneSimulationFailureTest {

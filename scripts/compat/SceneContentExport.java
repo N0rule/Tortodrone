@@ -33,6 +33,12 @@ import org.tortodrone.core.Json;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.SceneActorTemplates;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneScript;
+import org.tortodrone.core.world.SceneMovementScript;
+import org.tortodrone.core.world.SceneElevator;
+import org.tortodrone.core.world.SceneActions;
 
 /** Exports numeric and config-reference content for a captured native scene. */
 public final class SceneContentExport {
@@ -115,7 +121,7 @@ public final class SceneContentExport {
             if(reference==null)continue;
             var fields=new TreeMap<String,String>();fields.put("config",reference.getName());
             writeActor(cm,fields,"",reference);
-            new org.tortodrone.world.SceneActions.Spawn(fields);
+            new org.tortodrone.core.world.SceneActions.Spawn(fields);
             for(var field:fields.entrySet())values.put("actor-template.spawn_"+i+"."+field.getKey(),field.getValue());
             ids.add("spawn_"+i);
             // Do not imply parity merely because a cyclic config can now be represented.
@@ -124,7 +130,7 @@ public final class SceneContentExport {
         values.put("actor-templates",String.join(",",ids));
         var prepared=new Properties();prepared.setProperty("format","1");prepared.setProperty("layout-sha256","template-validation");
         values.forEach((key,value)->{if(key.equals("actor-templates")||key.startsWith("actor-template."))prepared.setProperty(key,value);});
-        org.tortodrone.world.SceneContent.load(prepared,"template-validation");
+        org.tortodrone.core.world.SceneContent.load(prepared,"template-validation");
     }
 
     /** Reserve identity before expanding definitions so legitimate respawn cycles stay finite. */
@@ -239,7 +245,7 @@ public final class SceneContentExport {
         if (action == null) return;
         if (depth > 32) throw new IOException("Startup compound nesting exceeds limit at " + sourceKey);
         if(action instanceof ActionConfig.Random){
-            var graph=sceneAction(action,0,cm);org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(graph));
+            var graph=sceneAction(action,0,cm);org.tortodrone.core.world.SceneActions.parse(org.tortodrone.core.Json.stringify(graph));
             startups.add(new Startup(sourceKey,handlerIndex,x,y,rotation,graph));return;
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.FireAction wrapper){
@@ -291,7 +297,7 @@ public final class SceneContentExport {
                         fields.put("state-key",source+":removed-group");fields.put("event","removed");fields.put("all","true");fields.put("watch-tag",group.tags().get(i));fields.put("removed-group",String.join(",",group.tags()));
                         fields.put("x",Float.toString(finite(point.x,"trigger x")));fields.put("y",Float.toString(finite(point.y,"trigger y")));fields.put("rotation",Float.toString(finite(rotation,"trigger rotation")));
                         fields.put("action",org.tortodrone.core.Json.stringify(group.action()));
-                        org.tortodrone.world.SceneActions.rule(new org.tortodrone.world.SceneContent.Entry(source,point.x,point.y,rotation,new org.tortodrone.world.SceneContent.Spec(fields)));
+                        org.tortodrone.core.world.SceneActions.rule(new org.tortodrone.core.world.SceneContent.Entry(source,point.x,point.y,rotation,new org.tortodrone.core.world.SceneContent.Spec(fields)));
                         String index=Integer.toString(indexes.size());indexes.add(index);fields.forEach((k,v)->values.put("entry."+index+"."+k,v));
                     }
                     importReport.remove("Unsupported handler at "+source+" / 2: "+HandlerConfig.VariableChanged.class.getName());
@@ -327,8 +333,8 @@ public final class SceneContentExport {
                     }
                     var graph=counterGraph==null?sceneAction(((HandlerConfig.ActionHandlerConfig)handler).action,0,cm):counterGraph;
                     if(handler.getClass()==HandlerConfig.Timer.class){var timer=(HandlerConfig.Timer)handler;graph=timerAction(timer,graph);}
-                    var parsed=org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(graph));
-                    try{for(String tag:tags)new org.tortodrone.world.SceneActions.Rule(key(entry.getKey())+":"+hi,fields.get("event"),tag,fields.getOrDefault("signal",""),Boolean.parseBoolean(fields.getOrDefault("all","false")),parsed,fields.get("state-key"),"entry:"+key(entry.getKey()));}
+                    var parsed=org.tortodrone.core.world.SceneActions.parse(org.tortodrone.core.Json.stringify(graph));
+                    try{for(String tag:tags)new org.tortodrone.core.world.SceneActions.Rule(key(entry.getKey())+":"+hi,fields.get("event"),tag,fields.getOrDefault("signal",""),Boolean.parseBoolean(fields.getOrDefault("all","false")),parsed,fields.get("state-key"),"entry:"+key(entry.getKey()));}
                     catch(IllegalArgumentException invalid){throw new IOException("Invalid complete native handler: "+invalid.getMessage(),invalid);}
                     fields.put("action",org.tortodrone.core.Json.stringify(graph));
                     for(int ti=0;ti<tags.size();ti++){
@@ -385,7 +391,7 @@ public final class SceneContentExport {
         }
         var action=((ActionConfig.Conditional)changed.action).action;
         if(!(reference.ld().get("Action") instanceof ActionConfig supplied)||!Objects.equals(supplied,action))throw new IOException("Two-tag removal action binding changed");
-        var graph=sceneAction(action,0,cm);org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(graph));
+        var graph=sceneAction(action,0,cm);org.tortodrone.core.world.SceneActions.parse(org.tortodrone.core.Json.stringify(graph));
         return new RemovedGroup(List.copyOf(tags),graph);
     }
     private static boolean strippedGuard(ActionConfig action){
@@ -633,7 +639,7 @@ public final class SceneContentExport {
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ProgressEvent event){
             var fields=Map.<String,Object>of("kind","progress-event","level",event.level,"progress",event.progress);
-            org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
+            org.tortodrone.core.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.NextFloor next){
             if(!(next.target instanceof com.threerings.tudey.config.TargetConfig.Activator))throw new IOException("Unsupported NextFloor target");
@@ -643,7 +649,7 @@ public final class SceneContentExport {
             if(!pawnActivator||!(memory.target instanceof com.threerings.tudey.config.TargetConfig.Activator)
                     ||memory.persistence!=null&&memory.persistence!=com.threerings.projectx.config.Persistence.KNIGHT)throw new IOException("Unsupported scene memory scope/target");
             var fields=Map.<String,Object>of("kind","knight-memory","name",memory.name,"remember",memory.persistence!=null);
-            org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
+            org.tortodrone.core.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
         }
         if(action instanceof com.threerings.projectx.config.ProjectXActionConfig.SetObjective objective){
             if(!pawnActivator||!(objective.target instanceof com.threerings.tudey.config.TargetConfig.Activator)
@@ -655,7 +661,7 @@ public final class SceneContentExport {
                 text=simple.text;
             }
             var fields=new LinkedHashMap<String,Object>();fields.put("kind","knight-objective");fields.put("name",objective.name);fields.put("text",text);
-            org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
+            org.tortodrone.core.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ApplyStatus status){
             if(cm==null||!pawnTarget(status.target))throw new IOException("Unsupported scripted status target");
@@ -663,7 +669,7 @@ public final class SceneContentExport {
             try{prepared=FireCatalogExport.readAction(cm,status);}catch(Exception invalid){throw new IOException("Unresolved scripted status",invalid);}
             if(prepared.kind()!=org.tortodrone.core.world.FireCatalog.Kind.APPLY_STATUS)throw new IOException("Unresolved scripted status");
             var fields=Map.<String,Object>of("kind","pawn-status","config",org.tortodrone.core.world.FireCatalog.modelJson(prepared.config()));
-            org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
+            org.tortodrone.core.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ClearStatus status){
             if(!pawnTarget(status.target)||status.mask<0)throw new IOException("Unsupported scripted status clear target/mask");
@@ -736,7 +742,7 @@ public final class SceneContentExport {
                     ||!(shape instanceof com.threerings.tudey.shape.config.ShapeConfig.Point))throw new IOException("Unsupported effect impulse region/location");
             try{
                 var prepared=FireCatalogExport.readAction(cm,impulse);var data=new TreeMap<>(prepared.config().arguments());data.put("shape",FireCatalogExport.argumentValue(shape));
-                var model=new org.tortodrone.core.character.StarterCatalog.Model("ImpartImpulse",data);new org.tortodrone.world.SceneActions.Impulse(model);
+                var model=new org.tortodrone.core.character.StarterCatalog.Model("ImpartImpulse",data);new org.tortodrone.core.world.SceneActions.Impulse(model);
                 return Map.of("kind","source-impulse","config",org.tortodrone.core.world.FireCatalog.modelJson(model));
             }catch(Exception invalid){throw new IOException("Unsupported native effect impulse",invalid);}
         }
@@ -760,7 +766,7 @@ public final class SceneContentExport {
                 }
             }
             if(tags!=null)fields.put("tags",String.join(",",sceneTags(config,resolved.ld(),tags)));
-            new org.tortodrone.world.SceneActions.Spawn(fields,activate);
+            new org.tortodrone.core.world.SceneActions.Spawn(fields,activate);
         }catch(Exception invalid){throw new IOException("Unsupported scene spawn actor "+actor.getName()+": "+invalid.getMessage(),invalid);}
         return Map.of("kind","spawn","fields",fields,"activate",activate);
     }
@@ -839,7 +845,7 @@ public final class SceneContentExport {
                 if(child==null||!Float.isFinite(child.weight)||child.weight<0||!child.dropModifierTag.isEmpty())throw new IOException("Unimplemented random table weight modifier");
                 actions.add(sceneTableEntry(cm,child.entry,depth+1));weights.add(child.weight);
             }
-            var result=Map.<String,Object>of("kind","weighted-choice","actions",actions,"weights",weights);org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(result));return result;
+            var result=Map.<String,Object>of("kind","weighted-choice","actions",actions,"weights",weights);org.tortodrone.core.world.SceneActions.parse(org.tortodrone.core.Json.stringify(result));return result;
         }
         throw new IOException("Unsupported complete scene table entry: "+entry.getClass().getName());
     }
@@ -931,7 +937,7 @@ public final class SceneContentExport {
                 exclude=true;selection=excluding.target;
             }
             if(!(selection instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged))throw new IOException("Unsupported nearest signal candidate selection");
-            new org.tortodrone.world.SceneActions.NearestSignal(tagged.tag,name,nearest.size,exclude);
+            new org.tortodrone.core.world.SceneActions.NearestSignal(tagged.tag,name,nearest.size,exclude);
             return Map.of("kind","nearest-signal","tag",tagged.tag,"name",name,"count",nearest.size,"excludeSource",exclude);
         }
         if(target instanceof com.threerings.tudey.config.TargetConfig.Compound compound){
@@ -1079,7 +1085,7 @@ public final class SceneContentExport {
                 importReport.add("Unsupported elevator routing variant retained idle: "+reference.getName());
             else{
                 out.put(prefix+"elevator-mode","standard");out.put(prefix+"elevator-advance",elevator.dissolveParty?"-1":"1");out.put(prefix+"elevator-completes",Boolean.toString(!elevator.noComplete));
-                var fields=new TreeMap<String,String>();out.forEach((key,value)->{if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),value);});org.tortodrone.world.SceneElevator.read(new org.tortodrone.world.SceneContent.Spec(fields));
+                var fields=new TreeMap<String,String>();out.forEach((key,value)->{if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),value);});org.tortodrone.core.world.SceneElevator.read(new org.tortodrone.core.world.SceneContent.Spec(fields));
             }
         }
         if (field(original, "actor") instanceof ConfigReference<?> && field(original, "delay") != null
@@ -1124,12 +1130,12 @@ public final class SceneContentExport {
             else if(step instanceof com.threerings.tudey.config.ScriptConfig.Action action){
                 if(!(action.action instanceof ActionConfig.SetVariable variable)||!variable.name.isEmpty()||!(variable.target instanceof com.threerings.tudey.config.TargetConfig.Source)||!(variable.value instanceof com.threerings.tudey.config.ExpressionConfig.Constant constant)||!constant.value.isEmpty())throw new IOException("Native stripped script Action footprint changed");
                 String restored=rules.getProperty(base+"action");if(restored==null)throw new IOException("Unverified stripped script Action at "+i);
-                org.tortodrone.world.SceneActions.parse(restored);value=Map.of("kind","action","action",org.tortodrone.core.Json.parse(restored));
+                org.tortodrone.core.world.SceneActions.parse(restored);value=Map.of("kind","action","action",org.tortodrone.core.Json.parse(restored));
             }else throw new IOException("Unsupported complete native script step "+step.getClass().getName());
             steps.add(value);
         }
         out.put(prefix+"script.program",org.tortodrone.core.Json.stringify(steps));
-        var fields=new TreeMap<String,String>();out.forEach((key,value)->{if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),value);});org.tortodrone.world.SceneScript.read(new org.tortodrone.world.SceneContent.Spec(fields));
+        var fields=new TreeMap<String,String>();out.forEach((key,value)->{if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),value);});org.tortodrone.core.world.SceneScript.read(new org.tortodrone.core.world.SceneContent.Spec(fields));
     }
     static Map<String,Object> scriptShutdownArguments(ActorConfig config,ConfigReference<ActorConfig> reference)throws IOException {
         var bindings=new LinkedHashMap<String,Object>();String start="implementation.actor[\"Shutdown Action\"].actor[\"";
@@ -1167,7 +1173,7 @@ public final class SceneContentExport {
         Object goal=reference.ld().getOrDefault("Goal",move.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged?tagged.tag:"");
         Object delay=reference.ld().getOrDefault("Wait",wait.wait),direction=config.getParameter("End Orientation")==null?rotate.direction:reference.ld().getOrDefault("End Orientation",rotate.direction);
         if(!(goal instanceof String tag)||!(delay instanceof Number millis)||millis.doubleValue()!=millis.intValue()||!(direction instanceof Number angle))throw new IOException("Invalid native movement script parameters");
-        var script=new org.tortodrone.world.SceneMovementScript(millis.intValue(),tag,move.maxPathLength,angle.floatValue(),monster.turnRate);
+        var script=new org.tortodrone.core.world.SceneMovementScript(millis.intValue(),tag,move.maxPathLength,angle.floatValue(),monster.turnRate);
         out.put(prefix+"script.kind","wait-move-rotate");out.put(prefix+"script.wait",Integer.toString(script.waitMillis()));out.put(prefix+"script.goal",script.goal());out.put(prefix+"script.max-path",Float.toString(script.maxPath()));out.put(prefix+"script.rotation",Float.toString(script.rotation()));out.put(prefix+"script.turn-rate",Float.toString(script.turnRate()));
     }
     private static boolean scriptParameter(ActorConfig config,String name,String path){
@@ -1236,7 +1242,7 @@ public final class SceneContentExport {
         }
     }
 
-    static org.tortodrone.world.SceneActions.Signal oneTimeLever(ConfigManager cm,ConfigReference<ActorConfig> reference,Object original)throws IOException {
+    static org.tortodrone.core.world.SceneActions.Signal oneTimeLever(ConfigManager cm,ConfigReference<ActorConfig> reference,Object original)throws IOException {
         // The installed export stripped the entire Damage action and state 1.
         // Archive actor.xml preserves Limit(1) -> Signal(next) and state 1's
         // Tagged signal; check_multi_trigger.py measures both original levers.
@@ -1247,7 +1253,7 @@ public final class SceneContentExport {
         requirePaths(reference.a(cm,ActorConfig.class),"(Activate Signal)","implementation.state_actions[1].name");
         requirePaths(reference.a(cm,ActorConfig.class),"(Activate Tag)","implementation.state_actions[1].target.tag");
         if(!(reference.ld().get("(Activate Signal)") instanceof String name)||!(reference.ld().get("(Activate Tag)") instanceof String tag))throw new IOException("Missing authored lever target");
-        try{return new org.tortodrone.world.SceneActions.Signal(tag,name);}catch(IllegalArgumentException invalid){throw new IOException("Invalid lever signal",invalid);}
+        try{return new org.tortodrone.core.world.SceneActions.Signal(tag,name);}catch(IllegalArgumentException invalid){throw new IOException("Invalid lever signal",invalid);}
     }
     private static void writeMechanism(ConfigManager cm,Map<String,String> out,String prefix,ConfigReference<ActorConfig> reference,Object original)throws Exception {
         var args=reference.ld();String mode=out.get(prefix+"switch-mode");
@@ -1427,7 +1433,7 @@ public final class SceneContentExport {
                 if(!rules.getProperty(prefix+"initial-footprint","").equals("rhendon-rc-intro"))throw new IOException("Unverified conversation initial action");
                 String initialAction=rules.getProperty(prefix+"initial-action");
                 var original=((ActionConfig.Compound)((ActionConfig.Conditional)conversation.initialAction).elseAction).actions[0];
-                if(!org.tortodrone.world.SceneActions.parse(initialAction).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(sceneAction(original,0,cm,true)))))throw new IOException("Conversation initial memory changed");
+                if(!org.tortodrone.core.world.SceneActions.parse(initialAction).equals(org.tortodrone.core.world.SceneActions.parse(org.tortodrone.core.Json.stringify(sceneAction(original,0,cm,true)))))throw new IOException("Conversation initial memory changed");
                 put(out,prefix+"initial-action",initialAction);
             }
             Object model=script==null?field(cm.d(ActorConfig.class,actorName).al(cm).sprite,"model"):script.model;
@@ -1459,7 +1465,7 @@ public final class SceneContentExport {
                     if(script!=null||verify){
                         String restored=rules.getProperty(rp+"action");String destination=rules.getProperty(rp+"destination","");
                         try{verifyConversationResponse(response.action,destination,restored,rules.getProperty(rp+"stripped-action",""));}catch(IOException invalid){throw new IOException("Conversation "+reference+" / "+node.name+" / "+j+": "+invalid.getMessage(),invalid);}
-                        if(restored!=null){org.tortodrone.world.SceneActions.parse(restored);put(out,rp+"action",restored);}
+                        if(restored!=null){org.tortodrone.core.world.SceneActions.parse(restored);put(out,rp+"action",restored);}
                     }
                 }
             }
@@ -1501,7 +1507,7 @@ public final class SceneContentExport {
                     &&clear.target instanceof com.threerings.tudey.config.TargetConfig.Activator)return;
             if(footprint.equals("default-tagged-guard")&&restored!=null){
                 var unwrapped=withoutDefaultTaggedGuards(action,0);
-                if(org.tortodrone.world.SceneActions.parse(restored).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(sceneAction(unwrapped,0,null,true)))))return;
+                if(org.tortodrone.core.world.SceneActions.parse(restored).equals(org.tortodrone.core.world.SceneActions.parse(org.tortodrone.core.Json.stringify(sceneAction(unwrapped,0,null,true)))))return;
             }
             throw new IOException("Sourced conversation response footprint changed");
         }
@@ -1512,7 +1518,7 @@ public final class SceneContentExport {
         if(action instanceof ActionConfig.Compound compound&&compound.actions!=null&&compound.actions.length==1){verifyConversationResponse(compound.actions[0],destination,restored,"");return;}
         if(!destination.isEmpty()&&restored==null&&action instanceof com.threerings.projectx.config.ProjectXActionConfig.ConversationJump jump
                 &&jump.target instanceof com.threerings.tudey.config.TargetConfig.Activator&&jump.node.equals(destination))return;
-        if(destination.isEmpty()&&restored!=null&&org.tortodrone.world.SceneActions.parse(restored).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(sceneAction(action,0,null,true)))))return;
+        if(destination.isEmpty()&&restored!=null&&org.tortodrone.core.world.SceneActions.parse(restored).equals(org.tortodrone.core.world.SceneActions.parse(org.tortodrone.core.Json.stringify(sceneAction(action,0,null,true)))))return;
         throw new IOException("Scripted conversation response changed ("+(action==null?"null":action.getClass().getName())
             +(action instanceof com.threerings.projectx.config.ProjectXActionConfig.ConversationJump jump?", node="+jump.node+", target="+jump.target.getClass().getName():"")
             +(action instanceof com.threerings.projectx.config.ProjectXActionConfig.ClearDialog clear?", target="+clear.target.getClass().getName():"")+"); refusing to omit authored siblings");

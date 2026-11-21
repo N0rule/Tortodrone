@@ -4,6 +4,9 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.world.*;
 import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneConversation;
 
 /** Real original scene/encounter fixture; pawn starts at the native ambush strip. */
 public class TutorialSquadCompatibility {

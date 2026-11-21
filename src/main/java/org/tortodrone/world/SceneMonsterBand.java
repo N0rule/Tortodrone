@@ -1,5 +1,7 @@
 package org.tortodrone.world;
 
+import org.tortodrone.core.world.MonsterArchetype;
+
 /**
  * Scheduling band for one scene monster.
  *

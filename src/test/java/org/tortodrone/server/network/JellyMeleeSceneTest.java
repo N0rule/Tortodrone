@@ -15,6 +15,8 @@ import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.world.SceneCombatEvent;
+import org.tortodrone.core.world.InputBits;
 
 /** Full-session crash site fight regression: an entered knight arms the Crash Site
  *  jelly wave and trades blows with it like a live client - walking input frames and

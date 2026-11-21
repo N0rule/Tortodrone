@@ -6,8 +6,10 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
 
 /** Crash Site destructible tutorial boxes: heart treasure blocks break and drop a
  * healing heart, and explosive blocks apply their authored detonation damage. */

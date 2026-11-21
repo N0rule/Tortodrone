@@ -5,6 +5,9 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneCollision;
 
 /** Synthetic hostile/friendly bodies exercise authoritative scene actor targeting. */
 public final class MonsterTargetingTest {

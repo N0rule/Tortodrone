@@ -10,6 +10,12 @@ import com.threerings.projectx.dungeon.data.actor.Dungeoneer;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.EquipmentCatalog;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.ProjectileState;
+import org.tortodrone.core.world.SceneEffect;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** Small unchanged-stock-reader check for native weapon state and its delta mask. */
 public final class WeaponCompatibility {

@@ -8,6 +8,8 @@ import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.world.*;
 import org.tortodrone.core.Json;
 import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.world.EquipmentCatalog;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** Disposable legacy fixtures derived from the one unified source for reader/migration regressions. */
 public final class ContentFixture {

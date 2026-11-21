@@ -11,6 +11,13 @@ import org.tortodrone.core.config.ServerSettings;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.GearStats;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.MonsterCatalog;
+import org.tortodrone.core.world.MapCollision;
+import org.tortodrone.core.world.CollisionMap;
 
 /** Atomic startup compilation. No pack selection, runtime downloads or content writes. */
 public final class ContentManager {

@@ -7,9 +7,11 @@ import org.tortodrone.world.*;
 import org.tortodrone.core.NewsCatalog;
 import org.tortodrone.core.mission.MissionCatalog;
 import org.tortodrone.world.MissionComlinks;
-import org.tortodrone.world.MissionGates;
+import org.tortodrone.core.mission.MissionGates;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.EquipmentCatalog;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** One fully validated immutable definition snapshot; mutable scene instances remain in SceneRegistry. */
 public record ContentRegistry(List<Pack> packs, Map<String,Resource> resources, SceneCatalog scenes,

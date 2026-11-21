@@ -13,6 +13,8 @@ import org.tortodrone.core.character.SlotUpgrades;
 import org.tortodrone.core.town.TownState;
 import org.tortodrone.core.town.SpriteRules;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.GearStats;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** Read-only presentation facts. Mutable state continues to belong to domain services. */
 final class AdminViews {
@@ -35,7 +37,7 @@ final class AdminViews {
     private final org.tortodrone.resources.PresentationCatalog presentation;
     AdminViews(AccountStore accounts,ServerControl control,org.tortodrone.resources.ContentRegistry content){
         this.accounts=accounts;this.control=control;presentation=content==null?org.tortodrone.resources.PresentationCatalog.empty():content.presentation();
-        shieldHealth=content==null?Map.of():content.weapons().shields().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(org.tortodrone.world.WeaponCatalog.Shield::config,org.tortodrone.world.WeaponCatalog.Shield::health));
+        shieldHealth=content==null?Map.of():content.weapons().shields().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(org.tortodrone.core.world.WeaponCatalog.Shield::config,org.tortodrone.core.world.WeaponCatalog.Shield::health));
         stats=content==null||content.scenes().scenes().isEmpty()?Map.of():content.scenes().scenes().getFirst().content().stats();
     }
 
@@ -137,7 +139,7 @@ final class AdminViews {
             modifiers.variants().stream().map(v->new StarterCatalog.Model(v,Map.of())).toList());
         for(String key:List.of("health-bonus","shield-health","defense.normal","defense.piercing","defense.elemental","defense.shadow")) {
             Float value=stats.get(level+key);
-            if(value!=null){float calculated=key.startsWith("defense.")?org.tortodrone.world.GearStats.defense(stats,item,key.substring(8),accounts.townRules()):value;
+            if(value!=null){float calculated=key.startsWith("defense.")?org.tortodrone.core.world.GearStats.defense(stats,item,key.substring(8),accounts.townRules()):value;
                 if(key.equals("health-bonus"))calculated+=accounts.townRules().weaponBonuses(item,"").health();
                 if(calculated!=0)result.put(key,calculated);
             }

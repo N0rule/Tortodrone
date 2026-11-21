@@ -5,6 +5,10 @@ import java.util.concurrent.*;
 import java.util.function.Predicate;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneElevator;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Synthetic geometry: production ride clock, membership authority and normal movement inputs. */
 public final class SceneElevatorTest {

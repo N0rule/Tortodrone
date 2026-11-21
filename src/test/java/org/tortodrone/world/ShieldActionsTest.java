@@ -6,6 +6,12 @@ import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.SceneCombatEvent;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneDamage;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** Basic scene-only checks against the shipped native-derived shield graphs. */
 public final class ShieldActionsTest {

@@ -13,6 +13,8 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.KnightProgress;
 import org.tortodrone.core.town.TownState;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** The WebUI can inspect only a running session's current owned scene membership. */
 public final class CompanionInspectionTest {

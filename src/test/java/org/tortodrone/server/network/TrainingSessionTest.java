@@ -19,6 +19,10 @@ import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.SceneChat;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Disposable native party chat and Spark request path; no graphical client or owner data. */
 public final class TrainingSessionTest {

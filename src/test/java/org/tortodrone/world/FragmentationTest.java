@@ -5,6 +5,8 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.KnightCombat;
 
 /** Exercise every retained shard graph against the authoritative projectile clock. */
 public final class FragmentationTest {

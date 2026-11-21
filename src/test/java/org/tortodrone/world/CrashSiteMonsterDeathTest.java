@@ -7,8 +7,12 @@ import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** The monster death wire contract, from the native death flow: the killing blow
  *  switches the activity to 2 (DYING) at its own stamp and sets destroyed to

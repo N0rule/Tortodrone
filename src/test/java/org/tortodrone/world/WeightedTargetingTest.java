@@ -5,6 +5,10 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.SceneTargeting;
 
 public final class WeightedTargetingTest {
     public static void main(String[] args)throws Exception {

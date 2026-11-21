@@ -5,8 +5,11 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.Json;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.SceneCombatEvent;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.CollisionMap;
 
 /** Exercises the real entity removal and dynamic-door collision paths, with explicit tick times. */
 public final class SceneActionsTest {

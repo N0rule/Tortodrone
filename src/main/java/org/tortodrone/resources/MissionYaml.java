@@ -6,9 +6,9 @@ import java.util.*;
 import org.tortodrone.core.mission.MissionCatalog;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.world.MissionComlinks;
-import org.tortodrone.world.MissionGates;
+import org.tortodrone.core.mission.MissionGates;
 import org.tortodrone.world.MissionRun;
-import org.tortodrone.world.SceneConversation;
+import org.tortodrone.core.world.SceneConversation;
 import static org.tortodrone.core.Yaml.*;
 import org.tortodrone.core.ContentFiles;
 

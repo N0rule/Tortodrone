@@ -11,6 +11,8 @@ import org.tortodrone.core.Yaml;
 import org.tortodrone.core.ContentFiles;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.world.EquipmentCatalog;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** Migration-only reader for effective native-path YAML, including sparse inherited defaults. */
 final class LegacyItemYaml {

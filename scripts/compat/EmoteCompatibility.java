@@ -10,9 +10,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.io.*;
-import org.tortodrone.world.PlayerEmotes;
+import org.tortodrone.core.world.PlayerEmotes;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneChat;
 
 /** Compares the complete server emote catalog with installed stock client configs. */
 public final class EmoteCompatibility {
@@ -69,8 +71,8 @@ public final class EmoteCompatibility {
     private static void activities()throws Exception {
         for(boolean interior:new boolean[]{false,true})for(String name:List.of("Attack","Helpme","Follow","Fallback","Wave")){
             var descriptor=PlayerEmotes.find(name);var model=new org.tortodrone.core.character.StarterCatalog.Model("Fixture",Map.of());
-            var first=new org.tortodrone.world.ActorState(42,1001,"Fixture",0,1,0,0,0,0,0,descriptor.activity(),1000,model);
-            var moved=new org.tortodrone.world.ActorState(42,1001,"Fixture",0,1,1,0,0,0,2,descriptor.activity(),1000,model);
+            var first=new org.tortodrone.core.world.ActorState(42,1001,"Fixture",0,1,0,0,0,0,0,descriptor.activity(),1000,model);
+            var moved=new org.tortodrone.core.world.ActorState(42,1001,"Fixture",0,1,1,0,0,0,2,descriptor.activity(),1000,model);
             var initial=FireCompatibility.read(new org.tortodrone.protocol.SessionCodec().sceneDelta(1001,140,0,(short)0,0,1000,(short)50,List.of(first),List.of(),new int[0],Map.of(),interior));
             var nativeActor=(com.threerings.tudey.data.actor.Active)initial.aej()[0];
             // The controlling client advances its baseline independently. A passive
@@ -81,7 +83,7 @@ public final class EmoteCompatibility {
             var applied=(com.threerings.tudey.data.actor.Active)update.aek()[0].apply(nativeActor);
             if((int)FireCompatibility.field(applied,"_activity")!=0||(int)FireCompatibility.field(applied,"_activityStarted")!=1000+descriptor.duration()||applied.tz().x!=1)
                 throw new AssertionError("Passive update reapplied emote activity: "+name);
-            var ended=new org.tortodrone.world.ActorState(42,1001,"Fixture",0,1,1,0,0,0,0,0,1800,model);
+            var ended=new org.tortodrone.core.world.ActorState(42,1001,"Fixture",0,1,1,0,0,0,0,0,1800,model);
             var end=FireCompatibility.read(new org.tortodrone.protocol.SessionCodec().sceneDelta(1001,140,1050,(short)0,1050,1800,(short)50,List.of(),List.of(ended),new int[0],Map.of(42,moved),interior));
             applied=(com.threerings.tudey.data.actor.Active)end.aek()[0].apply(applied);
             if((int)FireCompatibility.field(applied,"_activity")!=0||(int)FireCompatibility.field(applied,"_activityStarted")!=1800)throw new AssertionError("Real activity transition lost: "+name);
@@ -89,9 +91,9 @@ public final class EmoteCompatibility {
         System.out.println("PASS: native town/dungeon deltas preserve predicted emote clocks and deliver real activity transitions");
     }
     private static void messages()throws Exception {
-        var routing=new org.tortodrone.world.SceneChat();
-        var received=new java.util.ArrayList<org.tortodrone.world.SceneChat.Message>();
-        try(var sender=routing.join(10,1002,"First-Knight",new org.tortodrone.world.SceneChat.RateLimit(),m->{received.add(m);return true;})) {
+        var routing=new org.tortodrone.core.world.SceneChat();
+        var received=new java.util.ArrayList<org.tortodrone.core.world.SceneChat.Message>();
+        try(var sender=routing.join(10,1002,"First-Knight",new org.tortodrone.core.world.SceneChat.RateLimit(),m->{received.add(m);return true;})) {
             var bundle=new com.threerings.util.R("rsrc.i18n").gw("chat");
             var codec=new org.tortodrone.protocol.SessionCodec();var bytes=new ByteArrayOutputStream();
             byte[] handshake=org.tortodrone.protocol.HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef");

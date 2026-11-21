@@ -3,6 +3,10 @@ package org.tortodrone.world;
 import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.MonsterCatalog;
 
 /**
  * Phase 10 soak: keep a full wave population and eight observers running for thirty

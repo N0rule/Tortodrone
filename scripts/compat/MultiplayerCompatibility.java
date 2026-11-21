@@ -12,6 +12,10 @@ import com.threerings.tudey.dobj.SceneDeltaEvent;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneKnightState;
+import org.tortodrone.core.world.SceneStatus;
 
 /** Retail-reader regression for two connection identities, native membership events and private reveals. */
 public final class MultiplayerCompatibility {

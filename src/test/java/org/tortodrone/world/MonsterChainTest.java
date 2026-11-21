@@ -3,8 +3,10 @@ package org.tortodrone.world;
 import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
 
 /** Native attack rearm/chain timing through the production entity tick, without a server timer. */
 public final class MonsterChainTest {

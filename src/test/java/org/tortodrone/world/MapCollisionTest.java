@@ -3,6 +3,7 @@ package org.tortodrone.world;
 import java.nio.file.*;
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.MapCollision;
 
 /** Exact collision: properties import, binary round trip, broadphase queries and wall penetration. */
 public final class MapCollisionTest {

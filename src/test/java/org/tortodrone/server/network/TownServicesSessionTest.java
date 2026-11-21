@@ -15,6 +15,7 @@ import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.Currency;
+import org.tortodrone.core.world.ActorState;
 
 /** Native inventory Use dispatch and dialog ownership, on a disposable authenticated session. */
 public final class TownServicesSessionTest {

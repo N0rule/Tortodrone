@@ -6,6 +6,12 @@ import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneCombatEvent;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.SceneDamage;
 
 /** Deterministic hitbox and thrown-lift regressions, without accounts or a ticking server. */
 public final class SceneEntitiesTest {

@@ -5,7 +5,10 @@ import java.util.concurrent.*;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Synthetic sensor exercises real membership input, scheduling and native floor-request authority. */
 public final class SceneNextFloorTest {

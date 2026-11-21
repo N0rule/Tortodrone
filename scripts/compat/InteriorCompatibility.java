@@ -34,7 +34,7 @@ import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionCodec;
-import org.tortodrone.world.ActorState;
+import org.tortodrone.core.world.ActorState;
 import org.tortodrone.world.SceneCatalog;
 import org.tortodrone.world.SceneRegistry;
 import org.tortodrone.core.character.StarterCatalog;

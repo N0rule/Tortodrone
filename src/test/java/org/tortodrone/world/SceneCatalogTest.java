@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.jar.JarFile;
 import org.tortodrone.server.Server;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.ScenePortals;
 
 public final class SceneCatalogTest {
     public static void main(String[] args)throws Exception {
@@ -18,7 +19,7 @@ public final class SceneCatalogTest {
             }
             copy(org.tortodrone.support.ContentFixture.path("maps"),maps);
             var catalog=SceneCatalog.load(maps);
-            check(catalog.scenes().size()==10 && catalog.entry().id()==1,"all ten bundled scenes load without installed game");
+            check(catalog.scenes().size()==17 && catalog.entry().id()==1,"all 17 bundled scenes load without installed game");
             check(catalog.scene(294).image().equals("traininghall.jpg"),"Training loading screen uses its native background");
             check(catalog.entry().zoneName().equals("%town:m.haven")&&catalog.entry().townName().equals("m.haven"),
                 "captured qualified zone name and town localization key remain distinct");

@@ -9,8 +9,9 @@ import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.Json;
 import org.tortodrone.core.Yaml;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.SceneContent;
 
 /** A synthetic response/presentation graft on the existing verified training pack tests import only. */
 public final class ScriptedConversationImportTest {

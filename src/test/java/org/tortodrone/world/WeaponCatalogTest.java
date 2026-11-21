@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.WeaponCatalog;
 
 public final class WeaponCatalogTest {
     public static void main(String[] args) throws Exception {

@@ -4,6 +4,8 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
 
 /**
  * Phase 4: a monster wakes only when a player enters its activation radius (or it is hit),

@@ -3,7 +3,8 @@ package org.tortodrone.world;
 import java.io.IOException;
 import java.security.*;
 import java.util.*;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Verified Crash Site exit with direct arrival at Haven's authored default spawn.
  * Native NextFloor remains a generic scene action; this supplies its tutorial party's destination. */

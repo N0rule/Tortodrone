@@ -5,6 +5,10 @@ import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.CollisionMap;
 
 /** Real scene/membership/lift/input services on synthetic geometry; not a Generator playthrough. */
 public final class SceneGoldKeyTest {

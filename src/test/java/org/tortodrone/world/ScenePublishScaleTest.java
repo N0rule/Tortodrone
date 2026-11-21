@@ -5,6 +5,7 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.protocol.SessionCodec;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.world.ActorState;
 
 /**
  * Scale check for the shared town publication path. A shared town ticks one simulation for

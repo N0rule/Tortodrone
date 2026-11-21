@@ -6,6 +6,10 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.CollisionMap;
 
 /**
  * Phase 6: the grid broadphase must return exactly the entities the linear scan returns, in

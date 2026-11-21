@@ -2,6 +2,7 @@ package org.tortodrone.world;
 
 import java.util.HashSet;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.PlayerEmotes;
 
 public final class PlayerEmotesTest {
     public static void main(String[] args) {

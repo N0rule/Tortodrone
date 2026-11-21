@@ -4,6 +4,9 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.PreparedActor;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneAttackMotion;
 
 /**
  * Phase 3: native behaviour is parsed once per prepared actor and shared by every instance.

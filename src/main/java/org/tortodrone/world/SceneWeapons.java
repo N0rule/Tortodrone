@@ -4,6 +4,15 @@ import java.util.*;
 import org.tortodrone.core.WireTypes;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.GearStats;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.ProjectileState;
+import org.tortodrone.core.world.SceneEffect;
+import org.tortodrone.core.world.SceneEntityState;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.SceneDamage;
+import org.tortodrone.core.world.CollisionMap;
 
 /** Scene-owned stock fire actions, with contact and damage resolved by instance entities. */
 public final class SceneWeapons {

@@ -6,8 +6,9 @@ import java.util.stream.Collectors;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.SceneContent;
 
 /** The tutorial Ironwood Giant's authored Shutdown payout: 12 Copper and 1 Copper-Silver
  * Crown plus 2 Ember 5 and 1 Ember 3, through the production death and pickup paths. */

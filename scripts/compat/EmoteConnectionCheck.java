@@ -11,7 +11,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
-import org.tortodrone.world.PlayerEmotes;
+import org.tortodrone.core.world.PlayerEmotes;
 import org.tortodrone.core.character.Knight;
 
 /** Optional disposable stock-client exercise of every emote RPC in an ordinary town instance. */

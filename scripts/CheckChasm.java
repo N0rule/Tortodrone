@@ -4,6 +4,8 @@ import java.util.*;
 import org.tortodrone.world.*;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneActions;
 
 /** Original content and isolated control-chain regression; never a full gameplay acceptance. */
 public final class CheckChasm {

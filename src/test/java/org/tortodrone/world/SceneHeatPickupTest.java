@@ -4,6 +4,9 @@ import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Synthetic scene: real ticking pickup claims and scene-owned party credit. */
 public final class SceneHeatPickupTest {

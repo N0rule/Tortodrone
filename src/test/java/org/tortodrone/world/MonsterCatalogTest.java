@@ -7,6 +7,9 @@ import java.security.MessageDigest;
 import java.util.*;
 import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.MonsterCatalog;
+import org.tortodrone.core.world.MonsterType;
 
 /** Generated catalogue contract: format, fingerprints, fail-closed refusals and overlay limits. */
 public final class MonsterCatalogTest {

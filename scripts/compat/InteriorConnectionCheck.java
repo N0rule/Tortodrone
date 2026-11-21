@@ -17,6 +17,7 @@ import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
 import org.tortodrone.world.*;
 import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Two stock clients exercise the native Haven interior links and party exit operation. */
 public final class InteriorConnectionCheck {

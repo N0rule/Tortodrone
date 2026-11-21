@@ -8,6 +8,7 @@ import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.ActorState;
 
 /** Stock metadata and equipment-model check, using unchanged installed classes. */
 public final class ItemCatalogCompatibility {
@@ -114,7 +115,7 @@ public final class ItemCatalogCompatibility {
             throw new AssertionError("Interior body duplicates stock sprite weapon/shield attachments");
         // Read the rendered actor too: this exercises TransNormal fields on the wire.
         var codec=new org.tortodrone.protocol.SessionCodec(catalog);var model=StarterCatalog.equipped(knight,profile,catalog);
-        var state=new org.tortodrone.world.ActorState(10,1001,knight.name(),257,100,0,-8,0,0,0,
+        var state=new org.tortodrone.core.world.ActorState(10,1001,knight.name(),257,100,0,-8,0,0,0,
             new StarterCatalog.Model("Character/PC/Default",Map.of("Model",model,"Height",model.arguments().get("Height"))));
         var bytes=new java.io.ByteArrayOutputStream();
         for(byte[] frame:List.of(org.tortodrone.protocol.HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),

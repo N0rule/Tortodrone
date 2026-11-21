@@ -6,6 +6,12 @@ import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.core.world.CollisionMap;
 
 /** Pawn separation and lunge prediction regressions, independent of scheduler and network timing. */
 public final class MovementCollisionTest {

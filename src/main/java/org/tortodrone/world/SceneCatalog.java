@@ -6,6 +6,12 @@ import java.security.*;
 import java.util.*;
 import org.tortodrone.core.ContentFiles;
 import org.tortodrone.core.config.ServerSettings;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.MonsterCatalog;
+import org.tortodrone.core.world.MapCollision;
+import org.tortodrone.core.world.CollisionMap;
 
 /** External immutable map packs. Templates are distinct from runtime place objects. */
 public final class SceneCatalog {

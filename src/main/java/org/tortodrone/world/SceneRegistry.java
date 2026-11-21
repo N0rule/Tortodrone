@@ -7,11 +7,14 @@ import org.tortodrone.core.NewsCatalog;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.mission.MissionCatalog;
 import org.tortodrone.world.MissionComlinks;
-import org.tortodrone.world.MissionGates;
+import org.tortodrone.core.mission.MissionGates;
 import org.tortodrone.world.MissionRun;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownCatalog;
 import org.tortodrone.resources.BoxCatalog;
+import org.tortodrone.core.world.EquipmentCatalog;
+import org.tortodrone.core.world.SceneChat;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** Server-assigned scene instances; a client scene version is never an instance selector. */
 public final class SceneRegistry {

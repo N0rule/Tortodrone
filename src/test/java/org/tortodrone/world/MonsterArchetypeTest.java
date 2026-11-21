@@ -6,6 +6,11 @@ import java.security.MessageDigest;
 import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.MonsterCatalog;
+import org.tortodrone.core.world.MonsterType;
+import org.tortodrone.core.world.MonsterArchetype;
 
 /**
  * Phase 9: six scheduling policies, one behaviour check per archetype, generated per-type

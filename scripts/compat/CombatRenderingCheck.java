@@ -16,11 +16,15 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.core.character.Knight;
-import org.tortodrone.world.CollisionMap;
+import org.tortodrone.core.world.CollisionMap;
 import org.tortodrone.world.SceneCatalog;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.character.Currency;
 import org.tortodrone.core.character.Confetti;
+import org.tortodrone.core.world.ReadyRoom;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.SceneActions;
 
 /** Unchanged native controller/sprite/framebuffer probe; launched only by CheckCombatRendering. */
 public final class CombatRenderingCheck {
@@ -523,7 +527,7 @@ public final class CombatRenderingCheck {
     /** Load one scene through the native command and drive free stock movement in it. */
     private void exploreTick(long now)throws Exception {
         if(app.CZ()==null)return;
-        if(app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE){
+        if(app.CZ().zoneId==org.tortodrone.core.world.ReadyRoom.ZONE){
             if(!exploreWorldRequested&&!(app.GK().mN()||app.GB())&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())){
                 app.GI().bU(com.threerings.projectx.client.aU.class).EQ();exploreWorldRequested=true;
             }
@@ -581,7 +585,7 @@ public final class CombatRenderingCheck {
         if(app.CZ()==null||app.Gx()==null)return;
         if(started==0)started=now;
         if(stage<3&&now-started>60_000_000_000L)throw new AssertionError("Tutorial entry timed out; zone="+app.CZ().zoneId+" loading="+(app.GK().mN()||app.GB()));
-        if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
+        if(stage==0&&app.CZ().zoneId==org.tortodrone.core.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
             // The rebuilt ready-room view is client dT (extends the tudey place view dC and is
             // built by the dS controller that tracks the knight appearance); it no longer
             // exposes its controller, and the old dR action "town" is, in its bytecode, aU.EQ().
@@ -600,7 +604,7 @@ public final class CombatRenderingCheck {
     private List<org.tortodrone.world.ScenePathing.Point> tutorialPath=List.of();
     private long tutorialResponseAt,tutorialProgressAt,tutorialCombatAt,tutorialRepathAt,tutorialRouteRetryAt,tutorialEnemySince;
     private double tutorialBestDistance=Double.POSITIVE_INFINITY;
-    private final Map<String,org.tortodrone.world.SceneContent.Spec> tutorialSpecs=new HashMap<>();
+    private final Map<String,org.tortodrone.core.world.SceneContent.Spec> tutorialSpecs=new HashMap<>();
     private String tutorialDialog="";
     private int tutorialEnemy;
     private float tutorialEnemyGoalX,tutorialEnemyGoalY;
@@ -779,21 +783,21 @@ public final class CombatRenderingCheck {
             if(now<tutorialRouteRetryAt){flags(view,0);return false;}
             if(tutorialSpecs.isEmpty())for(var e:tutorialMap.content().entries()){
                 tutorialSpecs.putIfAbsent(e.spec().config().name(),e.spec());
-                if(!e.spec().text("action","").isEmpty())tutorialSpawnSpecs(org.tortodrone.world.SceneActions.parse(e.spec().text("action","")));
+                if(!e.spec().text("action","").isEmpty())tutorialSpawnSpecs(org.tortodrone.core.world.SceneActions.parse(e.spec().text("action","")));
             }
             int mask=Math.round(tutorialMap.content().stats().get("player.collision-mask"));
             tutorialPath=org.tortodrone.world.ScenePathing.route(own.tG().x,own.tG().y,x,y,(sx,sy,tx,ty)->{
                 int count=Math.max(1,(int)Math.ceil(Math.hypot(tx-sx,ty-sy)/.1));
                 for(int i=1;i<=count;i++){float px=sx+(tx-sx)*i/count,py=sy+(ty-sy)*i/count;
-                    if(!tutorialMap.staticCollision().floorSupported(px,py)||tutorialMap.staticCollision().penetration(mask,px,py,org.tortodrone.world.ScenePortals.PAWN_RADIUS).present())return false;
+                    if(!tutorialMap.staticCollision().floorSupported(px,py)||tutorialMap.staticCollision().penetration(mask,px,py,org.tortodrone.core.world.ScenePortals.PAWN_RADIUS).present())return false;
                     for(var obstacle:authoritative.values())if(obstacle.vD()!=own.vD()){
                         var spec=tutorialSpecs.get(obstacle.MX().getName());
                         if(spec==null||(spec.integer("collision-flags",0)&mask)==0||spec.text("damage-action","").equals("destroy")||Set.of("TimedBlock","StoneBlock").contains(spec.text("kind",""))||spec.text("kind","").equals("Door")&&obstacle.bT(2))continue;
                         // A scripted reposition can leave the knight overlapping a door or a
                         // helper's footprint. Ignore anything already covering the pawn so
                         // the escape route is plannable; the server still owns collision.
-                        if(spec.contains(obstacle.tG().x,obstacle.tG().y,obstacle.tH(),own.tG().x,own.tG().y,org.tortodrone.world.ScenePortals.PAWN_RADIUS))continue;
-                        if(spec.contains(obstacle.tG().x,obstacle.tG().y,obstacle.tH(),px,py,org.tortodrone.world.ScenePortals.PAWN_RADIUS))return false;
+                        if(spec.contains(obstacle.tG().x,obstacle.tG().y,obstacle.tH(),own.tG().x,own.tG().y,org.tortodrone.core.world.ScenePortals.PAWN_RADIUS))continue;
+                        if(spec.contains(obstacle.tG().x,obstacle.tG().y,obstacle.tH(),px,py,org.tortodrone.core.world.ScenePortals.PAWN_RADIUS))return false;
                     }
                 }return true;
             });tutorialNode=0;
@@ -821,13 +825,13 @@ public final class CombatRenderingCheck {
         for(var a:authoritative.values())if(a.MX().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")&&monsterHealth(a)>0)return true;
         return false;
     }
-    private void tutorialSpawnSpecs(org.tortodrone.world.SceneActions.Action action){
+    private void tutorialSpawnSpecs(org.tortodrone.core.world.SceneActions.Action action){
         if(action==null)return;
-        if(action instanceof org.tortodrone.world.SceneActions.Spawn spawn){var spec=new org.tortodrone.world.SceneContent.Spec(spawn.fields());tutorialSpecs.putIfAbsent(spec.config().name(),spec);}
-        else if(action instanceof org.tortodrone.world.SceneActions.Delay delay)tutorialSpawnSpecs(delay.action());
-        else if(action instanceof org.tortodrone.world.SceneActions.Sequence sequence)sequence.actions().forEach(this::tutorialSpawnSpecs);
-        else if(action instanceof org.tortodrone.world.SceneActions.Choice choice)choice.actions().forEach(this::tutorialSpawnSpecs);
-        else if(action instanceof org.tortodrone.world.SceneActions.Limited limited){tutorialSpawnSpecs(limited.action());tutorialSpawnSpecs(limited.otherwise());}
+        if(action instanceof org.tortodrone.core.world.SceneActions.Spawn spawn){var spec=new org.tortodrone.core.world.SceneContent.Spec(spawn.fields());tutorialSpecs.putIfAbsent(spec.config().name(),spec);}
+        else if(action instanceof org.tortodrone.core.world.SceneActions.Delay delay)tutorialSpawnSpecs(delay.action());
+        else if(action instanceof org.tortodrone.core.world.SceneActions.Sequence sequence)sequence.actions().forEach(this::tutorialSpawnSpecs);
+        else if(action instanceof org.tortodrone.core.world.SceneActions.Choice choice)choice.actions().forEach(this::tutorialSpawnSpecs);
+        else if(action instanceof org.tortodrone.core.world.SceneActions.Limited limited){tutorialSpawnSpecs(limited.action());tutorialSpawnSpecs(limited.otherwise());}
     }
     private void checkCampObjective(){
         if(app.CZ().objectives.size()!=1)throw new AssertionError("Expected one persistent Camp objective");
@@ -882,7 +886,7 @@ public final class CombatRenderingCheck {
         var hudType=Class.forName("com.threerings.projectx.client.as");
         var ctxType=Class.forName("com.threerings.projectx.util.w");
         var tabType=Class.forName("com.threerings.projectx.client.UplinkWindow$Tab");
-        if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
+        if(stage==0&&app.CZ().zoneId==org.tortodrone.core.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
             if(started==0)started=now;if(now-started<3_000_000_000L)return;
             capture("ready-room");
             stage=1;started=now;
@@ -952,7 +956,7 @@ public final class CombatRenderingCheck {
         if(app.CZ()==null||app.Gx()==null)return;
         Object item=null;
         for(var held:app.CZ().items)if(held instanceof com.threerings.projectx.item.data.LevelItem&&"Weapon/Sword/Proto Sword".equals(held.c(app).getName()))item=held;
-        if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
+        if(stage==0&&app.CZ().zoneId==org.tortodrone.core.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
             if(started==0)started=now;if(now-started<3_000_000_000L)return;
             if(item==null)throw new AssertionError("The forge seed's Proto Sword is missing from the native arsenal");
             capture("ready-room");stage=1;started=now;
@@ -993,7 +997,7 @@ public final class CombatRenderingCheck {
     }
     private void readyRoomTick(long now)throws Exception{
         if(app.CZ()==null||app.Gx()==null)return;
-        if(stage==0&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
+        if(stage==0&&app.CZ().zoneId==org.tortodrone.core.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())&&!(app.GK().mN()||app.GB())){
             if(started==0)started=now;if(now-started<3_000_000_000L)return;
             capture("ready-room");
             // The rebuilt ready-room view (client dT, built by the dS controller) no longer
@@ -1051,7 +1055,7 @@ public final class CombatRenderingCheck {
             if(tutorialEntryOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}tutorialEntryTick(now);return;}
             if(readyRoomOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}if(campStory&&stage>=2)campStoryTick(new View(app.Gx()),now);else if(readyRoomMailOnly)readyRoomMailTick(now);else if(readyRoomForgeOnly)readyRoomForgeTick(now);else readyRoomTick(now);return;}
             if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
-            if(app.CZ()!=null&&app.CZ().zoneId==org.tortodrone.world.ReadyRoom.ZONE){
+            if(app.CZ()!=null&&app.CZ().zoneId==org.tortodrone.core.world.ReadyRoom.ZONE){
                 if(!initialWorldReturnRequested&&!(app.GK().mN()||app.GB())&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())){
                     // The rebuilt ready-room view (client dT) has no controller; the old dR
                     // action "town" == the stock aU.EQ() enter-world call.

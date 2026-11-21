@@ -6,6 +6,9 @@ import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.WireTypes;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneDamage;
 
 /** Official-capture pot torches: Fire Power 100 for a direct Fire Pot, Fire (Scaled)
  *  flags 1 / 0.0 / 0 for oil ignition, and sequential ignition down an oil line. */

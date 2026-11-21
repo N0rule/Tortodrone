@@ -12,6 +12,9 @@ import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneChat;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Optional independent reader fixture using the read-only installed client. */
 public final class WorldCompatibility {
@@ -55,7 +58,7 @@ public final class WorldCompatibility {
         var moved=new ActorState(10,1001,knight.name(),257,100,.25f,-8,1.5f,0,2,state.config());
         append(bytes,codec.sceneDelta(1001,101,(short)20,101,151,(short)50,List.of(),List.of(moved),new int[0],Map.of(10,state)));
         append(bytes,codec.occupants(List.of(state)));
-        append(bytes,codec.chat(10,new org.tortodrone.world.SceneChat.Message(knight.name(),"Hello 🌍",(byte)2)));
+        append(bytes,codec.chat(10,new org.tortodrone.core.world.SceneChat.Message(knight.name(),"Hello 🌍",(byte)2)));
         append(bytes,codec.chatFeedback(10,"Please slow down."));
         var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));
         input.qe();input.qe();

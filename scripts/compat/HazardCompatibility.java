@@ -5,6 +5,7 @@ import org.tortodrone.protocol.*;
 import com.threerings.config.*;
 import com.threerings.tudey.config.ActorConfig;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.SceneContent;
 
 /** Native actor class, config resolution and destruction delta oracle for pot hazards. */
 public final class HazardCompatibility {

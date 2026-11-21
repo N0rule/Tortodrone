@@ -5,6 +5,11 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Payment rollback and exactly one native Spark effect/monster impulse after commit. */
 public final class SparkRevivalTest {

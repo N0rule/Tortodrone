@@ -2,7 +2,7 @@ package org.tortodrone.resources;
 
 import java.io.*;
 import java.util.*;
-import org.tortodrone.world.WeaponCatalog;
+import org.tortodrone.core.world.WeaponCatalog;
 import static org.tortodrone.core.Yaml.*;
 import static org.tortodrone.resources.ItemFields.*;
 

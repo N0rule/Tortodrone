@@ -4,6 +4,8 @@ import java.util.*;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
 
 /** Count region applications independently of probabilistic Fire/status protection. */
 public final class HazardLifetimeTest {

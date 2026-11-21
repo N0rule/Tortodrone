@@ -3,7 +3,7 @@ import java.security.*;
 import java.util.*;
 import com.threerings.config.*;
 import com.threerings.tudey.data.*;
-import org.tortodrone.world.SceneCollision;
+import org.tortodrone.core.world.SceneCollision;
 
 /** Stock getFloorZ is the oracle for terrain plus authored floorTile placeables. */
 public final class SceneFloorCompatibility {

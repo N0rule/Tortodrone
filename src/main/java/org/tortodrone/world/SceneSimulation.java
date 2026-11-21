@@ -10,11 +10,28 @@ import org.tortodrone.core.character.KnightProgress;
 import org.tortodrone.core.character.KnightObjective;
 import org.tortodrone.core.character.KnightMemory;
 import org.tortodrone.core.character.AnimatedItems;
-import org.tortodrone.world.SceneConversation;
+import org.tortodrone.core.world.SceneConversation;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownState;
 import org.tortodrone.core.town.SpriteRules;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.EquipmentCatalog;
+import org.tortodrone.core.world.GearStats;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.PlayerEmotes;
+import org.tortodrone.core.world.SceneCombatEvent;
+import org.tortodrone.core.world.SceneEffect;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneKnightState;
+import org.tortodrone.core.world.ScenePetState;
+import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneDamage;
+import org.tortodrone.core.world.SceneElevator;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.core.world.InputBits;
 
 /** One authoritative clock, movement owner and immutable publication per scene instance.
  * Session callbacks only offer publications to bounded mailboxes; no socket or storage work

@@ -4,6 +4,9 @@ import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Real ticks: shared publication/diff, authoritative movement, isolation and idle lifecycle. */
 public final class SceneSimulationTest {

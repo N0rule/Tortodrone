@@ -4,6 +4,9 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneTargeting;
 
 /** Targeting authority/lifecycle on synthetic terrain; native attack data has a stock oracle. */
 public final class SceneTargetingTest {

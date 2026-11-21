@@ -3,6 +3,7 @@ import com.threerings.config.ConfigManager;
 import com.threerings.projectx.dungeon.config.*;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.Json;
+import org.tortodrone.core.world.SceneAttackMotion;
 
 /** Stock attack timings and action graphs; AI choices remain separate prepared rules. */
 public final class SceneMonsterExport {
@@ -38,7 +39,7 @@ public final class SceneMonsterExport {
             var impulse=attack.impulseReceived;
             if(impulse!=null){
                 if(impulse.translation==null)throw new java.io.IOException("Missing native attack motion translation");
-                new org.tortodrone.world.SceneAttackMotion(impulse.delay,impulse.duration,impulse.translation.x,impulse.translation.y);
+                new org.tortodrone.core.world.SceneAttackMotion(impulse.delay,impulse.duration,impulse.translation.x,impulse.translation.y);
                 out.put(p+"impulse-delay",Integer.toString(impulse.delay));out.put(p+"impulse-duration",Integer.toString(impulse.duration));
                 out.put(p+"impulse-x",Float.toString(impulse.translation.x));out.put(p+"impulse-y",Float.toString(impulse.translation.y));
             }

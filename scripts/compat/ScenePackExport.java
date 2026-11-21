@@ -7,6 +7,9 @@ import com.threerings.config.*;
 import com.threerings.tudey.config.*;
 import com.threerings.tudey.data.*;
 import com.threerings.math.*;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.MapCollision;
 
 /** Read-only stock configuration oracle. Exports a server map pack, never game assets. */
 public final class ScenePackExport {
@@ -49,9 +52,9 @@ public final class ScenePackExport {
         SceneCollisionExport.export(manager,scene,out);
         p.setProperty("static-collision-sha256",digest(out.resolve("static-collision.properties")));
         p.setProperty("content-sha256",digest(out.resolve("content.properties")));
-        var exact=org.tortodrone.world.MapCollision.fromProperties(out.resolve("static-collision.properties"));
-        int mask=Math.round(org.tortodrone.world.SceneContent.DEFAULT_PLAYER_COLLISION_MASK);
-        if(!exact.clear(mask,spawnX,spawnY,org.tortodrone.world.ScenePortals.PAWN_RADIUS))
+        var exact=org.tortodrone.core.world.MapCollision.fromProperties(out.resolve("static-collision.properties"));
+        int mask=Math.round(org.tortodrone.core.world.SceneContent.DEFAULT_PLAYER_COLLISION_MASK);
+        if(!exact.clear(mask,spawnX,spawnY,org.tortodrone.core.world.ScenePortals.PAWN_RADIUS))
             throw new IOException("Native or requested spawn is not clear at "+spawnX+","+spawnY+" (native entrance "+entrance.id+"); refusing an invented arrival");
         writeProperties(out.resolve("map.properties"),p);
         // Mission returns use the town's real entrance too (powered Camp 218/5158).
@@ -102,8 +105,8 @@ public final class ScenePackExport {
     private static void writePortals(Path out,String layoutDigest,Entrance entrance,
             TudeySceneModel scene,ConfigManager manager)throws IOException {
         var p=new Properties();p.setProperty("format","2");p.setProperty("layout-sha256",layoutDigest);
-        var exact=org.tortodrone.world.MapCollision.fromProperties(out.resolve("static-collision.properties"));
-        int mask=Math.round(org.tortodrone.world.SceneContent.DEFAULT_PLAYER_COLLISION_MASK);
+        var exact=org.tortodrone.core.world.MapCollision.fromProperties(out.resolve("static-collision.properties"));
+        int mask=Math.round(org.tortodrone.core.world.SceneContent.DEFAULT_PLAYER_COLLISION_MASK);
         var entrances=new TreeMap<String,Entrance>();
         for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)){
             if(!entry.placeable.getName().equals("Dynamic/Portal/Destination"))continue;
@@ -112,7 +115,7 @@ public final class ScenePackExport {
             var position=entry.transform.tK();var rotation=entry.transform.tL();
             float yaw=(float)Math.atan2(2f*(rotation.w*rotation.z+rotation.x*rotation.y),
                 1f-2f*(rotation.y*rotation.y+rotation.z*rotation.z));
-            if(!exact.clear(mask,position.x,position.y,org.tortodrone.world.ScenePortals.PAWN_RADIUS)){System.out.println("SKIP unwalkable native portal entrance: "+tag);continue;}
+            if(!exact.clear(mask,position.x,position.y,org.tortodrone.core.world.ScenePortals.PAWN_RADIUS)){System.out.println("SKIP unwalkable native portal entrance: "+tag);continue;}
             if(entrances.putIfAbsent(tag,new Entrance(((Number)entry.getKey()).intValue(),position.x,position.y,yaw))!=null)
                 throw new IOException("Duplicate native portal destination tag: "+tag);
         }

@@ -11,6 +11,8 @@ import org.tortodrone.core.character.KnightProgress;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownState;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** One isolated scene: owned companion, native skill intent, cooldown and departure cleanup. */
 public final class PetCombatTest {

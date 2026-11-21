@@ -7,6 +7,7 @@ import java.util.random.RandomGenerator;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.core.loot.*;
+import org.tortodrone.loot.BoxFixture;
 import org.tortodrone.resources.BoxCatalog;
 import org.tortodrone.resources.ItemYaml;
 import static org.tortodrone.support.TestWire.check;

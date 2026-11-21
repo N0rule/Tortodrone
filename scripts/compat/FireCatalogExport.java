@@ -12,6 +12,7 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.FireCatalog.*;
 import org.tortodrone.core.Json;
+import org.tortodrone.core.world.SceneDamage;
 
 /** Exports numeric stock attack/fire-action references; never copies client assets or code. */
 public final class FireCatalogExport {
@@ -106,7 +107,7 @@ public final class FireCatalogExport {
         var config=fresh.config();
         if(fresh.kind()==Kind.CONDITIONAL&&config!=null&&old.config()!=null
                 &&config.arguments().get("condition") instanceof DataValue current&&current.type().endsWith("$Tagged")
-                &&Objects.equals(org.tortodrone.world.SceneDamage.field(current,"tag"),"")
+                &&Objects.equals(org.tortodrone.core.world.SceneDamage.field(current,"tag"),"")
                 &&old.config().arguments().get("condition") instanceof DataValue prior&&!prior.type().endsWith("$Tagged"))config=old.config();
         return new Action(fresh.kind(),config,actor,fresh.targetType(),fresh.facingType(),fresh.collisionSourceType(),fresh.x(),fresh.y(),repairedFan?fresh.rotation():old.rotation(),old.rotationVariance(),repairedFan||old.relative(),fresh.count(),fresh.stepSize(),fresh.steps(),fresh.collisionMask(),fresh.stopOnFailure(),children,fresh.unsupportedType(),fresh.parameter(),fresh.values());
     }

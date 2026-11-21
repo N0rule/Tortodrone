@@ -6,6 +6,7 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.world.*;
+import org.tortodrone.core.world.ActorState;
 
 /** Opt-in, local CPU/allocation comparison of scene hot paths; no accounts or sockets. */
 public final class SceneBenchmark {

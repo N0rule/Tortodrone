@@ -8,6 +8,7 @@ import com.threerings.projectx.dungeon.util.DamageSummary.DamageType;
 import org.tortodrone.resources.*;
 import org.tortodrone.core.Json;
 import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.world.EquipmentCatalog;
 
 /** Read-only numeric level/variant extraction. No models, textures or client classes are emitted. */
 public final class GearStatsExport {
@@ -39,8 +40,8 @@ public final class GearStatsExport {
                         if(resist!=0||level.c(cm,0).ay(gear.defense.eq(mask),0)!=0)put(p+"status-resist."+mask,resist);
                     }
                 }
-                for(var weapon:org.tortodrone.world.EquipmentCatalog.WeaponClass.values()) {
-                    var cls=weapon==org.tortodrone.world.EquipmentCatalog.WeaponClass.NONE?null:LevelConfig.Weapons.valueOf(weapon.name());
+                for(var weapon:org.tortodrone.core.world.EquipmentCatalog.WeaponClass.values()) {
+                    var cls=weapon==org.tortodrone.core.world.EquipmentCatalog.WeaponClass.NONE?null:LevelConfig.Weapons.valueOf(weapon.name());
                     var mods=new EquipmentModifiers();current.a(mods,cls);
                     var base=new EquipmentModifiers();level.c(cm,0).a(base,cls);
                     String m=p+"modifiers."+weapon+".";

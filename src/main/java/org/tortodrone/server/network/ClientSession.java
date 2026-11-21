@@ -11,6 +11,7 @@ import org.tortodrone.core.character.Knight;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
+import org.tortodrone.core.world.SceneChat;
 
 /** Authenticated objects, receiver registration, and limited invocation handling. */
 final class ClientSession {
@@ -216,7 +217,7 @@ final class ClientSession {
             if(world.tradeInvocation(invocation))return;
             if(world.departingScene(invocation.oid())&&invocation.service()==10
                     &&invocation.method()==1&&invocation.arguments().isEmpty())return;
-            if((invocation.service()==org.tortodrone.world.SceneChat.SERVICE||invocation.service()==org.tortodrone.world.SceneChat.PARTY_SERVICE)&&invocation.oid()!=SessionCodec.INVOCATION_OID) {
+            if((invocation.service()==org.tortodrone.core.world.SceneChat.SERVICE||invocation.service()==org.tortodrone.core.world.SceneChat.PARTY_SERVICE)&&invocation.oid()!=SessionCodec.INVOCATION_OID) {
                 world.speak(invocation);return;
             }
             if (world.ownsScene(invocation.oid()) && invocation.service()>=6 && invocation.service()<=11) {

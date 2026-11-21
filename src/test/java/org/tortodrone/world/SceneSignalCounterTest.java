@@ -5,8 +5,10 @@ import java.util.*;
 import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.StarterCatalog;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.CollisionMap;
 
 /** Synthetic geometry: production counter scheduling and native door collision, not a floor drive. */
 public final class SceneSignalCounterTest {

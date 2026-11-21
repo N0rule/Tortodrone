@@ -3,6 +3,8 @@ package org.tortodrone.world;
 import java.nio.file.*;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
 
 /** The shipped maps with native static collision load their compiled exact collision. */
 public final class MapCollisionContentTest {

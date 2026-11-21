@@ -2,6 +2,9 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.world.*;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.InteractionState;
+import org.tortodrone.core.world.SceneEntityState;
 
 /** Installed reader oracle for an authored entry's actor and mutable state, not elevator travel. */
 public final class EntryStateCompatibility {

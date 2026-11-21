@@ -13,8 +13,10 @@ import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.ItemCatalog;
-import org.tortodrone.world.SceneConversation;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneConversation;
+import org.tortodrone.core.world.SceneActions;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Synthetic authored sensor uses real accounts, sessions, native response requests and scene services. */
 public final class ScriptedConversationSessionTest {

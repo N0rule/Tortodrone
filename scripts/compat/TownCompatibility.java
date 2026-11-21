@@ -11,6 +11,11 @@ import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.ProjectileState;
+import org.tortodrone.core.world.SceneKnightState;
+import org.tortodrone.core.world.ScenePetState;
+import org.tortodrone.core.world.SceneStatus;
 
 /** Focused stock-reader check for Town messages; no server or graphical client is launched. */
 public final class TownCompatibility {
@@ -27,7 +32,7 @@ public final class TownCompatibility {
         var profile=new WorldProfile(42,1,1,1000,100,1,List.of(item),KnightProgress.RECRUIT,state);
         var codec=new SessionCodec();var bytes=new ByteArrayOutputStream();
         append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"fixture","Fixture"));append(bytes,codec.player((short)3,1002,1,"Fixture"));append(bytes,codec.itemChanges(1002,choices(),new WorldProfile(42,1,1,0,0,1,List.of()),profile));append(bytes,codec.townState(1002,profile));
-        var source=new org.tortodrone.world.ActorState(1000000000,0,"",0,1,0,0,0,0,0,0,0,new StarterCatalog.Model("Shop/Haven/Alchemy",Map.of()),false);
+        var source=new org.tortodrone.core.world.ActorState(1000000000,0,"",0,1,0,0,0,0,0,0,0,new StarterCatalog.Model("Shop/Haven/Alchemy",Map.of()),false);
         for(String kind:List.of("OpenCrafter","OpenCatalogCrafter","OpenUnbinder","OpenAccessorizer","OpenVariantMaker","OpenAuction","OpenShop","OpenDepot","OpenHarnessInstaller")){
             var station=new TownCatalog.Station("",kind,"","NORMAL","~","~","","",kind.equals("OpenCatalogCrafter")?List.of("Sprite/Food/Power Mote"):List.of());append(bytes,codec.townDialog(1002,10,station,source,123456,101));
         }
@@ -38,22 +43,22 @@ public final class TownCompatibility {
         append(bytes,codec.townResult(1002,(short)7,new AuctionState.Page(1,List.of(featured)),profile));
         append(bytes,codec.townResult(1002,(short)8,new TownCatalog.DepotOffers(Map.of(7,new TownCatalog.DepotGood(new TownCatalog.Good("Weapon/Sword/Calibur",1,500,200,0,"",0),true,400,true))),profile));
         int callbackEnd=bytes.size();
-        var actor=new org.tortodrone.world.ActorState(42,1002,"Fixture",256,1,0,0,0,0,0,0,1,new StarterCatalog.Model("Character/PC/Default",Map.of()),false,null,null,null,null,new org.tortodrone.world.SceneKnightState(null,0,org.tortodrone.world.SceneStatus.State.NORMAL,KnightProgress.RECRUIT,sprite,new TownState.Harness(9,"Iron Harness")));
-        var changed=new org.tortodrone.world.ActorState(42,1002,"Fixture",256,1,1,0,0,0,0,0,1,actor.config(),false,null,null,null,null,new org.tortodrone.world.SceneKnightState(null,0));
+        var actor=new org.tortodrone.core.world.ActorState(42,1002,"Fixture",256,1,0,0,0,0,0,0,1,new StarterCatalog.Model("Character/PC/Default",Map.of()),false,null,null,null,null,new org.tortodrone.core.world.SceneKnightState(null,0,org.tortodrone.core.world.SceneStatus.State.NORMAL,KnightProgress.RECRUIT,sprite,new TownState.Harness(9,"Iron Harness")));
+        var changed=new org.tortodrone.core.world.ActorState(42,1002,"Fixture",256,1,1,0,0,0,0,0,1,actor.config(),false,null,null,null,null,new org.tortodrone.core.world.SceneKnightState(null,0));
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,0,100,(short)50,List.of(actor),List.of(),new int[0],Map.of(),false));
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,100,150,(short)50,List.of(),List.of(changed),new int[0],Map.of(42,actor),false));
-        var companion=new org.tortodrone.world.ActorState(1700000000,0,"",0,1,0,0,0,0,0,0,1,new StarterCatalog.Model("Sprite/Base",Map.of()),false,null,null,null,null,null,new org.tortodrone.world.ScenePetState(42,sprite,new TownState.Harness(9,"Iron Harness"),false,List.of(0,0,0),0,0,null));
-        var casting=new org.tortodrone.world.ActorState(companion.id(),0,"",0,1,1,0,1,0,0,1,10,companion.config(),false,null,null,null,null,null,new org.tortodrone.world.ScenePetState(42,sprite,new TownState.Harness(9,"Iron Harness"),true,List.of(100,200,300),40,80,"0"));
+        var companion=new org.tortodrone.core.world.ActorState(1700000000,0,"",0,1,0,0,0,0,0,0,1,new StarterCatalog.Model("Sprite/Base",Map.of()),false,null,null,null,null,null,new org.tortodrone.core.world.ScenePetState(42,sprite,new TownState.Harness(9,"Iron Harness"),false,List.of(0,0,0),0,0,null));
+        var casting=new org.tortodrone.core.world.ActorState(companion.id(),0,"",0,1,1,0,1,0,0,1,10,companion.config(),false,null,null,null,null,null,new org.tortodrone.core.world.ScenePetState(42,sprite,new TownState.Harness(9,"Iron Harness"),true,List.of(100,200,300),40,80,"0"));
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,150,200,(short)50,List.of(companion),List.of(),new int[0],Map.of(),true));
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,200,250,(short)50,List.of(),List.of(casting),new int[0],Map.of(companion.id(),companion),true));
-        var dungeon=new org.tortodrone.world.ActorState(42,1002,"Fixture",256,1,0,0,0,0,0,0,1,actor.config(),false,null,null,null,null,new org.tortodrone.world.SceneKnightState(null,0,org.tortodrone.world.SceneStatus.State.NORMAL,KnightProgress.RECRUIT,sprite,new TownState.Harness(9,"Iron Harness"),companion.id(),1));
+        var dungeon=new org.tortodrone.core.world.ActorState(42,1002,"Fixture",256,1,0,0,0,0,0,0,1,actor.config(),false,null,null,null,null,new org.tortodrone.core.world.SceneKnightState(null,0,org.tortodrone.core.world.SceneStatus.State.NORMAL,KnightProgress.RECRUIT,sprite,new TownState.Harness(9,"Iron Harness"),companion.id(),1));
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,250,300,(short)50,List.of(dungeon),List.of(),new int[0],Map.of(),true));
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,300,350,(short)50,List.of(),List.of(dungeon),new int[0],Map.of(42,dungeon),true));
-        var auxiliary=new java.util.ArrayList<org.tortodrone.world.ActorState>();int auxiliaryId=1700000001;
+        var auxiliary=new java.util.ArrayList<org.tortodrone.core.world.ActorState>();int auxiliaryId=1700000001;
         for(String kind:List.of("ACTOR","LASER","ORBITAL")){
-            var orbit=kind.equals("ORBITAL")?new org.tortodrone.world.ProjectileState.Orbit(.5f,42,.5f,0,0,0,42):null;
-            var projectile=new org.tortodrone.world.ProjectileState(kind,new StarterCatalog.Model("Fixture",Map.of()),0,1,Integer.MAX_VALUE,0,0,Float.NEGATIVE_INFINITY,4,0,42,false,orbit);
-            auxiliary.add(new org.tortodrone.world.ActorState(auxiliaryId++,0,"",0,1,0,0,0,0,0,0,1,projectile.config(),false,null,projectile));
+            var orbit=kind.equals("ORBITAL")?new org.tortodrone.core.world.ProjectileState.Orbit(.5f,42,.5f,0,0,0,42):null;
+            var projectile=new org.tortodrone.core.world.ProjectileState(kind,new StarterCatalog.Model("Fixture",Map.of()),0,1,Integer.MAX_VALUE,0,0,Float.NEGATIVE_INFINITY,4,0,42,false,orbit);
+            auxiliary.add(new org.tortodrone.core.world.ActorState(auxiliaryId++,0,"",0,1,0,0,0,0,0,0,1,projectile.config(),false,null,projectile));
         }
         int beforeAuxiliary=bytes.size();
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,350,400,(short)50,auxiliary,List.of(),new int[0],Map.of(),true));

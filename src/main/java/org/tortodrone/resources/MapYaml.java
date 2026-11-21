@@ -9,6 +9,7 @@ import org.tortodrone.core.Json;
 import org.tortodrone.core.ContentFiles;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.SceneContent;
 
 /** Map-local editable intent combined with pinned native layout and source bindings. */
 public final class MapYaml {

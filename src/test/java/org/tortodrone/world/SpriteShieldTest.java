@@ -11,6 +11,11 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.KnightProgress;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownState;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneDamage;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Real Aura actions in one isolated shared scene, with direct authoritative damage. */
 public final class SpriteShieldTest {

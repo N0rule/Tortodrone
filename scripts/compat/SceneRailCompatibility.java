@@ -6,6 +6,8 @@ import com.threerings.math.*;
 import com.threerings.tudey.data.*;
 import com.threerings.tudey.shape.config.ShapeConfig;
 import org.tortodrone.world.*;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Read-only native oracle for Rescue Camp's two-vertex compound rail geometry. */
 public final class SceneRailCompatibility {

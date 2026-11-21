@@ -10,6 +10,8 @@ import org.tortodrone.core.NewsCatalog;
 import org.tortodrone.core.config.ServerSettings;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.EquipmentCatalog;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** Offline migration resolution for versioned and legacy packs. No downloads, data writes, implicit custom packs or partial publication. */
 final class MigrationPackLoader {

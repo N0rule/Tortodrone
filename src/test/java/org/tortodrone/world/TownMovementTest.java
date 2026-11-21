@@ -5,6 +5,9 @@ import java.util.HexFormat;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.Confetti;
+import org.tortodrone.core.world.PlayerEmotes;
+import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.world.CollisionMap;
 
 public final class TownMovementTest {
     private static CollisionMap corridor;

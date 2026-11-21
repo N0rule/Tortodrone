@@ -6,9 +6,36 @@ import org.tortodrone.core.Json;
 import org.tortodrone.core.WireTypes;
 import org.tortodrone.core.character.KnightObjective;
 import org.tortodrone.core.character.KnightMemory;
-import org.tortodrone.world.SceneConversation;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneConversation;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.GearStats;
+import org.tortodrone.core.world.InteractionState;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.SceneCombatEvent;
+import org.tortodrone.core.world.SceneEntityState;
+import org.tortodrone.core.world.SceneLiftState;
+import org.tortodrone.core.world.ScenePickupState;
+import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.world.PreparedActor;
+import org.tortodrone.core.world.SceneShape;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.SceneDamage;
+import org.tortodrone.core.world.SceneScript;
+import org.tortodrone.core.world.SceneTargeting;
+import org.tortodrone.core.world.SceneWander;
+import org.tortodrone.core.world.SceneFollow;
+import org.tortodrone.core.world.SceneAttackMotion;
+import org.tortodrone.core.world.ScenePartyPlatform;
+import org.tortodrone.core.world.SceneMovementScript;
+import org.tortodrone.core.world.SceneElevator;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.MonsterCatalog;
+import org.tortodrone.core.world.CollisionMap;
+import org.tortodrone.core.world.MonsterType;
+import org.tortodrone.core.world.MonsterArchetype;
 
 /** Instance-owned native actors, pad regeneration, movement and damage targets. */
 public final class SceneEntities implements SceneWeapons.Targets {
@@ -1148,38 +1175,6 @@ public final class SceneEntities implements SceneWeapons.Targets {
      *  region whose circle is smaller than that range (the Jelly Cube stops at
      *  1.9997 edge while its resolved Medium circle reaches 1.5). Cap only that
      *  slot, so a projectile or beam on another slot keeps its full range. */
-    static Map<Integer,Float> meleeRangeCaps(SceneContent.Spec spec){
-        var caps=new HashMap<Integer,Float>();
-        for(String key:spec.fields().keySet()){
-            if(!key.startsWith("attack.")||!key.endsWith(".fire.0.action"))continue;
-            String slot=key.substring("attack.".length(),key.length()-".fire.0.action".length());
-            if(slot.isEmpty()||slot.length()>3||!slot.chars().allMatch(Character::isDigit))continue;
-            int index=Integer.parseInt(slot);float radius=meleeDamageRadius(spec,index);
-            if(radius!=Float.MAX_VALUE)caps.put(index,radius);
-        }
-        return Map.copyOf(caps);
-    }
-    /** Extract the damage circle radius from the attack slot's first fire action. Returns
-     *  Float.MAX_VALUE when no damage shape can be determined (charging/ranged attacks
-     *  handle their own range). */
-    private static float meleeDamageRadius(SceneContent.Spec spec,int slot){
-        try{
-            String json=spec.text("attack."+slot+".fire.0.action","");
-            if(json.isEmpty())return Float.MAX_VALUE;
-            var action=FireCatalog.actionJson(json);
-            if(action.kind()!=FireCatalog.Kind.DAMAGE_REGION)return Float.MAX_VALUE;
-            Object shape=action.config().arguments().get("shape");
-            if(shape instanceof FireCatalog.DataValue dv&&dv.type().endsWith("$TransformedShape")){
-                Object inner=SceneDamage.field(shape,"shape");
-                if(inner instanceof FireCatalog.DataValue idv&&idv.type().endsWith("$Circle")){
-                    float radius=SceneDamage.number(inner,"radius",0);
-                    if(radius==1f&&ROUNDHOUSE_MEDIUM_CONFIG.equals(spec.config().name()))radius=ROUNDHOUSE_MEDIUM_RADIUS;
-                    return radius;
-                }
-            }
-        }catch(java.io.IOException ignored){}
-        return Float.MAX_VALUE;
-    }
     /** Export resolution never applies an attack's parameter choices, so the Jelly
      * Roundhouse's fire reference keeps its blank base Shape (Circle 1.0) while every
      * Jelly Cube (Intro) resolves Damage Region=Medium, Circle 1.5. Medium is verified

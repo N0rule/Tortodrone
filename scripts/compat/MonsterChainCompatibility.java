@@ -4,6 +4,7 @@ import com.threerings.config.*;
 import com.threerings.tudey.config.*;
 import com.threerings.projectx.dungeon.config.*;
 import org.tortodrone.core.Json;
+import org.tortodrone.core.world.SceneActions;
 
 /** Stock attack configuration plus a read-only captured activity ledger; no behavior is invented. */
 public final class MonsterChainCompatibility {
@@ -18,7 +19,7 @@ public final class MonsterChainCompatibility {
         if(head.attack!=1||!fields.get("attack.0.chain-next").equals("1")||!fields.get("attack.0.chain-rearm").equals(Integer.toString(head.rearm))
                 ||!fields.get("attack.1.land").equals(Integer.toString(follow.land))||!fields.get("attack.1.clear").equals(Integer.toString(follow.clear)))throw new AssertionError("Native chain fields lost");
         fields.put("config",GIANT);fields.put("kind","Monster");fields.put("native-type","com.threerings.projectx.dungeon.data.actor.Monster");fields.put("health",Float.toString(monster.health));
-        new org.tortodrone.world.SceneActions.Spawn(fields,true);
+        new org.tortodrone.core.world.SceneActions.Spawn(fields,true);
         if(head.rearm!=1000)throw new AssertionError("Captured Giant rearm differs from supported client: "+head.rearm);
         if(Files.size(Path.of(args[1]))>8_000_000)throw new AssertionError("Capture ledger exceeds bound");
         var ledger=(Map<?,?>)Json.parse(Files.readString(Path.of(args[1])));int pairs=0;

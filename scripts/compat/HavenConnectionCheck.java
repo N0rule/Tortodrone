@@ -7,6 +7,7 @@ import com.threerings.projectx.data.*;
 import com.threerings.util.Name;
 import org.tortodrone.world.*;
 import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Stock network walking exercises every directed town link; routing is test-only static collision. */
 public final class HavenConnectionCheck {

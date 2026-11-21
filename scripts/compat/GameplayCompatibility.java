@@ -18,6 +18,11 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.KnightProgress;
 import org.tortodrone.core.character.Confetti;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.InteractionState;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneKnightState;
+import org.tortodrone.core.world.SceneStatus;
 
 /** Focused retail-reader oracle. No sockets, client process, preferences or persistent state. */
 public final class GameplayCompatibility {

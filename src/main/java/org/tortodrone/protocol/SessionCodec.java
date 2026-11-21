@@ -13,14 +13,14 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.SlotUpgrades;
-import org.tortodrone.world.KnightCombat;
-import org.tortodrone.world.PlayerEmotes;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.PlayerEmotes;
 import org.tortodrone.world.TownMovement;
-import org.tortodrone.world.ActorState;
+import org.tortodrone.core.world.ActorState;
 import org.tortodrone.world.SceneRegistry;
 import org.tortodrone.world.SceneCatalog;
-import org.tortodrone.world.SceneEffect;
-import org.tortodrone.world.SceneCombatEvent;
+import org.tortodrone.core.world.SceneEffect;
+import org.tortodrone.core.world.SceneCombatEvent;
 import org.tortodrone.world.SceneSimulation;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.world.PartyRegistry;
@@ -31,12 +31,20 @@ import org.tortodrone.core.character.OpeningCompletion;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.character.KnightMemory;
 import org.tortodrone.core.mission.MissionCatalog;
-import org.tortodrone.world.MissionGates;
-import org.tortodrone.world.SceneConversation;
+import org.tortodrone.core.mission.MissionGates;
+import org.tortodrone.core.world.SceneConversation;
 import org.tortodrone.core.town.TownState;
 import org.tortodrone.core.town.AuctionState;
 import org.tortodrone.core.town.ExchangeState;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.EquipmentCatalog;
+import org.tortodrone.core.world.InteractionState;
+import org.tortodrone.core.world.ProjectileState;
+import org.tortodrone.core.world.SceneChat;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneLiftState;
+import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.world.ReadyRoom;
 
 /** Downstream session messages after the secure and authentication responses. */
 public final class SessionCodec {
@@ -241,7 +249,7 @@ public final class SessionCodec {
             var tutorial=soloInteriors?SceneRegistry.system().tutorial():null;
             var registry=soloInteriors?SceneRegistry.system():null;
             var openingGate=registry==null?null:registry.openingGate(org.tortodrone.core.character.OpeningMission.ANCIENT_GENERATOR);
-            var missionGates=registry==null?java.util.List.<org.tortodrone.world.MissionGates.Gate>of():registry.availableGates();
+            var missionGates=registry==null?java.util.List.<org.tortodrone.core.mission.MissionGates.Gate>of():registry.availableGates();
             var towns=registry==null?java.util.List.<org.tortodrone.world.SceneCatalog.MapScene>of():registry.catalog().towns().stream().filter(m->m.id()==registry.entry().map().id()||m.id()==217||m.id()==218).toList();
             if(soloInteriors){type(out,WireTypes.DSET);out.writeInt(towns.size());for(var town:towns)townSummary(out,town);}
             else emptyDSet(out);
@@ -301,7 +309,7 @@ public final class SessionCodec {
         string(out,null);string(out,null); // no expansion/prestige access requirement
     }
     /** An imported rank mission's live 2026 gate, wheel for wheel. */
-    private void missionGate(DataOutputStream out,org.tortodrone.world.MissionGates.Gate gate)throws IOException {
+    private void missionGate(DataOutputStream out,org.tortodrone.core.mission.MissionGates.Gate gate)throws IOException {
         type(out,"com.threerings.projectx.dungeon.data.MissionGateSummary");out.writeBoolean(true);out.writeInt(gate.gateId());
         string(out,gate.name());string(out,gate.icon());
         type(out,"[Lcom.threerings.opengl.renderer.config.ColorizationConfig;");out.writeInt(gate.colors().size());
@@ -964,7 +972,7 @@ public final class SessionCodec {
     }
     private int listingViewer;
 
-    public byte[] conversationDialog(int playerOid,int sceneOid,org.tortodrone.world.SceneConversation conversation,
+    public byte[] conversationDialog(int playerOid,int sceneOid,org.tortodrone.core.world.SceneConversation conversation,
             String nodeId,ActorState source,long created)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",playerOid);type(out,WireTypes.ARRAY_LIST);out.writeInt(2);
             attribute(out,playerOid,"sceneDialogCreated",o->value(o,created));
@@ -981,7 +989,7 @@ public final class SessionCodec {
                 for(int i=0;i<count;i+=8)o.writeByte((1<<Math.min(8,count-i))-1);
                 for(var response:node.responses())o.writeUTF(response.text());
                 o.writeBoolean(true);o.writeInt(count);for(var response:node.responses())o.writeBoolean(response.destination().isEmpty());
-                type(o,"com.threerings.projectx.data.ConversationMarshaller");o.writeInt(sceneOid);o.writeInt(org.tortodrone.world.SceneConversation.SERVICE);o.writeLong(0);
+                type(o,"com.threerings.projectx.data.ConversationMarshaller");o.writeInt(sceneOid);o.writeInt(org.tortodrone.core.world.SceneConversation.SERVICE);o.writeLong(0);
             });});
     }
     public byte[] tradeObject(short messageId,TradeView view)throws IOException {
@@ -1040,11 +1048,11 @@ public final class SessionCodec {
     public byte[] readyRoomMove(int oid,short request) throws IOException {
         return frame(out -> {
             eventHeader(out,"InvocationResponseEvent",oid);out.writeShort(request);out.writeByte(2);
-            out.writeBoolean(true);out.writeInt(3);value(out,org.tortodrone.world.ReadyRoom.PLACE);
+            out.writeBoolean(true);out.writeInt(3);value(out,org.tortodrone.core.world.ReadyRoom.PLACE);
             type(out,"com.threerings.projectx.data.ReadyRoomSceneConfig");string(out,null);
-            type(out,"com.threerings.whirled.zone.data.ZoneSummary");out.writeInt(org.tortodrone.world.ReadyRoom.ZONE);name(out,"");
+            type(out,"com.threerings.whirled.zone.data.ZoneSummary");out.writeInt(org.tortodrone.core.world.ReadyRoom.ZONE);name(out,"");
             type(out,"[Lcom.threerings.whirled.zone.data.SceneSummary;");out.writeInt(1);
-            type(out,"com.threerings.whirled.zone.data.SceneSummary");out.writeInt(org.tortodrone.world.ReadyRoom.SCENE);string(out,"~");
+            type(out,"com.threerings.whirled.zone.data.SceneSummary");out.writeInt(org.tortodrone.core.world.ReadyRoom.SCENE);string(out,"~");
             emptyCollection(out);emptyCollection(out);
         });
     }
@@ -1052,7 +1060,7 @@ public final class SessionCodec {
     public byte[] readyRoomLocation(int oid) throws IOException {
         return frame(out -> {
             eventHeader(out,"CompoundEvent",oid);type(out,WireTypes.ARRAY_LIST);out.writeInt(5);
-            attribute(out,oid,"zoneId",o->value(o,org.tortodrone.world.ReadyRoom.ZONE));
+            attribute(out,oid,"zoneId",o->value(o,org.tortodrone.core.world.ReadyRoom.ZONE));
             attribute(out,oid,"instanceId",o->value(o,0));
             attribute(out,oid,"zoneGeneralOid",o->value(o,0));attribute(out,oid,"zoneTradeOid",o->value(o,0));
             attribute(out,oid,"location",o->value(o,null));
@@ -1092,7 +1100,7 @@ public final class SessionCodec {
     public byte[] chatChannel(short message,int oid,int chatType)throws IOException {
         if(chatType!=6&&chatType!=7)throw new IOException("Unsupported chat channel type");
         return frame(out->{objectHeader(out,message,"com.threerings.projectx.data.ZoneInstanceObject",oid);
-            type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(oid);out.writeInt(org.tortodrone.world.SceneChat.SERVICE);
+            type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(oid);out.writeInt(org.tortodrone.core.world.SceneChat.SERVICE);
         });
     }
     public byte[] sceneLocation(int oid,SceneRegistry.Instance scene)throws IOException{return sceneLocation(oid,scene,0,0);}
@@ -1114,7 +1122,7 @@ public final class SessionCodec {
             type(out,"com.threerings.presents.dobj.OidList");out.writeBoolean(true);out.writeInt(actors.size());for(var a:actors)out.writeInt(a.clientOid());out.writeInt(actors.size());
             // DSet.readObject retains wire order; its key lookup requires ascending bodyOid.
             type(out,WireTypes.DSET);out.writeInt(actors.size());for(var a:actors.stream().sorted(java.util.Comparator.comparingInt(ActorState::clientOid)).toList())occupant(out,a);
-            type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(scene.oid());out.writeInt(org.tortodrone.world.SceneChat.SERVICE);
+            type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(scene.oid());out.writeInt(org.tortodrone.core.world.SceneChat.SERVICE);
             type(out,"com.threerings.tudey.data.TudeySceneMarshaller");out.writeInt(scene.oid());out.writeInt(TUDEY_SCENE_INVOCATION);
             type(out,"com.threerings.projectx.data.ProjectXSceneMarshaller");out.writeInt(scene.oid());out.writeInt(PROJECTX_SCENE_INVOCATION);
             var icons=scene.map().content().mapIcons();
@@ -1127,12 +1135,12 @@ public final class SessionCodec {
     /** Compatibility transport for explicitly constructed single-member interior fixtures. */
     public static int interiorPartyOid(SceneRegistry.Instance scene){return 500+scene.oid();}
     public byte[] interiorParty(short message,int partyOid,int playerOid,Knight knight,WorldProfile profile,SceneRegistry.Instance scene)throws IOException {
-        return interiorParty(message,partyOid,playerOid,knight,profile,scene,new org.tortodrone.world.SceneHealth.State(1,1,0));
+        return interiorParty(message,partyOid,playerOid,knight,profile,scene,new org.tortodrone.core.world.SceneHealth.State(1,1,0));
     }
-    public byte[] interiorParty(short message,int partyOid,int playerOid,Knight knight,WorldProfile profile,SceneRegistry.Instance scene,org.tortodrone.world.SceneHealth.State health)throws IOException {
-        return interiorParty(message,partyOid,playerOid,knight,profile,scene,health,org.tortodrone.world.SceneStatus.State.NORMAL);
+    public byte[] interiorParty(short message,int partyOid,int playerOid,Knight knight,WorldProfile profile,SceneRegistry.Instance scene,org.tortodrone.core.world.SceneHealth.State health)throws IOException {
+        return interiorParty(message,partyOid,playerOid,knight,profile,scene,health,org.tortodrone.core.world.SceneStatus.State.NORMAL);
     }
-    public byte[] interiorParty(short message,int partyOid,int playerOid,Knight knight,WorldProfile profile,SceneRegistry.Instance scene,org.tortodrone.world.SceneHealth.State health,org.tortodrone.world.SceneStatus.State status)throws IOException {
+    public byte[] interiorParty(short message,int partyOid,int playerOid,Knight knight,WorldProfile profile,SceneRegistry.Instance scene,org.tortodrone.core.world.SceneHealth.State health,org.tortodrone.core.world.SceneStatus.State status)throws IOException {
         return party(message,partyOid,List.of(new PartyRegistry.Participant(playerOid,profile.worldId(),0,knight,profile,health,status)),scene,false);
     }
     public byte[] party(short message,PartyRegistry.View view,SceneRegistry.Instance scene)throws IOException{return party(message,view,scene,false);}
@@ -1147,7 +1155,7 @@ public final class SessionCodec {
             var run=scene.run();boolean mission=run!=null;
             objectHeader(out,message,"com.threerings.projectx.dungeon.data."+(mission?"MissionPartyObject":"LevelPartyObject"),partyOid);
             type(out,"com.threerings.projectx.dungeon.data.PartyMarshaller");out.writeInt(partyOid);out.writeInt(PARTY_INVOCATION);
-            type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(partyOid);out.writeInt(org.tortodrone.world.SceneChat.PARTY_SERVICE);
+            type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(partyOid);out.writeInt(org.tortodrone.core.world.SceneChat.PARTY_SERVICE);
             type(out,WireTypes.DSET);out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyMember(out,member);
             type(out,WireTypes.DSET);out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyHealth(out,member);
             type(out,WireTypes.DSET);out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyStatus(out,member);
@@ -1241,12 +1249,12 @@ public final class SessionCodec {
         });
     }
 
-    public byte[] partyHealth(int partyOid,int playerOid,org.tortodrone.world.SceneHealth.State health)throws IOException {
+    public byte[] partyHealth(int partyOid,int playerOid,org.tortodrone.core.world.SceneHealth.State health)throws IOException {
         return frame(out->{eventHeader(out,"EntryUpdatedEvent",partyOid);string(out,"health");
             type(out,"com.threerings.projectx.dungeon.data.Health");out.writeInt(playerOid);
             out.writeInt(health.current());out.writeInt(health.maximum());out.writeInt(health.bonus());});
     }
-    public byte[] partyVitals(int partyOid,int playerOid,org.tortodrone.world.SceneHealth.State health,org.tortodrone.world.SceneStatus.State status)throws IOException{
+    public byte[] partyVitals(int partyOid,int playerOid,org.tortodrone.core.world.SceneHealth.State health,org.tortodrone.core.world.SceneStatus.State status)throws IOException{
         return frame(out->{eventHeader(out,"CompoundEvent",partyOid);type(out,WireTypes.ARRAY_LIST);out.writeInt(2);
             type(out,WireTypes.ENTRY_UPDATED_EVENT);out.writeInt(partyOid);string(out,"health");
             type(out,"com.threerings.projectx.dungeon.data.Health");out.writeInt(playerOid);out.writeInt(health.current());out.writeInt(health.maximum());out.writeInt(health.bonus());
@@ -1259,7 +1267,7 @@ public final class SessionCodec {
         return frame(out->{eventHeader(out,"InvocationResponseEvent",playerOid);out.writeShort(request);out.writeByte(0);out.writeBoolean(true);out.writeInt(1);value(out,reason);});
     }
     /** Original Crowd place chat message, carrying a server-selected visible name. */
-    public byte[] chat(int sceneOid,org.tortodrone.world.SceneChat.Message message)throws IOException {
+    public byte[] chat(int sceneOid,org.tortodrone.core.world.SceneChat.Message message)throws IOException {
         return frame(out->{
             eventHeader(out,"MessageEvent",sceneOid);string(out,"crowd.chat");
             out.writeBoolean(true);out.writeInt(1);type(out,message.mode()==5||message.mode()==6?
@@ -1591,12 +1599,12 @@ public final class SessionCodec {
         value(out,activityData(a,observer));interaction(out,a.interaction());string(out,null);out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().lift());actorSprite(out,a);
         if(interior) {
             var combat=a.combat();
-            weapon(out,a.id(),combat);string(out,combat==null?null:combat.shield());string(out,combat==null?null:combat.shieldCostume());conditions(out,a.sceneKnight()==null?org.tortodrone.world.SceneStatus.State.NORMAL:a.sceneKnight().status());
+            weapon(out,a.id(),combat);string(out,combat==null?null:combat.shield());string(out,combat==null?null:combat.shieldCostume());conditions(out,a.sceneKnight()==null?org.tortodrone.core.world.SceneStatus.State.NORMAL:a.sceneKnight().status());
             out.writeInt(combat==null?0:combat.shieldRegenStart());out.writeInt(combat==null?-300000:combat.shieldHit());out.writeFloat(combat==null?0:combat.shieldHealth());out.writeInt(combat==null?0:combat.shieldMaximum());impulse(out,combat==null?null:combat.impulse());
             out.writeInt(0);out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().hitTime());
             out.writeInt(combat==null?0:combat.chainCount());out.writeInt(combat==null?0:combat.chainReset());
             out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteActor());out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteAttack());out.writeInt(combat==null?0:combat.nextDodge());
-            statusModifiers(out,a.sceneKnight()==null?org.tortodrone.world.SceneStatus.Modifiers.NORMAL:a.sceneKnight().status().modifiers());
+            statusModifiers(out,a.sceneKnight()==null?org.tortodrone.core.world.SceneStatus.Modifiers.NORMAL:a.sceneKnight().status().modifiers());
             equipmentModifiers(out,combat==null?null:combat.equipmentModifiers());equipmentModifiers(out,combat==null?null:combat.weaponModifiers());
         }
     }
@@ -1634,7 +1642,7 @@ public final class SessionCodec {
         if(combatChanged) {
             var combat=a.combat();weapon(out,a.id(),combat);value(out,combat==null?null:combat.shield());value(out,combat==null?null:combat.shieldCostume());
         }
-        if(interior&&sceneData)conditions(out,a.sceneKnight()==null?org.tortodrone.world.SceneStatus.State.NORMAL:a.sceneKnight().status());
+        if(interior&&sceneData)conditions(out,a.sceneKnight()==null?org.tortodrone.core.world.SceneStatus.State.NORMAL:a.sceneKnight().status());
         if(combatChanged) {
             var combat=a.combat();
             out.writeInt(combat==null?0:combat.shieldRegenStart());out.writeInt(combat==null?-300000:combat.shieldHit());out.writeFloat(combat==null?0:combat.shieldHealth());out.writeInt(combat==null?0:combat.shieldMaximum());impulse(out,combat==null?null:combat.impulse());
@@ -1645,18 +1653,18 @@ public final class SessionCodec {
         if(interior&&sceneData){out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteActor());out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteAttack());}
         if(combatChanged){var combat=a.combat();out.writeInt(combat==null?0:combat.nextDodge());
         }
-        if(interior&&sceneData)statusModifiers(out,a.sceneKnight()==null?org.tortodrone.world.SceneStatus.Modifiers.NORMAL:a.sceneKnight().status().modifiers());
+        if(interior&&sceneData)statusModifiers(out,a.sceneKnight()==null?org.tortodrone.core.world.SceneStatus.Modifiers.NORMAL:a.sceneKnight().status().modifiers());
         if(combatChanged) {
             var combat=a.combat();
             equipmentModifiers(out,combat==null?null:combat.equipmentModifiers());equipmentModifiers(out,combat==null?null:combat.weaponModifiers());
         }
     }
-    private void equipmentModifiers(DataOutputStream out,org.tortodrone.world.EquipmentCatalog.Modifiers modifiers)throws IOException {
-        var value=modifiers==null?org.tortodrone.world.EquipmentCatalog.Modifiers.ZERO:modifiers;
+    private void equipmentModifiers(DataOutputStream out,org.tortodrone.core.world.EquipmentCatalog.Modifiers modifiers)throws IOException {
+        var value=modifiers==null?org.tortodrone.core.world.EquipmentCatalog.Modifiers.ZERO:modifiers;
         type(out,"com.threerings.projectx.item.data.ImmutableEquipmentModifiers");
         out.writeFloat(value.chargeTime());out.writeFloat(value.speed());out.writeFloat(value.attackSpeed());out.writeFloat(value.defendingSpeed());
     }
-    private void interaction(DataOutputStream out,org.tortodrone.world.InteractionState interaction)throws IOException {
+    private void interaction(DataOutputStream out,org.tortodrone.core.world.InteractionState interaction)throws IOException {
         if(interaction==null){out.writeShort(0);out.writeShort(0);out.writeShort(0);return;}
         if(!java.util.Set.of("Interact","Talk","Shop","Lift","Resurrect","UnlockGold").contains(interaction.action()))throw new IOException("Unsupported interaction action");
         type(out,"com.threerings.projectx.config.ActionDesc$"+interaction.action());
@@ -1715,7 +1723,7 @@ public final class SessionCodec {
             case "Lift" -> {out.writeFloat(e.maxStep());out.writeFloat(a.direction());out.writeFloat(e.lift()==null?0:e.lift().z());dropPoint(out,e.lift());}
             case "Pickup" -> {primitiveInts(out,null);primitiveInts(out,e.pickup()==null?null:new int[]{e.pickup().playerOid(),e.pickup().activated()});}
             case "Trap" -> {type(out,"com.threerings.projectx.dungeon.data.actor.Trap$State");out.writeByte(e.state());out.writeInt(e.stateEntered());}
-            case "Bomb" -> {out.writeInt(0);out.writeInt(0);out.writeFloat(org.tortodrone.world.ProjectileState.UNSPECIFIED_Z);}
+            case "Bomb" -> {out.writeInt(0);out.writeInt(0);out.writeFloat(org.tortodrone.core.world.ProjectileState.UNSPECIFIED_Z);}
             case "Actor" -> { }
             default -> throw new IOException("Unsupported prepared actor type");
         }
@@ -1757,24 +1765,24 @@ public final class SessionCodec {
             default -> throw new IOException("Unsupported prepared actor delta");
         }
     }
-    private void dropPoint(DataOutputStream out,org.tortodrone.world.SceneLiftState lift)throws IOException {
+    private void dropPoint(DataOutputStream out,org.tortodrone.core.world.SceneLiftState lift)throws IOException {
         if(lift==null||lift.dropPoint()==null)out.writeShort(0);else vector(out,lift.dropPoint().x(),lift.dropPoint().y());
     }
     private void neutralStatus(DataOutputStream out)throws IOException {
-        statusModifiers(out,org.tortodrone.world.SceneStatus.Modifiers.NORMAL);
+        statusModifiers(out,org.tortodrone.core.world.SceneStatus.Modifiers.NORMAL);
     }
-    private void conditions(DataOutputStream out,org.tortodrone.world.SceneStatus.State status)throws IOException {
+    private void conditions(DataOutputStream out,org.tortodrone.core.world.SceneStatus.State status)throws IOException {
         if(status.conditions().isEmpty()){out.writeShort(0);return;}
         type(out,"[Lcom.threerings.config.ConfigReference;");out.writeInt(status.conditions().size());for(var condition:status.conditions())value(out,condition);
     }
-    private void statusModifiers(DataOutputStream out,org.tortodrone.world.SceneStatus.Modifiers status)throws IOException {
+    private void statusModifiers(DataOutputStream out,org.tortodrone.core.world.SceneStatus.Modifiers status)throws IOException {
         type(out,"com.threerings.projectx.dungeon.data.ImmutableStatusModifiers");
         out.writeFloat(status.speed());out.writeFloat(status.attackSpeed());out.writeFloat(status.attackDamage());out.writeFloat(status.relativeDamage());
         out.writeFloat(status.defense());out.writeFloat(status.heal());out.writeFloat(1);out.writeFloat(1);out.writeFloat(0);
         out.writeBoolean(status.canMove());out.writeBoolean(status.canRotate());out.writeBoolean(status.canDefend());out.writeBoolean(status.canAttack());
         out.writeBoolean(status.asleep());out.writeBoolean(status.shocked());out.writeBoolean(status.canBeTargeted());out.writeInt(0);
     }
-    public byte[] partyStatus(int partyOid,int playerOid,org.tortodrone.world.SceneStatus.State status)throws IOException {
+    public byte[] partyStatus(int partyOid,int playerOid,org.tortodrone.core.world.SceneStatus.State status)throws IOException {
         return frame(out->{eventHeader(out,"EntryUpdatedEvent",partyOid);string(out,"status");
             type(out,"com.threerings.projectx.dungeon.data.Status");out.writeInt(playerOid);conditions(out,status);
             primitiveInts(out,status.expires().isEmpty()?null:status.expires().stream().mapToInt(Integer::intValue).toArray());out.writeByte(0);});

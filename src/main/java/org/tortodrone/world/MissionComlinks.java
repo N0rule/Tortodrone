@@ -2,6 +2,7 @@ package org.tortodrone.world;
 
 import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.SceneConversation;
 
 /** Imported comlink dialogue graphs keyed by mission id. Only message/response keys,
  * jump edges and presentation configs; the stock client localizes every displayed key. */

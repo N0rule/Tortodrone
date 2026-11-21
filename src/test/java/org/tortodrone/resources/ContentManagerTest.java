@@ -10,6 +10,7 @@ import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.Json;
 import org.tortodrone.core.Yaml;
 import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.world.SceneContent;
 
 /** Real administrator edits, unchanged defaults, bounded inputs and failed snapshot isolation. */
 public final class ContentManagerTest {

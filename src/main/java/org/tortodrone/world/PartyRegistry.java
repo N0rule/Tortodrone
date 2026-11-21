@@ -6,6 +6,9 @@ import java.util.function.*;
 import org.tortodrone.character.*;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.world.SceneChat;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneStatus;
 
 /** Transient, session-bound parties. Endpoints only enqueue work; they never perform network I/O. */
 public final class PartyRegistry {

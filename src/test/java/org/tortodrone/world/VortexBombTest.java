@@ -5,6 +5,11 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.SceneCombatEvent;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneDamage;
 
 /** Real exported vortex chains, including range, immunity, timing and final damage. */
 public final class VortexBombTest {

@@ -10,6 +10,10 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.world.*;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneEffect;
+import org.tortodrone.core.world.SceneEntityState;
+import org.tortodrone.core.world.SceneDamage;
 
 /** Read-only retail oracle: retained skill parameters, intentional Ban Stick damage,
  * generator add/delta state, and the complete native Spark particle reference.

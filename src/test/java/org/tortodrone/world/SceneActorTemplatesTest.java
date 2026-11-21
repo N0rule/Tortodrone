@@ -4,6 +4,8 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
 
 /** Production entity damage/fire/scene clocks on synthetic geometry, not a Chasm playthrough. */
 public final class SceneActorTemplatesTest {

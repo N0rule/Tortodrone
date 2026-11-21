@@ -20,6 +20,7 @@ import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.KnightProgress;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.character.KnightMemory;
+import org.tortodrone.core.world.SceneContent;
 
 /** Original-map native protocol/entry acceptance from an explicit post-Camp fixture.
  * Does not claim to play Generator encounters or settle its final exit. */

@@ -13,6 +13,8 @@ import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneConversation;
 
 /** Original Camp content through real movement, interaction, conversation, session and SQLite.
  * Starts at a completed-tutorial checkpoint; does not claim to play scene 398. */

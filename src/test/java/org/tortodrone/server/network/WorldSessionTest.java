@@ -14,6 +14,7 @@ import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.SceneChat;
 
 public final class WorldSessionTest {
     public static void main(String[] args) throws Exception {
@@ -39,7 +40,7 @@ public final class WorldSessionTest {
                 refuse(() -> first.input(input));
                 refuse(() -> expired.select(knight.name(),receiver));
                 first.select(knight.name(),receiver);
-                var chatRequest=new SessionDecoder.Invocation(TownSquare.SCENE_OID,org.tortodrone.world.SceneChat.SERVICE,1,List.of("hello",(byte)0));
+                var chatRequest=new SessionDecoder.Invocation(TownSquare.SCENE_OID,org.tortodrone.core.world.SceneChat.SERVICE,1,List.of("hello",(byte)0));
                 refuse(()->first.speak(chatRequest));
                 check(first.selected() && WorldSession.active(1,knight.id()),"owned character acquires controller");
                 refuse(() -> second.select(knight.name(),receiver));

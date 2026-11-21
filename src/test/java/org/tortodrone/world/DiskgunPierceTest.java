@@ -4,6 +4,8 @@ import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.KnightCombat;
 
 /** Custom forward-only Diskgun saws: one disk per shot, normal pierces one enemy,
  *  charged pierces every unique enemy until its fuse. */

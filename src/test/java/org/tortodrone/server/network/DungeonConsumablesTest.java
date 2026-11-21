@@ -14,6 +14,9 @@ import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.ScenePortals;
 
 /** Capacity refusal keeps a shared pickup claimable, without allocating an extra hidden stack. */
 public final class DungeonConsumablesTest {

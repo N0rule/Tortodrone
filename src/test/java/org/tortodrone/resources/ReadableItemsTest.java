@@ -13,6 +13,9 @@ import org.tortodrone.core.Json;
 import org.tortodrone.core.Yaml;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.world.EquipmentCatalog;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** Whole-catalog equivalence, effective legacy edits, strict diagnostics and stable reference identities. */
 public final class ReadableItemsTest {

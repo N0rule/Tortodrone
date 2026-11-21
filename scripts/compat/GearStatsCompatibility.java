@@ -8,6 +8,7 @@ import org.tortodrone.character.*;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.world.*;
 import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.world.GearStats;
 
 /** Representative family/level comparisons against the unchanged client's calculations. */
 public final class GearStatsCompatibility {

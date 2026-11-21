@@ -11,6 +11,8 @@ import org.tortodrone.core.character.KnightProgress;
 import org.tortodrone.core.character.OpeningCompletion;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneConversation;
 
 /** Installed native reader/application oracle; no live gameplay is claimed. */
 public final class MissionProtocolCompatibility {
@@ -26,8 +28,8 @@ public final class MissionProtocolCompatibility {
         var receipt=new OpeningCompletion(OpeningMission.SECURING_CAMP,1770000000000L,null);
         append(bytes,codec.missionSettlement(1001,before,after,receipt,1770000000001L));
         append(bytes,codec.completedMissions(1001,List.of(receipt,new OpeningCompletion(OpeningMission.ANCIENT_GENERATOR,1770000000002L,"EASY"))));
-        var source=new org.tortodrone.world.ActorState(21,1,"ReaderFixture",0,1000,0,0,0,0,0,new StarterCatalog.Model("Character/PC/Default",Map.of()));
-        var panels=new ArrayList<org.tortodrone.world.SceneConversation.Node>();var dialogs=new ArrayList<org.tortodrone.world.SceneConversation>();
+        var source=new org.tortodrone.core.world.ActorState(21,1,"ReaderFixture",0,1000,0,0,0,0,0,new StarterCatalog.Model("Character/PC/Default",Map.of()));
+        var panels=new ArrayList<org.tortodrone.core.world.SceneConversation.Node>();var dialogs=new ArrayList<org.tortodrone.core.world.SceneConversation>();
         for(var mission:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN)){
             var conversation=org.tortodrone.world.OpeningComlinks.get(mission);String node=conversation.initial();
             while(!node.isEmpty()){

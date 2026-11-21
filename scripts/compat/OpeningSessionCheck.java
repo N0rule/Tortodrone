@@ -11,6 +11,7 @@ import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
 import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.world.ReadyRoom;
 
 /** Real exported-map session/ownership checks, not a gameplay completion simulator. */
 public final class OpeningSessionCheck {

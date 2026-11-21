@@ -20,12 +20,21 @@ import org.tortodrone.core.character.KnightMemory;
 import org.tortodrone.core.character.AnimatedItems;
 import org.tortodrone.core.character.Confetti;
 import org.tortodrone.world.MissionRun;
-import org.tortodrone.world.SceneConversation;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneConversation;
+import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.town.TownState;
 import org.tortodrone.core.town.ExchangeState;
 import org.tortodrone.core.town.DepotGate;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.PlayerEmotes;
+import org.tortodrone.core.world.SceneChat;
+import org.tortodrone.core.world.SceneHealth;
+import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.world.ReadyRoom;
+import org.tortodrone.core.world.SceneElevator;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.WeaponCatalog;
 
 /** Selected character protocol/controller; authoritative entities live in their scene instance. */
 final class WorldSession implements AutoCloseable {
@@ -374,7 +383,7 @@ final class WorldSession implements AutoCloseable {
             if(request.method()!=1||a.size()!=2||!(a.get(0) instanceof String text)||!(a.get(1) instanceof Byte mode))
                 throw new SessionDecoder.Rejected("Invalid guild chat");
             if(!chatRate.allow(System.nanoTime())){unavailable("Please slow down before sending another message.");return true;}
-            var message=new org.tortodrone.world.SceneChat.Message(knight.name(),text,mode);
+            var message=new org.tortodrone.core.world.SceneChat.Message(knight.name(),text,mode);
             var peers=new ArrayList<WorldSession>();
             synchronized(ACTIVE){for(var peer:ACTIVE.values())if(!peer.closed&&peer.guildView!=null
                     &&peer.guildView.guild().id()==guildView.guild().id())peers.add(peer);}

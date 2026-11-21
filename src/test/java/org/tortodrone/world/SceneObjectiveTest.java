@@ -7,7 +7,9 @@ import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.KnightObjective;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneActions;
+import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.SceneContent;
 
 public final class SceneObjectiveTest {
     public static void main(String[] args)throws Exception {

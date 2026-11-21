@@ -15,6 +15,7 @@ import org.tortodrone.support.ContentFixture;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.world.ActorState;
 
 /** Crash Site stateful cameras and pulse cables spawn inert the native way: the authored
  * "Startup State: Off" choice has the placeable's Startup handler signal each DumbSwitch to
@@ -105,7 +106,7 @@ public final class StatefulCameraSessionTest {
     }
 
     /** The authored tutorial camera is the rhendonCam-tagged one; runtime keys are source keys. */
-    private static int tutorialCamera(List<org.tortodrone.world.ActorState> cameras){
+    private static int tutorialCamera(List<org.tortodrone.core.world.ActorState> cameras){
         return cameras.stream().filter(a->a.entity()!=null&&a.entity().key().equals("2959")).findFirst().orElseThrow().id();
     }
     private static Object entityField(SceneSimulation simulation)throws Exception {synchronized(simulation){var f=SceneSimulation.class.getDeclaredField("entities");f.setAccessible(true);return f.get(simulation);}}

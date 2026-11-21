@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.util.*;
 import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.world.SceneConversation;
-import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.SceneConversation;
+import org.tortodrone.core.world.SceneActions;
+import org.tortodrone.core.world.SceneContent;
 
 /** Content ownership distinguishes real placed NPCs from reachable scene-started conversations. */
 public final class SceneConversationBindingTest {

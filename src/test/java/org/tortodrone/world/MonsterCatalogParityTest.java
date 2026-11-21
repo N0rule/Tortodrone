@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import org.tortodrone.resources.MapYaml;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.MonsterCatalog;
 
 /**
  * Phase 2 parity: a scene placement resolves its attack graph from the generated catalogue while
