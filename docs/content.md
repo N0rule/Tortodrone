@@ -733,8 +733,8 @@ sell from 3-1, matching the client's first sprite rank that requires knight rank
 same gate covers methods 4, 5, 6 and the quoted buy path. Administrators still see
 the full catalogue and every rank tier.
 
-**PvP shield slot:** the client's PvP shield uses equipment slot 14, which schema 17
-predates. Tortodrone stores it in `item.pvp-shield.<world>` metadata and overlays it
+**PvP shield slot:** the client's PvP shield uses equipment slot 14, which the baseline
+schema does not include. Tortodrone stores it in `item.pvp-shield.<world>` metadata and overlays it
 into `equipment[14]`; normal shields still use slot 2. Named loadouts save and
 restore slot 14. The slot is reserved for future PvP/arena gameplay; Lockdown item
 models remain unsupported until that path exists. No schema migration is required.
@@ -743,7 +743,7 @@ models remain unsupported until that path exists. No schema migration is require
 The slot is stored in `item.dungeon.<world>` metadata, each capsule tier adds 40
 maximum health, and equipping a lower-or-equal tier is refused while a better pod
 replaces the old one. The persisted inventory row stays in the generic `OTHER`
-database slot so schema 17 is unchanged.
+database slot so the baseline schema is unchanged.
 
 Explicit initialization/seed-version metadata makes seeding one-time. Restart,
 disabling all offers or intentionally clearing a managed catalog never reseeds it.

@@ -20,17 +20,21 @@ import org.tortodrone.resources.SceneCatalog;
 public final class WorldSessionTest {
     public static void main(String[] args) throws Exception {
         Path home=Files.createTempDirectory("tortodrone-town-sessions-");
+        var restore=org.tortodrone.world.SceneRegistry.system();
         try(var accounts=new AccountStore(home,false,org.tortodrone.core.character.ItemCatalog.starter())) {
             accounts.create("Alice","alice-password".toCharArray());
             var characters=new CharacterStore(new Database(home,false),1,"Alice");
             var knight=characters.create(new Knight(0,"Town-Knight","Gear/Helm/Spiral Sallet (Blue)",
                 "Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             RecordingSocket unavailable=new RecordingSocket();
+            var emptyRegistry=new org.tortodrone.world.SceneRegistry(org.tortodrone.resources.SceneCatalog.empty());
+            org.tortodrone.world.SceneRegistry.install(emptyRegistry);
             try(var output=new SessionOutput(unavailable);var empty=new WorldSession(unavailable,characters,output,new SessionCodec(),1000,1,message->{},
-                    new org.tortodrone.world.SceneRegistry(org.tortodrone.resources.SceneCatalog.empty()))) {
+                    emptyRegistry)) {
                 refuse(()->empty.select(knight.name(),Map.of(TownSquare.ZONE_RECEIVER,(short)0)));
                 check(!empty.selected()&&!WorldSession.active(1,knight.id()),"missing maps refuse world entry without acquiring a controller");
             }
+            org.tortodrone.world.SceneRegistry.install(restore);
             RecordingSocket one=new RecordingSocket(),two=new RecordingSocket(),stale=new RecordingSocket();
             try(var out1=new SessionOutput(one);var out2=new SessionOutput(two);var out3=new SessionOutput(stale);
                     var first=new WorldSession(one,characters,out1,new SessionCodec(),1001,1,message -> {});
@@ -127,7 +131,7 @@ public final class WorldSessionTest {
             }
             check(!WorldSession.active(1,knight.id()),"reconnect cleanup releases controller");
             System.out.println("PASS: town ownership, auth revisions, input readiness, delayed/invalid acknowledgements, reliable deltas, re-entry and reconnect cleanup");
-        } finally {try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
+        } finally {org.tortodrone.world.SceneRegistry.install(restore);try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
     }
     private static void publicationBoundaries(WorldSession session)throws Exception {
         var lockField=WorldSession.class.getDeclaredField("publications");lockField.setAccessible(true);

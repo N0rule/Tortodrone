@@ -135,7 +135,7 @@ disconnect counts, largest frame, retained snapshots, heap per slow reader.
 
 Source-verified settings and write path:
 
-- SQLite schema 18; WAL enabled at initialization; `foreign_keys=ON` and
+- Pre-0.42.0 measurement: SQLite schema 18 (superseded by the schema 1 baseline); WAL enabled at initialization; `foreign_keys=ON` and
   `busy_timeout=5000` per connection; a fresh connection for every `read`/`write`;
   writes use `BEGIN IMMEDIATE`.
 - Every write calls `InventoryExpiry.prune(...)` before the caller's work

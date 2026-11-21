@@ -20,8 +20,9 @@ import org.tortodrone.core.town.TownCatalog;
 public final class FriendSessionTest {
     public static void main(String[] args)throws Exception {
         Path root=Files.createTempDirectory("tortodrone-friend-session-");
+        var previous=org.tortodrone.world.SceneRegistry.system();
         try{
-            var content=ContentManager.load(Path.of("."));var scenes=org.tortodrone.world.SceneRegistry.create(content);var db=new Database(root,false);
+            var content=ContentManager.load(Path.of("."));var scenes=org.tortodrone.world.SceneRegistry.create(content);org.tortodrone.world.SceneRegistry.install(scenes);var db=new Database(root,false);
             try(var alice=person(db,content.items(),scenes,"Alice");var bob=person(db,content.items(),scenes,"Bobby");var other=person(db,content.items(),scenes,"Other")){
                 check(alice.world.feedInvocation(new SessionDecoder.Invocation(3,11,1,List.of(true,0L,result()))),"current feed request is answered");
                 check(alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,2,List.of(1,List.of(),result()))),"current party-suggestion request is answered");
@@ -112,7 +113,7 @@ public final class FriendSessionTest {
                 await(()->WorldSession.friendPresence(db.file()).get(mateWorld).instance()==0);
             }
             System.out.println("PASS: native friend request/join/secret join/looking-for-group/remove, Town and Training instance presence/travel, open/private party controls, stranger/offline/private/transition/auth guards");
-        }finally{org.tortodrone.support.ContentFixture.delete(root);}
+        }finally{org.tortodrone.world.SceneRegistry.install(previous);org.tortodrone.support.ContentFixture.delete(root);}
     }
     private static String destination(org.tortodrone.core.world.MapScene map){return map.name().substring("%town:m.".length());}
     private static SessionDecoder.Listener confirm(){return new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)5);}
