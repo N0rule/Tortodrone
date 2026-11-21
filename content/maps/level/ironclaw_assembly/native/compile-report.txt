@@ -1,0 +1,8 @@
+source=map-sources/ironclaw_assembly
+scene-id=320
+type=level
+zone-id=33554543
+zone-name=%dungeon:m.ironclaw_munitions_factory_assembly
+link=none
+The visual scene, collision, portals and supported bindings are generated.
+Routing beyond an existing portal is a design decision and is not invented.

@@ -1,0 +1,23 @@
+Prepared native identity and default entrance retained. Supported extracted bindings were validated.
+Cached scenes cannot establish missing server scripts, AI, rewards or portal actions; no behaviors invented.
+Review unresolved localization in NPC YAML and verify travel with an isolated stock client.
+Supported actors=53, NPC conversations=2, portal triggers=0
+Supported extracted actor bindings: 27
+Unsupported handler at 5185 / 0: com.threerings.projectx.config.ProjectXHandlerConfig$Interaction
+Unsupported handler at 5188 / 0: com.threerings.projectx.config.ProjectXHandlerConfig$Interaction
+Unsupported handler at 5189 / 0: com.threerings.projectx.config.ProjectXHandlerConfig$Interaction
+Unsupported handler at 5191 / 0: com.threerings.projectx.config.ProjectXHandlerConfig$Interaction
+Unsupported handler at 4174 / 0: com.threerings.projectx.config.ProjectXHandlerConfig$Interaction
+Unsupported handler at 4174 / 1: com.threerings.tudey.config.HandlerConfig$IntersectionStart
+Unsupported complete startup at 4887 / 0: Unsupported startup action com.threerings.tudey.config.ActionConfig$FireEffect
+Unsupported complete startup at 4890 / 0: Unsupported startup action com.threerings.tudey.config.ActionConfig$FireEffect
+Unsupported complete startup at 4898 / 0: Unsupported startup action com.threerings.tudey.config.ActionConfig$Delayed
+Unsupported complete startup at 4979 / 0: Unsupported startup action com.threerings.tudey.config.ActionConfig$Delayed
+Unresolved conversation for placed NPC 4724: Character/NPC/Rescue Camp/Soil
+Unresolved conversation for placed NPC 4951: Character/NPC/Rescue Camp/Injured
+Unresolved conversation for placed NPC 4955: Character/NPC/Rescue Camp/Recruit, idle
+Unresolved conversation for placed NPC 4959: Character/NPC/Rescue Camp/Virgil
+Unresolved conversation for placed NPC 4961: Character/NPC/Rescue Camp/Recruit, sitting
+Unresolved conversation for placed NPC 4962: Character/NPC/Rescue Camp/Recruit, idle
+Unresolved conversation for placed NPC 4968: Character/NPC/Rescue Camp/Injured
+Unresolved conversation for placed NPC 5138: Character/NPC/Rescue Camp/Technician, idle

@@ -1,0 +1,6 @@
+id: 218
+name: Rescue Camp|Light in the Darkness
+type: town
+zone: '16777222'
+defaultSpawn: level_start
+instances: 1

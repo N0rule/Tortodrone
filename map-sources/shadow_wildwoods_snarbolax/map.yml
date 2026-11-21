@@ -1,0 +1,8 @@
+# deployed-levels.tsv 161,'gloaming_wildwoods_snarbolax' -> scene 384; zone is ZoneUtil.qualify(2, 161).
+id: 384
+name: "Gloaming Wildwoods|Lair of the Snarbolax"
+type: level
+zone-id: 33554593
+zone-name: "%dungeon:m.gloaming_wildwoods_snarbolax"
+defaultSpawn: level_start
+instances: 1

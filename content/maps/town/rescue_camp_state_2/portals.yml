@@ -1,0 +1,13 @@
+portals: {
+  }
+entrances:
+  from_final:
+    id: 4173
+    facing: 0
+    x: 7.5
+    y: 62.5
+  level_start:
+    id: 5158
+    facing: 0
+    x: 9.5
+    y: 2.5

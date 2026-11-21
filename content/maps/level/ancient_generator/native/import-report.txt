@@ -1,0 +1,172 @@
+Prepared native identity and default entrance retained. Supported extracted bindings were validated.
+Cached scenes cannot establish missing server scripts, AI, rewards or portal actions; no behaviors invented.
+Review unresolved localization in NPC YAML and verify travel with an isolated stock client.
+Supported actors=670, NPC conversations=2, portal triggers=0
+Supported extracted actor bindings: 248
+Native null startup actor (no spawn) at 2202
+Native null startup actor (no spawn) at 2239
+Native null startup actor (no spawn) at 2246
+Native null startup actor (no spawn) at 3059
+Native null startup actor (no spawn) at 3411
+Unsupported handler at 3977 / 0: com.threerings.projectx.config.ProjectXHandlerConfig$Interaction
+Gold door Door/Iron Gate/Gold 5: physical key/drop handling restored; native ClearMinimap icon removal is not implemented
+Restored archived Trigger/One Time Action handler at 2338 / 0
+Restored archived Trigger/One Time Action handler at 2342 / 0
+Restored archived Trigger/One Time Action handler at 2343 / 0
+Restored archived Trigger/One Time Action handler at 2429 / 0
+Restored archived Trigger/One Time Action handler at 2797 / 0
+Restored archived Trigger/One Time Action handler at 2811 / 0
+Restored archived Trigger/One Time Action handler at 967 / 0
+Restored archived Trigger/One Time Action handler at 968 / 0
+Restored archived Trigger/One Time Action handler at 969 / 0
+Restored archived Trigger/One Time Action handler at 970 / 0
+Restored archived Trigger/One Time Action handler at 3289 / 0
+Prepared Scaled Ember for the scene export's depth-zero context; higher-depth selection is not implemented
+Restored archived Trigger/One Time Action handler at 3328 / 0
+Restored archived Trigger/One Time Action handler at 3334 / 0
+Restored archived Trigger/One Time Action handler at 3335 / 0
+Restored archived Trigger/One Time Action handler at 3471 / 0
+Restored archived Trigger/One Time Action handler at 3472 / 0
+Unsupported complete scene handler at 3473 / 0: Native signal name is stripped or empty
+Unsupported complete scene handler at 3473 / 1: Native signal name is stripped or empty
+Unsupported complete scene handler at 3473 / 2: Unsupported scene action com.threerings.tudey.config.ActionConfig$Conditional
+Restored archived Trigger/One Time Action handler at 3474 / 0
+Restored archived Trigger/One Time Action handler at 3484 / 0
+Restored archived Trigger/One Time Action handler at 3485 / 0
+Restored archived Trigger/One Time Action handler at 3486 / 0
+Restored archived Trigger/One Time Action handler at 3487 / 0
+Restored archived Trigger/One Time Action handler at 3488 / 0
+Restored archived Trigger/One Time Action handler at 3489 / 0
+Restored archived Trigger/One Time Action handler at 3490 / 0
+Restored archived Trigger/One Time Action handler at 3491 / 0
+Restored archived Trigger/One Time Action handler at 3492 / 0
+Restored archived Trigger/One Time Action handler at 3493 / 0
+Restored archived Trigger/One Time Action handler at 3494 / 0
+Restored archived Trigger/One Time Action handler at 3495 / 0
+Restored archived Trigger/One Time Action handler at 3496 / 0
+Restored archived Trigger/One Time Action handler at 3498 / 0
+Restored archived Trigger/One Time Action handler at 3499 / 0
+Restored archived Trigger/One Time Action handler at 3500 / 0
+Restored archived Trigger/One Time Action handler at 3501 / 0
+Restored archived Trigger/One Time Action handler at 3502 / 0
+Restored archived Trigger/One Time Action handler at 3504 / 0
+Restored archived Trigger/One Time Action handler at 3505 / 0
+Restored archived Trigger/One Time Action handler at 3506 / 0
+Restored archived Trigger/One Time Action handler at 3507 / 0
+Restored archived Trigger/One Time Action handler at 3508 / 0
+Restored archived Trigger/One Time Action handler at 3509 / 0
+Restored archived Trigger/One Time Action handler at 3510 / 0
+Restored archived Trigger/One Time Action handler at 3511 / 0
+Restored archived Trigger/One Time Action handler at 3512 / 0
+Restored archived Trigger/One Time Action handler at 3513 / 0
+Restored archived Trigger/One Time Action handler at 3514 / 0
+Restored archived Trigger/One Time Action handler at 3515 / 0
+Restored archived Trigger/One Time Action handler at 3516 / 0
+Restored archived Trigger/One Time Action handler at 3517 / 0
+Restored archived Trigger/One Time Action handler at 3518 / 0
+Restored archived Trigger/One Time Action handler at 3519 / 0
+Restored archived Trigger/One Time Action handler at 3520 / 0
+Restored archived Trigger/One Time Action handler at 3521 / 0
+Restored archived Trigger/One Time Action handler at 3522 / 0
+Restored archived Trigger/One Time Action handler at 3524 / 0
+Restored archived Trigger/One Time Action handler at 3525 / 0
+Restored archived Trigger/One Time Action handler at 3526 / 0
+Restored archived Trigger/One Time Action handler at 3527 / 0
+Restored archived Trigger/One Time Action handler at 3528 / 0
+Restored archived Trigger/One Time Action handler at 3529 / 0
+Restored archived Trigger/One Time Action handler at 3530 / 0
+Restored archived Trigger/One Time Action handler at 3531 / 0
+Restored archived Trigger/One Time Action handler at 3534 / 0
+Restored archived Trigger/One Time Action handler at 3535 / 0
+Restored archived Trigger/One Time Action handler at 3536 / 0
+Restored archived Trigger/One Time Action handler at 3538 / 0
+Restored archived Trigger/One Time Action handler at 3539 / 0
+Restored archived Trigger/One Time Action handler at 3540 / 0
+Restored archived Trigger/One Time Action handler at 3541 / 0
+Restored archived Trigger/One Time Action handler at 3542 / 0
+Restored archived Trigger/One Time Action handler at 3543 / 0
+Restored archived Trigger/One Time Action handler at 3544 / 0
+Restored archived Trigger/One Time Action handler at 3545 / 0
+Unsupported complete scene handler at 3545 / 0: Unsupported scene action com.threerings.projectx.dungeon.config.DungeonActionConfig$TableSpawnPerMember
+Restored archived Trigger/One Time Action handler at 3547 / 0
+Restored archived Trigger/One Time Action handler at 3548 / 0
+Restored archived Trigger/One Time Action handler at 3549 / 0
+Restored archived Trigger/One Time Action handler at 3550 / 0
+Restored archived Trigger/One Time Action handler at 3551 / 0
+Restored archived Trigger/One Time Action handler at 3553 / 0
+Restored archived Trigger/One Time Action handler at 3554 / 0
+Restored archived Trigger/One Time Action handler at 3558 / 0
+Restored archived Trigger/One Time Action handler at 3559 / 0
+Restored archived Trigger/One Time Action handler at 3564 / 0
+Restored archived Trigger/One Time Action handler at 3565 / 0
+Restored archived Trigger/One Time Action handler at 3566 / 0
+Restored archived Trigger/One Time Action handler at 3567 / 0
+Restored archived Trigger/One Time Action handler at 3568 / 0
+Restored archived Trigger/One Time Action handler at 3569 / 0
+Restored archived Trigger/One Time Action handler at 3570 / 0
+Restored archived Trigger/One Time Action handler at 3572 / 0
+Restored archived Trigger/One Time Action handler at 3573 / 0
+Restored archived Trigger/One Time Action handler at 3575 / 0
+Restored archived Trigger/One Time Action handler at 3578 / 0
+Restored archived Trigger/One Time Action handler at 3579 / 0
+Restored archived Trigger/One Time Action handler at 3581 / 0
+Restored archived Trigger/One Time Action handler at 3582 / 0
+Restored archived Trigger/One Time Action handler at 3584 / 0
+Restored archived Trigger/One Time Action handler at 3585 / 0
+Restored archived Trigger/One Time Action handler at 3587 / 0
+Restored archived Trigger/One Time Action handler at 3588 / 0
+Restored archived Trigger/One Time Action handler at 3589 / 0
+Restored archived Trigger/One Time Action handler at 3590 / 0
+Restored archived Trigger/One Time Action handler at 3591 / 0
+Restored archived Trigger/One Time Action handler at 3807 / 0
+Restored archived Trigger/One Time Action handler at 3808 / 0
+Restored archived Trigger/One Time Action handler at 3809 / 0
+Restored archived Trigger/One Time Action handler at 3853 / 0
+Restored archived Trigger/One Time Action handler at 3854 / 0
+Restored archived Trigger/One Time Action handler at 3890 / 0
+Restored archived Trigger/One Time Action handler at 3907 / 0
+Restored archived Trigger/One Time Action handler at 3911 / 0
+Restored archived Trigger/One Time Action handler at 3912 / 0
+Restored archived Trigger/One Time Action handler at 3913 / 0
+Restored archived Trigger/One Time Action handler at 3914 / 0
+Restored archived Trigger/One Time Action handler at 3921 / 0
+Restored archived Trigger/One Time Action handler at 3922 / 0
+Restored archived Trigger/One Time Action handler at 3923 / 0
+Restored archived Trigger/One Time Action handler at 3924 / 0
+Restored archived Trigger/One Time Action handler at 3925 / 0
+Restored archived Trigger/One Time Action handler at 3926 / 0
+Restored archived Trigger/One Time Action handler at 3928 / 0
+Restored archived PawnLogic area guard at 2347 / 0
+Restored archived PawnLogic area guard at 2488 / 0
+Restored archived PawnLogic area guard at 2493 / 0
+Restored archived PawnLogic area guard at 2495 / 0
+Restored archived PawnLogic area guard at 2988 / 0
+Native null scene effect (no fire); presentation data may be stripped
+Restored archived PawnLogic area guard at 2989 / 0
+Native null scene effect (no fire); presentation data may be stripped
+Restored archived PawnLogic area guard at 2990 / 0
+Native null scene effect (no fire); presentation data may be stripped
+Restored archived PawnLogic area guard at 2991 / 0
+Native null scene effect (no fire); presentation data may be stripped
+Restored archived PawnLogic area guard at 2994 / 0
+Native null scene effect (no fire); presentation data may be stripped
+Restored archived PawnLogic area guard at 2995 / 0
+Native null scene effect (no fire); presentation data may be stripped
+Restored archived PawnLogic area guard at 2997 / 0
+Native null scene effect (no fire); presentation data may be stripped
+Restored archived PawnLogic area guard at 2998 / 0
+Native null scene effect (no fire); presentation data may be stripped
+Restored archived PawnLogic area guard at 2999 / 0
+Native null scene effect (no fire); presentation data may be stripped
+Restored archived PawnLogic area guard at 3000 / 0
+Native null scene effect (no fire); presentation data may be stripped
+Restored archived PawnLogic area guard at 3001 / 0
+Native null scene effect (no fire); presentation data may be stripped
+Restored archived PawnLogic area guard at 3265 / 0
+Restored archived PawnLogic area guard at 3317 / 0
+Restored archived PawnLogic area guard at 3318 / 0
+Restored archived PawnLogic area guard at 3805 / 0
+Restored archived PawnLogic area guard at 3918 / 0
+Restored archived PawnLogic area guard at 3927 / 0
+Restored archived PawnLogic area guard at 3940 / 0
+Restored archived PawnLogic area guard at 3975 / 0

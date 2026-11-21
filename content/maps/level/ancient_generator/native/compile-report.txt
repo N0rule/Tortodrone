@@ -1,0 +1,8 @@
+source=map-sources/ancient_generator
+scene-id=337
+type=level
+zone-id=33554605
+zone-name=%dungeon:m.training_grounds_generator
+link=none
+The visual scene, collision, portals and supported bindings are generated.
+Routing beyond an existing portal is a design decision and is not invented.

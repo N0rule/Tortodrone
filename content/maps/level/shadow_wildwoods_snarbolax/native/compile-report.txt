@@ -1,0 +1,8 @@
+source=map-sources/shadow_wildwoods_snarbolax
+scene-id=384
+type=level
+zone-id=33554593
+zone-name=%dungeon:m.gloaming_wildwoods_snarbolax
+link=none
+The visual scene, collision, portals and supported bindings are generated.
+Routing beyond an existing portal is a design decision and is not invented.

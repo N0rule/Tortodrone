@@ -1,0 +1,8 @@
+portals: {
+  }
+entrances:
+  level_start:
+    id: 82
+    facing: 0
+    x: 0.5
+    y: 0.5

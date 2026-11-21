@@ -1,0 +1,6 @@
+id: 384
+name: Gloaming Wildwoods|Lair of the Snarbolax
+type: level
+zone: '33554593'
+defaultSpawn: level_start
+instances: 1

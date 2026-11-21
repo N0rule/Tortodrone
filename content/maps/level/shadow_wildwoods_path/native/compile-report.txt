@@ -1,0 +1,8 @@
+source=map-sources/shadow_wildwoods_path
+scene-id=380
+type=level
+zone-id=33554591
+zone-name=%dungeon:m.gloaming_wildwoods_path
+link=none
+The visual scene, collision, portals and supported bindings are generated.
+Routing beyond an existing portal is a design decision and is not invented.

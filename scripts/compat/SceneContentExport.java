@@ -909,11 +909,16 @@ public final class SceneContentExport {
         for(String tag:result)if(tag==null||tag.length()>256||tag.contains(",")||tag.chars().anyMatch(Character::isISOControl))throw new IOException("Unrepresentable native scene tag");
         return result.stream().filter(tag->!tag.isBlank()).distinct().toList();
     }
+    /** A tagged signal with no tag resolves no actor in native TargetLogic.Tagged; keep it a no-op. */
+    private static Map<String,Object> noOpSignal(String name){
+        importReport.add("Native tagged signal \""+name+"\" has an empty tag and resolves no actor; exported as a no-op");
+        return Map.of("kind","sequence","stopOnFailure",false,"actions",List.of());
+    }
     private static Map<String,Object> sceneSignalAction(com.threerings.tudey.config.TargetConfig target,String name,int depth)throws IOException {
-        if(depth>16)throw new IOException("Scene signal target graph is too deep");
-        if(name==null||name.isBlank()||name.length()>256||name.chars().anyMatch(Character::isISOControl))throw new IOException("Invalid or stripped native signal name");
+        if(depth>16)throw new IOException("Scene signal target graph is too deep");        if(name==null||name.isBlank()||name.length()>256||name.chars().anyMatch(Character::isISOControl))throw new IOException("Invalid or stripped native signal name");
         if(target instanceof com.threerings.tudey.config.TargetConfig.Source)return Map.of("kind","source-signal","name",name);
-        if(target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged)return Map.of("kind","signal","tag",tagged.tag,"name",name);
+        if(target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged)return tagged.tag.isBlank()
+            ? noOpSignal(name) : Map.of("kind","signal","tag",tagged.tag,"name",name);
         if(target instanceof com.threerings.tudey.config.TargetConfig.NearestSubset nearest){
             if(!(nearest.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported nearest signal reference location");
             var selection=nearest.target;boolean exclude=false;

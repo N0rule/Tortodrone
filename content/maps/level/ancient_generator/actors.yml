@@ -1,0 +1,7023 @@
+actors:
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_110_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -89.99998884409983
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: (Set Tag)
+    x: 8.5
+    y: 23.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_111_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -89.99998884409983
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: (Set Tag)
+    x: 8.5
+    y: 28.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_112_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -139.99998568201713
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: (Set Tag)
+    x: 9.122317
+    y: 21.02148
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_113_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 130.00002866160654
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: (Set Tag)
+    x: -7.9785194
+    y: 20.877684
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_115_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99997768819966
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: (Set Tag)
+    x: 6.5
+    y: 21.500002
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_116_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.9999640278213
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: (Set Tag)
+    x: -5.5
+    y: 21.500002
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_117_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 90.00002299504568
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: (Set Tag)
+    x: -7.499998
+    y: 23.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_118_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 90.00003665542401
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: (Set Tag)
+    x: -7.499998
+    y: 28.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1297_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 90.00005031580235
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 56.525867
+    y: 75.97672
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1298_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 90.00007763655904
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 76.52586
+    y: 75.97672
+  block_ghost_1300_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 77.5
+    y: 88.5
+  block_ghost_1301_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 78.5
+    y: 88.5
+  block_unbreakable_parts_clockworks_base_1302_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 79.5
+    y: 88.5
+  block_unbreakable_parts_clockworks_base_1303_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 79.5
+    y: 87.5
+  block_unbreakable_parts_clockworks_base_1304_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 79.5
+    y: 86.5
+  block_unbreakable_parts_clockworks_base_1305_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 80.5
+    y: 86.5
+  block_unbreakable_parts_clockworks_base_1308_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 80.5
+    y: 85.5
+  block_unbreakable_parts_clockworks_base_1313_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 80.5
+    y: 84.5
+  block_ghost_1328_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 76.5
+    y: 88.5
+  dynamic_misc_respawn_pad_1330_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    child.actionable-signal: ''
+    child.bounds-max-x: 0.45
+    child.bounds-max-y: 0.45
+    child.bounds-min-x: -0.45
+    child.bounds-min-y: -0.45
+    child.can-throw: true
+    child.collision-flags: 514
+    child.collision-mask: 141
+    child.description: Dungeon/Lift Objects/Clay Pot
+    child.destroy-on-land: true
+    child.explode-on-impact: false
+    child.faction: -1
+    child.fall-speed: 0
+    child.fuse: 1500
+    child.is-static: false
+    child.radius: 0.45
+    child.shape: Circle
+    child.snap-tag: ''
+    child.speed: 11.69
+    child.tags: ''
+    child.throw-time: 650
+    child.thrown-collision-flags: 512
+    child.thrown-collision-mask: 137
+    collision-flags: 0
+    collision-mask: 0
+    delay: 3000
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    warning: 0
+    width: 1
+    x: 76.5
+    y: 82.5
+  block_explosive_1358_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -179.99990938630796
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 20.5
+    y: 39.5
+  dynamic_misc_respawn_pad_1458_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    child.actionable-signal: ''
+    child.bounds-max-x: 0.45
+    child.bounds-max-y: 0.45
+    child.bounds-min-x: -0.45
+    child.bounds-min-y: -0.45
+    child.can-throw: true
+    child.collision-flags: 514
+    child.collision-mask: 141
+    child.description: Dungeon/Lift Objects/Clay Pot
+    child.destroy-on-land: true
+    child.explode-on-impact: false
+    child.faction: -1
+    child.fall-speed: 0
+    child.fuse: 1500
+    child.is-static: false
+    child.radius: 0.45
+    child.shape: Circle
+    child.snap-tag: ''
+    child.speed: 11.69
+    child.tags: ''
+    child.throw-time: 650
+    child.thrown-collision-flags: 512
+    child.thrown-collision-mask: 137
+    collision-flags: 0
+    collision-mask: 0
+    delay: 3000
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    warning: 0
+    width: 1
+    x: 88.5
+    y: 109.5
+  block_explosive_1459_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 91.5
+    y: 109.5
+  block_unbreakable_parts_clockworks_base_1460_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 92.5
+    y: 108.5
+  block_explosive_1461_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 92.5
+    y: 109.5
+  block_unbreakable_parts_clockworks_base_1462_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 93.5
+    y: 108.5
+  block_explosive_1463_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 93.5
+    y: 109.5
+  block_unbreakable_parts_clockworks_base_1464_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 94.5
+    y: 108.5
+  block_explosive_1465_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 94.5
+    y: 109.5
+  block_unbreakable_parts_clockworks_base_1466_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 95.5
+    y: 108.5
+  block_explosive_1467_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 95.5
+    y: 109.5
+  block_explosive_1468_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 95.5
+    y: 111.5
+  block_explosive_1469_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 95.5
+    y: 110.5
+  block_ghost_1470_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 95.5
+    y: 113.5
+  block_explosive_timed_1471_0:
+    block-damage: true
+    block-fuse: 3000
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 95.5
+    y: 112.5
+  block_unbreakable_parts_clockworks_base_1495_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 96.5
+    y: 109.5
+  block_unbreakable_parts_clockworks_base_1496_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 96.5
+    y: 108.5
+  block_unbreakable_parts_clockworks_base_1497_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 97.5
+    y: 108.5
+  block_explosive_1498_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 97.5
+    y: 109.5
+  block_unbreakable_parts_clockworks_base_1499_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 96.5
+    y: 111.5
+  block_unbreakable_parts_clockworks_base_1500_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 96.5
+    y: 110.5
+  block_explosive_1501_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 97.5
+    y: 111.5
+  block_explosive_1502_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 97.5
+    y: 110.5
+  block_unbreakable_parts_clockworks_base_1503_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 98.5
+    y: 108.5
+  block_explosive_1504_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 98.5
+    y: 109.5
+  block_explosive_1505_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 99.5
+    y: 109.5
+  block_unbreakable_parts_clockworks_base_1506_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 99.5
+    y: 108.5
+  block_unbreakable_parts_clockworks_base_1507_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 96.5
+    y: 112.5
+  block_ghost_1508_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 96.5
+    y: 113.5
+  block_explosive_timed_1509_0:
+    block-damage: true
+    block-fuse: 3000
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 97.5
+    y: 112.5
+  block_ghost_1510_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 97.5
+    y: 113.5
+  block_unbreakable_parts_clockworks_base_1511_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 100.5
+    y: 108.5
+  block_explosive_1512_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 100.5
+    y: 109.5
+  block_explosive_1513_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 101.5
+    y: 109.5
+  dynamic_misc_respawn_pad_1514_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    child.actionable-signal: ''
+    child.bounds-max-x: 0.45
+    child.bounds-max-y: 0.45
+    child.bounds-min-x: -0.45
+    child.bounds-min-y: -0.45
+    child.can-throw: true
+    child.collision-flags: 514
+    child.collision-mask: 141
+    child.description: Dungeon/Lift Objects/Clay Pot
+    child.destroy-on-land: true
+    child.explode-on-impact: false
+    child.faction: -1
+    child.fall-speed: 0
+    child.fuse: 1500
+    child.is-static: false
+    child.radius: 0.45
+    child.shape: Circle
+    child.snap-tag: ''
+    child.speed: 11.69
+    child.tags: ''
+    child.throw-time: 650
+    child.thrown-collision-flags: 512
+    child.thrown-collision-mask: 137
+    collision-flags: 0
+    collision-mask: 0
+    delay: 3000
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    warning: 0
+    width: 1
+    x: 104.5
+    y: 109.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1518_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99993670706462
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 93.53894
+    y: 93.714325
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1519_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99993670706462
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.53894
+    y: 93.714325
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1567_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99993670706462
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 100.53894
+    y: 116.714325
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1568_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99993670706462
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 92.53894
+    y: 116.714325
+  dynamic_switch_button_one_time_160_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    radius: 0.4
+    facing: -89.99998201391065
+    shape: Circle
+    state.0.signal: ''
+    state.0.tag: ''
+    state.1.signal: open
+    state.1.tag: door 1a
+    switch-mode: button-once
+    tags: button 1a
+    x: 0.5
+    y: 18.5
+  door_iron_gate_trigger_3_162_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: -89.99998201391065
+    shape: Rectangle
+    start-open: false
+    tags: door 1a
+    width: 1
+    x: 0.5
+    y: 21.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1625_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 90.00010495731571
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 119.71432
+    y: 131.46107
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1626_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 90.00010495731571
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 112.974
+    y: 131.46107
+  door_iron_gate_trigger_3_1636_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: 90.00010495731571
+    shape: Rectangle
+    start-open: true
+    tags: door 1c
+    width: 1
+    x: 96.5
+    y: 89.5
+  door_iron_gate_monster_3_1705_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: -1.0245284569241124E-5
+    shape: Rectangle
+    start-open: true
+    tags: door 1b
+    width: 1
+    x: 0.5
+    y: 74.5
+  block_unbreakable_parts_clockworks_base_1726_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 19.5
+    y: 76.5
+  block_unbreakable_parts_clockworks_base_1727_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 19.5
+    y: 77.5
+  dynamic_help_bubble_help_1770_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: ''
+    x: 60.5
+    y: 82.5
+  block_explosive_1891_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 131.5
+    y: 151.5
+  block_explosive_1897_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 141.5
+    y: 151.5
+  block_explosive_1924_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 131.5
+    y: 138.5
+  block_explosive_1928_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 141.5
+    y: 138.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1932_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -135.000014002001
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 127.16573
+    y: 160.08252
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1933_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -135.000014002001
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 126.97017
+    y: 159.82733
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1937_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 135.00000034162267
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 146.18349
+    y: 159.97212
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1938_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 134.99998668124434
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 145.92828
+    y: 160.16774
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_194_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99997768819966
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 9.509401
+    y: 25.639898
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1972_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 2.049056913848225E-5
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.5
+    y: 139.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_198_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 135.00004132275768
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 13.364281
+    y: 37.226772
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_199_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99997768819966
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 9.49147
+    y: 33.355896
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_1999_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 29.99994960840728
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.37505
+    y: 145.9053
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2000_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -30.00005206124483
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.43651
+    y: 145.59798
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2002_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -85.00005814521872
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.67494
+    y: 146.14502
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2003_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 89.99992054220813
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.433304
+    y: 146.53885
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2005_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 149.99994270242775
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.81421
+    y: 147.47409
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2006_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -155.00006464660564
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.84192
+    y: 147.86595
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2007_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -2.049056913848225E-5
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.23393
+    y: 138.75241
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2008_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -4.09811382769645E-5
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.75955
+    y: 139.28271
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2009_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99993670706462
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.53894
+    y: 130.71432
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2035_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 179.999991348578
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 127.31677
+    y: 191.00854
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2036_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 179.999991348578
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 127.635506
+    y: 191.05069
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2062_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 89.99996152334315
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 135.21988
+    y: 200.12592
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2080_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 137.62305
+    y: 200.12122
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2084_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 179.999991348578
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 145.31677
+    y: 190.00854
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2085_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 179.999991348578
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 145.6355
+    y: 190.05069
+  dynamic_breakable_objects_clockworks_bucket_o_bolts_210_0:
+    bounds-max-x: 0.2
+    bounds-max-y: 0.2
+    bounds-min-x: -0.2
+    bounds-min-y: -0.2
+    collision-flags: 224
+    collision-mask: 0
+    damage-action: destroy
+    damage-mask: 3
+    is-static: true
+    radius: 0.2
+    facing: -89.99998201391065
+    shape: Circle
+    tags: ''
+    x: 4.5
+    y: 40.5
+  item_consumable_crowns_copper_crown_2124_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    radius: 0.4
+    facing: -90.00000250447816
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 136.5
+    y: 173.5
+  item_consumable_crowns_copper_crown_2125_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    radius: 0.4
+    facing: -90.00000250447816
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 136.5
+    y: 175.5
+  item_consumable_crowns_copper_crown_2126_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    radius: 0.4
+    facing: -90.00000250447816
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 136.5
+    y: 177.5
+  item_consumable_crowns_copper_crown_2127_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    radius: 0.4
+    facing: -90.00000250447816
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 136.5
+    y: 179.5
+  item_consumable_crowns_copper_crown_2128_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    radius: 0.4
+    facing: -90.00000250447816
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 136.5
+    y: 181.5
+  item_consumable_crowns_copper_crown_2129_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    radius: 0.4
+    facing: -90.00000250447816
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 136.5
+    y: 183.5
+  item_consumable_heat_ember_2_2133_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 5
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 132.5
+    y: 191.5
+  item_consumable_heat_ember_2_2136_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 5
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 133.5
+    y: 190.5
+  item_consumable_heat_ember_1_2137_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 1
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 133.5
+    y: 191.5
+  item_consumable_heat_ember_1_2138_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 1
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 134.5
+    y: 191.5
+  item_consumable_heat_ember_1_2140_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 1
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 133.5
+    y: 192.5
+  item_consumable_heat_ember_1_2141_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 1
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 135.5
+    y: 192.5
+  item_consumable_heat_ember_1_2142_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 1
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 136.5
+    y: 191.5
+  item_consumable_heat_ember_1_2143_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 1
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 137.5
+    y: 192.5
+  item_consumable_heat_ember_1_2144_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 1
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 136.5
+    y: 192.5
+  item_consumable_heat_ember_2_2145_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 5
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 136.5
+    y: 193.5
+  item_consumable_heat_ember_2_2147_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 5
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 138.5
+    y: 191.5
+  item_consumable_heat_ember_1_2150_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 1
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 139.5
+    y: 190.5
+  item_consumable_heat_ember_1_2151_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 1
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 139.5
+    y: 191.5
+  item_consumable_heat_ember_1_2152_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 1
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 140.5
+    y: 191.5
+  item_consumable_heat_ember_1_2154_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    pickup-heat: 1
+    radius: 0.4
+    facing: -89.99998884409983
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 139.5
+    y: 192.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2157_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 179.999991348578
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 127.31677
+    y: 176.00854
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2158_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 179.999991348578
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 127.635506
+    y: 176.05069
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2160_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 179.999991348578
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 145.63568
+    y: 176.07742
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2161_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 179.999991348578
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 145.31694
+    y: 176.03528
+  door_iron_gate_trigger_3_2344_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: -1.0245284569241124E-5
+    shape: Rectangle
+    start-open: false
+    tags: door 1d
+    width: 1
+    x: 106.5
+    y: 134.5
+  dynamic_switch_button_one_time_2345_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    radius: 0.4
+    facing: -90.00000250447816
+    shape: Circle
+    state.0.signal: ''
+    state.0.tag: ''
+    state.1.signal: activate
+    state.1.tag: action 1d
+    switch-mode: button-once
+    tags: button 1d
+    x: 99.5
+    y: 135.5
+  door_iron_gate_trigger_3_2386_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    start-open: false
+    tags: door 2a
+    width: 1
+    x: 10.499997
+    y: 54.500004
+  dynamic_switch_lever_damage_toggle_2388_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 1
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    state.0.signal: toggle
+    state.0.tag: door 2a
+    state.1.signal: toggle
+    state.1.tag: door 2a
+    switch-cooldown: 1500
+    switch-mode: damage-toggle
+    tags: ''
+    width: 1
+    x: 15.5
+    y: 56.5
+  dynamic_misc_respawn_pad_2391_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    child.actionable-signal: ''
+    child.bounds-max-x: 0.45
+    child.bounds-max-y: 0.45
+    child.bounds-min-x: -0.45
+    child.bounds-min-y: -0.45
+    child.can-throw: true
+    child.collision-flags: 514
+    child.collision-mask: 141
+    child.description: Dungeon/Lift Objects/Clay Pot
+    child.destroy-on-land: true
+    child.explode-on-impact: false
+    child.faction: -1
+    child.fall-speed: 0
+    child.fuse: 1500
+    child.is-static: false
+    child.radius: 0.45
+    child.shape: Circle
+    child.snap-tag: ''
+    child.speed: 11.69
+    child.tags: ''
+    child.throw-time: 650
+    child.thrown-collision-flags: 512
+    child.thrown-collision-mask: 137
+    collision-flags: 0
+    collision-mask: 0
+    delay: 3000
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    warning: 0
+    width: 1
+    x: 12.5
+    y: 52.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2393_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99997768819966
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 15.604905
+    y: 65.979004
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2394_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 175.0000333289402
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 21.07451
+    y: 55.496494
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2396_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -89.99996835353231
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 16.718235
+    y: 56.470367
+  door_iron_gate_trigger_3_2405_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: -179.99997768819966
+    shape: Rectangle
+    start-open: true
+    tags: door 2a
+    width: 1
+    x: 0.5
+    y: 64.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2415_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -94.99996735430513
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 3.6774302
+    y: 69.24375
+  dynamic_misc_stateful_monitor_2428_-1:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    radius: 0.5
+    facing: -84.99999667351618
+    shape: Circle
+    switch-states: 4
+    tags: mon_0
+    x: 99.367775
+    y: 137.36351
+  environment_lights_stateful_16_x_16_2436_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: generator_light
+    x: 99.5
+    y: 134.5
+  dynamic_misc_respawn_pad_2456_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    child.actionable-signal: ''
+    child.bounds-max-x: 0.45
+    child.bounds-max-y: 0.45
+    child.bounds-min-x: -0.45
+    child.bounds-min-y: -0.45
+    child.can-throw: true
+    child.collision-flags: 514
+    child.collision-mask: 141
+    child.description: Dungeon/Lift Objects/Clay Pot
+    child.destroy-on-land: true
+    child.explode-on-impact: false
+    child.faction: -1
+    child.fall-speed: 0
+    child.fuse: 1500
+    child.is-static: false
+    child.radius: 0.45
+    child.shape: Circle
+    child.snap-tag: ''
+    child.speed: 11.69
+    child.tags: ''
+    child.throw-time: 650
+    child.thrown-collision-flags: 512
+    child.thrown-collision-mask: 137
+    collision-flags: 0
+    collision-mask: 0
+    delay: 3000
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    warning: 0
+    width: 1
+    x: 3.5
+    y: 62.5
+  block_explosive_251_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -179.9999230466863
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 5.5
+    y: 39.5
+  block_explosive_252_0:
+    block-damage: true
+    block-fuse: 100
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -179.99990938630796
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 8.5
+    y: 39.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2556_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99993670706462
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 93.53894
+    y: 99.714325
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2558_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99993670706462
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 99.53894
+    y: 100.714325
+  block_unbreakable_parts_clockworks_base_2646_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 80.5
+    y: 83.5
+  block_unbreakable_parts_clockworks_base_2647_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 81.5
+    y: 83.5
+  block_unbreakable_parts_clockworks_base_2648_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 82.5
+    y: 83.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2886_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 90.00009129693737
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 87.414825
+    y: 77.52183
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2887_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 105.00008829925582
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 95.494934
+    y: 80.387276
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2889_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -144.99991638089824
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 93.38523
+    y: 86.84551
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2890_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -179.99993670706462
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 93.53894
+    y: 130.71432
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2897_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 179.99977278252456
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 131.5
+    y: 156
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2899_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00021424034244
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 130.00002
+    y: 154.50002
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2900_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 89.99977027804638
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 142.99997
+    y: 154.49997
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_2901_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 179.9997591221462
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 141.50005
+    y: 155.99998
+  dynamic_elevator_next_floor_2930_-1:
+    bounds-max-x: 0.875
+    bounds-max-y: 0.875
+    bounds-min-x: -0.875
+    bounds-min-y: -0.875
+    collision-flags: 192
+    collision-mask: 0
+    elevator-advance: 1
+    elevator-completes: true
+    elevator-mode: standard
+    height: 1.75
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1.75
+    x: 136.5
+    y: 197.5
+  block_unbreakable_parts_clockworks_base_2971_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 37.5
+    y: 79.5
+  block_unbreakable_parts_clockworks_base_2973_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 37.5
+    y: 80.5
+  block_unbreakable_parts_clockworks_base_2974_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 31.5
+    y: 76.5
+  block_unbreakable_parts_clockworks_base_2975_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 31.5
+    y: 77.5
+  block_unbreakable_parts_clockworks_base_2982_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 25.5
+    y: 79.5
+  block_unbreakable_parts_clockworks_base_2983_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 25.5
+    y: 80.5
+  item_consumable_crowns_copper_crown_2984_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    radius: 0.4
+    facing: -34.99999983559887
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 16.5
+    y: 78.5
+  item_consumable_crowns_copper_crown_2985_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    radius: 0.4
+    facing: -35.00000666578804
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 22.5
+    y: 78.5
+  item_consumable_crowns_copper_crown_2986_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    radius: 0.4
+    facing: -35.00000666578804
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 28.5
+    y: 78.5
+  item_consumable_crowns_copper_silver_crown_2987_table_0_0:
+    bounds-max-x: 0.4
+    bounds-max-y: 0.4
+    bounds-min-x: -0.4
+    bounds-min-y: -0.4
+    collision-flags: 16
+    collision-mask: 3
+    is-static: true
+    lifespan: 0
+    radius: 0.4
+    facing: -35.00000666578804
+    shape: Circle
+    tags: ''
+    vacuum-expansion: 2
+    vacuum-speed: 8
+    x: 34.5
+    y: 78.5
+  dynamic_help_bubble_help_3028_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: tut lever
+    x: 15.536087
+    y: 56.451332
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_3137_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -84.99989422067863
+    shape: Point
+    switch-states: 2
+    tags: artifact_machine
+    x: 138.30447
+    y: 156.60959
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_3138_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -89.99989322145144
+    shape: Point
+    switch-states: 2
+    tags: artifact_machine
+    x: 138.40474
+    y: 156.27065
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_3139_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 95.00010395808853
+    shape: Point
+    switch-states: 2
+    tags: artifact_machine
+    x: 134.64389
+    y: 156.58467
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_3140_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 95.00010395808853
+    shape: Point
+    switch-states: 2
+    tags: artifact_machine
+    x: 134.69823
+    y: 156.29163
+  static_stateful_props_beacons_floor_recolor_on_off_3143_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    switch-states: 2
+    tags: artifact_machine
+    x: 138.927
+    y: 155.5
+  static_stateful_props_beacons_floor_recolor_on_off_3144_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    switch-states: 2
+    tags: artifact_machine
+    x: 134.06299
+    y: 155.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_3145_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 95.00010395808853
+    shape: Point
+    switch-states: 2
+    tags: artifact_machine
+    x: 134.51025
+    y: 154.70248
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_3146_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 85.00005814521872
+    shape: Point
+    switch-states: 2
+    tags: artifact_machine
+    x: 134.54906
+    y: 154.2622
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_3147_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -84.99989422067863
+    shape: Point
+    switch-states: 2
+    tags: artifact_machine
+    x: 138.52614
+    y: 154.6029
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_3148_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -89.99989322145144
+    shape: Point
+    switch-states: 2
+    tags: artifact_machine
+    x: 138.3984
+    y: 154.23872
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_3152_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 95.00010395808853
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 140.51025
+    y: 153.70248
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_3155_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -84.99993520181366
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: generator_cables
+    x: 132.48975
+    y: 153.29752
+  dynamic_help_bubble_help_3160_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: tut shield
+    x: 14.5
+    y: 74.5
+  dynamic_misc_respawn_pad_3175_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    child.actionable-signal: ''
+    child.bounds-max-x: 0.45
+    child.bounds-max-y: 0.45
+    child.bounds-min-x: -0.45
+    child.bounds-min-y: -0.45
+    child.can-throw: true
+    child.collision-flags: 0
+    child.collision-mask: 133
+    child.description: Dungeon/Lift Objects/Bomb Shell
+    child.explode-on-impact: false
+    child.fall-speed: 10
+    child.fuse: 1500
+    child.is-static: false
+    child.radius: 0.45
+    child.shape: Circle
+    child.snap-tag: ''
+    child.speed: 5
+    child.tags: ''
+    child.throw-time: 1
+    child.thrown-collision-flags: 512
+    child.thrown-collision-mask: 1
+    collision-flags: 0
+    collision-mask: 0
+    delay: 5000
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    warning: 0
+    width: 1
+    x: -6.5
+    y: 67.5
+  dynamic_switch_party_platform_base_3183_0:
+    bounds-max-x: 1.5
+    bounds-max-y: 1.5
+    bounds-min-x: -1.5
+    bounds-min-y: -1.5
+    collision-flags: 0
+    collision-mask: 0
+    height: 3
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    switch-mode: party
+    tags: ''
+    width: 3
+    x: 96.5
+    y: 99.5
+  door_iron_gate_trigger_5_3184_0:
+    bounds-max-x: 0.425
+    bounds-max-y: 2.425
+    bounds-min-x: -0.425
+    bounds-min-y: -2.425
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 4.85
+    is-static: true
+    facing: 90.00010495731571
+    shape: Rectangle
+    start-open: false
+    tags: door 1c
+    width: 0.85
+    x: 96.5
+    y: 101.5
+  door_iron_gate_trigger_3_3185_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: 9.56226548939545E-5
+    shape: Rectangle
+    start-open: false
+    tags: door 1c
+    width: 1
+    x: 98.50001
+    y: 99.50001
+  door_iron_gate_trigger_3_3186_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: 9.562264838017851E-5
+    shape: Rectangle
+    start-open: false
+    tags: door 1c
+    width: 1
+    x: 94.50001
+    y: 99.50001
+  door_iron_gate_trigger_3_3187_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: 90.00010495731571
+    shape: Rectangle
+    start-open: true
+    tags: door 1c
+    width: 1
+    x: 96.5
+    y: 97.5
+  dynamic_help_bubble_help_3261_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: tut goldkey
+    x: 4.5
+    y: 75.5
+  dynamic_switch_lever_damage_toggle_3263_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 1
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    state.0.signal: toggle
+    state.0.tag: door 2a
+    state.1.signal: toggle
+    state.1.tag: door 2a
+    switch-cooldown: 1500
+    switch-mode: damage-toggle
+    tags: ''
+    width: 1
+    x: 3.5
+    y: 69.5
+  dynamic_switch_party_platform_base_3283_0:
+    bounds-max-x: 1.5
+    bounds-max-y: 1.5
+    bounds-min-x: -1.5
+    bounds-min-y: -1.5
+    collision-flags: 0
+    collision-mask: 0
+    height: 3
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    switch-mode: party
+    tags: ''
+    width: 3
+    x: 60.5
+    y: 79.5
+  door_iron_gate_trigger_3_3285_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: -3.4150945850063755E-6
+    shape: Rectangle
+    start-open: true
+    tags: door heat
+    width: 1
+    x: 55.5
+    y: 79.5
+  door_iron_gate_trigger_3_3286_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: -2.049056913848225E-5
+    shape: Rectangle
+    start-open: false
+    tags: door heat
+    width: 1
+    x: 65.5
+    y: 79.5
+  dynamic_help_bubble_help_3320_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: tut golddoor
+    x: 13.5
+    y: 68.5
+  dynamic_lift_objects_gold_key_3427_0:
+    actionable-signal: gold_unlock
+    bounds-max-x: 0.2
+    bounds-max-y: 0.2
+    bounds-min-x: -0.2
+    bounds-min-y: -0.2
+    can-throw: false
+    collision-flags: 1
+    collision-mask: 7
+    description: Dungeon/Lift Objects/Gold Key
+    explode-on-impact: false
+    fall-speed: 3
+    fuse: 5000
+    is-static: true
+    radius: 0.2
+    facing: -89.999995674289
+    shape: Circle
+    snap-tag: ''
+    speed: 6
+    tags: ''
+    throw-time: 500
+    thrown-collision-flags: 512
+    thrown-collision-mask: 1
+    x: 4.5
+    y: 74.5
+  environment_lights_stateful_12_x_12_3475_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: intro_monitor
+    x: 122.46
+    y: 149.40004
+  dynamic_misc_stateful_monitor_3476_-1:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    radius: 0.5
+    facing: -5.0000250408690246
+    shape: Circle
+    switch-states: 4
+    tags: intro_monitor
+    x: 118.79364
+    y: 146.68999
+  dynamic_misc_stateful_monitor_3477_-1:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    radius: 0.5
+    facing: -5.0000250408690246
+    shape: Circle
+    switch-states: 4
+    tags: intro_monitor
+    x: 118.744835
+    y: 148.14363
+  dynamic_misc_stateful_monitor_3478_-1:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    radius: 0.5
+    facing: -2.049056913848225E-5
+    shape: Circle
+    switch-states: 4
+    tags: intro_monitor
+    x: 118.809074
+    y: 149.60323
+  character_scripted_missions_tutorial_ancient_generator_mini_boss_scorcher_intro_conversation_3479_0:
+    activate-time: 0
+    attack.0.blended: false
+    attack.0.clear: 3450
+    attack.0.fire-speed: 1
+    attack.0.fire.0.delay: 0
+    attack.0.fires: 0
+    attack.0.land: 0
+    attack.0.monster-movement: false
+    attack.1.blended: true
+    attack.1.clear: 1000
+    attack.1.fire-speed: 1
+    attack.1.fire.0.delay: 0
+    attack.1.fire.1.delay: 200
+    attack.1.fires: 0,1
+    attack.1.land: 0
+    attack.1.monster-movement: false
+    attack.2.blended: false
+    attack.2.clear: 1593
+    attack.2.fire-speed: 1
+    attack.2.fires: ''
+    attack.2.land: 0
+    attack.2.monster-movement: false
+    attack.3.blended: false
+    attack.3.clear: 2738
+    attack.3.fire-speed: 1
+    attack.3.fire.0.delay: 0
+    attack.3.fires: 0
+    attack.3.impulse-delay: 300
+    attack.3.impulse-duration: 200
+    attack.3.impulse-x: 1
+    attack.3.impulse-y: 0
+    attack.3.land: 1499
+    attack.3.monster-movement: false
+    attack.4.blended: false
+    attack.4.clear: 3450
+    attack.4.fire-speed: 1
+    attack.4.fire.0.delay: 0
+    attack.4.fires: 0
+    attack.4.land: 0
+    attack.4.monster-movement: false
+    attacks: 0,1,2,3,4
+    block-damage: false
+    bounds-max-x: 0.45
+    bounds-max-y: 0.45
+    bounds-min-x: -0.45
+    bounds-min-y: -0.45
+    collision-flags: 8
+    collision-mask: 67
+    damage-mask: 0
+    death-time: 2467
+    health: 200
+    health-scale: Monster/Health/Health Base +40
+    is-static: false
+    min-react-percent: 1
+    radius: 0.45
+    react-time: 567
+    facing: 49.99998317753897
+    script.activate-signal: activate
+    script.restore-program: true
+    script.step.0.condition: activate
+    script.step.15.goal: waypoint_terminal2
+    script.step.8.goal: waypoint_overlook
+    script.steps: 19
+    shape: Circle
+    show-health: false
+    speed: 3.5
+    tags: intro_miniboss1
+    targeted-speed: 3.5
+    turn-rate: 6.2831855
+    x: 125.65679
+    y: 150.28952
+  dynamic_misc_stateful_monitor_3481_-1:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    radius: 0.5
+    facing: -60.99999600565534
+    shape: Circle
+    switch-states: 4
+    tags: intro_monitor
+    x: 124.557915
+    y: 152.84622
+  environment_lights_stateful_16_x_16_3482_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: generator_light
+    x: 136.5
+    y: 144.5
+  door_iron_gate_trigger_3_3483_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: -2.049056913848225E-5
+    shape: Rectangle
+    start-open: true
+    tags: door 1e
+    width: 1
+    x: 128.50002
+    y: 136.50002
+  dynamic_switch_party_platform_base_3532_0:
+    bounds-max-x: 1.5
+    bounds-max-y: 1.5
+    bounds-min-x: -1.5
+    bounds-min-y: -1.5
+    collision-flags: 0
+    collision-mask: 0
+    height: 3
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    switch-mode: party
+    tags: ''
+    width: 3
+    x: 136.5
+    y: 140.5
+  dynamic_misc_stateful_monitor_3556_-1:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    radius: 0.5
+    facing: -115.00000433853141
+    shape: Circle
+    switch-states: 4
+    tags: intro_monitor
+    x: 127.3634
+    y: 152.95139
+  dynamic_misc_stateful_monitor_3557_-1:
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    radius: 0.5
+    facing: -100.0000005060238
+    shape: Circle
+    switch-states: 4
+    tags: intro_monitor
+    x: 126.070816
+    y: 153.02121
+  door_iron_gate_monster_5_3560_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 2.5
+    bounds-min-x: -0.5
+    bounds-min-y: -2.5
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 5
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    start-open: true
+    tags: door 3e
+    width: 1
+    x: 136.5
+    y: 152.5
+  door_iron_gate_trigger_5_3561_0:
+    bounds-max-x: 0.425
+    bounds-max-y: 2.425
+    bounds-min-x: -0.425
+    bounds-min-y: -2.425
+    collision-flags: 1
+    collision-mask: 1
+    door-speed: 500
+    height: 4.85
+    is-static: true
+    facing: -89.99989322145144
+    shape: Rectangle
+    start-open: false
+    tags: door 2e
+    width: 0.85
+    x: 136.5
+    y: 152.5
+  door_iron_gate_multi_trigger_3_3563_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 1.5
+    bounds-min-x: -0.5
+    bounds-min-y: -1.5
+    collision-flags: 1
+    collision-mask: 1
+    door-increments: 2
+    door-speed: 500
+    height: 3
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    start-open: false
+    tags: door 1f
+    width: 1
+    x: 136.5
+    y: 158.5
+  environment_stateful_camera_3571_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: cam_battle1
+    x: 161.5
+    y: 139.5
+  environment_stateful_camera_3574_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: cam_outro0
+    x: 164.5
+    y: 144.5
+  environment_stateful_camera_3580_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: cam_battle2
+    x: 166.5
+    y: 137.5
+  environment_stateful_camera_3583_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: cam_battle3
+    x: 169.5
+    y: 137.5
+  environment_stateful_camera_3586_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: cam_battle0
+    x: 172.5
+    y: 137.5
+  environment_stateful_camera_3592_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    startup-state: 1
+    switch-states: 2
+    tags: cam_outro1
+    x: 173.5
+    y: 146.5
+  block_ghost_3768_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 74.5
+    y: 78.5
+  block_unbreakable_parts_clockworks_base_3769_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 74.5
+    y: 79.5
+  block_unbreakable_parts_clockworks_base_3770_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 75.5
+    y: 79.5
+  block_unbreakable_parts_clockworks_base_3771_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 75.5
+    y: 78.5
+  block_unbreakable_parts_clockworks_base_3772_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 74.5
+    y: 80.5
+  block_unbreakable_parts_clockworks_base_3773_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 75.5
+    y: 80.5
+  block_unbreakable_parts_clockworks_base_3782_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 46.5
+    y: 78.5
+  block_unbreakable_parts_clockworks_base_3783_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 46.5
+    y: 79.5
+  block_unbreakable_parts_clockworks_base_3784_table_0_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -89.999995674289
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 46.5
+    y: 80.5
+  block_ghost_3785_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 45.5
+    y: 80.5
+  dynamic_lift_objects_tutorial_artifact_3893_0:
+    bounds-max-x: 0.3
+    bounds-max-y: 0.3
+    bounds-min-x: -0.3
+    bounds-min-y: -0.3
+    collision-flags: 1
+    collision-mask: 1
+    is-static: true
+    radius: 0.3
+    facing: -90.00000250447816
+    shape: Circle
+    tags: ''
+    x: 136.5
+    y: 155.5
+  character_npc_monster_construct_blastcore_parts_hatch_activator_3931_0:
+    bounds-max-x: 2
+    bounds-max-y: 2
+    bounds-min-x: -2
+    bounds-min-y: -2
+    collision-flags: 96
+    collision-mask: 1
+    is-static: true
+    radius: 2
+    facing: -90.00000250447816
+    shape: Circle
+    tags: spawn 1e
+    x: 136.5
+    y: 147.5
+  dynamic_help_bubble_help_3932_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: tut pot
+    x: 12.536087
+    y: 52.451332
+  dynamic_help_bubble_help_3933_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: tut pots
+    x: 3.536087
+    y: 62.451332
+  dynamic_help_bubble_help_3941_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: tut lever
+    x: 3.536087
+    y: 69.45133
+  dynamic_help_bubble_help_3942_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: tut ghost
+    x: 45.536087
+    y: 80.45133
+  dynamic_help_bubble_help_3943_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: tut pots 2
+    x: 76.53609
+    y: 82.45133
+  dynamic_help_bubble_help_3944_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: tut ghost 2
+    x: 77.53609
+    y: 88.45133
+  block_treasure_training_3945_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 132.5
+    y: 190.5
+  block_treasure_training_3946_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 132.5
+    y: 192.5
+  block_treasure_training_3947_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 134.5
+    y: 192.5
+  block_treasure_training_3948_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 138.5
+    y: 190.5
+  block_treasure_training_3949_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 134.5
+    y: 190.5
+  block_treasure_training_3950_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 140.5
+    y: 190.5
+  block_treasure_training_3951_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 138.5
+    y: 192.5
+  block_treasure_training_3952_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 140.5
+    y: 192.5
+  block_treasure_health_3953_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: -7.5
+    y: 75.5
+  block_treasure_health_3954_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: -5.5
+    y: 75.5
+  block_treasure_training_3955_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 87.5
+    y: 86.5
+  block_treasure_training_3956_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 86.5
+    y: 85.5
+  block_treasure_training_3957_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 88.5
+    y: 85.5
+  block_treasure_health_3958_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 104.5
+    y: 98.5
+  block_treasure_health_3959_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 88.5
+    y: 98.5
+  block_treasure_health_3960_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 130.5
+    y: 150.5
+  block_treasure_health_3961_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 142.5
+    y: 150.5
+  block_treasure_health_3962_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 130.5
+    y: 139.5
+  block_treasure_health_3963_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 3
+    height: 1
+    is-static: true
+    facing: -89.99998884409983
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 142.5
+    y: 139.5
+  dynamic_help_bubble_help_3966_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: ''
+    x: -2.5
+    y: 5.5
+  dynamic_help_bubble_help_3974_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: -90.00000250447816
+    shape: Point
+    switch-states: 2
+    tags: tut_important_obj
+    x: 136.5
+    y: 155.5
+  door_iron_gate_gold_5_604_0:
+    bounds-max-x: 0.5
+    bounds-max-y: 2.5
+    bounds-min-x: -0.5
+    bounds-min-y: -2.5
+    collision-flags: 1
+    collision-mask: 1
+    door-lock: gold
+    door-speed: 500
+    height: 5
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    start-open: false
+    tags: (Door Tag)
+    width: 1
+    x: 16.5
+    y: 69.5
+  static_stateful_props_cables_and_wires_hanging_cable_pulse_994_-1:
+    bounds-max-x: 0
+    bounds-max-y: 0
+    bounds-min-x: 0
+    bounds-min-y: 0
+    collision-flags: 0
+    collision-mask: 0
+    is-static: true
+    facing: 170.00000700741072
+    shape: Point
+    switch-states: 2
+    tags: (Set Tag)
+    x: 20.924126
+    y: 75.48564
+  startup_169_0:
+    event: signal-start
+    facing: -89.99998201391065
+    scene-startup: true
+    signal: startup
+    state-key: 169:startup:0
+    watch-tag: startup:169:0
+    x: 6.5
+    y: 22.5
+  startup_170_0:
+    event: signal-start
+    facing: -89.99998201391065
+    scene-startup: true
+    signal: startup
+    state-key: 170:startup:0
+    watch-tag: startup:170:0
+    x: 7.5
+    y: 22.5
+  startup_171_0:
+    event: signal-start
+    facing: -89.99998201391065
+    scene-startup: true
+    signal: startup
+    state-key: 171:startup:0
+    watch-tag: startup:171:0
+    x: 7.5
+    y: 23.5
+  startup_256_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 256:startup:0
+    watch-tag: startup:256:0
+    x: 4.5
+    y: 37.5
+  startup_257_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 257:startup:0
+    watch-tag: startup:257:0
+    x: 5.5
+    y: 37.5
+  startup_258_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 258:startup:0
+    watch-tag: startup:258:0
+    x: 6.5
+    y: 37.5
+  startup_269_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 269:startup:0
+    watch-tag: startup:269:0
+    x: 7.5
+    y: 38.5
+  startup_272_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 272:startup:0
+    watch-tag: startup:272:0
+    x: 7.5
+    y: 40.5
+  startup_273_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 273:startup:0
+    watch-tag: startup:273:0
+    x: 7.5
+    y: 39.5
+  startup_274_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 274:startup:0
+    watch-tag: startup:274:0
+    x: 9.5
+    y: 40.5
+  startup_275_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 275:startup:0
+    watch-tag: startup:275:0
+    x: 9.5
+    y: 39.5
+  startup_276_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 276:startup:0
+    watch-tag: startup:276:0
+    x: 9.5
+    y: 38.5
+  startup_277_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 277:startup:0
+    watch-tag: startup:277:0
+    x: 6.5
+    y: 38.5
+  startup_278_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 278:startup:0
+    watch-tag: startup:278:0
+    x: 4.5
+    y: 40.5
+  startup_2369_0:
+    event: signal-start
+    facing: -179.99990938630796
+    scene-startup: true
+    signal: startup
+    state-key: 2369:startup:0
+    watch-tag: startup:2369:0
+    x: 9.5
+    y: 48.5
+  startup_2370_0:
+    event: signal-start
+    facing: -179.99990938630796
+    scene-startup: true
+    signal: startup
+    state-key: 2370:startup:0
+    watch-tag: startup:2370:0
+    x: 9.5
+    y: 47.5
+  startup_2371_0:
+    event: signal-start
+    facing: -179.99990938630796
+    scene-startup: true
+    signal: startup
+    state-key: 2371:startup:0
+    watch-tag: startup:2371:0
+    x: 10.5
+    y: 48.5
+  startup_2496_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2496:startup:0
+    watch-tag: startup:2496:0
+    x: 19.5
+    y: 79.5
+  startup_2497_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2497:startup:0
+    watch-tag: startup:2497:0
+    x: 19.5
+    y: 80.5
+  startup_2498_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2498:startup:0
+    watch-tag: startup:2498:0
+    x: 19.5
+    y: 78.5
+  startup_2655_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 2655:startup:0
+    watch-tag: startup:2655:0
+    x: 76.5
+    y: 77.5
+  startup_2662_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 2662:startup:0
+    watch-tag: startup:2662:0
+    x: 82.5
+    y: 77.5
+  startup_2708_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 2708:startup:0
+    watch-tag: startup:2708:0
+    x: 87.5
+    y: 85.5
+  startup_2825_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 2825:startup:0
+    watch-tag: startup:2825:0
+    x: 130.5
+    y: 151.5
+  startup_2826_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 2826:startup:0
+    watch-tag: startup:2826:0
+    x: 142.5
+    y: 151.5
+  startup_2827_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 2827:startup:0
+    watch-tag: startup:2827:0
+    x: 130.5
+    y: 138.5
+  startup_2828_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 2828:startup:0
+    watch-tag: startup:2828:0
+    x: 142.5
+    y: 138.5
+  startup_2931_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 2931:startup:0
+    watch-tag: startup:2931:0
+    x: 86.5
+    y: 86.5
+  startup_2936_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 2936:startup:0
+    watch-tag: startup:2936:0
+    x: 77.5
+    y: 76.5
+  startup_2938_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 2938:startup:0
+    watch-tag: startup:2938:0
+    x: 81.5
+    y: 76.5
+  startup_2969_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2969:startup:0
+    watch-tag: startup:2969:0
+    x: 37.5
+    y: 77.5
+  startup_2970_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2970:startup:0
+    watch-tag: startup:2970:0
+    x: 37.5
+    y: 76.5
+  startup_2972_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2972:startup:0
+    watch-tag: startup:2972:0
+    x: 37.5
+    y: 78.5
+  startup_2976_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2976:startup:0
+    watch-tag: startup:2976:0
+    x: 31.5
+    y: 79.5
+  startup_2977_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2977:startup:0
+    watch-tag: startup:2977:0
+    x: 31.5
+    y: 78.5
+  startup_2978_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2978:startup:0
+    watch-tag: startup:2978:0
+    x: 31.5
+    y: 80.5
+  startup_2979_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2979:startup:0
+    watch-tag: startup:2979:0
+    x: 25.5
+    y: 76.5
+  startup_2980_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2980:startup:0
+    watch-tag: startup:2980:0
+    x: 25.5
+    y: 77.5
+  startup_2981_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 2981:startup:0
+    watch-tag: startup:2981:0
+    x: 25.5
+    y: 78.5
+  startup_3029_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3029:startup:0
+    watch-tag: startup:3029:0
+    x: -3.5
+    y: 27.5
+  startup_3030_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3030:startup:0
+    watch-tag: startup:3030:0
+    x: -2.5
+    y: 27.5
+  startup_3031_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3031:startup:0
+    watch-tag: startup:3031:0
+    x: -2.5
+    y: 26.5
+  startup_3032_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3032:startup:0
+    watch-tag: startup:3032:0
+    x: -6.5
+    y: 23.5
+  startup_3033_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3033:startup:0
+    watch-tag: startup:3033:0
+    x: -6.5
+    y: 22.5
+  startup_3034_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3034:startup:0
+    watch-tag: startup:3034:0
+    x: -5.5
+    y: 22.5
+  startup_3217_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3217:startup:0
+    watch-tag: startup:3217:0
+    x: -10.5
+    y: 66.5
+  startup_3218_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3218:startup:0
+    watch-tag: startup:3218:0
+    x: -10.5
+    y: 67.5
+  startup_3219_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3219:startup:0
+    watch-tag: startup:3219:0
+    x: -10.5
+    y: 68.5
+  startup_3224_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3224:startup:0
+    watch-tag: startup:3224:0
+    x: -10.5
+    y: 71.5
+  startup_3225_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3225:startup:0
+    watch-tag: startup:3225:0
+    x: -10.5
+    y: 72.5
+  startup_3226_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3226:startup:0
+    watch-tag: startup:3226:0
+    x: -9.5
+    y: 72.5
+  startup_3227_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3227:startup:0
+    watch-tag: startup:3227:0
+    x: -8.5
+    y: 72.5
+  startup_3228_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3228:startup:0
+    watch-tag: startup:3228:0
+    x: -4.5
+    y: 72.5
+  startup_3229_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3229:startup:0
+    watch-tag: startup:3229:0
+    x: -3.5
+    y: 72.5
+  startup_3230_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3230:startup:0
+    watch-tag: startup:3230:0
+    x: -5.5
+    y: 72.5
+  startup_3235_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3235:startup:0
+    watch-tag: startup:3235:0
+    x: -0.5
+    y: 68.5
+  startup_1355_0:
+    event: signal-start
+    facing: -179.9999230466863
+    scene-startup: true
+    signal: startup
+    state-key: 1355:startup:0
+    watch-tag: startup:1355:0
+    x: 21.5
+    y: 39.5
+  startup_1356_0:
+    event: signal-start
+    facing: -179.99990938630796
+    scene-startup: true
+    signal: startup
+    state-key: 1356:startup:0
+    watch-tag: startup:1356:0
+    x: 20.5
+    y: 38.5
+  startup_1357_0:
+    event: signal-start
+    facing: -179.99990938630796
+    scene-startup: true
+    signal: startup
+    state-key: 1357:startup:0
+    watch-tag: startup:1357:0
+    x: 21.5
+    y: 38.5
+  startup_3428_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3428:startup:0
+    watch-tag: startup:3428:0
+    x: 82.5
+    y: 76.5
+  startup_3429_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3429:startup:0
+    watch-tag: startup:3429:0
+    x: 76.5
+    y: 76.5
+  startup_3441_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3441:startup:0
+    watch-tag: startup:3441:0
+    x: -0.5
+    y: 70.5
+  startup_3442_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3442:startup:0
+    watch-tag: startup:3442:0
+    x: -0.5
+    y: 67.5
+  startup_1701_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 1701:startup:0
+    watch-tag: startup:1701:0
+    x: -0.5
+    y: 69.5
+  startup_1703_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 1703:startup:0
+    watch-tag: startup:1703:0
+    x: -0.5
+    y: 71.5
+  startup_3759_0:
+    event: signal-start
+    facing: -179.99990938630796
+    scene-startup: true
+    signal: startup
+    state-key: 3759:startup:0
+    watch-tag: startup:3759:0
+    x: 5.5
+    y: 36.5
+  startup_3760_0:
+    event: signal-start
+    facing: -179.99990938630796
+    scene-startup: true
+    signal: startup
+    state-key: 3760:startup:0
+    watch-tag: startup:3760:0
+    x: 6.5
+    y: 36.5
+  startup_3761_0:
+    event: signal-start
+    facing: -179.99990938630796
+    scene-startup: true
+    signal: startup
+    state-key: 3761:startup:0
+    watch-tag: startup:3761:0
+    x: 4.5
+    y: 36.5
+  startup_3800_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3800:startup:0
+    watch-tag: startup:3800:0
+    x: 88.5
+    y: 86.5
+  startup_3821_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3821:startup:0
+    watch-tag: startup:3821:0
+    x: 100.5
+    y: 102.5
+  startup_3822_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3822:startup:0
+    watch-tag: startup:3822:0
+    x: 100.5
+    y: 101.5
+  startup_3823_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3823:startup:0
+    watch-tag: startup:3823:0
+    x: 101.5
+    y: 101.5
+  startup_3824_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3824:startup:0
+    watch-tag: startup:3824:0
+    x: 101.5
+    y: 102.5
+  startup_3825_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3825:startup:0
+    watch-tag: startup:3825:0
+    x: 91.5
+    y: 102.5
+  startup_3826_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3826:startup:0
+    watch-tag: startup:3826:0
+    x: 91.5
+    y: 101.5
+  startup_3827_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3827:startup:0
+    watch-tag: startup:3827:0
+    x: 92.5
+    y: 101.5
+  startup_3828_0:
+    event: signal-start
+    facing: -90.00000250447816
+    scene-startup: true
+    signal: startup
+    state-key: 3828:startup:0
+    watch-tag: startup:3828:0
+    x: 92.5
+    y: 102.5
+  startup_3855_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3855:startup:0
+    watch-tag: startup:3855:0
+    x: 18.5
+    y: 76.5
+  startup_3856_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3856:startup:0
+    watch-tag: startup:3856:0
+    x: 14.5
+    y: 76.5
+  startup_3857_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3857:startup:0
+    watch-tag: startup:3857:0
+    x: 15.5
+    y: 76.5
+  startup_3858_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3858:startup:0
+    watch-tag: startup:3858:0
+    x: 17.5
+    y: 76.5
+  startup_3859_0:
+    event: signal-start
+    facing: -89.999995674289
+    scene-startup: true
+    signal: startup
+    state-key: 3859:startup:0
+    watch-tag: startup:3859:0
+    x: 16.5
+    y: 76.5
+  startup_1887_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1887:startup:0
+    watch-tag: startup:1887:0
+    x: 130.5
+    y: 149.5
+  startup_1890_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1890:startup:0
+    watch-tag: startup:1890:0
+    x: 131.5
+    y: 150.5
+  startup_1892_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1892:startup:0
+    watch-tag: startup:1892:0
+    x: 132.5
+    y: 151.5
+  startup_1893_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1893:startup:0
+    watch-tag: startup:1893:0
+    x: 140.5
+    y: 151.5
+  startup_1894_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1894:startup:0
+    watch-tag: startup:1894:0
+    x: 142.5
+    y: 149.5
+  startup_1896_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1896:startup:0
+    watch-tag: startup:1896:0
+    x: 141.5
+    y: 150.5
+  startup_1922_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1922:startup:0
+    watch-tag: startup:1922:0
+    x: 130.5
+    y: 140.5
+  startup_1923_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1923:startup:0
+    watch-tag: startup:1923:0
+    x: 132.5
+    y: 138.5
+  startup_1925_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1925:startup:0
+    watch-tag: startup:1925:0
+    x: 131.5
+    y: 139.5
+  startup_1926_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1926:startup:0
+    watch-tag: startup:1926:0
+    x: 140.5
+    y: 138.5
+  startup_1930_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1930:startup:0
+    watch-tag: startup:1930:0
+    x: 141.5
+    y: 139.5
+  startup_1931_0:
+    event: signal-start
+    facing: -89.99998884409983
+    scene-startup: true
+    signal: startup
+    state-key: 1931:startup:0
+    watch-tag: startup:1931:0
+    x: 142.5
+    y: 140.5
+  trigger_one_time_action_2338_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '2338:0'
+    watch-tag: spawn 1d
+    x: 99.5
+    y: 133.5
+  character_monster_generic_single_spawn_2342_0.tag.0:
+    event: signal-start
+    facing: -179.999991348578
+    signal: activate
+    state-key: '2342:0'
+    watch-tag: spawn 2d
+    x: 103.49999
+    y: 132.50002
+  character_monster_generic_single_spawn_2343_0.tag.0:
+    event: signal-start
+    facing: -44.999994422049916
+    signal: activate
+    state-key: '2343:0'
+    watch-tag: spawn 2d
+    x: 94.5
+    y: 136.5
+  trigger_one_time_action_2429_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '2429:0'
+    watch-tag: action 1d
+    x: 99.5
+    y: 136.5
+  trigger_one_time_action_2797_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '2797:0'
+    watch-tag: spawn 1bbbb
+    x: -2.5
+    y: 65.5
+  trigger_one_time_action_2811_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '2811:0'
+    watch-tag: spawn 2a
+    x: 15.5
+    y: 44.5
+  character_monster_generic_single_spawn_967_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '967:0'
+    watch-tag: spawn 2b
+    x: 16.5
+    y: 84.499985
+  character_monster_generic_single_spawn_968_0.tag.0:
+    event: signal-start
+    facing: -90.00002299504568
+    signal: activate
+    state-key: '968:0'
+    watch-tag: spawn 2b
+    x: 22.5
+    y: 84.499985
+  character_monster_generic_single_spawn_969_0.tag.0:
+    event: signal-start
+    facing: -90.00002299504568
+    signal: activate
+    state-key: '969:0'
+    watch-tag: spawn 2b
+    x: 28.5
+    y: 84.499985
+  character_monster_generic_single_spawn_970_0.tag.0:
+    event: signal-start
+    facing: -90.00002299504568
+    signal: activate
+    state-key: '970:0'
+    watch-tag: spawn 2b
+    x: 34.5
+    y: 84.499985
+  trigger_one_time_action_3289_0.tag.0:
+    event: signal-start
+    facing: -89.99998884409983
+    signal: activate
+    state-key: '3289:0'
+    watch-tag: heat spawner
+    x: 60.5
+    y: 83.5
+  character_monster_generic_single_spawn_3328_0.tag.0:
+    event: signal-start
+    facing: -89.99994103277564
+    signal: activate
+    state-key: '3328:0'
+    watch-tag: spawn 1c
+    x: 96.5
+    y: 106.500015
+  character_monster_generic_single_spawn_3334_0.tag.0:
+    event: signal-start
+    facing: -135.00000034162267
+    signal: activate
+    state-key: '3334:0'
+    watch-tag: spawn 1c
+    x: 101.5
+    y: 105.500015
+  character_monster_generic_single_spawn_3335_0.tag.0:
+    event: signal-start
+    facing: -44.999994422049916
+    signal: activate
+    state-key: '3335:0'
+    watch-tag: spawn 1c
+    x: 91.5
+    y: 105.500015
+  trigger_one_time_action_3471_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3471:0'
+    watch-tag: intro_start-music
+    x: 160.5
+    y: 133.5
+  trigger_one_time_action_3472_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3472:0'
+    watch-tag: intro_conversation-music
+    x: 165.5
+    y: 131.5
+  trigger_one_time_action_3474_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3474:0'
+    watch-tag: intro_start-doors
+    x: 174.5
+    y: 133.5
+  trigger_one_time_action_3484_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3484:0'
+    watch-tag: splode1_chain
+    x: 132.5
+    y: 142.5
+  trigger_one_time_action_3485_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3485:0'
+    watch-tag: splode1_chain
+    x: 132
+    y: 142.5
+  trigger_one_time_action_3486_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3486:0'
+    watch-tag: splode1_chain
+    x: 133
+    y: 142.5
+  trigger_one_time_action_3487_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3487:0'
+    watch-tag: splode1_chain
+    x: 131.5
+    y: 143
+  trigger_one_time_action_3488_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3488:0'
+    watch-tag: splode1_chain
+    x: 131.5
+    y: 142.5
+  trigger_one_time_action_3489_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3489:0'
+    watch-tag: splode1_end
+    x: 126.5
+    y: 143.5
+  trigger_one_time_action_3490_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3490:0'
+    watch-tag: splode1_end-explosions
+    x: 125.18929
+    y: 144.71754
+  trigger_one_time_action_3491_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3491:0'
+    watch-tag: splode1_end-smoke
+    x: 126.372154
+    y: 145.17609
+  trigger_one_time_action_3492_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3492:0'
+    watch-tag: splode1_end-explosions
+    x: 125.9214
+    y: 145.83429
+  trigger_one_time_action_3493_0.tag.0:
+    event: signal-start
+    facing: 16.999987381872188
+    signal: activate
+    state-key: '3493:0'
+    watch-tag: splode1_end-explosions
+    x: 125.135956
+    y: 146.12187
+  trigger_one_time_action_3494_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3494:0'
+    watch-tag: splode1_chain
+    x: 128.5
+    y: 143.5
+  trigger_one_time_action_3495_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3495:0'
+    watch-tag: splode1_chain
+    x: 127.5
+    y: 143.5
+  trigger_one_time_action_3496_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3496:0'
+    watch-tag: splode1_end-explosions
+    x: 127.33803
+    y: 145.978
+  trigger_one_time_action_3498_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3498:0'
+    watch-tag: splode2_chain
+    x: 126.5
+    y: 149
+  trigger_one_time_action_3499_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3499:0'
+    watch-tag: splode2_chain
+    x: 127
+    y: 147.5
+  trigger_one_time_action_3500_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3500:0'
+    watch-tag: splode2_chain
+    x: 126.5
+    y: 147.5
+  trigger_one_time_action_3501_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3501:0'
+    watch-tag: splode2_chain
+    x: 126.5
+    y: 148.5
+  trigger_one_time_action_3502_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3502:0'
+    watch-tag: splode2_chain
+    x: 126.5
+    y: 148
+  trigger_one_time_action_3504_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3504:0'
+    watch-tag: splode2_chain
+    x: 126.5
+    y: 149.5
+  trigger_one_time_action_3505_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3505:0'
+    watch-tag: splode2_chain
+    x: 126.5
+    y: 150.5
+  trigger_one_time_action_3506_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3506:0'
+    watch-tag: splode2_chain
+    x: 126.5
+    y: 150
+  trigger_one_time_action_3507_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3507:0'
+    watch-tag: splode2_end-explosions
+    x: 125.9214
+    y: 150.83429
+  trigger_one_time_action_3508_0.tag.0:
+    event: signal-start
+    facing: 106.9999813486139
+    signal: activate
+    state-key: '3508:0'
+    watch-tag: splode2_end-explosions
+    x: 125.87813
+    y: 150.13596
+  trigger_one_time_action_3509_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3509:0'
+    watch-tag: splode2_chain
+    x: 128.5
+    y: 147.5
+  trigger_one_time_action_3510_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3510:0'
+    watch-tag: splode2_chain
+    x: 127.5
+    y: 147.5
+  trigger_one_time_action_3511_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3511:0'
+    watch-tag: splode2_chain
+    x: 128
+    y: 147.5
+  trigger_one_time_action_3512_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3512:0'
+    watch-tag: splode2_end
+    x: 128.5
+    y: 150.5
+  trigger_one_time_action_3513_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3513:0'
+    watch-tag: splode2_end-explosions
+    x: 127.15979
+    y: 150.97693
+  trigger_one_time_action_3514_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3514:0'
+    watch-tag: splode1_chain
+    x: 130.5
+    y: 143.5
+  trigger_one_time_action_3515_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3515:0'
+    watch-tag: splode1_chain
+    x: 130
+    y: 143.5
+  trigger_one_time_action_3516_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3516:0'
+    watch-tag: splode1_chain
+    x: 129.25
+    y: 143.5
+  trigger_one_time_action_3517_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3517:0'
+    watch-tag: splode1_chain
+    x: 131
+    y: 143.5
+  trigger_one_time_action_3518_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3518:0'
+    watch-tag: splode1_chain
+    x: 131.5
+    y: 143.5
+  trigger_one_time_action_3519_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3519:0'
+    watch-tag: splode2_chain
+    x: 129.25
+    y: 147.5
+  trigger_one_time_action_3520_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3520:0'
+    watch-tag: splode2_chain
+    x: 130
+    y: 147.5
+  trigger_one_time_action_3521_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3521:0'
+    watch-tag: splode2_chain
+    x: 130.5
+    y: 147.5
+  trigger_one_time_action_3522_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3522:0'
+    watch-tag: splode2_chain
+    x: 131
+    y: 147.5
+  trigger_one_time_action_3524_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3524:0'
+    watch-tag: splode2_chain
+    x: 131.5
+    y: 147.5
+  trigger_one_time_action_3525_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3525:0'
+    watch-tag: splode2_chain
+    x: 132.5
+    y: 147.5
+  trigger_one_time_action_3526_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3526:0'
+    watch-tag: splode2_chain
+    x: 133
+    y: 147.5
+  trigger_one_time_action_3527_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3527:0'
+    watch-tag: splode2_chain
+    x: 132
+    y: 147.5
+  trigger_one_time_action_3528_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3528:0'
+    watch-tag: splode1_chain
+    x: 134.5
+    y: 143
+  trigger_one_time_action_3529_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3529:0'
+    watch-tag: splode1_chain
+    x: 134.5
+    y: 142.5
+  trigger_one_time_action_3530_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3530:0'
+    watch-tag: splode1_chain
+    x: 133.5
+    y: 142.5
+  trigger_one_time_action_3531_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3531:0'
+    watch-tag: splode1_chain
+    x: 134
+    y: 142.5
+  trigger_one_time_action_3534_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3534:0'
+    watch-tag: splode1_start
+    x: 136.5
+    y: 142.5
+  trigger_one_time_action_3535_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3535:0'
+    watch-tag: splode1_chain
+    x: 136.5
+    y: 143
+  trigger_one_time_action_3536_0.tag.0:
+    event: signal-start
+    facing: -41.00004439879368
+    signal: activate
+    state-key: '3536:0'
+    watch-tag: splode1_start
+    x: 136.43977
+    y: 142.6806
+  trigger_actor_removed_3537_0.tag.0:
+    all: true
+    event: removed
+    facing: -90.00000250447816
+    state-key: '3537:0'
+    watch-tag: wave battlepod
+    x: 140.5
+    y: 136.5
+  trigger_one_time_action_3538_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3538:0'
+    watch-tag: spawn 1e
+    x: 139.5
+    y: 137.5
+  trigger_one_time_action_3539_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3539:0'
+    watch-tag: splode1_chain
+    x: 134.5
+    y: 143.5
+  trigger_one_time_action_3540_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3540:0'
+    watch-tag: splode1_chain
+    x: 135
+    y: 143.5
+  character_monster_generic_single_spawn_3541_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3541:0'
+    watch-tag: spawn 1e
+    x: 133.5
+    y: 146.5
+  trigger_one_time_action_3542_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3542:0'
+    watch-tag: splode1_chain
+    x: 136.5
+    y: 143.5
+  trigger_one_time_action_3543_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3543:0'
+    watch-tag: splode1_chain
+    x: 136
+    y: 143.5
+  trigger_one_time_action_3544_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3544:0'
+    watch-tag: splode1_chain
+    x: 135.5
+    y: 143.5
+  trigger_one_time_action_3547_0.tag.0:
+    event: signal-start
+    facing: 48.99993420002239
+    signal: activate
+    state-key: '3547:0'
+    watch-tag: splode2_start
+    x: 134.31941
+    y: 147.43977
+  trigger_one_time_action_3548_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3548:0'
+    watch-tag: splode2_chain
+    x: 133.5
+    y: 147.5
+  trigger_one_time_action_3549_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3549:0'
+    watch-tag: splode2_chain
+    x: 135
+    y: 147.5
+  trigger_one_time_action_3550_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3550:0'
+    watch-tag: splode2_chain
+    x: 134.5
+    y: 147.5
+  trigger_one_time_action_3551_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3551:0'
+    watch-tag: splode2_chain
+    x: 134
+    y: 147.5
+  trigger_one_time_action_3553_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3553:0'
+    watch-tag: splode2_start
+    x: 135.5
+    y: 147.5
+  character_monster_generic_single_spawn_3554_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3554:0'
+    watch-tag: spawn 1e
+    x: 139.5
+    y: 146.5
+  trigger_one_time_action_3558_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3558:0'
+    watch-tag: splode2_end-smoke
+    x: 126.640594
+    y: 151.64853
+  trigger_one_time_action_3559_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3559:0'
+    watch-tag: splode2_end-explosions
+    x: 125.258484
+    y: 151.56352
+  trigger_one_time_action_3564_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3564:0'
+    watch-tag: action 1f
+    x: 136.5
+    y: 157.5
+  trigger_one_time_action_3565_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3565:0'
+    watch-tag: action cleanup
+    x: 141.5
+    y: 137.5
+  trigger_one_time_action_3566_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3566:0'
+    watch-tag: intro_conversation1
+    x: 160.5
+    y: 135.5
+  trigger_one_time_action_3567_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3567:0'
+    watch-tag: intro_start-lockwarp
+    x: 160.5
+    y: 137.5
+  trigger_one_time_action_3568_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3568:0'
+    watch-tag: intro_start
+    x: 158.5
+    y: 140.5
+  trigger_one_time_action_3569_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3569:0'
+    watch-tag: battle_cutscene0
+    x: 160.5
+    y: 139.5
+  trigger_one_time_action_3570_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3570:0'
+    watch-tag: splode1
+    x: 160.5
+    y: 141.5
+  trigger_one_time_action_3572_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3572:0'
+    watch-tag: outro_start-music
+    x: 163.5
+    y: 140.5
+  trigger_one_time_action_3573_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3573:0'
+    watch-tag: outro_start-lockwarp
+    x: 163.5
+    y: 142.5
+  trigger_one_time_action_3575_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3575:0'
+    watch-tag: outro_cutscene0
+    x: 163.5
+    y: 144.5
+  trigger_one_time_action_3578_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3578:0'
+    watch-tag: splode2
+    x: 163.5
+    y: 148.5
+  trigger_one_time_action_3579_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3579:0'
+    watch-tag: intro_conversation1-miniboss
+    x: 165.5
+    y: 135.5
+  trigger_one_time_action_3581_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3581:0'
+    watch-tag: battle_cutscene1
+    x: 165.5
+    y: 137.5
+  trigger_one_time_action_3582_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3582:0'
+    watch-tag: battle_cutscene2
+    x: 168.5
+    y: 137.5
+  trigger_one_time_action_3584_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3584:0'
+    watch-tag: intro_cleanup
+    x: 171.5
+    y: 135.5
+  trigger_one_time_action_3585_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3585:0'
+    watch-tag: battle_cutscene3
+    x: 171.5
+    y: 137.5
+  trigger_one_time_action_3587_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3587:0'
+    watch-tag: outro_start-doors
+    x: 168.5
+    y: 145.5
+  trigger_one_time_action_3588_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3588:0'
+    watch-tag: outro_cleanup
+    x: 170.5
+    y: 146.5
+  trigger_one_time_action_3589_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3589:0'
+    watch-tag: outro_end-music
+    x: 172.5
+    y: 144.5
+  trigger_one_time_action_3590_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3590:0'
+    watch-tag: outro_cutscene1
+    x: 172.5
+    y: 146.5
+  trigger_one_time_action_3591_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3591:0'
+    watch-tag: intro_beginfight
+    x: 173.5
+    y: 135.5
+  character_monster_generic_single_spawn_3807_0.tag.0:
+    event: signal-start
+    facing: 4.781132419008926E-5
+    signal: activate
+    state-key: '3807:0'
+    watch-tag: spawn 3b
+    x: 76.50001
+    y: 87.49999
+  character_monster_generic_single_spawn_3808_0.tag.0:
+    event: signal-start
+    facing: -179.99995036744298
+    signal: activate
+    state-key: '3808:0'
+    watch-tag: spawn 3b
+    x: 90.50001
+    y: 88.50002
+  character_monster_generic_single_spawn_3809_0.tag.0:
+    event: signal-start
+    facing: -179.99995036744298
+    signal: activate
+    state-key: '3809:0'
+    watch-tag: spawn 3b
+    x: 90.50001
+    y: 84.50002
+  trigger_actor_removed_3829_0.tag.0:
+    all: true
+    event: removed
+    facing: -89.999995674289
+    state-key: '3829:0'
+    watch-tag: wave 1bbbb
+    x: -5.5
+    y: 67.5
+  character_monster_generic_single_spawn_3853_0.tag.0:
+    event: signal-start
+    facing: -44.999994422049916
+    signal: activate
+    state-key: '3853:0'
+    watch-tag: spawn 1b
+    x: -8.499992
+    y: 74.50001
+  character_monster_generic_single_spawn_3854_0.tag.0:
+    event: signal-start
+    facing: -35.000016911071796
+    signal: activate
+    state-key: '3854:0'
+    watch-tag: spawn 1bbb
+    x: -12.499992
+    y: 72.50001
+  character_monster_generic_single_spawn_3890_0.tag.0:
+    event: signal-start
+    facing: -179.99995036744298
+    signal: activate
+    state-key: '3890:0'
+    watch-tag: spawn 3b
+    x: 96.50001
+    y: 88.50002
+  character_monster_generic_single_spawn_3907_0.tag.0:
+    event: signal-start
+    facing: -124.9999886796987
+    signal: activate
+    state-key: '3907:0'
+    watch-tag: spawn 1bbb
+    x: -1.5
+    y: 72.5
+  character_monster_generic_single_spawn_3911_0.tag.0:
+    event: signal-start
+    facing: -134.99998668124434
+    signal: activate
+    state-key: '3911:0'
+    watch-tag: spawn 1bb
+    x: -1.500001
+    y: 74.499985
+  character_monster_generic_single_spawn_3912_0.tag.0:
+    event: signal-start
+    facing: -134.99998668124434
+    signal: activate
+    state-key: '3912:0'
+    watch-tag: spawn 1b
+    x: -5.500001
+    y: 74.499985
+  character_monster_generic_single_spawn_3913_0.tag.0:
+    event: signal-start
+    facing: 44.9999978371445
+    signal: activate
+    state-key: '3913:0'
+    watch-tag: spawn 1bbb
+    x: -12.5
+    y: 64.5
+  character_monster_generic_single_spawn_3914_0.tag.0:
+    event: signal-start
+    facing: 135.00000034162267
+    signal: activate
+    state-key: '3914:0'
+    watch-tag: spawn 1bbb
+    x: -3.4999933
+    y: 64.50001
+  trigger_actor_removed_3915_0.tag.0:
+    all: true
+    event: removed
+    facing: -89.999995674289
+    state-key: '3915:0'
+    watch-tag: wave 1b
+    x: -8.5
+    y: 69.5
+  trigger_actor_removed_3916_0.tag.0:
+    all: true
+    event: removed
+    facing: -89.999995674289
+    state-key: '3916:0'
+    watch-tag: wave 1bb
+    x: -7.5
+    y: 69.5
+  trigger_actor_removed_3917_0.tag.0:
+    all: true
+    event: removed
+    facing: -89.999995674289
+    state-key: '3917:0'
+    watch-tag: wave 1bbb
+    x: -6.5
+    y: 69.5
+  character_monster_generic_single_spawn_3921_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3921:0'
+    watch-tag: spawn 1a
+    x: 5.5
+    y: 33.5
+  character_monster_generic_single_spawn_3922_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3922:0'
+    watch-tag: spawn 1a
+    x: 4.5
+    y: 31.5
+  character_monster_generic_single_spawn_3923_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3923:0'
+    watch-tag: spawn 1a
+    x: 5.5
+    y: 28.5
+  character_monster_generic_single_spawn_3924_0.tag.0:
+    event: signal-start
+    facing: -135.00000034162267
+    signal: activate
+    state-key: '3924:0'
+    watch-tag: spawn 2a
+    x: 15.5
+    y: 43.5
+  character_monster_generic_single_spawn_3925_0.tag.0:
+    event: signal-start
+    facing: -45.00000808242825
+    signal: activate
+    state-key: '3925:0'
+    watch-tag: spawn 1bb
+    x: -10.499993
+    y: 74.50001
+  character_monster_generic_single_spawn_3926_0.tag.0:
+    event: signal-start
+    facing: -45.00000808242825
+    signal: activate
+    state-key: '3926:0'
+    watch-tag: spawn 1bb
+    x: -12.499993
+    y: 73.50001
+  trigger_one_time_action_3928_0.tag.0:
+    event: signal-start
+    facing: -90.00000250447816
+    signal: activate
+    state-key: '3928:0'
+    watch-tag: outro_start
+    x: 161.5
+    y: 147.5
+  player_enter_spawn_activate_2347_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2347:0'
+    watch-tag: area:2347:0
+    x: 96.5
+    y: 127.5
+  player_enter_base_2488_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2488:0'
+    watch-tag: area:2488:0
+    x: 16.500004
+    y: 68.500015
+  player_enter_base_2493_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2493:0'
+    watch-tag: area:2493:0
+    x: 16.500004
+    y: 71.500015
+  player_enter_spawn_activate_2495_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2495:0'
+    watch-tag: area:2495:0
+    x: 4.4999924
+    y: 75.50001
+  player_enter_progress_event_2988_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2988:0'
+    watch-tag: area:2988:0
+    x: 0.5
+    y: 22.5
+  player_enter_progress_event_2989_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2989:0'
+    watch-tag: area:2989:0
+    x: 18.5
+    y: 50.5
+  player_enter_progress_event_2990_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2990:0'
+    watch-tag: area:2990:0
+    x: 10.5
+    y: 55.5
+  player_enter_progress_event_2991_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2991:0'
+    watch-tag: area:2991:0
+    x: -0.4999962
+    y: 64.5
+  player_enter_progress_event_2994_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2994:0'
+    watch-tag: area:2994:0
+    x: 16.5
+    y: 70.50001
+  player_enter_progress_event_2995_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2995:0'
+    watch-tag: area:2995:0
+    x: 46.5
+    y: 79.50001
+  player_enter_progress_event_2997_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2997:0'
+    watch-tag: area:2997:0
+    x: 81.5
+    y: 84.5
+  player_enter_progress_event_2998_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2998:0'
+    watch-tag: area:2998:0
+    x: 96.5
+    y: 114.5
+  player_enter_progress_event_2999_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '2999:0'
+    watch-tag: area:2999:0
+    x: 107.5
+    y: 134.50002
+  player_enter_progress_event_3000_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '3000:0'
+    watch-tag: area:3000:0
+    x: 136.5
+    y: 153.5
+  player_enter_progress_event_3001_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '3001:0'
+    watch-tag: area:3001:0
+    x: 136.5
+    y: 189.5
+  player_enter_spawn_activate_3265_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '3265:0'
+    watch-tag: area:3265:0
+    x: 16.5
+    y: 70.5
+  player_enter_spawn_activate_3317_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '3317:0'
+    watch-tag: area:3317:0
+    x: -0.5
+    y: 64.5
+  player_enter_spawn_activate_3318_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '3318:0'
+    watch-tag: area:3318:0
+    x: 1.4999924
+    y: 75.50001
+  player_enter_spawn_activate_3805_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '3805:0'
+    watch-tag: area:3805:0
+    x: 81.500015
+    y: 84.5
+  player_enter_spawn_activate_3918_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '3918:0'
+    watch-tag: area:3918:0
+    x: 0.8901906
+    y: 22.705906
+  player_enter_spawn_activate_3927_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '3927:0'
+    watch-tag: area:3927:0
+    x: 8.5
+    y: 39.5
+  player_enter_spawn_activate_3940_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '3940:0'
+    watch-tag: area:3940:0
+    x: 18.500004
+    y: 50.5
+  player_enter_spawn_activate_3975_0:
+    event: signal-start
+    interaction-area: true
+    facing: 0
+    scene-sensor: true
+    sensor-mask: 65535
+    signal: intersection
+    state-key: '3975:0'
+    watch-tag: area:3975:0
+    x: 129.5
+    y: 136.5
+  dynamic_elevator_start_platform_82_anchor:
+    facing: -90.00000250447816
+    x: 0.5
+    y: 0.5
+  trigger_one_time_action_2338_anchor:
+    facing: -90.00000250447816
+    x: 99.5
+    y: 133.5
+  generic_marker_2339_anchor:
+    facing: -90.00000250447816
+    x: 104
+    y: 136
+  generic_marker_2340_anchor:
+    facing: -90.00000250447816
+    x: 95
+    y: 134
+  character_monster_generic_single_spawn_2342_anchor:
+    facing: -179.999991348578
+    x: 103.49999
+    y: 132.50002
+  character_monster_generic_single_spawn_2343_anchor:
+    facing: -44.999994422049916
+    x: 94.5
+    y: 136.5
+  dynamic_misc_stateful_monitor_2428_anchor:
+    facing: -84.99999667351618
+    x: 99.367775
+    y: 137.36351
+  trigger_one_time_action_2429_anchor:
+    facing: -90.00000250447816
+    x: 99.5
+    y: 136.5
+  lights_spot_stateful_16_x_16_2436_anchor:
+    facing: -90.00000250447816
+    x: 99.5
+    y: 134.5
+  generic_marker_2794_anchor:
+    facing: -90.00000250447816
+    x: -3.5
+    y: 76.5
+  trigger_one_time_action_2797_anchor:
+    facing: -90.00000250447816
+    x: -2.5
+    y: 65.5
+  trigger_one_time_action_2811_anchor:
+    facing: -90.00000250447816
+    x: 15.5
+    y: 44.5
+  generic_marker_2814_anchor:
+    facing: -135.00000034162267
+    x: 20
+    y: 45
+  generic_marker_2823_anchor:
+    facing: -114.99999067815307
+    x: 16.003437
+    y: 47.97943
+  character_monster_generic_single_spawn_967_anchor:
+    facing: -90.00000250447816
+    x: 16.5
+    y: 84.499985
+  character_monster_generic_single_spawn_968_anchor:
+    facing: -90.00002299504568
+    x: 22.5
+    y: 84.499985
+  character_monster_generic_single_spawn_969_anchor:
+    facing: -90.00002299504568
+    x: 28.5
+    y: 84.499985
+  character_monster_generic_single_spawn_970_anchor:
+    facing: -90.00002299504568
+    x: 34.5
+    y: 84.499985
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_3143_anchor:
+    facing: -90.00000250447816
+    x: 138.927
+    y: 155.5
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_3144_anchor:
+    facing: -90.00000250447816
+    x: 134.06299
+    y: 155.5
+  generic_marker_3163_anchor:
+    facing: -90.00000250447816
+    x: -10.5
+    y: 76.5
+  generic_marker_3172_anchor:
+    facing: -3.4150945850063755E-6
+    x: -14.499993
+    y: 66.50001
+  generic_marker_3174_anchor:
+    facing: -3.4150945850063755E-6
+    x: -14.499993
+    y: 71.50001
+  generic_marker_3258_anchor:
+    facing: -90.00000250447816
+    x: 128.5
+    y: 143.5
+  trigger_one_time_action_3289_anchor:
+    facing: -89.99998884409983
+    x: 60.5
+    y: 83.5
+  generic_marker_3293_anchor:
+    facing: -89.99998884409983
+    x: 56.5
+    y: 81.5
+  generic_marker_3294_anchor:
+    facing: -89.99998884409983
+    x: 57.5
+    y: 82.5
+  generic_marker_3295_anchor:
+    facing: -89.99998884409983
+    x: 56.5
+    y: 77.5
+  generic_marker_3296_anchor:
+    facing: -89.99998884409983
+    x: 57.5
+    y: 76.5
+  generic_marker_3297_anchor:
+    facing: -89.99998884409983
+    x: 63.5
+    y: 76.5
+  generic_marker_3298_anchor:
+    facing: -89.99998884409983
+    x: 64.5
+    y: 77.5
+  generic_marker_3299_anchor:
+    facing: -89.99998884409983
+    x: 64.5
+    y: 81.5
+  generic_marker_3300_anchor:
+    facing: -89.99998884409983
+    x: 63.5
+    y: 82.5
+  generic_marker_3301_anchor:
+    facing: -89.99998884409983
+    x: 56.5
+    y: 80.5
+  generic_marker_3302_anchor:
+    facing: -89.99998884409983
+    x: 57.5
+    y: 81.5
+  generic_marker_3303_anchor:
+    facing: -89.99998884409983
+    x: 58.5
+    y: 82.5
+  generic_marker_3304_anchor:
+    facing: -89.99998884409983
+    x: 56.5
+    y: 78.5
+  generic_marker_3305_anchor:
+    facing: -89.99998884409983
+    x: 57.5
+    y: 77.5
+  generic_marker_3306_anchor:
+    facing: -89.99998884409983
+    x: 58.5
+    y: 76.5
+  generic_marker_3307_anchor:
+    facing: -89.99998884409983
+    x: 62.5
+    y: 76.5
+  generic_marker_3308_anchor:
+    facing: -89.99998884409983
+    x: 63.5
+    y: 77.5
+  generic_marker_3309_anchor:
+    facing: -89.99998884409983
+    x: 64.5
+    y: 78.5
+  generic_marker_3310_anchor:
+    facing: -89.99998884409983
+    x: 64.5
+    y: 80.5
+  generic_marker_3311_anchor:
+    facing: -89.99998884409983
+    x: 63.5
+    y: 81.5
+  generic_marker_3312_anchor:
+    facing: -89.99998884409983
+    x: 62.5
+    y: 82.5
+  generic_marker_3324_anchor:
+    facing: -90.00000250447816
+    x: 125.5
+    y: 145.5
+  generic_marker_3325_anchor:
+    facing: -90.00000250447816
+    x: 127.5
+    y: 148.5
+  character_monster_generic_single_spawn_3328_anchor:
+    facing: -89.99994103277564
+    x: 96.5
+    y: 106.500015
+  character_monster_generic_single_spawn_3334_anchor:
+    facing: -135.00000034162267
+    x: 101.5
+    y: 105.500015
+  character_monster_generic_single_spawn_3335_anchor:
+    facing: -44.999994422049916
+    x: 91.5
+    y: 105.500015
+  trigger_one_time_action_3471_anchor:
+    facing: -90.00000250447816
+    x: 160.5
+    y: 133.5
+  trigger_one_time_action_3472_anchor:
+    facing: -90.00000250447816
+    x: 165.5
+    y: 131.5
+  trigger_interval_repeat_action_3473_anchor:
+    facing: -90.00000250447816
+    x: 165.5
+    y: 133.5
+  trigger_one_time_action_3474_anchor:
+    facing: -90.00000250447816
+    x: 174.5
+    y: 133.5
+  lights_spot_stateful_12_x_12_3475_anchor:
+    facing: -90.00000250447816
+    x: 122.46
+    y: 149.40004
+  dynamic_misc_stateful_monitor_3476_anchor:
+    facing: -5.0000250408690246
+    x: 118.79364
+    y: 146.68999
+  dynamic_misc_stateful_monitor_3477_anchor:
+    facing: -5.0000250408690246
+    x: 118.744835
+    y: 148.14363
+  dynamic_misc_stateful_monitor_3478_anchor:
+    facing: -2.049056913848225E-5
+    x: 118.809074
+    y: 149.60323
+  generic_marker_3480_anchor:
+    facing: -90.00000250447816
+    x: 115.41999
+    y: 163.40366
+  dynamic_misc_stateful_monitor_3481_anchor:
+    facing: -60.99999600565534
+    x: 124.557915
+    y: 152.84622
+  lights_spot_stateful_16_x_16_3482_anchor:
+    facing: -90.00000250447816
+    x: 136.5
+    y: 144.5
+  trigger_one_time_action_3484_anchor:
+    facing: -90.00000250447816
+    x: 132.5
+    y: 142.5
+  trigger_one_time_action_3485_anchor:
+    facing: -90.00000250447816
+    x: 132
+    y: 142.5
+  trigger_one_time_action_3486_anchor:
+    facing: -90.00000250447816
+    x: 133
+    y: 142.5
+  trigger_one_time_action_3487_anchor:
+    facing: -90.00000250447816
+    x: 131.5
+    y: 143
+  trigger_one_time_action_3488_anchor:
+    facing: -90.00000250447816
+    x: 131.5
+    y: 142.5
+  trigger_one_time_action_3489_anchor:
+    facing: -90.00000250447816
+    x: 126.5
+    y: 143.5
+  trigger_one_time_action_3490_anchor:
+    facing: -90.00000250447816
+    x: 125.18929
+    y: 144.71754
+  trigger_one_time_action_3491_anchor:
+    facing: -90.00000250447816
+    x: 126.372154
+    y: 145.17609
+  trigger_one_time_action_3492_anchor:
+    facing: -90.00000250447816
+    x: 125.9214
+    y: 145.83429
+  trigger_one_time_action_3493_anchor:
+    facing: 16.999987381872188
+    x: 125.135956
+    y: 146.12187
+  trigger_one_time_action_3494_anchor:
+    facing: -90.00000250447816
+    x: 128.5
+    y: 143.5
+  trigger_one_time_action_3495_anchor:
+    facing: -90.00000250447816
+    x: 127.5
+    y: 143.5
+  trigger_one_time_action_3496_anchor:
+    facing: -90.00000250447816
+    x: 127.33803
+    y: 145.978
+  generic_marker_3497_anchor:
+    facing: -90.00000250447816
+    x: 126.95667
+    y: 148.46457
+  trigger_one_time_action_3498_anchor:
+    facing: -90.00000250447816
+    x: 126.5
+    y: 149
+  trigger_one_time_action_3499_anchor:
+    facing: -90.00000250447816
+    x: 127
+    y: 147.5
+  trigger_one_time_action_3500_anchor:
+    facing: -90.00000250447816
+    x: 126.5
+    y: 147.5
+  trigger_one_time_action_3501_anchor:
+    facing: -90.00000250447816
+    x: 126.5
+    y: 148.5
+  trigger_one_time_action_3502_anchor:
+    facing: -90.00000250447816
+    x: 126.5
+    y: 148
+  generic_marker_3503_anchor:
+    facing: -90.00000250447816
+    x: 125.62557
+    y: 150.26534
+  trigger_one_time_action_3504_anchor:
+    facing: -90.00000250447816
+    x: 126.5
+    y: 149.5
+  trigger_one_time_action_3505_anchor:
+    facing: -90.00000250447816
+    x: 126.5
+    y: 150.5
+  trigger_one_time_action_3506_anchor:
+    facing: -90.00000250447816
+    x: 126.5
+    y: 150
+  trigger_one_time_action_3507_anchor:
+    facing: -90.00000250447816
+    x: 125.9214
+    y: 150.83429
+  trigger_one_time_action_3508_anchor:
+    facing: 106.9999813486139
+    x: 125.87813
+    y: 150.13596
+  trigger_one_time_action_3509_anchor:
+    facing: -90.00000250447816
+    x: 128.5
+    y: 147.5
+  trigger_one_time_action_3510_anchor:
+    facing: -90.00000250447816
+    x: 127.5
+    y: 147.5
+  trigger_one_time_action_3511_anchor:
+    facing: -90.00000250447816
+    x: 128
+    y: 147.5
+  trigger_one_time_action_3512_anchor:
+    facing: -90.00000250447816
+    x: 128.5
+    y: 150.5
+  trigger_one_time_action_3513_anchor:
+    facing: -90.00000250447816
+    x: 127.15979
+    y: 150.97693
+  trigger_one_time_action_3514_anchor:
+    facing: -90.00000250447816
+    x: 130.5
+    y: 143.5
+  trigger_one_time_action_3515_anchor:
+    facing: -90.00000250447816
+    x: 130
+    y: 143.5
+  trigger_one_time_action_3516_anchor:
+    facing: -90.00000250447816
+    x: 129.25
+    y: 143.5
+  trigger_one_time_action_3517_anchor:
+    facing: -90.00000250447816
+    x: 131
+    y: 143.5
+  trigger_one_time_action_3518_anchor:
+    facing: -90.00000250447816
+    x: 131.5
+    y: 143.5
+  trigger_one_time_action_3519_anchor:
+    facing: -90.00000250447816
+    x: 129.25
+    y: 147.5
+  trigger_one_time_action_3520_anchor:
+    facing: -90.00000250447816
+    x: 130
+    y: 147.5
+  trigger_one_time_action_3521_anchor:
+    facing: -90.00000250447816
+    x: 130.5
+    y: 147.5
+  trigger_one_time_action_3522_anchor:
+    facing: -90.00000250447816
+    x: 131
+    y: 147.5
+  generic_marker_3523_anchor:
+    facing: -90.00000250447816
+    x: 133
+    y: 149
+  trigger_one_time_action_3524_anchor:
+    facing: -90.00000250447816
+    x: 131.5
+    y: 147.5
+  trigger_one_time_action_3525_anchor:
+    facing: -90.00000250447816
+    x: 132.5
+    y: 147.5
+  trigger_one_time_action_3526_anchor:
+    facing: -90.00000250447816
+    x: 133
+    y: 147.5
+  trigger_one_time_action_3527_anchor:
+    facing: -90.00000250447816
+    x: 132
+    y: 147.5
+  trigger_one_time_action_3528_anchor:
+    facing: -90.00000250447816
+    x: 134.5
+    y: 143
+  trigger_one_time_action_3529_anchor:
+    facing: -90.00000250447816
+    x: 134.5
+    y: 142.5
+  trigger_one_time_action_3530_anchor:
+    facing: -90.00000250447816
+    x: 133.5
+    y: 142.5
+  trigger_one_time_action_3531_anchor:
+    facing: -90.00000250447816
+    x: 134
+    y: 142.5
+  generic_marker_3533_anchor:
+    facing: 90.00007763655904
+    x: 136.5
+    y: 140.5
+  trigger_one_time_action_3534_anchor:
+    facing: -90.00000250447816
+    x: 136.5
+    y: 142.5
+  trigger_one_time_action_3535_anchor:
+    facing: -90.00000250447816
+    x: 136.5
+    y: 143
+  trigger_one_time_action_3536_anchor:
+    facing: -41.00004439879368
+    x: 136.43977
+    y: 142.6806
+  trigger_one_time_action_3538_anchor:
+    facing: -90.00000250447816
+    x: 139.5
+    y: 137.5
+  trigger_one_time_action_3539_anchor:
+    facing: -90.00000250447816
+    x: 134.5
+    y: 143.5
+  trigger_one_time_action_3540_anchor:
+    facing: -90.00000250447816
+    x: 135
+    y: 143.5
+  character_monster_generic_single_spawn_3541_anchor:
+    facing: -90.00000250447816
+    x: 133.5
+    y: 146.5
+  trigger_one_time_action_3542_anchor:
+    facing: -90.00000250447816
+    x: 136.5
+    y: 143.5
+  trigger_one_time_action_3543_anchor:
+    facing: -90.00000250447816
+    x: 136
+    y: 143.5
+  trigger_one_time_action_3544_anchor:
+    facing: -90.00000250447816
+    x: 135.5
+    y: 143.5
+  trigger_one_time_action_3545_anchor:
+    facing: -90.00000250447816
+    x: 136.5
+    y: 145.5
+  trigger_one_time_action_3547_anchor:
+    facing: 48.99993420002239
+    x: 134.31941
+    y: 147.43977
+  trigger_one_time_action_3548_anchor:
+    facing: -90.00000250447816
+    x: 133.5
+    y: 147.5
+  trigger_one_time_action_3549_anchor:
+    facing: -90.00000250447816
+    x: 135
+    y: 147.5
+  trigger_one_time_action_3550_anchor:
+    facing: -90.00000250447816
+    x: 134.5
+    y: 147.5
+  trigger_one_time_action_3551_anchor:
+    facing: -90.00000250447816
+    x: 134
+    y: 147.5
+  trigger_one_time_action_3553_anchor:
+    facing: -90.00000250447816
+    x: 135.5
+    y: 147.5
+  character_monster_generic_single_spawn_3554_anchor:
+    facing: -90.00000250447816
+    x: 139.5
+    y: 146.5
+  generic_marker_3555_anchor:
+    facing: -90.00000250447816
+    x: 141
+    y: 148
+  dynamic_misc_stateful_monitor_3556_anchor:
+    facing: -115.00000433853141
+    x: 127.3634
+    y: 152.95139
+  dynamic_misc_stateful_monitor_3557_anchor:
+    facing: -100.0000005060238
+    x: 126.070816
+    y: 153.02121
+  trigger_one_time_action_3558_anchor:
+    facing: -90.00000250447816
+    x: 126.640594
+    y: 151.64853
+  trigger_one_time_action_3559_anchor:
+    facing: -90.00000250447816
+    x: 125.258484
+    y: 151.56352
+  trigger_one_time_action_3564_anchor:
+    facing: -90.00000250447816
+    x: 136.5
+    y: 157.5
+  trigger_one_time_action_3565_anchor:
+    facing: -90.00000250447816
+    x: 141.5
+    y: 137.5
+  trigger_one_time_action_3566_anchor:
+    facing: -90.00000250447816
+    x: 160.5
+    y: 135.5
+  trigger_one_time_action_3567_anchor:
+    facing: -90.00000250447816
+    x: 160.5
+    y: 137.5
+  trigger_one_time_action_3568_anchor:
+    facing: -90.00000250447816
+    x: 158.5
+    y: 140.5
+  trigger_one_time_action_3569_anchor:
+    facing: -90.00000250447816
+    x: 160.5
+    y: 139.5
+  trigger_one_time_action_3570_anchor:
+    facing: -90.00000250447816
+    x: 160.5
+    y: 141.5
+  camera_toggle_camera_global_3571_anchor:
+    facing: -90.00000250447816
+    x: 161.5
+    y: 139.5
+  trigger_one_time_action_3572_anchor:
+    facing: -90.00000250447816
+    x: 163.5
+    y: 140.5
+  trigger_one_time_action_3573_anchor:
+    facing: -90.00000250447816
+    x: 163.5
+    y: 142.5
+  camera_toggle_camera_global_3574_anchor:
+    facing: -90.00000250447816
+    x: 164.5
+    y: 144.5
+  trigger_one_time_action_3575_anchor:
+    facing: -90.00000250447816
+    x: 163.5
+    y: 144.5
+  generic_marker_3576_anchor:
+    facing: -90.00000250447816
+    x: 163.5
+    y: 146.5
+  trigger_one_time_action_3578_anchor:
+    facing: -90.00000250447816
+    x: 163.5
+    y: 148.5
+  trigger_one_time_action_3579_anchor:
+    facing: -90.00000250447816
+    x: 165.5
+    y: 135.5
+  camera_toggle_camera_global_3580_anchor:
+    facing: -90.00000250447816
+    x: 166.5
+    y: 137.5
+  trigger_one_time_action_3581_anchor:
+    facing: -90.00000250447816
+    x: 165.5
+    y: 137.5
+  trigger_one_time_action_3582_anchor:
+    facing: -90.00000250447816
+    x: 168.5
+    y: 137.5
+  camera_toggle_camera_global_3583_anchor:
+    facing: -90.00000250447816
+    x: 169.5
+    y: 137.5
+  trigger_one_time_action_3584_anchor:
+    facing: -90.00000250447816
+    x: 171.5
+    y: 135.5
+  trigger_one_time_action_3585_anchor:
+    facing: -90.00000250447816
+    x: 171.5
+    y: 137.5
+  camera_toggle_camera_global_3586_anchor:
+    facing: -90.00000250447816
+    x: 172.5
+    y: 137.5
+  trigger_one_time_action_3587_anchor:
+    facing: -90.00000250447816
+    x: 168.5
+    y: 145.5
+  trigger_one_time_action_3588_anchor:
+    facing: -90.00000250447816
+    x: 170.5
+    y: 146.5
+  trigger_one_time_action_3589_anchor:
+    facing: -90.00000250447816
+    x: 172.5
+    y: 144.5
+  trigger_one_time_action_3590_anchor:
+    facing: -90.00000250447816
+    x: 172.5
+    y: 146.5
+  trigger_one_time_action_3591_anchor:
+    facing: -90.00000250447816
+    x: 173.5
+    y: 135.5
+  camera_toggle_camera_global_3592_anchor:
+    facing: -90.00000250447816
+    x: 173.5
+    y: 146.5
+  character_monster_generic_single_spawn_3807_anchor:
+    facing: 4.781132419008926E-5
+    x: 76.50001
+    y: 87.49999
+  character_monster_generic_single_spawn_3808_anchor:
+    facing: -179.99995036744298
+    x: 90.50001
+    y: 88.50002
+  character_monster_generic_single_spawn_3809_anchor:
+    facing: -179.99995036744298
+    x: 90.50001
+    y: 84.50002
+  character_monster_generic_single_spawn_3853_anchor:
+    facing: -44.999994422049916
+    x: -8.499992
+    y: 74.50001
+  character_monster_generic_single_spawn_3854_anchor:
+    facing: -35.000016911071796
+    x: -12.499992
+    y: 72.50001
+  character_monster_generic_single_spawn_3890_anchor:
+    facing: -179.99995036744298
+    x: 96.50001
+    y: 88.50002
+  generic_marker_3899_anchor:
+    facing: -90.00000250447816
+    x: 136.5
+    y: 147.5
+  character_monster_generic_single_spawn_3907_anchor:
+    facing: -124.9999886796987
+    x: -1.5
+    y: 72.5
+  character_monster_generic_single_spawn_3911_anchor:
+    facing: -134.99998668124434
+    x: -1.500001
+    y: 74.499985
+  character_monster_generic_single_spawn_3912_anchor:
+    facing: -134.99998668124434
+    x: -5.500001
+    y: 74.499985
+  character_monster_generic_single_spawn_3913_anchor:
+    facing: 44.9999978371445
+    x: -12.5
+    y: 64.5
+  character_monster_generic_single_spawn_3914_anchor:
+    facing: 135.00000034162267
+    x: -3.4999933
+    y: 64.50001
+  character_monster_generic_single_spawn_3921_anchor:
+    facing: -90.00000250447816
+    x: 5.5
+    y: 33.5
+  character_monster_generic_single_spawn_3922_anchor:
+    facing: -90.00000250447816
+    x: 4.5
+    y: 31.5
+  character_monster_generic_single_spawn_3923_anchor:
+    facing: -90.00000250447816
+    x: 5.5
+    y: 28.5
+  character_monster_generic_single_spawn_3924_anchor:
+    facing: -135.00000034162267
+    x: 15.5
+    y: 43.5
+  character_monster_generic_single_spawn_3925_anchor:
+    facing: -45.00000808242825
+    x: -10.499993
+    y: 74.50001
+  character_monster_generic_single_spawn_3926_anchor:
+    facing: -45.00000808242825
+    x: -12.499993
+    y: 73.50001
+  trigger_one_time_action_3928_anchor:
+    facing: -90.00000250447816
+    x: 161.5
+    y: 147.5

@@ -1,0 +1,6 @@
+id: 324
+name: Ironclaw Munitions Factory|Warfare Workshop
+type: level
+zone: '33554545'
+defaultSpawn: level_start
+instances: 1

@@ -1,0 +1,8 @@
+# deployed-levels.tsv 159,'gloaming_wildwoods_path' -> scene 380; zone is ZoneUtil.qualify(2, 159).
+id: 380
+name: "Gloaming Wildwoods|Terrilous Trail"
+type: level
+zone-id: 33554591
+zone-name: "%dungeon:m.gloaming_wildwoods_path"
+defaultSpawn: level_start
+instances: 1

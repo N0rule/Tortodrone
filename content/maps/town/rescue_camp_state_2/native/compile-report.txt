@@ -1,0 +1,8 @@
+source=map-sources/rescue_camp_state_2
+scene-id=218
+type=town
+zone-id=16777222
+zone-name=%town:m.rescue_camp_state_2
+link=none
+The visual scene, collision, portals and supported bindings are generated.
+Routing beyond an existing portal is a design decision and is not invented.

@@ -1,0 +1,6 @@
+id: 382
+name: Gloaming Wildwoods|Roarsterous Ruins
+type: level
+zone: '33554592'
+defaultSpawn: level_start
+instances: 1

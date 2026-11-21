@@ -1,0 +1,8 @@
+id: generator_outro
+dialogue:
+  nodes:
+    part 1a:
+      responses: [
+        ]
+      text: "You nasty, little things! Don't you dare touch the artifact! \n\nArgh! I'll be back for you!"
+  initial: part 1a

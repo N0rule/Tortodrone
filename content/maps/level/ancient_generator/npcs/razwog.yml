@@ -1,0 +1,8 @@
+id: generator_intro
+dialogue:
+  nodes:
+    part 1a:
+      responses: [
+        ]
+      text: "What do we have here, more little creatures that came from the sky?  Here to take my power and disturb my research? \n\nNo one disrupts the work of the great Schemer Razwog!  I'll see to it you never leave this room alive!"
+  initial: part 1a

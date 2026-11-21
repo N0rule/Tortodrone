@@ -1,0 +1,6 @@
+id: 337
+name: Ancient Generator|Restoring Power
+type: level
+zone: '33554605'
+defaultSpawn: level_start
+instances: 1

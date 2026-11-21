@@ -108,11 +108,11 @@ unified pipeline; `collision.bin` is the only collision artifact.
 
 ## Current status
 
-All ten bundled maps now carry generated exact collision:
+All seventeen bundled maps now carry generated exact collision:
 
 | Maps | Exact collision |
 | --- | --- |
-| haven, bazaar, arcade, garrison, rescue_camp, advanced_training, crash_site, laboratory, hall_of_heroes, mission_lobby | generated and used |
+| haven, bazaar, arcade, garrison, rescue_camp, rescue_camp_state_2, advanced_training, crash_site, laboratory, hall_of_heroes, mission_lobby, ancient_generator, ironclaw_assembly, ironclaw_workshop, shadow_wildwoods_path, shadow_wildwoods_ruins, shadow_wildwoods_snarbolax | generated and used |
 
 `mission_lobby` is the stock mission ready room (scene 351, `%dungeon:m.mission_lobby`).
 `levels.sql` row 114 names it as the `mission_lobby` scene, so its zone is
@@ -120,7 +120,14 @@ All ten bundled maps now carry generated exact collision:
 own; mission parties are not implemented yet, so it is reachable only through
 `/sgo 351`.
 
-`collision.bin` is 265 KiB for all ten maps in total. `walkability.gz` is no longer required or generated: `collision.bin` is mandatory, and the runtime
+The level maps are imported only when a mission route needs them. `ancient_generator`
+is the pinned opening floor. `ironclaw_assembly`/`ironclaw_workshop` and the three
+`shadow_wildwoods_*` floors are stock scenes imported for imported rank missions;
+`ironclaw_twins` (scene 322) is not bundled because its native WarpActor action is
+not implemented. A bundled floor is not by itself proof that a mission route is
+playable.
+
+`collision.bin` is 464 KiB for all seventeen maps in total. `walkability.gz` is no longer required or generated: `collision.bin` is mandatory, and the runtime
 collision view is exact for movement, portal entrances, entities and projectile sweeps. A
 generated town map validates against the full deployment; portals whose destination scene is
 absent are dropped and reported rather than published as dead travel edges.

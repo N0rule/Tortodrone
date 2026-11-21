@@ -1,0 +1,20 @@
+dialogue:
+  initial: part 1a
+  nodes:
+    part 1a:
+      responses:
+      - text: What's the problem, Greta?
+        next: part 2a
+      text: Greetings, I'm Squad Leader Greta.  You must be {0}. Rhendon said we should be expecting you, and not a moment too soon.  This Rescue Camp is facing a crisis.
+    part 2a:
+      responses:
+      - text: How can I help channel power to the camp?
+        next: part 3a
+      text: "In short, this camp has no power and the sun is setting soon. Last night all manners of horrible monsters came after us in the dark.  We couldn't see and had no power for our defensive turrets. \n\n...we lost a lot of recruits. \n\nWe need to channel power to the Rescue Camp so that we can set up a defensive perimeter before night falls!"
+    part 3a:
+      responses:
+      - text: I'll meet up with Rhendon before I investigate the generator.
+        close: true
+        action: 0
+      text: "Our scans have located an ancient generator below this camp.  It should be sending power to the surface, but something seems to be diverting it. \n\nWe need you to go investigate the ancient generator and divert power back to the surface.  But you'll need to be ready- it's completely uncharted territory and teeming with monsters. \n\nRhendon said he wanted to meet up with you before you take on this mission.  Why don't you see him first?"
+id: camp_greta

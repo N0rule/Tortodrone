@@ -1,0 +1,16 @@
+Prepared native identity and default entrance retained. Supported extracted bindings were validated.
+Cached scenes cannot establish missing server scripts, AI, rewards or portal actions; no behaviors invented.
+Review unresolved localization in NPC YAML and verify travel with an isolated stock client.
+Supported actors=40, NPC conversations=0, portal triggers=0
+Supported extracted actor bindings: 30
+Unsupported handler at 1726 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 1729 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 1731 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 1732 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 1790 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 1829 / 0: com.threerings.projectx.config.ProjectXHandlerConfig$Interaction
+Unsupported handler at 1849 / 0: com.threerings.projectx.config.ProjectXHandlerConfig$Interaction
+Unsupported complete scene handler at 467 / 0: Unsupported scene table Treasure/Monster/Beast/Snarbolax Loot: Unsupported monster activation table root
+Restored archived Trigger/Repeat Action handler at 1828 / 0
+Unsupported complete scene handler at 1828 / 0: Unsupported monster activation table root
+Restored archived PawnLogic area guard at 1769 / 0

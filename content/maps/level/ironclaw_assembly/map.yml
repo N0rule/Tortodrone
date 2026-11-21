@@ -1,0 +1,6 @@
+id: 320
+name: Ironclaw Munitions Factory|Abandoned Assembly
+type: level
+zone: '33554543'
+defaultSpawn: level_start
+instances: 1

@@ -1,0 +1,202 @@
+Prepared native identity and default entrance retained. Supported extracted bindings were validated.
+Cached scenes cannot establish missing server scripts, AI, rewards or portal actions; no behaviors invented.
+Review unresolved localization in NPC YAML and verify travel with an isolated stock client.
+Supported actors=775, NPC conversations=0, portal triggers=0
+Supported extracted actor bindings: 672
+Unsupported complete startup at 6416 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5774 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5775 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5776 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5777 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5778 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5779 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5780 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5781 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5782 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5783 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5784 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5785 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5788 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5789 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5790 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5791 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5792 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5793 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5794 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5795 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5796 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5797 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5798 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5799 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5800 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5801 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5802 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5803 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5804 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5805 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5807 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5808 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5809 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5810 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5812 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5814 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5815 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5816 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5817 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5818 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5819 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 5820 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3775 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3776 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3777 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3778 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3779 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3780 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3781 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3782 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3783 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3784 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3785 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3819 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3820 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3821 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3822 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3823 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3824 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3825 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3826 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3827 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3828 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3829 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3831 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3832 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3833 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3834 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3835 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3836 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3838 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3839 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3840 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3841 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3842 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3843 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3844 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3845 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3846 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3847 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 3848 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 6115 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 6116 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 6117 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 6118 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 6119 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 6121 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 6122 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 6124 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Unsupported complete startup at 6125 / 0: Unsupported scene table Breakable Objects/Clockworks/Factory/Mortar shell: Unsupported scene spawn actor Dynamic/Breakable Objects/Clockworks/Factory/Munitions/Mortar Shell (inert): Unsupported scene spawn actor
+Restored archived Trigger/One Time Action handler at 6496 / 0
+Unsupported complete scene handler at 6496 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6500 / 0
+Unsupported complete scene handler at 6500 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6501 / 0
+Unsupported complete scene handler at 6501 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6502 / 0
+Unsupported complete scene handler at 6502 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6503 / 0
+Unsupported complete scene handler at 6503 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6504 / 0
+Unsupported complete scene handler at 6504 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6733 / 0
+Unsupported complete scene handler at 6733 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6753 / 0
+Unsupported complete scene handler at 6753 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6804 / 0
+Restored archived Trigger/One Time Action handler at 6806 / 0
+Restored archived Trigger/One Time Action handler at 6807 / 0
+Restored archived Trigger/Multi Trigger Action handler at 6813 / 0
+Restored archived Trigger/One Time Action handler at 6815 / 0
+Unsupported complete scene handler at 6815 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6816 / 0
+Unsupported complete scene handler at 6816 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6824 / 0
+Restored archived Trigger/One Time Action handler at 6827 / 0
+Unsupported complete scene handler at 6827 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6829 / 0
+Unsupported complete scene handler at 6829 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6830 / 0
+Unsupported complete scene handler at 6830 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4816 / 0
+Unsupported complete scene handler at 4816 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4818 / 0
+Unsupported complete scene handler at 4818 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6881 / 0
+Unsupported complete scene handler at 6881 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 5333 / 0
+Unsupported complete scene handler at 5333 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 5334 / 0
+Unsupported complete scene handler at 5334 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 3571 / 0
+Unsupported complete scene handler at 3571 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 3578 / 0
+Unsupported complete scene handler at 3578 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 3597 / 0
+Unsupported complete scene handler at 3597 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 3603 / 0
+Unsupported complete scene handler at 3603 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 5682 / 0
+Unsupported complete scene handler at 5682 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 5690 / 0
+Restored archived Trigger/One Time Action handler at 5723 / 0
+Unsupported complete scene handler at 5723 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 3676 / 0
+Unsupported complete scene handler at 3676 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 5725 / 0
+Unsupported complete scene handler at 5725 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 3687 / 0
+Unsupported complete scene handler at 3687 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 3689 / 0
+Unsupported complete scene handler at 3689 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 5756 / 0
+Restored archived Trigger/One Time Action handler at 5905 / 0
+Restored archived Trigger/One Time Action handler at 5919 / 0
+Unsupported complete scene handler at 5919 / 0: Unsupported scene spawn actor Dynamic/Misc/Damage Pad (Table): Unsupported scene spawn actor
+Restored archived Trigger/One Time Action handler at 5920 / 0
+Unsupported complete scene handler at 5920 / 0: Unsupported scene spawn actor Dynamic/Misc/Damage Pad (Table): Unsupported scene spawn actor
+Restored archived Trigger/One Time Action handler at 5921 / 0
+Unsupported complete scene handler at 5921 / 0: Unsupported scene spawn actor Dynamic/Misc/Damage Pad (Table): Unsupported scene spawn actor
+Restored archived Trigger/Multi Trigger Action handler at 5927 / 0
+Restored archived Trigger/One Time Action handler at 3932 / 0
+Unsupported complete scene handler at 3932 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 5993 / 0
+Unsupported complete scene handler at 5993 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 5994 / 0
+Unsupported complete scene handler at 5994 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 5998 / 0
+Unsupported complete scene handler at 5998 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 5999 / 0
+Unsupported complete scene handler at 5999 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6000 / 0
+Unsupported complete scene handler at 6000 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 6107 / 0
+Unsupported complete scene handler at 6107 / 0: Unsupported monster activation table root
+Restored archived PawnLogic area guard at 2116 / 0
+Restored archived PawnLogic area guard at 6293 / 0
+Restored archived PawnLogic area guard at 6940 / 0
+Unsupported complete area handler at 6940 / 0: Unsupported scene effect location
+Restored archived PawnLogic area guard at 5470 / 0
+Restored archived PawnLogic area guard at 5475 / 0
+Restored archived PawnLogic area guard at 5648 / 0
+Restored archived PawnLogic area guard at 3606 / 0
+Restored archived PawnLogic area guard at 3607 / 0
+Restored archived PawnLogic area guard at 3612 / 0
+Restored archived PawnLogic area guard at 5674 / 0
+Restored archived PawnLogic area guard at 5675 / 0
+Restored archived PawnLogic area guard at 5687 / 0
+Restored archived PawnLogic area guard at 5718 / 0
+Restored archived PawnLogic area guard at 3701 / 0
+Restored archived PawnLogic area guard at 5758 / 0
+Restored archived PawnLogic area guard at 5762 / 0
+Restored archived PawnLogic area guard at 5763 / 0
+Restored archived PawnLogic area guard at 5764 / 0
+Restored archived PawnLogic area guard at 3759 / 0
+Restored archived PawnLogic area guard at 3853 / 0

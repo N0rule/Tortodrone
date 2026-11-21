@@ -1,0 +1,211 @@
+Prepared native identity and default entrance retained. Supported extracted bindings were validated.
+Cached scenes cannot establish missing server scripts, AI, rewards or portal actions; no behaviors invented.
+Review unresolved localization in NPC YAML and verify travel with an isolated stock client.
+Supported actors=380, NPC conversations=0, portal triggers=0
+Supported extracted actor bindings: 319
+Unsupported handler at 31 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 38 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 39 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 40 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 43 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 45 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 46 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 47 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 48 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 49 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 50 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 51 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 52 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 53 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 54 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 55 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 61 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 64 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 71 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 72 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 73 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 75 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 76 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 77 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 79 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 80 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 82 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 83 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 84 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 85 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 86 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 87 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 88 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 89 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 90 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 91 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 92 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4188 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 93 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4189 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4190 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4191 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4192 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4193 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4194 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4197 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4208 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4211 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4212 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 117 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4213 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 118 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4214 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 120 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 121 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4217 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4218 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 123 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4219 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 124 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4220 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 125 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 126 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 127 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 128 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 129 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 130 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 131 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 135 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 136 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 137 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 138 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 139 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4249 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4252 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4253 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4254 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4255 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4256 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4361 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4461 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4463 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4464 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4471 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4501 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4502 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4503 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4504 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4505 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4506 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4507 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4508 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4509 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4510 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4511 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4512 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4513 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4514 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4515 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4549 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 4947 / 0: com.threerings.projectx.config.ProjectXHandlerConfig$Interaction
+Unsupported handler at 4947 / 1: com.threerings.tudey.config.HandlerConfig$IntersectionStart
+Unsupported handler at 4947 / 2: com.threerings.tudey.config.HandlerConfig$IntersectionStop
+Unsupported handler at 4947 / 3: com.threerings.tudey.config.HandlerConfig$Reference
+Unsupported handler at 1468 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 1469 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 1471 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 1492 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 1493 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 1494 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Unsupported handler at 1496 / 0: com.threerings.tudey.config.HandlerConfig$Intersection
+Restored archived Trigger/One Time Action handler at 4233 / 0
+Unsupported complete scene handler at 4233 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4235 / 0
+Unsupported complete scene handler at 4235 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4257 / 0
+Unsupported complete scene handler at 4257 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4260 / 0
+Unsupported complete scene handler at 4260 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4261 / 0
+Unsupported complete scene handler at 4261 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 2255 / 0
+Unsupported complete scene handler at 2255 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 2256 / 0
+Unsupported complete scene handler at 2256 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4339 / 0
+Unsupported complete scene handler at 4339 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4340 / 0
+Unsupported complete scene handler at 4340 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4341 / 0
+Unsupported complete scene handler at 4341 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4366 / 0
+Unsupported complete scene handler at 4366 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4466 / 0
+Unsupported complete scene handler at 4466 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4467 / 0
+Unsupported complete scene handler at 4467 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4473 / 0
+Unsupported complete scene handler at 4473 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4474 / 0
+Unsupported complete scene handler at 4474 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4475 / 0
+Unsupported complete scene handler at 4475 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4477 / 0
+Unsupported complete scene handler at 4477 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4479 / 0
+Unsupported complete scene handler at 4479 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4486 / 0
+Unsupported complete scene handler at 4486 / 0: Unsupported scene spawn actor Character/NPC/Monster/Boss/Snarbolax/Parts/Snarbolax, Rush: Unsupported scene spawn actor
+Restored archived Trigger/One Time Action handler at 4520 / 0
+Unsupported complete scene handler at 4520 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4570 / 0
+Unsupported complete scene handler at 4570 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4594 / 0
+Unsupported complete scene handler at 4594 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4595 / 0
+Unsupported complete scene handler at 4595 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4641 / 0
+Unsupported complete scene handler at 4641 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4642 / 0
+Unsupported complete scene handler at 4642 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4643 / 0
+Unsupported complete scene handler at 4643 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4649 / 0
+Unsupported complete scene handler at 4649 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4650 / 0
+Unsupported complete scene handler at 4650 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4652 / 0
+Unsupported complete scene handler at 4652 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4659 / 0
+Unsupported complete scene handler at 4659 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 4775 / 0
+Unsupported complete scene handler at 4775 / 0: Unsupported scene spawn actor Character/NPC/Monster/Boss/Snarbolax/Parts/Snarbolax, Rush: Unsupported scene spawn actor
+Restored archived Trigger/One Time Action handler at 999 / 0
+Unsupported complete scene handler at 999 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 1000 / 0
+Unsupported complete scene handler at 1000 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 1002 / 0
+Unsupported complete scene handler at 1002 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 1039 / 0
+Unsupported complete scene handler at 1039 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 1040 / 0
+Unsupported complete scene handler at 1040 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 1047 / 0
+Unsupported complete scene handler at 1047 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 1048 / 0
+Unsupported complete scene handler at 1048 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 1222 / 0
+Restored archived Trigger/One Time Action handler at 1358 / 0
+Unsupported complete scene handler at 1358 / 0: Unsupported monster activation table or transform
+Restored archived Trigger/One Time Action handler at 1361 / 0
+Unsupported complete scene handler at 1361 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 1362 / 0
+Unsupported complete scene handler at 1362 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 3814 / 0
+Unsupported complete scene handler at 3814 / 0: Unsupported monster activation table root
+Restored archived Trigger/One Time Action handler at 3818 / 0
+Unsupported complete scene handler at 3818 / 0: Unsupported monster activation table root
+Restored archived PawnLogic area guard at 4230 / 0
+Restored archived PawnLogic area guard at 4231 / 0
+Restored archived PawnLogic area guard at 4653 / 0
+Restored archived PawnLogic area guard at 4662 / 0
+Restored archived PawnLogic area guard at 1003 / 0
+Restored archived PawnLogic area guard at 3643 / 0
+Restored archived PawnLogic area guard at 3833 / 0
+Restored archived PawnLogic area guard at 3844 / 0

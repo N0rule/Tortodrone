@@ -1,0 +1,6 @@
+id: 380
+name: Gloaming Wildwoods|Terrilous Trail
+type: level
+zone: '33554591'
+defaultSpawn: level_start
+instances: 1

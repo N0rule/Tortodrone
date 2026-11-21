@@ -1,0 +1,8 @@
+# deployed-levels.tsv 111,'ironclaw_munitions_factory_assembly' -> scene 320; zone is ZoneUtil.qualify(2, 111).
+id: 320
+name: "Ironclaw Munitions Factory|Abandoned Assembly"
+type: level
+zone-id: 33554543
+zone-name: "%dungeon:m.ironclaw_munitions_factory_assembly"
+defaultSpawn: level_start
+instances: 1
