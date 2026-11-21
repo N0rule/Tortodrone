@@ -50,8 +50,10 @@ The checkout and portable deployment use the same content/configuration layout.
 `build/plugins` beside the single `tortodrone.jar`. Ordinary builds are offline once
 Gradle dependencies are cached and never require a game installation or capture.
 
-Nine maps ship in total. The seven town/interior maps are `haven` (1), `bazaar` (2), `arcade` (3), `garrison` (445),
-`advanced_training` (294), `laboratory` (30893), and `hall_of_heroes` (318); the opening pair is Crash Site 398 and Rescue Camp 217.
+Ten maps ship in total. The seven non-opening maps are `haven` (1), `bazaar` (2), `arcade` (3),
+`garrison` (445), `advanced_training` (294), `laboratory` (30893), and `hall_of_heroes` (318); the
+opening pair is Crash Site 398 and Rescue Camp 217; the Mission Lobby (351) is retained as a
+mission-area preview.
 There are 9,355 indexed original item definitions, 386 weapon controls and 123
 shields. Indexed content does not establish gameplay support. The implementation
 still has the limits described in [Architecture](architecture.md) and the

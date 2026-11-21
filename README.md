@@ -26,7 +26,7 @@ Tortodrone is an independent Java 25 server for **Spiral Knights**. It hosts a p
 - **Unmodified client** — connect with your own official installation through [KnightLauncherCustom](https://github.com/N0rule/KnightLauncherCustom). No client patches are required.
 - **Portable server** — one JAR plus `config/`, `content/`, `webui/`, and `plugins/`; no external database or runtime services.
 - **Built-in administration** — manage accounts, knights, inventory, economy, and News from the terminal or the WebUI.
-- **Opening content included** — new knights start in Crash Site and travel directly to Haven after completion, without the legacy Rescue Camp missions. Nine maps are bundled; no separate import is needed.
+- **Opening content included** — new knights start in Crash Site and travel directly to Haven after completion, without the legacy Rescue Camp missions. Ten maps are bundled; no separate import is needed.
 - **Source-available** — build, inspect, and modify the server under the project license.
 
 ## Requirements
