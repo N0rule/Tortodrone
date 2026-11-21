@@ -110,7 +110,10 @@ public final class PartyCodec extends WireWriter {
             type(out,WireTypes.FLOOR_TYPE);out.writeByte(mission?0:tutorial?1:4);
             type(out,WireTypes.FLOOR_TYPE);out.writeByte(reporting?0:4);
             out.writeBoolean(mission&&reporting);out.writeBoolean(false);out.writeBoolean(mission&&reporting);emptyDSet(out);
-            for(int i=0;i<4;i++)out.writeInt(0);out.writeLong(0);emptyCollection(out);string(out,null);
+            // The native elevator and floor HUD index the gate's wheels by actualFloor and look
+            // up actualGateId in the served gate set; both stay zero outside a mission run.
+            out.writeInt(mission?scene.missionGateId():0);out.writeInt(mission?scene.missionFloor():0);
+            out.writeInt(0);out.writeInt(0);out.writeLong(0);emptyCollection(out);string(out,null);
             out.writeBoolean(true);out.writeInt(0); // Empty typed Multiset<Integer>.
             if(mission)string(out,scene.missionId());
         });

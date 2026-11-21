@@ -7,6 +7,7 @@ public interface SceneInstanceView {
     boolean hasTutorial();
     boolean hasMission();
     int missionGateId();
+    int missionFloor();
     String missionId();
     int missionDifficulty();
 }

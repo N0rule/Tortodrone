@@ -39,6 +39,7 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
         @Override public boolean hasTutorial(){return tutorial!=null;}
         @Override public boolean hasMission(){return run!=null;}
         @Override public int missionGateId(){return run==null?0:run.gateId();}
+        @Override public int missionFloor(){return run==null?0:run.floor();}
         @Override public String missionId(){return run==null?null:run.missionId();}
         @Override public int missionDifficulty(){return run==null?0:run.difficultyOrdinal();}
         public int index(){return index;}

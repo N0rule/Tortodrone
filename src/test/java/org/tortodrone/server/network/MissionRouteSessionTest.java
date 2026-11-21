@@ -47,6 +47,8 @@ public final class MissionRouteSessionTest {
                 MissionRun run=sceneRun(session);
                 check(run!=null&&run.floors().size()==4&&run.floors().getFirst().scene().id()==351,
                     "the live scene keeps the authored four-floor mission route");
+                check(scene(session).missionGateId()==run.gateId()&&scene(session).missionFloor()==0,
+                    "the party view exposes the mission gate and current floor");
                 check(session.sceneEntered()&&session.sceneSubscribed(),"the lobby accepts native readiness");
                 session.townInvocation(gateStart("shadow_beast",2,0));
                 check(sceneId(session)==351,"a repeated gate start keeps the current mission scene");
