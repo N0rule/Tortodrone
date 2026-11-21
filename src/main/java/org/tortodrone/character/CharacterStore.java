@@ -13,6 +13,7 @@ import org.tortodrone.core.character.KnightObjective;
 import org.tortodrone.core.character.KnightMemory;
 import org.tortodrone.core.mission.MissionCatalog;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.resources.BoxCatalog;
 
 /** Account-owned roster with transactional SQLite saves. */
 public final class CharacterStore {
@@ -30,7 +31,7 @@ public final class CharacterStore {
     public org.tortodrone.storage.AuctionHouse auction(org.tortodrone.core.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Auctions require SQLite storage");return new org.tortodrone.storage.AuctionHouse(database,catalog,rules);}
     public org.tortodrone.storage.TownStore town(org.tortodrone.core.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Town operations require SQLite storage");return new org.tortodrone.storage.TownStore(database,catalog,rules);}
     public org.tortodrone.storage.GuildStore guilds()throws IOException{if(database==null)throw new IOException("Guilds require SQLite storage");return new org.tortodrone.storage.GuildStore(database);}
-    public org.tortodrone.storage.BoxOpeningService boxes(org.tortodrone.loot.BoxCatalog boxes)throws IOException {
+    public org.tortodrone.storage.BoxOpeningService boxes(org.tortodrone.resources.BoxCatalog boxes)throws IOException {
         if(database==null)throw new IOException("Box opening requires SQLite storage");
         return new org.tortodrone.storage.BoxOpeningService(database,catalog,boxes);
     }

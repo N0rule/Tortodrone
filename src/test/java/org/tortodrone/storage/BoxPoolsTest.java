@@ -6,12 +6,16 @@ import java.util.*;
 import java.util.random.RandomGenerator;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.loot.*;
+import org.tortodrone.core.loot.*;
+import org.tortodrone.resources.BoxCatalog;
 import org.tortodrone.resources.ItemYaml;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.resources.BoxCatalog;
+import org.tortodrone.core.loot.BoxDefinition;
+import org.tortodrone.core.loot.BoxRewardSelector;
 
 /** Shipped estimates use real native identities, retain every category and persist complete bundles. */
 public final class BoxPoolsTest {

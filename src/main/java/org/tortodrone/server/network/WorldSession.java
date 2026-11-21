@@ -393,9 +393,9 @@ final class WorldSession implements AutoCloseable {
             var guilds=characters.guilds();
             boolean changed=false;Object response=null;
             switch(method){
-                case 1->{requireArgs(a,3,Integer.class,SessionDecoder.EnumValue.class,Integer.class);
+                case 1->{requireArgs(a,3,Integer.class,org.tortodrone.core.wire.EnumValue.class,Integer.class);
                     changed=true;guilds.buyExpansion(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),
-                        ((SessionDecoder.EnumValue)a.get(1)).ordinal());}
+                        ((org.tortodrone.core.wire.EnumValue)a.get(1)).ordinal());}
                 case 2->{requireArgs(a,0);guilds.canRename(characters.accountId(),knight.id(),authRevision);}
                 case 3->{requireArgs(a,2,String.class,Byte.class);changed=true;
                     guilds.changeRank(characters.accountId(),knight.id(),authRevision,(String)a.get(0),(Byte)a.get(1));}
@@ -414,18 +414,18 @@ final class WorldSession implements AutoCloseable {
                 case 11->{requireArgs(a,0);changed=true;
                     guilds.leave(characters.accountId(),knight.id(),authRevision);}
                 case 12->{requireArgs(a,6,Integer.class,Long.class,Integer.class,Integer.class,null,null);validateLogArgs(a);
-                    int category=a.get(4)==null?-1:((SessionDecoder.EnumValue)a.get(4)).ordinal();
+                    int category=a.get(4)==null?-1:((org.tortodrone.core.wire.EnumValue)a.get(4)).ordinal();
                     response=guilds.log(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),(Long)a.get(1),
                         (Integer)a.get(2),(Integer)a.get(3),category<0?null:category,(String)a.get(5));}
                 case 13->throw new IOException("The guild shop is not available on this server.");
-                case 14->{requireArgs(a,3,Integer.class,SessionDecoder.EnumValue.class,null);changed=true;
+                case 14->{requireArgs(a,3,Integer.class,org.tortodrone.core.wire.EnumValue.class,null);changed=true;
                     guilds.removeExpansion(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),
-                        ((SessionDecoder.EnumValue)a.get(1)).ordinal());}
+                        ((org.tortodrone.core.wire.EnumValue)a.get(1)).ordinal());}
                 case 15->{requireArgs(a,1,String.class);changed=true;
                     guilds.rename(characters.accountId(),knight.id(),authRevision,(String)a.get(0));}
-                case 16->{requireArgs(a,3,Integer.class,SessionDecoder.EnumValue.class,String.class);changed=true;
+                case 16->{requireArgs(a,3,Integer.class,org.tortodrone.core.wire.EnumValue.class,String.class);changed=true;
                     guilds.setHallGlobal(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),
-                        ((SessionDecoder.EnumValue)a.get(1)).ordinal(),(String)a.get(2));}
+                        ((org.tortodrone.core.wire.EnumValue)a.get(1)).ordinal(),(String)a.get(2));}
                 case 17->{requireArgs(a,2,Integer.class,Boolean.class);changed=true;
                     guilds.setHallOpen(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),(Boolean)a.get(1));}
                 case 18->{requireArgs(a,2,Integer.class,String.class);changed=true;
@@ -435,9 +435,9 @@ final class WorldSession implements AutoCloseable {
                     long now=System.currentTimeMillis();
                     float prorate=view.guild().upkeepTime()<=now?0f:Math.min(1f,(view.guild().upkeepTime()-now)/604_800_000f);
                     output.send(()->codec.expansionDialog(oid,view.guild().id(),view.expansions(),view.guild().inDefault(),prorate,now));}
-                case 20->{requireArgs(a,2,Integer.class,SessionDecoder.EnumValue.class);
+                case 20->{requireArgs(a,2,Integer.class,org.tortodrone.core.wire.EnumValue.class);
                     var view=guildView;if(view==null||view.guild().id()!=(Integer)a.get(0))throw new IOException("m.access_denied");
-                    int type=((SessionDecoder.EnumValue)a.get(1)).ordinal();
+                    int type=((org.tortodrone.core.wire.EnumValue)a.get(1)).ordinal();
                     String current=type==0?view.guild().theme():view.guild().environment();
                     output.send(()->codec.hallGlobalDialog(oid,view.guild().id(),type,view.expansions(),current,System.currentTimeMillis()));}
                 case 21->throw new IOException("Guild halls are not available on this server yet.");
@@ -468,7 +468,7 @@ final class WorldSession implements AutoCloseable {
         for(int i=0;i<types.length;i++)if(types[i]!=null&&!(types[i].isInstance(args.get(i))))throw new IOException("m.internal_error");
     }
     private static void validateLogArgs(List<Object> args)throws IOException {
-        if(args.get(4)!=null&&(!(args.get(4) instanceof SessionDecoder.EnumValue e)
+        if(args.get(4)!=null&&(!(args.get(4) instanceof org.tortodrone.core.wire.EnumValue e)
                 ||!e.type().equals("com.threerings.projectx.guild.data.GuildLogEntry$Category")))throw new IOException("m.internal_error");
         if(args.get(5)!=null&&!(args.get(5) instanceof String))throw new IOException("m.internal_error");
     }
@@ -525,16 +525,16 @@ final class WorldSession implements AutoCloseable {
     private boolean openingMissionInvocation(SessionDecoder.Invocation request)throws IOException {
         var args=request.arguments();int method=request.method();
         if(method==8){
-            if(args.size()!=1||!(args.getFirst() instanceof List<?> values)||values.size()>128||values.stream().anyMatch(v->!(v instanceof SessionDecoder.ConfigReference)))throw new SessionDecoder.Rejected("Invalid mission crafting intent");
+            if(args.size()!=1||!(args.getFirst() instanceof List<?> values)||values.size()>128||values.stream().anyMatch(v->!(v instanceof org.tortodrone.core.wire.ConfigReference)))throw new SessionDecoder.Rejected("Invalid mission crafting intent");
             return true; // Native no-listener operation; no unsupported item mutation.
         }
         boolean result=method==7;
         if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.LISTENER_PREFIX+(result?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid mission listener");
         boolean valid=switch(method){
             case 1->args.size()==3&&args.getFirst() instanceof String&&args.get(1) instanceof long[];
-            case 2->args.size()==6&&args.getFirst() instanceof String&&args.get(1) instanceof SessionDecoder.EnumValue band&&band.type().equals(org.tortodrone.core.WireTypes.DIFFICULTY)&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean&&args.get(4) instanceof Boolean;
+            case 2->args.size()==6&&args.getFirst() instanceof String&&args.get(1) instanceof org.tortodrone.core.wire.EnumValue band&&band.type().equals(org.tortodrone.core.WireTypes.DIFFICULTY)&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean&&args.get(4) instanceof Boolean;
             // Current build dropped the third boolean from the preview request.
-            case 7->args.size()==5&&args.getFirst() instanceof String&&args.get(1) instanceof SessionDecoder.EnumValue band&&band.type().equals(org.tortodrone.core.WireTypes.DIFFICULTY)&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean;
+            case 7->args.size()==5&&args.getFirst() instanceof String&&args.get(1) instanceof org.tortodrone.core.wire.EnumValue band&&band.type().equals(org.tortodrone.core.WireTypes.DIFFICULTY)&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean;
             case 3,9->args.size()==2&&args.getFirst() instanceof String;
             default->false;
         };
@@ -571,7 +571,7 @@ final class WorldSession implements AutoCloseable {
         }
         if(method==2||method==7){
             try{
-                String missionId=(String)args.getFirst();int band=((SessionDecoder.EnumValue)args.get(1)).ordinal();
+                String missionId=(String)args.getFirst();int band=((org.tortodrone.core.wire.EnumValue)args.get(1)).ordinal();
                 if(band<0||band>2||!Boolean.TRUE.equals(args.get(2))||method==2&&(!Boolean.FALSE.equals(args.get(3))||!Boolean.FALSE.equals(args.get(4))))throw new IOException("m.internal_error");
                 String difficulty=List.of("EASY","MEDIUM","HARD").get(band);
                 var active=portalMove!=null&&portalMove.destination().run()!=null?portalMove.destination():scene;
@@ -661,7 +661,7 @@ final class WorldSession implements AutoCloseable {
         if(!auction&&!mail)return false;
         boolean resultListener=auction||method==6;
         if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.LISTENER_PREFIX+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid auction/mail listener");
-        boolean valid=auction?switch(method){case 1->a.size()==3&&a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 2,7->a.size()==2&&a.get(0) instanceof Long;case 3,4->a.size()==1;case 5->a.size()==3&&a.get(0) instanceof SessionDecoder.AuctionSearch&&a.get(1) instanceof Integer;case 6->a.size()==7&&a.get(0) instanceof Long&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer&&a.get(3) instanceof Integer&&a.get(4) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.auction.data.Duration")&&a.get(5) instanceof Boolean;default->false;}:a.size()==2&&(method==5?a.get(0) instanceof SessionDecoder.SentMail:method==6?a.get(0)==null||a.get(0) instanceof long[]:method==11?a.get(0) instanceof long[]:a.get(0) instanceof Long);
+        boolean valid=auction?switch(method){case 1->a.size()==3&&a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 2,7->a.size()==2&&a.get(0) instanceof Long;case 3,4->a.size()==1;case 5->a.size()==3&&a.get(0) instanceof org.tortodrone.core.wire.AuctionSearch&&a.get(1) instanceof Integer;case 6->a.size()==7&&a.get(0) instanceof Long&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer&&a.get(3) instanceof Integer&&a.get(4) instanceof org.tortodrone.core.wire.EnumValue e&&e.type().equals("com.threerings.projectx.auction.data.Duration")&&a.get(5) instanceof Boolean;default->false;}:a.size()==2&&(method==5?a.get(0) instanceof org.tortodrone.core.wire.SentMail:method==6?a.get(0)==null||a.get(0) instanceof long[]:method==11?a.get(0) instanceof long[]:a.get(0) instanceof Long);
         if(!valid)throw new SessionDecoder.Rejected("Invalid auction/mail arguments");
         // The stock uplink window serves mail wherever a knight is selected; the auction
         // station is a town place, so its operations keep the scene requirement.
@@ -694,7 +694,7 @@ final class WorldSession implements AutoCloseable {
             case 4->args.size()==3&&args.get(0) instanceof String&&args.get(1) instanceof Boolean;
             // setLookingForGroup: current build sends only the inverted toggle and difficulty.
             case 6->args.size()==3&&args.get(0) instanceof Boolean
-                &&(args.get(1)==null||args.get(1) instanceof SessionDecoder.EnumValue e&&e.type().equals(DIFFICULTY));
+                &&(args.get(1)==null||args.get(1) instanceof org.tortodrone.core.wire.EnumValue e&&e.type().equals(DIFFICULTY));
             default->false;
         };
         if(!valid)throw new SessionDecoder.Rejected("Invalid friend-list arguments");
@@ -703,7 +703,7 @@ final class WorldSession implements AutoCloseable {
             switch(method){
                 case 3->joinFriend((String)args.get(0));
                 case 4->joinBySecret((String)args.get(0),(Boolean)args.get(1));
-                case 6->setLookingForGroup((Boolean)args.get(0),(SessionDecoder.EnumValue)args.get(1));
+                case 6->setLookingForGroup((Boolean)args.get(0),(org.tortodrone.core.wire.EnumValue)args.get(1));
                 case 8->{synchronized(this){
                     requireFriendCurrent();var friends=characters.friends();friends.remove(characters.accountId(),knight.id(),authRevision,(String)args.get(0));
                     profile=characters.worldProfile(knight.name(),authRevision,profile);refreshFriends(null,friends.snapshot(),friendPresence(characters.worldStorageFile()));
@@ -733,7 +733,7 @@ final class WorldSession implements AutoCloseable {
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.EVENT_LOG_SERVICE)return false;
         int method=request.method();var args=request.arguments();
         if(method==1){
-            if(args.size()!=3||!(args.get(0) instanceof SessionDecoder.EnumValue event)
+            if(args.size()!=3||!(args.get(0) instanceof org.tortodrone.core.wire.EnumValue event)
                     ||!event.type().equals("com.threerings.projectx.client.EventLogService$EventHubEntry")
                     ||!(args.get(1) instanceof Integer)||!(args.get(2) instanceof String))throw new SessionDecoder.Rejected("Invalid event log entry");
             return true;
@@ -816,7 +816,7 @@ final class WorldSession implements AutoCloseable {
         }
     }
     /** Native method 4: publish the party-finder flag; matchmaking itself is not implemented. */
-    private void setLookingForGroup(boolean enabled,SessionDecoder.EnumValue difficulty)throws IOException {
+    private void setLookingForGroup(boolean enabled,org.tortodrone.core.wire.EnumValue difficulty)throws IOException {
         synchronized(this){
             if(closed||!selected())throw new IOException("Select a knight first");
             try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
@@ -928,7 +928,7 @@ final class WorldSession implements AutoCloseable {
             if(!normal){townChanged(result,false);output.send(()->codec.townResult(oid,listener.requestId(),null,result.profile()));return true;}
             var references=new ArrayList<StarterCatalog.Model>();
             references.add(new StarterCatalog.Model(current.items().stream().filter(i->i.id()==id).findFirst().orElseThrow().config(),Map.of()));
-            var rewards=((SessionDecoder.Multiset)result.result()).counts();
+            var rewards=((org.tortodrone.core.wire.Multiset)result.result()).counts();
             result.profile().items().stream().filter(i->rewards.containsKey(i.id())).map(WorldProfile.Item::config).distinct()
                 .forEach(config->references.add(new StarterCatalog.Model(config,Map.of())));
             membership.openBox(List.copyOf(references));
@@ -965,8 +965,8 @@ final class WorldSession implements AutoCloseable {
             if(apply){
                 var value=args.getFirst();var kind=org.tortodrone.storage.StyleStore.Kind.Color;int ordinal;
                 if(value instanceof Integer color)ordinal=color;
-                else if(value instanceof SessionDecoder.EnumValue e&&e.type().equals(org.tortodrone.core.WireTypes.EYE_TYPE)){kind=org.tortodrone.storage.StyleStore.Kind.Eye;ordinal=e.ordinal();}
-                else if(value instanceof SessionDecoder.EnumValue e&&e.type().equals(org.tortodrone.core.WireTypes.KNIGHT_HEIGHT)){kind=org.tortodrone.storage.StyleStore.Kind.Height;ordinal=e.ordinal();}
+                else if(value instanceof org.tortodrone.core.wire.EnumValue e&&e.type().equals(org.tortodrone.core.WireTypes.EYE_TYPE)){kind=org.tortodrone.storage.StyleStore.Kind.Eye;ordinal=e.ordinal();}
+                else if(value instanceof org.tortodrone.core.wire.EnumValue e&&e.type().equals(org.tortodrone.core.WireTypes.KNIGHT_HEIGHT)){kind=org.tortodrone.storage.StyleStore.Kind.Height;ordinal=e.ordinal();}
                 else throw new IOException("m.internal_error");
                 try{style=new org.tortodrone.storage.StyleStore.Style(kind,ordinal);}catch(IllegalArgumentException invalid){throw new IOException("m.internal_error");}
             }
@@ -1100,7 +1100,7 @@ final class WorldSession implements AutoCloseable {
             }else if(operation){
                 if(townDialog==null||request.service()!=townService||trades!=null&&trades.active(tradeMember))throw new IOException("Town dialog expired");
                 if(townDialog.kind().equals("OpenShop")){
-                    if(request.method()!=1||a.size()!=3||!(a.get(0) instanceof SessionDecoder.Multiset buys)||!(a.get(1) instanceof SessionDecoder.Multiset sells)||!buys.counts().keySet().stream().allMatch(k->k instanceof Integer)||!sells.counts().keySet().stream().allMatch(k->k instanceof Long))throw new SessionDecoder.Rejected("Invalid shop transaction");
+                    if(request.method()!=1||a.size()!=3||!(a.get(0) instanceof org.tortodrone.core.wire.Multiset buys)||!(a.get(1) instanceof org.tortodrone.core.wire.Multiset sells)||!buys.counts().keySet().stream().allMatch(k->k instanceof Integer)||!sells.counts().keySet().stream().allMatch(k->k instanceof Long))throw new SessionDecoder.Rejected("Invalid shop transaction");
                     var purchases=new java.util.HashMap<Integer,Integer>();buys.counts().forEach((key,value)->purchases.put((Integer)key,value));var sales=new java.util.HashMap<Long,Integer>();sells.counts().forEach((key,value)->sales.put((Long)key,value));
                     result=store.shop(characters.accountId(),knight.id(),authRevision,townDialog,townShopCycle,purchases,sales);
                 }else if(townDialog.kind().equals("OpenHarnessInstaller")){
@@ -1111,7 +1111,7 @@ final class WorldSession implements AutoCloseable {
                     if(request.method()!=1||a.size()!=3||!(a.get(0) instanceof Long)||!(a.get(1) instanceof Long))throw new SessionDecoder.Rejected("Invalid unbind request");
                     result=store.unbind(characters.accountId(),knight.id(),authRevision,(Long)a.get(0),(Long)a.get(1));
                 }else if(townDialog.kind().equals("OpenAccessorizer")){
-                    if(a.size()!=3||!(a.get(0) instanceof Long gear)||request.method()<1||request.method()>3||!(request.method()==2?a.get(1) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.item.data.ItemCodes$AccessoryLocation"):a.get(1) instanceof Long))throw new SessionDecoder.Rejected("Invalid accessory request");
+                    if(a.size()!=3||!(a.get(0) instanceof Long gear)||request.method()<1||request.method()>3||!(request.method()==2?a.get(1) instanceof org.tortodrone.core.wire.EnumValue e&&e.type().equals("com.threerings.projectx.item.data.ItemCodes$AccessoryLocation"):a.get(1) instanceof Long))throw new SessionDecoder.Rejected("Invalid accessory request");
                     result=store.accessorize(characters.accountId(),knight.id(),authRevision,request.method(),gear,a.get(1),knight.costume());
                 }else if(townDialog.kind().equals("OpenVariantMaker")){
                     boolean custom=request.method()==1;int offset=custom?0:1;
@@ -1128,7 +1128,7 @@ final class WorldSession implements AutoCloseable {
                 if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
                 if(unwrap){if(a.size()!=2||!(a.getFirst() instanceof Long id))throw new SessionDecoder.Rejected("Invalid gift unwrap request");result=store.unwrap(characters.accountId(),knight.id(),authRevision,id);}
                 else{
-                    if(a.size()!=4||!(a.get(0) instanceof Long paper)||!(a.get(1) instanceof SessionDecoder.Multiset contents)||!(a.get(2) instanceof String message)||!contents.counts().keySet().stream().allMatch(k->k instanceof Long))throw new SessionDecoder.Rejected("Invalid gift wrap request");
+                    if(a.size()!=4||!(a.get(0) instanceof Long paper)||!(a.get(1) instanceof org.tortodrone.core.wire.Multiset contents)||!(a.get(2) instanceof String message)||!contents.counts().keySet().stream().allMatch(k->k instanceof Long))throw new SessionDecoder.Rejected("Invalid gift wrap request");
                     var selected=new LinkedHashMap<Long,Integer>();contents.counts().forEach((key,count)->selected.put((Long)key,count));
                     result=store.wrap(characters.accountId(),knight.id(),authRevision,paper,selected,message,knight.costume());
                 }
@@ -1141,7 +1141,7 @@ final class WorldSession implements AutoCloseable {
                 result=hatch?store.hatch(characters.accountId(),knight.id(),authRevision,id):harness?store.installHarness(characters.accountId(),knight.id(),authRevision,id):store.learn(characters.accountId(),knight.id(),authRevision,id);
             }else{
                 int method=request.method();int[] counts={0,4,6,3,2,3,3,4,3,4};if(method<1||method>9||a.size()!=counts[method])throw new SessionDecoder.Rejected("Invalid sprite argument count");
-                boolean valid=switch(method){case 1->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer;case 2->a.subList(0,5).stream().allMatch(v->v instanceof Integer);case 3->a.get(0) instanceof Integer&&(a.get(1)==null||a.get(1) instanceof SessionDecoder.EnumValue e&&e.type().equals(org.tortodrone.core.WireTypes.SPRITE_PERK));case 4->a.get(0) instanceof Integer;case 5->a.get(0) instanceof Integer&&a.get(1) instanceof Long;case 6->a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 7->a.get(0) instanceof Integer&&a.get(1) instanceof Long&&a.get(2) instanceof Boolean;case 8->a.get(0) instanceof Integer&&a.get(1) instanceof String;case 9->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof SessionDecoder.EnumValue e&&e.type().equals(org.tortodrone.core.WireTypes.SPRITE_ULTIMATE);default->false;};
+                boolean valid=switch(method){case 1->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer;case 2->a.subList(0,5).stream().allMatch(v->v instanceof Integer);case 3->a.get(0) instanceof Integer&&(a.get(1)==null||a.get(1) instanceof org.tortodrone.core.wire.EnumValue e&&e.type().equals(org.tortodrone.core.WireTypes.SPRITE_PERK));case 4->a.get(0) instanceof Integer;case 5->a.get(0) instanceof Integer&&a.get(1) instanceof Long;case 6->a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 7->a.get(0) instanceof Integer&&a.get(1) instanceof Long&&a.get(2) instanceof Boolean;case 8->a.get(0) instanceof Integer&&a.get(1) instanceof String;case 9->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof org.tortodrone.core.wire.EnumValue e&&e.type().equals(org.tortodrone.core.WireTypes.SPRITE_ULTIMATE);default->false;};
                 if(!valid)throw new SessionDecoder.Rejected("Invalid sprite arguments");result=store.sprite(characters.accountId(),knight.id(),authRevision,method,a,staff);
             }
             // Learning publishes its committed recipe through EntryAddedEvent below. Replacing
@@ -1700,7 +1700,7 @@ final class WorldSession implements AutoCloseable {
                     || !(args.get(1) instanceof Integer) || !(args.get(2) instanceof SessionDecoder.Listener)) {
                 throw new SessionDecoder.Rejected("Invalid equip item request");
             }
-            equip(List.of(args.get(0), new SessionDecoder.EnumValue(
+            equip(List.of(args.get(0), new org.tortodrone.core.wire.EnumValue(
                 org.tortodrone.core.WireTypes.ITEM_LOCATION, 1), args.get(1), args.get(2)));
             return true;
         }
@@ -1975,7 +1975,7 @@ final class WorldSession implements AutoCloseable {
         if(method==49){
             // Stock ActorSpawner and /spawn both call ProjectXAdminMarshaller.b(ConfigReference,
             // callback), id 49 in the installed build. The argument is a config reference only.
-            if(args.size()!=2||!(args.getFirst() instanceof SessionDecoder.ConfigReference reference))throw new SessionDecoder.Rejected("Invalid monster spawn request");
+            if(args.size()!=2||!(args.getFirst() instanceof org.tortodrone.core.wire.ConfigReference reference))throw new SessionDecoder.Rejected("Invalid monster spawn request");
             try{
                 requireAdminReady();
                 characters.town(scenes.town()).requireGameMaster(characters.accountId(),authRevision);
@@ -2015,7 +2015,7 @@ final class WorldSession implements AutoCloseable {
 
     private String adminSprite(int method,List<Object> args)throws IOException{
         boolean valid=switch(method){
-            case 8->args.size()==2&&args.getFirst() instanceof SessionDecoder.ConfigReference;
+            case 8->args.size()==2&&args.getFirst() instanceof org.tortodrone.core.wire.ConfigReference;
             case 45->args.size()==2&&args.getFirst() instanceof Integer;
             case 46->args.size()==4&&args.subList(0,3).stream().allMatch(v->v instanceof Integer);
             case 47->args.size()==3&&args.subList(0,2).stream().allMatch(v->v instanceof Integer);
@@ -2034,7 +2034,7 @@ final class WorldSession implements AutoCloseable {
 
     /** ProjectXAdminMarshaller.createItem(config, quantity, locked, expireDays), stock method seven. */
     private String createItem(List<Object> args)throws IOException {
-        if(args.size()!=5||!(args.get(0) instanceof SessionDecoder.ConfigReference reference)
+        if(args.size()!=5||!(args.get(0) instanceof org.tortodrone.core.wire.ConfigReference reference)
                 ||reference.name()==null||!(args.get(1) instanceof Integer quantity)
                 ||!(args.get(2) instanceof Boolean locked)||!(args.get(3) instanceof Integer expireDays))
             return "Invalid item creation request";
@@ -2058,7 +2058,7 @@ final class WorldSession implements AutoCloseable {
 
     private void equip(List<Object> args) throws IOException {
         if (args.size() != 4 || !(args.get(0) instanceof Long item)
-                || !(args.get(1) instanceof SessionDecoder.EnumValue location)
+                || !(args.get(1) instanceof org.tortodrone.core.wire.EnumValue location)
                 || !location.type().equals(org.tortodrone.core.WireTypes.ITEM_LOCATION)
                 || !(args.get(2) instanceof Integer slot)
                 || !(args.get(3) instanceof SessionDecoder.Listener listener)

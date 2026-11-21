@@ -1,4 +1,4 @@
-package org.tortodrone.loot;
+package org.tortodrone.resources;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -7,9 +7,10 @@ import java.util.*;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.resources.*;
 import static org.tortodrone.core.Yaml.*;
-import static org.tortodrone.loot.BoxDefinition.*;
+import static org.tortodrone.core.loot.BoxDefinition.*;
 import org.tortodrone.core.Json;
 import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.loot.BoxDefinition;
 
 /** Explicit native key bindings and fail-closed, readable loot definitions. */
 public final class BoxCatalog {

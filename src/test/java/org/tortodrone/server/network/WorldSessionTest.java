@@ -105,7 +105,7 @@ public final class WorldSessionTest {
                 long helm=characters.worldProfile(knight.name(),1).equipment()[0];
                 var confirm=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)9);
                 first.invocation(new SessionDecoder.Invocation(3,9,9,List.of(helm,
-                    new SessionDecoder.EnumValue("com.threerings.projectx.item.data.ItemCodes$Location",0),0,confirm)));
+                    new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.item.data.ItemCodes$Location",0),0,confirm)));
                 check(characters.worldProfile(knight.name(),1).equipment()[0]==0,"moveItem unequips");
                 first.invocation(new SessionDecoder.Invocation(3,9,3,List.of(helm,0,confirm)));
                 check(characters.worldProfile(knight.name(),1).equipment()[0]==helm

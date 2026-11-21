@@ -57,7 +57,7 @@ public final class TownEconomyTest {
             var accessory=items.entries().stream().filter(ItemCatalog.Entry::grantable).filter(e->{String name=rules.item(e.config()).get("accessory");var definition=name==null?null:rules.accessory(name);return definition!=null&&!definition.remove()&&definition.location().equals("ARMOR_BACK");}).findFirst().orElseThrow();
             grant(db,items,"Alice","Alice-Knight",accessory.config(),2);long gear=(Long)crafted.result(),ticket=id(db.worldProfile(a,1,1),accessory.config());town.accessorize(a,1,1,1,gear,ticket,"Blue");
             var accessorized=db.worldProfile(a,1,1);long duplicateTicket=id(accessorized,accessory.config());refused(()->town.accessorize(a,1,1,1,gear,duplicateTicket,"Blue"));check(db.worldProfile(a,1,1).equals(accessorized),"occupied accessory slot refuses without consuming the ticket");
-            town.accessorize(a,1,1,2,gear,new SessionDecoder.EnumValue("com.threerings.projectx.item.data.ItemCodes$AccessoryLocation",6),"Blue");
+            town.accessorize(a,1,1,2,gear,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.item.data.ItemCodes$AccessoryLocation",6),"Blue");
             grant(db,items,"Alice","Alice-Knight","Sprite/Drakon Egg",1);long egg=id(db.worldProfile(a,1,1),"Sprite/Drakon Egg");int sprite=(Integer)town.hatch(a,1,1,egg).result();
             grant(db,items,"Alice","Alice-Knight","Food/Power Mote",1);long food=id(db.worldProfile(a,1,1),"Food/Power Mote");var fed=town.sprite(a,1,1,6,List.of(food,sprite),false);check(fed.profile().town().sprites().getFirst().heat()>0,"feeding consumes food and grants heat");
             refused(()->town.sprite(b,1,1,4,List.of(sprite),false));refused(()->town.sprite(a,1,1,7,List.of(sprite,0L,true),false));
@@ -69,7 +69,7 @@ public final class TownEconomyTest {
             town.sprite(a,1,1,5,List.of(sprite,harness),false);
             check(new Database(home,true).worldProfile(a,1,1).town().sprites().getFirst().harness()==harness,"installed harness and sprite selection persist");
             grant(db,items,"Alice","Alice-Knight","Weapon/Sword/Calibur",1);long sword=id(db.worldProfile(a,1,1),"Weapon/Sword/Calibur");
-            var listed=house.operate(a,1,1,6,List.of(sword,1,100,500,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.Duration",0),false),false);long listing=((AuctionState.Listing)listed.result()).id();
+            var listed=house.operate(a,1,1,6,List.of(sword,1,100,500,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.auction.data.Duration",0),false),false);long listing=((AuctionState.Listing)listed.result()).id();
             var bobBefore=db.worldProfile(b,1,1);refused(()->house.operate(b,1,1,1,List.of(listing,50),false));check(db.worldProfile(b,1,1).equals(bobBefore),"failed bid rolls back crowns");
             house.operate(b,1,1,1,List.of(listing,500),false);var mail=db.worldProfile(b,1,1).town().mail().stream().filter(m->m.item()!=null).findFirst().orElseThrow();
             refused(()->house.mail(a,1,1,1,List.of(mail.id())));house.mail(b,1,1,1,List.of(mail.id()));refused(()->house.mail(b,1,1,1,List.of(mail.id())));

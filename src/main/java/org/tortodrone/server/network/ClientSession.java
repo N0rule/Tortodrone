@@ -320,7 +320,7 @@ final class ClientSession {
                 try {
                     Knight choices = new Knight(0, (String) args.get(1), (String) args.get(2), (String) args.get(3),
                         (String) args.get(4), (String) args.get(5), (String) args.get(6), (Integer) args.get(7),
-                        ((SessionDecoder.EnumValue) args.get(8)).ordinal(), ((SessionDecoder.EnumValue) args.get(9)).ordinal(), 0);
+                        ((org.tortodrone.core.wire.EnumValue) args.get(8)).ordinal(), ((org.tortodrone.core.wire.EnumValue) args.get(9)).ordinal(), 0);
                     if (args.get(0) == null) {
                         if(!world.openingAvailable())throw new IOException("The opening adventure is unavailable; please try again later");
                         characters.createForOpening(choices,authRevision);
@@ -363,7 +363,7 @@ final class ClientSession {
 
     private static boolean optionalString(Object value) { return value == null || value instanceof String; }
     private static boolean enumeration(Object value, String name) {
-        return value instanceof SessionDecoder.EnumValue enumeration
+        return value instanceof org.tortodrone.core.wire.EnumValue enumeration
             && enumeration.type().equals("com.threerings.projectx.data.ProjectXCodes$" + name);
     }
 }

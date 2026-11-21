@@ -46,7 +46,7 @@ public final class AdminServiceTest {
                 check(players.worldProfile(player.name(), 1).items().stream().allMatch(i -> i.starter()),
                     "no admin item reaches an unprivileged account");
                 for(int method:new int[]{8,17,44,45,46,47}){
-                    Object[] values=switch(method){case 8->new Object[]{new SessionDecoder.ConfigReference("Drakon",Map.of())};case 17->new Object[]{123};case 44->new Object[]{4,2};case 45->new Object[]{99};case 46->new Object[]{0,0,3};default->new Object[]{0,1};};
+                    Object[] values=switch(method){case 8->new Object[]{new org.tortodrone.core.wire.ConfigReference("Drakon",Map.of())};case 17->new Object[]{123};case 44->new Object[]{4,2};case 45->new Object[]{99};case 46->new Object[]{0,0,3};default->new Object[]{0,1};};
                     world.admin(spriteInvoke(method,(short)20,values));
                     response(playerFrames,playerSocket,(short)20,(byte)0,"Game Master permission required");
                 }
@@ -91,7 +91,7 @@ public final class AdminServiceTest {
                     List.of("Gear/Shield/Proto Shield", new SessionDecoder.Listener(
                         "com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller", (short) 11))));
                 response(staffFrames, staffSocket, (short) 11, (byte) 0, "Placeholder: this admin tool is not implemented yet");
-                world.admin(spriteInvoke(49,(short)13,new SessionDecoder.ConfigReference("fixture_wave",Map.of())));
+                world.admin(spriteInvoke(49,(short)13,new org.tortodrone.core.wire.ConfigReference("fixture_wave",Map.of())));
                 response(staffFrames,staffSocket,(short)13,(byte)0,"Monsters can only be spawned in a level scene");
                 check(staff.worldProfile(knight.name(), 1).items().stream().filter(i -> !i.starter()).count() == 5,
                     "refused admin operations grant nothing");
@@ -103,7 +103,7 @@ public final class AdminServiceTest {
                 gearCommands(world,staffFrames,staffSocket,staff,knight,database);
                 spriteCommands(world,staffFrames,staffSocket,staff,knight,accounts,database,scenes);
                 accounts.setGameMaster("Master",false);
-                world.admin(spriteInvoke(49,(short)14,new SessionDecoder.ConfigReference("fixture_wave",Map.of())));
+                world.admin(spriteInvoke(49,(short)14,new org.tortodrone.core.wire.ConfigReference("fixture_wave",Map.of())));
                 response(staffFrames,staffSocket,(short)14,(byte)0,"Game Master permission required");
                 accounts.setGameMaster("Master",true);
             }
@@ -151,7 +151,7 @@ public final class AdminServiceTest {
             AccountStore accounts,Database database,org.tortodrone.world.SceneRegistry scenes)throws Exception{
         world.admin(spriteInvoke(45,(short)30,99));
         response(frames,socket,(short)30,(byte)0,"Equip a battle sprite first; /sprite_list shows owned sprite IDs");
-        world.admin(spriteInvoke(8,(short)31,new SessionDecoder.ConfigReference("Drakon",Map.of())));
+        world.admin(spriteInvoke(8,(short)31,new org.tortodrone.core.wire.ConfigReference("Drakon",Map.of())));
         response(frames,socket,(short)31,(byte)1,null);
         var initial=staff.worldProfile(knight.name(),1);int first=initial.town().equippedSprite();
         check(initial.town().sprites().size()==1&&first==initial.town().sprites().getFirst().id(),"Sprite Creator grants and equips the first pet");
@@ -161,13 +161,13 @@ public final class AdminServiceTest {
         check(edited.level()==0&&edited.powers().get(8)==3&&edited.ultimates().get(2)==2,"GM setters bypass point and skill unlock requirements at level 1");
         world.admin(spriteInvoke(45,(short)34,99));response(frames,socket,(short)34,(byte)1,null);
         var baseline=staff.worldProfile(knight.name(),1);
-        for(Object[] invalid:new Object[][]{{45,-1},{45,100},{46,3,0,1},{46,0,3,1},{46,0,0,4},{47,0,3},{8,new SessionDecoder.ConfigReference("Not a sprite",Map.of())}}){
+        for(Object[] invalid:new Object[][]{{45,-1},{45,100},{46,3,0,1},{46,0,3,1},{46,0,0,4},{47,0,3},{8,new org.tortodrone.core.wire.ConfigReference("Not a sprite",Map.of())}}){
             world.admin(spriteInvoke((Integer)invalid[0],(short)35,Arrays.copyOfRange(invalid,1,invalid.length)));
             String reason=switch((Integer)invalid[0]){case 45->"Sprite level must be between 1 and 100";case 46->"Sprite skill and power must be 1-3; value must be 0-3";case 47->"Sprite skill must be 1-3; ultimate must be 0 (none), 1 (A) or 2 (B)";default->"Unknown sprite configuration";};
             response(frames,socket,(short)35,(byte)0,reason);
             check(staff.worldProfile(knight.name(),1).equals(baseline),"invalid sprite admin write rolls back without a revision change");
         }
-        world.admin(spriteInvoke(8,(short)36,new SessionDecoder.ConfigReference("Maskeraith",Map.of())));
+        world.admin(spriteInvoke(8,(short)36,new org.tortodrone.core.wire.ConfigReference("Maskeraith",Map.of())));
         response(frames,socket,(short)36,(byte)1,null);
         var two=staff.worldProfile(knight.name(),1);int second=two.town().sprites().get(1).id();
         check(two.town().equippedSprite()==first,"creating another sprite retains the equipped one");

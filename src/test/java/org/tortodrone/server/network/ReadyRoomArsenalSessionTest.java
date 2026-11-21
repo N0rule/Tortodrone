@@ -57,7 +57,7 @@ public final class ReadyRoomArsenalSessionTest {
                 response(alice,(short)25,(byte)0,"m.internal_error");
                 check(!alice.socket.written.stream().anyMatch(f->f.contains("Enter a scene first")),"arsenal operations from the Ready Room never hit the scene gate");
                 // Equipment changes: the stock unequip (moveItem to inventory) and arsenal equip.
-                alice.world.invocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.ITEM_SERVICE,9,List.of(shield.id(),new SessionDecoder.EnumValue(WireTypes.ITEM_LOCATION,0),-1,confirm((short)31))));
+                alice.world.invocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.ITEM_SERVICE,9,List.of(shield.id(),new org.tortodrone.core.wire.EnumValue(WireTypes.ITEM_LOCATION,0),-1,confirm((short)31))));
                 response(alice,(short)31,(byte)1,null);
                 check(alice.chars.worldProfile("Alice",1).equipment()[2]==0,"Ready Room unequip clears the equipped shield");
                 alice.world.invocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.ITEM_SERVICE,3,List.of(shield.id(),2,confirm((short)32))));
@@ -67,7 +67,7 @@ public final class ReadyRoomArsenalSessionTest {
                 alice.world.invocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.ITEM_SERVICE,10,List.of("Room set",confirm((short)33))));
                 response(alice,(short)33,(byte)1,null);
                 check(alice.chars.worldProfile("Alice",1).town().loadouts().stream().anyMatch(l->l.name().equals("Room set")),"Ready Room can save a named loadout");
-                alice.world.invocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.ITEM_SERVICE,9,List.of(shield.id(),new SessionDecoder.EnumValue(WireTypes.ITEM_LOCATION,0),-1,confirm((short)34))));
+                alice.world.invocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.ITEM_SERVICE,9,List.of(shield.id(),new org.tortodrone.core.wire.EnumValue(WireTypes.ITEM_LOCATION,0),-1,confirm((short)34))));
                 response(alice,(short)34,(byte)1,null);
                 alice.world.invocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.ITEM_SERVICE,4,List.of("Room set",confirm((short)35))));
                 response(alice,(short)35,(byte)1,null);

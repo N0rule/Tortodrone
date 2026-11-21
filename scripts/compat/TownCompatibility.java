@@ -104,7 +104,7 @@ public final class TownCompatibility {
         var giftItem=new WorldProfile.Item(70,WorldProfile.Slot.OTHER,"Upgrade/Gift Box/Checker Gift Box (Blue)",null,0,null,false,false,false,1,false).withGift(new WorldProfile.Gift(1,"Gift-Alice","A gift for you",List.of(giftContent)));
         var owner=new WorldProfile(42,1,1,0,0,1,List.of(giftItem));
         append(bytes,codec.player((short)4,1002,1,"Fixture"));append(bytes,codec.itemChanges(1002,choices(),new WorldProfile(42,1,1,0,0,1,List.of()),owner));
-        append(bytes,codec.townResult(1002,(short)8,new SessionDecoder.Multiset(Map.of(71L,1)),owner));
+        append(bytes,codec.townResult(1002,(short)8,new org.tortodrone.core.wire.Multiset(Map.of(71L,1)),owner));
         var in=new v(new ByteArrayInputStream(bytes.toByteArray()));in.ql();in.ql();
         for(String command:List.of("forge","show_arsenal_station")){
             var event=(MessageEvent)((EventNotification)in.ql()).yn();
@@ -126,12 +126,12 @@ public final class TownCompatibility {
         var buys=com.google.common.collect.HashMultiset.<Integer>create();buys.add(2,3);var sells=com.google.common.collect.HashMultiset.<Long>create();sells.add(45L,2);
         var confirm=new com.threerings.presents.data.InvocationMarshaller.ConfirmMarshaller();
         var invocation=decode(new com.threerings.presents.dobj.InvocationRequestEvent(10,100,1,new Object[]{buys,sells,confirm}));
-        if(!((SessionDecoder.Multiset)invocation.arguments().get(0)).counts().equals(Map.of(2,3))||!((SessionDecoder.Multiset)invocation.arguments().get(1)).counts().equals(Map.of(45L,2)))throw new AssertionError("Native shop multiset layout differs");
+        if(!((org.tortodrone.core.wire.Multiset)invocation.arguments().get(0)).counts().equals(Map.of(2,3))||!((org.tortodrone.core.wire.Multiset)invocation.arguments().get(1)).counts().equals(Map.of(45L,2)))throw new AssertionError("Native shop multiset layout differs");
         invocation=decode(new com.threerings.presents.dobj.InvocationRequestEvent(10,101,1,new Object[]{new java.util.HashSet<Integer>(Set.of(1,2)),confirm}));
         if(!new java.util.HashSet<>((List<?>)invocation.arguments().getFirst()).equals(Set.of(1,2)))throw new AssertionError("Native harness index set layout differs");
         var search=new com.threerings.projectx.auction.data.Search();search.group=com.threerings.projectx.item.data.ItemCodes.Group.ARMOR;search.configs=new java.util.HashSet<>(Set.of(123));search.sort=com.threerings.projectx.auction.data.Search.Sort.BID_PRICE;search.ascending=true;
         var result=new com.threerings.presents.data.InvocationMarshaller.ResultMarshaller();invocation=decode(new com.threerings.presents.dobj.InvocationRequestEvent(3,15,5,new Object[]{search,0,result}));
-        var parsed=(SessionDecoder.AuctionSearch)invocation.arguments().get(0);if(parsed.sort()!=1||!parsed.ascending()||!parsed.configs().equals(search.configs))throw new AssertionError("Native auction search layout differs");
+        var parsed=(org.tortodrone.core.wire.AuctionSearch)invocation.arguments().get(0);if(parsed.sort()!=1||!parsed.ascending()||!parsed.configs().equals(search.configs))throw new AssertionError("Native auction search layout differs");
     }
     private static SessionDecoder.Invocation decode(com.threerings.presents.dobj.InvocationRequestEvent event)throws Exception{
         var bytes=new ByteArrayOutputStream();var nativeOut=new com.threerings.io.w(bytes);nativeOut.bf(new com.threerings.presents.net.ForwardEventRequest(event));nativeOut.flush();

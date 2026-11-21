@@ -5,12 +5,16 @@ import java.util.*;
 import java.util.random.RandomGenerator;
 import java.security.SecureRandom;
 import org.tortodrone.character.*;
-import org.tortodrone.loot.*;
+import org.tortodrone.core.loot.*;
+import org.tortodrone.resources.BoxCatalog;
 import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.resources.BoxCatalog;
+import org.tortodrone.core.loot.BoxDefinition;
+import org.tortodrone.core.loot.BoxRewardSelector;
 
 /** One authenticated BEGIN IMMEDIATE write: consume, grant, reload, commit; never publish here. */
 public final class BoxOpeningService {
@@ -80,7 +84,7 @@ public final class BoxOpeningService {
                 }
             }
             TownStore.touch(c,profile.worldId());
-            return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),new SessionDecoder.Multiset(result));
+            return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),new org.tortodrone.core.wire.Multiset(result));
         });
     }
     private static final class Grant {

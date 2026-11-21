@@ -1,8 +1,8 @@
-package org.tortodrone.loot;
+package org.tortodrone.core.loot;
 
 import java.util.*;
 import java.util.random.RandomGenerator;
-import static org.tortodrone.loot.BoxDefinition.*;
+import static org.tortodrone.core.loot.BoxDefinition.*;
 
 /** Stateless, server-owned weighted selection. Every bonus group has an independent chance. */
 public final class BoxRewardSelector {

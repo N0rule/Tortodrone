@@ -6,7 +6,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.loot.*;
+import org.tortodrone.core.loot.*;
+import org.tortodrone.resources.BoxCatalog;
 import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.resources.*;
 import static org.tortodrone.support.TestWire.check;
@@ -66,7 +67,7 @@ public final class BoxOpeningTest {
                 check(count(after,PRIZE)==0&&count(after,SILVER)==(keys?2:0)&&count(after,SLIME)==(keys?2:0),"Prize Box opens without consuming keys");
                 check(count(after,"Weapon/Sword/Calibur")==2&&count(after,"Rarity/Spark of Life")==3&&count(after,"Material/Brimstone")==2,"main quantities, guaranteed and independent bonus rewards delivered");
                 check(after.items().stream().filter(i->i.config().equals("Material/Brimstone")).allMatch(WorldProfile.Item::bound),"explicit reward binding persists");
-                var receipt=(SessionDecoder.Multiset)result.result();check(receipt.counts().size()==4&&receipt.counts().keySet().stream().allMatch(k->after.items().stream().anyMatch(i->i.id()==(Long)k)),"callback identifies every real granted inventory instance");
+                var receipt=(org.tortodrone.core.wire.Multiset)result.result();check(receipt.counts().size()==4&&receipt.counts().keySet().stream().allMatch(k->after.items().stream().anyMatch(i->i.id()==(Long)k)),"callback identifies every real granted inventory instance");
                 check(new CharacterStore(db,prize.account,prize.username,items).worldProfile(prize.name,1).equals(after),"reconnect reloads all rewards");
                 check(new Database(home.resolve("data"),true).worldProfile(prize.account,1,1).equals(after),"database reopen preserves all rewards");
                 refused(()->service().open(prize.account,1,1,after.revision(),id(initial,PRIZE),-1));
@@ -102,7 +103,7 @@ public final class BoxOpeningTest {
             while(merging.profile().items().size()<300)merging.grant("Weapon/Sword/Calibur",Math.min(20,300-merging.profile().items().size()));
             var mergedBefore=merging.profile();var merged=merger.open(merging.account,1,1,mergedBefore.revision(),id(mergedBefore,PRIZE),-1);
             check(id(merged.profile(),"Material/Brimstone")==material&&count(merged.profile(),"Material/Brimstone")==7,"main and guaranteed rewards merge into the matching bound stack");
-            check(merged.profile().items().size()==300-1&&((SessionDecoder.Multiset)merged.result()).counts().equals(Map.of(material,5)),"full inventory uses stack capacity and callback reports only awarded quantity");
+            check(merged.profile().items().size()==300-1&&((org.tortodrone.core.wire.Multiset)merged.result()).counts().equals(Map.of(material,5)),"full inventory uses stack capacity and callback reports only awarded quantity");
             var unsupported=player();unsupported.grant("Upgrade/Prize Box/Solstice Prize Box",1);var saved=unsupported.profile();refused(()->unsupported.open("Upgrade/Prize Box/Solstice Prize Box",-1));check(unsupported.profile().equals(saved),"missing pool never awards fallback prizes");
             System.out.println("PASS: keyed/keyless/Slime options, ownership/auth, stack replay/race, atomic rollback, inventory capacity, quantities/binding and reconnect/reopen persistence");
         }finally{org.tortodrone.support.ContentFixture.delete(home);}

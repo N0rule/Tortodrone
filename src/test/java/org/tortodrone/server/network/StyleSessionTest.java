@@ -60,7 +60,7 @@ public final class StyleSessionTest {
                 refused(()->store.change(account,1,1,current.revision(),null,new StyleStore.Style(StyleStore.Kind.Eye,1)));
                 check(db.worldProfile(account,1,1).equals(current)&&db.roster(account).equals(rosterBeforeFee),"failed reapply rolls back fee and roster");
                 db.write(c->{try(var st=c.createStatement()){st.execute("DROP TRIGGER fail_reapply");}return null;});
-                check(world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,1,1,List.of(new SessionDecoder.EnumValue("com.threerings.projectx.data.ProjectXCodes$EyeType",1),listener(request++)))),"native style kit dispatch");
+                check(world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,1,1,List.of(new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.data.ProjectXCodes$EyeType",1),listener(request++)))),"native style kit dispatch");
                 var changed=db.worldProfile(account,1,1);check(changed.crowns()==2000&&db.roster(account).getFirst().eye()==1,"reapply charges exactly 1000 Crowns and changes appearance");
                 check(db.roster(account).getFirst().color()==8&&db.roster(account).getFirst().height()==3,"native personal color normalized to existing roster and height applied");
                 refused(()->store.change(account,1,1,changed.revision(),null,new StyleStore.Style(StyleStore.Kind.Eye,1)));

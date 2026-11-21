@@ -29,7 +29,7 @@ public final class SessionTest {
         var parsed = new HandshakeCodec().sessionRequest(creation);
         var invocation = (SessionDecoder.Invocation) parsed.event();
         TestWire.check(invocation.method() == 5 && invocation.arguments().get(0) == null
-            && invocation.arguments().get(1).equals(new SessionDecoder.EnumValue("com.threerings.projectx.data.ProjectXCodes$KnightHeight", 2))
+            && invocation.arguments().get(1).equals(new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.data.ProjectXCodes$KnightHeight", 2))
             && invocation.arguments().get(3).equals(List.of())
             && ((SessionDecoder.Listener) invocation.arguments().get(4)).requestId() == 0, "character creation value subset");
         rejected(out -> { newMessage(out, "CompoundUpstreamMessage"); out.writeBoolean(true); out.writeInt(129); });
@@ -77,7 +77,7 @@ public final class SessionTest {
                 writer.type(out, "com.threerings.config.ArgumentMap"); out.writeInt(0);
                 writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(22);
             });
-            names.add(((SessionDecoder.ConfigReference) ((SessionDecoder.Invocation)
+            names.add(((org.tortodrone.core.wire.ConfigReference) ((SessionDecoder.Invocation)
                 connection.sessionRequests(body).getFirst().event()).arguments().get(0)).name());
         }
         if (!names.get(0).equals("Gear/Shield/Proto Shield") || !names.get(0).equals(names.get(1)))
@@ -105,9 +105,9 @@ public final class SessionTest {
         });
         var invocation = (SessionDecoder.Invocation) new HandshakeCodec().sessionRequests(body).getFirst().event();
         var arguments = invocation.arguments();
-        TestWire.check(arguments.get(0).equals(new SessionDecoder.ConfigReference(
+        TestWire.check(arguments.get(0).equals(new org.tortodrone.core.wire.ConfigReference(
             "Gear/Shield/Proto Shield", Map.of("Colorization", 7))), "config reference name and arguments");
-        TestWire.check(arguments.get(1).equals(new SessionDecoder.ConfigReference(
+        TestWire.check(arguments.get(1).equals(new org.tortodrone.core.wire.ConfigReference(
             "Gear/Shield/Proto Shield", Map.of())), "repeated interned config reference");
         TestWire.check(((SessionDecoder.Listener) arguments.get(2)).requestId() == 22, "config reference listener");
         rejected(out -> {

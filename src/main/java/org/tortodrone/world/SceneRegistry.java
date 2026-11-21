@@ -11,6 +11,7 @@ import org.tortodrone.world.MissionGates;
 import org.tortodrone.world.MissionRun;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.resources.BoxCatalog;
 
 /** Server-assigned scene instances; a client scene version is never an instance selector. */
 public final class SceneRegistry {
@@ -52,9 +53,9 @@ public final class SceneRegistry {
     private org.tortodrone.world.MissionComlinks comlinks=org.tortodrone.world.MissionComlinks.empty();
     public org.tortodrone.world.MissionComlinks comlinks(){return comlinks;}
     public void comlinks(org.tortodrone.world.MissionComlinks catalog){comlinks=Objects.requireNonNull(catalog);}
-    private org.tortodrone.loot.BoxCatalog boxes=org.tortodrone.loot.BoxCatalog.empty();
-    public org.tortodrone.loot.BoxCatalog boxes(){return boxes;}
-    public void boxes(org.tortodrone.loot.BoxCatalog catalog){boxes=Objects.requireNonNull(catalog);}
+    private org.tortodrone.resources.BoxCatalog boxes=org.tortodrone.resources.BoxCatalog.empty();
+    public org.tortodrone.resources.BoxCatalog boxes(){return boxes;}
+    public void boxes(org.tortodrone.resources.BoxCatalog catalog){boxes=Objects.requireNonNull(catalog);}
     private org.tortodrone.core.NewsCatalog news=org.tortodrone.core.NewsCatalog.disabled();
     public org.tortodrone.core.NewsCatalog news(){return news;}
     public void news(org.tortodrone.core.NewsCatalog catalog){news=Objects.requireNonNull(catalog);}

@@ -20,7 +20,7 @@ public final class StyleCompatibility {
         var request=new ByteArrayOutputStream();var writer=new com.threerings.io.w(request);
         writer.bf(new ForwardEventRequest(dispatch.request));writer.flush();
         var decoded=(SessionDecoder.Invocation)new HandshakeCodec().sessionRequest(request.toByteArray()).event();
-        check(decoded.service()==1&&decoded.method()==1&&decoded.arguments().getFirst().equals(new SessionDecoder.EnumValue("com.threerings.projectx.data.ProjectXCodes$EyeType",1)),"native applyStyle request");
+        check(decoded.service()==1&&decoded.method()==1&&decoded.arguments().getFirst().equals(new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.data.ProjectXCodes$EyeType",1)),"native applyStyle request");
         var bytes=new ByteArrayOutputStream();append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
         append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Alice"));
         var knight=new Knight(1,"Fixture","","",null,null,"Blue",8,3,1,0);

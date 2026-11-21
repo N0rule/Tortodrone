@@ -475,7 +475,7 @@ public final class TownStore {
                 try(var st=c.prepareStatement("UPDATE inventory_items SET heat=?,accessory=?,accessories=?,bind_on_equip=? WHERE world_id=? AND item_id=?")){st.setInt(1,item.heat());st.setString(2,item.accessory());st.setString(3,Json.stringify(item.additionalAccessories()));st.setBoolean(4,item.bindOnEquip());st.setInt(5,p.worldId());st.setLong(6,id);st.executeUpdate();}
                 result.merge(id,item.count(),Math::addExact);
             }
-            return new org.tortodrone.protocol.SessionDecoder.Multiset(result);
+            return new org.tortodrone.core.wire.Multiset(result);
         });
     }
     private void learn(Connection c,WorldProfile p,String config,long now)throws SQLException,IOException{
@@ -585,7 +585,7 @@ public final class TownStore {
                 consume(c,p,ticket,1);accessories.add(name);
             }else{
                 String slot;TownCatalog.Accessory tool=null;long toolId=0;
-                if(method==2){int ordinal=((org.tortodrone.protocol.SessionDecoder.EnumValue)argument).ordinal();if(ordinal<0||ordinal>=ACCESSORY_SLOTS.size())throw new IOException("Invalid accessory slot");slot=ACCESSORY_SLOTS.get(ordinal);}
+                if(method==2){int ordinal=((org.tortodrone.core.wire.EnumValue)argument).ordinal();if(ordinal<0||ordinal>=ACCESSORY_SLOTS.size())throw new IOException("Invalid accessory slot");slot=ACCESSORY_SLOTS.get(ordinal);}
                 else if(method==3){toolId=(Long)argument;String name=rules.item(owned(p,toolId).config()).get("accessory");tool=name==null?null:rules.accessory(name);if(tool==null||!tool.remove())throw new IOException("e.cant_use_accessory");slot=tool.location();}else throw new IOException("Invalid accessory operation");
                 String worn=null;for(String existing:accessories){var a=rules.accessory(existing);if(a!=null&&a.location().equals(slot)){worn=existing;break;}}if(worn==null)throw new IOException("e.no_accessory");
                 if(tool!=null){consume(c,p,toolId,1);if(!tool.destroy()){String recovered=rules.accessoryTicket(worn);if(recovered==null)throw new IOException("Accessory has no recoverable ticket");result=create(c,p,recovered,1,false,0,0,List.of());}}
@@ -618,7 +618,7 @@ public final class TownStore {
         return change(account,knight,auth,(c,p)->{
             requireGameMaster(c,account,auth);
             if(method==8){
-                String config=((org.tortodrone.protocol.SessionDecoder.ConfigReference)args.get(0)).name();
+                String config=((org.tortodrone.core.wire.ConfigReference)args.get(0)).name();
                 if(config==null||rules.sprite(config)==null)throw new IOException("Unknown sprite configuration");
                 return createSprite(c,p,config);
             }
@@ -711,7 +711,7 @@ public final class TownStore {
                     if(method==1){int power=(Integer)args.get(2);if(power<0||power>=3)throw new IOException("Invalid skill power");add[power]=1;}else for(int i=0;i<3;i++)add[i]=(Integer)args.get(i+2);
                     long spend=0;for(int i=0;i<3;i++){if(add[i]<0||add[i]>3||powers.get(skill*3+i)+add[i]>3)throw new IOException("Invalid skill power");spend+=add[i];}
                     if(spend>SpriteRules.points(level)-sprite.spent())throw new IOException("Insufficient skill points");for(int i=0;i<3;i++)powers.set(skill*3+i,powers.get(skill*3+i)+add[i]);}
-                case 3->{Integer requested=args.get(1)==null?null:((org.tortodrone.protocol.SessionDecoder.EnumValue)args.get(1)).ordinal();
+                case 3->{Integer requested=args.get(1)==null?null:((org.tortodrone.core.wire.EnumValue)args.get(1)).ordinal();
                     var unlocked=unlocked(perkLevel,perks);if(requested!=null&&!unlocked.contains(requested))throw new IOException("Perk not unlocked");perk=requested;}
                 case 5->{harness=(Long)args.get(1);if(harness!=0){var h=p.town().harnesses().stream().filter(v->v.id()==(Long)args.get(1)).findFirst().orElseThrow(()->new IOException("Unknown owned harness"));if(definition.restrictedDamage().equals(rules.harnessDamage(h.config())))throw new IOException("This sprite cannot wear that harness");}}
                 case 6->{long foodId=(Long)args.get(0);var food=owned(p,foodId);if(food.config().equals("Food/Special/Reset Star")){if(sprite.spent()==0)throw new IOException("e.no_points_to_reset");Collections.fill(powers,0);Collections.fill(ultimates,0);}else{
@@ -726,13 +726,13 @@ public final class TownStore {
                     if(level>=99&&perkLevel>5)return null;
                     boolean grant=SpriteRules.grantsPerk(level);level=Math.min(99,level+1);heat=0;
                     if(grant&&perkLevel<=5){var candidates=new ArrayList<Integer>();for(int i=0;i<rules.perks().size();i++)if(rules.perks().get(i).tier()==perkLevel&&!perks.contains(i))candidates.add(i);
-                        if(!candidates.isEmpty()){int granted=candidates.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(candidates.size()));perks.add(granted);result=new org.tortodrone.protocol.SessionDecoder.EnumValue(org.tortodrone.core.WireTypes.SPRITE_PERK,granted);
+                        if(!candidates.isEmpty()){int granted=candidates.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(candidates.size()));perks.add(granted);result=new org.tortodrone.core.wire.EnumValue(org.tortodrone.core.WireTypes.SPRITE_PERK,granted);
                             if(perk!=null&&rules.perks().get(granted).previous().equals(rules.perks().get(perk).name()))perk=granted;
                             int total=0;for(var candidate:rules.perks())if(candidate.tier()==perkLevel)total++;if(perks.size()==total){perkLevel++;perks.clear();}
                         }
                     }}
                 case 8->{name=(String)args.get(1);if(name==null||!name.matches("[A-Za-z]+(?:[ -][A-Za-z]+)*")||name.length()>64)throw new IOException("m.invalid_name");}
-                case 9->{int skill=(Integer)args.get(1),ultimate=((org.tortodrone.protocol.SessionDecoder.EnumValue)args.get(2)).ordinal();if(!SpriteRules.ultimate(level,skill)||powers.subList(skill*3,skill*3+3).stream().mapToInt(Integer::intValue).sum()!=9||ultimates.get(skill)!=0||ultimate<1||ultimate>2)throw new IOException("Ultimate not available");ultimates.set(skill,ultimate);}
+                case 9->{int skill=(Integer)args.get(1),ultimate=((org.tortodrone.core.wire.EnumValue)args.get(2)).ordinal();if(!SpriteRules.ultimate(level,skill)||powers.subList(skill*3,skill*3+3).stream().mapToInt(Integer::intValue).sum()!=9||ultimates.get(skill)!=0||ultimate<1||ultimate>2)throw new IOException("Ultimate not available");ultimates.set(skill,ultimate);}
                 default->throw new IOException("Unknown sprite operation");
             }
             try(var s=c.prepareStatement("UPDATE town_sprites SET name=?,level=?,heat=?,last_full=?,full_stamp=?,perk_level=?,perks=?,perk=?,powers=?,ultimates=?,harness=? WHERE id=? AND world_id=?")){

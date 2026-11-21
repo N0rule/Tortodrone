@@ -61,9 +61,9 @@ public final class AuctionHouse {
                 case 2->{long id=(Long)args.get(0);var listing=require(c,id,p.worldId());if(listing.featured()||listing.seller()!=p.worldId()){if(!staff)throw new IOException("m.access_denied");TownStore.requireGameMaster(c,account,auth);}if(listing.ended()){result=new AuctionState.Update(listing,"e.auction_ended");break;}if(listing.bidder()!=0){if(!staff)throw new IOException("e.auction_bid");TownStore.requireGameMaster(c,account,auth);}
                     try(var s=c.prepareStatement("UPDATE town_auctions SET cancelled=1,expires=? WHERE id=? AND ended=0")){s.setLong(1,System.currentTimeMillis());s.setLong(2,id);s.executeUpdate();}settle(c,id);result=new AuctionState.Update(require(c,id,p.worldId()),null);}
                 case 3,4->{var all=list(c,p.worldId());result=all.stream().filter(v->method==3?v.seller()==p.worldId():v.participated()||v.watching()).toList();if(method==4)clearOutbids(c,p.worldId());}
-                case 5->{var search=(SessionDecoder.AuctionSearch)args.get(0);int page=(Integer)args.get(1);if(page<0||page>100000)throw new IOException("Invalid auction page");var all=new ArrayList<>(list(c,p.worldId(),true,search.featured()).stream().filter(v->!v.ended()&&v.availableAt()<=System.currentTimeMillis()&&v.expires()>System.currentTimeMillis()&&v.featured()==search.featured()).filter(v->search.configs()==null||items.find(v.item().config())!=null&&search.configs().contains(items.find(v.item().config()).stockId())).filter(v->search.group()==null||groupOrdinal(items.find(v.item().config()))==search.group().ordinal()).toList());
+                case 5->{var search=(org.tortodrone.core.wire.AuctionSearch)args.get(0);int page=(Integer)args.get(1);if(page<0||page>100000)throw new IOException("Invalid auction page");var all=new ArrayList<>(list(c,p.worldId(),true,search.featured()).stream().filter(v->!v.ended()&&v.availableAt()<=System.currentTimeMillis()&&v.expires()>System.currentTimeMillis()&&v.featured()==search.featured()).filter(v->search.configs()==null||items.find(v.item().config())!=null&&search.configs().contains(items.find(v.item().config()).stockId())).filter(v->search.group()==null||groupOrdinal(items.find(v.item().config()))==search.group().ordinal()).toList());
                     Comparator<AuctionState.Listing> sort=switch(search.sort()){case 1->AuctionHouse::compareBidUnit;case 2->AuctionHouse::compareBuyUnit;case 3->Comparator.comparingInt(v->v.item().count());case 4->Comparator.comparingInt(v->{var d=items.find(v.item().config());return d==null?0:d.rarity();});case 5->Comparator.comparingInt(v->v.item().variants().size());default->Comparator.comparingLong(AuctionState.Listing::expires);};if(!search.ascending())sort=sort.reversed();all.sort(sort.thenComparingLong(AuctionState.Listing::id));int pages=(all.size()+49)/50,start=Math.min(all.size(),page*50);result=new AuctionState.Page(pages,all.subList(start,Math.min(start+50,all.size())));}
-                case 6->{long itemId=(Long)args.get(0);int count=(Integer)args.get(1),bid=(Integer)args.get(2),buy=(Integer)args.get(3),duration=((SessionDecoder.EnumValue)args.get(4)).ordinal();boolean featured=(Boolean)args.get(5);
+                case 6->{long itemId=(Long)args.get(0);int count=(Integer)args.get(1),bid=(Integer)args.get(2),buy=(Integer)args.get(3),duration=((org.tortodrone.core.wire.EnumValue)args.get(4)).ordinal();boolean featured=(Boolean)args.get(5);
                     if(duration<0||duration>=10||count<1||bid<1||buy<0||buy!=0&&buy<bid)throw new IOException("Invalid auction listing");
                     if(duration>=4||featured){if(!staff)throw new IOException("m.access_denied");TownStore.requireGameMaster(c,account,auth);}
                     long expires=duration==9?Long.MAX_VALUE:System.currentTimeMillis()+HOURS[duration]*3600000L;
@@ -226,7 +226,7 @@ public final class AuctionHouse {
     }
     public TownStore.Result mail(int account,int knight,long auth,int method,List<Object> args)throws IOException{
         return database.write(c->{var p=WorldProfiles.load(c,account,knight,auth);long now=System.currentTimeMillis();sweep(c);purgeWorldMail(c,p.worldId(),now);campaigns.deliver(c,p.worldId());Object result=null;
-            if(method==5)deliver(c,p,(SessionDecoder.SentMail)args.getFirst());
+            if(method==5)deliver(c,p,(org.tortodrone.core.wire.SentMail)args.getFirst());
             else if(method==6){long[] ids=(long[])args.getFirst();var messages=loadMail(c,p.worldId());result=ids==null?messages:messages.stream().filter(m->java.util.stream.LongStream.of(ids).anyMatch(id->id==m.id())).toList();}
             else if(method==11){long[] ids=(long[])args.getFirst();for(long id:ids)try(var s=c.prepareStatement("UPDATE town_mail SET is_read=1 WHERE id=? AND world_id=?")){s.setLong(1,id);s.setInt(2,p.worldId());s.executeUpdate();}}
             else{long id=(Long)args.getFirst();var mail=loadMail(c,p.worldId()).stream().filter(m->m.id()==id).findFirst().orElseThrow(()->new IOException("Unknown owned mail"));
@@ -267,7 +267,7 @@ public final class AuctionHouse {
         }
     }
     /** Uplink method 5: validate text, fee and item ownership, then escrow everything in one write. */
-    private void deliver(Connection c,WorldProfile p,SessionDecoder.SentMail sent)throws SQLException,IOException {
+    private void deliver(Connection c,WorldProfile p,org.tortodrone.core.wire.SentMail sent)throws SQLException,IOException {
         if(sent==null||sent.subject()==null||sent.body()==null||sent.subject().length()>50||sent.body().length()>8096||sent.crowns()<0||sent.energy()<0)
             throw new IOException("Invalid mail text or attachment");
         long units=0;

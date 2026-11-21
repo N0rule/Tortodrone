@@ -1,5 +1,11 @@
 package org.tortodrone.protocol;
 
+import org.tortodrone.core.wire.AuctionSearch;
+import org.tortodrone.core.wire.ConfigReference;
+import org.tortodrone.core.wire.EnumValue;
+import org.tortodrone.core.wire.Multiset;
+import org.tortodrone.core.wire.SentMail;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,20 +43,7 @@ public final class SessionDecoder {
         }
     }
     public record Registration(String code, short id) { }
-    public record Multiset(Map<Object,Integer> counts) {public Multiset{counts=Map.copyOf(counts);}}
     public record Listener(String type, short requestId) { }
-    public record EnumValue(String type, int ordinal) { }
-    public record AuctionSearch(boolean featured,EnumValue group,java.util.Set<Integer> configs,int sort,boolean ascending,boolean all) { }
-    /** Player mail as the stock Uplink.deliver call streams it: item id repeated per unit. */
-    public record SentMail(String recipient,String subject,String body,Map<Long,Integer> items,int crowns,int energy) {
-        public SentMail { items = Map.copyOf(items); }
-    }
-    /** Stock ConfigReference: an interned config name plus its streamed argument map. */
-    public record ConfigReference(String name, Map<String,Object> arguments) {
-        public ConfigReference {
-            arguments = arguments == null ? Map.of() : Map.copyOf(arguments);
-        }
-    }
 
     @FunctionalInterface interface Types { String read(DataInputStream in) throws IOException; }
     @FunctionalInterface interface Interns { String read(DataInputStream in) throws IOException; }
@@ -221,9 +214,9 @@ public final class SessionDecoder {
         }
         return new SentMail((String)recipient,subject,body,items,in.readInt(),in.readInt());
     }
-    private SessionDecoder.ConfigReference configReference(DataInputStream in,int depth)throws IOException {
+    private org.tortodrone.core.wire.ConfigReference configReference(DataInputStream in,int depth)throws IOException {
         String name=intern(in);
-        return new SessionDecoder.ConfigReference(name,argumentMap(in,depth));
+        return new org.tortodrone.core.wire.ConfigReference(name,argumentMap(in,depth));
     }
     private Map<String,Object> argumentMap(DataInputStream in,int depth)throws IOException {
         limit(depth);

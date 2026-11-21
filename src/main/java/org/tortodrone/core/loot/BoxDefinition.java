@@ -1,4 +1,4 @@
-package org.tortodrone.loot;
+package org.tortodrone.core.loot;
 
 import java.util.*;
 

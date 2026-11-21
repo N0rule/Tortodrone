@@ -8,6 +8,8 @@ import java.util.random.RandomGenerator;
 import org.tortodrone.resources.*;
 import static org.tortodrone.core.Yaml.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.loot.BoxDefinition;
+import org.tortodrone.core.loot.BoxRewardSelector;
 
 /** Reject guessed keys, partial grants and invalid probability graphs before publication. */
 public final class BoxCatalogTest {

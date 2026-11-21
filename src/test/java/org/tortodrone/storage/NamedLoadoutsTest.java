@@ -34,7 +34,7 @@ public final class NamedLoadoutsTest {
             var battle=town.loadout(a,1,1,"bAtTlE",false).profile();check(battle.equipment()[6]==sword.id(),"switch selects the saved owned item");
             town.loadout(a,1,1,"Basic",false);db.itemQuantity("Alice",knight.name(),a,battle.worldId(),sword.id(),0,content.items());
             var missing=db.worldProfile(a,1,1);refused(()->town.loadout(a,1,1,"Battle",false));check(db.worldProfile(a,1,1).equals(missing),"missing item refuses the complete switch without clearing equipment");
-            town.adminSprite(a,1,1,8,List.of(new org.tortodrone.protocol.SessionDecoder.ConfigReference("Drakon",Map.of())));
+            town.adminSprite(a,1,1,8,List.of(new org.tortodrone.core.wire.ConfigReference("Drakon",Map.of())));
             int sprite=db.worldProfile(a,1,1).town().equippedSprite();town.loadout(a,1,1,"Pet",true);
             town.sprite(a,1,1,4,List.of(0),false);var pet=town.loadout(a,1,1,"Pet",false).profile();check(pet.town().equippedSprite()==sprite,"saved loadout restores an owned battle sprite");
             town.loadout(a,1,1,"pet",true);check(db.worldProfile(a,1,1).town().loadouts().size()==3,"saving an existing name replaces rather than duplicates it");

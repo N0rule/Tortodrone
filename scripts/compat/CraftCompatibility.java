@@ -38,7 +38,7 @@ public final class CraftCompatibility {
         var gifts=com.google.common.collect.HashMultiset.<Long>create();gifts.add(44L,2);
         itemService.a(22L,gifts,"A gift",(A.a)null);invocation=decode(dispatch.event);
         check("wrap method",invocation.method(),15);check("wrap arguments",invocation.arguments().size(),4);
-        check("wrap contents",invocation.arguments().get(1),new SessionDecoder.Multiset(Map.of(44L,2)));listener(invocation.arguments().get(3),false);
+        check("wrap contents",invocation.arguments().get(1),new org.tortodrone.core.wire.Multiset(Map.of(44L,2)));listener(invocation.arguments().get(3),false);
         itemService.e(55L,(A.c)null);invocation=decode(dispatch.event);
         check("unwrap method",invocation.method(),13);check("unwrap arguments",invocation.arguments().size(),2);listener(invocation.arguments().get(1),true);
         // Plain crafters send the learned recipe identifier instead.

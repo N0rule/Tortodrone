@@ -10,12 +10,12 @@ public final class SentMailDecodeTest {
     private static final String INV="com.threerings.presents.data.InvocationMarshaller$";
 
     public static void main(String[] args)throws Exception {
-        var sent=(SessionDecoder.SentMail)invocation("Bob-Knight",Long.valueOf(42),2,25,10).arguments().getFirst();
+        var sent=(org.tortodrone.core.wire.SentMail)invocation("Bob-Knight",Long.valueOf(42),2,25,10).arguments().getFirst();
         check(sent.recipient().equals("Bob-Knight")&&sent.subject().equals("parcel")&&sent.body().equals("for you"),
             "Name, subject and body stream as a field, not a dynamic value");
         check(sent.items().equals(java.util.Map.of(42L,2))&&sent.crowns()==25&&sent.energy()==10,
             "a Multiset attachment keeps item ids, units, crowns and energy");
-        var empty=(SessionDecoder.SentMail)invocation("Bob-Knight",null,0,0,0).arguments().getFirst();
+        var empty=(org.tortodrone.core.wire.SentMail)invocation("Bob-Knight",null,0,0,0).arguments().getFirst();
         check(empty.items().isEmpty()&&empty.crowns()==0&&empty.energy()==0,"an absent multiset is an empty attachment");
         refuse(()->invocation("Bob-Knight",Integer.valueOf(42),1,0,0));
         refuse(()->invocation("Bob-Knight",Long.valueOf(42),0,0,0));

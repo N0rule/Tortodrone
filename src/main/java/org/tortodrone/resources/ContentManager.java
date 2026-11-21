@@ -47,7 +47,7 @@ public final class ContentManager {
             var definitions=ItemYaml.read(content.resolve("items"),dodge);
             var fires=FireCatalog.load(content.resolve("_internal/fires.json"));
             var pet=FireCatalog.load(content.resolve("_internal/pet-fires.json"));
-            var boxes=org.tortodrone.loot.BoxCatalog.load(content,definitions.items());
+            var boxes=org.tortodrone.resources.BoxCatalog.load(content,definitions.items());
             var news=NewsYaml.load(content.resolve("shared/news"));
             var townData=TownYaml.data(content.resolve("town"),definitions.items());TownYaml.references(townData,definitions.items());
             var town=org.tortodrone.core.town.TownCatalog.fromData(townData);

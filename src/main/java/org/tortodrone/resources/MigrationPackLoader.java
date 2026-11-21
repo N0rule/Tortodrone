@@ -126,7 +126,7 @@ final class MigrationPackLoader {
         return new ContentRegistry(packs,resources,scenes,items,weapons,equipment,fires,warnings,
             resources.containsKey("town")?org.tortodrone.core.town.TownCatalog.load(resources.get("town").path()):org.tortodrone.core.town.TownCatalog.empty(),
             resources.containsKey("pet-fires")?FireCatalog.load(resources.get("pet-fires").path()):FireCatalog.empty(),
-            org.tortodrone.core.NewsCatalog.disabled(),org.tortodrone.loot.BoxCatalog.empty());
+            org.tortodrone.core.NewsCatalog.disabled(),org.tortodrone.resources.BoxCatalog.empty());
     }
     private static void requireItem(ItemCatalog items,String config) throws IOException {if(items.find(config)==null)throw new IOException("Combat reference has no item definition: "+config);}
     static int sceneId(String key) throws IOException {

@@ -306,7 +306,7 @@ public final class CombatRenderingCheck {
             try{
                 var account=store.authenticate("LanPlayer",password);var town=account.characters().town(store.townRules());int knight=account.characters().roster().getFirst().id();
                 for(String config:List.of("Drakon","Maskeraith","Seraphynx")){
-                    var created=town.adminSprite(account.id(),knight,account.authRevision(),8,List.of(new org.tortodrone.protocol.SessionDecoder.ConfigReference(config,Map.of()))).profile();
+                    var created=town.adminSprite(account.id(),knight,account.authRevision(),8,List.of(new org.tortodrone.core.wire.ConfigReference(config,Map.of()))).profile();
                     int id=created.town().sprites().stream().filter(s->s.config().equals(config)).findFirst().orElseThrow().id();
                     town.sprite(account.id(),knight,account.authRevision(),4,List.of(id),true);
                     town.adminSprite(account.id(),knight,account.authRevision(),45,List.of(99));

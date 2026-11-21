@@ -78,7 +78,7 @@ public final class ConfettiSessionTest {
                 var open=WorldSession.class.getDeclaredMethod("openTownDialog",org.tortodrone.core.town.TownCatalog.Station.class,ActorState.class);open.setAccessible(true);
                 open.invoke(world,scenes.town().station("scene.1.placed.3733"),source);
                 var dialog=WorldSession.class.getDeclaredField("townDialog");dialog.setAccessible(true);check(dialog.get(world)==null,"auction opens through a controller action without installing a scene modal");
-                var search=new SessionDecoder.AuctionSearch(true,null,null,0,true,false);
+                var search=new org.tortodrone.core.wire.AuctionSearch(true,null,null,0,true,false);
                 check(world.auctionInvocation(new SessionDecoder.Invocation(3,15,5,List.of(search,0,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",request++)))),"native featured auction search is reachable after opening");
                 byte[] marker={0};output.send(()->marker);for(;;){var frame=frames.poll(3,java.util.concurrent.TimeUnit.SECONDS);check(frame!=null,"session output drains");if(frame==marker)break;}
             }

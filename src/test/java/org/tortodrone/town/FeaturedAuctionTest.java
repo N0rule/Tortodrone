@@ -33,7 +33,7 @@ public final class FeaturedAuctionTest {
             refused(()->house.operate(alice,1,1,2,List.of(featured.id()),true));check(before.equals(db.worldProfile(alice,1,1)),"a forged GM flag cannot administer featured auctions");
             house.operate(alice,1,1,1,List.of(featured.id(),100),false);house.operate(bob,1,1,1,List.of(featured.id(),200),false);
             check(house.deliveries(featured.id()).stream().filter(d->d.crowns()==100).count()==1,"outbid crowns have one durable refund");
-            var filtered=(AuctionState.Page)house.operate(bob,1,1,5,List.of(new SessionDecoder.AuctionSearch(true,null,null,0,true,false),0),false).result();
+            var filtered=(AuctionState.Page)house.operate(bob,1,1,5,List.of(new org.tortodrone.core.wire.AuctionSearch(true,null,null,0,true,false),0),false).result();
             check(filtered.listings().stream().anyMatch(a->a.id()==featured.id()),"featured tab returns the system listing");
             expire(db,featured.id());house.settleExpired();house.settleExpired();
             var deliveries=house.deliveries(featured.id());check(deliveries.size()==2&&deliveries.stream().filter(AuctionHouse.Delivery::item).count()==1,"featured settlement delivers once and never pays a nonexistent seller");
@@ -51,10 +51,10 @@ public final class FeaturedAuctionTest {
             // Preserve a player escrow listing and watch/bid rows across the real predecessor upgrade.
             db.grantItems("Alice","Alice-Knight",alice,-1,items.require("Weapon/Sword/Calibur"),1,-1,-1);
             long sword=db.worldProfile(alice,1,1).items().stream().filter(i->i.config().equals("Weapon/Sword/Calibur")).findFirst().orElseThrow().id();
-            var player=(AuctionState.Listing)house.operate(alice,1,1,6,List.of(sword,1,100,1000,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.Duration",0),false),false).result();
+            var player=(AuctionState.Listing)house.operate(alice,1,1,6,List.of(sword,1,100,1000,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.auction.data.Duration",0),false),false).result();
             check(player.item().id()==sword,"escrow retains original item-instance identity for durable inspection");
             house.operate(bob,1,1,1,List.of(player.id(),150),false);
-            refused(()->house.operate(alice,1,1,6,List.of(sword,1,100,1000,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.Duration",0),true),true));
+            refused(()->house.operate(alice,1,1,6,List.of(sword,1,100,1000,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.auction.data.Duration",0),true),true));
             // The predecessor has no system listings; remove only this fixture's finished system history.
             downgradeFixture(db);
             try(var channel=FileChannel.open(home.resolve("server.lock"),StandardOpenOption.CREATE,StandardOpenOption.WRITE);var lock=channel.lock()){

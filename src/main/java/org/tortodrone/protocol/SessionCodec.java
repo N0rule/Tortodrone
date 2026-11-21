@@ -577,7 +577,7 @@ public final class SessionCodec {
     void value(DataOutputStream out,Object value) throws IOException {
         if (value == null || value==FireCatalog.NullValue.INSTANCE) { out.writeShort(0);
         } else if (value instanceof Long number) { type(out,"java.lang.Long"); out.writeLong(number);
-        } else if (value instanceof SessionDecoder.EnumValue e) {type(out,e.type());out.writeByte(e.ordinal());
+        } else if (value instanceof org.tortodrone.core.wire.EnumValue e) {type(out,e.type());out.writeByte(e.ordinal());
         } else if (value instanceof Boolean flag) { type(out,"java.lang.Boolean"); out.writeBoolean(flag);
         } else if (value instanceof StarterCatalog.Model model) {
             type(out,WireTypes.CONFIG_REFERENCE); intern(out,model.name());
@@ -719,7 +719,7 @@ public final class SessionCodec {
         return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"knight");name(out,knight);});
     }
     public byte[] equipPolicy(int oid,boolean station)throws IOException {
-        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"equipPolicy");value(out,new SessionDecoder.EnumValue("com.threerings.projectx.data.PlayerObject$EquipPolicy",station?2:0));});
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"equipPolicy");value(out,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.data.PlayerObject$EquipPolicy",station?2:0));});
     }
     /** TudeyBodyObject.FORCE_CLIENT_ACTION, as emitted by ForceClientAction logic. */
     public byte[] controllerAction(int oid,String command,ActorState source)throws IOException {
@@ -847,8 +847,8 @@ public final class SessionCodec {
                     type(o,"com.threerings.projectx.shop.data.ShopDialogInfo");
                     if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{sourceKey(o,source);vector(o,source.x(),source.y());o.writeFloat(source.rotation());}
                     o.writeShort(0);o.writeShort(0);value(o,station.model().isEmpty()?null:new StarterCatalog.Model(station.model(),Map.of()));o.writeShort(0);string(o,station.name());string(o,station.title());
-                    o.writeInt(station.shop().level());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.shop.data.ShopDialogInfo$Type",station.type().equals("ENERGY")?1:station.type().equals("TOKEN")?2:0));
-                    int preparer=List.of("BASIC","GREMLIN","LOCKED","LOCK_NON_STACKABLE","DEPOT","STATUE").indexOf(station.shop().preparer());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.shop.util.ItemPreparer",Math.max(0,preparer)));o.writeBoolean(station.shop().perKnight());
+                    o.writeInt(station.shop().level());value(o,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.shop.data.ShopDialogInfo$Type",station.type().equals("ENERGY")?1:station.type().equals("TOKEN")?2:0));
+                    int preparer=List.of("BASIC","GREMLIN","LOCKED","LOCK_NON_STACKABLE","DEPOT","STATUE").indexOf(station.shop().preparer());value(o,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.shop.util.ItemPreparer",Math.max(0,preparer)));o.writeBoolean(station.shop().perKnight());
                     type(o,"com.threerings.projectx.shop.data.ShopMarshaller");o.writeInt(sceneOid);o.writeInt(service);return;
                 }
                 if(kind.equals("OpenHarnessInstaller")){
@@ -880,8 +880,8 @@ public final class SessionCodec {
     public byte[] styles(int oid,Knight knight,org.tortodrone.storage.StyleStore.Saved saved)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,WireTypes.ARRAY_LIST);out.writeInt(6);
             attribute(out,oid,"color",o->value(o,256|knight.color()));
-            attribute(out,oid,"eye",o->value(o,new SessionDecoder.EnumValue(WireTypes.EYE_TYPE,knight.eye())));
-            attribute(out,oid,"height",o->value(o,new SessionDecoder.EnumValue(WireTypes.KNIGHT_HEIGHT,knight.height())));
+            attribute(out,oid,"eye",o->value(o,new org.tortodrone.core.wire.EnumValue(WireTypes.EYE_TYPE,knight.eye())));
+            attribute(out,oid,"height",o->value(o,new org.tortodrone.core.wire.EnumValue(WireTypes.KNIGHT_HEIGHT,knight.height())));
             attribute(out,oid,"savedColors",o->{type(o,"[I");o.writeInt(saved.colors().size());for(int color:saved.colors())o.writeInt(color);});
             attribute(out,oid,"savedEyes",o->styleArray(o,"EyeType",saved.eyes()));
             attribute(out,oid,"savedHeights",o->styleArray(o,"KnightHeight",saved.heights()));
@@ -895,7 +895,7 @@ public final class SessionCodec {
     public byte[] townState(int oid,WorldProfile profile)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,WireTypes.ARRAY_LIST);out.writeInt(6);
             attribute(out,oid,"outbid",o->value(o,!profile.town().outbids().isEmpty()));
-            attribute(out,oid,"newMailInfo",o->{type(o,WireTypes.DSET);var mail=profile.town().mail().stream().filter(m->!m.read()).toList();o.writeInt(mail.size());for(var m:mail){type(o,"com.threerings.projectx.uplink.data.NewMailInfo");o.writeLong(m.id());name(o,m.sender());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.uplink.data.MailType",m.nativeType()));}});
+            attribute(out,oid,"newMailInfo",o->{type(o,WireTypes.DSET);var mail=profile.town().mail().stream().filter(m->!m.read()).toList();o.writeInt(mail.size());for(var m:mail){type(o,"com.threerings.projectx.uplink.data.NewMailInfo");o.writeLong(m.id());name(o,m.sender());value(o,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.uplink.data.MailType",m.nativeType()));}});
             attribute(out,oid,"recipes",o->{type(o,WireTypes.DSET);o.writeInt(profile.town().recipes().size());for(var recipe:profile.town().recipes()){type(o,"com.threerings.projectx.craft.data.Recipe");o.writeBoolean(true);o.writeLong(recipe.id());string(o,recipe.config());}});
             attribute(out,oid,"harnesses",o->{type(o,WireTypes.DSET);o.writeInt(profile.town().harnesses().size());for(var h:profile.town().harnesses())harness(o,h);});
             attribute(out,oid,"sprites",o->{type(o,WireTypes.DSET);o.writeInt(profile.town().sprites().size());for(var sprite:profile.town().sprites())sprite(o,profile,sprite);});
@@ -912,9 +912,9 @@ public final class SessionCodec {
     }
     private void sprite(DataOutputStream out,int worldId,org.tortodrone.core.town.TownState.Sprite s,org.tortodrone.core.town.TownState.Harness h)throws IOException {
         type(out,"com.threerings.projectx.sprites.data.BattleSprite");string(out,s.name());out.writeFloat(s.heat());out.writeBoolean(s.lastFull()!=null);if(s.lastFull()!=null)out.writeLong(s.lastFull());out.writeInt(s.level());out.writeLong(s.fullStamp());
-        out.writeBoolean(true);out.writeInt(3);for(int skill=0;skill<3;skill++){type(out,"com.threerings.projectx.sprites.data.BattleSprite$SkillBonus");primitiveInts(out,new int[]{s.powers().get(skill*3),s.powers().get(skill*3+1),s.powers().get(skill*3+2)});value(out,new SessionDecoder.EnumValue(WireTypes.SPRITE_ULTIMATE,s.ultimates().get(skill)));}
-        out.writeInt(s.perkLevel());out.writeBoolean(true);out.writeInt(s.perks().size());for(int perk:s.perks().stream().sorted().toList())value(out,new SessionDecoder.EnumValue(WireTypes.SPRITE_PERK,perk));
-        value(out,s.perk()==null?null:new SessionDecoder.EnumValue(WireTypes.SPRITE_PERK,s.perk()));out.writeInt(s.id());out.writeInt(worldId);out.writeUTF(s.config());harness(out,h==null?new org.tortodrone.core.town.TownState.Harness(0,"Iron Harness"):h);
+        out.writeBoolean(true);out.writeInt(3);for(int skill=0;skill<3;skill++){type(out,"com.threerings.projectx.sprites.data.BattleSprite$SkillBonus");primitiveInts(out,new int[]{s.powers().get(skill*3),s.powers().get(skill*3+1),s.powers().get(skill*3+2)});value(out,new org.tortodrone.core.wire.EnumValue(WireTypes.SPRITE_ULTIMATE,s.ultimates().get(skill)));}
+        out.writeInt(s.perkLevel());out.writeBoolean(true);out.writeInt(s.perks().size());for(int perk:s.perks().stream().sorted().toList())value(out,new org.tortodrone.core.wire.EnumValue(WireTypes.SPRITE_PERK,perk));
+        value(out,s.perk()==null?null:new org.tortodrone.core.wire.EnumValue(WireTypes.SPRITE_PERK,s.perk()));out.writeInt(s.id());out.writeInt(worldId);out.writeUTF(s.config());harness(out,h==null?new org.tortodrone.core.town.TownState.Harness(0,"Iron Harness"):h);
     }
     public byte[] itemAcquireDelay(int oid,int millis)throws IOException {
         return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"itemAcquireDelay");value(out,millis);});
@@ -926,7 +926,7 @@ public final class SessionCodec {
     }
 
     private void townValue(DataOutputStream out,Object value)throws IOException {
-        if(value instanceof SessionDecoder.Multiset multiset){type(out,"com.google.common.collect.HashMultiset");out.writeInt(multiset.counts().size());for(var entry:multiset.counts().entrySet()){value(out,entry.getKey());out.writeInt(entry.getValue());}}
+        if(value instanceof org.tortodrone.core.wire.Multiset multiset){type(out,"com.google.common.collect.HashMultiset");out.writeInt(multiset.counts().size());for(var entry:multiset.counts().entrySet()){value(out,entry.getKey());out.writeInt(entry.getValue());}}
         else if(value instanceof java.util.List<?> list){type(out,"java.util.ArrayList");out.writeInt(list.size());for(var element:list)townValue(out,element);}
         else if(value instanceof org.tortodrone.core.town.ExchangeState.Offer offer){type(out,"com.threerings.coin.data.CoinExOfferInfo");out.writeInt(offer.id());out.writeBoolean(offer.buy());out.writeInt(offer.price());out.writeInt(offer.volume());}
         else if(value instanceof org.tortodrone.core.town.TownCatalog.DepotOffers offers){
@@ -943,16 +943,16 @@ public final class SessionCodec {
             if(m.friendRequest()){type(out,"com.threerings.projectx.uplink.data.FriendRequest");out.writeInt(m.friendWorld());}
             else if(m.claimed()||m.items().isEmpty()&&m.crowns()==0&&m.energy()==0)out.writeShort(0);else{type(out,"com.threerings.projectx.uplink.data.MultiAttachment");
                 out.writeBoolean(!m.items().isEmpty());if(!m.items().isEmpty()){out.writeInt(m.items().size());for(var item:m.items()){value(out,new StarterCatalog.Model(item.config(),Map.of()));out.writeInt(item.count());}}out.writeInt(m.crowns());out.writeInt(m.energy());}
-            value(out,new SessionDecoder.EnumValue("com.threerings.projectx.uplink.data.MailType",m.nativeType()));out.writeByte((m.read()?0:1)|(m.claimed()?2:0));
+            value(out,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.uplink.data.MailType",m.nativeType()));out.writeByte((m.read()?0:1)|(m.claimed()?2:0));
         }else value(out,value);
     }
     private void listing(DataOutputStream out,org.tortodrone.core.town.AuctionState.Listing a)throws IOException{
         type(out,"com.threerings.projectx.auction.data.ListingInfo");out.writeLong(a.id());int status=a.bidder()==0?0:a.participated()?(a.mine()?1:3):1;
         // The caller's winning status is carried explicitly by the view, separate from seller ownership.
         if(a.participated()&&a.bidder()!=0&&!a.mine())status=a.bidder()==listingViewer?2:3;else if(!a.participated()&&a.watching())status=4;
-        value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.BidStatus",status));
+        value(out,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.auction.data.BidStatus",status));
         int time=a.timeLeft(System.currentTimeMillis());
-        value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.TimeLeft",time));out.writeInt(a.buy());out.writeInt(a.bid());
+        value(out,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.auction.data.TimeLeft",time));out.writeInt(a.buy());out.writeInt(a.bid());
         // The current ListingInfo carries a numeric config id plus the export-encoded
         // config arguments. Torodrone items are identified by name and do not carry
         // per-instance config arguments, so send the stock id and a null argument map.
@@ -1546,7 +1546,7 @@ public final class SessionCodec {
         int[] slots={0,1,2,3,4,15,6,7,8,9,10,11};
         out.writeBoolean(true);out.writeInt(slots.length);for(int slot:slots)out.writeLong(equipment[slot]);
         out.writeBoolean(pvp);out.writeInt(rarity);out.writeInt(sprite);out.writeLong(harness);
-        value(out,perk==null?null:new SessionDecoder.EnumValue(WireTypes.SPRITE_PERK,perk));string(out,name);
+        value(out,perk==null?null:new org.tortodrone.core.wire.EnumValue(WireTypes.SPRITE_PERK,perk));string(out,name);
     }
 
     private void townSummary(DataOutputStream out)throws IOException {
@@ -1798,7 +1798,7 @@ public final class SessionCodec {
         vector(out,damage.x(),damage.y());out.writeFloat(damage.rotation());
         out.writeInt(0); // Client oid: a shared effect, never a private prefire.
         out.writeBoolean(false);out.writeInt(damage.amount());out.writeInt(damage.source());
-        value(out,new SessionDecoder.EnumValue("com.threerings.projectx.dungeon.util.DamageSummary$Performance",ordinal));
+        value(out,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.dungeon.util.DamageSummary$Performance",ordinal));
     }
     private static final List<String> DAMAGE_PERFORMANCE=List.of(
         "WEAK","NORMAL","STRONG","WEAK_SMALL","WEAK_MEDIUM","WEAK_LARGE",

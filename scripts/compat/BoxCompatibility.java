@@ -17,6 +17,7 @@ import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.KnightProgress;
 import org.tortodrone.core.character.Confetti;
+import org.tortodrone.core.loot.BoxDefinition;
 
 /** Installed, unmodified ItemMarshaller and reader are the wire oracle; no client patching. */
 public final class BoxCompatibility {
@@ -62,7 +63,7 @@ public final class BoxCompatibility {
         append(bytes,codec.itemAcquireDelay(10,7500));
         append(bytes,codec.itemChanges(10,null,empty,after));
         append(bytes,codec.itemAcquireDelay(10,0));
-        append(bytes,codec.townResult(10,(short)9,new SessionDecoder.Multiset(Map.of(777L,3)),after));
+        append(bytes,codec.townResult(10,(short)9,new org.tortodrone.core.wire.Multiset(Map.of(777L,3)),after));
         append(bytes,codec.invocationFailure(10,(short)10,"m.inventory_full"));
         var weapon=(StarterCatalog.Model)catalog.require("untimely_scythe").arguments(256).get("Weapon");
         append(bytes,codec.townResult(10,(short)11,weapon,after));
@@ -168,9 +169,9 @@ public final class BoxCompatibility {
             check(expected.getName().equals(represented.name()),"native prize model reference: "+id);
         }
         var rewards=new HashSet<String>();
-        for(var box:org.tortodrone.loot.BoxCatalog.load(Path.of("content"),items).entries())if(box.enabled()) {
+        for(var box:org.tortodrone.resources.BoxCatalog.load(Path.of("content"),items).entries())if(box.enabled()) {
             var all=new ArrayList<>(box.guaranteed());box.groups().values().forEach(g->g.entries().forEach(e->all.addAll(e.rewards())));
-            for(var reward:all)if(reward instanceof org.tortodrone.loot.BoxDefinition.Item item)rewards.add(item.config());
+            for(var reward:all)if(reward instanceof org.tortodrone.core.loot.BoxDefinition.Item item)rewards.add(item.config());
         }
         for(String reward:rewards) {
             var entry=items.require(reward);var original=manager.a(ItemConfig.class,new ConfigReference<ItemConfig>(reward)).w(manager);

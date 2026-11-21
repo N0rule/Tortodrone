@@ -123,8 +123,8 @@ public final class MailDeliveryTest {
         }finally{try(var files=Files.walk(home)){for(var path:files.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
 
-    private static SessionDecoder.SentMail mail(String recipient,String subject,String body,Map<Long,Integer> items,int crowns,int energy){
-        return new SessionDecoder.SentMail(recipient,subject,body,items,crowns,energy);
+    private static org.tortodrone.core.wire.SentMail mail(String recipient,String subject,String body,Map<Long,Integer> items,int crowns,int energy){
+        return new org.tortodrone.core.wire.SentMail(recipient,subject,body,items,crowns,energy);
     }
     private static List<AuctionState.Mail> mailbox(Database db,int account)throws IOException{
         return db.worldProfile(account,1,1).town().mail();

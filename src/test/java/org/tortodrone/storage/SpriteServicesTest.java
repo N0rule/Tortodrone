@@ -21,13 +21,13 @@ public final class SpriteServicesTest {
             int gm=db.create("Alice",secret,true),other=db.create("Bob",secret,false);
             for(int account:List.of(gm,other))new CharacterStore(db,account,account==gm?"Alice":"Bob",content.items()).create(new Knight(0,account==gm?"Alice-Knight":"Bob-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0));
             var town=new TownStore(db,content.items(),content.town());
-            town.adminSprite(gm,1,1,8,List.of(new SessionDecoder.ConfigReference("Drakon",Map.of())));
+            town.adminSprite(gm,1,1,8,List.of(new org.tortodrone.core.wire.ConfigReference("Drakon",Map.of())));
             var before=db.worldProfile(gm,1,1);refused(()->town.adminSprite(other,1,1,45,List.of(99)));
             var raised=town.adminSprite(gm,1,1,45,List.of(99)).profile();var sprite=raised.town().sprites().getFirst();
             check(sprite.level()==99&&!TownStore.unlocked(content.town(),sprite.perkLevel(),sprite.perks()).isEmpty(),"GM level setter grants the skipped native perk progression");
             var again=town.adminSprite(gm,1,1,45,List.of(99)).profile().town().sprites().getFirst();check(again.perkLevel()==sprite.perkLevel()&&again.perks().equals(sprite.perks()),"repeating level setter cannot reroll perks");
             int health=TownStore.unlocked(content.town(),sprite.perkLevel(),sprite.perks()).stream().filter(i->content.town().perks().get(i).name().startsWith("HEALTH_")).findFirst().orElseThrow();
-            var selected=town.sprite(gm,1,1,3,List.of(sprite.id(),new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",health)),true).profile();
+            var selected=town.sprite(gm,1,1,3,List.of(sprite.id(),new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",health)),true).profile();
             check(content.town().equipmentBonuses(selected,"").health()>0,"selected sprite perk contributes its native health bonus");
             var station=content.town().station("Shop/Haven/Harness Installer");var goods=content.town().goods(station,0,before.worldId());
             check(goods.size()==11,"merchant serves the eleven non-starter, non-development harnesses");

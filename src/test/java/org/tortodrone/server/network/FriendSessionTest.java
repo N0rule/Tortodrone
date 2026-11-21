@@ -69,7 +69,7 @@ public final class FriendSessionTest {
                 check(alice.world.ownsScene(trainingPresence.instance()),"friend join reaches the exact Training party instance");
                 check(WorldSession.friendPresence(db.file()).get(alice.chars.worldProfile("Alice",1).worldId()).instance()==trainingPresence.instance(),"both friends publish the same Training presence");
                 // Native method 6: only the toggle is published; matching itself is not simulated.
-                var difficulty=new SessionDecoder.EnumValue("com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty",1);
+                var difficulty=new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty",1);
                 alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,6,List.of(true,difficulty,confirm())));alice.socket.await("lfg");
                 check(alice.world.lookingForGroup(),"party-finder toggle publishes its native lfg attribute");
                 alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,6,List.of(false,difficulty,confirm())));alice.socket.await("lfg");

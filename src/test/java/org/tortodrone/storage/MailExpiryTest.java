@@ -121,8 +121,8 @@ public final class MailExpiryTest {
         }finally{try(var files=Files.walk(home)){for(var path:files.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
 
-    private static SessionDecoder.SentMail mail(String subject,String body,Map<Long,Integer> items,int crowns,int energy){
-        return new SessionDecoder.SentMail("Bob-Knight",subject,body,items,crowns,energy);
+    private static org.tortodrone.core.wire.SentMail mail(String subject,String body,Map<Long,Integer> items,int crowns,int energy){
+        return new org.tortodrone.core.wire.SentMail("Bob-Knight",subject,body,items,crowns,energy);
     }
     private static List<AuctionState.Mail> mailbox(Database db,int account)throws IOException{return db.worldProfile(account,1,1).town().mail();}
     private static AuctionState.Mail delivered(Database db,int account,String subject)throws IOException{return mailbox(db,account).stream().filter(m->m.subject().equals(subject)).findFirst().orElseThrow();}
