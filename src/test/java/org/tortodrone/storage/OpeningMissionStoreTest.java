@@ -18,25 +18,25 @@ public final class OpeningMissionStoreTest {
             int account=db.create("MissionOwner",protection,false),foreign=db.create("MissionPeer",protection,false);
             var owner=new CharacterStore(db,account,"MissionOwner",content.items());var peer=new CharacterStore(db,foreign,"MissionPeer",content.items());
             var knight=owner.createForOpening(knight("Mission-Knight"),1);var other=peer.createForOpening(knight("Mission-Peer"),1);
-            var store=owner.openingMissions(content.town());var incomplete=owner.worldProfile(knight.name(),1);
-            refused(()->store.complete(account,knight.id(),1,incomplete,OpeningMission.SECURING_CAMP,null));
+            var store=owner.openingMissions(content.town(),content.missions());var incomplete=owner.worldProfile(knight.name(),1);
+            refused(()->store.complete(account,knight.id(),1,incomplete,OpeningMission.SECURING_CAMP.id(),null));
             // Explicit legacy Camp checkpoint: new tutorial completions now skip this route.
             db.write(c->{try(var s=c.prepareStatement("UPDATE metadata SET value=1 WHERE key=?")){s.setString(1,"world."+incomplete.worldId()+".opening-stage");s.executeUpdate();}return null;});
             var camp=owner.worldProfile(knight.name(),1);var peerBefore=peer.worldProfile(other.name(),1);
-            for(long auth:new long[]{-1,0,2})refused(()->store.complete(account,knight.id(),auth,camp,OpeningMission.SECURING_CAMP,null));
-            refused(()->store.complete(foreign,other.id(),1,camp,OpeningMission.SECURING_CAMP,null));
-            refused(()->store.complete(account,knight.id(),1,camp,OpeningMission.ANCIENT_GENERATOR,"EASY"));
-            refused(()->store.complete(account,knight.id(),1,camp,OpeningMission.SECURING_CAMP,null));
+            for(long auth:new long[]{-1,0,2})refused(()->store.complete(account,knight.id(),auth,camp,OpeningMission.SECURING_CAMP.id(),null));
+            refused(()->store.complete(foreign,other.id(),1,camp,OpeningMission.SECURING_CAMP.id(),null));
+            refused(()->store.complete(account,knight.id(),1,camp,OpeningMission.ANCIENT_GENERATOR.id(),"EASY"));
+            refused(()->store.complete(account,knight.id(),1,camp,OpeningMission.SECURING_CAMP.id(),null));
             var story=owner.knightStory(knight.id(),1,camp,List.of(new KnightMemory("talkedRhendonRC",true),new KnightMemory("talkto_rhendon_icon",true)),List.of(new KnightObjective("findRhendon","m.find_rhendon")));
             var before=story.profile();String receipt="world."+before.worldId()+".mission.securing_camp";
-            refused(()->store.complete(account,knight.id(),1,camp,OpeningMission.SECURING_CAMP,null));
-            refused(()->store.complete(account,knight.id(),1,before,OpeningMission.SECURING_CAMP,"EASY"));
+            refused(()->store.complete(account,knight.id(),1,camp,OpeningMission.SECURING_CAMP.id(),null));
+            refused(()->store.complete(account,knight.id(),1,before,OpeningMission.SECURING_CAMP.id(),"EASY"));
             db.write(c->{try(var s=c.createStatement()){s.execute("CREATE TRIGGER reject_completion BEFORE INSERT ON metadata WHEN NEW.key='"+receipt+"' BEGIN SELECT RAISE(ABORT,'reject after rewards'); END");}return null;});
-            refused(()->store.complete(account,knight.id(),1,before,OpeningMission.SECURING_CAMP,null));
+            refused(()->store.complete(account,knight.id(),1,before,OpeningMission.SECURING_CAMP.id(),null));
             check(owner.worldProfile(knight.name(),1).equals(before)&&store.load(account,knight.id(),1).isEmpty()&&owner.knightObjectives(knight.id(),1).equals(story.objectives())&&owner.knightMemories(knight.id(),1).equals(story.memories()),"receipt failure rolls back inventory, allocation counters, story effects, rank and prestige");
             db.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER reject_completion");}return null;});
             var gate=new CountDownLatch(1);var results=new LinkedBlockingQueue<OpeningMissionStore.Settlement>();var failures=new LinkedBlockingQueue<Throwable>();
-            Runnable settle=()->{try{gate.await();results.add(store.complete(account,knight.id(),1,before,OpeningMission.SECURING_CAMP,null));}catch(Throwable e){failures.add(e);}};
+            Runnable settle=()->{try{gate.await();results.add(store.complete(account,knight.id(),1,before,OpeningMission.SECURING_CAMP.id(),null));}catch(Throwable e){failures.add(e);}};
             var a=Thread.ofVirtual().start(settle);var b=Thread.ofVirtual().start(settle);gate.countDown();a.join();b.join();
             check(failures.isEmpty()&&results.size()==2&&results.stream().filter(OpeningMissionStore.Settlement::first).count()==1,"concurrent terminal requests pay once and share one durable receipt");
             var first=owner.worldProfile(knight.name(),1);
@@ -47,36 +47,42 @@ public final class OpeningMissionStoreTest {
             for(var mission:List.of(OpeningMission.ANCIENT_GENERATOR,OpeningMission.FIRST_CONTACT,OpeningMission.CROSSING_CHASM,OpeningMission.WELCOME_HAVEN)){
                 if(mission==OpeningMission.ANCIENT_GENERATOR){
                     var expected=current;
-                    for(float invalid:new float[]{Float.NaN,Float.POSITIVE_INFINITY,-1,1_000_001})refused(()->store.complete(account,knight.id(),1,expected,mission,"EASY",invalid));
+                    for(float invalid:new float[]{Float.NaN,Float.POSITIVE_INFINITY,-1,1_000_001})refused(()->store.complete(account,knight.id(),1,expected,mission.id(),"EASY",invalid));
                     String gateReceipt="world."+expected.worldId()+".mission."+mission.id();
                     db.write(c->{try(var s=c.createStatement()){s.execute("CREATE TRIGGER reject_floor_receipt BEFORE INSERT ON metadata WHEN NEW.key='"+gateReceipt+"' BEGIN SELECT RAISE(ABORT,'reject after heat and rewards'); END");}return null;});
-                    refused(()->store.complete(account,knight.id(),1,expected,mission,"EASY",25));
+                    refused(()->store.complete(account,knight.id(),1,expected,mission.id(),"EASY",25));
                     check(owner.worldProfile(knight.name(),1).equals(expected),"failed gate receipt rolls back heat, rewards and progression together");
                     db.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER reject_floor_receipt");}return null;});
                 }
                 OpeningMissionStore.Settlement settled;
                 if(mission==OpeningMission.ANCIENT_GENERATOR){
                     var expected=current;var heatStart=new CountDownLatch(1);var heatResults=new LinkedBlockingQueue<OpeningMissionStore.Settlement>();var heatErrors=new LinkedBlockingQueue<Throwable>();
-                    Runnable finishFloor=()->{try{heatStart.await();heatResults.add(store.complete(account,knight.id(),1,expected,mission,"EASY",25));}catch(Throwable failure){heatErrors.add(failure);}};
+                    Runnable finishFloor=()->{try{heatStart.await();heatResults.add(store.complete(account,knight.id(),1,expected,mission.id(),"EASY",25));}catch(Throwable failure){heatErrors.add(failure);}};
                     var one=Thread.ofVirtual().start(finishFloor);var two=Thread.ofVirtual().start(finishFloor);heatStart.countDown();one.join();two.join();
                     check(heatErrors.isEmpty()&&heatResults.size()==2&&heatResults.stream().filter(OpeningMissionStore.Settlement::first).count()==1,"concurrent gate settlement grants floor heat and rewards once");
                     settled=heatResults.stream().filter(OpeningMissionStore.Settlement::first).findFirst().orElseThrow();
-                }else settled=store.complete(account,knight.id(),1,current,mission,mission.gate()?"EASY":null);
+                }else settled=store.complete(account,knight.id(),1,current,mission.id(),mission.gate()?"EASY":null);
                 prestige+=mission.prestige();
                 check(settled.first()&&settled.profile().progress().prestige()==prestige&&settled.profile().revision()==current.revision()+1,"each verified definition pays once in route order");current=settled.profile();
                 if(mission==OpeningMission.ANCIENT_GENERATOR){
                     var expected=current;
                     check(current.items().stream().filter(i->i.starter()&&i.equippedSlot()!=null&&Set.of(0,1,2,6,7).contains(i.equippedSlot())).allMatch(i->i.heatProgress()>0),"collected floor heat reaches the carried equipment");
                     check(current.items().stream().filter(i->i.config().equals("Gear/Armor/Vitasuit")).allMatch(i->i.heatProgress()==0),"new mission reward does not absorb the previous floor's heat");
-                    check(!store.complete(account,knight.id(),1,expected,mission,"HARD",100).first()&&owner.worldProfile(knight.name(),1).equals(expected),"receipt prevents repeated heat or difficulty upgrades");
+                    check(!store.complete(account,knight.id(),1,expected,mission.id(),"HARD",100).first()&&owner.worldProfile(knight.name(),1).equals(expected),"receipt prevents repeated heat or difficulty upgrades");
                 }
             }
             var finalState=current;var receipts=store.load(account,knight.id(),1);
             check(receipts.size()==5&&current.progress().rankPair().equals("2-1")&&current.progress().openingStage()==3&&owner.lastTownScene(knight.id(),1)==1,"all opening storage transitions preserve the Haven checkpoint");
-            for(var mission:OpeningMission.values())check(!store.complete(account,knight.id(),1,before,mission,mission.gate()?"HARD":null).first(),"stale retries of a recorded terminal cannot upgrade difficulty or pay twice");
-            check(owner.worldProfile(knight.name(),1).equals(finalState)&&store.load(account,knight.id(),1).equals(receipts),"replay does not modify later inventory, rank, checkpoint or original difficulty/time");
+            for(var mission:OpeningMission.values())check(!store.complete(account,knight.id(),1,before,mission.id(),mission.gate()?"HARD":null).first(),"stale retries of a recorded terminal cannot pay twice or promote again");
+            var replayed=store.load(account,knight.id(),1);
+            check(owner.worldProfile(knight.name(),1).equals(finalState),"replay does not modify later inventory, rank or checkpoint");
+            for(var mission:OpeningMission.values()){
+                var original=receipts.get(mission.id());var replay=replayed.get(mission.id());
+                if(mission.gate())check(replay.difficulty().equals("HARD")&&replay.completed()>=original.completed(),"a higher gate band updates the stored receipt");
+                else check(replay.equals(original),"a conversation replay keeps its receipt");
+            }
             var reopened=new CharacterStore(new Database(home,false),account,"MissionOwner",content.items());
-            check(reopened.openingMissions(content.town()).load(account,knight.id(),1).equals(receipts)&&reopened.worldProfile(knight.name(),1).equals(finalState),"receipts and reward state survive reopening SQLite");
+            check(reopened.openingMissions(content.town(),content.missions()).load(account,knight.id(),1).equals(replayed)&&reopened.worldProfile(knight.name(),1).equals(finalState),"receipts and reward state survive reopening SQLite");
             check(peer.worldProfile(other.name(),1).equals(peerBefore),"foreign knight unaffected");
         }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}}
         System.out.println("PASS: opening settlement auth/ownership, prerequisites/revisions, exact locked rewards, native rank/prestige/checkpoints, injected rollback, concurrent receipts, replay and reopen (storage only; floors not exercised)");

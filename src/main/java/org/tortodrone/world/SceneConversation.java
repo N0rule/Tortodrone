@@ -10,10 +10,11 @@ public record SceneConversation(String actor,String name,String bundle,String in
     public SceneConversation(String actor,String name,String bundle,String initial,StarterCatalog.Model model,Map<String,Node> nodes,StarterCatalog.Model sourceCloseAnimation,StarterCatalog.Model music){this(actor,name,bundle,initial,model,nodes,sourceCloseAnimation,music,null);}
     public SceneConversation(String actor,String name,String bundle,String initial,StarterCatalog.Model model,Map<String,Node> nodes){this(actor,name,bundle,initial,model,nodes,null,null);}
     public static final int SERVICE=21;
-    public record Response(String text,String destination,String station,String command,SceneActions.Action action) {
-        public Response(String text,String destination,String station,String command){this(text,destination,station,command,null);}
-        public Response(String text,String destination,String station){this(text,destination,station,"");}
-        public Response(String text,String destination){this(text,destination,"");}
+    public record Response(String text,String destination,String station,String command,SceneActions.Action action,boolean terminal) {
+        public Response(String text,String destination,String station,String command,SceneActions.Action action){this(text,destination,station,command,action,false);}
+        public Response(String text,String destination,String station,String command){this(text,destination,station,command,null,false);}
+        public Response(String text,String destination,String station){this(text,destination,station,"",null,false);}
+        public Response(String text,String destination){this(text,destination,"","",null,false);}
     }
     public record Node(String id,String message,List<Response> responses,
             StarterCatalog.Model animation,StarterCatalog.Model transientModel,StarterCatalog.Model userInterface) {

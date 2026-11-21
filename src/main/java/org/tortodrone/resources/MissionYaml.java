@@ -4,6 +4,9 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.character.MissionCatalog;
+import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.world.MissionComlinks;
+import org.tortodrone.world.SceneConversation;
 import static org.tortodrone.resources.Yaml.*;
 
 /** Validated reader for the imported stock mission catalogue. No gameplay is implied. */
@@ -13,19 +16,25 @@ public final class MissionYaml {
         "prestige","briefing","cardImage","missionProps","rewards","requirement","repeatable","rescueCamp","retired","test",
         "inTest","rank","subrank","needMission","daily","onceOnly","restrictions","group","tier");
 
-    public static MissionCatalog load(Path directory)throws IOException {
-        if(!Files.exists(directory))return MissionCatalog.empty();
+    public record Definitions(MissionCatalog missions,MissionComlinks comlinks) { }
+
+    public static MissionCatalog load(Path directory)throws IOException{return definitions(directory).missions();}
+
+    public static Definitions definitions(Path directory)throws IOException {
+        if(!Files.exists(directory))return new Definitions(MissionCatalog.empty(),MissionComlinks.empty());
         ContentFiles.safe(directory);if(!Files.isDirectory(directory))throw new IOException("Mission catalogue is not a directory: "+directory);
         var missions=new LinkedHashMap<String,MissionCatalog.Entry>();
         var groups=new LinkedHashMap<String,MissionCatalog.Group>();
         var properties=new LinkedHashMap<String,MissionCatalog.Property>();
+        var grants=new LinkedHashMap<String,List<MissionCatalog.Grant>>();
+        var comlinks=new LinkedHashMap<String,SceneConversation>();
         try(var paths=Files.list(directory)) {
             var files=paths.filter(Files::isRegularFile).sorted().toList();
             if(files.size()>16)throw new IOException("Too many mission files: "+directory);
             for(Path file:files) {
                 if(!file.getFileName().toString().matches("[a-z][a-z0-9_-]*\\.yml"))throw new IOException("Invalid mission file name: "+file);
                 var root=read(file);var sections=root.keySet();
-                if(sections.size()!=1)throw new IOException(file+": expected one of missions, groups or properties");
+                if(sections.size()!=1)throw new IOException(file+": expected one of missions, groups, properties, grants or comlinks");
                 String section=sections.iterator().next();
                 switch(section) {
                     case "missions" -> {
@@ -48,11 +57,72 @@ public final class MissionYaml {
                             if(properties.putIfAbsent(property.name(),property)!=null)throw new IOException(file+": duplicate mission properties "+property.name());
                         }
                     }
+                    case "grants" -> {
+                        for(var row:map(root.get("grants"),file+" grants").entrySet()) {
+                            String id=row.getKey();if(!id.matches("[a-z][a-z0-9_]{0,127}"))throw new IOException(file+": invalid grant mission id "+id);
+                            if(grants.putIfAbsent(id,grants(row.getValue(),file+" grants "+id))!=null)throw new IOException(file+": duplicate grant mission "+id);
+                        }
+                    }
+                    case "comlinks" -> {
+                        for(var row:map(root.get("comlinks"),file+" comlinks").entrySet()) {
+                            String id=row.getKey();if(!id.matches("[a-z][a-z0-9_]{0,127}"))throw new IOException(file+": invalid comlink mission id "+id);
+                            if(comlinks.putIfAbsent(id,comlink(id,map(row.getValue(),file+" comlink "+id),file+" comlink "+id))!=null)throw new IOException(file+": duplicate comlink mission "+id);
+                        }
+                    }
                     default -> throw new IOException(file+": unknown section "+section);
                 }
             }
         }
-        try{return MissionCatalog.of(missions,groups,properties);}catch(IllegalArgumentException invalid){throw new IOException(directory+": "+invalid.getMessage(),invalid);}
+        MissionCatalog catalog;
+        try{catalog=MissionCatalog.of(missions,groups,properties,grants);}catch(IllegalArgumentException invalid){throw new IOException(directory+": "+invalid.getMessage(),invalid);}
+        for(String id:comlinks.keySet()) {
+            var mission=catalog.mission(id);
+            if(mission==null)throw new IOException(directory+": comlink for missing mission "+id);
+            if(!mission.requirement().type().equals("conversation")&&!mission.requirement().type().equals("gate_conversation"))throw new IOException(directory+": comlink mission is not a conversation: "+id);
+        }
+        try{return new Definitions(catalog,new MissionComlinks(comlinks));}catch(IllegalArgumentException invalid){throw new IOException(directory+": "+invalid.getMessage(),invalid);}
+    }
+
+    private static SceneConversation comlink(String id,Map<String,Object> row,String where)throws IOException {
+        fields(row,where,"name","initial","model","music","nodes");
+        String name=text(row.get("name"),where+" name");bounded(name,where+" name");
+        String initial=text(row.get("initial"),where+" initial");bounded(initial,where+" initial");
+        StarterCatalog.Model model=model(row.get("model"),where+" model");
+        StarterCatalog.Model music=model(row.get("music"),where+" music");
+        var nodes=new LinkedHashMap<String,SceneConversation.Node>();
+        for(var entry:map(row.get("nodes"),where+" nodes").entrySet()) {
+            String nodeId=entry.getKey();bounded(nodeId,where+" node id");
+            if(nodes.size()>=256)throw new IOException(where+": too many comlink nodes");
+            var node=map(entry.getValue(),where+" node "+nodeId);
+            fields(node,where+" node "+nodeId,"message","interface","animation","transient","responses");
+            String message=text(node.get("message"),where+" "+nodeId+" message");bounded(message,where+" "+nodeId+" message");
+            var responses=new ArrayList<SceneConversation.Response>();
+            for(Object raw:list(node.get("responses"),where+" "+nodeId+" responses")) {
+                if(responses.size()>=16)throw new IOException(where+": too many comlink responses");
+                var response=map(raw,where+" "+nodeId+" response");
+                fields(response,where+" "+nodeId+" response","text","destination","terminal");
+                String text=text(response.get("text"),where+" "+nodeId+" response text");bounded(text,where+" "+nodeId+" response text");
+                String destination=optionalText(response.get("destination"),where+" "+nodeId+" destination");
+                if(!destination.isEmpty())bounded(destination,where+" "+nodeId+" destination");
+                responses.add(new SceneConversation.Response(text,destination,"","",null,flag(response.getOrDefault("terminal",false),where+" "+nodeId+" terminal")));
+            }
+            if(responses.isEmpty())throw new IOException(where+": comlink node has no responses: "+nodeId);
+            if(nodes.putIfAbsent(nodeId,new SceneConversation.Node(nodeId,message,responses,
+                model(node.get("animation"),where+" "+nodeId+" animation"),model(node.get("transient"),where+" "+nodeId+" transient"),
+                model(node.get("interface"),where+" "+nodeId+" interface")))!=null)throw new IOException(where+": duplicate comlink node "+nodeId);
+        }
+        if(nodes.isEmpty())throw new IOException(where+": comlink has no nodes");
+        return MissionComlinks.conversation(id,name,model,music,initial,nodes);
+    }
+
+    private static StarterCatalog.Model model(Object raw,String where)throws IOException {
+        if(raw==null)return null;
+        if(raw instanceof String text) {
+            String name=text(text,where);bounded(name,where);return name.isBlank()?null:new StarterCatalog.Model(name,Map.of());
+        }
+        var row=map(raw,where);fields(row,where,"name","arguments");
+        String name=text(row.get("name"),where+" name");bounded(name,where+" name");
+        return new StarterCatalog.Model(name,row.containsKey("arguments")?arguments(row.get("arguments"),where+" arguments"):Map.of());
     }
 
     private static MissionCatalog.Entry mission(String id,Map<String,Object> row,String where)throws IOException {
@@ -153,6 +223,24 @@ public final class MissionYaml {
             var reference=map(row.get("rewards"),where+" reference");fields(reference,where+" reference","name","arguments");
             result.add(new MissionCatalog.Reward(difficulty,text(reference.get("name"),where+" reward name"),
                 reference.containsKey("arguments")?arguments(reference.get("arguments"),where+" reward arguments"):Map.of()));
+        }
+        return result;
+    }
+
+    private static List<MissionCatalog.Grant> grants(Object raw,String where)throws IOException {
+        var result=new ArrayList<MissionCatalog.Grant>();
+        if(raw==null)return result;
+        for(Object value:list(raw,where)) {
+            if(result.size()>=64)throw new IOException(where+": too many grants");
+            var row=map(value,where+" entry");fields(row,where+" entry","config","count","locked","variants");
+            var variants=new ArrayList<String>();
+            for(Object variant:list(row.getOrDefault("variants",List.of()),where+" variants")) {
+                if(variants.size()>=16)throw new IOException(where+": too many grant variants");
+                variants.add(text(variant,where+" variant"));
+            }
+            try{result.add(new MissionCatalog.Grant(text(row.get("config"),where+" config"),
+                integer(row.getOrDefault("count",1),where+" count"),flag(row.getOrDefault("locked",true),where+" locked"),variants));}
+            catch(IllegalArgumentException invalid){throw new IOException(where+": "+invalid.getMessage(),invalid);}
         }
         return result;
     }

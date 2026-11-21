@@ -20,7 +20,7 @@ public final class OpeningComlinkSessionTest {
         var content=ContentManager.load(Path.of("."));var base=content.createScenes();var haven=base.catalog().scene(1);
         var camp=new SceneCatalog.MapScene(218,16777222,"%town:m.fixture","Fixture powered Camp",haven.image(),"town",1,haven.spawnX(),haven.spawnY(),haven.spawnRotation(),1,haven.collision(),haven.layout(),ScenePortals.EMPTY,SceneContent.empty());
         var maps=new TreeMap<Integer,SceneCatalog.MapScene>();for(var map:base.catalog().scenes())maps.put(map.id(),map);maps.put(218,camp);
-        var registry=new SceneRegistry(SceneCatalog.of(maps,1));registry.town(content.town());
+        var registry=new SceneRegistry(SceneCatalog.of(maps,1));registry.town(content.town());registry.missions(content.missions());registry.comlinks(content.comlinks());
         var previous=SceneRegistry.system();SceneRegistry.install(registry);
         Path home=Files.createTempDirectory("tortodrone-comlinks-");
         try{
@@ -74,6 +74,25 @@ public final class OpeningComlinkSessionTest {
                 check(registry.destination(OpeningComlinks.scene(mission),checkpoint.worldId()).simulation().playerCount()==0,"disconnect releases every owned pawn");
             }
             check(peer.worldProfile(foreign.name(),1).equals(untouched),"foreign account inventory and progress unaffected");
+            var generic=owner.createForOpening(knight("Generic-Comlink"),1);int genericWorld=owner.worldProfile(generic.name(),1).worldId();
+            db.write(c->{try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,52) ON CONFLICT(key) DO UPDATE SET value=52")){s.setString(1,"knight.progress."+genericWorld+".rank");s.executeUpdate();}return null;});
+            var genericBefore=owner.worldProfile(generic.name(),1);
+            try(var output=new SessionOutput(new RecordingSocket());var world=new WorldSession(new RecordingSocket(),owner,output,new SessionCodec(),1301,1,message->{},registry)){
+                world.select(generic.name(),RECEIVERS,true);enterScene(world,registry,218);
+                var definition=registry.comlinks().get("another_trace");
+                check(definition!=null,"imported catalogue supplies the generic comlink graph");
+                world.townInvocation(start("another_trace",120));
+                check(definition.initial().equals(node(world)),"method 3 opens the imported initial node");
+                int oid=sceneOid(world);
+                for(int step=0;step<3;step++)world.conversationInvocation(response(oid,0,121+step));
+                check("node_end".equals(node(world)),"imported chain reaches its closing screen");
+                world.conversationInvocation(response(oid,0,124));
+                var genericAfter=owner.worldProfile(generic.name(),1);
+                check(node(world)==null&&genericAfter.progress().prestige()==genericBefore.progress().prestige()+content.missions().prestige("another_trace")
+                    &&genericAfter.revision()==genericBefore.revision()+1,"generic comlink closes and settles once with catalogue prestige");
+                check(count(genericAfter,"Rarity/Spark of Life")-count(genericBefore,"Rarity/Spark of Life")==3,"generic comlink pays its catalogue grant");
+                world.townInvocation(start("another_trace",125));check(owner.worldProfile(generic.name(),1).equals(genericAfter)&&node(world)==null,"a completed generic comlink cannot restart or pay twice");
+            }
         }finally{SceneRegistry.install(previous);try(var files=Files.walk(home)){for(var file:files.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(file);}}
         System.out.println("PASS: native First Contact B and Welcome to Haven attempts, all captured panels, ownership, eligibility, invalid/duplicate responses, rollback/retry, exact rewards, completion publication and Ready Room reconnect (post-floor checkpoints; synthetic Camp geometry)");
     }
@@ -84,9 +103,14 @@ public final class OpeningComlinkSessionTest {
         db.write(c->{try(var s=c.prepareStatement("UPDATE metadata SET value=1 WHERE key=?")){s.setString(1,"world."+world+".opening-stage");s.executeUpdate();}return null;});
         profile=owner.worldProfile(knight.name(),1);
         profile=owner.knightStory(knight.id(),1,profile,List.of(new KnightMemory("talkedRhendonRC",true)),List.of()).profile();
-        for(var mission:OpeningMission.values()){if(mission==target)break;profile=owner.openingMissions(registry.town()).complete(owner.accountId(),knight.id(),1,profile,mission,mission.gate()?"EASY":null).profile();}
+        for(var mission:OpeningMission.values()){if(mission==target)break;profile=owner.openingMissions(registry.town(),registry.missions()).complete(owner.accountId(),knight.id(),1,profile,mission.id(),mission.gate()?"EASY":null).profile();}
         return profile;
     }
+    private static void enterScene(WorldSession world,SceneRegistry registry,int sceneId)throws Exception {
+        var map=registry.catalog().scene(sceneId);world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));
+        world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),1,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));world.subscribe((short)2);world.entered();
+    }
+    private static int sceneOid(WorldSession world)throws Exception{synchronized(world){var field=WorldSession.class.getDeclaredField("scene");field.setAccessible(true);return ((SceneRegistry.Instance)field.get(world)).oid();}}
     private static void enter(WorldSession world,SceneRegistry registry,OpeningMission mission)throws Exception {
         var map=registry.catalog().scene(OpeningComlinks.scene(mission));world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));
         world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),1,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));world.subscribe((short)2);world.entered();

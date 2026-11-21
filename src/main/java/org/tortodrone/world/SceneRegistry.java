@@ -35,6 +35,12 @@ public final class SceneRegistry {
     private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
     public org.tortodrone.town.TownCatalog town(){return town;}
     public void town(org.tortodrone.town.TownCatalog catalog){town=Objects.requireNonNull(catalog);equipment.town(town);for(var copies:instances.values())for(var instance:copies)instance.simulation().town(town);}
+    private org.tortodrone.character.MissionCatalog missions=org.tortodrone.character.MissionCatalog.empty();
+    public org.tortodrone.character.MissionCatalog missions(){return missions;}
+    public void missions(org.tortodrone.character.MissionCatalog catalog){missions=Objects.requireNonNull(catalog);}
+    private org.tortodrone.world.MissionComlinks comlinks=org.tortodrone.world.MissionComlinks.empty();
+    public org.tortodrone.world.MissionComlinks comlinks(){return comlinks;}
+    public void comlinks(org.tortodrone.world.MissionComlinks catalog){comlinks=Objects.requireNonNull(catalog);}
     private org.tortodrone.loot.BoxCatalog boxes=org.tortodrone.loot.BoxCatalog.empty();
     public org.tortodrone.loot.BoxCatalog boxes(){return boxes;}
     public void boxes(org.tortodrone.loot.BoxCatalog catalog){boxes=Objects.requireNonNull(catalog);}

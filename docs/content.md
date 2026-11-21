@@ -497,19 +497,32 @@ The same manifest records that list for future import work.
 restriction and prestige range is retained. Startup checks cross-file references and
 rejects unknown fields or malformed data.
 
-The catalogue exposes definition data and the rank-board helpers only: descending
-priority with a stable id tie break, completed-card removal and `needMission`
-prerequisite gating. Dungeon mission runs, objective progress, reward granting,
-conversation hand-in and the mission UI are not implemented. A deployment without
-`content/missions/` keeps an empty catalogue and logs a startup warning.
+The catalogue exposes definition data, the rank-board helpers (descending priority
+with a stable id tie break, completed-card removal and `needMission` prerequisite
+gating) and the imported runtime tables. `grants.yml` resolves every rank reward
+reference to its concrete stock item, count, binding and explicit variants;
+`comlinks.yml` holds the 28 rank conversation graphs that use deterministic
+message/item/response nodes. The stock client draws and orders its own mission
+cards from the shipped definitions and the completion set.
+
+Rank settlement is server-owned. A first completion pays the catalogue grants and
+prestige, advances rank through the stock promotion rule and publishes the native
+settlement and item deltas; a repeat gate completion only records a higher
+difficulty band. Conversation missions complete on their closing comlink response,
+and the nine rank exchanges consume exactly their ingredient list through
+mission-service id 1. The opening gate remains the only playable dungeon route:
+generic dungeon routes, objective progress, prestige/expansion missions, the
+gate-conversation lobbies and the mission bar are not implemented. A deployment
+without `content/missions/` keeps an empty catalogue and logs a startup warning.
 
 The checked-in import contains 273 missions (108 rank, 147 prestige, 3 expansion and
 15 hidden), one group and 27 properties. Refresh it deterministically with:
 
 ```sh
 python3 scripts/content/import_missions.py --source /path/to/exported/config
-# Verify without writing:
-python3 scripts/content/import_missions.py --source /path/to/exported/config --check
+python3 scripts/content/import_mission_rewards.py --source /path/to/exported/config
+python3 scripts/content/import_mission_comlinks.py --source /path/to/exported/config
+# Add --check to any of them to verify without writing.
 ```
 
 ## Map identity, actors, portals and traps

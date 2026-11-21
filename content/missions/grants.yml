@@ -1,0 +1,814 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+grants:
+  a_call_to_arms:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  abandoned_depot:
+  - config: Weapon/Sword/Slime Slasher
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 2
+  - config: Gear/Armor/Vitasuit
+    count: 1
+    locked: true
+    variants:
+    - Gear/Fire Resist 2
+  - config: Weapon/Handgun/Stun Gun
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 2
+  - config: Gear/Helm/Cyclops Cap
+    count: 1
+    locked: true
+    variants:
+    - Gear/Freeze Resist 2
+  advanced_alchemy:
+  - config: Weapon/Sword/Brandish
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Warm
+    count: 5
+    locked: true
+  alchemy_beginners:
+  - config: Recipe/Sword/Hot Edge Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Handgun/Frost Gun Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Flawed
+    count: 9
+    locked: true
+  - config: Material/Green Shard
+    count: 3
+    locked: true
+  - config: Material/Spark Plug
+    count: 2
+    locked: true
+  alchemy_mastery:
+  - config: Rarity/Orb of Alchemy/Elite
+    count: 1
+    locked: true
+  alien_ooze:
+  - config: Recipe/Armor/Emberbreak Armor Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Helm/Emberbreak Helm Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Flawed
+    count: 3
+    locked: true
+  alone_in_dark:
+  - config: Gear/Trinket/Sacred Silver Amulet
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Radiant
+    count: 10
+    locked: true
+  ancient_generator:
+  - config: Gear/Armor/Vitasuit
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Cracked
+    count: 10
+    locked: true
+  another_trace:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  - config: Recipe/Rarity/Fire Crystal/Warm Recipe
+    count: 1
+    locked: true
+  axes_of_evil:
+  - config: Gear/Trinket/Redwood Bracelet
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Glowing
+    count: 5
+    locked: true
+  becoming_champion:
+  - config: Recipe/Helm/Azure Guardian Helm Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Armor/Azure Guardian Armor Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Shield/Aegis Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Sword/Leviathan Blade Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Handgun/Valiance Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Bomb/Nitronome Recipe
+    count: 1
+    locked: true
+  best_of_beast:
+  - config: Food/Power Orb
+    count: 3
+    locked: true
+  beyond_axes_of_evil:
+  - config: Accessory/Armor/Front/Crest/Crest, Gremlin
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true
+  blades_fallen:
+  - config: Weapon/Sword/Calibur
+    count: 1
+    locked: true
+  - config: Weapon/Handgun/Blaster
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Warm
+    count: 5
+    locked: true
+  breaking_in_recruits:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  built_to_destroy:
+  - config: Token/Roarmulus Token
+    count: 1
+    locked: true
+  - config: Rarity/Evo Catalyst/Advanced Evo Catalyst
+    count: 1
+    locked: true
+  chilled_to_bone:
+  - config: Material/Grave Soil
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Warm
+    count: 3
+    locked: true
+  choose_your_sprite:
+  - config: Food/Power Mote
+    count: 3
+    locked: true
+  - config: Food/Divine Mote
+    count: 3
+    locked: true
+  - config: Food/Shadow Mote
+    count: 3
+    locked: true
+  creators_and_created:
+  - config: Food/Divine Orb
+    count: 3
+    locked: true
+  crimson_chaos:
+  - config: Rarity/Fire Crystal/Radiant
+    count: 15
+    locked: true
+  crossing_chasm:
+  - config: Weapon/Sword/Hatchet
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 2
+  - config: Weapon/Handgun/Punch Gun
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  - config: Weapon/Sword/Beast Basher
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 2
+  crossing_chasm_b:
+  - config: Weapon/Sword/Slime Slasher
+    count: 1
+    locked: true
+  - config: Gear/Armor/Fencing Jacket
+    count: 1
+    locked: true
+  - config: Weapon/Bomb/Proto Bomb
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Cracked
+    count: 10
+    locked: true
+  darkest_depths:
+  - config: Rarity/Spark of Life
+    count: 2
+    locked: true
+  - config: Recipe/Rarity/Fire Crystal/Glowing Recipe
+    count: 1
+    locked: true
+  darkest_forces:
+  - config: Food/Shadow Orb
+    count: 3
+    locked: true
+  delved_too_deep:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  dreams_and_nightmares:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  - config: Rarity/Orb of Alchemy/Eternal
+    count: 1
+    locked: true
+  elemental_my_dear:
+  - config: Food/Divine Stone
+    count: 3
+    locked: true
+  ending_in_fire:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  - config: Recipe/Rarity/Fire Crystal/Shining Recipe
+    count: 1
+    locked: true
+  explosive_plot:
+  - config: Rarity/Spark of Life
+    count: 2
+    locked: true
+  eye_of_needle:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  faith_armor:
+  - config: Gear/Helm/Cobalt Helm
+    count: 1
+    locked: true
+  - config: Gear/Armor/Cobalt Armor
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Warm
+    count: 5
+    locked: true
+  first_contact:
+  - config: Weapon/Bomb/Proto Bomb
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  first_contact_b:
+  - config: Weapon/Sword/Robo Wrecker
+    count: 1
+    locked: true
+  - config: Gear/Helm/Cyclops Cap
+    count: 1
+    locked: true
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  from_below:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  - config: Rarity/Orb of Alchemy/Eternal
+    count: 1
+    locked: true
+  frostifur_fandango:
+  - config: Material/Monster Bone
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Warm
+    count: 3
+    locked: true
+  go_shopping:
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  go_shopping_b:
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  great_escape:
+  - config: Recipe/Bomb/Plasma Capacitor Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Eternal
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true
+  hall_of_heroes_1:
+  - config: Accessory/Armor/Front/Crest/Crest, Cobalt 1
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Simple
+    count: 3
+    locked: true
+  hall_of_heroes_2:
+  - config: Accessory/Armor/Front/Crest/Crest, Cobalt 2
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Glowing
+    count: 5
+    locked: true
+  hall_of_heroes_3:
+  - config: Accessory/Armor/Front/Crest/Crest, Cobalt 3
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Elite
+    count: 1
+    locked: true
+  hall_of_heroes_4:
+  - config: Accessory/Armor/Front/Crest/Crest, Cobalt 3-5
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Eternal
+    count: 1
+    locked: true
+  hall_of_heroes_5:
+  - config: Accessory/Armor/Front/Crest/Crest, Cobalt 4
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Eternal
+    count: 1
+    locked: true
+  heart_of_matter:
+  - config: Rarity/Spark of Life
+    count: 5
+    locked: true
+  high_temperature_hostages:
+  - config: Token/Forge Token
+    count: 2
+    locked: false
+  - config: Rarity/Fire Crystal/Glowing
+    count: 5
+    locked: true
+  honor_duty:
+  - config: Rarity/Fire Crystal/Radiant
+    count: 15
+    locked: true
+  in_cold_blood:
+  - config: Accessory/Armor/Front/Crest/Crest, Beast
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true
+  king_of_ashes:
+  - config: Token/Vanaduke Token
+    count: 1
+    locked: true
+  - config: Rarity/Evo Catalyst/Ultimate Evo Catalyst
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Radiant
+    count: 25
+    locked: true
+  laboratory_visit:
+  - config: Weapon/Sword/Big Beast Basher
+    count: 1
+    locked: true
+  minerals_rock:
+  - config: Weapon/Bomb/Cold Snap
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 2
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  mission_sprite_1:
+  - config: Weapon/Handgun/Zapper
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 3
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  - config: Material/Red Shard
+    count: 3
+    locked: true
+  - config: Material/Brimstone
+    count: 2
+    locked: true
+  mission_sprite_2:
+  - config: Weapon/Sword/Super Slime Slasher
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  - config: Material/Light Shard
+    count: 3
+    locked: true
+  - config: Material/Gel Drop
+    count: 2
+    locked: true
+  mission_sprite_3:
+  - config: Gear/Helm/Spiral Scale Helm
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  - config: Material/Dark Shard
+    count: 3
+    locked: true
+  - config: Material/Ecto Drop
+    count: 2
+    locked: true
+  monstrous_research:
+  - config: Gear/Helm/Spiral Scale Helm
+    count: 1
+    locked: true
+  monstrous_research_2:
+  - config: Weapon/Sword/Heavy Hatchet
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 3
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  monstrous_research_3:
+  - config: Gear/Trinket/Jelly Band
+    count: 1
+    locked: true
+  monstrous_research_4:
+  - config: Gear/Trinket/Crystal Pin
+    count: 1
+    locked: true
+  monstrous_research_5:
+  - config: Gear/Trinket/Skelly Charm
+    count: 1
+    locked: true
+  monstrous_research_6:
+  - config: Rarity/Spark of Life
+    count: 2
+    locked: true
+  monstrous_research_7:
+  - config: Rarity/Spark of Life
+    count: 2
+    locked: true
+  monstrous_research_8:
+  - config: Rarity/Spark of Life
+    count: 2
+    locked: true
+  new_chapter:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  occurance_at_owlite_keep:
+  - config: Recipe/Handgun/Strike Needle Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Radiant
+    count: 5
+    locked: true
+  oilers_in_boilers:
+  - config: Material/Gel Core
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Warm
+    count: 3
+    locked: true
+  pierce_of_cake:
+  - config: Food/Power Stone
+    count: 3
+    locked: true
+  pioneers:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  - config: Recipe/Rarity/Fire Crystal/Dim Recipe
+    count: 1
+    locked: true
+  plan_of_attack:
+  - config: Gear/Trinket/Dewy Wetstone Pendant
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Glowing
+    count: 5
+    locked: true
+  prestigious_opportunity:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  pumping_up:
+  - config: Weapon/Handgun/Super Stun Gun
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  reporting_duty:
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  rescues_and_recycling:
+  - config: Material/Gremlin Gizmo
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Warm
+    count: 3
+    locked: true
+  return_of_ur:
+  - config: Accessory/Armor/Front/Crest/Crest, Fiend
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true
+  rise_or_fall:
+  - config: Recipe/Sword/Tempered Calibur Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Handgun/Super Blaster Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Bomb/Super Blast Bomb Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Advanced
+    count: 3
+    locked: true
+  rotting_metropolis:
+  - config: Recipe/Handgun/Shadow Driver Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Eternal
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true
+  scarlet_fortress:
+  - config: Weapon/Handgun/Zapper
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 3
+  - config: Weapon/Sword/Rugged Robo Wrecker
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  search_continues:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  securing_camp:
+  - config: Rarity/Fire Crystal/Cracked
+    count: 15
+    locked: true
+  - config: Rarity/Spark of Life
+    count: 5
+    locked: true
+  securing_camp_b:
+  - config: Gear/Armor/Vitasuit
+    count: 1
+    locked: true
+  - config: Weapon/Sword/Robo Wrecker
+    count: 1
+    locked: true
+  sewer_stash:
+  - config: Recipe/Sword/Ascended Calibur Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Handgun/Master Blaster Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Bomb/Master Blast Bomb Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Elite
+    count: 1
+    locked: true
+  shadow_beast:
+  - config: Token/Snarbolax Token
+    count: 1
+    locked: true
+  - config: Rarity/Evo Catalyst/Evo Catalyst
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Simple
+    count: 3
+    locked: true
+  shadow_knows:
+  - config: Food/Shadow Stone
+    count: 3
+    locked: true
+  - config: Gear/Armor/Skelly Suit
+    count: 1
+    locked: true
+  - config: Gear/Helm/Skelly Mask
+    count: 1
+    locked: true
+  shadowplay:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  - config: Rarity/Fire Crystal/Radiant
+    count: 15
+    locked: true
+  shocking_sentient_sentries:
+  - config: Material/Iron Gear
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Warm
+    count: 3
+    locked: true
+  shopping_again:
+  - config: Accessory/Armor/Front/Crest/Crest, Stun
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Warm
+    count: 5
+    locked: true
+  shopping_again_b:
+  - config: Accessory/Armor/Front/Crest/Crest, Stun
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Warm
+    count: 5
+    locked: true
+  silent_legion:
+  - config: Material/Trojan Horseshoe
+    count: 1
+    locked: false
+  - config: Material/Sun Silver
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Radiant
+    count: 5
+    locked: true
+  skies_under_cradle:
+  - config: Weapon/Sword/Super Slime Slasher
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  - config: Weapon/Sword/Big Beast Basher
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  sovereign_slime:
+  - config: Token/Jelly Token
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Advanced
+    count: 2
+    locked: true
+  - config: Rarity/Spark of Life
+    count: 2
+    locked: true
+  spark_roar:
+  - config: Accessory/Armor/Front/Crest/Crest, Construct
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true
+  strength_unity:
+  - config: Gear/Shield/Defender
+    count: 1
+    locked: true
+  - config: Weapon/Bomb/Blast Bomb
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Warm
+    count: 5
+    locked: true
+  target_acquired:
+  - config: Rarity/Spark of Life
+    count: 2
+    locked: true
+  terminal_meltdown:
+  - config: Gear/Trinket/Slippery Wetstone Pendant
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Radiant
+    count: 10
+    locked: true
+  the_collector:
+  - config: Rarity/Orb of Alchemy/Flawed
+    count: 3
+    locked: true
+  - config: Rarity/Spark of Life
+    count: 5
+    locked: true
+  the_flickering_flame:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  the_gauntlet:
+  - config: Material/Dragon Scale
+    count: 1
+    locked: false
+  - config: Material/Volcanic Iron
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Radiant
+    count: 15
+    locked: true
+  time_enough_at_last:
+  - config: Recipe/Helm/Solid Cobalt Helm Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Armor/Solid Cobalt Armor Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Shield/Great Defender Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Advanced
+    count: 3
+    locked: true
+  time_to_crafty:
+  - config: Weapon/Sword/Hot Edge
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Construct Damage 3
+  - config: Weapon/Handgun/Frost Gun
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  toy_soldiers:
+  - config: Recipe/Shield/Emberbreak Shield Recipe
+    count: 1
+    locked: true
+  - config: Weapon/Bomb/Firecracker
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 2
+  - config: Rarity/Orb of Alchemy/Flawed
+    count: 3
+    locked: true
+  true_champion:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  vicious_viscous:
+  - config: Accessory/Armor/Front/Crest/Crest, Slime
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true
+  vile_engine:
+  - config: Gear/Trinket/Snowy White Laurel
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Eternal
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true
+  weight_of_darkness:
+  - config: Accessory/Armor/Front/Crest/Crest, Undead
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true
+  welcome_to_haven:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  - config: Recipe/Rarity/Fire Crystal/Cracked Recipe
+    count: 1
+    locked: true
+  welcome_to_haven_b:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  - config: Recipe/Rarity/Fire Crystal/Cracked Recipe
+    count: 1
+    locked: true
+  whipping_mishandling:
+  - config: Recipe/Helm/Mighty Cobalt Helm Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Armor/Mighty Cobalt Armor Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Shield/Mighty Defender Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Elite
+    count: 1
+    locked: true
+  work_idle_hands:
+  - config: Material/Forbidden Fruit
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Warm
+    count: 3
+    locked: true

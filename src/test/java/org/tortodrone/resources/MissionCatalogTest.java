@@ -19,6 +19,21 @@ public final class MissionCatalogTest {
         check(missions.properties().size()==27&&missions.property("Rank/Rank 1").prestigeAvg()==10
             &&missions.property("Rank/Rank 10").prestigeMax()==200,"prestige/crown properties are retained");
 
+        var comlinks=baseline.comlinks();
+        check(comlinks.size()==28,"imported rank comlink dialogue is available");
+        var trace=comlinks.get("another_trace");
+        check(trace!=null&&trace.initial().equals("node_1")&&trace.nodes().size()==4
+            &&trace.nodes().get("node_1").responses().getFirst().destination().equals("node_2")
+            &&trace.nodes().get("node_end").responses().getFirst().terminal(),
+            "derived Simple Images dialogue keeps its chain and terminal screen");
+        var shadow=comlinks.get("shadow_knows");
+        check(shadow!=null&&shadow.nodes().size()==6
+            &&!shadow.nodes().get("part 4a").responses().getFirst().terminal()
+            &&shadow.nodes().get("part 4a").responses().get(1).destination().equals("part 5a")
+            &&shadow.nodes().get("part 6a").responses().getFirst().terminal(),
+            "original dialogue keeps decline branches apart from the closing response");
+        check(comlinks.get("a_call_to_arms").initial().equals("node_end"),"a one-message comlink starts on its closing screen");
+
         var chasm=missions.mission("crossing_chasm");
         check(chasm.name().equals("Rank/01/1.2/Crossing the Chasm")&&chasm.rank()==1&&chasm.subrank()==2
             &&!chasm.repeatable()&&chasm.rescueCamp()&&chasm.test().equals("old_experience"),"rank pair and rescue test fields match the stock card");

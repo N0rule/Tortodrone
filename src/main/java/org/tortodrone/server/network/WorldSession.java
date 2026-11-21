@@ -60,7 +60,7 @@ final class WorldSession implements AutoCloseable {
     private Knight knight;
     private WorldProfile profile;
     private Set<String> memories=Set.of();
-    private Map<OpeningMission,OpeningCompletion> completedOpening=Map.of();
+    private Map<String,OpeningCompletion> completedOpening=Map.of();
     private int acknowledge, created, reference, lastStamp;
     private volatile int sceneGeneration;
     private short ping;
@@ -194,7 +194,7 @@ final class WorldSession implements AutoCloseable {
     private final Set<Short> conversationResponses=new LinkedHashSet<>();
     private String conversationNode;
     private ActorState conversationSource;
-    private OpeningMission conversationMission;
+    private String conversationMission;
     private OpeningMission arrivalComlink;
     /** The one arrival comlink this session already delivered; native bodyEntered spends the
      *  held comlink once, so re-entering the scene must not reopen it. */
@@ -520,8 +520,30 @@ final class WorldSession implements AutoCloseable {
         if(!valid)throw new SessionDecoder.Rejected("Invalid mission arguments");
         if(method==3){
             try{
-                var mission=OpeningMission.byId((String)args.getFirst());
-                openComlink(mission);arrivalComlink=null;
+                var missionId=(String)args.getFirst();
+                var mission=scenes.missions().mission(missionId);
+                if(mission==null||!mission.requirement().type().equals("conversation")&&!mission.requirement().type().equals("gate_conversation"))
+                    throw new IOException("m.internal_error");
+                openComlink(missionId);arrivalComlink=null;
+                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
+            return true;
+        }
+        if(method==1){
+            try{
+                if(closed||!selected())throw new IOException("m.internal_error");
+                var missionId=(String)args.getFirst();var itemIds=(long[])args.get(1);
+                if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                profile=loadProfile(profile);var before=profile;boolean firstEver=completedOpening.isEmpty();
+                var settled=characters.openingMissions(scenes.town(),scenes.missions()).exchange(characters.accountId(),knight.id(),authRevision,profile,missionId,itemIds);
+                profile=settled.profile();
+                if(!settled.completion().equals(completedOpening.get(missionId))){var completed=new LinkedHashMap<>(completedOpening);completed.put(missionId,settled.completion());completedOpening=Map.copyOf(completed);}
+                if(settled.first()){
+                    membership.equipment(visibleProfile());conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);missionDialogCreated=conversationCreated;
+                    output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),scenes.missions().grants(missionId),scenes.missions().prestige(missionId),true,conversationCreated));
+                    output.send(()->codec.itemChanges(oid,knight,before,profile));
+                    if(firstEver)output.send(()->codec.controllerAction(oid,"new_mission",null));partyState();
+                }
                 output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
             return true;
@@ -556,12 +578,29 @@ final class WorldSession implements AutoCloseable {
         if(closed||!selected()||forcedReceiver==null||portalMove!=null||deferredMove!=null||scene.map().id()!=217||!scene.map().town()
             ||!readyRoom&&(!entered||!subscribed||membership==null||membership.health().current()<=0))throw new IOException("m.internal_error");
         if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
-        profile=loadProfile(profile);completedOpening=characters.openingMissions(scenes.town()).load(characters.accountId(),knight.id(),authRevision);
+        profile=loadProfile(profile);completedOpening=characters.openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
         var gate=scenes.openingGate(mission);
-        if(gate==null||!mission.eligible(profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
+        if(gate==null||!scenes.missions().eligible(mission.id(),profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
         scenes.parties().soloGate(partyMember,partyOid(),()->Boolean.TRUE);return gate;
     }
     private void openComlink(OpeningMission mission)throws IOException {openComlink(mission,false);}
+    /** Any imported conversation mission, opened where the knight currently is. */
+    private void openComlink(String missionId)throws IOException {
+        SceneConversation definition=comlink(missionId);
+        if(definition==null||closed||!selected()||!entered||!subscribed||membership==null)throw new IOException("m.internal_error");
+        profile=loadProfile(profile);if(!scenes.missions().eligible(missionId,profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
+        var snapshot=scene.simulation().snapshot();var own=snapshot.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
+        if(own==null||snapshot.portal(own.id())!=null||membership.health().current()<=0)throw new IOException("m.internal_error");
+        if(definition==conversation&&missionId.equals(conversationMission))return;
+        closeTownDialog();closeConversation();conversationMission=missionId;conversation=definition;conversationSource=own;conversationNode=definition.initial();
+        conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);conversationX=own.x();conversationY=own.y();
+        output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,conversationSource,conversationCreated));
+    }
+    private SceneConversation comlink(String missionId){
+        var opening=OpeningMission.byId(missionId);
+        if(opening!=null&&OpeningComlinks.get(opening)!=null)return OpeningComlinks.get(opening);
+        return scenes.comlinks().get(missionId);
+    }
     /** The arrival variant opens during the zone-change flush, mirroring native
      * MissionManager.comlinkArrived from ThetyaSceneManager.bodyEntered: the stock client has
      * already left its scene controller (SceneDirector.forcedMove -> didLeaveScene, then
@@ -572,11 +611,11 @@ final class WorldSession implements AutoCloseable {
      * loading. */
     private void openComlink(OpeningMission mission,boolean arriving)throws IOException {
         if(mission==null||OpeningComlinks.get(mission)==null||closed||!selected()||(!arriving&&(!entered||!subscribed))||membership==null||scene.map().id()!=OpeningComlinks.scene(mission))throw new IOException("m.internal_error");
-        profile=loadProfile(profile);if(!mission.eligible(profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
+        profile=loadProfile(profile);if(!scenes.missions().eligible(mission.id(),profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
         var snapshot=scene.simulation().snapshot();var own=snapshot.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
         if(own==null||snapshot.portal(own.id())!=null||membership.health().current()<=0)throw new IOException("m.internal_error");
-        if(OpeningComlinks.owns(mission,conversation)&&conversationMission==mission)return;
-        closeTownDialog();closeConversation();conversationMission=mission;conversation=OpeningComlinks.get(mission);conversationSource=own;conversationNode=conversation.initial();
+        if(OpeningComlinks.owns(mission,conversation)&&mission.id().equals(conversationMission))return;
+        closeTownDialog();closeConversation();conversationMission=mission.id();conversation=OpeningComlinks.get(mission);conversationSource=own;conversationNode=conversation.initial();
         conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);conversationX=own.x();conversationY=own.y();
         output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,conversationSource,conversationCreated));
     }
@@ -1102,27 +1141,33 @@ final class WorldSession implements AutoCloseable {
         var responses=conversation.nodes().get(conversationNode).responses();
         if(choice<0||choice>=responses.size()){output.send(()->codec.invocationFailure(oid,listener.requestId(),"Invalid conversation choice"));return true;}
         var response=responses.get(choice);String destination=response.destination();
-        var terminal=scene.map().id()==217&&conversation.actor().equals(RHENDON_CAMP)&&conversationNode.equals("part 3a")&&choice==0?OpeningMission.SECURING_CAMP:
-            OpeningComlinks.terminal(conversationMission,conversation,conversationNode,choice)?conversationMission:null;
-        if(terminal!=null){
+        var openingTerminal=conversationMission==null?null:OpeningMission.byId(conversationMission);
+        boolean securing=scene.map().id()==217&&conversation.actor().equals(RHENDON_CAMP)&&conversationNode.equals("part 3a")&&choice==0;
+        String terminalId=securing?OpeningMission.SECURING_CAMP.id():
+            openingTerminal!=null?OpeningComlinks.terminal(openingTerminal,conversation,conversationNode,choice)?conversationMission:null:
+            conversationMission!=null&&response.terminal()?conversationMission:null;
+        if(terminalId!=null){
             var own=scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
-            boolean validSource=terminal==OpeningMission.SECURING_CAMP?membership.conversationValid(conversation,conversationNode,choice,conversationSource):
-                entered&&subscribed&&scene.map().id()==OpeningComlinks.scene(terminal)&&membership.health().current()>0&&conversationSource!=null&&conversationSource.id()==profile.worldId()&&scene.simulation().snapshot().portal(profile.worldId())==null;
-            if(own==null||terminal==OpeningMission.SECURING_CAMP&&Math.hypot(own.x()-conversationX,own.y()-conversationY)>1||!validSource){
+            boolean validSource=securing?membership.conversationValid(conversation,conversationNode,choice,conversationSource):
+                openingTerminal!=null?entered&&subscribed&&scene.map().id()==OpeningComlinks.scene(openingTerminal)&&membership.health().current()>0&&conversationSource!=null&&conversationSource.id()==profile.worldId()&&scene.simulation().snapshot().portal(profile.worldId())==null:
+                entered&&subscribed&&membership.health().current()>0&&conversationSource!=null&&conversationSource.id()==profile.worldId()&&scene.simulation().snapshot().portal(profile.worldId())==null;
+            if(own==null||securing&&Math.hypot(own.x()-conversationX,own.y()-conversationY)>1||!validSource){
                 output.send(()->codec.invocationFailure(oid,listener.requestId(),"Conversation source is unavailable"));return true;
             }
             try{
                 var expectedTerminal=new SceneActions.Sequence(List.of(new SceneActions.Memory(new KnightMemory("talkto_rhendon_icon",false)),new SceneActions.Objective(new KnightObjective("findRhendon",null))),false);
-                if(terminal==OpeningMission.SECURING_CAMP?!expectedTerminal.equals(response.action()):response.action()!=null)throw new IOException("Unsupported mission terminal action graph");
+                if(securing?!expectedTerminal.equals(response.action()):response.action()!=null)throw new IOException("Unsupported mission terminal action graph");
                 profile=loadProfile(profile);var before=profile;boolean firstEver=completedOpening.isEmpty();
-                var settled=characters.openingMissions(scenes.town()).complete(characters.accountId(),knight.id(),authRevision,profile,terminal,null);
+                var settled=characters.openingMissions(scenes.town(),scenes.missions()).complete(characters.accountId(),knight.id(),authRevision,profile,terminalId,null);
                 closeConversation();profile=settled.profile();
                 if(!memories.equals(settled.memories())){var old=memories;memories=settled.memories();output.send(()->codec.knightMemoryChanges(oid,old,memories));}
                 if(!objectives.equals(settled.objectives())){objectives=settled.objectives();output.send(()->codec.knightObjectives(oid,objectives));}
+                if(!settled.completion().equals(completedOpening.get(terminalId))){var completed=new LinkedHashMap<>(completedOpening);completed.put(terminalId,settled.completion());completedOpening=Map.copyOf(completed);}
                 if(settled.first()){
-                    var completed=new EnumMap<OpeningMission,OpeningCompletion>(OpeningMission.class);completed.putAll(completedOpening);completed.put(terminal,settled.completion());completedOpening=Map.copyOf(completed);
                     membership.equipment(visibleProfile());conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);missionDialogCreated=conversationCreated;
-                    output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),conversationCreated));
+                    var entry=scenes.missions().mission(terminalId);
+                    boolean immediate=entry==null||!entry.requirement().type().equals("gate");
+                    output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),scenes.missions().grants(terminalId),scenes.missions().prestige(terminalId),immediate,conversationCreated));
                     output.send(()->codec.itemChanges(oid,knight,before,profile));
                     if(firstEver)output.send(()->codec.controllerAction(oid,"new_mission",own));partyState();
                 }
@@ -1354,7 +1399,7 @@ final class WorldSession implements AutoCloseable {
         partyState();
         if(characters.hasWorldStorage())memories=characters.knightMemories(knight.id(),authRevision);
         if(characters.hasWorldStorage())objectives=characters.knightObjectives(knight.id(),authRevision);
-        if(characters.hasWorldStorage())completedOpening=characters.openingMissions(scenes.town()).load(characters.accountId(),knight.id(),authRevision);
+        if(characters.hasWorldStorage())completedOpening=characters.openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
         output.send(() -> codec.selected(oid, knight, profile, guildView == null ? null : guildView.guild()));
         output.send(() -> codec.knightMemories(oid,memories));
         output.send(() -> codec.knightObjectives(oid,objectives));
@@ -1761,7 +1806,7 @@ final class WorldSession implements AutoCloseable {
         // Arriving comlinks are delivered behind the move response (see completeMove),
         // before the client can answer enteredPlace from inside its loading screen.
         arrivalComlink=null;
-        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&candidate.eligible(profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
+        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&scenes.missions().eligible(candidate.id(),profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
     }
 
     private record AdminLocation(SceneRegistry.Instance scene,int world,String name,float x,float y,float rotation) { }
@@ -2054,7 +2099,7 @@ final class WorldSession implements AutoCloseable {
         membership.enter(snapshot->offer(placeInstance,generation,snapshot));
         if(scene.opening()!=null&&(!scenes.authorized(scene,profile.worldId(),partyMember)||!membership.authorizeElevator(Integer.toString(OpeningGate.GENERATOR_EXIT),Set.of(profile.worldId()))))throw new IOException("Opening mission exit is unavailable");
         arrivalComlink=null;
-        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&candidate.eligible(profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
+        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&scenes.missions().eligible(candidate.id(),profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
         if(auctionAfterArrival){auctionAfterArrival=false;try{openAuction();}catch(IOException refused){unavailable(refused.getMessage());}}
         persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
         flushPendingTravel();
@@ -2401,12 +2446,12 @@ final class WorldSession implements AutoCloseable {
             if(sourceSpec!=null)binding=scene.map().content().conversations().get(sourceSpec.text("dialogue",source.config().name()));
             if(station!=null&&(trades==null||!trades.active(tradeMember))&&own.interaction()!=null&&own.interaction().actorId()==target){openTownDialog(station,source);}
             else if(binding!=null&&(trades==null||!trades.active(tradeMember))&&own.interaction()!=null&&own.interaction().actorId()==target){
-                if(binding.actor().equals(RHENDON_CAMP)&&!completedOpening.containsKey(OpeningMission.SECURING_CAMP)&&!OpeningMission.SECURING_CAMP.eligible(profile.progress(),completedOpening.keySet()))return;
+                if(binding.actor().equals(RHENDON_CAMP)&&!completedOpening.containsKey(OpeningMission.SECURING_CAMP.id())&&!scenes.missions().eligible(OpeningMission.SECURING_CAMP.id(),profile.progress(),completedOpening.keySet()))return;
                 if(binding.initialAction()!=null&&!membership.conversationStart(binding,source))return;
                 closeTownDialog();conversationMission=null;conversation=binding;conversationNode=binding.initial();conversationSource=source;
                 // Repeat node is the archive's documented interim HasCompletedMission branch;
                 // it cannot pay or set the mission completed merely by opening.
-                if(binding.actor().equals(RHENDON_CAMP)&&completedOpening.containsKey(OpeningMission.SECURING_CAMP))conversationNode="part 4a";
+                if(binding.actor().equals(RHENDON_CAMP)&&completedOpening.containsKey(OpeningMission.SECURING_CAMP.id()))conversationNode="part 4a";
                 conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);conversationX=own.x();conversationY=own.y();
                 output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,source,conversationCreated));
             }
@@ -2474,7 +2519,7 @@ final class WorldSession implements AutoCloseable {
                 org.tortodrone.storage.OpeningMissionStore.Settlement settled;
                 try{
                     settled=scenes.parties().soloGate(partyMember,attempt.partyOid(),()->membership.settleSoloFloor(request,
-                        ()->characters.openingMissions(scenes.town()).complete(characters.accountId(),knight.id(),authRevision,before,attempt.gate().mission(),attempt.difficulty(),membership.floorHeat())));
+                        ()->characters.openingMissions(scenes.town(),scenes.missions()).complete(characters.accountId(),knight.id(),authRevision,before,attempt.gate().mission().id(),attempt.difficulty(),membership.floorHeat())));
                 }catch(IOException failure){
                     openingPayoutRetry=stamp+1000;
                     if(!openingPayoutWarning){openingPayoutWarning=true;log.warn("Opening mission settlement failed; keeping the owned ride for retry");}
@@ -2483,10 +2528,11 @@ final class WorldSession implements AutoCloseable {
                 profile=settled.profile();openingAdvance=null;openingPayoutRetry=0;openingPayoutWarning=false;
                 if(!memories.equals(settled.memories())){var old=memories;memories=settled.memories();output.send(()->codec.knightMemoryChanges(oid,old,memories));}
                 if(!objectives.equals(settled.objectives())){objectives=settled.objectives();output.send(()->codec.knightObjectives(oid,objectives));}
+                var gateMission=attempt.gate().mission().id();
+                if(!settled.completion().equals(completedOpening.get(gateMission))){var completed=new LinkedHashMap<>(completedOpening);completed.put(gateMission,settled.completion());completedOpening=Map.copyOf(completed);}
                 if(settled.first()){
-                    var completed=new EnumMap<OpeningMission,OpeningCompletion>(OpeningMission.class);completed.putAll(completedOpening);completed.put(attempt.gate().mission(),settled.completion());completedOpening=Map.copyOf(completed);
                     closeConversation();closeTownDialog();membership.equipment(visibleProfile());conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);missionDialogCreated=conversationCreated;
-                    output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),missionDialogCreated));
+                    output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),scenes.missions().grants(gateMission),scenes.missions().prestige(gateMission),false,missionDialogCreated));
                     output.send(()->codec.itemChanges(oid,knight,before,profile));partyState();
                 }
                 floorReport=new FloorReport(membership,request,stamp);openingDropStarted=false;

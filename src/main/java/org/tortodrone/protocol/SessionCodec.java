@@ -300,15 +300,16 @@ public final class SessionCodec {
         return frame(out->{objectHeader(out,messageId,"com.threerings.projectx.love.data.LoveTestObject",LOVE_TEST_OID);emptyDSet(out);});
     }
     public byte[] completedMissions(int oid,java.util.Collection<org.tortodrone.character.OpeningCompletion> completions)throws IOException {
-        if(completions.size()>org.tortodrone.character.OpeningMission.values().length)throw new IOException("Too many opening receipts");
-        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"completedMissions");type(out,WireTypes.DSET);out.writeInt(completions.size());for(var receipt:completions.stream().sorted(java.util.Comparator.comparing(r->r.mission().id())).toList())missionCompletion(out,receipt);});
+        if(completions.size()>4096)throw new IOException("Too many mission receipts");
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"completedMissions");type(out,WireTypes.DSET);out.writeInt(completions.size());for(var receipt:completions.stream().sorted(java.util.Comparator.comparing(org.tortodrone.character.OpeningCompletion::missionId)).toList())missionCompletion(out,receipt);});
     }
     private void missionCompletion(DataOutputStream out,org.tortodrone.character.OpeningCompletion receipt)throws IOException {
-        type(out,"com.threerings.projectx.mission.data.MissionCompletion");string(out,receipt.mission().id());out.writeLong(receipt.completed());
+        type(out,"com.threerings.projectx.mission.data.MissionCompletion");string(out,receipt.missionId());out.writeLong(receipt.completed());
         if(receipt.difficulty()==null)value(out,null);else{type(out,WireTypes.DIFFICULTY);out.writeByte(java.util.List.of("EASY","MEDIUM","HARD").indexOf(receipt.difficulty()));}
     }
-    public byte[] missionSettlement(int oid,WorldProfile before,WorldProfile after,org.tortodrone.character.OpeningCompletion receipt,long created)throws IOException {
-        var mission=receipt.mission();
+    public byte[] missionSettlement(int oid,WorldProfile before,WorldProfile after,org.tortodrone.character.OpeningCompletion receipt,
+            java.util.List<org.tortodrone.character.MissionCatalog.Grant> rewards,int prestige,boolean immediate,long created)throws IOException {
+        int total=rewards.stream().mapToInt(org.tortodrone.character.MissionCatalog.Grant::count).sum();
         return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,WireTypes.ARRAY_LIST);out.writeInt(6);
             rank(out,oid,after);attribute(out,oid,"prestige",o->value(o,after.progress().prestige()));attribute(out,oid,"progressFlags",o->value(o,after.progress().progressFlags()));
             partyEntry(out,oid,"completedMissions","EntryAddedEvent");missionCompletion(out,receipt);
@@ -316,13 +317,20 @@ public final class SessionCodec {
             attribute(out,oid,"sceneDialog",o->{
                 type(o,"com.threerings.projectx.mission.data.MissionCompleteDialogInfo");
                 o.writeShort(0);o.writeShort(0);o.writeFloat(0);o.writeShort(0);o.writeShort(0);
-                string(o,mission.id());o.writeBoolean(true);o.writeInt(mission.rewards().stream().mapToInt(org.tortodrone.character.OpeningMission.Reward::count).sum());
-                for(var reward:mission.rewards())for(int i=0;i<reward.count();i++)value(o,new StarterCatalog.Model(reward.config(),java.util.Map.of("_createLocked",true)));
-                o.writeInt(mission.prestige());o.writeBoolean(!mission.gate());
+                string(o,receipt.missionId());o.writeBoolean(true);o.writeInt(total);
+                for(var reward:rewards)for(int i=0;i<reward.count();i++)value(o,grantModel(reward));
+                o.writeInt(prestige);o.writeBoolean(immediate);
                 type(o,"com.threerings.projectx.mission.data.RankPair");o.writeInt(before.progress().rank());o.writeInt(before.progress().subrank());o.writeBoolean(true);
                 string(o,"ui/icon/difficulty/"+(receipt.difficulty()==null?"hard":receipt.difficulty().toLowerCase(java.util.Locale.ROOT))+".png");
             });
         });
+    }
+    private static StarterCatalog.Model grantModel(org.tortodrone.character.MissionCatalog.Grant grant){
+        var args=new java.util.TreeMap<String,Object>();
+        if(grant.locked())args.put("_createLocked",true);
+        if(!grant.variants().isEmpty())args.put("_setVariants",new org.tortodrone.world.FireCatalog.ListValue(WireTypes.CONFIG_REFERENCE,
+            new java.util.ArrayList<Object>(grant.variants().stream().map(name->(Object)new StarterCatalog.Model(name,java.util.Map.of())).toList())));
+        return new StarterCatalog.Model(grant.config(),args);
     }
 
     public byte[] exchange(short messageId,org.tortodrone.town.ExchangeState.Book book)throws IOException{
