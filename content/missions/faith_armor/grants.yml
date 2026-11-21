@@ -1,0 +1,13 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  faith_armor:
+  - config: Gear/Helm/Cobalt Helm
+    count: 1
+    locked: true
+  - config: Gear/Armor/Cobalt Armor
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Warm
+    count: 5
+    locked: true

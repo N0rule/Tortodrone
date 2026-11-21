@@ -1,0 +1,40 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  welcome_to_haven_b:
+    initial: part 1a
+    model:
+      arguments:
+        Variant: comlink
+      name: character/npc/crew/model_kora.dat
+    music: Custom/Mission/Comlink
+    name: Mission/Rank/Welcome to Haven B
+    nodes:
+      part 1a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.welcome_to_haven_b_1a
+        responses:
+        - destination: part 2a
+          text: r.welcome_to_haven_b_1a
+      part 2a:
+        interface:
+          arguments:
+            Variant: Default
+            image: ui/conversation/images/mission_2-1/stranger.png
+          name: ui/conversation/interface_comlink.dat
+        message: m.welcome_to_haven_b_2a
+        responses:
+        - destination: part 3a
+          text: r.welcome_to_haven_b_2a
+      part 3a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.welcome_to_haven_b_3a
+        responses:
+        - terminal: true
+          text: r.welcome_to_haven_b_3a

@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_ghost_machine_r7:
+    name: Prestige/Special/Danger Missions/Ghosts in the Machine, Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1348297200000
+        interval: 4d
+    cardImage: ui/mission/images/cards/images/gitm_dangermission.png
+    missionProps: Prestige/Rank 7, 8, Gate

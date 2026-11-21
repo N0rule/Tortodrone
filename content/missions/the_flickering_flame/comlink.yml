@@ -1,0 +1,47 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  the_flickering_flame:
+    initial: node_1
+    model:
+      arguments:
+        Variant: comlink
+      name: character/npc/crew/model_kora.dat
+    name: Mission/Rank/The Flickering Flame
+    nodes:
+      node_1:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.the_flickering_flame_1a
+        responses:
+        - destination: node_2
+          text: r.the_flickering_flame_1a
+      node_2:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.the_flickering_flame_2a
+        responses:
+        - destination: node_3
+          text: r.the_flickering_flame_2a
+      node_3:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.the_flickering_flame_3a
+        responses:
+        - destination: node_end
+          text: r.the_flickering_flame_3a
+      node_end:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.the_flickering_flame_4a
+        responses:
+        - terminal: true
+          text: r.the_flickering_flame_4a

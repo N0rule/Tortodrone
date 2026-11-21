@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  the_gauntlet:
+    name: Rank/09/9.2/The Gauntlet
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 4
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/09/9.2/The Gauntlet (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/zomnight3_lava.png
+    missionProps: Rank/Rank 9
+    rank: 9
+    subrank: 2

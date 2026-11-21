@@ -1,0 +1,18 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  hall_of_heroes_0:
+    name: Hidden/Hall of Heroes
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    restrictions: []
+    missionProps: Hidden/Hidden

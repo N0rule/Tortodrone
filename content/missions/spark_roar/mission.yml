@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  spark_roar:
+    name: Rank/07/7.3/Spark and Roar
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 6
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/07/7.3/Spark and Roar (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/mechaknight3_cooling.png
+    missionProps: Rank/Rank 7
+    rank: 7
+    subrank: 3

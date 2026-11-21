@@ -1,0 +1,24 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  first_mission:
+    name: Examples/First Mission
+    type: rank
+    deployment: NONE
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    missionProps: Dev/Rank 1-1
+    rank: 1
+    subrank: 1

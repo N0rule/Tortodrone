@@ -1,0 +1,15 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  toy_soldiers:
+  - config: Recipe/Shield/Emberbreak Shield Recipe
+    count: 1
+    locked: true
+  - config: Weapon/Bomb/Firecracker
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 2
+  - config: Rarity/Orb of Alchemy/Flawed
+    count: 3
+    locked: true

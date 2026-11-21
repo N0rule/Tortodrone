@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  blades_fallen:
+    name: Rank/03/3.2/Blades of the Fallen
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 4
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/03/3.2/Blades of the Fallen (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/swordyard.png
+    missionProps: Rank/Rank 3
+    rank: 3
+    subrank: 2

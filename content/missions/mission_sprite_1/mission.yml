@@ -1,0 +1,29 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  mission_sprite_1:
+    name: Rank/02/2.2/Drakon Sprite
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 10
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/02/2.2/Drakon Sprite (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: true
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/sprite-drakon.png
+    missionProps: Rank/Rank 2
+    rank: 2
+    subrank: 2
+    needMission: laboratory_visit

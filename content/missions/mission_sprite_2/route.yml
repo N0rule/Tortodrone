@@ -1,0 +1,55 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  mission_sprite_2:
+    colors:
+    - 520
+    - 799
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 564
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.mission_sprite_2|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: castle
+        level: mission_seraphynx_1
+        name: m.mission|%mission:m.mission_sprite_2|m.mission_seraphynx_1
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: clockwork
+        level: mission_seraphynx_2
+        name: m.mission|%mission:m.mission_sprite_2|m.mission_seraphynx_2
+        restricted: false
+        scene: 0
+        type: LEVEL

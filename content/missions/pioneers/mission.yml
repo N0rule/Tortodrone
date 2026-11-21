@@ -1,0 +1,33 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  pioneers:
+    name: Rank/03/3.2/The Pioneers
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 10
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/03/3.2/The Pioneers (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_kora.dat
+          arguments:
+            Variant: comlink
+        music: Custom/Mission/Comlink
+        conversation: Mission/Rank/Pioneers
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-kora_comlink.png
+    missionProps: Rank/Rank 3
+    rank: 3
+    subrank: 2

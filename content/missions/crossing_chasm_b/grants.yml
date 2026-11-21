@@ -1,0 +1,16 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  crossing_chasm_b:
+  - config: Weapon/Sword/Slime Slasher
+    count: 1
+    locked: true
+  - config: Gear/Armor/Fencing Jacket
+    count: 1
+    locked: true
+  - config: Weapon/Bomb/Proto Bomb
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Cracked
+    count: 10
+    locked: true

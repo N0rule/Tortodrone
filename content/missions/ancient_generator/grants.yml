@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  ancient_generator:
+  - config: Gear/Armor/Vitasuit
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Cracked
+    count: 10
+    locked: true

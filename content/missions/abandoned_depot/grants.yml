@@ -1,0 +1,24 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  abandoned_depot:
+  - config: Weapon/Sword/Slime Slasher
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 2
+  - config: Gear/Armor/Vitasuit
+    count: 1
+    locked: true
+    variants:
+    - Gear/Fire Resist 2
+  - config: Weapon/Handgun/Stun Gun
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 2
+  - config: Gear/Helm/Cyclops Cap
+    count: 1
+    locked: true
+    variants:
+    - Gear/Freeze Resist 2

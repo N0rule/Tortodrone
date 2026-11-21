@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  alone_in_dark:
+  - config: Gear/Trinket/Sacred Silver Amulet
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Radiant
+    count: 10
+    locked: true

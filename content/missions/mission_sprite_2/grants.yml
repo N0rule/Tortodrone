@@ -1,0 +1,18 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  mission_sprite_2:
+  - config: Weapon/Sword/Super Slime Slasher
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  - config: Material/Light Shard
+    count: 3
+    locked: true
+  - config: Material/Gel Drop
+    count: 2
+    locked: true

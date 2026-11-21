@@ -1,0 +1,36 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  best_of_beast:
+    initial: node_1
+    model:
+      name: character/npc/crew/model_hahn.dat
+    name: Mission/Rank/Best of the Beast
+    nodes:
+      node_1:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.best_of_beast_1a
+        responses:
+        - destination: node_2
+          text: r.best_of_beast_1a
+      node_2:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.best_of_beast_2a
+        responses:
+        - destination: node_end
+          text: r.best_of_beast_2a
+      node_end:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.best_of_beast_3a
+        responses:
+        - terminal: true
+          text: r.best_of_beast_3a

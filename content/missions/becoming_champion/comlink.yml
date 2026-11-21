@@ -1,0 +1,55 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  becoming_champion:
+    initial: node_1
+    model:
+      name: character/npc/crew/model_feron.dat
+    music: Custom/Mission/Comlink
+    name: Mission/Rank/Becoming Champion
+    nodes:
+      node_1:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.becoming_champion_1a
+        responses:
+        - destination: node_2
+          text: r.becoming_champion_1a
+      node_2:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.becoming_champion_2a
+        responses:
+        - destination: node_3
+          text: r.becoming_champion_2a
+      node_3:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.becoming_champion_3a
+        responses:
+        - destination: node_4
+          text: r.becoming_champion_3a
+      node_4:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.becoming_champion_4a
+        responses:
+        - destination: node_end
+          text: r.becoming_champion_4a
+      node_end:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.becoming_champion_5a
+        responses:
+        - terminal: true
+          text: r.becoming_champion_5a

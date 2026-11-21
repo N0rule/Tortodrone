@@ -1,0 +1,13 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  strength_unity:
+  - config: Gear/Shield/Defender
+    count: 1
+    locked: true
+  - config: Weapon/Bomb/Blast Bomb
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Warm
+    count: 5
+    locked: true

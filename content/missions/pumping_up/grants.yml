@@ -1,0 +1,12 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  pumping_up:
+  - config: Weapon/Handgun/Super Stun Gun
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true

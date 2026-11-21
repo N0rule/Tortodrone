@@ -1,0 +1,7 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  heart_of_matter:
+  - config: Rarity/Spark of Life
+    count: 5
+    locked: true

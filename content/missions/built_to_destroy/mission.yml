@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  built_to_destroy:
+    name: Rank/06/6.2/Built to Destroy
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 4
+    showMissionsOnComplete: true
+    prestige: MAX
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/06/6.2/Built to Destroy (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/imf.png
+    missionProps: Rank/Rank 6
+    rank: 6
+    subrank: 2

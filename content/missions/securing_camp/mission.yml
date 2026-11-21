@@ -1,0 +1,35 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  securing_camp:
+    name: Rank/01/1.1/Rhendon Mission Intro
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/01/1.1/Rhendon Mission Intro (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_rendon.dat
+          arguments:
+            Attachment (Back): ''
+            Attachment (Lift Object): ''
+            Variant: comlink
+        music: Custom/Mission/Comlink
+        conversation: Mission/Rank/Rhendon RC Intro
+    repeatable: true
+    rescueCamp: true
+    retired: false
+    test: old_experience
+    inTest: false
+    cardImage: ui/mission/images/cards/images/knight-rendon.png
+    missionProps: Rank/Rank 1
+    rank: 1
+    subrank: 1

@@ -20,6 +20,8 @@ import xml.etree.ElementTree as ET
 
 import yaml
 
+import mission_layout
+
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 CONVERSATION = "com.threerings.projectx.config.ConversationConfig$"
 ACTION = "com.threerings.projectx.config.ProjectXActionConfig$"
@@ -242,14 +244,17 @@ def load_missions(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--conversations", required=True, type=pathlib.Path)
+    parser.add_argument("--content", type=pathlib.Path, default=ROOT / "content",
+                        help="mission catalogue root; layout 2 writes one comlink.yml per mission")
     parser.add_argument("--missions", type=pathlib.Path,
-                        default=ROOT / "content/missions/rank.yml")
+                        help="flat v1 missions file to read instead of the catalogue root")
     parser.add_argument("--output", type=pathlib.Path,
-                        default=ROOT / "content/missions/comlinks.yml")
+                        help="flat v1 output file; defaults to the catalogue layout")
+    parser.add_argument("--check", action="store_true", help="compare with the checked-in tree instead of writing")
     args = parser.parse_args()
 
     conversations = load_conversations(args.conversations)
-    missions = load_missions(args.missions)
+    missions = load_missions(args.missions) if args.missions is not None else mission_layout.mission_rows(args.content)
     output = {}
     skipped = []
     for mission_id, mission in sorted(missions.items()):
@@ -298,14 +303,25 @@ def main():
 
     for mission_id, reason in skipped:
         print(f"skip {mission_id}: {reason}", file=sys.stderr)
-    document = {"comlinks": output}
-    args.output.write_text(
-        "# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.\n"
-        + yaml.safe_dump(document, sort_keys=True, allow_unicode=True)
-    )
-    print(f"Wrote {args.output}: {len(output)} comlinks, "
-          f"{sum(len(row['nodes']) for row in output.values())} nodes")
-
+    header = "# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py."
+    if args.output is not None:
+        outputs = [(args.output, mission_layout.yaml_text("comlinks", output, header, sort_keys=True, allow_unicode=True))]
+    elif mission_layout.format_of(args.content) == 2:
+        outputs = [(args.content / "missions" / mission_id / "comlink.yml",
+                    mission_layout.yaml_text("comlinks", {mission_id: row}, header, sort_keys=True, allow_unicode=True))
+                   for mission_id, row in sorted(output.items())]
+        stale = [path for path in (args.content / "missions").glob("*/comlink.yml")
+                 if path.parent.name not in output]
+        if stale and args.check:
+            fail("stale comlink files: " + ", ".join(str(path) for path in stale))
+        for path in stale:
+            path.unlink()
+    else:
+        outputs = [(args.content / "missions" / "comlinks.yml",
+                    mission_layout.yaml_text("comlinks", output, header, sort_keys=True, allow_unicode=True))]
+    if not mission_layout.compare(outputs, args.check):
+        mission_layout.write_all(outputs)
+    print(f"Wrote {len(output)} comlinks, {sum(len(row['nodes']) for row in output.values())} nodes")
 
 if __name__ == "__main__":
     main()

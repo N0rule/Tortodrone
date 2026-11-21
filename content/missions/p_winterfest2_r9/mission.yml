@@ -1,0 +1,30 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_winterfest2_r9:
+    name: Prestige/Special/Winterfest/Winterfest 2 Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 9
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Winterfest
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1386748800000
+        interval: 2d
+    briefing: b.p_winterfest_r3
+    cardImage: ui/mission/images/cards/images/winterfest.png

@@ -1,0 +1,68 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  time_enough_at_last:
+    colors:
+    - 520
+    - 775
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 302
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.time_enough_at_last|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 10
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.scarlet_fortress_desc
+        icon: castle
+        level: lost_castle_spiral_court_2_timeenoughatlast
+        name: m.mission|%mission:m.time_enough_at_last|m.lost_castle_spiral_court_2_timeenoughatlast
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.scarlet_fortress_desc
+        icon: castle
+        level: lost_castle_cravat_hall_2_timeenoughatlast
+        name: m.mission|%mission:m.time_enough_at_last|m.lost_castle_cravat_hall_2_timeenoughatlast
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.scarlet_fortress_desc
+        icon: castle
+        level: scarlet_fortress_grim_gallery_eternalstudy
+        name: m.mission|%mission:m.time_enough_at_last|m.scarlet_fortress_grim_gallery_eternalstudy
+        restricted: false
+        scene: 0
+        type: LEVEL

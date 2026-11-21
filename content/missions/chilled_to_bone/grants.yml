@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  chilled_to_bone:
+  - config: Material/Grave Soil
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Warm
+    count: 3
+    locked: true

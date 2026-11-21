@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  darkest_depths:
+  - config: Rarity/Spark of Life
+    count: 2
+    locked: true
+  - config: Recipe/Rarity/Fire Crystal/Glowing Recipe
+    count: 1
+    locked: true

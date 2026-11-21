@@ -1,0 +1,31 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_r7_weap_4:
+    name: Prestige/Rank 7, 8/Exchange/Weapon 4 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: MAX
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Weap Bomb 4
+        - name: Mission/Weap Handgun 4
+        - name: Mission/Weap Sword 4
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1326096000000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 7, 8, Exchange

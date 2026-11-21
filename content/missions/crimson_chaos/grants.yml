@@ -1,0 +1,7 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  crimson_chaos:
+  - config: Rarity/Fire Crystal/Radiant
+    count: 15
+    locked: true

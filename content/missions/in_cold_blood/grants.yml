@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  in_cold_blood:
+  - config: Accessory/Armor/Front/Crest/Crest, Beast
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true

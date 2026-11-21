@@ -1,0 +1,25 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_apocrea_r6:
+    name: Prestige/Special/Shroud of Apocrea/Apocrea Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Apocrea
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    cardImage: ui/mission/images/cards/images/harvester.png

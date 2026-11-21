@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  pioneers:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  - config: Recipe/Rarity/Fire Crystal/Dim Recipe
+    count: 1
+    locked: true

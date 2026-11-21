@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  hall_of_heroes_1:
+    name: Rank/04/4.1/Hall of Heroes
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 4
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/04/4.1/Hall of Heroes (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/hallofheroes.png
+    missionProps: Rank/Rank 4
+    rank: 4
+    subrank: 1

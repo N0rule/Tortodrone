@@ -1,0 +1,56 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  pierce_of_cake:
+    initial: part 1a
+    model:
+      name: character/npc/crew/model_hahn.dat
+    music: Custom/Mission/Comlink
+    name: Mission/Rank/Pierce of Cake
+    nodes:
+      part 1a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.pierce_of_cake_1a
+        responses:
+        - destination: part 2a
+          text: r.pierce_of_cake_1a
+      part 2a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.pierce_of_cake_2a
+        responses:
+        - destination: part 3a
+          text: r.pierce_of_cake_2a
+      part 3a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.pierce_of_cake_3a
+        responses:
+        - destination: part 4a
+          text: r.pierce_of_cake_3a
+      part 4a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.pierce_of_cake_4a
+        responses:
+        - text: r.pierce_of_cake_4a
+        - destination: part 5a
+          text: r.pierce_of_cake_4b
+      part 5a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.pierce_of_cake_5a
+        responses:
+        - terminal: true
+          text: r.pierce_of_cake_5a

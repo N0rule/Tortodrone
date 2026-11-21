@@ -1,0 +1,12 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  monstrous_research_2:
+  - config: Weapon/Sword/Heavy Hatchet
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 3
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true

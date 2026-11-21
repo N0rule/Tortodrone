@@ -1,0 +1,26 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  prestige_gate_2:
+    name: Examples/Prestige Gate 2
+    type: prestige
+    deployment: NONE
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 10
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1328169600000
+        interval: 5d

@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  crossing_chasm:
+    name: Rank/01/1.2/Crossing the Chasm
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/01/1.2/Crossing the Chasm (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: false
+    rescueCamp: true
+    retired: false
+    test: old_experience
+    inTest: true
+    cardImage: ui/mission/images/cards/images/crossingthecasm.png
+    missionProps: Rank/Rank 1
+    rank: 1
+    subrank: 2

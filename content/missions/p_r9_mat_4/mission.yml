@@ -1,0 +1,31 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_r9_mat_4:
+    name: Prestige/Rank 9/Exchange/Material 4 Star
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mat 4
+          arguments:
+            Count: '1'
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325664000000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 9, Exchange

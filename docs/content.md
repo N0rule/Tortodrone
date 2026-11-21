@@ -490,12 +490,15 @@ The same manifest records that list for future import work.
 
 ## Missions
 
-`content/missions/` holds the complete stock mission catalogue, split by implementation
-(`rank.yml`, `prestige.yml`, `expansion.yml`, `hidden.yml`) plus `groups.yml` and
-`properties.yml`. It is generated from the client's exported `mission.xml`,
+`content/missions/` holds the complete stock mission catalogue as one folder per
+mission: `<mission-id>/mission.yml` is required and `grants.yml`, `comlink.yml` and
+`route.yml` are optional. Shared mission groups and prestige/crown properties live in
+`content/shared/missions/`. `content/format.txt` contains `2` and selects this folder
+layout; a tree without the marker (or with `1`) keeps the readable v1 split layout for
+one release. It is generated from the client's exported `mission.xml`,
 `mission_group.xml` and `mission_property.xml`; every id, rank pair, reward reference,
 restriction and prestige range is retained. Startup checks cross-file references and
-rejects unknown fields or malformed data.
+rejects unknown fields, unknown files and mixed v1/v2 trees.
 
 The catalogue exposes definition data, the rank-board helpers (descending priority
 with a stable id tie break, completed-card removal and `needMission` prerequisite
@@ -512,7 +515,7 @@ difficulty band. Conversation missions complete on their closing comlink respons
 and the nine rank exchanges consume exactly their ingredient list through
 mission-service id 1.
 
-`routes.yml` imports the live `MissionGateSummary` capture: gate identity, colours,
+`route.yml` imports the live `MissionGateSummary` capture: gate identity, colours,
 flags and the ordered wheels. A route is playable only when every wedge resolves to
 a bundled canonical scene, each floor has exactly one gate-completing elevator and
 at least one floor is a non-lobby level; the server then advertises that gate and
@@ -527,12 +530,14 @@ The checked-in import contains 273 missions (108 rank, 147 prestige, 3 expansion
 the pinned opening gate). Refresh it deterministically with:
 
 ```sh
+python3 scripts/content/migrate_content_v2.py --content content
 python3 scripts/content/import_missions.py --source /path/to/exported/config
 python3 scripts/content/import_mission_rewards.py --source /path/to/exported/config
 python3 scripts/content/import_mission_comlinks.py --source /path/to/exported/config
 python3 scripts/content/import_mission_routes.py --gates /path/to/live-MissionGateSummary.json \
   --levels /path/to/deployed-levels.tsv
-# Add --check to any of the first three to verify without writing.
+# Add --check to any importer to verify without writing. In format 2 each
+# importer writes its per-mission file atomically; the converter is idempotent.
 ```
 
 ## Map identity, actors, portals and traps

@@ -1,0 +1,31 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  alchemy_beginners:
+    name: Rank/02/2.2/Alchemy for Beginners
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 4
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/02/2.2/Alchemy for Beginners (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_bosco.dat
+        conversation: Mission/Rank/Alchemy for Beginners A
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-bosco_haven.png
+    missionProps: Rank/Rank 2
+    rank: 2
+    subrank: 2
+    needMission: mission_sprite_3

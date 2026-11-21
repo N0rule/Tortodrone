@@ -12,6 +12,8 @@ import argparse, pathlib, sys
 import xml.etree.ElementTree as ET
 import yaml
 
+import mission_layout
+
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 TYPES = {
     "com.threerings.projectx.mission.config.MissionConfig$Rank": "rank",
@@ -419,7 +421,6 @@ def property_row(entry, where):
 
 
 def dump(path, payload, header):
-    path.parent.mkdir(parents=True, exist_ok=True)
     body = yaml.safe_dump(payload, sort_keys=False, allow_unicode=False, width=1000, default_flow_style=False)
     text = header.strip() + "\n\n" + body
     return path, text
@@ -459,7 +460,22 @@ def build(source, content):
             if restriction["type"] == "mission" and restriction["missionId"] not in missions:
                 fail(where, f"unknown restricted mission {restriction['missionId']!r}")
 
+    layout = mission_layout.format_of(content)
     outputs = []
+    if layout == 2:
+        for mission_id, row in sorted(missions.items()):
+            outputs.append(dump(content / "missions" / mission_id / "mission.yml",
+                                {"missions": {mission_id: row}},
+                                "# Imported mission row; regenerate with scripts/content/import_missions.py."))
+        if groups:
+            outputs.append(dump(content / "shared" / "missions" / "groups.yml",
+                                {"groups": dict(sorted(groups.items()))},
+                                "# Imported mission groups; regenerate with scripts/content/import_missions.py."))
+        if properties:
+            outputs.append(dump(content / "shared" / "missions" / "properties.yml",
+                                {"properties": dict(sorted(properties.items()))},
+                                "# Imported mission prestige/crown properties; regenerate with scripts/content/import_missions.py."))
+        return missions, groups, properties, outputs
     for kind in ("rank", "prestige", "expansion", "hidden"):
         rows = {key: row for key, row in sorted(missions.items()) if row["type"] == kind}
         outputs.append(dump(content / "missions" / f"{kind}.yml", {"missions": rows},
@@ -480,18 +496,11 @@ def main():
     args = parser.parse_args()
     missions, groups, properties, outputs = build(args.source, args.content)
     if args.check:
-        bad = []
-        for path, text in outputs:
-            if not path.is_file() or path.read_text() != text:
-                bad.append(str(path))
-        if bad:
-            raise SystemExit("mission catalogue differs: " + ", ".join(bad))
+        mission_layout.compare(outputs, True)
         print(f"PASS: {len(missions)} missions, {len(groups)} groups, {len(properties)} properties match")
         return
-    for path, text in outputs:
-        path.write_text(text)
+    mission_layout.write_all(outputs)
     print(f"Imported {len(missions)} missions, {len(groups)} groups, {len(properties)} properties into {args.content / 'missions'}")
-
 
 if __name__ == "__main__":
     main()

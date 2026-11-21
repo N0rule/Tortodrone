@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  toy_soldiers:
+    name: Rank/03/3.1/Toy Soldiers
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 6
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/03/3.1/Toy Soldiers (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/mechaknight_decon.png
+    missionProps: Rank/Rank 3
+    rank: 3
+    subrank: 1

@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  shocking_sentient_sentries:
+    name: Rank/04/4.3/Shocking Sentient Sentries
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 6
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/04/4.3/Shocking Sentient Sentries (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/mechaknight2_decon.png
+    missionProps: Rank/Rank 4
+    rank: 4
+    subrank: 3

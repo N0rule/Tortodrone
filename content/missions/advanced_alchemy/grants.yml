@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  advanced_alchemy:
+  - config: Weapon/Sword/Brandish
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Warm
+    count: 5
+    locked: true

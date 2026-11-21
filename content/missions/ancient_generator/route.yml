@@ -1,0 +1,42 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  ancient_generator:
+    colors:
+    - 532
+    - 787
+    description: m.training_1_desc
+    destId: 0
+    flags: 8
+    gateId: 398
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.ancient_generator|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: clockwork
+        level: training_grounds_generator
+        name: m.mission|%mission:m.ancient_generator|m.training_grounds_generator
+        restricted: true
+        scene: 337
+        type: LEVEL

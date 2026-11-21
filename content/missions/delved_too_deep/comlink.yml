@@ -1,0 +1,47 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  delved_too_deep:
+    initial: node_1
+    model:
+      arguments:
+        Variant: comlink
+      name: character/npc/crew/model_kora.dat
+    name: Mission/Rank/Delved Too Deep
+    nodes:
+      node_1:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.delved_too_deep_1a
+        responses:
+        - destination: node_2
+          text: r.delved_too_deep_1a
+      node_2:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.delved_too_deep_2a
+        responses:
+        - destination: node_3
+          text: r.delved_too_deep_2a
+      node_3:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.delved_too_deep_3a
+        responses:
+        - destination: node_end
+          text: r.delved_too_deep_3a
+      node_end:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.delved_too_deep_4a
+        responses:
+        - terminal: true
+          text: r.delved_too_deep_4a

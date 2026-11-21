@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  securing_camp_b:
+  - config: Gear/Armor/Vitasuit
+    count: 1
+    locked: true
+  - config: Weapon/Sword/Robo Wrecker
+    count: 1
+    locked: true

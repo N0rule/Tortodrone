@@ -1,0 +1,68 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  shadow_beast:
+    colors:
+    - 2049
+    - 2305
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 295
+    icon: rook
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.shadow_beast|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 4
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.gloaming_wildwoods_desc
+        icon: woods
+        level: gloaming_wildwoods_path
+        name: m.mission|%mission:m.shadow_beast|m.gloaming_wildwoods_path
+        restricted: false
+        scene: 380
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.gloaming_wildwoods_desc
+        icon: woods
+        level: gloaming_wildwoods_ruins
+        name: m.mission|%mission:m.shadow_beast|m.gloaming_wildwoods_ruins
+        restricted: false
+        scene: 382
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.gloaming_wildwoods_desc
+        icon: boss
+        level: gloaming_wildwoods_snarbolax
+        name: m.mission|%mission:m.shadow_beast|m.gloaming_wildwoods_snarbolax
+        restricted: true
+        scene: 384
+        type: LEVEL

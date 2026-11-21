@@ -1,0 +1,13 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  shadow_knows:
+  - config: Food/Shadow Stone
+    count: 3
+    locked: true
+  - config: Gear/Armor/Skelly Suit
+    count: 1
+    locked: true
+  - config: Gear/Helm/Skelly Mask
+    count: 1
+    locked: true

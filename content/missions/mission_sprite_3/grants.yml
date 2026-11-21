@@ -1,0 +1,16 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  mission_sprite_3:
+  - config: Gear/Helm/Spiral Scale Helm
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  - config: Material/Dark Shard
+    count: 3
+    locked: true
+  - config: Material/Ecto Drop
+    count: 2
+    locked: true

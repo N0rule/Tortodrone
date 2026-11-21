@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  sovereign_slime:
+    name: Rank/05/5.2/The Sovereign Slime
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 2
+    showMissionsOnComplete: true
+    prestige: MAX
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/05/5.2/The Sovereign Slime (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/royaljelly_castle.png
+    missionProps: Rank/Rank 5
+    rank: 5
+    subrank: 2

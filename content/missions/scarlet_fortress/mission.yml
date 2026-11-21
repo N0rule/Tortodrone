@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  scarlet_fortress:
+    name: Rank/02/2.2/The Scarlet Fortress
+    type: rank
+    deployment: NONE
+    support: false
+    priority: 8
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/02/2.2/The Scarlet Fortress (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/spookat_castle.png
+    missionProps: Rank/Rank 2
+    rank: 2
+    subrank: 2

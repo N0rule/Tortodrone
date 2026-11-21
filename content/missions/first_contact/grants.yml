@@ -1,0 +1,9 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  first_contact:
+  - config: Weapon/Bomb/Proto Bomb
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3

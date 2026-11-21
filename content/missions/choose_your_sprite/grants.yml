@@ -1,0 +1,13 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  choose_your_sprite:
+  - config: Food/Power Mote
+    count: 3
+    locked: true
+  - config: Food/Divine Mote
+    count: 3
+    locked: true
+  - config: Food/Shadow Mote
+    count: 3
+    locked: true

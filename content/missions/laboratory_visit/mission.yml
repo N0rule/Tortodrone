@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  laboratory_visit:
+    name: Rank/02/2.1/Spiral Laboratory
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 2
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/02/2.1/Spiral Laboratory (Easy)
+    requirement:
+      type: gate_conversation
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-morlin.png
+    missionProps: Rank/Rank 2
+    rank: 2
+    subrank: 1

@@ -1,0 +1,30 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  time_to_crafty:
+    name: Rank/02/2.2/Time to Get Crafty
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 2
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/02/2.2/Time to Get Crafty (Easy)
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Weapon/Sword/Hot Edge
+      - item: Weapon/Handgun/Frost Gun
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/alchemy.png
+    missionProps: Rank/Rank 2
+    rank: 2
+    subrank: 2
+    needMission: alchemy_beginners

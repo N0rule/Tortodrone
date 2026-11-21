@@ -1,0 +1,30 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  reporting_duty:
+    name: Rank/02/2.1/Reporting for Duty
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 8
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/02/2.1/Reporting for Duty (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_feron.dat
+        conversation: Mission/Rank/Reporting for Duty A
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-feron_arcade.png
+    missionProps: Rank/Rank 2
+    rank: 2
+    subrank: 1

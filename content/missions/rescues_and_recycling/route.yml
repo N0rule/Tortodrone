@@ -1,0 +1,55 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  rescues_and_recycling:
+    colors:
+    - 2055
+    - 2305
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 298
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.rescues_and_recycling|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 8
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: clockwork
+        level: ct_gremlin_rescues_and_recycling
+        name: m.ct_gremlin_rescues_and_recycling
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: decon
+        level: dz_knight_rescue_vanilla_rescues_and_recycling
+        name: m.dz_knight_rescue_vanilla_rescues_and_recycling
+        restricted: false
+        scene: 0
+        type: LEVEL

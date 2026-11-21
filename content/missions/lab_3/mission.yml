@@ -1,0 +1,20 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  lab_3:
+    name: Hidden/Lab 3
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: mission_sprite_2
+    missionProps: Hidden/Hidden

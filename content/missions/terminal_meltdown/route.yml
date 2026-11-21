@@ -1,0 +1,68 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  terminal_meltdown:
+    colors:
+    - 2052
+    - 2306
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 323
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.terminal_meltdown|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 23
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: monsters
+        level: lichenous_lair_fire_terminal_meltdown
+        name: m.lichenous_lair_fire_terminal_meltdown
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: compound_critter
+        level: wolver_den_fire_terminal_meltdown
+        name: m.wolver_den_fire_terminal_meltdown
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: clockwork
+        level: bf_slime_fuel_depot
+        name: m.bf_slime_fuel_depot
+        restricted: false
+        scene: 0
+        type: LEVEL

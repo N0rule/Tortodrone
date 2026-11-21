@@ -1,0 +1,14 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  skies_under_cradle:
+  - config: Weapon/Sword/Super Slime Slasher
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  - config: Weapon/Sword/Big Beast Basher
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3

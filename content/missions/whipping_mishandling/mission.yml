@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  whipping_mishandling:
+    name: Rank/06/6.2/Whipping and Mishandling
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 8
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/06/6.2/Whipping and Mishandling (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/devilites_clockworks.png
+    missionProps: Rank/Rank 6
+    rank: 6
+    subrank: 2

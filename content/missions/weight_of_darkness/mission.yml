@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  weight_of_darkness:
+    name: Rank/08/8.1/Weight of Darkness
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 6
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/08/8.1/Weight of Darkness (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/shdpoi3_clockworks.png
+    missionProps: Rank/Rank 8
+    rank: 8
+    subrank: 1

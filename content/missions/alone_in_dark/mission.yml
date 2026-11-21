@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  alone_in_dark:
+    name: Rank/09/9.2/Alone in the Dark
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 6
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/09/9.2/Alone in the Dark (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/lostsoul_clockworks.png
+    missionProps: Rank/Rank 9
+    rank: 9
+    subrank: 2

@@ -1,0 +1,16 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  time_enough_at_last:
+  - config: Recipe/Helm/Solid Cobalt Helm Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Armor/Solid Cobalt Armor Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Shield/Great Defender Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Advanced
+    count: 3
+    locked: true

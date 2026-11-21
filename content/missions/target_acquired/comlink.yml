@@ -1,0 +1,40 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  target_acquired:
+    initial: node_1
+    model:
+      arguments:
+        Variant: comlink
+      name: character/npc/crew/model_kora.dat
+    music: Custom/Mission/Comlink
+    name: Mission/Rank/Target Acquired
+    nodes:
+      node_1:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.target_acquired_1a
+        responses:
+        - destination: node_2
+          text: r.target_acquired_1a
+      node_2:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.target_acquired_2a
+        responses:
+        - destination: node_3
+          text: r.target_acquired_2a
+      node_3:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.target_acquired_3a
+        responses:
+        - destination: node_end
+          text: r.target_acquired_3a
+      node_end:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.target_acquired_4a
+        responses:
+        - terminal: true
+          text: r.target_acquired_4a

@@ -1,0 +1,18 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  a_call_to_arms:
+    initial: node_end
+    model:
+      name: character/npc/crew/model_vaelyn.dat
+    name: Mission/Rank/A Call to Arms
+    nodes:
+      node_end:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.a_call_to_arms1
+        responses:
+        - terminal: true
+          text: r.a_call_to_arms1

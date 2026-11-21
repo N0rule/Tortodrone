@@ -1,0 +1,94 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  dreams_and_nightmares:
+    colors:
+    - 2049
+    - 2305
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 1098
+    icon: knight
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.dreams_and_nightmares|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 23
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.terminal_core_desc
+        icon: terminal
+        level: terminal_core_camefrombelow
+        name: m.mission|%mission:m.dreams_and_nightmares|m.terminal_core_camefrombelow
+        restricted: true
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: core
+        level: core_1
+        name: m.core_1
+        restricted: true
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: core
+        level: core_1
+        name: m.core_1
+        restricted: true
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: core
+        level: core_dreamsandnightmares_finale
+        name: m.mission|%mission:m.dreams_and_nightmares|m.core_dreamsandnightmares_finale
+        restricted: true
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: core
+        level: core_treasure_vault
+        name: m.mission|%mission:m.dreams_and_nightmares|m.core_treasure_vault
+        restricted: true
+        scene: 0
+        type: LEVEL

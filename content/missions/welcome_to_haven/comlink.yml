@@ -1,0 +1,70 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  welcome_to_haven:
+    initial: part 1a
+    model:
+      arguments:
+        Variant: comlink
+      name: character/npc/crew/model_kora.dat
+    music: Custom/Mission/Comlink
+    name: Mission/Rank/Welcome to Haven
+    nodes:
+      part 1a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.welcome_to_haven_1a
+        responses:
+        - destination: part 2a
+          text: r.welcome_to_haven_1a
+      part 2a:
+        interface:
+          arguments:
+            Variant: Default
+            image: ui/conversation/images/mission_2-1/stranger.png
+          name: ui/conversation/interface_comlink.dat
+        message: m.welcome_to_haven_2a
+        responses:
+        - destination: part 3a
+          text: r.welcome_to_haven_2a
+      part 3a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.welcome_to_haven_3a
+        responses:
+        - destination: part 4a
+          text: r.welcome_to_haven_3a
+      part 4a:
+        interface:
+          arguments:
+            Variant: Default
+            image: ui/conversation/images/mission_2-1/useenergy.png
+          name: ui/conversation/interface_comlink.dat
+        message: m.welcome_to_haven_4a
+        responses:
+        - destination: part 5a
+          text: r.welcome_to_haven_4a
+      part 5a:
+        interface:
+          arguments:
+            Variant: Default
+            image: ui/conversation/images/mission_2-1/crsytalenergy_en.png
+          name: ui/conversation/interface_comlink.dat
+        message: m.welcome_to_haven_5a
+        responses:
+        - text: r.welcome_to_haven_5a
+        - destination: part 6a
+          text: r.welcome_to_haven_5b
+      part 6a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.welcome_to_haven_6a
+        responses:
+        - terminal: true
+          text: r.welcome_to_haven_6a

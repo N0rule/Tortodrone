@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  welcome_to_haven:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true
+  - config: Recipe/Rarity/Fire Crystal/Cracked Recipe
+    count: 1
+    locked: true

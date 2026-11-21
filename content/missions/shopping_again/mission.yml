@@ -1,0 +1,30 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  shopping_again:
+    name: Rank/04/4.1/Let's Go Shopping Again!
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 8
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/04/4.1/Let's Go Shopping Again! (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_armorstylist.dat
+        conversation: Mission/Rank/Lets Go Shopping Again A
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-bechamel_haven.png
+    missionProps: Rank/Rank 4
+    rank: 4
+    subrank: 1

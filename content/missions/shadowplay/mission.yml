@@ -1,0 +1,29 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  shadowplay:
+    name: Rank/10/10.2/Shadowplay
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 8
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/10/10.1/10.2/Shadowplay (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/zomnight3_lava.png
+    missionProps: Rank/Rank 10
+    rank: 10
+    subrank: 2
+    needMission: the_flickering_flame

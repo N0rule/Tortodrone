@@ -1,0 +1,14 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  time_to_crafty:
+  - config: Weapon/Sword/Hot Edge
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Construct Damage 3
+  - config: Weapon/Handgun/Frost Gun
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3

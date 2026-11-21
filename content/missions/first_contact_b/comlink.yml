@@ -1,0 +1,70 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  first_contact_b:
+    initial: node_1
+    model:
+      arguments:
+        Variant: comlink
+      name: character/npc/crew/model_kora.dat
+    music: Custom/Mission/Comlink
+    name: Mission/Rank/First Contact B
+    nodes:
+      node_1:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.first_contact_b_1a
+        responses:
+        - destination: node_2
+          text: r.first_contact_b_1a
+      node_2:
+        interface:
+          arguments:
+            Variant: Default
+            image: ui/conversation/images/mission_1-1/rhen-raz-artifact.png
+          name: ui/conversation/interface_comlink.dat
+        message: m.first_contact_b_2a
+        responses:
+        - destination: node_3
+          text: r.first_contact_b_2a
+      node_3:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.first_contact_b_3a
+        responses:
+        - destination: node_4
+          text: r.first_contact_b_3a
+      node_4:
+        interface:
+          arguments:
+            Variant: Default
+            image: ui/conversation/images/mission_1-1/gremlin.png
+          name: ui/conversation/interface_comlink.dat
+        message: m.first_contact_b_4a
+        responses:
+        - destination: node_5
+          text: r.first_contact_b_4a
+      node_5:
+        interface:
+          arguments:
+            Variant: Default
+            image: ui/conversation/images/mission_1-1/haven.png
+          name: ui/conversation/interface_comlink.dat
+        message: m.first_contact_b_5a
+        responses:
+        - destination: node_end
+          text: r.first_contact_b_5a
+      node_end:
+        interface:
+          arguments:
+            Variant: Default
+            image: ui/conversation/images/mission_1-1/haven.png
+          name: ui/conversation/interface_comlink.dat
+        message: m.first_contact_b_6a
+        responses:
+        - terminal: true
+          text: r.first_contact_b_6a

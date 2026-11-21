@@ -1,0 +1,65 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  shadow_knows:
+    initial: part 1a
+    model:
+      name: character/npc/crew/model_hahn.dat
+    music: Custom/Mission/Comlink
+    name: Mission/Rank/The Shadow Knows
+    nodes:
+      part 1a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.shadow_knows_1a
+        responses:
+        - destination: part 2a
+          text: r.shadow_knows_1a
+      part 2a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.shadow_knows_2a
+        responses:
+        - destination: part 3a
+          text: r.shadow_knows_2a
+      part 3a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.shadow_knows_3a
+        responses:
+        - destination: part 4a
+          text: r.shadow_knows_3a
+      part 4a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.shadow_knows_4a
+        responses:
+        - text: r.shadow_knows_4a
+        - destination: part 5a
+          text: r.shadow_knows_4b
+      part 5a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.shadow_knows_5a
+        responses:
+        - destination: part 6a
+          text: r.shadow_knows_5a
+      part 6a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.shadow_knows_6a
+        responses:
+        - terminal: true
+          text: r.shadow_knows_6a

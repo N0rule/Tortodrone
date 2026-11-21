@@ -1,0 +1,7 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  delved_too_deep:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true

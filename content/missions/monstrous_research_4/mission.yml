@@ -1,0 +1,29 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  monstrous_research_4:
+    name: Rank/04/4.3/Monstrous Research
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 4
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/04/4.3/Monstrous Research (Easy)
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Gremlin Gizmo
+      - item: Material/Iron Gear
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Rank/Rank 4
+    rank: 4
+    subrank: 3

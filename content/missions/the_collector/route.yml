@@ -1,0 +1,68 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  the_collector:
+    colors:
+    - 2053
+    - 2305
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 566
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.the_collector|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 1
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: clockwork
+        level: ct_construct
+        name: m.ct_construct
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: miniboss
+        level: mission_collector
+        name: m.mission|%mission:m.the_collector|m.mission_collector
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: town
+        level: haven_laboratory
+        name: m.mission|%mission:m.the_collector|m.haven_laboratory
+        restricted: true
+        scene: 30893
+        type: SUBTOWN

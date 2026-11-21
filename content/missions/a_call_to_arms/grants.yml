@@ -1,0 +1,7 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  a_call_to_arms:
+  - config: Rarity/Spark of Life
+    count: 3
+    locked: true

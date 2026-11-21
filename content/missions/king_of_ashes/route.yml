@@ -1,0 +1,107 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  king_of_ashes:
+    colors:
+    - 524
+    - 779
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 326
+    icon: rook
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.king_of_ashes|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 23
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.firestorm_citadel_desc
+        icon: castle
+        level: firestorm_citadel_blackstone_bridge
+        name: m.mission|%mission:m.king_of_ashes|m.firestorm_citadel_blackstone_bridge
+        restricted: false
+        scene: 264
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.firestorm_citadel_desc
+        icon: castle
+        level: firestorm_citadel_charred_court
+        name: m.mission|%mission:m.king_of_ashes|m.firestorm_citadel_charred_court
+        restricted: false
+        scene: 266
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.firestorm_citadel_desc
+        icon: castle
+        level: firestorm_citadel_ash_armory
+        name: m.mission|%mission:m.king_of_ashes|m.firestorm_citadel_ash_armory
+        restricted: false
+        scene: 262
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.firestorm_citadel_desc
+        icon: castle
+        level: firestorm_citadel_smoldering_steps
+        name: m.mission|%mission:m.king_of_ashes|m.firestorm_citadel_smoldering_steps
+        restricted: false
+        scene: 268
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.vanaduke_desc
+        icon: boss
+        level: firestorm_citadel_vanaduke
+        name: m.mission|%mission:m.king_of_ashes|m.firestorm_citadel_vanaduke
+        restricted: true
+        scene: 270
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.terminal_core_desc
+        icon: terminal
+        level: terminal_core_mission
+        name: m.mission|%mission:m.king_of_ashes|m.terminal_core_mission
+        restricted: false
+        scene: 329
+        type: TERMINAL

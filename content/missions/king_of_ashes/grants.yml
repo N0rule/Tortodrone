@@ -1,0 +1,13 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  king_of_ashes:
+  - config: Token/Vanaduke Token
+    count: 1
+    locked: true
+  - config: Rarity/Evo Catalyst/Ultimate Evo Catalyst
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Radiant
+    count: 25
+    locked: true

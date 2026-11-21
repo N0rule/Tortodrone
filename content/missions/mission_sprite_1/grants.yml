@@ -1,0 +1,18 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  mission_sprite_1:
+  - config: Weapon/Handgun/Zapper
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 3
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true
+  - config: Material/Red Shard
+    count: 3
+    locked: true
+  - config: Material/Brimstone
+    count: 2
+    locked: true

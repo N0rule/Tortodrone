@@ -1,0 +1,24 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  operation_crimson_hammer_3:
+    name: Expansion/Operation Crimson Hammer 3
+    type: expansion
+    deployment: PRODUCTION
+    support: false
+    priority: 1
+    showMissionsOnComplete: true
+    prestige: MAX
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Expansion/Operation Crimson Hammer 3 (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    tier: TIER_3
+    briefing: b.operation_crimson_hammer_1
+    cardImage: ui/mission/images/cards/images/crimson_hammer.png
+    missionProps: Expansion/Expansion Tier 3
+    group: operation_crimson_hammer

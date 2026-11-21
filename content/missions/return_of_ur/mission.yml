@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  return_of_ur:
+    name: Rank/08/8.1/The Return of Ur
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 8
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/08/8.1/The Return of Ur (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/fiends3_clockworks.png
+    missionProps: Rank/Rank 8
+    rank: 8
+    subrank: 1

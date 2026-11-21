@@ -1,0 +1,38 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_moorcroft1_r9:
+    name: Prestige/Special/Moorcroft Event/Moorcroft 1 Rank 9
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: default (Item)
+        arguments:
+          Count: '4'
+          Item:
+            name: Token/Page Token
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Black Kat
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1377068400000
+        interval: 3d
+    briefing: b.p_moorcroft1
+    cardImage: ui/mission/images/cards/images/blackkat1_clockworks.png
+    missionProps: Prestige/Rank 9, Gate

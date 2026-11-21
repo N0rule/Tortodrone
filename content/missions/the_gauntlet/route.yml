@@ -1,0 +1,68 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  the_gauntlet:
+    colors:
+    - 2049
+    - 2305
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 325
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.the_gauntlet|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 23
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: monsters
+        level: devilish_drudgery_shock_the_gauntlet
+        name: m.devilish_drudgery_shock_the_gauntlet
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: decon
+        level: deconstruction_zone_fire_the_gauntlet
+        name: m.deconstruction_zone_fire_the_gauntlet
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: shield
+        level: ba_gauntlet
+        name: m.ba_gauntlet
+        restricted: false
+        scene: 0
+        type: LEVEL

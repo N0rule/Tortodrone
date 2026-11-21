@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  rescues_and_recycling:
+  - config: Material/Gremlin Gizmo
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Warm
+    count: 3
+    locked: true

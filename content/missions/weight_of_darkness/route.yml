@@ -1,0 +1,68 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  weight_of_darkness:
+    colors:
+    - 2051
+    - 2308
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 316
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.weight_of_darkness|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 18
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: pawn
+        level: candlestick_keep_poison_weight_of_darkness
+        name: m.candlestick_keep_poison_weight_of_darkness
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: monsters
+        level: devilish_drudgery_poison_weight_of_darkness
+        name: m.devilish_drudgery_poison_weight_of_darkness
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: shield
+        level: vfa_undead_weight_of_darkness
+        name: m.vfa_undead_weight_of_darkness
+        restricted: false
+        scene: 0
+        type: LEVEL

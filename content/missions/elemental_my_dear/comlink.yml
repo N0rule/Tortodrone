@@ -1,0 +1,47 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  elemental_my_dear:
+    initial: part 1a
+    model:
+      name: character/npc/crew/model_hahn.dat
+    music: Custom/Mission/Comlink
+    name: Mission/Rank/Elemental My Dear
+    nodes:
+      part 1a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.elemental_my_dear_1a
+        responses:
+        - destination: part 2a
+          text: r.elemental_my_dear_1a
+      part 2a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.elemental_my_dear_2a
+        responses:
+        - destination: part 3a
+          text: r.elemental_my_dear_2a
+      part 3a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.elemental_my_dear_3a
+        responses:
+        - text: r.elemental_my_dear_3a
+        - destination: part 4a
+          text: r.elemental_my_dear_3b
+      part 4a:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.elemental_my_dear_4a
+        responses:
+        - terminal: true
+          text: r.elemental_my_dear_4a

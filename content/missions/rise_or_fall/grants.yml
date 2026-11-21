@@ -1,0 +1,16 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  rise_or_fall:
+  - config: Recipe/Sword/Tempered Calibur Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Handgun/Super Blaster Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Bomb/Super Blast Bomb Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Advanced
+    count: 3
+    locked: true

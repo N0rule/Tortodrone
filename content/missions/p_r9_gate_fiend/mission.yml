@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_r9_gate_fiend:
+    name: Prestige/Rank 9/Gate/Fiend
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 9
+      maxRank: 11
+    - type: schedule
+      schedule:
+        refTime: 1325750400000
+        interval: 6d
+    cardImage: ui/mission/images/cards/images/devilites_clockworks.png
+    missionProps: Prestige/Rank 9, Gate

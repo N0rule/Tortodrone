@@ -1,0 +1,55 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  strength_unity:
+    colors:
+    - 2050
+    - 2305
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 293
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.strength_unity|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 3
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: clockwork
+        level: ct_beast
+        name: m.ct_beast
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.aurora_isles_desc
+        icon: island
+        level: geo_knight_camp
+        name: m.mission|%mission:m.strength_unity|m.geo_knight_camp
+        restricted: false
+        scene: 0
+        type: LEVEL

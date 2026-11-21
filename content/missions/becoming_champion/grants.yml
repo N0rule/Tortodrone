@@ -1,0 +1,22 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  becoming_champion:
+  - config: Recipe/Helm/Azure Guardian Helm Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Armor/Azure Guardian Armor Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Shield/Aegis Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Sword/Leviathan Blade Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Handgun/Valiance Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Bomb/Nitronome Recipe
+    count: 1
+    locked: true

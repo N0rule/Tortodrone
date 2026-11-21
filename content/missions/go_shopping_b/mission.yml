@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  go_shopping_b:
+    name: Rank/02/2.1/Bazaar Troubles
+    type: rank
+    deployment: NONE
+    support: false
+    priority: 7
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/02/2.1/Let's Go Shopping! (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/stranger_haven.png
+    missionProps: Rank/Rank 2
+    rank: 2
+    subrank: 1

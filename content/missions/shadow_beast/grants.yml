@@ -1,0 +1,13 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  shadow_beast:
+  - config: Token/Snarbolax Token
+    count: 1
+    locked: true
+  - config: Rarity/Evo Catalyst/Evo Catalyst
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Simple
+    count: 3
+    locked: true

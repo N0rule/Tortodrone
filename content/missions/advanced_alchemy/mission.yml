@@ -1,0 +1,30 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  advanced_alchemy:
+    name: Rank/04/4.1/Advanced Alchemy
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 6
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/04/4.1/Advanced Alchemy (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_bosco.dat
+        conversation: Mission/Rank/Advanced Alchemy A
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/alchemy.png
+    missionProps: Rank/Rank 4
+    rank: 4
+    subrank: 1

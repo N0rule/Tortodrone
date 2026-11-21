@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  from_below:
+    name: Rank/10/10.1/It Came From Below
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 6
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/10/10.1/It Came From Below (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-desna.png
+    missionProps: Rank/Rank 10
+    rank: 10
+    subrank: 1

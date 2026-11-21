@@ -1,0 +1,7 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  explosive_plot:
+  - config: Rarity/Spark of Life
+    count: 2
+    locked: true

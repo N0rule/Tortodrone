@@ -1,0 +1,96 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  pioneers:
+    initial: node_1
+    model:
+      arguments:
+        Variant: comlink
+      name: character/npc/crew/model_kora.dat
+    music: Custom/Mission/Comlink
+    name: Mission/Rank/Pioneers
+    nodes:
+      node_1:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_1a
+        responses:
+        - destination: node_2
+          text: r.pioneers_1a
+      node_10:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_10a
+        responses:
+        - destination: node_11
+          text: r.pioneers_10a
+      node_11:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_11a
+        responses:
+        - destination: node_end
+          text: r.pioneers_11a
+      node_2:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_2a
+        responses:
+        - destination: node_3
+          text: r.pioneers_2a
+      node_3:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_3a
+        responses:
+        - destination: node_4
+          text: r.pioneers_3a
+      node_4:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_4a
+        responses:
+        - destination: node_5
+          text: r.pioneers_4a
+      node_5:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_5a
+        responses:
+        - destination: node_6
+          text: r.pioneers_5a
+      node_6:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_6a
+        responses:
+        - destination: node_7
+          text: r.pioneers_6a
+      node_7:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_7a
+        responses:
+        - destination: node_8
+          text: r.pioneers_7a
+      node_8:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_8a
+        responses:
+        - destination: node_9
+          text: r.pioneers_8a
+      node_9:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_9a
+        responses:
+        - destination: node_10
+          text: r.pioneers_9a
+      node_end:
+        interface:
+          name: ui/conversation/interface_comlink.dat
+        message: m.pioneers_12a
+        responses:
+        - terminal: true
+          text: r.pioneers_12a

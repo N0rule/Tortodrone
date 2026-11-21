@@ -1,0 +1,31 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  heart_of_matter:
+    name: Rank/09/9.3/Heart of the Matter
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 10
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/09/9.3/Heart of the Matter (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_vaelyn.dat
+        music: Custom/Mission/Comlink
+        conversation: Mission/Rank/Heart of the Matter
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-vaelyn_comlink.png
+    missionProps: Rank/Rank 9
+    rank: 9
+    subrank: 3

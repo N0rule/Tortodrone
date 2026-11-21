@@ -1,0 +1,13 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  alien_ooze:
+  - config: Recipe/Armor/Emberbreak Armor Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Helm/Emberbreak Helm Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Flawed
+    count: 3
+    locked: true

@@ -1,0 +1,29 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  monstrous_research_5:
+    name: Rank/05/5.1/Monstrous Research
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 4
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/05/5.1/Monstrous Research (Easy)
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Grave Soil
+      - item: Material/Forbidden Fruit
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Rank/Rank 5
+    rank: 5
+    subrank: 1

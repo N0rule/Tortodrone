@@ -1,0 +1,24 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_testmission_1:
+    name: Prestige/internal TEST mission
+    type: prestige
+    deployment: DEV
+    support: true
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 1
+      maxRank: 11
+    cardImage: ui/mission/images/cards/images/creepcakes_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate

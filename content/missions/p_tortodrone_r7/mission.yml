@@ -1,0 +1,25 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_tortodrone_r7:
+    name: Prestige/Special/Tortodrone Event/Tortodrone Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 10
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: false
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: event
+      event: Tortodrone
+    cardImage: ui/mission/images/cards/images/tortodrone-aggro_clockworks.png

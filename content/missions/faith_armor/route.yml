@@ -1,0 +1,42 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  faith_armor:
+    colors:
+    - 2049
+    - 2305
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 292
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.faith_armor|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 3
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.training_grounds_desc
+        icon: clockwork
+        level: trap_chamber
+        name: m.mission|%mission:m.faith_armor|m.trap_chamber
+        restricted: false
+        scene: 0
+        type: LEVEL

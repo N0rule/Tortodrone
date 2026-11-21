@@ -1,0 +1,54 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  creators_and_created:
+    initial: node_1
+    model:
+      name: character/npc/crew/model_hahn.dat
+    name: Mission/Rank/Creators and the Created
+    nodes:
+      node_1:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.creators_and_created_1a
+        responses:
+        - destination: node_2
+          text: r.creators_and_created_1a
+      node_2:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.creators_and_created_2a
+        responses:
+        - destination: node_3
+          text: r.creators_and_created_2a
+      node_3:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.creators_and_created_3a
+        responses:
+        - destination: node_4
+          text: r.creators_and_created_3a
+      node_4:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.creators_and_created_4a
+        responses:
+        - destination: node_end
+          text: r.creators_and_created_4a
+      node_end:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.creators_and_created_5a
+        responses:
+        - terminal: true
+          text: r.creators_and_created_5a

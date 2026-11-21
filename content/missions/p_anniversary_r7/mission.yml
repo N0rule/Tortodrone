@@ -1,0 +1,29 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_anniversary_r7:
+    name: Prestige/Special/Anniversary/Anniversary Rank 7,8
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Treasure/Event/Anniversary/Cake Slice (T3)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: event
+      event: Anniversary
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    cardImage: ui/mission/images/cards/images/creepcakes_clockworks.png
+    missionProps: Prestige/Rank 7, 8, Gate

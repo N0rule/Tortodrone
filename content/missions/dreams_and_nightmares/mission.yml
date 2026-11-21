@@ -1,0 +1,29 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  dreams_and_nightmares:
+    name: Rank/10/10.2/Dreams and Nightmares
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 4
+    showMissionsOnComplete: true
+    prestige: HIGH
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/10/10.1/10.2/Dreams and Nightmares (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/core_closed.png
+    missionProps: Rank/Rank 10
+    rank: 10
+    subrank: 2
+    needMission: a_call_to_arms

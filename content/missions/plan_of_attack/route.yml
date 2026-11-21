@@ -1,0 +1,55 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  plan_of_attack:
+    colors:
+    - 2055
+    - 2309
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 306
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.plan_of_attack|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 13
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: clockwork
+        level: ww_fiend_plan_of_attack
+        name: m.ww_fiend_plan_of_attack
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: clockwork
+        level: pc_gremlin_plan_o_attack
+        name: m.pc_gremlin_plan_o_attack
+        restricted: false
+        scene: 0
+        type: LEVEL

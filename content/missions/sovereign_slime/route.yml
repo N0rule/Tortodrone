@@ -1,0 +1,68 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  sovereign_slime:
+    colors:
+    - 546
+    - 799
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 304
+    icon: rook
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.sovereign_slime|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 13
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.royal_jelly_desc
+        icon: castle
+        level: royal_jelly_garden
+        name: m.mission|%mission:m.sovereign_slime|m.royal_jelly_garden
+        restricted: false
+        scene: 253
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.royal_jelly_desc
+        icon: castle
+        level: royal_jelly_court
+        name: m.mission|%mission:m.sovereign_slime|m.royal_jelly_court
+        restricted: false
+        scene: 251
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.royal_jelly_desc
+        icon: boss
+        level: royal_jelly_lair
+        name: m.mission|%mission:m.sovereign_slime|m.royal_jelly_lair
+        restricted: true
+        scene: 255
+        type: LEVEL

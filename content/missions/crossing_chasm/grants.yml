@@ -1,0 +1,19 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  crossing_chasm:
+  - config: Weapon/Sword/Hatchet
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 2
+  - config: Weapon/Handgun/Punch Gun
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3
+  - config: Weapon/Sword/Beast Basher
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 2

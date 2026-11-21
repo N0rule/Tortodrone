@@ -1,0 +1,68 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  high_temperature_hostages:
+    colors:
+    - 2055
+    - 2306
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 307
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.high_temperature_hostages|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 13
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: monsters
+        level: wolver_den_fire_high_temperature_hostages
+        name: m.wolver_den_fire_high_temperature_hostages
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: clockwork
+        level: bf_construct_high_temperature_hostages
+        name: m.bf_construct_high_temperature_hostages
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: decon
+        level: dz_bp_knight_rescue_fire
+        name: m.dz_bp_knight_rescue_fire
+        restricted: false
+        scene: 0
+        type: LEVEL

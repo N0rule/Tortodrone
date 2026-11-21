@@ -1,0 +1,21 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  tutorial_mission:
+    name: Tutorial/Tutorial Mission
+    type: hidden
+    deployment: DEV
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Tutorial/Tutorial Mission
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions: []
+    missionProps: Hidden/Hidden

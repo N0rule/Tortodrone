@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  shopping_again_b:
+  - config: Accessory/Armor/Front/Crest/Crest, Stun
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Warm
+    count: 5
+    locked: true

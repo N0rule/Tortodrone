@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  securing_camp:
+  - config: Rarity/Fire Crystal/Cracked
+    count: 15
+    locked: true
+  - config: Rarity/Spark of Life
+    count: 5
+    locked: true

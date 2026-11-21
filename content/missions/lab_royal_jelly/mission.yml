@@ -1,0 +1,20 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  lab_royal_jelly:
+    name: Hidden/Lab Royal Jelly Complete
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: sovereign_slime
+    missionProps: Hidden/Hidden

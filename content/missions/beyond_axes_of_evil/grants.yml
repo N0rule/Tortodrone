@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  beyond_axes_of_evil:
+  - config: Accessory/Armor/Front/Crest/Crest, Gremlin
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true

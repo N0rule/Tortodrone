@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  hall_of_heroes_4:
+  - config: Accessory/Armor/Front/Crest/Crest, Cobalt 3-5
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Eternal
+    count: 1
+    locked: true

@@ -45,7 +45,7 @@ public final class ContentManager {
             var townData=TownYaml.data(content.resolve("town"),definitions.items());TownYaml.references(townData,definitions.items());
             var town=org.tortodrone.town.TownCatalog.fromData(townData);
             var presentation=PresentationCatalog.load(content.resolve("shared/presentation.yml"));
-            var missionDefinitions=MissionYaml.definitions(content.resolve("missions"));
+            var missionDefinitions=MissionYaml.definitions(content);
             var missions=missionDefinitions.missions();
             if(missions.size()==0)warnings.add("Mission catalogue is missing; mission definitions cannot be served");
             for(var entry:missions.missions())for(var grant:missions.grants(entry.id()))if(definitions.items().find(grant.config())==null)throw new IOException("Mission "+entry.id()+" grants missing item: "+grant.config());

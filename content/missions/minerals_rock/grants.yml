@@ -1,0 +1,12 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  minerals_rock:
+  - config: Weapon/Bomb/Cold Snap
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 2
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true

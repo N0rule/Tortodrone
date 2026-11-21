@@ -1,0 +1,16 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  sewer_stash:
+  - config: Recipe/Sword/Ascended Calibur Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Handgun/Master Blaster Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Bomb/Master Blast Bomb Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Elite
+    count: 1
+    locked: true

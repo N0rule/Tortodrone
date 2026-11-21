@@ -1,0 +1,30 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  best_of_beast:
+    name: Rank/07/7.2/Best of the Beast
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 10
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/07/7.2/Best of the Beast (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_hahn.dat
+        conversation: Mission/Rank/Best of the Beast
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/wolver3_clockwork.png
+    missionProps: Rank/Rank 7
+    rank: 7
+    subrank: 2

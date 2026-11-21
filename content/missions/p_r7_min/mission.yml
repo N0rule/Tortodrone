@@ -1,0 +1,32 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_r7_min:
+    name: Prestige/Rank 7, 8/Exchange/Mineral
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: choose_exchange
+      choose:
+      - recipes:
+        - name: Mission/Mineral
+          arguments:
+            Count: '20'
+        choose: 2
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 7
+      maxRank: 9
+    - type: schedule
+      schedule:
+        refTime: 1325491200000
+        interval: 9d
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Prestige/Rank 7, 8, Exchange

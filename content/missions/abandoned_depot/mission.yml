@@ -1,0 +1,28 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  abandoned_depot:
+    name: Rank/01/1.1/The Abandoned Depot
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/01/1.1/The Abandoned Depot (Easy)
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    repeatable: true
+    rescueCamp: true
+    retired: false
+    test: old_experience
+    inTest: true
+    cardImage: ui/mission/images/cards/images/scuttlebot_clockworks.png
+    missionProps: Rank/Rank 1
+    rank: 1
+    subrank: 1

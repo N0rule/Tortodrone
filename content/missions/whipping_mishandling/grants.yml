@@ -1,0 +1,16 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  whipping_mishandling:
+  - config: Recipe/Helm/Mighty Cobalt Helm Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Armor/Mighty Cobalt Armor Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Shield/Mighty Defender Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Elite
+    count: 1
+    locked: true

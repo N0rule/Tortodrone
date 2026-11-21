@@ -1,0 +1,17 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  pseudoplayer_test:
+    name: PseudoPlayer Gate Mission
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    restrictions: []

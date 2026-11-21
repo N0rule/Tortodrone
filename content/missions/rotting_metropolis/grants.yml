@@ -1,0 +1,13 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  rotting_metropolis:
+  - config: Recipe/Handgun/Shadow Driver Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Eternal
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Shining
+    count: 5
+    locked: true

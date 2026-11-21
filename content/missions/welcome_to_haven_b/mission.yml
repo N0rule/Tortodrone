@@ -1,0 +1,33 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  welcome_to_haven_b:
+    name: Rank/02/2.1/Welcome to Haven! B
+    type: rank
+    deployment: NONE
+    support: false
+    priority: 10
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/02/2.1/Welcome to Haven! (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_kora.dat
+          arguments:
+            Variant: comlink
+        music: Custom/Mission/Comlink
+        conversation: Mission/Rank/Welcome to Haven B
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-kora_comlink.png
+    missionProps: Rank/Rank 2
+    rank: 2
+    subrank: 1

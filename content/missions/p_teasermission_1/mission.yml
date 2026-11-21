@@ -1,0 +1,24 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_teasermission_1:
+    name: Prestige/TEASER mission
+    type: prestige
+    deployment: DEV
+    support: true
+    priority: 6
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: false
+    restrictions:
+    - type: rank_range
+      rank: 1
+      maxRank: 11
+    cardImage: ui/mission/images/cards/images/thwacker2_clockworks.png
+    missionProps: Prestige/Rank 4, 5, Gate

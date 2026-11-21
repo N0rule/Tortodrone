@@ -1,0 +1,7 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  monstrous_research_5:
+  - config: Gear/Trinket/Skelly Charm
+    count: 1
+    locked: true

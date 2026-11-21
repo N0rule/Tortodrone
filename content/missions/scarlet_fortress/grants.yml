@@ -1,0 +1,14 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  scarlet_fortress:
+  - config: Weapon/Handgun/Zapper
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Attack Speed 3
+  - config: Weapon/Sword/Rugged Robo Wrecker
+    count: 1
+    locked: true
+    variants:
+    - Weapon/Charge Time 3

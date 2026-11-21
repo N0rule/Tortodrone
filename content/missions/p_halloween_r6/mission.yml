@@ -1,0 +1,26 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  p_halloween_r6:
+    name: Prestige/Special/Halloween/Halloween Rank 6
+    type: prestige
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: true
+      dissolveToLab: false
+    daily: true
+    onceOnly: true
+    restrictions:
+    - type: rank_range
+      rank: 6
+      maxRank: 7
+    - type: event
+      event: Dark Harvest
+    cardImage: ui/mission/images/cards/images/punkin_king.png
+    missionProps: Prestige/Rank 6, Gate

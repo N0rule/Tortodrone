@@ -1,0 +1,7 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  best_of_beast:
+  - config: Food/Power Orb
+    count: 3
+    locked: true

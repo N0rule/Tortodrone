@@ -1,0 +1,33 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  delved_too_deep:
+    name: Rank/10/10.2/Delved Too Deep
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 2
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/10/10.1/10.2/Delved Too Deep (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_kora.dat
+          arguments:
+            Variant: comlink
+        conversation: Mission/Rank/Delved Too Deep
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-kora_comlink.png
+    missionProps: Rank/Rank 10
+    rank: 10
+    subrank: 2
+    needMission: dreams_and_nightmares

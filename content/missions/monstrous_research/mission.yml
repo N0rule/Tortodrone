@@ -1,0 +1,29 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  monstrous_research:
+    name: Rank/02/2.2/Monstrous Research
+    type: rank
+    deployment: NONE
+    support: false
+    priority: 6
+    showMissionsOnComplete: true
+    prestige: AVG
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/02/2.2/Monstrous Research (Easy)
+    requirement:
+      type: exchange
+      ingredients:
+      - item: Material/Sharp Fang
+      - item: Material/Ecto Drop
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/itemturnin.png
+    missionProps: Rank/Rank 2
+    rank: 2
+    subrank: 2

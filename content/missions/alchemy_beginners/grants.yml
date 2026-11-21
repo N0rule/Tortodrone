@@ -1,0 +1,19 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  alchemy_beginners:
+  - config: Recipe/Sword/Hot Edge Recipe
+    count: 1
+    locked: true
+  - config: Recipe/Handgun/Frost Gun Recipe
+    count: 1
+    locked: true
+  - config: Rarity/Orb of Alchemy/Flawed
+    count: 9
+    locked: true
+  - config: Material/Green Shard
+    count: 3
+    locked: true
+  - config: Material/Spark Plug
+    count: 2
+    locked: true

@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  plan_of_attack:
+  - config: Gear/Trinket/Dewy Wetstone Pendant
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Glowing
+    count: 5
+    locked: true

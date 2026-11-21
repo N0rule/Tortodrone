@@ -1,0 +1,13 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  the_gauntlet:
+  - config: Material/Dragon Scale
+    count: 1
+    locked: false
+  - config: Material/Volcanic Iron
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Radiant
+    count: 15
+    locked: true

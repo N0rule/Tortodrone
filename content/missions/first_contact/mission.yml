@@ -1,0 +1,33 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  first_contact:
+    name: Rank/01/1.1/First Contact
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 2
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/01/1.1/First Contact (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_kora.dat
+          arguments:
+            Variant: comlink
+        music: Custom/Mission/Comlink
+        conversation: Mission/Rank/First Contact
+    repeatable: true
+    rescueCamp: true
+    retired: false
+    test: old_experience
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-kora_comlink.png
+    missionProps: Rank/Rank 1
+    rank: 1
+    subrank: 1

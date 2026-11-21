@@ -1,0 +1,13 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  silent_legion:
+  - config: Material/Trojan Horseshoe
+    count: 1
+    locked: false
+  - config: Material/Sun Silver
+    count: 1
+    locked: false
+  - config: Rarity/Fire Crystal/Radiant
+    count: 5
+    locked: true

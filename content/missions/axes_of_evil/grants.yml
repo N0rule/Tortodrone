@@ -1,0 +1,10 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  axes_of_evil:
+  - config: Gear/Trinket/Redwood Bracelet
+    count: 1
+    locked: true
+  - config: Rarity/Fire Crystal/Glowing
+    count: 5
+    locked: true

@@ -1,0 +1,20 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  lab_new_threat:
+    name: Hidden/Lab A New Threat
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: new_threat
+    missionProps: Hidden/Hidden

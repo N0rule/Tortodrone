@@ -1,0 +1,68 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  occurance_at_owlite_keep:
+    colors:
+    - 2051
+    - 2307
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 320
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.occurance_at_owlite_keep|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 23
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: graveyard
+        level: graveyard_occurance_at_owlite_keep
+        name: m.graveyard_occurance_at_owlite_keep
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.scarlet_fortress_desc
+        icon: castle
+        level: lost_castle_cravat_hall_3_occuranceatowlitekeep
+        name: m.mission|%mission:m.occurance_at_owlite_keep|m.lost_castle_cravat_hall_3_occuranceatowlitekeep
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: pawn
+        level: ck_freeze_owlite_tome
+        name: m.ck_freeze_owlite_tome
+        restricted: false
+        scene: 0
+        type: LEVEL

@@ -20,6 +20,8 @@ import xml.etree.ElementTree as ET
 
 import yaml
 
+import mission_layout
+
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PREFIX = "com.threerings.projectx.dungeon.config.SpawnTableConfig$"
 ITEM_ENTRIES = {
@@ -172,14 +174,17 @@ def load_missions(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--spawn-table", required=True, type=pathlib.Path)
+    parser.add_argument("--content", type=pathlib.Path, default=ROOT / "content",
+                        help="mission catalogue root; layout 2 writes one grants.yml per mission")
     parser.add_argument("--missions", type=pathlib.Path,
-                        default=ROOT / "content/missions/rank.yml")
+                        help="flat v1 missions file to read instead of the catalogue root")
     parser.add_argument("--output", type=pathlib.Path,
-                        default=ROOT / "content/missions/grants.yml")
+                        help="flat v1 output file; defaults to the catalogue layout")
+    parser.add_argument("--check", action="store_true", help="compare with the checked-in tree instead of writing")
     args = parser.parse_args()
 
     tables = load_spawn_tables(args.spawn_table)
-    missions = load_missions(args.missions)
+    missions = load_missions(args.missions) if args.missions is not None else mission_layout.mission_rows(args.content)
     output = {}
     for mission_id, mission in sorted(missions.items()):
         rewards = mission.get("rewards") or []
@@ -204,28 +209,34 @@ def main():
                 fail(name, "spawn table has no root")
             granted.extend(grants(root, f"{name}.root"))
         if granted:
-            output[mission_id] = granted
+            output[mission_id] = [
+                {key: value for key, value in row.items() if key != "variants" or value}
+                for row in granted
+            ]
 
     for mission_id in output:
         if mission_id not in missions:
             fail(mission_id, "grant has no mission")
 
-    document = {
-        "grants": {
-            mission_id: [
-                {key: value for key, value in row.items() if key != "variants" or value}
-                for row in rows
-            ]
-            for mission_id, rows in output.items()
-        }
-    }
-    args.output.write_text(
-        "# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.\n"
-        + yaml.safe_dump(document, sort_keys=True, allow_unicode=True)
-    )
-    print(f"Wrote {args.output}: {len(output)} missions, "
-          f"{sum(len(rows) for rows in output.values())} grants")
-
+    header = "# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py."
+    if args.output is not None:
+        outputs = [(args.output, mission_layout.yaml_text("grants", output, header, sort_keys=True, allow_unicode=True))]
+    elif mission_layout.format_of(args.content) == 2:
+        outputs = [(args.content / "missions" / mission_id / "grants.yml",
+                    mission_layout.yaml_text("grants", {mission_id: rows}, header, sort_keys=True, allow_unicode=True))
+                   for mission_id, rows in sorted(output.items())]
+        stale = [path for path in (args.content / "missions").glob("*/grants.yml")
+                 if path.parent.name not in output]
+        if stale and args.check:
+            fail("stale grant files: " + ", ".join(str(path) for path in stale))
+        for path in stale:
+            path.unlink()
+    else:
+        outputs = [(args.content / "missions" / "grants.yml",
+                    mission_layout.yaml_text("grants", output, header, sort_keys=True, allow_unicode=True))]
+    if not mission_layout.compare(outputs, args.check):
+        mission_layout.write_all(outputs)
+    print(f"Wrote {len(output)} missions, {sum(len(rows) for rows in output.values())} grants")
 
 if __name__ == "__main__":
     main()

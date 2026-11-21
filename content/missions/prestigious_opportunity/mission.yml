@@ -1,0 +1,34 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  prestigious_opportunity:
+    name: Rank/03/3.1/A Prestigious Opportunity
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 12
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/03/3.1/A Prestigious Opportunity (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        name: n.prestigious_opportunity
+        model:
+          name: character/npc/crew/model_kora.dat
+          arguments:
+            Variant: comlink
+        music: Custom/Mission/Comlink
+        conversation: Mission/Rank/Prestigious Opportunity
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-kora_comlink.png
+    missionProps: Rank/Rank 3
+    rank: 3
+    subrank: 1

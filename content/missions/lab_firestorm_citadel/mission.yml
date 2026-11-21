@@ -1,0 +1,20 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  lab_firestorm_citadel:
+    name: Hidden/Lab Firestorm Citadel Complete
+    type: hidden
+    deployment: PRODUCTION
+    support: false
+    priority: 0
+    showMissionsOnComplete: false
+    prestige: LOW
+    rewards: []
+    requirement:
+      type: gate
+      hasObjective: false
+      dissolveToLab: false
+    restrictions:
+    - type: mission
+      missionId: king_of_ashes
+    missionProps: Hidden/Hidden

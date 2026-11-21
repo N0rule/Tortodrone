@@ -1,0 +1,7 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  go_shopping_b:
+  - config: Rarity/Fire Crystal/Dim
+    count: 5
+    locked: true

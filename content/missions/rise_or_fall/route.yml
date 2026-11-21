@@ -1,0 +1,68 @@
+# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py.
+
+routes:
+  rise_or_fall:
+    colors:
+    - 2052
+    - 2309
+    description: '~'
+    destId: 0
+    flags: 8
+    gateId: 303
+    icon: pawn
+    priority: 0
+    sourceId: 0
+    tokens: 0
+    wheels:
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: m.lobby_desc
+        icon: lobby
+        level: mission_lobby
+        name: m.mission|%mission:m.rise_or_fall|m.mission_lobby
+        restricted: false
+        scene: 351
+        type: LOBBY
+    - lengths:
+      - 6.2831855
+      skip: 10
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: monsters
+        level: wolver_den_shock_rise_or_fall
+        name: m.wolver_den_shock_rise_or_fall
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: monsters
+        level: lichenous_lair_shock_rise_or_fall
+        name: m.lichenous_lair_shock_rise_or_fall
+        restricted: false
+        scene: 0
+        type: LEVEL
+    - lengths:
+      - 6.2831855
+      skip: 0
+      start: 1787270400000
+      velocity: 0.0
+      wedges:
+      - description: '~'
+        icon: shield
+        level: iea_slime_noexit_rise_or_fall
+        name: m.iea_slime_noexit_rise_or_fall
+        restricted: false
+        scene: 0
+        type: LEVEL

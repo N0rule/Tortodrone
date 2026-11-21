@@ -1,0 +1,31 @@
+# Imported mission row; regenerate with scripts/content/import_missions.py.
+
+missions:
+  a_call_to_arms:
+    name: Rank/10/10.2/A Call to Arms
+    type: rank
+    deployment: PRODUCTION
+    support: false
+    priority: 6
+    showMissionsOnComplete: true
+    prestige: LOW
+    rewards:
+    - difficulty: EASY
+      rewards:
+        name: Mission/Rank/10/10.1/10.2/A Call to Arms (Easy)
+    requirement:
+      type: conversation
+      conversation:
+        model:
+          name: character/npc/crew/model_vaelyn.dat
+        conversation: Mission/Rank/A Call to Arms
+    repeatable: true
+    rescueCamp: false
+    retired: false
+    test: ''
+    inTest: true
+    cardImage: ui/mission/images/cards/images/knight-vaelyn_comlink.png
+    missionProps: Rank/Rank 10
+    rank: 10
+    subrank: 2
+    needMission: shadowplay

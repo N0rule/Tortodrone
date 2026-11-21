@@ -1,0 +1,19 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  shopping_again_b:
+    initial: part 1a
+    model:
+      name: character/npc/crew/model_armorstylist.dat
+    name: Mission/Rank/Lets Go Shopping Again A-2
+    nodes:
+      part 1a:
+        message: m.shopping_again_b_1a
+        responses:
+        - destination: part 2a
+          text: r.shopping_again_1a
+      part 2a:
+        message: m.shopping_again_2a
+        responses:
+        - terminal: true
+          text: r.shopping_again_2a

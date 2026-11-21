@@ -1,0 +1,48 @@
+# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py.
+
+comlinks:
+  another_trace:
+    initial: node_1
+    model:
+      arguments:
+        Variant: default
+      name: character/npc/crew/model_kora.dat
+    music: Custom/Mission/Comlink
+    name: Mission/Rank/Another Trace
+    nodes:
+      node_1:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.another_trace_1a
+        responses:
+        - destination: node_2
+          text: r.another_trace_1a
+      node_2:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.another_trace_2a
+        responses:
+        - destination: node_3
+          text: r.another_trace_2a
+      node_3:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.another_trace_3a
+        responses:
+        - destination: node_end
+          text: r.another_trace_3a
+      node_end:
+        interface:
+          arguments:
+            Variant: Default
+          name: ui/conversation/interface_comlink.dat
+        message: m.another_trace_4a
+        responses:
+        - terminal: true
+          text: r.another_trace_4a

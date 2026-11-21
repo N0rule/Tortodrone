@@ -1,0 +1,7 @@
+# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py.
+
+grants:
+  creators_and_created:
+  - config: Food/Divine Orb
+    count: 3
+    locked: true
