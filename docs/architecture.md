@@ -7,7 +7,7 @@ Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights 
 | Responsibility | Current source |
 | --- | --- |
 | Listener, lifecycle, terminal console, metrics/logging | `server/{Server,ServerControl,ServerConsole,ServerOptions,ServerLog,ConsoleInput,ConsoleHelp}` |
-| Login/session orchestration | `server/network/{SecureHandshake,ClientSession,WorldSession,SessionInvocationRouter,SessionResponder,SessionOutput,WorldStatePoller}` and feature handlers (`GuildHandler`, `TradeHandler`, `ExchangeHandler`, `AuctionHandler`, `BillingHandler`, `SteamHandler`) |
+| Login/session orchestration | `server/network/{SecureHandshake,ClientSession,WorldSession,SessionInvocationRouter,SessionResponder,SessionOutput,WorldStatePoller}` and feature handlers (`GuildHandler`, `TradeHandler`, `ExchangeHandler`, `AuctionHandler`, `BillingHandler`, `SteamHandler`, `FriendHandler`) |
 | Client framing, class tables and serialization | `protocol/{HandshakeCodec,SessionDecoder,WireContext,WireWriter,SessionCodec}` and per-feature codecs (`BootstrapCodec`, `SocialCodec`, `MissionCodec`, `KnightCodec`, `TradeCodec`, `TownCodec`, `PartyCodec`, `SceneCodec`, `GuildCodec`) |
 | Authentication and account/knight services | `account/`, `character/` |
 | Transactions, persisted identity, items and trades | `storage/{Database,WorldProfiles,TradeTransfer}` |
@@ -80,6 +80,8 @@ Named commit-under-lock paths (the only allowed SCENE/party → storage edges):
 SQLite runs on a single dedicated platform writer and a small platform reader pool; a session virtual thread never runs JDBC. Shutdown stops accept, stops scene lanes, drains delivery, shuts the storage pools down, checkpoints the WAL, and only then closes the database and logger.
 
 ## Wire correctness
+
+`SessionCodec` is a facade over per-feature codecs that share one `WireContext` per connection, so class and string-intern ordering stays single and connection-global. `SessionWireGoldenTest` pins a synthetic cross-feature stream byte-for-byte. `SessionInvocationRouter` keeps the ordered claim chain, and feature handlers write only through `SessionResponder`; neither touches the socket queue directly.
 
 The stock client expects exact Narya/Presents serialization, not Java serialization or approximate messages:
 
