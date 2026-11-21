@@ -152,6 +152,9 @@ public final class Server {
             console.close();
             try { listener.close(); } catch (IOException ignored) { }
             clients.close();
+            // Stop scene lanes after sessions stop, then drain the output writers before the
+            // owning account store checkpoints and closes the database.
+            org.tortodrone.world.SceneScheduler.shared().close();
             // Joins must finish before taking the log monitor used by handlers.
             synchronized (log) {
                 log.info("Server stopped.");

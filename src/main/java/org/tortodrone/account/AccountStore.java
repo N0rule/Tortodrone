@@ -296,6 +296,7 @@ public final class AccountStore implements AutoCloseable {
     @Override public void close() {
         synchronized(this){if (watcher != null) watcher.shutdownNow();}
         List.copyOf(sessions.values()).forEach(Attached::close);
+        if (database != null) database.checkpoint();
     }
     public static char[] transform(char[] password) throws IOException { return Passwords.transform(password); }
     private Stored require(String username,int expectedId) throws IOException { Stored stored = memory.get(canonical(username)); if (stored == null) throw new IOException("No such account"); if (expectedId >= 0 && stored.id() != expectedId) throw new IOException("Account changed; refresh the account list"); return stored; }

@@ -126,11 +126,28 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
         var map=catalog.scene(scene);
         var created=new ArrayList<Instance>(map.instances());
         for(int i=0;i<map.instances();i++){
-            var instance=new Instance(nextOid++,i,map,0,tutorial);
+            var instance=monitor(new Instance(nextOid++,i,map,0,tutorial));
             instance.simulation().fires(fires);instance.simulation().petFires(petFires);instance.simulation().town(town);
             created.add(instance);
         }
         copies=List.copyOf(created);instances.put(scene,copies);return copies;
+    }
+    /** Install the failure owner so a dead lane recycles its private instance and oid. */
+    private Instance monitor(Instance instance){instance.simulation().onFailure(this::sceneFailed);return instance;}
+    private void sceneFailed(SceneSimulation simulation){
+        Instance failed=null;
+        synchronized(this){
+            for(var copies:instances.values())for(var candidate:copies)if(candidate.simulation()==simulation)failed=candidate;
+            for(var candidate:interiors.values())if(candidate.simulation()==simulation)failed=candidate;
+            if(failed!=null&&!failed.map().town()){
+                var target=failed;
+                interiors.values().removeIf(value->value==target);
+                interiorLeases.remove(target);
+                if(!interiorOids.contains(target.oid()))interiorOids.addLast(target.oid());
+            }
+        }
+        if(failed!=null)System.getLogger(SceneRegistry.class.getName()).log(System.Logger.Level.WARNING,
+            "Scene instance recycled after tick failure: template="+failed.map().id()+", instance="+failed.oid());
     }
     public SceneCatalog catalog(){return catalog;}
     /** Inspect only an already allocated instance; release this monitor before entering simulation. */
@@ -180,7 +197,7 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
             var key=new InteriorKey(scene,owner==0?worldId:-owner);var existing=interiors.get(key);
             if(existing!=null){interiorLeases.get(existing).add(worldId);return existing;}
             var oid=interiorOids.pollFirst();if(oid==null){if(assigned)parties.leaveTraining(member);throw new IOException("Interior capacity is full; try again later");}
-            var created=new Instance(oid,0,map,owner,tutorial);created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
+            var created=monitor(new Instance(oid,0,map,owner,tutorial));created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
         }
         return instance(scene,Math.floorMod(worldId,ensure(scene).size()));
     }
@@ -198,7 +215,7 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
         var key=new InteriorKey(run.source().id(),worldId);
         if(interiors.containsKey(key)||interiorOids.isEmpty())throw new IOException("Mission instance is unavailable");
         // Construct before changing party state or consuming a reusable place OID.
-        var created=new Instance(interiorOids.getFirst(),0,run.source(),0,null,run);
+        var created=monitor(new Instance(interiorOids.getFirst(),0,run.source(),0,null,run));
         created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);
         parties.enterOpening(member);interiorOids.removeFirst();interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
         });
@@ -212,7 +229,7 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
         return parties.soloGate(member,view.oid(),()->{
         var key=new InteriorKey(next.source().id(),worldId);
         if(interiors.containsKey(key)||interiorOids.isEmpty())throw new IOException("Mission instance is unavailable");
-        var created=new Instance(interiorOids.getFirst(),0,next.source(),0,null,next);
+        var created=monitor(new Instance(interiorOids.getFirst(),0,next.source(),0,null,next));
         created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);
         interiorOids.removeFirst();interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
         });

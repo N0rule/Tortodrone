@@ -2677,6 +2677,13 @@ final class WorldSession implements AutoCloseable {
         log.warn("World state refresh closed; "+deliveryFailure(failure));close();
         try{socket.close();}catch(IOException ignored){}
     }
+    /** A scene tick failed; return this knight to character selection rather than a frozen world. */
+    private void sceneFailed() {
+        if(closed)return;
+        log.warn("Scene tick failed; closing session for a safe return; scene="+(scene==null?0:scene.oid()));
+        close();
+        try{socket.close();}catch(IOException ignored){}
+    }
     private void attach() {
         floorReport=null;
         openingAdvance=null;openingDropStarted=openingPayoutWarning=false;openingPayoutRetry=0;
@@ -2684,7 +2691,7 @@ final class WorldSession implements AutoCloseable {
         publishedArsenal=null;
         membership=null; // The old scene membership is closed before rebuilding its replacement.
         rebuildAppearance();var place=scene;
-        membership=place.simulation().join(actorAppearance(),snapshot->{});
+        membership=place.simulation().join(actorAppearance(),snapshot->{},this::sceneFailed);
         membership.equipment(visibleProfile());
         if(!place.map().town())membership.combat(weapons,scenes.equipment(),visibleProfile());
         try{partyState();}catch(IOException invalid){throw new IllegalStateException(invalid);}

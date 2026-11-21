@@ -367,6 +367,9 @@ public final class SceneSimulation {
         }}
         public String pickupReceipt(int entity){return pickupEpoch+":"+entity;}
         public void completePickup(int entity,boolean success){synchronized(SceneSimulation.this){entities.completePickup(appearance.id(),entity,success);}}
+        private volatile Runnable sceneFailure;
+        /** Owner callback invoked after a tick failure, outside the simulation lock. */
+        public void onSceneFailure(Runnable callback){sceneFailure=callback;}
         private Membership(ActorState actor,Consumer<Snapshot> publish) {
             appearance=actor;this.initialPublish=this.publish=publish;
             health.spriteShield((damage,stamp,multiplier)->{
@@ -577,7 +580,9 @@ public final class SceneSimulation {
         combatEvents.addLast(new SceneCombatEvent(++combatSequence,event.timestamp(),event.actor(),event.amount(),event.source(),event.x(),event.y(),event.rotation(),event.performance()));
     }
     public synchronized void fires(FireCatalog catalog){weapons.catalog(catalog);}
-    private ScheduledExecutorService timer;
+    /** Set while this instance owns a scheduler lane; never a second concurrent tick. */
+    private volatile boolean scheduled;
+    private volatile Consumer<SceneSimulation> failureListener;
     private Throwable tickFailure;
     private Snapshot previous;
     private long tickCount;
@@ -727,9 +732,12 @@ public final class SceneSimulation {
     public synchronized InteractionSource interactionSource(int id){return new InteractionSource(entities.actor(id),entities.specification(id));}
     public synchronized ActorState station(String kind){return entities.station(kind);}
     public synchronized Membership join(ActorState actor,Consumer<Snapshot> publish) {
+        return join(actor,publish,null);
+    }
+    public synchronized Membership join(ActorState actor,Consumer<Snapshot> publish,Runnable sceneFailure) {
         if(members.containsKey(actor.id()))throw new IllegalStateException("Actor is already in this scene");
         if(members.values().stream().anyMatch(m->m.appearance.clientOid()==actor.clientOid()))throw new IllegalStateException("Connection already owns a scene actor");
-        var membership=new Membership(actor,Objects.requireNonNull(publish));members.put(actor.id(),membership);return membership;
+        var membership=new Membership(actor,Objects.requireNonNull(publish));membership.onSceneFailure(sceneFailure);members.put(actor.id(),membership);return membership;
     }
     /** Selection/subscription sees the same scene-owned entities without advancing movement. */
     public synchronized Snapshot snapshot(){return capture(SceneClock.now(),null);}
@@ -755,30 +763,40 @@ public final class SceneSimulation {
         var health=new HashMap<Integer,SceneHealth.State>();members.forEach((id,member)->health.put(id,member.health.state()));
         return new Snapshot(stamp,actors,weapons.effects(),List.copyOf(combatEvents),portals,health,baseline);
     }
+    /** Install the owner callback for tick failures; the registry recycles the instance. */
+    public void onFailure(Consumer<SceneSimulation> listener){failureListener=listener;}
     private void start() {
-        if(timer!=null)return;
+        if(scheduled)return;
         tickFailure=null;
-        timer=Executors.newSingleThreadScheduledExecutor(r->Thread.ofVirtual().name("Scene-"+instance.oid()).unstarted(r));
-        // Never burst missed ticks. Integration uses actual elapsed scene time.
-        timer.scheduleWithFixedDelay(()->{
-            try{tick();}
-            catch(RuntimeException|Error failure){
-                synchronized(this){tickFailure=failure;}
-                System.getLogger(SceneSimulation.class.getName()).log(System.Logger.Level.ERROR,"Scene simulation stopped: template="+instance.map().id()+", instance="+instance.oid(),failure);
-                throw failure;
-            }
-        },50,50,TimeUnit.MILLISECONDS);
+        SceneScheduler.shared().start(instance.oid(),this::scheduledTick);
+        scheduled=true;
+    }
+    /** One serial lane callback: a failure stops this scene without touching any other lane. */
+    private void scheduledTick() {
+        try{tick();}
+        catch(RuntimeException|Error failure){
+            synchronized(this){tickFailure=failure;scheduled=false;}
+            SceneScheduler.shared().stop(instance.oid());
+            System.getLogger(SceneSimulation.class.getName()).log(System.Logger.Level.ERROR,
+                "Scene simulation stopped: template="+instance.map().id()+", instance="+instance.oid(),failure);
+            var listener=failureListener;
+            if(listener!=null)try{listener.accept(this);}catch(RuntimeException ignored){}
+            List<Runnable> evictions;
+            synchronized(this){evictions=members.values().stream().map(m->m.sceneFailure).filter(Objects::nonNull).toList();}
+            for(var eviction:evictions)try{eviction.run();}catch(RuntimeException ignored){}
+            throw failure;
+        }
     }
     private void stopIfIdle() {
         if(members.values().stream().anyMatch(m->m.entered))return;
-        if(timer!=null){timer.shutdownNow();timer=null;}
+        if(scheduled){scheduled=false;SceneScheduler.shared().stop(instance.oid());}
         previous=null;
     }
     private void tick() {
         long tickStarted=System.nanoTime();
         Snapshot publication;List<Consumer<Snapshot>> recipients;
         synchronized(this) {
-            if(timer==null)return;
+            if(!scheduled)return;
             int stamp=SceneClock.now();long now=System.nanoTime()/1_000_000L;
             if(previous!=null&&stamp-previous.timestamp()<=0)return;
             // All authoritative entities advance before capture. Future AI/combat/dynamic

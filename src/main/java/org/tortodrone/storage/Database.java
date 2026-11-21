@@ -106,6 +106,14 @@ public final class Database {
             + "; expected " + SCHEMA_VERSION + ". Inspect a backup or use a supported explicit upgrade; saved data was not changed");
     }
     public Path file() { return file; }
+    /** Fold the WAL back into the main file after every writer has stopped. */
+    public void checkpoint() {
+        try (Connection connection = connect(); var statement = connection.createStatement()) {
+            statement.execute("PRAGMA wal_checkpoint(TRUNCATE)");
+        } catch (SQLException ignored) {
+            // Shutdown must not fail because the file was already closed or removed.
+        }
+    }
     private Connection connect() throws SQLException {
         if (!Files.isRegularFile(file)) throw new SQLException("Database file is missing or not a regular file");
         Connection connection = DriverManager.getConnection("jdbc:sqlite:" + file);
