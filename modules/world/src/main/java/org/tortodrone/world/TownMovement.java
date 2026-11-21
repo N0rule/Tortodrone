@@ -1,0 +1,439 @@
+package org.tortodrone.world;
+import org.tortodrone.core.world.SceneClock;
+
+import java.util.ArrayDeque;
+import org.tortodrone.core.WireTypes;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.AnimatedItems;
+import org.tortodrone.core.character.Confetti;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.KnightCombat;
+import org.tortodrone.core.world.PlayerEmotes;
+import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.core.world.MapCollision;
+import org.tortodrone.core.world.CollisionMap;
+import org.tortodrone.core.world.InputBits;
+
+/** Server-owned movement on the scene clock. Client frames never provide positions. */
+public final class TownMovement {
+    /** Native translation speed of Character/PC/Default (ActorConfig$Mobile.speed),
+     * shared by the dungeon PC (Character/PC/Level): 5.0 world-units/second; the
+     * config's own "movements" speeds are animation multipliers, not translation.
+     * Native Knight.getSpeed() triples this while the FAST flag (16) is set. */
+    public static final float SPEED = 5f;
+    // Half the shortest edge of the verified Default PC collision shape, as in MobileLogic.
+    public static final float MAX_STEP = .333333f;
+    // Verified stock KnightAdvancer inventory activities and closing duration.
+    public static final int INVENTORY = 3, INVENTORY_END = 4, INVENTORY_END_MILLIS = 889;
+    // The stock Knight constructor publishes activity LOADING(1); KnightLogic.tick clears it
+    // once the owning client's first input frame reports the finished scene load.
+    public static final int LOADING = 1;
+    public static final int USE_ITEM=5, USE_ITEM_MILLIS=1433;
+    /** Native Mobile.MOVING published actor flag (2): set on the pawn record while
+     * the server integrates a moving input segment. */
+    public static final int PUBLISHED_MOVING_FLAG = 2;
+    // Stock KnightAdvancer registers the lockbox reveal as a stationary 8250 ms activity.
+    public static final int OPEN_BOX=265, OPEN_BOX_MILLIS=8250;
+    public static final int ANIMATED_ITEM=267;
+    // Stock EmoteConfig sorted animation index 17, plus 9; end index adds 20 emotes.
+    public static final int SIT = 26, SIT_END = 46, SIT_END_MILLIS = 1333;
+    // Current stock Dungeoneer activities; never use the archive's 2011 numbering.
+    public static final int HURT=274, SHOCKED=278, DYING=280, DEAD=281, RESURRECT=282;
+    public static final int IDLE=285; // Current Dungeoneer frozen elevator pose.
+    // DungeoneerAdvancer registers HURT_SOFT as Activity(true, 500):
+    // movement and rotation continue during the reaction, independently of its animation.
+    public static final int HURT_MILLIS=500, DYING_MILLIS=1290, RESURRECT_MILLIS=400;
+    // Stock Dungeoneer carry poses: raising (268) settles into the carried hold after
+    // 277 ms; both throw (270) and drop (271) play for 767 ms before control returns.
+    public static final int LIFT_POSE=268, LIFTED_POSE=269, THROW_POSE=270, DROP_POSE=271;
+    public static final int LIFT_MILLIS=277, THROWN_MILLIS=767;
+    /** Retail sprite command: activity 288, movement allowed, 750 ms. */
+    public static final int SPRITE_COMMAND=288, SPRITE_COMMAND_MILLIS=750;
+    // Server policy: how far a client-supplied input stamp may lead or lag the scene
+    // clock before the frame is refused as unsynchronized.
+    public static final int CLOCK_TOLERANCE_MILLIS=10000;
+    // Combat actions echo their activity stamp; accept it within this window.
+    public static final int ACTION_WINDOW_MILLIS=600000;
+    // Server policy: without fresh input frames for this long, held-button bits
+    // (other than persistent slot selection) are dropped as a stale connection.
+    public static final int INPUT_IDLE_MILLIS=500;
+    private static final int MAX_PENDING = 256;
+    private record Frame(int timestamp, float rotation, float direction, int flags,int actionChanged) { }
+    private final ArrayDeque<Frame> pending = new ArrayDeque<>();
+    private final CollisionMap terrain;
+    private final ScenePortals portals;
+    private ScenePortals.Trigger portal;
+    private float x, y, rotation, direction;
+    private int flags, inputFlags, activity, activityStarted, lastTimestamp, timestamp;
+    private long lastInputAt;
+    private boolean inputSeen;
+    private boolean inTransit;
+    public boolean inTransit(){return inTransit;}
+    /** Server-owned elevator control. Departure clears it through resetInput. */
+    public boolean transit(boolean active,int stamp){
+        if(active==inTransit)return false;
+        if(active){
+            if(dead()||activity==RESURRECT||portal!=null)return false;
+            int watermark=inputSeen&&lastTimestamp-stamp>0?lastTimestamp:stamp;
+            resetInput(stamp);lastTimestamp=watermark;inputSeen=true;inTransit=true;setActivity(IDLE,stamp);
+        }else{
+            inTransit=false;pending.clear();inputFlags=flags=0;timestamp=stamp;if(stamp-lastTimestamp>0)lastTimestamp=stamp;inputSeen=true;
+            if(activity==IDLE)setActivity(0,stamp);
+        }
+        return true;
+    }
+    private int warpUntil;
+    private int interactionChange=-1;
+    private int interactionMillis=670;
+    public void interactionDuration(int millis){if(millis<0||millis>10000)throw new IllegalArgumentException("Invalid interaction duration");interactionMillis=millis;}
+    private KnightCombat combat;
+    private SceneStatus.Modifiers status=SceneStatus.Modifiers.NORMAL;
+    public void status(SceneStatus.Modifiers modifiers){status=modifiers;if(combat!=null)combat.status(modifiers);
+        if(modifiers.shocked()&&!dead()&&activity!=RESURRECT&&activity!=SHOCKED){if(combat!=null)combat.reset(timestamp);setActivity(SHOCKED,timestamp);}
+        else if(!modifiers.shocked()&&activity==SHOCKED)setActivity(0,timestamp);
+        updateFlags();}
+    private java.util.function.IntPredicate revival=stamp->false;
+    public void revival(java.util.function.IntPredicate handler){revival=java.util.Objects.requireNonNull(handler);}
+    public boolean dead(){return activity==DYING||activity==DEAD;}
+    public void hurt(int stamp){
+        if(dead()||activity==RESURRECT||activity==SHOCKED)return;
+        // Damage is not a scene transition. Retain queued intent, the monotonic input
+        // watermark and any received knockback instead of discarding prediction input.
+        if(combat!=null)combat.interrupt(stamp);
+        setActivity(HURT,stamp);updateFlags();
+    }
+    public void die(int stamp){if(dead())return;resetInput(stamp);setActivity(DYING,stamp);}
+    public void resurrect(int stamp){resetInput(stamp);setActivity(RESURRECT,stamp);updateFlags();}
+    /** Play the stock sprite-command pose; a battle-sprite ult button triggers it remotely. */
+    public boolean spriteCommand(int stamp){
+        if(activity!=0||!status.canAttack()||combat!=null&&!combat.canOverride())return false;
+        if(combat!=null)combat.reset(stamp);setActivity(SPRITE_COMMAND,stamp);updateFlags();return true;
+    }
+    private Object activityData;
+    private boolean publicationPending;
+    private int animatedItemMillis;
+    private java.util.function.IntPredicate throwing=stamp->false;
+    public void throwing(java.util.function.IntPredicate handler){throwing=java.util.Objects.requireNonNull(handler);}
+    public boolean lift(int stamp){
+        if(activity!=0&&activity!=INVENTORY&&activity!=INVENTORY_END||combat!=null&&!combat.canOverride())return false;
+        if(combat!=null)combat.reset(stamp);setActivity(LIFT_POSE,stamp);updateFlags();return true;
+    }
+    public void thrown(boolean drop,int stamp){if(combat!=null)combat.reset(stamp);setActivity(drop?DROP_POSE:THROW_POSE,stamp);updateFlags();}
+    /** Active.interpolate switches activity at its start stamp but copies data from the older
+     * record. Data-dependent activities must start at their first publication boundary. */
+    public void preparePublication(int stamp){
+        if(!publicationPending)return;publicationPending=false;
+        // RPC emotes start between ticks, too. Give the stock animation its entire
+        // configured duration from the first scene publication, just as item poses.
+        if(activityData==null&&PlayerEmotes.byActivity(activity)==null)return;
+        activityStarted=stamp;
+        if(activity==ANIMATED_ITEM&&activityData instanceof org.tortodrone.core.character.StarterCatalog.Model item)
+            animatedItemMillis=animatedDuration(item.name(),stamp);
+    }
+    public Object activityData(){return activityData;}
+    public boolean canOpenBox(){
+        return portal==null&&(activity==0||activity==INVENTORY||activity==INVENTORY_END)
+            &&(combat==null||combat.canOverride());
+    }
+    public boolean openBox(java.util.List<org.tortodrone.core.character.StarterCatalog.Model> references,int stamp){
+        if(!canOpenBox()||references.size()<2)return false;
+        if(combat!=null)combat.reset(stamp);
+        setActivity(OPEN_BOX,stamp);activityData=java.util.List.copyOf(references);
+        rotation=-(float)Math.PI/2;updateFlags();return true;
+    }
+    public boolean confetti(String config,int stamp){
+        if(!canOpenBox()||!org.tortodrone.core.character.Confetti.supports(config))return false;
+        if(combat!=null)combat.reset(stamp);
+        setActivity(ANIMATED_ITEM,stamp);animatedItemMillis=org.tortodrone.core.character.Confetti.duration(config,stamp);
+        activityData=new org.tortodrone.core.character.StarterCatalog.Model(config,java.util.Map.of());updateFlags();return true;
+    }
+    public boolean animatedItem(String config,int stamp){
+        if(!canOpenBox()||!org.tortodrone.core.character.AnimatedItems.supports(config))return false;
+        if(combat!=null)combat.reset(stamp);
+        setActivity(ANIMATED_ITEM,stamp);animatedItemMillis=animatedDuration(config,stamp);
+        activityData=new org.tortodrone.core.character.StarterCatalog.Model(config,java.util.Map.of());updateFlags();return true;
+    }
+    private static int animatedDuration(String config,int stamp){
+        return org.tortodrone.core.character.Confetti.supports(config)?org.tortodrone.core.character.Confetti.duration(config,stamp)
+            :org.tortodrone.core.character.AnimatedItems.duration(config);
+    }
+    public boolean useItem(org.tortodrone.core.character.StarterCatalog.Model item,int stamp){
+        if(!canUseItem()||combat!=null&&!combat.canOverride())return false;
+        if(combat!=null)combat.reset(stamp);setActivity(USE_ITEM,stamp);activityData=item;updateFlags();return true;
+    }
+    /** A Use-request vial lift rides the same native canUseItem gate, not the interaction
+     *  carry gate: native doRun only rechecks canLift (lift==0, held by the membership)
+     *  before entering the LIFT pose. */
+    public boolean useLift(int stamp){
+        if(!canUseItem()||combat!=null&&!combat.canOverride())return false;
+        if(combat!=null)combat.reset(stamp);setActivity(LIFT_POSE,stamp);updateFlags();return true;
+    }
+    /** Native Dungeoneer.ITEM_PREVENTERS (LIFT, HOLD, THROW, DROP, DYING, DEAD, TRANSIT,
+     *  IDLE, USE_ITEM): the only activities a method-14 Use request refuses. The loading
+     *  pose, emotes and the hurt/shock poses stay usable exactly as the shipped rule;
+     *  elevator transit rides the frozen IDLE pose, which the set guards. */
+    private static final java.util.Set<Integer> ITEM_PREVENTERS=java.util.Set.of(
+        LIFT_POSE,LIFTED_POSE,THROW_POSE,DROP_POSE,DYING,DEAD,USE_ITEM,IDLE);
+    private boolean canUseItem(){return !ITEM_PREVENTERS.contains(activity);}
+    private java.util.function.IntPredicate interaction=stamp->false;
+    private java.util.function.BiPredicate<Float,Float> dynamicCollision=(x,y)->true;
+    private java.util.function.BiFunction<Float,Float,SceneCollision.Penetration> dynamicPenetration=(x,y)->SceneCollision.Penetration.NONE;
+    private SceneCollision staticCollision=SceneCollision.empty();
+    private MapCollision exactCollision;
+    private java.util.Set<Integer> disabledCollision=java.util.Set.of();
+    private int collisionMask=43;
+    private static final Object PAWN_SHAPE=new FireCatalog.DataValue(org.tortodrone.core.WireTypes.SHAPE_CIRCLE,
+        java.util.List.of(new FireCatalog.FieldValue("radius","float",ScenePortals.PAWN_RADIUS)));
+    public void staticCollision(SceneCollision geometry,int mask){staticCollision=java.util.Objects.requireNonNull(geometry);collisionMask=mask;}
+    /** Prefer the compiled exact collision; the sampled grid is only a legacy fallback. */
+    public void exactCollision(MapCollision geometry,int mask){exactCollision=java.util.Objects.requireNonNull(geometry);collisionMask=mask;}
+    /** Source entry ids whose native statics are currently open/destroyed (doors, blocks). */
+    public void disabledCollision(java.util.Set<Integer> sources){disabledCollision=java.util.Set.copyOf(sources);}
+    private boolean walkable(float toX,float toY){
+        if(exactCollision!=null)return exactCollision.clearSegment(collisionMask,x,y,toX,toY,ScenePortals.PAWN_RADIUS,disabledCollision);
+        if(staticCollision.isEmpty())return terrain.walkable(toX,toY);
+        if(!staticCollision.floorSupported(toX,toY)||!staticCollision.clearSegment(collisionMask,PAWN_SHAPE,x,y,toX,toY,0))return false;
+        int steps=Math.max(1,(int)Math.ceil(Math.hypot(toX-x,toY-y)/.1));
+        for(int i=1;i<steps;i++)if(!staticCollision.floorSupported(x+(toX-x)*i/steps,y+(toY-y)*i/steps))return false;
+        return true;
+    }
+    public void interaction(java.util.function.IntPredicate handler){interaction=java.util.Objects.requireNonNull(handler);}
+    public void dynamicCollision(java.util.function.BiPredicate<Float,Float> predicate){dynamicCollision=java.util.Objects.requireNonNull(predicate);}
+    public void dynamicPenetration(java.util.function.BiFunction<Float,Float,SceneCollision.Penetration> query){dynamicPenetration=java.util.Objects.requireNonNull(query);}
+
+    public void combat(KnightCombat controller){combat=java.util.Objects.requireNonNull(controller);}
+    public KnightCombat.State combatState(){return combat==null?null:combat.state();}
+
+    public TownMovement() {
+        this(SceneRegistry.defaultEntry().map().collision(),SceneRegistry.defaultEntry().map().spawnX(),
+            SceneRegistry.defaultEntry().map().spawnY(),SceneRegistry.defaultEntry().map().spawnRotation());
+    }
+    public TownMovement(CollisionMap terrain,float spawnX,float spawnY) {
+        this(terrain,spawnX,spawnY,0);
+    }
+    public TownMovement(CollisionMap terrain,float spawnX,float spawnY,float facing) {
+        this(terrain,spawnX,spawnY,facing,ScenePortals.EMPTY);
+    }
+    public TownMovement(CollisionMap terrain,float spawnX,float spawnY,float facing,ScenePortals portals) {
+        if(!terrain.walkable(spawnX,spawnY))throw new IllegalArgumentException("Invalid scene spawn");
+        if(!Float.isFinite(facing))throw new IllegalArgumentException("Invalid scene facing");
+        this.terrain=terrain;this.portals=java.util.Objects.requireNonNull(portals);x=spawnX;y=spawnY;
+        rotation=normalize(facing);
+    }
+
+    /** Native Knight constructor state: every published pawn begins frozen in LOADING
+     * until its client's first input frame signals the finished scene load. */
+    public void beginLoading(int stamp) {
+        if (dead() || activity == RESURRECT) throw new IllegalStateException("Cannot load a dead pawn");
+        setActivity(LOADING, stamp);
+    }
+
+    /** Clear input on scene entry/re-entry without moving the character. */
+    public void resetInput(int sceneTime) {
+        inTransit=false;
+        pending.clear();
+        timestamp = sceneTime;
+        flags = 0;
+        inputFlags = 0;
+        if(!dead()&&activity!=RESURRECT){activity = 0;activityStarted = sceneTime;activityData=null;}
+        inputSeen = false;
+        if(combat!=null)combat.reset(sceneTime);
+    }
+
+    /** Relocate the existing pawn; retain the input watermark to discard pre-warp frames. */
+    public boolean teleport(float toX,float toY,float facing,int stamp) {
+        if(!Float.isFinite(toX)||!Float.isFinite(toY)||!Float.isFinite(facing)||portal!=null||dead()
+                ||(exactCollision!=null?!exactCollision.clear(collisionMask,toX,toY,ScenePortals.PAWN_RADIUS,disabledCollision):!terrain.walkable(toX,toY))
+                ||exactCollision==null&&!staticCollision.isEmpty()&&(!staticCollision.floorSupported(toX,toY)
+                    ||staticCollision.penetration(collisionMask,toX,toY,ScenePortals.PAWN_RADIUS).present())
+                ||!dynamicCollision.test(toX,toY)||dynamicPenetration.apply(toX,toY).present()
+                ||portals.triggers().stream().anyMatch(t->t.intersects(toX,toY)))return false;
+        int watermark=inputSeen?Math.max(lastTimestamp,stamp):stamp;
+        resetInput(stamp);lastTimestamp=watermark;inputSeen=true;
+        x=toX;y=toY;rotation=direction=normalize(facing);warpUntil=stamp+100; // brief input suppression after a server-authored warp
+        return true;
+    }
+
+    public boolean accept(int stamp, float facing, float heading, int inputFlags,
+            int sceneTime, long now) {
+        return accept(stamp,facing,heading,inputFlags,stamp,sceneTime,now);
+    }
+    public boolean accept(int stamp,float facing,float heading,int inputFlags,int actionChanged,int sceneTime,long now) {
+        if (inTransit||portal!=null || !Float.isFinite(facing) || !Float.isFinite(heading)
+                || Math.abs((long) (stamp - sceneTime)) > CLOCK_TOLERANCE_MILLIS
+                || (inputSeen && stamp - lastTimestamp <= 0)
+                || pending.size() >= MAX_PENDING) return false;
+        if(combat!=null&&Math.abs((long)actionChanged-stamp)>ACTION_WINDOW_MILLIS)return false;
+        pending.addLast(new Frame(stamp, normalize(facing), normalize(heading), inputFlags & (combat==null?InputBits.MOVING|InputBits.UI_WINDOW|InputBits.ACTION:InputBits.DEFINED_MASK),actionChanged));
+        lastTimestamp = stamp;
+        lastInputAt = now;
+        inputSeen = true;
+        // Native KnightLogic.tick ends the loading pose on the client's first input frame.
+        if (activity == LOADING) setActivity(0, stamp);
+        return true;
+    }
+
+    /** Compatibility adapter for the original sit RPC. */
+    public boolean sit(int sceneTime, long now) {
+        return emote(PlayerEmotes.find("Sit"),sceneTime,now);
+    }
+
+    /** Start a catalogued stock emote without accepting client-supplied activity data. */
+    public boolean emote(PlayerEmotes.Descriptor emote, int sceneTime, long now) {
+        if(!PlayerEmotes.isCatalogued(emote))return false;
+        advance(sceneTime, now);
+        if(inTransit||portal!=null||dead()||activity==RESURRECT)return false;
+        // Text-only emotes use the normal chat bubble path and must not clear a pose.
+        if (!emote.animated()) return true;
+        if (activity == INVENTORY || activity == INVENTORY_END || activity==OPEN_BOX || activity==ANIMATED_ITEM || combat!=null&&!combat.canOverride()) return false;
+        if(combat!=null)combat.reset(timestamp);
+        if (activity != emote.activity() || emote.activity()!=SIT)
+            setActivity(emote.activity(), timestamp);
+        updateFlags();
+        return true;
+    }
+
+    /** Integrate each input segment only when its timestamp is due. */
+    public void advance(int sceneTime, long now) {
+        if (sceneTime - timestamp < 0) return;
+        if(inTransit){timestamp=sceneTime;return;}
+        if(portal!=null||!dead()&&detectPortal(sceneTime))return;
+        while (!pending.isEmpty() && sceneTime - pending.peekFirst().timestamp() >= 0) {
+            var frame = pending.removeFirst();
+            if (frame.timestamp() - timestamp > 0) moveTo(frame.timestamp());
+            if(portal!=null)return;
+            if (status.canRotate()&&(activity == 0 || activityAllowsMovement()) && (combat==null||combat.allowsRotation(timestamp))) rotation = frame.rotation();
+            direction = frame.direction();
+            inputFlags = frame.flags();
+            if (activity != 0 && !activityAllowsMovement() && (inputFlags & InputBits.MOVING) != 0) {
+                var emote = PlayerEmotes.byActivity(activity);
+                if(emote!=null)setActivity(emote.endActivity(),timestamp);
+            }
+            if ((inputFlags & InputBits.UI_WINDOW) != 0 && activity != INVENTORY && (activity==0||activity==INVENTORY_END||PlayerEmotes.byActivity(activity)!=null) && (combat==null||combat.canOverride())) {
+                if(combat!=null)combat.reset(timestamp);setActivity(INVENTORY, timestamp);rotation=-(float)Math.PI/2;
+            }
+            else if ((inputFlags & InputBits.UI_WINDOW) == 0 && activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
+            if(activity==LIFTED_POSE&&(inputFlags&InputBits.ACTION)!=0&&frame.actionChanged()>=activityStarted&&throwing.test(timestamp))inputFlags&=~InputBits.ACTION;
+            boolean freshAction=(inputFlags&InputBits.ACTION)!=0&&frame.actionChanged()>interactionChange;
+            if(freshAction)interactionChange=frame.actionChanged();
+            if(dead()){
+                if(activity==DEAD&&freshAction&&frame.actionChanged()>=activityStarted&&revival.test(timestamp)){
+                    setActivity(RESURRECT,timestamp);pending.clear();
+                }
+                inputFlags=0;updateFlags();continue;
+            }
+            if(status.canAttack()&&activity==0&&(combat==null||combat.canOverride())&&freshAction&&interaction.test(timestamp)){
+                inputFlags&=~InputBits.ACTION;if(combat!=null)combat.reset(timestamp);
+                if(activity==0)setActivity(2,timestamp);
+            }
+            if(combat!=null)combat.input(inputFlags,frame.actionChanged(),timestamp,rotation,direction,activity==0&&status.canAttack());
+            updateFlags();
+        }
+        if (now - lastInputAt > INPUT_IDLE_MILLIS) {
+            // Selection bits are persistent client state, not held buttons.
+            // Timing out movement/attack must not invent a switch back to slot zero.
+            inputFlags &= InputBits.WEAPON_SLOT_MASK;
+            if (activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
+            if(combat!=null)combat.input(inputFlags,timestamp,timestamp,rotation,direction,activity==0&&status.canAttack());
+            updateFlags();
+        }
+        moveTo(sceneTime);
+    }
+
+    private void moveTo(int target) {
+        if(activity==DYING&&target-activityStarted>=DYING_MILLIS)setActivity(DEAD,activityStarted+DYING_MILLIS);
+        if(activity==LIFT_POSE&&target-activityStarted>=LIFT_MILLIS)setActivity(LIFTED_POSE,activityStarted+LIFT_MILLIS);
+        int duration = activity==SPRITE_COMMAND?SPRITE_COMMAND_MILLIS:activity==ANIMATED_ITEM?animatedItemMillis:activity==OPEN_BOX?OPEN_BOX_MILLIS:activity==HURT?HURT_MILLIS:activity==RESURRECT?RESURRECT_MILLIS:activity==THROW_POSE||activity==DROP_POSE?THROWN_MILLIS:activity == USE_ITEM ? USE_ITEM_MILLIS : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
+            : activity == SIT_END ? SIT_END_MILLIS : 0;
+        var emote = PlayerEmotes.byActivity(activity);
+        boolean movingEmote=emote!=null&&emote.allowsMovement();
+        if(movingEmote)duration=emote.duration();
+        if (duration > 0 && target - activityStarted >= duration) {
+            int ended = activityStarted + duration;
+            // A movement-enabled animation permits the same movement before and after
+            // its exact deadline, so integrate the whole interval in one pass.
+            if (!movingEmote && !activityAllowsMovement() && ended - timestamp > 0) timestamp = ended;
+            setActivity(0, ended);
+            updateFlags();
+        }
+        int elapsed = target - timestamp;
+        // Match the client's small collision substeps instead of one large 50 ms jump.
+        while (elapsed > 0) {
+            int step = Math.min(elapsed, 16);
+            elapsed -= step;
+            int previous=timestamp;timestamp+=step;
+            if(combat!=null){combat.advance(timestamp,rotation);updateFlags();}
+            float distance = (flags&PUBLISHED_MOVING_FLAG)==0?0:SPEED * step / 1000f*status.speed()*(combat==null?1:combat.movementScale());
+            float dx=(float)Math.cos(direction)*distance,dy=(float)Math.sin(direction)*distance;
+            var impulse=combat==null?null:combat.state().impulse();
+            if(impulse!=null&&status.canMove()){float portion=impulse.fraction(timestamp)-impulse.fraction(previous);dx+=impulse.x()*portion;dy+=impulse.y()*portion;}
+            move(dx,dy);
+            if(combat!=null)combat.retireImpulse(timestamp);
+            if(!dead()&&detectPortal(target))return;
+        }
+    }
+    private SceneCollision.Penetration staticPenetration(float x,float y){
+        if(exactCollision==null)return staticCollision.penetration(collisionMask,x,y,ScenePortals.PAWN_RADIUS);
+        var p=exactCollision.penetration(collisionMask,x,y,ScenePortals.PAWN_RADIUS,disabledCollision);
+        return p.present()?new SceneCollision.Penetration(p.x(),p.y()):SceneCollision.Penetration.NONE;
+    }
+    private void move(float dx,float dy){
+        if(dx==0&&dy==0)return;
+        float length=(float)Math.hypot(dx,dy);
+        if(length>MAX_STEP){dx*=MAX_STEP/length;dy*=MAX_STEP/length;}
+        float nx=x+dx,ny=y+dy;
+        // Stock MobileAdvancer resolves the deepest penetration, with three bounded attempts.
+        // Endpoint rejection and axis sliding cannot escape an existing overlap or round a corner.
+        for(int attempt=0;attempt<3;attempt++){
+            var penetration=staticPenetration(nx,ny).deepest(dynamicPenetration.apply(nx,ny));
+            if(!penetration.present()){
+                boolean floor=exactCollision!=null?exactCollision.clearSegment(collisionMask,x,y,nx,ny,ScenePortals.PAWN_RADIUS,disabledCollision)
+                    :staticCollision.isEmpty()?terrain.walkableSegment(x,y,nx,ny):staticCollision.floorSupported(nx,ny);
+                if(floor&&dynamicCollision.test(nx,ny)){x=nx;y=ny;return;}
+                break;
+            }
+            nx+=penetration.x()*1.001f;ny+=penetration.y()*1.001f;
+        }
+        // Legacy packs have only a sampled walkability grid, without a separating vector.
+        if(exactCollision==null&&staticCollision.isEmpty()){
+            nx=x+dx;ny=y+dy;
+            if(walkable(nx,y)&&dynamicCollision.test(nx,y)&&!dynamicPenetration.apply(nx,y).present())x=nx;
+            else if(walkable(x,ny)&&dynamicCollision.test(x,ny)&&!dynamicPenetration.apply(x,ny).present())y=ny;
+        }
+    }
+    private boolean detectPortal(int sceneTime) {
+        for(var trigger:portals.triggers())if(trigger.intersects(x,y)) {
+            portal=trigger;resetInput(sceneTime);return true;
+        }
+        return false;
+    }
+    public ScenePortals.Trigger portal(){return portal;}
+
+    public float x() { return x; }
+    public float y() { return y; }
+    public float rotation() { return rotation; }
+    public float direction() { return direction; }
+    public int flags() { return flags|(SceneClock.before(timestamp,warpUntil)?1:0)|(combat==null?0:combat.flags()); }
+    public int inputFlags(){return inputFlags;}
+    public int activity() { return combat!=null&&combat.activity()!=0?combat.activity():activity; }
+    public int activityStarted() { return combat!=null&&(combat.activity()!=0||activity==0&&combat.started()-activityStarted>0)?combat.started():activityStarted; }
+    private void setActivity(int value, int started) {
+        activityData=null;publicationPending=true;
+        activity = value;
+        activityStarted = started;
+    }
+    private boolean activityAllowsMovement() {
+        if(activity==269||activity==HURT||activity==USE_ITEM||activity==SPRITE_COMMAND)return true;
+        var emote=PlayerEmotes.byActivity(activity);
+        return emote!=null&&emote.allowsMovement();
+    }
+    private void updateFlags() {
+        flags = status.canMove()&&(activity == 0 || activityAllowsMovement()) && (combat==null||combat.allowsMovement()) && (inputFlags & InputBits.MOVING) != 0 ? PUBLISHED_MOVING_FLAG : 0;
+    }
+    private static float normalize(float angle) {
+        return (float) Math.IEEEremainder(angle, Math.PI * 2);
+    }
+}

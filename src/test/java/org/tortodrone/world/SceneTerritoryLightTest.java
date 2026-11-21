@@ -1,4 +1,5 @@
 package org.tortodrone.world;
+import org.tortodrone.core.world.SceneClock;
 
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;

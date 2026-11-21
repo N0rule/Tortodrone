@@ -18,6 +18,29 @@ Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights 
 
 The executable JAR and packaged WebUI are independent of a running stock game installation. Source imports/compatibility fixtures can read installed client classes read-only in isolated test environments.
 
+## Module graph
+
+Seven Gradle projects are shaded into the same single executable JAR. The root
+project is the packaging/composition `:app`; `implementation` dependencies stay
+private, so javac rejects an undeclared edge as well as the explicit
+`checkModuleGraph` verification.
+
+```text
+:app     -> :core :content :protocol :world :gameplay :server
+:server  -> :gameplay :protocol :world :content :core
+:gameplay-> :world :content :core
+:world   -> :content :core
+:protocol-> :core
+:content -> :core
+:core    -> none
+```
+
+Packages are assigned by extracted type, so `gameplay` contains `account`,
+`character`, `storage`, `loot`, `town` and `gameplay`; `server` contains `server`,
+`web`, `news` and `config`. Shared content/view models live in `core`, including
+`core.world.SceneClock`, which is used by both content actions and scene
+simulation.
+
 ## Critical identities and security
 
 | ID | Scope |

@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.io.File
@@ -22,11 +23,36 @@ tasks.withType<JavaCompile>().configureEach {
 val launcher25 = javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) }
 
 dependencies {
+    // The root project is the packaging/composition :app module.
+    implementation(project(":core"))
+    implementation(project(":content"))
+    implementation(project(":protocol"))
+    implementation(project(":world"))
+    implementation(project(":gameplay"))
+    implementation(project(":server"))
     implementation("org.yaml:snakeyaml:2.5")
     // JLine's aggregate classifier already contains its providers/native libraries.
     implementation("org.jline:jline:4.4.7:jdk11") { isTransitive = false }
     // Production uses java.sql and loads the driver at runtime.
     runtimeOnly("org.xerial:sqlite-jdbc:3.53.4.0") { isTransitive = false }
+}
+
+/**
+ * Documented module graph. Each project validates its exact edges and `implementation`
+ * is not re-exported, so javac rejects an undeclared edge too. The :app composition
+ * project depends on all six modules and exposes this aggregate verification task.
+ */
+val moduleProjects = listOf(":core", ":content", ":protocol", ":world", ":gameplay", ":server")
+val appDeclaredProjectDependencies: Set<String> =
+    configurations.getByName("implementation").dependencies
+        .withType(ProjectDependency::class.java)
+        .map { it.path }.toSet()
+if (appDeclaredProjectDependencies != moduleProjects.toSet())
+    throw GradleException(":app must depend on every module; declares $appDeclaredProjectDependencies; expected $moduleProjects")
+val checkModuleGraph = tasks.register("checkModuleGraph") {
+    group = "verification"
+    description = "Verify the extracted projects declare only the documented dependency graph."
+    dependsOn(moduleProjects.map { "$it:checkModuleGraph" })
 }
 
 tasks.processResources {
@@ -155,7 +181,7 @@ val buildWebui = tasks.register<Sync>("buildWebui") {
 val buildServer = tasks.register("buildServer") {
     group = "build"
     description = "Build the executable server JAR and prepare unified content."
-    dependsOn(serverJar, prepareContent, buildWebui)
+    dependsOn(checkModuleGraph, serverJar, prepareContent, buildWebui)
 }
 tasks.assemble { dependsOn(buildServer) }
 // Keep the conventional build task focused on deliverables. Regression programs are
