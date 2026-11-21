@@ -2412,6 +2412,9 @@ final class WorldSession implements AutoCloseable {
         return message.toString();
     }
     private synchronized void publish(Publication publication)throws IOException {
+        // Optional scene work is skipped before encoding when this reader is behind its byte
+        // budget; the next publication re-encodes from the last snapshot actually sent.
+        if(output.optionalOverBudget())return;
         var current=publication.snapshot();int stamp=current.timestamp();
         if(closed||!subscribed||!entered||scene!=publication.scene()||sceneGeneration!=publication.generation()||stamp-lastStamp<=0)return;
         boolean interior=!scene.map().town();
@@ -2432,11 +2435,13 @@ final class WorldSession implements AutoCloseable {
         short elapsed=(short)Math.max(1,Math.min(Short.MAX_VALUE,stamp-lastStamp));
         var frame=encoded.frame();
         // The first frame for a connection registers the symbols; later ones reuse the shared body.
-        output.send(()->{
+        // This is an optional update: when the session is already over budget it is skipped before
+        // encoding, so no unseen symbol mapping can be introduced.
+        if(!output.sendOptional(()->{
             var shared=codec.materialize(frame,oid,acknowledge,ping,reference,elapsed);
             return shared!=null?shared:codec.sceneDelta(oid,scene.oid(),acknowledge,ping,reference,stamp,elapsed,
                 delta.added(),delta.updated(),delta.removed(),delta.baseline(),interior,encoded.effects(),encoded.combat());
-        });
+        }))return;
         var currentOwn=current.player(oid);
         var health=currentOwn==null?null:current.health(currentOwn.id());
         var previousOwn=lastSnapshot==null?null:lastSnapshot.actor(profile.worldId());
