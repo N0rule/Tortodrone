@@ -38,6 +38,7 @@ public final class MissionRouteSessionTest {
             try(var output=new SessionOutput(socket);var session=new WorldSession(socket,characters,output,new SessionCodec(content.items()),1501,1,message->{},registry)){
                 session.select(knight.name(),RECEIVERS);
                 enter(session,registry,1);
+                check(!socket.text().contains("o.shadow_beast"),"the town HUD carries no mission objective");
                 check(registry.missionRoute("shadow_beast",world,1,"MEDIUM")!=null,"the bundled Shadow Beast route is playable");
                 session.townInvocation(gateStart("shadow_beast",1,0));
                 var destination=portalDestination(session);
@@ -50,6 +51,7 @@ public final class MissionRouteSessionTest {
                 check(scene(session).missionGateId()==run.gateId()&&scene(session).missionFloor()==0,
                     "the party view exposes the mission gate and current floor");
                 check(session.sceneEntered()&&session.sceneSubscribed(),"the lobby accepts native readiness");
+                check(socket.text().contains("o.shadow_beast"),"the mission bar publishes the mission's own o.<id> objective");
                 session.townInvocation(gateStart("shadow_beast",2,0));
                 check(sceneId(session)==351,"a repeated gate start keeps the current mission scene");
             }

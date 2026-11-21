@@ -212,6 +212,8 @@ final class WorldSession implements AutoCloseable {
     private float townX,townY;
     private SceneConversation conversation;
     private Map<String,org.tortodrone.core.character.KnightObjective.State> objectives=Map.of();
+    /** The active mission whose {@code o.<missionId>} objective is on the player's bar, or null. */
+    private String missionObjective;
     private final Set<Short> conversationResponses=new LinkedHashSet<>();
     private String conversationNode;
     private ActorState conversationSource;
@@ -230,6 +232,17 @@ final class WorldSession implements AutoCloseable {
         if(membership!=null)membership.inventory(visibleProfile());
         for(int slot=0;slot<quickbar.length;slot++)if(!temporaryItems.containsKey(quickbar[slot]))quickbar[slot]=0;
         var slots=quickbar.clone();output.send(()->codec.quickbar(oid,slots));
+    }
+    /** The native {@code PlayerObject.objectives} set: knight-persistent entries plus the
+     *  mission bar derived from the mission's own {@code o.<id>} text key. */
+    private java.util.List<org.tortodrone.core.mission.ObjectiveEntry> wireObjectives(){
+        int next=0;var result=new ArrayList<org.tortodrone.core.mission.ObjectiveEntry>(objectives.size()+1);
+        for(var value:objectives.values()){result.add(new org.tortodrone.core.mission.ObjectiveEntry(value.index(),value.name(),value.text(),org.tortodrone.core.mission.ObjectiveEntry.KNIGHT));next=Math.max(next,value.index()+1);}
+        if(missionObjective!=null)result.add(new org.tortodrone.core.mission.ObjectiveEntry(next,missionObjective,"o."+missionObjective,org.tortodrone.core.mission.ObjectiveEntry.PARTY));
+        return result;
+    }
+    private void publishObjectives()throws IOException {
+        var wire=wireObjectives();output.send(()->codec.objectives(oid,wire));
     }
     private WorldProfile visibleProfile(){
         return visibleProfile(membership==null?Set.of():membership.status().cursedItems());
@@ -959,7 +972,7 @@ final class WorldSession implements AutoCloseable {
                 var settled=characters.openingMissions(scenes.town(),scenes.missions()).complete(characters.accountId(),knight.id(),authRevision,profile,terminalId,null);
                 closeConversation();profile=settled.profile();
                 if(!memories.equals(settled.memories())){var old=memories;memories=settled.memories();output.send(()->codec.knightMemoryChanges(oid,old,memories));}
-                if(!objectives.equals(settled.objectives())){objectives=settled.objectives();output.send(()->codec.knightObjectives(oid,objectives));}
+                if(!objectives.equals(settled.objectives())){objectives=settled.objectives();publishObjectives();}
                 if(!settled.completion().equals(completedOpening.get(terminalId))){var completed=new LinkedHashMap<>(completedOpening);completed.put(terminalId,settled.completion());completedOpening=Map.copyOf(completed);}
                 if(settled.first()){
                     membership.equipment(visibleProfile());conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);missionDialogCreated=conversationCreated;
@@ -1191,7 +1204,7 @@ final class WorldSession implements AutoCloseable {
         if(characters.hasWorldStorage())completedOpening=characters.openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
         output.send(() -> codec.selected(oid, knight, profile, guilds.guildInfo()));
         output.send(() -> codec.knightMemories(oid,memories));
-        output.send(() -> codec.knightObjectives(oid,objectives));
+        publishObjectives();
         output.send(()->codec.completedMissions(oid,completedOpening.values()));
         output.send(() -> codec.townState(oid,profile));
         publishStyles();
@@ -1890,7 +1903,15 @@ final class WorldSession implements AutoCloseable {
         for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&scenes.missions().eligible(candidate.id(),profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
         if(auctionAfterArrival){auctionAfterArrival=false;try{openAuction();}catch(IOException refused){unavailable(refused.getMessage());}}
         persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
+        syncMissionObjective();
         flushPendingTravel();
+    }
+    /** The mission bar follows the owned run: the imported mission's {@code o.<id>} objective
+     *  while it is active, and nothing outside a mission. */
+    private void syncMissionObjective()throws IOException {
+        var run=scene.run();String next=null;
+        if(run!=null){var mission=scenes.missions().mission(run.missionId());if(mission!=null&&mission.requirement().hasObjective())next=run.missionId();}
+        if(!java.util.Objects.equals(next,missionObjective)){missionObjective=next;publishObjectives();}
     }
 
     private record AlchemyDestination(String key,ScenePortals.Entrance entrance) { }
@@ -2203,7 +2224,7 @@ final class WorldSession implements AutoCloseable {
             var result=characters.knightStory(knight.id(),authRevision,profile,story.memories().stream().map(SceneSimulation.MemoryRequest::operation).toList(),story.objectives().stream().map(SceneSimulation.ObjectiveRequest::operation).toList());
             profile=result.profile();
             if(!memories.equals(result.memories())){var before=memories;memories=result.memories();output.send(()->codec.knightMemoryChanges(oid,before,memories));}
-            if(!objectives.equals(result.objectives())){objectives=result.objectives();output.send(()->codec.knightObjectives(oid,objectives));}
+            if(!objectives.equals(result.objectives())){objectives=result.objectives();publishObjectives();}
         }
         collectPickups();
         for(long id:membership.takeUsedItems()){
@@ -2321,7 +2342,7 @@ final class WorldSession implements AutoCloseable {
                     }
                     profile=settled.profile();openingAdvance=null;openingPayoutRetry=0;openingPayoutWarning=false;
                     if(!memories.equals(settled.memories())){var old=memories;memories=settled.memories();output.send(()->codec.knightMemoryChanges(oid,old,memories));}
-                    if(!objectives.equals(settled.objectives())){objectives=settled.objectives();output.send(()->codec.knightObjectives(oid,objectives));}
+                    if(!objectives.equals(settled.objectives())){objectives=settled.objectives();publishObjectives();}
                     var gateMission=run.missionId();
                     if(!settled.completion().equals(completedOpening.get(gateMission))){var completed=new LinkedHashMap<>(completedOpening);completed.put(gateMission,settled.completion());completedOpening=Map.copyOf(completed);}
                     if(settled.first()){

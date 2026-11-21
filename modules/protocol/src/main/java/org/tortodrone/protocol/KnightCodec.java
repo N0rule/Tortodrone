@@ -147,13 +147,22 @@ public final class KnightCodec extends WireWriter {
     }
 
     public byte[] knightObjectives(int oid,java.util.Map<String,org.tortodrone.core.character.KnightObjective.State> objectives)throws IOException {
+        return objectives(oid,objectives.values().stream()
+            .map(value->new org.tortodrone.core.mission.ObjectiveEntry(value.index(),value.name(),value.text(),org.tortodrone.core.mission.ObjectiveEntry.KNIGHT))
+            .toList());
+    }
+
+    /** The complete native objectives set: knight-persistent entries plus the active mission bar. */
+    public byte[] objectives(int oid,java.util.List<org.tortodrone.core.mission.ObjectiveEntry> objectives)throws IOException {
         if(objectives.size()>256)throw new IOException("Too many objectives");
-        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"objectives");type(out,WireTypes.DSET);out.writeInt(objectives.size());
-            for(var objective:objectives.values().stream().sorted(java.util.Comparator.comparingInt(org.tortodrone.core.character.KnightObjective.State::index)).toList()){
+        var ordered=objectives.stream().sorted(java.util.Comparator.comparingInt(org.tortodrone.core.mission.ObjectiveEntry::index)).toList();
+        for(int i=1;i<ordered.size();i++)if(ordered.get(i-1).index()==ordered.get(i).index())throw new IOException("Duplicate objective index");
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"objectives");type(out,WireTypes.DSET);out.writeInt(ordered.size());
+            for(var objective:ordered){
                 type(out,"com.threerings.projectx.data.Objective");
                 type(out,"com.threerings.projectx.config.ObjectiveConfig$Simple");
                 string(out,objective.text());for(int i=0;i<4;i++)out.writeFloat(.5f);value(out,null);
-                type(out,"com.threerings.projectx.config.Persistence");out.writeByte(3);out.writeBoolean(true);out.writeInt(objective.index());string(out,objective.name());
+                type(out,"com.threerings.projectx.config.Persistence");out.writeByte(objective.persistence());out.writeBoolean(true);out.writeInt(objective.index());string(out,objective.name());
             }
         });
     }

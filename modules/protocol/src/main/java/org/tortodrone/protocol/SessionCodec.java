@@ -368,6 +368,7 @@ public final class SessionCodec extends WireWriter {
             org.tortodrone.core.guild.Guild guild) throws IOException { return knightCodec.selected(oid, knight, profile, guild); }
     public byte[] knightMemories(int oid,java.util.Set<String> names)throws IOException { return knightCodec.knightMemories(oid, names); }
     public byte[] knightObjectives(int oid,java.util.Map<String,org.tortodrone.core.character.KnightObjective.State> objectives)throws IOException { return knightCodec.knightObjectives(oid, objectives); }
+    public byte[] objectives(int oid,java.util.List<org.tortodrone.core.mission.ObjectiveEntry> objectives)throws IOException { return knightCodec.objectives(oid, objectives); }
     public byte[] knightMemoryChanges(int oid,java.util.Set<String> before,java.util.Set<String> after)throws IOException { return knightCodec.knightMemoryChanges(oid, before, after); }
     public byte[] knightName(int oid,String knight)throws IOException { return knightCodec.knightName(oid, knight); }
     public byte[] equipPolicy(int oid,boolean station)throws IOException { return knightCodec.equipPolicy(oid, station); }
