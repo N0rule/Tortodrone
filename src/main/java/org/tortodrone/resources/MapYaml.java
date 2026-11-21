@@ -14,7 +14,7 @@ public final class MapYaml {
     public static final Set<String> CATEGORIES=Set.of("town","training","level");
     public static Map<Integer,Path> folders(Path maps)throws IOException {
         ContentFiles.safe(maps);if(!Files.isDirectory(maps))throw new IOException("Missing maps: "+maps);
-        var result=new TreeMap<Integer,Path>();int count=0;
+        var result=new TreeMap<Integer,Path>();var names=new HashSet<String>();int count=0;
         try(var categories=Files.list(maps)) {
             var list=categories.sorted().toList();if(list.size()>CATEGORIES.size())throw new IOException("Unexpected entry in map categories: "+maps);
             for(Path categoryFolder:list) {
@@ -24,7 +24,11 @@ public final class MapYaml {
                 try(var paths=Files.list(categoryFolder)) {
                     for(Path folder:paths.sorted().toList()) {
                         ContentFiles.safe(folder);
-                        if(!Files.isDirectory(folder)||!folder.getFileName().toString().matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid map folder: "+folder);
+                        String folderName=folder.getFileName().toString();
+                        if(!Files.isDirectory(folder)||!folderName.matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid map folder: "+folder);
+                        // Startup-map and portal destinations resolve by folder name; a second
+                        // folder with the same name in another category would be unreachable.
+                        if(!names.add(folderName))throw new IOException("Duplicate map folder name: "+folderName);
                         if(++count>64)throw new IOException("Too many map folders");
                         var map=read(folder.resolve("map.yml"));
                         int id=integer(map.get("id"),folder+": id");

@@ -303,9 +303,9 @@ document.addEventListener('keydown', (event) => {
         event.preventDefault();
         menu(false, true);
     } else if (event.key === 'Tab') {
-        const controls = [...$('#sidebar').querySelectorAll('a[href], button:not(:disabled)')].filter(
-            (node) => node.checkVisibility()
-        );
+        const controls = [
+            ...$('#sidebar').querySelectorAll('a[href], button:not(:disabled)')
+        ].filter((node) => node.checkVisibility());
         const first = controls[0],
             last = controls.at(-1);
         if (event.shiftKey && document.activeElement === first) {

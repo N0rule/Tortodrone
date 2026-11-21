@@ -23,7 +23,8 @@ const SENDERS = [
     ['5', 'Haven Treasury'],
     ['4', 'Spiral Knights Support']
 ];
-const senderName = (sender) => SENDERS.find(([id]) => Number(id) === sender)?.[1] || `System ${sender}`;
+const senderName = (sender) =>
+    SENDERS.find(([id]) => Number(id) === sender)?.[1] || `System ${sender}`;
 const displaySender = (value) =>
     value.senderLabel?.trim() ? value.senderLabel.trim() : senderName(value.sender);
 const units = (gifts) => gifts.reduce((total, gift) => total + Number(gift.count || 0), 0);
@@ -171,11 +172,7 @@ export async function mount(ctx) {
                     const cell = el('div', null, 'mail-subject-cell');
                     cell.append(
                         el('strong', campaign.subject),
-                        el(
-                            'small',
-                            campaign.body.replace(/\s+/g, ' ').slice(0, 90),
-                            'muted'
-                        )
+                        el('small', campaign.body.replace(/\s+/g, ' ').slice(0, 90), 'muted')
                     );
                     return cell;
                 },
@@ -207,7 +204,9 @@ export async function mount(ctx) {
                     const cell = el('div', null, 'mail-gifts-cell');
                     cell.append(el('span', unitCount(units(campaign.gifts)), 'muted'));
                     for (const gift of campaign.gifts)
-                        cell.append(itemLine(definitions.get(gift.config), { config: gift.config }));
+                        cell.append(
+                            itemLine(definitions.get(gift.config), { config: gift.config })
+                        );
                     return cell;
                 },
                 (campaign) => units(campaign.gifts)
@@ -229,7 +228,12 @@ export async function mount(ctx) {
         ],
         {
             actions: (get) => [
-                button('Edit', () => compose('campaign', get()), 'secondary', () => get().enabled),
+                button(
+                    'Edit',
+                    () => compose('campaign', get()),
+                    'secondary',
+                    () => get().enabled
+                ),
                 button(
                     'Cancel',
                     () =>
@@ -248,7 +252,8 @@ export async function mount(ctx) {
                 [
                     'Status',
                     ['All', 'Active', 'Scheduled', 'Ended', 'Cancelled'],
-                    (campaign, value) => value === 'All' || mailingStatus(campaign, data.now) === value
+                    (campaign, value) =>
+                        value === 'All' || mailingStatus(campaign, data.now) === value
                 ]
             ]
         }
@@ -263,32 +268,32 @@ export async function mount(ctx) {
             delivered += campaign.delivered;
         }
         const summaryPanel = panel(
-                'Delivery status',
-                guidance,
-                toolbar(
-                    ...Object.entries(counts).map(([name, count]) =>
-                        badge(`${count} ${name.toLowerCase()}`, name === 'Active' ? 'good' : '')
-                    ),
-                    badge(
-                        `${delivered.toLocaleString()} letter${delivered === 1 ? '' : 's'} delivered`,
-                        'gold'
-                    )
+            'Delivery status',
+            guidance,
+            toolbar(
+                ...Object.entries(counts).map(([name, count]) =>
+                    badge(`${count} ${name.toLowerCase()}`, name === 'Active' ? 'good' : '')
                 ),
-                el(
-                    'small',
-                    'Editing an active mailing changes what knights who have not received it yet will get. Delivered letters stay untouched.',
-                    'muted'
-                ),
-                ...(data.campaigns.length
-                    ? []
-                    : [
-                          el(
-                              'p',
-                              'No mailings yet. Create a windowed mailing for every knight, or send a one-off letter to a single knight.',
-                              'empty'
-                          )
-                      ])
-            );
+                badge(
+                    `${delivered.toLocaleString()} letter${delivered === 1 ? '' : 's'} delivered`,
+                    'gold'
+                )
+            ),
+            el(
+                'small',
+                'Editing an active mailing changes what knights who have not received it yet will get. Delivered letters stay untouched.',
+                'muted'
+            ),
+            ...(data.campaigns.length
+                ? []
+                : [
+                      el(
+                          'p',
+                          'No mailings yet. Create a windowed mailing for every knight, or send a one-off letter to a single knight.',
+                          'empty'
+                      )
+                  ])
+        );
         summaryPanel.classList.add('stack');
         summary.replaceChildren(summaryPanel);
     }
@@ -306,7 +311,10 @@ export async function mount(ctx) {
                 'Optional. Only knights created while this is enabled receive it; existing knights are not mailed. It arrives once, on the knight’s first visit. Disabling stops new copies but keeps eligibility for knights created while it was enabled.',
                 'muted'
             ),
-            toolbar(badge(welcome.enabled ? 'Enabled' : 'Disabled', welcome.enabled ? 'good' : ''), el('span', status, 'muted'))
+            toolbar(
+                badge(welcome.enabled ? 'Enabled' : 'Disabled', welcome.enabled ? 'good' : ''),
+                el('span', status, 'muted')
+            )
         ];
         if (welcome.subject || welcome.body || welcome.gifts.length)
             content.push(
@@ -336,7 +344,8 @@ export async function mount(ctx) {
             header = el('div', null, 'form-grid'),
             gifts = el('div', null, 'stack'),
             unitLabel = el('small', '', 'muted');
-        const enabled = mode === 'welcome' ? input('Enable welcome mail', draft.enabled, 'checkbox') : null;
+        const enabled =
+            mode === 'welcome' ? input('Enable welcome mail', draft.enabled, 'checkbox') : null;
         const subject = input('Subject', draft.subject);
         subject.maxLength = 50;
         const body = input('Body', draft.body, 'textarea');
@@ -346,10 +355,20 @@ export async function mount(ctx) {
         const customSender = input('Custom sender (optional)', draft.senderLabel);
         customSender.maxLength = 40;
         customSender.placeholder = 'Overrides the system sender name';
-        const starts = mode === 'campaign' ? input('Starts', localDate(draft.starts), 'datetime-local') : null;
-        const ends = mode === 'campaign' ? input('Ends', localDate(draft.ends), 'datetime-local') : null;
-        const crowns = input('Crowns', draft.crowns, 'number', { min: 0, max: 2147483647, step: 1 });
-        const energy = input('Energy', draft.energy, 'number', { min: 0, max: 2147483647, step: 1 });
+        const starts =
+            mode === 'campaign' ? input('Starts', localDate(draft.starts), 'datetime-local') : null;
+        const ends =
+            mode === 'campaign' ? input('Ends', localDate(draft.ends), 'datetime-local') : null;
+        const crowns = input('Crowns', draft.crowns, 'number', {
+            min: 0,
+            max: 2147483647,
+            step: 1
+        });
+        const energy = input('Energy', draft.energy, 'number', {
+            min: 0,
+            max: 2147483647,
+            step: 1
+        });
         let filter, target;
         if (mode === 'direct') {
             filter = input('Filter knights');
@@ -571,7 +590,8 @@ export async function mount(ctx) {
                 const requiresText = mode !== 'welcome' || enabled.checked || draft.enabledAt;
                 if (requiresText && !subject.value.trim()) throw new Error('Subject is required.');
                 if (requiresText && !body.value.trim()) throw new Error('Body is required.');
-                if (units(draft.gifts) > 14) throw new Error('A mailing can carry at most 14 item units.');
+                if (units(draft.gifts) > 14)
+                    throw new Error('A mailing can carry at most 14 item units.');
                 const values = {
                     sender: Number(sender.value),
                     senderLabel: customSender.value,
@@ -585,7 +605,9 @@ export async function mount(ctx) {
                     if (!target.value) throw new Error('Choose a knight.');
                     const [username, knight] = target.value.split('|');
                     await api.change('mail-send', { ...values, username, knight });
-                    changed(`Mail queued for ${knight}. It is waiting even while they are offline.`);
+                    changed(
+                        `Mail queued for ${knight}. It is waiting even while they are offline.`
+                    );
                 } else if (mode === 'welcome') {
                     await api.change('mail-welcome-save', { ...values, enabled: enabled.checked });
                     changed(enabled.checked ? 'Welcome mail saved.' : 'Welcome mail disabled.');

@@ -351,10 +351,7 @@ export async function inspectItem(def, item, fixed, writable = false) {
                     .filter(Boolean)
                     .join(', ') || 'Standard item'
             ],
-            [
-                'Expiration',
-                item.expiresAt ? date(item.expiresAt) : 'Permanent'
-            ],
+            ['Expiration', item.expiresAt ? date(item.expiresAt) : 'Permanent'],
             ['Accessories', attached.length ? `${attached.length} attached` : 'None']
         ])
     );

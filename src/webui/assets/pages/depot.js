@@ -159,12 +159,7 @@ export async function mount(ctx) {
             ['Price', price],
             [
                 'Availability',
-                (o) =>
-                    o.sale
-                        ? 'Promotion sale'
-                        : o.featured
-                            ? 'Featured'
-                            : 'Regular'
+                (o) => (o.sale ? 'Promotion sale' : o.featured ? 'Featured' : 'Regular')
             ]
         ],
         { key: (o) => o.id }

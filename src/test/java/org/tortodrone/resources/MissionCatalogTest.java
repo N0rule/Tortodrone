@@ -55,6 +55,46 @@ public final class MissionCatalogTest {
         check(missions.availableRankCards(2,2,Set.of()).stream().map(MissionCatalog.Entry::id).noneMatch("alchemy_beginners"::equals),
             "an unmet needMission prerequisite withholds its card");
 
+        // Every rank pair, not only 2.2: board order and prerequisite gating stay uniform.
+        var pairs = new TreeSet<String>();
+        for (var card : missions.missions("rank")) {
+            check(card.rank() >= 1 && card.rank() <= 10 && card.subrank() >= 1 && card.subrank() <= 4,
+                "rank pair within the stock range: " + card.id());
+            pairs.add(card.rank() + "." + card.subrank());
+        }
+        check(pairs.size() == 27, "the catalogue covers 27 occupied rank subranks: " + pairs);
+        check(pairs.contains("1.1") && pairs.contains("9.4") && pairs.contains("10.2"),
+            "early, late and prestige levels are all represented");
+        for (var pair : pairs) {
+            int rank = Integer.parseInt(pair.substring(0, pair.indexOf('.')));
+            int subrank = Integer.parseInt(pair.substring(pair.indexOf('.') + 1));
+            var board = missions.rankBoard(rank, subrank);
+            check(!board.isEmpty(), "board is never empty for an occupied pair: " + pair);
+            var sorted = new ArrayList<>(board);
+            sorted.sort(Comparator.comparingInt(MissionCatalog.Entry::priority).reversed()
+                .thenComparing(MissionCatalog.Entry::id));
+            check(board.equals(sorted), "board order is priority descending then id: " + pair);
+            var available = missions.availableRankCards(rank, subrank, Set.of());
+            for (var card : board)
+                check(available.contains(card) == card.needMission().isEmpty(),
+                    "only unmet prerequisites withhold " + card.id());
+        }
+        // The longest stock chain releases one card at a time.
+        var chain = new LinkedHashSet<String>();
+        for (String expected : List.of("the_flickering_flame", "shadowplay", "a_call_to_arms",
+            "dreams_and_nightmares", "delved_too_deep")) {
+            check(missions.availableRankCards(10, 2, chain).stream().map(MissionCatalog.Entry::id)
+                .toList().equals(List.of(expected)), "rank 10.2 chain releases " + expected);
+            chain.add(expected);
+        }
+        check(missions.availableRankCards(10, 2, chain).isEmpty(), "a completed chain leaves no card");
+        for (int rank = 1; rank <= 10; rank++) {
+            var property = missions.property("Rank/Rank " + rank);
+            check(property != null && property.prestigeLow() <= property.prestigeAvg()
+                && property.prestigeAvg() <= property.prestigeHigh()
+                && property.prestigeHigh() <= property.prestigeMax(), "prestige ranges stay ordered: rank " + rank);
+        }
+
         Path dir=Files.createTempDirectory("tortodrone-mission-test-");
         try {
             write(dir,"rank.yml","""

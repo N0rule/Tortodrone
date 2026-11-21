@@ -513,8 +513,10 @@ python3 scripts/content/import_missions.py --source /path/to/exported/config --c
 ## Map identity, actors, portals and traps
 
 `map.yml` preserves the native ID and type, provides readable administration
-labels, and selects `defaultSpawn` by a named entrance. Names used in native
-`Name` serialization, scene version, image and zone IDs stay in
+labels, and selects `defaultSpawn` by a named entrance. Map folders are grouped
+under `town/`, `training/` or `level/`, and a folder name must be unique across
+those categories because `startup-map` and portal destinations resolve by name.
+Names used in native `Name` serialization, scene version, image and zone IDs stay in
 `native/metadata.properties`; changing an administration label does not rename
 client-localized maps. The `zone` field is descriptive; native zone membership
 requires a verified reimport. `instances` remains bounded to 1–16 per template,
@@ -566,6 +568,12 @@ The catalogue supplies its native attack graph and timings; the placement still 
 identity, geometry, health, speed and any tuning override. Unknown or unsupported types,
 non-monster actors and actor/type mismatches fail startup. Existing attacks remain embedded
 until a placement is migrated; the laboratory Companion Cube is the first migrated example.
+Crash Site still uses embedded graphs and therefore the documented `melee-chaser` scheduling
+fallback, although its native configs resolve to supported catalogue types. Advanced Training
+places eleven inert authored cubes (`child.attack` 0, 30 health) whose actor is the supported
+Shufflebot type; those cubes are gym targets, not hostile encounters. `MapEnemyCoverageTest`
+pins both boundaries. The checked-in catalogue holds 253 stock descriptions, 222 spawnable and
+31 listed with explicit native-action refusal reasons.
 
 Optional `mechanics.yml` contains each map's own rules. Native `destination.*`
 markers moved to immutable bindings: travel uses the single editable arrival in

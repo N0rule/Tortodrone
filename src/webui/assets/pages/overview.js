@@ -107,7 +107,11 @@ export async function mount(ctx) {
             ['Queued', (r) => r.monsters.pathQueued],
             ['Dropped', (r) => r.monsters.pathDropped],
             ['Path failures', (r) => r.monsters.pathFailures],
-            ['Tick p99', (r) => r.monsters.tickP99Millis.toFixed(2), (r) => r.monsters.tickP99Millis]
+            [
+                'Tick p99',
+                (r) => r.monsters.tickP99Millis.toFixed(2),
+                (r) => r.monsters.tickP99Millis
+            ]
         ],
         { key: (r) => `${r.templateId}:${r.instanceId}`, pageSize: 8 }
     );
@@ -146,9 +150,15 @@ export async function mount(ctx) {
         text(counters[2][1], s.failure || '');
         text(counters[3][0], s.database.failures ? 'Review' : 'Available');
         text(counters[3][1], `${s.accounts} accounts`);
-        text(counters[4][0], s.scenes.reduce((a, v) => a + v.monsters.total, 0));
+        text(
+            counters[4][0],
+            s.scenes.reduce((a, v) => a + v.monsters.total, 0)
+        );
         text(counters[4][1], 'live in active scenes');
-        text(counters[5][0], s.scenes.reduce((a, v) => a + v.monsters.engaged, 0));
+        text(
+            counters[5][0],
+            s.scenes.reduce((a, v) => a + v.monsters.engaged, 0)
+        );
         text(counters[5][1], 'full pursuit and attack');
         monsters.update(s.scenes);
         for (const c of [cpu, memory, population, activity]) c.update(history);

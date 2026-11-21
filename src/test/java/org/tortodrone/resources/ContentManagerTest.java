@@ -65,6 +65,10 @@ public final class ContentManagerTest {
             Path gear=home.resolve("content/items/materials.yml");var yaml=Yaml.read(gear);var definitions=Yaml.map(yaml.get("items"),"items");var first=definitions.entrySet().iterator().next();var item=Yaml.map(first.getValue(),"item");item.put("stockId","invalid");Files.delete(gear);Yaml.write(gear,yaml);failure(()->ContentManager.load(home),"stockId");item.remove("stockId");Files.delete(gear);Yaml.write(gear,yaml);
             check(baseline.items().entries().size()==9355&&baseline.scenes().scene(294).content().conversations().get(konway.actor()).equals(konway),"failed loads never mutate an existing snapshot");
             Path mapFile=home.resolve("content/maps/training/advanced_training/map.yml");String mapText=Files.readString(mapFile);Files.writeString(mapFile,mapText.replace("id: 294","id: 1"));failure(()->MapYaml.folders(home.resolve("content/maps")),"Duplicate");Files.writeString(mapFile,mapText);
+            Path duplicateFolder=home.resolve("content/maps/level/advanced_training");Files.createDirectories(duplicateFolder);
+            Files.writeString(duplicateFolder.resolve("map.yml"),mapText.replace("id: 294","id: 295").replace("type: training","type: level"));
+            failure(()->MapYaml.folders(home.resolve("content/maps")),"duplicate map folder name");
+            ContentFixture.delete(duplicateFolder);
             Path misc=home.resolve("content/items/misc.yml");String miscOriginal=Files.readString(misc);var miscYaml=Yaml.read(misc);Yaml.map(miscYaml.get("items"),"items").put(first.getKey(),item);Files.delete(misc);Yaml.write(misc,miscYaml);failure(()->ContentManager.load(home),"duplicate item ID");Files.writeString(misc,miscOriginal);
             var town=TownYaml.data(home.resolve("content/town"));var recipe=Yaml.map(Yaml.list(town.get("recipes"),"recipes").getFirst(),"recipe");recipe.put("item","Missing/Item");failure(()->TownYaml.references(town,baseline.items()),"missing item");
             Path bad=home.resolve("invalid.yml");

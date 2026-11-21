@@ -105,7 +105,10 @@ export async function mount(ctx) {
     const welcomeSave = button('Save welcome message', () => reviewWelcome());
     const welcomePanel = panel(
         'Welcome message',
-        label('Shown once in chat after a knight enters the world. Leave empty to disable.', welcomeInput),
+        label(
+            'Shown once in chat after a knight enters the world. Leave empty to disable.',
+            welcomeInput
+        ),
         el('small', 'Up to 256 characters. Stored in the active server configuration file.'),
         toolbar(welcomeSave, welcomeStatus)
     );
