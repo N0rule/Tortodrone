@@ -23,6 +23,8 @@ import org.tortodrone.core.world.SceneChat;
 import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.ScenePortals;
 import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.core.party.PartyView;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Three disposable authenticated sessions exercise actual invitation, travel, publication and exit paths. */
 public class CooperativeTrainingTest {
@@ -139,11 +141,11 @@ public class CooperativeTrainingTest {
             world.select(name,Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribeInteriorParty((short)1);world.subscribe((short)2);world.entered();
         }
         PartyRegistry.Member member(){return (PartyRegistry.Member)field(world,"partyMember");}
-        PartyRegistry.View party(){try{return scenes.parties().view(member());}catch(IOException failure){throw new AssertionError(failure);}}
+        PartyView.View party(){try{return scenes.parties().view(member());}catch(IOException failure){throw new AssertionError(failure);}}
         SceneRegistry.Instance place(){synchronized(world){return (SceneRegistry.Instance)field(world,"scene");}}
         SceneSimulation.Membership membership(){synchronized(world){return (SceneSimulation.Membership)field(world,"membership");}}
-        int publishedMembers(){synchronized(world){var view=(PartyRegistry.View)field(world,"publishedParty");return view==null?0:view.members().size();}}
-        boolean peerHurt(int oid){synchronized(world){var view=(PartyRegistry.View)field(world,"publishedParty");return view!=null&&view.members().stream().anyMatch(m->m.playerOid()==oid&&m.health().current()<m.health().maximum());}}
+        int publishedMembers(){synchronized(world){var view=(PartyView.View)field(world,"publishedParty");return view==null?0:view.members().size();}}
+        boolean peerHurt(int oid){synchronized(world){var view=(PartyView.View)field(world,"publishedParty");return view!=null&&view.members().stream().anyMatch(m->m.playerOid()==oid&&m.health().current()<m.health().maximum());}}
         void operation(int method,String target)throws Exception{world.partyInvocation(new SessionDecoder.Invocation(party().oid(),20,method,target==null?List.of(listener()):List.of(target,listener())));}
         void travel(int template)throws Exception{
             synchronized(world){

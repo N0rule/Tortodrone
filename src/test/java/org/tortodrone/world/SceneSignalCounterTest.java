@@ -9,6 +9,7 @@ import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.CollisionMap;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Synthetic geometry: production counter scheduling and native door collision, not a floor drive. */
 public final class SceneSignalCounterTest {

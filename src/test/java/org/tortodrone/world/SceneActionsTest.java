@@ -10,6 +10,7 @@ import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.SceneCombatEvent;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.CollisionMap;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Exercises the real entity removal and dynamic-door collision paths, with explicit tick times. */
 public final class SceneActionsTest {

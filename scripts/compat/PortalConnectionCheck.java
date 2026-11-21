@@ -9,6 +9,7 @@ import com.threerings.util.Name;
 import org.tortodrone.world.*;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Unchanged stock input/receiver/move readers walk through both automatic town portals. */
 public final class PortalConnectionCheck {
@@ -73,14 +74,14 @@ public final class PortalConnectionCheck {
                 ||angleDiff(actor.tA(),entrance.rotation())>.001
                 ||actor.adU()!=0||actor.bR(2))throw new AssertionError("Wrong portal arrival: "+actor);
     }
-    static ScenePortals.Trigger triggerTo(SceneCatalog.MapScene map,int destination) {
+    static ScenePortals.Trigger triggerTo(org.tortodrone.core.world.MapScene map,int destination) {
         var matches=map.portals().triggers().stream().filter(portal->portal.destination()==destination).toList();
         if(matches.size()!=1)throw new AssertionError("Expected one native portal "+map.id()+" -> "+destination+", found "+matches.size());
         return matches.getFirst();
     }
     private static float angleDiff(float a,float b){float d=(a-b)%(2*(float)Math.PI);if(d>Math.PI)d-=2*Math.PI;if(d< -Math.PI)d+=2*Math.PI;return Math.abs(d);}
     record Cell(int x,int y){float wx(){return x*.25f;}float wy(){return y*.25f;}}
-    static float[][] route(SceneCatalog.MapScene map,ScenePortals.Trigger target,float x,float y) {
+    static float[][] route(org.tortodrone.core.world.MapScene map,ScenePortals.Trigger target,float x,float y) {
         Cell start=new Cell(Math.round(x*4),Math.round(y*4));
         var previous=new HashMap<Cell,Cell>();var pending=new ArrayDeque<Cell>();previous.put(start,null);pending.add(start);
         Cell end=null;int[][] directions={{1,0},{-1,0},{0,1},{0,-1}};
@@ -102,13 +103,13 @@ public final class PortalConnectionCheck {
         if(points.isEmpty())throw new AssertionError("Spawn already inside native portal "+map.id()+"/"+target.id());
         return points.toArray(float[][]::new);
     }
-    static boolean clear(SceneCatalog.MapScene map,ScenePortals.Trigger target,float x,float y) {
+    static boolean clear(org.tortodrone.core.world.MapScene map,ScenePortals.Trigger target,float x,float y) {
         return map.collision().walkable(x,y)&&map.portals().triggers().stream().noneMatch(portal->portal!=target&&portal.intersects(x,y));
     }
     static boolean interior(ScenePortals.Trigger target,float x,float y) {
         return target.intersects(x-.1f,y)&&target.intersects(x+.1f,y)&&target.intersects(x,y-.1f)&&target.intersects(x,y+.1f);
     }
-    static boolean visible(SceneCatalog.MapScene map,ScenePortals.Trigger target,float ax,float ay,float bx,float by) {
+    static boolean visible(org.tortodrone.core.world.MapScene map,ScenePortals.Trigger target,float ax,float ay,float bx,float by) {
         int steps=Math.max(1,(int)Math.ceil(Math.hypot(bx-ax,by-ay)/.05));
         for(int i=0;i<=steps;i++){float fraction=(float)i/steps;if(!clear(map,target,ax+(bx-ax)*fraction,ay+(by-ay)*fraction))return false;}
         return true;

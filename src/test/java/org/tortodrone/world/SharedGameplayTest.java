@@ -8,6 +8,7 @@ import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.KnightCombat;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Shared-instance knockback, combat occlusion and independent ignitable oil patches. */
 public final class SharedGameplayTest {
@@ -24,10 +25,10 @@ public final class SharedGameplayTest {
             "health","1000","radius",".2","collision-flags","8","collision-mask","79","damage-mask","2"));
     }
     private static ActorState player(int id,float x,float y){return new ActorState(id,1000+id,"Fixture",0,1000,x,y,0,0,0,PLAYER);}
-    private static SceneEntities world(SceneCatalog.MapScene map,SceneContent.Entry... entries){
+    private static SceneEntities world(org.tortodrone.core.world.MapScene map,SceneContent.Entry... entries){
         return new SceneEntities(new SceneContent(List.of(entries),map.content().scales(),Map.of(),map.content().stats(),Map.of(),Map.of(),map.content().statuses()),map.collision());
     }
-    private static void knockback(SceneCatalog.MapScene map){
+    private static void knockback(org.tortodrone.core.world.MapScene map){
         var entry=new SceneContent.Entry("monster",6.3f,-12.5f,0,monster());
         var world=world(map,entry);var unrelated=world(map,entry);
         var owner=player(7,5.5f,-12.5f);var peer=player(8,7.2f,-12.5f);
@@ -51,7 +52,7 @@ public final class SharedGameplayTest {
             "region",new FireCatalog.DataValue("com.threerings.tudey.config.RegionConfig$Default",Map.of("expansion",2f))));
     }
     private static Object normal(){return new FireCatalog.DataValue("Damage$Normal",Map.of("amount",10f,"flags",2));}
-    private static void barrier(SceneCatalog.MapScene map){
+    private static void barrier(org.tortodrone.core.world.MapScene map){
         for(boolean open:new boolean[]{false,true}){
             var door=new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Door","config","Fixture",
                 "collision-flags","192","shape","Rectangle","width",".25","height","3","start-open",Boolean.toString(open)));
@@ -68,7 +69,7 @@ public final class SharedGameplayTest {
         world.damage(hit(129,normal()),28.1f,-1.5f,0,1000,7);
         check(world.actor(id).entity().health()==1,"actual static Training barrier blocks sword reach");
     }
-    private static void oil(SceneCatalog.MapScene map)throws Exception {
+    private static void oil(org.tortodrone.core.world.MapScene map)throws Exception {
         var fields=new HashMap<String,String>();fields.put("native-type","com.threerings.projectx.dungeon.data.actor.DungeonLift");
         fields.put("config","Dynamic/Lift Objects/Oil Pot");fields.put("radius",".45");fields.put("collision-flags","514");
         var entry=new SceneContent.Entry("oil",5.5f,-12.5f,0,new SceneContent.Spec(fields));

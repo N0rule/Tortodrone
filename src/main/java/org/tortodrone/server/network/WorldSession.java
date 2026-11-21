@@ -19,7 +19,7 @@ import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.character.KnightMemory;
 import org.tortodrone.core.character.AnimatedItems;
 import org.tortodrone.core.character.Confetti;
-import org.tortodrone.world.MissionRun;
+import org.tortodrone.core.mission.MissionRun;
 import org.tortodrone.core.world.SceneConversation;
 import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.town.TownState;
@@ -35,6 +35,8 @@ import org.tortodrone.core.world.ReadyRoom;
 import org.tortodrone.core.world.SceneElevator;
 import org.tortodrone.core.world.ScenePortals;
 import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.core.mission.OpeningGate;
+import org.tortodrone.core.party.PartyView;
 
 /** Selected character protocol/controller; authoritative entities live in their scene instance. */
 final class WorldSession implements AutoCloseable {
@@ -101,7 +103,7 @@ final class WorldSession implements AutoCloseable {
      *  native destination request once the scene has subscribed and accepted enteredPlace. */
     private SessionDecoder.Invocation pendingTravel;
     private FloorReport floorReport;
-    private SceneSimulation.FloorAdvanceRequest openingAdvance;
+    private org.tortodrone.core.world.FloorAdvanceRequest openingAdvance;
     private boolean openingDropStarted,openingPayoutWarning;
     private int openingPayoutRetry;
     private MissionRun lastGateStart;
@@ -118,22 +120,22 @@ final class WorldSession implements AutoCloseable {
     private SceneStatus.State publishedStatus;
     private Boolean publishedArsenal;
     private PartyRegistry.Member partyMember;
-    private PartyRegistry.View publishedParty;
+    private PartyView.View publishedParty;
     private org.tortodrone.core.guild.View guildView;
     private boolean guildSubscribed;
-    private final ArrayDeque<PartyRegistry.Event> partyEvents=new ArrayDeque<>();
+    private final ArrayDeque<PartyView.Event> partyEvents=new ArrayDeque<>();
     private boolean partyRefreshQueued,partyOverflow;
     private int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
     private SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null,membership.floorHeat());}
-    private void offerParty(PartyRegistry.Event event){synchronized(publications){
-        if(deliveryStopped)return;if(event instanceof PartyRegistry.Refresh){if(partyRefreshQueued)return;partyRefreshQueued=true;}
+    private void offerParty(PartyView.Event event){synchronized(publications){
+        if(deliveryStopped)return;if(event instanceof PartyView.Refresh){if(partyRefreshQueued)return;partyRefreshQueued=true;}
         if(partyEvents.size()>=64)partyOverflow=true;else partyEvents.addLast(event);publications.notifyAll();
     }}
-    private synchronized void deliverParty(PartyRegistry.Event event)throws IOException {
+    private synchronized void deliverParty(PartyView.Event event)throws IOException {
         if(closed||partyMember==null)return;
-        if(event instanceof PartyRegistry.Invitation invite){output.send(()->codec.partyInvitation(oid,invite));return;}
-        if(event instanceof PartyRegistry.Chat chat){if(scenes.parties().owns(partyMember,chat.partyOid()))output.send(()->codec.chat(chat.partyOid(),chat.message()));return;}
+        if(event instanceof PartyView.Invitation invite){output.send(()->codec.partyInvitation(oid,invite));return;}
+        if(event instanceof PartyView.Chat chat){if(scenes.parties().owns(partyMember,chat.partyOid()))output.send(()->codec.chat(chat.partyOid(),chat.message()));return;}
         refreshParty();
     }
     private void refreshParty()throws IOException {refreshParty(false);}
@@ -152,7 +154,7 @@ final class WorldSession implements AutoCloseable {
         }
     }
     /** The native friend list's Join affordance is driven by this presence. */
-    private FriendPresence presence(PartyRegistry.View view)throws IOException {
+    private FriendPresence presence(PartyView.View view)throws IOException {
         if(scene.map().town())return new FriendPresence(scene.map().name(),scene.map().zone(),scene.oid());
         // Only Training rooms are party-shared; Laboratory and Hall of Heroes stay per-world.
         boolean shared=scene.map().kind().equals("training")&&scenes.parties().owner(partyMember,profile.worldId())!=0;
@@ -1410,7 +1412,7 @@ final class WorldSession implements AutoCloseable {
                 .findFirst().orElseThrow(() -> new IOException("No such knight"));
             int saved=characters.lastTownScene(choice.id(),authRevision);
             int destination=scenes.catalog().towns().stream().filter(map->map.id()==saved)
-                .mapToInt(SceneCatalog.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
+                .mapToInt(org.tortodrone.core.world.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
             if(loaded.progress().crashSiteIncomplete()){
                 if(scenes.tutorial()==null)throw new IOException("The opening adventure is unavailable; please try again later");
                 destination=scenes.tutorial().source().id();stageInReadyRoom=false;
@@ -1522,7 +1524,7 @@ final class WorldSession implements AutoCloseable {
                     return true;
                 }
                 characters.worldProfile(knight.name(),authRevision,profile);
-                SceneCatalog.MapScene map=null;ScenePortals.Entrance entrance=null;AlchemyDestination alchemy=null;
+                org.tortodrone.core.world.MapScene map=null;ScenePortals.Entrance entrance=null;AlchemyDestination alchemy=null;
                 if(destination.equals("move_alchemy_machine")){
                     alchemy=selectAlchemy();if(alchemy!=null){entrance=alchemy.entrance();map=scene.map();}
                 }
@@ -1777,7 +1779,7 @@ final class WorldSession implements AutoCloseable {
                     if(!scene.map().town()){
                         int saved=characters.lastTownScene(knight.id(),authRevision);
                         int permanent=scenes.catalog().towns().stream().filter(map->map.id()==saved)
-                            .mapToInt(SceneCatalog.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
+                            .mapToInt(org.tortodrone.core.world.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
                         returnScene=scenes.destination(permanent,profile.worldId());
                     }
                     var before=visibleProfile();
@@ -1907,7 +1909,7 @@ final class WorldSession implements AutoCloseable {
             if(method==24) {
                 var own=adminLocation();adminTravel(new AdminLocation(own.scene(),own.world(),own.name(),(Integer)args.get(0),(Integer)args.get(1),own.rotation()));
             }else if(method==28||method==30) {
-                SceneCatalog.MapScene map=null;
+                org.tortodrone.core.world.MapScene map=null;
                 String key=name.strip();
                 for(var candidate:scenes.catalog().scenes()) {
                     boolean match=method==30?candidate.town()&&(candidate.zoneName().equalsIgnoreCase(key)||candidate.zoneName().equalsIgnoreCase("%town:m."+key)||candidate.zoneName().equalsIgnoreCase("%zone:m."+key)||Integer.toString(candidate.zone()).equals(key)):
@@ -2382,7 +2384,7 @@ final class WorldSession implements AutoCloseable {
     private void deliverPublications() {
         try {
             while(true) {
-                Publication publication;List<PartyRegistry.Event> events;
+                Publication publication;List<PartyView.Event> events;
                 synchronized(publications) {
                     while(pending==null&&activityPublications.isEmpty()&&partyEvents.isEmpty()&&!partyOverflow&&!publicationOverflow&&!deliveryStopped)publications.wait();
                     if(deliveryStopped)return;

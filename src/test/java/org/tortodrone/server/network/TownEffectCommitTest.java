@@ -14,6 +14,7 @@ import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.Currency;
+import org.tortodrone.resources.SceneCatalog;
 
 /** A source connection lost after commit cannot suppress the effect for scene observers. */
 public final class TownEffectCommitTest {

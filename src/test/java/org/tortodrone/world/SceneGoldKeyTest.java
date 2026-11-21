@@ -39,7 +39,7 @@ public final class SceneGoldKeyTest {
         return new SceneContent(entries,Map.of(),Map.of(),Map.of("player.base-health",100f),Map.of(),Map.of(),Map.of());
     }
     private static void movement(CollisionMap terrain,SceneContent content)throws Exception {
-        var map=new SceneCatalog.MapScene(903,3<<24,"Fixture","Fixture","fixture","level",1,0,0,0,1,terrain,new byte[]{1},ScenePortals.EMPTY,content);
+        var map=new org.tortodrone.core.world.MapScene(903,3<<24,"Fixture","Fixture","fixture","level",1,0,0,0,1,terrain,new byte[]{1},ScenePortals.EMPTY,content);
         var scene=new SceneRegistry.Instance(703,0,map).simulation();int stamp=SceneClock.now();
         try(var owner=scene.join(player(219,0,0,stamp),s->{});var peer=scene.join(player(220,0,.65f,stamp),s->{})){
             owner.enter();peer.enter();input(owner,0,4);input(peer,0,4);

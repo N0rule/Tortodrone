@@ -21,6 +21,8 @@ import org.tortodrone.core.character.KnightProgress;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.character.KnightMemory;
 import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.mission.OpeningGate;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Original-map native protocol/entry acceptance from an explicit post-Camp fixture.
  * Does not claim to play Generator encounters or settle its final exit. */
@@ -29,8 +31,8 @@ public final class OpeningGateCompatibility {
     public static void main(String[] args)throws Exception {
         if(args.length!=4)throw new IllegalArgumentException("GAME BASE RAW337 RAW218");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
-        var content=ContentManager.load(Path.of(args[1]));var base=content.createScenes();
-        var maps=new TreeMap<Integer,SceneCatalog.MapScene>();for(var map:base.catalog().scenes())maps.put(map.id(),map);
+        var content=ContentManager.load(Path.of(args[1]));var base=org.tortodrone.world.SceneRegistry.create(content);
+        var maps=new TreeMap<Integer,org.tortodrone.core.world.MapScene>();for(var map:base.catalog().scenes())maps.put(map.id(),map);
         maps.put(337,SceneCatalog.loadTemplate(337,Path.of(args[2])));maps.put(218,SceneCatalog.loadTemplate(218,Path.of(args[3])));
         var registry=new SceneRegistry(SceneCatalog.of(maps,base.catalog().entry().id()));registry.town(base.town());registry.weapons(base.weapons());registry.equipment(base.equipment());registry.fires(base.fires());registry.petFires(content.petFires());SceneRegistry.install(registry);
         var gate=registry.openingGate(OpeningMission.ANCIENT_GENERATOR);check(gate!=null,"original Generator, powered Camp, entrances and native elevator required");
@@ -41,7 +43,7 @@ public final class OpeningGateCompatibility {
                 else bindings.add(binding);
             }
             var incomplete=new SceneContent(bindings,originalContent.scales(),originalContent.conversations(),originalContent.stats(),originalContent.items(),originalContent.cycles(),originalContent.statuses(),originalContent.mapIcons(),originalContent.actorTemplates());
-            var changed=new SceneCatalog.MapScene(original.id(),original.zone(),original.zoneName(),original.name(),original.image(),original.kind(),original.version(),original.spawnX(),original.spawnY(),original.spawnRotation(),original.instances(),original.collision(),original.layout(),original.portals(),incomplete,original.staticCollision());
+            var changed=new org.tortodrone.core.world.MapScene(original.id(),original.zone(),original.zoneName(),original.name(),original.image(),original.kind(),original.version(),original.spawnX(),original.spawnY(),original.spawnRotation(),original.instances(),original.collision(),original.layout(),original.portals(),incomplete,original.staticCollision());
             var invalid=new TreeMap<>(maps);invalid.put(337,changed);
             check(OpeningGate.available(SceneCatalog.of(invalid,base.catalog().entry().id()),OpeningMission.ANCIENT_GENERATOR)==null,"a pinned layout alone cannot advertise a gate with missing control mechanics: "+control.getValue());
         }

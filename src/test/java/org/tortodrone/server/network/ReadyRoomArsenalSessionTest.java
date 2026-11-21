@@ -21,7 +21,7 @@ public final class ReadyRoomArsenalSessionTest {
     public static void main(String[] args)throws Exception {
         Path root=Files.createTempDirectory("tortodrone-ready-room-arsenal-");
         try{
-            var content=ContentManager.load(Path.of("."));var scenes=content.createScenes();var db=new Database(root,false);
+            var content=ContentManager.load(Path.of("."));var scenes=org.tortodrone.world.SceneRegistry.create(content);var db=new Database(root,false);
             try(var alice=ready(db,content,scenes,"Alice")){
                 var profile=alice.chars.worldProfile("Alice",1);
                 var sword=profile.items().stream().filter(i->i.config().equals("Weapon/Sword/Proto Sword")).findFirst().orElseThrow();

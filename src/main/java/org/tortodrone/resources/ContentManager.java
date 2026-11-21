@@ -92,7 +92,7 @@ public final class ContentManager {
             return SceneCatalog.lazy(folders,entry,entryScene,folder->loadMap(folder,shared,town,items,monsters));
         }catch(IllegalArgumentException invalid){throw new IOException(maps+": "+invalid.getMessage(),invalid);}
     }
-    private static SceneCatalog.MapScene loadMap(Path folder,Path shared,org.tortodrone.core.town.TownCatalog town,org.tortodrone.core.character.ItemCatalog items,MonsterCatalog monsters)throws IOException {
+    private static org.tortodrone.core.world.MapScene loadMap(Path folder,Path shared,org.tortodrone.core.town.TownCatalog town,org.tortodrone.core.character.ItemCatalog items,MonsterCatalog monsters)throws IOException {
         var prepared=MapYaml.prepare(folder,shared,items);var p=prepared.descriptor();Path nativeDir=prepared.nativeDirectory();
         byte[] layout=Files.readAllBytes(nativeDir.resolve("scene.dat"));
         if(layout.length<16||layout.length>900_000||layout[0]!=(byte)0xfa||layout[1]!=(byte)0xce||layout[2]!=(byte)0xaf||layout[3]!=0x0e)throw new IOException(nativeDir+": invalid native scene header/size");
@@ -118,7 +118,7 @@ public final class ContentManager {
         if(exact==null)throw new IOException(folder+": exact collision.bin is required; run generateNativeCollision");
         var collision=CollisionMap.exact(exact,collisionMask,ScenePortals.PAWN_RADIUS);
         var portals=ScenePortals.load(prepared.portals(),digest,collision);
-        return new SceneCatalog.MapScene(Integer.parseInt(p.getProperty("scene-id")),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,portals,actors,SceneCollision.fromMapCollision(exact),exact,monsters);
+        return new org.tortodrone.core.world.MapScene(Integer.parseInt(p.getProperty("scene-id")),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,portals,actors,SceneCollision.fromMapCollision(exact),exact,monsters);
     }
     private static void requireItem(org.tortodrone.core.character.ItemCatalog items,String config)throws IOException{if(items.find(config)==null)throw new IOException("Combat references missing item: "+config);}
     static Map<String,String> inputs(Path root)throws IOException {

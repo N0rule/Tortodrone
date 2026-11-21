@@ -16,6 +16,7 @@ import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Town destination commands sent from the loading screen or Ready Room are replayed
  *  after enteredPlace instead of failing with "Finish entering this scene first". */

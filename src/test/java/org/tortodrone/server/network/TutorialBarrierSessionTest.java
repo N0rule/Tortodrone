@@ -23,7 +23,7 @@ public final class TutorialBarrierSessionTest {
     /** The authored breakable wall sealing the eastern exit corridor (x -14.5..-8.5, y -64.5..-59.5). */
     private static final float WALL_MIN_X=-15.25f,WALL_MAX_X=-8.0f,WALL_MIN_Y=-65.25f,WALL_MAX_Y=-58.75f;
     public static void main(String[] args)throws Exception {
-        var content=ContentManager.load(Path.of("."));var registry=content.createScenes();
+        var content=ContentManager.load(Path.of("."));var registry=org.tortodrone.world.SceneRegistry.create(content);
         var previous=SceneRegistry.system();SceneRegistry.install(registry);
         Path home=Files.createTempDirectory("tortodrone-tutorial-barrier-");
         try {
@@ -98,6 +98,6 @@ public final class TutorialBarrierSessionTest {
         }
     }
     private static Object field(WorldSession world,String name)throws Exception {synchronized(world){var f=WorldSession.class.getDeclaredField(name);f.setAccessible(true);return f.get(world);}}
-    private static void move(WorldSession world,SceneCatalog.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));}
+    private static void move(WorldSession world,org.tortodrone.core.world.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));}
     private static final class RecordingSocket extends Socket {@Override public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}}
 }

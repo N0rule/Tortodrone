@@ -41,7 +41,7 @@ public final class ConfettiSessionTest {
             refused(()->store.confetti(account,knight.id(),1,initial.revision(),id));
             check(db.worldProfile(account,knight.id(),1).equals(initial),"late failure rolls back stack consumption and revision");
             db.write(c->{c.createStatement().execute("DROP TRIGGER reject_confetti");return null;});
-            var scenes=content.createScenes();
+            var scenes=org.tortodrone.world.SceneRegistry.create(content);
             var frames=new java.util.concurrent.LinkedBlockingQueue<byte[]>();
             var socket=new Socket(){public OutputStream getOutputStream(){return new OutputStream(){public void write(int b){throw new AssertionError();}public void write(byte[] frame){frames.add(frame);}};}};
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)){

@@ -15,6 +15,7 @@ import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.ScenePortals;
 import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Delayed capsule actions follow the owned use activity, including combat interruptions. */
 public final class SceneItemUseTest {
@@ -185,9 +186,9 @@ public final class SceneItemUseTest {
         final SceneSimulation.Membership member;
         final SceneEntities entities;
         final BlockingQueue<SceneSimulation.Snapshot> publications=new LinkedBlockingQueue<>();
-        Fixture(SceneCatalog.MapScene map)throws Exception {
+        Fixture(org.tortodrone.core.world.MapScene map)throws Exception {
             var content=new SceneContent(List.of(),map.content().scales(),Map.of(),Map.of("player.base-health",200f),map.content().items(),Map.of(),map.content().statuses());
-            var isolated=new SceneCatalog.MapScene(map.id(),map.zone(),map.zoneName(),map.name(),map.image(),"training",map.version(),
+            var isolated=new org.tortodrone.core.world.MapScene(map.id(),map.zone(),map.zoneName(),map.name(),map.image(),"training",map.version(),
                 5.5f,-12.5f,0,1,map.collision(),map.layout(),ScenePortals.EMPTY,content);
             simulation=new SceneRegistry.Instance(790,1,isolated).simulation();
             var field=SceneSimulation.class.getDeclaredField("entities");field.setAccessible(true);entities=(SceneEntities)field.get(simulation);

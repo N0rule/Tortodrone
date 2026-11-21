@@ -18,6 +18,7 @@ import org.tortodrone.core.character.KnightMemory;
 import org.tortodrone.core.character.Currency;
 import org.tortodrone.core.character.DungeonGear;
 import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.mission.TutorialRoute;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
@@ -276,7 +277,7 @@ public final class Database {
             }
             try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
                 s.setString(1,receipt);s.setInt(2,1);s.executeUpdate();
-                s.setString(1,"world."+worldId+".last-town-scene");s.setInt(2,org.tortodrone.world.TutorialRoute.HAVEN);s.executeUpdate();
+                s.setString(1,"world."+worldId+".last-town-scene");s.setInt(2,org.tortodrone.core.mission.TutorialRoute.HAVEN);s.executeUpdate();
             }
             try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=? AND account_id=? AND knight_id=? AND state_revision=?")){
                 s.setInt(1,worldId);s.setInt(2,accountId);s.setInt(3,knightId);s.setLong(4,revision);

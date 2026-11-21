@@ -14,7 +14,7 @@ public final class RosterConcurrencyTest {
         var content = org.tortodrone.resources.ContentManager.load(Path.of("."));
         // Production installs scenes before accepting connections; warm the shared registry so
         // concurrent first requests do not pay the content-load time against the client timeout.
-        org.tortodrone.world.SceneRegistry.install(content.createScenes());
+        org.tortodrone.world.SceneRegistry.install(org.tortodrone.world.SceneRegistry.create(content));
         AccountStore accounts = new AccountStore(directory, false, content.items(), content.town());
         accounts.create("System", "system-password".toCharArray());
         accounts.create("Alice", "alice-password".toCharArray()); accounts.create("Bob", "bob-password".toCharArray());

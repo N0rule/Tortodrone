@@ -6,6 +6,7 @@ import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.SceneDamage;
+import org.tortodrone.resources.SceneCatalog;
 
 /** The damage summary's performance must classify natively (DamageSummary.getPerformance over
  *  applyDefense's ratio): each dealt part is compared with the same part mitigated by the

@@ -9,12 +9,14 @@ import java.util.Arrays;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.support.TestWire;
+import org.tortodrone.core.mission.TutorialRoute;
 
 /** Independent structural checks for the verified session wire subset. */
 public final class BootstrapTest {
     private static final String PREFIX = "com.threerings.presents.net.";
 
     public static void main(String[] args) throws Exception {
+        org.tortodrone.world.SceneRegistry.install(org.tortodrone.world.SceneRegistry.system());
         HandshakeCodec incoming = new HandshakeCodec();
         byte[] ping = request(-1, "PingRequest", (short) 3, null);
         var parsed = incoming.sessionRequest(ping);
@@ -69,7 +71,7 @@ public final class BootstrapTest {
             &&gate.get("_destId").equals(0),"interior transport exposes no dungeon floors or destination");
         if(tutorial!=null) {
             var tutorialGate=(java.util.Map<?,?>)gates.get(1);
-            check(tutorialGate.get("_gateId").equals(org.tortodrone.world.TutorialRoute.GATE)
+            check(tutorialGate.get("_gateId").equals(org.tortodrone.core.mission.TutorialRoute.GATE)
                 &&((java.util.List<?>)tutorialGate.get("_wheels")).size()==1,"tutorial transport gate");
         }
         if(!available.isEmpty()){

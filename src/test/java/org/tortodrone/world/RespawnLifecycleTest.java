@@ -5,6 +5,7 @@ import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Authored generator deadlines and the native warning/count animation signals. */
 public final class RespawnLifecycleTest {

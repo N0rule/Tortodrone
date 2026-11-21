@@ -6,41 +6,53 @@ import java.util.*;
 import org.tortodrone.core.NewsCatalog;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.mission.MissionCatalog;
-import org.tortodrone.world.MissionComlinks;
+import org.tortodrone.core.mission.MissionComlinks;
 import org.tortodrone.core.mission.MissionGates;
-import org.tortodrone.world.MissionRun;
+import org.tortodrone.core.mission.MissionRun;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownCatalog;
 import org.tortodrone.resources.BoxCatalog;
 import org.tortodrone.core.world.EquipmentCatalog;
 import org.tortodrone.core.world.SceneChat;
 import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.core.mission.OpeningGate;
+import org.tortodrone.core.mission.TutorialRoute;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Server-assigned scene instances; a client scene version is never an instance selector. */
-public final class SceneRegistry {
+public final class SceneRegistry implements org.tortodrone.core.world.SceneSource {
     public static final String ZONE_RECEIVER="2d900cf54355111b4bb4befcdff42b82";
-    public static final class Instance {
+    public static final class Instance implements org.tortodrone.core.world.SceneInstanceView {
         private final int oid,index,partyOwner;
-        private final SceneCatalog.MapScene map;
+        private final org.tortodrone.core.world.MapScene map;
         private final SceneSimulation simulation;
         private final TutorialRoute tutorial;
         private final MissionRun run;
-        public Instance(int oid,int index,SceneCatalog.MapScene map){this(oid,index,map,0);}
-        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner){this(oid,index,map,partyOwner,null);}
-        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner,TutorialRoute tutorial){this(oid,index,map,partyOwner,tutorial,null);}
-        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner,TutorialRoute tutorial,MissionRun run){this.oid=oid;this.index=index;this.map=map;this.partyOwner=partyOwner;this.tutorial=tutorial!=null&&tutorial.source()==map?tutorial:null;this.run=run;simulation=new SceneSimulation(this);}
+        public Instance(int oid,int index,org.tortodrone.core.world.MapScene map){this(oid,index,map,0);}
+        private Instance(int oid,int index,org.tortodrone.core.world.MapScene map,int partyOwner){this(oid,index,map,partyOwner,null);}
+        private Instance(int oid,int index,org.tortodrone.core.world.MapScene map,int partyOwner,TutorialRoute tutorial){this(oid,index,map,partyOwner,tutorial,null);}
+        private Instance(int oid,int index,org.tortodrone.core.world.MapScene map,int partyOwner,TutorialRoute tutorial,MissionRun run){this.oid=oid;this.index=index;this.map=map;this.partyOwner=partyOwner;this.tutorial=tutorial!=null&&tutorial.source()==map?tutorial:null;this.run=run;simulation=new SceneSimulation(this);}
         public TutorialRoute tutorial(){return tutorial;}
         public MissionRun run(){return run;}
         public int partyOwner(){return partyOwner;}
         public int oid(){return oid;}
+        @Override public boolean hasTutorial(){return tutorial!=null;}
+        @Override public boolean hasMission(){return run!=null;}
+        @Override public int missionGateId(){return run==null?0:run.gateId();}
+        @Override public String missionId(){return run==null?null:run.missionId();}
+        @Override public int missionDifficulty(){return run==null?0:run.difficultyOrdinal();}
         public int index(){return index;}
-        public SceneCatalog.MapScene map(){return map;}
+        public org.tortodrone.core.world.MapScene map(){return map;}
         public SceneSimulation simulation(){return simulation;}
     }
     private final SceneCatalog catalog;
     private final TutorialRoute tutorial;
     private final OpeningGate generator;
     public TutorialRoute tutorial(){return tutorial;}
+    @Override public boolean hasTutorial(){return tutorial!=null;}
+    @Override public int openingGateId(org.tortodrone.core.character.OpeningMission mission){
+        OpeningGate gate=openingGate(mission);return gate==null?0:gate.id();
+    }
     public OpeningGate openingGate(org.tortodrone.core.character.OpeningMission mission){return mission==org.tortodrone.core.character.OpeningMission.ANCIENT_GENERATOR?generator:null;}
     private MissionGates gates=MissionGates.empty();
     public MissionGates gates(){return gates;}
@@ -53,9 +65,9 @@ public final class SceneRegistry {
     private org.tortodrone.core.mission.MissionCatalog missions=org.tortodrone.core.mission.MissionCatalog.empty();
     public org.tortodrone.core.mission.MissionCatalog missions(){return missions;}
     public void missions(org.tortodrone.core.mission.MissionCatalog catalog){missions=Objects.requireNonNull(catalog);}
-    private org.tortodrone.world.MissionComlinks comlinks=org.tortodrone.world.MissionComlinks.empty();
-    public org.tortodrone.world.MissionComlinks comlinks(){return comlinks;}
-    public void comlinks(org.tortodrone.world.MissionComlinks catalog){comlinks=Objects.requireNonNull(catalog);}
+    private org.tortodrone.core.mission.MissionComlinks comlinks=org.tortodrone.core.mission.MissionComlinks.empty();
+    public org.tortodrone.core.mission.MissionComlinks comlinks(){return comlinks;}
+    public void comlinks(org.tortodrone.core.mission.MissionComlinks catalog){comlinks=Objects.requireNonNull(catalog);}
     private org.tortodrone.resources.BoxCatalog boxes=org.tortodrone.resources.BoxCatalog.empty();
     public org.tortodrone.resources.BoxCatalog boxes(){return boxes;}
     public void boxes(org.tortodrone.resources.BoxCatalog catalog){boxes=Objects.requireNonNull(catalog);}
@@ -81,6 +93,16 @@ public final class SceneRegistry {
     // Static places end before 138; player/trade objects start at 1000. Keep
     // active solo interior places and their party objects in disjoint ranges.
     private final ArrayDeque<Integer> interiorOids=new ArrayDeque<>();
+
+    /** Compose a live registry from a validated content snapshot; content never reaches back into world. */
+    public static SceneRegistry create(org.tortodrone.resources.ContentRegistry content) {
+        var registry=new SceneRegistry(content.scenes());
+        registry.boxes(content.boxes());registry.town(content.town());registry.petFires(content.petFires());registry.news(content.news());
+        registry.weapons(content.weapons());registry.equipment(content.equipment());registry.fires(content.fires());
+        registry.missions(content.missions());registry.comlinks(content.comlinks());registry.gates(content.gates());
+        return registry;
+    }
+
     private static SceneRegistry system;
     private final Map<Integer,Integer> channelZones=new HashMap<>();
     private final Map<Integer,SceneChat> channels=new HashMap<>();
@@ -224,12 +246,16 @@ public final class SceneRegistry {
             try {
                 Path source=Path.of(SceneRegistry.class.getProtectionDomain().getCodeSource().getLocation().toURI());
                 Path deployment=Files.isDirectory(source)?source:source.getParent();
-                system=org.tortodrone.resources.ContentManager.load(deployment).createScenes();
+                system=create(org.tortodrone.resources.ContentManager.load(deployment));
+                org.tortodrone.core.world.SceneSources.install(system);
             }catch(java.net.URISyntaxException e){throw new IOException("Cannot locate content directory",e);}
         }
         return system;
     }
-    public static synchronized void install(SceneRegistry registry){system=Objects.requireNonNull(registry);}
+    public static synchronized void install(SceneRegistry registry){
+        system=Objects.requireNonNull(registry);
+        org.tortodrone.core.world.SceneSources.install(system);
+    }
     public static Instance defaultEntry() {
         try{return system().entry();}catch(IOException e){throw new IllegalStateException("Prepared maps are unavailable",e);}
     }

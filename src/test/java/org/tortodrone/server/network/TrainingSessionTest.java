@@ -23,6 +23,7 @@ import org.tortodrone.core.world.SceneChat;
 import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.SceneStatus;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Disposable native party chat and Spark request path; no graphical client or owner data. */
 public final class TrainingSessionTest {

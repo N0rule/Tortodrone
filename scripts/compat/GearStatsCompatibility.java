@@ -14,7 +14,7 @@ import org.tortodrone.core.world.GearStats;
 public final class GearStatsCompatibility {
     public static void main(String[] args)throws Exception {
         Path game=Path.of(args[0]).toRealPath();var content=ContentManager.load(Path.of("."));
-        var stats=content.scenes().scene(294).content().stats();var equipment=content.createScenes().equipment();
+        var stats=content.scenes().scene(294).content().stats();var equipment=org.tortodrone.world.SceneRegistry.create(content).equipment();
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
         resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();

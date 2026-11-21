@@ -14,13 +14,14 @@ import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.OpeningMission;
+import org.tortodrone.core.mission.TutorialRoute;
 
 /** Real exit sensor/session/SQLite handoff. Server-side test placement skips combat;
  * this is not a full gameplay or graphical acceptance test. */
 public final class TutorialTravelSessionTest {
     private static final Map<String,Short> RECEIVERS=Map.of(SceneRegistry.ZONE_RECEIVER,(short)0);
     public static void main(String[] args)throws Exception {
-        var content=ContentManager.load(Path.of("."));var registry=content.createScenes();
+        var content=ContentManager.load(Path.of("."));var registry=org.tortodrone.world.SceneRegistry.create(content);
         var previous=SceneRegistry.system();SceneRegistry.install(registry);
         Path home=Files.createTempDirectory("tortodrone-tutorial-travel-");
         try {
@@ -84,7 +85,7 @@ public final class TutorialTravelSessionTest {
     }
     private static Object field(WorldSession world,String name)throws Exception {synchronized(world){var f=WorldSession.class.getDeclaredField(name);f.setAccessible(true);return f.get(world);}}
     private static SessionDecoder.Invocation report(int party){return new SessionDecoder.Invocation(party,SessionCodec.LEVEL_PARTY_SERVICE,3,List.of(true));}
-    private static void move(WorldSession world,SceneCatalog.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));}
+    private static void move(WorldSession world,org.tortodrone.core.world.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));}
     private interface Check{boolean ok()throws Exception;}
     private static void await(Check check)throws Exception {long end=System.nanoTime()+4_000_000_000L;while(System.nanoTime()<end){if(check.ok())return;Thread.sleep(10);}throw new AssertionError("Exit sensor did not open a floor report");}
     private static final class RecordingSocket extends Socket {

@@ -7,6 +7,7 @@ import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Authorization, invitation lifetime, party-owned leases and leader/disconnect cleanup. */
 public class PartyRegistryTest {

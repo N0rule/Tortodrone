@@ -7,6 +7,7 @@ import java.util.jar.JarFile;
 import org.tortodrone.server.Server;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.resources.SceneCatalog;
 
 public final class SceneCatalogTest {
     public static void main(String[] args)throws Exception {

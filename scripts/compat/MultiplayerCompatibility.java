@@ -16,6 +16,8 @@ import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.SceneKnightState;
 import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.party.PartyView;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Retail-reader regression for two connection identities, native membership events and private reveals. */
 public final class MultiplayerCompatibility {
@@ -38,10 +40,10 @@ public final class MultiplayerCompatibility {
             append(bytes,codec.sceneDelta(observer,registry.entry().oid(),0,(short)0,1000,1050,(short)50,List.of(),List.of(opening),new int[0],Map.of(a.id(),a),false));
             append(bytes,codec.occupantChanges(registry.entry().oid(),Map.of(a.id(),a.clientOid(),b.id(),b.clientOid()),List.of(b)));
             var knight=new org.tortodrone.core.character.Knight(1,"Fixture-A","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);
-            var participant=new PartyRegistry.Participant(1002,42,0,knight,new WorldProfile(42,1,1,0,0,1,List.of()),new SceneHealth.State(200,200,0),SceneStatus.State.NORMAL);
+            var participant=new PartyView.Participant(1002,42,0,knight,new WorldProfile(42,1,1,0,0,1,List.of()),new SceneHealth.State(200,200,0),SceneStatus.State.NORMAL);
             // A public Training party can be subscribed while the client still displays Haven.
             // Its one-time HUD inputs must already describe the destination party.
-            append(bytes,codec.party((short)4,new PartyRegistry.View(1600000000,1,List.of(participant),true,false,false,false),registry.entry()));
+            append(bytes,codec.party((short)4,new PartyView.View(1600000000,1,List.of(participant),true,false,false,false),registry.entry()));
             append(bytes,codec.sceneDelta(observer,140,0,(short)0,0,1050,(short)50,List.of(opening),List.of(),new int[0],Map.of(),true));
             var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
             var scene=(TudeySceneObject)((ObjectResponse<?>)in.qe()).yk();

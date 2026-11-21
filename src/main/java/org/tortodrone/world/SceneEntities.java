@@ -118,23 +118,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     /** Validate one prepared item-use definition before a scene exposes it to play. */
     public static void validateItemUse(SceneContent.Spec spec)throws java.io.IOException{
-        switch(spec.text("kind","")){
-            case "heal" -> {int heal=spec.integer("heal",0);if(heal<=0||heal>1_000_000)throw new java.io.IOException("Invalid prepared item heal");}
-            case "lethal" -> {
-                String damage=spec.text("damage","");if(damage.isBlank())throw new java.io.IOException("Missing prepared item damage");
-                try{FireCatalog.valueJson(damage);}catch(java.io.IOException invalid){throw new java.io.IOException("Invalid prepared item damage",invalid);}
-            }
-            case "spawn-actor" -> {
-                String type=spec.text("actor.native-type","");String simple=type.substring(type.lastIndexOf('.')+1);
-                if(!SUPPORTED.contains(simple)||spec.text("actor.config","").isBlank())throw new java.io.IOException("Unsupported prepared item actor: "+type);
-            }
-            case "lift" -> {
-                String type=spec.text("lift.native-type","");String simple=type.substring(type.lastIndexOf('.')+1);
-                if(!liftKind(simple)||!spec.flag("lift.can-throw",false)||spec.text("lift.config-json",spec.text("lift.config","")).isBlank())
-                    throw new java.io.IOException("Unsupported prepared item lift: "+type);
-            }
-            default -> throw new java.io.IOException("Unsupported prepared item use: "+spec.text("kind",""));
-        }
+        org.tortodrone.core.world.ItemUseRules.validate(spec);
     }
     /** Spawn the static prop authored by a native actor-item use. */
     public int spawnItemActor(ActorState player,SceneContent.Spec actor,int stamp){

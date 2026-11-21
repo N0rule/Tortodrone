@@ -35,7 +35,7 @@ import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.core.world.ActorState;
-import org.tortodrone.world.SceneCatalog;
+import org.tortodrone.resources.SceneCatalog;
 import org.tortodrone.world.SceneRegistry;
 import org.tortodrone.core.character.StarterCatalog;
 
@@ -70,7 +70,7 @@ public final class InteriorCompatibility {
         var registry = new SceneRegistry(SceneCatalog.load(Path.of("content/maps")));
         SceneRegistry.install(registry);
         var base = registry.catalog().scene(kind.equals("training")?294:318);
-        var map = new SceneCatalog.MapScene(base.id(), base.zone(), base.zoneName(), base.name(), base.image(), kind,
+        var map = new org.tortodrone.core.world.MapScene(base.id(), base.zone(), base.zoneName(), base.name(), base.image(), kind,
             base.version(), base.spawnX(), base.spawnY(), base.spawnRotation(), base.instances(), base.collision(), base.layout(), base.portals());
         var scene = new SceneRegistry.Instance(SCENE_OID, 0, map);
         var knight = new Knight(1, "Interior-Knight", "Gear/Helm/Spiral Sallet (Blue)",

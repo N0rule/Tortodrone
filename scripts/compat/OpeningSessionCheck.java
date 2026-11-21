@@ -17,7 +17,7 @@ import org.tortodrone.core.world.ReadyRoom;
 public final class OpeningSessionCheck {
     private static final Map<String,Short> RECEIVERS=Map.of(SceneRegistry.ZONE_RECEIVER,(short)0);
     public static void main(String[] args)throws Exception {
-        var content=ContentManager.load(Path.of(args[0]));var scenes=content.createScenes();SceneRegistry.install(scenes);
+        var content=ContentManager.load(Path.of(args[0]));var scenes=org.tortodrone.world.SceneRegistry.create(content);SceneRegistry.install(scenes);
         if(scenes.tutorial()==null)throw new AssertionError("Verified original 398/217 imports required");
         Path home=Files.createTempDirectory("tortodrone-opening-sessions-");
         try(var accounts=new AccountStore(home,false,content.items())){
@@ -57,7 +57,7 @@ public final class OpeningSessionCheck {
         }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}}
     }
     private static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
-    private static void move(WorldSession world,SceneCatalog.MapScene map)throws IOException{world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),1,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)6))));}
+    private static void move(WorldSession world,org.tortodrone.core.world.MapScene map)throws IOException{world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),1,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)6))));}
     private interface Operation{void run()throws Exception;}
     private static void refused(Operation op)throws Exception{try{op.run();throw new AssertionError("Unauthorized selection accepted");}catch(IOException|CharacterStore.Refused expected){}}
     private static void check(boolean value,String message){if(!value)throw new AssertionError(message);}

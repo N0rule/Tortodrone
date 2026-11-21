@@ -15,6 +15,7 @@ import org.tortodrone.core.world.SceneStatus;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.ScenePortals;
 import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Basic lifecycle regressions using disposable scene state and authoritative input. */
 public final class SceneLifeTest {
@@ -27,7 +28,7 @@ public final class SceneLifeTest {
         training(map);
         System.out.println("PASS: death, once-per-level Emergency Revive, input/instance isolation and health/status invariants");
     }
-    private static void entryProtection(SceneCatalog.MapScene training)throws Exception {
+    private static void entryProtection(org.tortodrone.core.world.MapScene training)throws Exception {
         var health=new SceneHealth(training.content());health.protectEntry(1000);
         check(health.invulnerable(3999)&&health.hit(damage(10),3999).amount()==0,"arrival protection blocks damage for three seconds");
         check(!health.invulnerable(4000)&&health.hit(damage(10),4000).amount()==10,"arrival protection ends at its deadline");
@@ -123,7 +124,7 @@ public final class SceneLifeTest {
         tiny.advance(101,1,false);
         check(!tiny.alive()&&tiny.status().conditions().isEmpty(),"burn death safely clears statuses after their tick");
     }
-    private static void movement(SceneCatalog.MapScene map) {
+    private static void movement(org.tortodrone.core.world.MapScene map) {
         var movement=new TownMovement(map.collision(),5.5f,-12.5f);
         movement.combat(new KnightCombat(WeaponCatalog.empty()));
         int[] revivals={0};movement.revival(stamp->{revivals[0]++;return true;});
@@ -141,7 +142,7 @@ public final class SceneLifeTest {
         movement.advance(2749,2749);check(movement.activity()==TownMovement.RESURRECT,"revival animation holds for 400 ms");
         movement.advance(2750,2750);check(movement.activity()==0,"revival animation returns to idle");
     }
-    private static void training(SceneCatalog.MapScene map)throws Exception {
+    private static void training(org.tortodrone.core.world.MapScene map)throws Exception {
         var spike=map.content().entries().stream().filter(e->e.spec().text("config","").endsWith("/Spikes")).findFirst().orElseThrow();
         var fields=new HashMap<>(spike.spec().fields());fields.put("cycle","UP");
         var monster=new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Monster","config","Fixture",
@@ -149,7 +150,7 @@ public final class SceneLifeTest {
         var content=new SceneContent(List.of(new SceneContent.Entry("trap",5.5f,-12.5f,0,new SceneContent.Spec(fields)),
                 new SceneContent.Entry("monster",6.3f,-12.5f,0,monster)),
             map.content().scales(),Map.of(),Map.of("player.base-health",1f),Map.of(),Map.of(),Map.of());
-        var fixture=new SceneCatalog.MapScene(map.id(),map.zone(),map.zoneName(),map.name(),map.image(),"training",map.version(),
+        var fixture=new org.tortodrone.core.world.MapScene(map.id(),map.zone(),map.zoneName(),map.name(),map.image(),"training",map.version(),
             5.5f,-12.5f,0,1,map.collision(),map.layout(),ScenePortals.EMPTY,content);
         var simulation=new SceneRegistry.Instance(799,1,fixture).simulation();
         var other=new SceneRegistry.Instance(800,2,fixture).simulation();

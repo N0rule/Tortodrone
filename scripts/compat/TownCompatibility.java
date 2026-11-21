@@ -16,6 +16,7 @@ import org.tortodrone.core.world.ProjectileState;
 import org.tortodrone.core.world.SceneKnightState;
 import org.tortodrone.core.world.ScenePetState;
 import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Focused stock-reader check for Town messages; no server or graphical client is launched. */
 public final class TownCompatibility {
@@ -102,7 +103,7 @@ public final class TownCompatibility {
         append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"fixture","Fixture"));
         append(bytes,codec.controllerAction(1002,"forge",null));
         append(bytes,codec.controllerAction(1002,"show_arsenal_station",null));
-        var registry=new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneCatalog.load(java.nio.file.Path.of("content/maps")));
+        var registry=new org.tortodrone.world.SceneRegistry(org.tortodrone.resources.SceneCatalog.load(java.nio.file.Path.of("content/maps")));
         append(bytes,codec.scene((short)3,registry.entry(),List.of()));
         append(bytes,codec.equipPolicy(1002,true));
         var giftContent=new WorldProfile.Item(0,WorldProfile.Slot.SWORD,"Weapon/Sword/Calibur",null,0,null,false,true,false,1,false,2,.4f,List.of(new StarterCatalog.Model("Weapon/Damage 1",Map.of())));

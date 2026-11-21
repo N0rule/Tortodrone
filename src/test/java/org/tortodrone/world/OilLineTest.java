@@ -9,6 +9,7 @@ import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.SceneDamage;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Official-capture pot torches: Fire Power 100 for a direct Fire Pot, Fire (Scaled)
  *  flags 1 / 0.0 / 0 for oil ignition, and sequential ignition down an oil line. */
@@ -20,7 +21,7 @@ public final class OilLineTest {
         System.out.println("PASS: pot torch status constants and oil-line chain propagation");
     }
 
-    private static void directTorch(SceneCatalog.MapScene map)throws Exception {
+    private static void directTorch(org.tortodrone.core.world.MapScene map)throws Exception {
         var fields=new HashMap<String,String>();
         fields.put("native-type","com.threerings.projectx.dungeon.data.actor.DungeonLift");
         fields.put("config","Dynamic/Lift Objects/Fire Pot");
@@ -36,7 +37,7 @@ public final class OilLineTest {
         assertStatus(hazardStatus(world,torch.id()),"Fire",2,1f,100);
     }
 
-    private static void oilLine(SceneCatalog.MapScene map)throws Exception {
+    private static void oilLine(org.tortodrone.core.world.MapScene map)throws Exception {
         float x=5.5f,y=-12.5f,spacing=.91f;
         var entries=new ArrayList<SceneContent.Entry>();
         for(int i=0;i<5;i++)entries.add(new SceneContent.Entry("slick"+i,x,y+i*spacing,0,slick()));

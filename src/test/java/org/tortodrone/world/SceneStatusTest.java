@@ -13,6 +13,7 @@ import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.SceneDamage;
 import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Focused status and emergency revive checks against the prepared Training Hall rules. */
 public final class SceneStatusTest {

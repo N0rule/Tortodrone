@@ -20,7 +20,7 @@ public final class SceneElevatorTest {
         var content=new SceneContent(List.of(new SceneContent.Entry("2930",0,0,0,new SceneContent.Spec(fields))),Map.of(),Map.of(),Map.of("player.base-health",100f),Map.of(),Map.of(),Map.of());
         deterministic(content);movement();
         var terrain=SceneWeaponsTest.openTerrain();
-        var map=new SceneCatalog.MapScene(901,3<<24,"Fixture","Fixture","fixture","level",1,-3,0,0,1,terrain,new byte[]{1},ScenePortals.EMPTY,content);
+        var map=new org.tortodrone.core.world.MapScene(901,3<<24,"Fixture","Fixture","fixture","level",1,-3,0,0,1,terrain,new byte[]{1},ScenePortals.EMPTY,content);
         var simulation=new SceneRegistry.Instance(701,0,map).simulation();var isolated=new SceneRegistry.Instance(702,0,map).simulation();
         var frames=new LinkedBlockingQueue<SceneSimulation.Snapshot>();int now=SceneClock.now();
         var first=simulation.join(player(21,-3,now),frames::offer);var second=simulation.join(player(22,-3,now),s->{});var foreign=isolated.join(player(23,-3,now),s->{});
@@ -107,7 +107,7 @@ public final class SceneElevatorTest {
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);
         do{var snapshot=simulation.snapshot();if(condition.test(snapshot))return snapshot;frames.poll(50,TimeUnit.MILLISECONDS);}while(System.nanoTime()<until);throw new AssertionError(message);
     }
-    private static SceneSimulation.FloorAdvanceRequest awaitRequest(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSimulation.Snapshot> frames)throws Exception {
+    private static org.tortodrone.core.world.FloorAdvanceRequest awaitRequest(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSimulation.Snapshot> frames)throws Exception {
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(3);do{var request=member.takeFloorAdvance();if(request!=null)return request;frames.poll(50,TimeUnit.MILLISECONDS);}while(System.nanoTime()<until);throw new AssertionError("Elevator offered no owned request");
     }
     private static void walk(SceneSimulation.Membership member,SceneSimulation simulation,LinkedBlockingQueue<SceneSimulation.Snapshot> frames,int id,float target,float heading)throws Exception {

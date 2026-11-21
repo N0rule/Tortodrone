@@ -10,6 +10,7 @@ import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.ProjectileState;
 import org.tortodrone.core.world.SceneEffect;
+import org.tortodrone.resources.SceneCatalog;
 
 
 /** Installed-client actor initialization and retained orbit-gun model skeletons. */

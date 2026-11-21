@@ -1,6 +1,9 @@
-package org.tortodrone.world;
+package org.tortodrone.core.mission;
 
 import java.util.*;
+import org.tortodrone.core.world.MapScene;
+import org.tortodrone.core.world.SceneCatalogView;
+import org.tortodrone.core.world.FloorAdvanceRequest;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.SceneConversation;
 

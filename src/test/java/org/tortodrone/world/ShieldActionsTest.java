@@ -12,6 +12,7 @@ import org.tortodrone.core.world.SceneCombatEvent;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.SceneDamage;
 import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Basic scene-only checks against the shipped native-derived shield graphs. */
 public final class ShieldActionsTest {

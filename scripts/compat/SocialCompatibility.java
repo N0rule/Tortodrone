@@ -7,6 +7,7 @@ import com.threerings.projectx.data.*;
 import com.threerings.projectx.social.data.*;
 import org.tortodrone.protocol.*;
 import org.tortodrone.world.*;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Read-only stock marshaller and friend-presence oracle; no sockets or preferences. */
 public final class SocialCompatibility {

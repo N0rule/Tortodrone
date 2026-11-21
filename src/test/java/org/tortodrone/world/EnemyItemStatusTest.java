@@ -11,6 +11,7 @@ import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.SceneDamage;
 import org.tortodrone.core.world.WeaponCatalog;
 import org.tortodrone.core.world.CollisionMap;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Real item graphs against instance-owned enemies; no accounts or client assets. */
 public final class EnemyItemStatusTest {

@@ -91,7 +91,7 @@ public final class CrashSiteBoxesTest {
             "a zero-speed Gun Puppy never translates while tracking and firing");
         System.out.println("PASS: Crash Site heart blocks drop hearts, explosive detonations damage adjacent knights and turrets stay put");
     }
-    private static SceneContent.Entry entry(SceneCatalog.MapScene map,String config){
+    private static SceneContent.Entry entry(org.tortodrone.core.world.MapScene map,String config){
         return map.content().entries().stream().filter(e->e.spec().text("config","").equals(config)).findFirst().orElseThrow();
     }
     private static StarterCatalog.Model hit(int flags,boolean major){

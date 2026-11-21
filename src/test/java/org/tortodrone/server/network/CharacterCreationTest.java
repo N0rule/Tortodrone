@@ -21,7 +21,7 @@ public final class CharacterCreationTest {
         var content = ContentManager.load(Path.of("."));
         // Production installs scenes before accepting connections; warm the shared registry so the
         // first creation request does not pay the full content-load time against the client timeout.
-        SceneRegistry.install(content.createScenes());
+        SceneRegistry.install(org.tortodrone.world.SceneRegistry.create(content));
         AccountStore accounts = new AccountStore(directory, false, content.items(), content.town());
         accounts.create("tortodrone", "tortodrone".toCharArray());
         ExecutorService worker = Executors.newSingleThreadExecutor();

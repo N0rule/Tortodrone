@@ -6,6 +6,7 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneActions;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Original content and isolated control-chain regression; never a full gameplay acceptance. */
 public final class CheckChasm {
@@ -32,7 +33,7 @@ public final class CheckChasm {
         System.out.println("PASS: original 314 production scene/content/entity load, entrance 13, pinned layout/collision, nine actor templates and both complete native wave observers; actors="+world.actors().size());
         System.out.println("NOT A PLAYTHROUGH: player poses and damage regions are explicit control fixtures; legal player traversal, encounter combat, mission routing and graphical verification remain separate acceptance requirements.");
     }
-    private static void controls(SceneCatalog.MapScene map,SceneEntities world)throws Exception {
+    private static void controls(org.tortodrone.core.world.MapScene map,SceneEntities world)throws Exception {
         int stamp=world.actors().getFirst().created()+100;
         var first=entry(world,"2934");var second=entry(world,"2935");var door=entry(world,"77");
         require(world.specification(door.id()).integer("door-increments",0)==2,"Original two-button door counter missing");

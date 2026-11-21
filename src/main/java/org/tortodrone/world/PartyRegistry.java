@@ -9,19 +9,16 @@ import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.world.SceneChat;
 import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.party.PartyView;
+import org.tortodrone.core.party.PartyView.Chat;
+import org.tortodrone.core.party.PartyView.Event;
+import org.tortodrone.core.party.PartyView.Invitation;
+import org.tortodrone.core.party.PartyView.Participant;
+import org.tortodrone.core.party.PartyView.Refresh;
+import org.tortodrone.core.party.PartyView.View;
 
 /** Transient, session-bound parties. Endpoints only enqueue work; they never perform network I/O. */
 public final class PartyRegistry {
-    public static final int CAPACITY=8;
-    public sealed interface Event permits Refresh,Invitation,Chat { }
-    public record Refresh() implements Event { }
-    public record Invitation(int partyOid,List<String> names,int inviter,boolean add) implements Event { }
-    public record Chat(int partyOid,SceneChat.Message message) implements Event { }
-    public record Participant(int playerOid,int worldId,int order,Knight knight,WorldProfile profile,SceneHealth.State health,SceneStatus.State status,float heat) {
-        public Participant(int playerOid,int worldId,int order,Knight knight,WorldProfile profile,SceneHealth.State health,SceneStatus.State status){this(playerOid,worldId,order,knight,profile,health,status,0);}
-        public Participant {if(!Float.isFinite(heat)||heat<0||heat>1_000_000)throw new IllegalArgumentException("Invalid floor heat");}
-    }
-    public record View(int oid,long revision,List<Participant> members,boolean automatic,boolean inviteOnly,boolean allowFriends,boolean allowGuild) { public View{members=List.copyOf(members);} }
     public final class Member implements AutoCloseable {
         public final int playerOid,worldId;
         private Knight knight;private WorldProfile profile;
@@ -63,7 +60,7 @@ public final class PartyRegistry {
         if(online.containsKey(profile.worldId()))throw new IOException("Knight already has a party session");
         var member=new Member(oid,knight,profile,Objects.requireNonNull(endpoint));online.put(member.worldId,member);
         var prior=detached.remove(member.worldId);
-        if(prior!=null&&prior.party().members.size()<CAPACITY){
+        if(prior!=null&&prior.party().members.size()<PartyView.CAPACITY){
             var party=prior.party();member.party=party;member.order=party.nextOrder++;party.members.add(member);party.revision++;publish(party);
         }else solo(member);
         return member;
@@ -74,7 +71,7 @@ public final class PartyRegistry {
     public synchronized void enterTraining(Member member)throws IOException {
         require(member);
         if(member.party.shared)return;
-        var target=training.stream().filter(p->p.members.size()<CAPACITY).findFirst().orElse(null);
+        var target=training.stream().filter(p->p.members.size()<PartyView.CAPACITY).findFirst().orElse(null);
         invalidate(member);remove(member,false);
         if(target==null){solo(member);target=member.party;target.shared=target.automatic=true;training.add(target);}
         else{member.party=target;member.order=target.nextOrder++;target.members.add(member);target.revision++;}
@@ -129,7 +126,7 @@ public final class PartyRegistry {
     }
     public synchronized void invite(Member sender,String name)throws IOException {
         require(sender);var party=sender.party;if(party.automatic)throw new IOException("Training groups do not allow invitations");if(party.members.iterator().next()!=sender)throw new IOException("Only the party leader can invite");
-        if(party.members.size()>=CAPACITY)throw new IOException("The party is full");
+        if(party.members.size()>=PartyView.CAPACITY)throw new IOException("The party is full");
         var target=online.values().stream().filter(m->m.knight.name().equalsIgnoreCase(name)).findFirst().orElseThrow(()->new IOException("That knight is not online"));
         if(target.party==party)throw new IOException("That knight is already in your party");
         if(!sender.town||!target.town)throw new IOException("Form parties in Haven before entering Training");
@@ -145,7 +142,7 @@ public final class PartyRegistry {
         pending.remove(invite.party.oid);target.endpoint.accept(new Invitation(invite.party.oid,List.of(),0,false));
         if(response==0)return;
         if(clock.getAsLong()>=invite.expires||online.get(invite.sender.worldId)!=invite.sender||invite.sender.party!=invite.party
-                ||invite.party.members.iterator().next()!=invite.sender||target.party.members.size()!=1||!target.town||!invite.sender.town||invite.party.members.size()>=CAPACITY)
+                ||invite.party.members.iterator().next()!=invite.sender||target.party.members.size()!=1||!target.town||!invite.sender.town||invite.party.members.size()>=PartyView.CAPACITY)
             throw new IOException("This party invitation has expired or is no longer valid");
         invalidate(target);remove(target,false);target.party=invite.party;target.order=invite.party.nextOrder++;invite.party.members.add(target);invite.party.shared=true;invite.party.revision++;publish(invite.party);
     }
@@ -159,7 +156,7 @@ public final class PartyRegistry {
         require(joiner);require(target);var party=target.party;
         if(party==joiner.party)return false;
         if(!party.shared)throw new IOException("That knight is not in a joinable party");
-        if(party.members.size()>=CAPACITY)throw new IOException("The party is full");
+        if(party.members.size()>=PartyView.CAPACITY)throw new IOException("The party is full");
         if(party.inviteOnly&&(!party.allowFriends||!friend))throw new IOException("That party is invite only");
         var current=joiner.party;if(current.members.size()>1&&!current.automatic)throw new IOException("Leave your current party first");
         invalidate(joiner);remove(joiner,false);

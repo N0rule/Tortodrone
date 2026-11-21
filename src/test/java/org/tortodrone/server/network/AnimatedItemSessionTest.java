@@ -40,7 +40,7 @@ public final class AnimatedItemSessionTest {
             refused(()->store.animatedItem(account,1,1,before.revision(),held.id()));
             check(db.worldProfile(account,1,1).equals(before),"failed auth/revision/ownership and late write roll back consumption");
             db.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER reject_animated");}return null;});
-            var scenes=content.createScenes();var socket=new Socket(){public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}};
+            var scenes=org.tortodrone.world.SceneRegistry.create(content);var socket=new Socket(){public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}};
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)) {
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();
                 var field=WorldSession.class.getDeclaredField("membership");field.setAccessible(true);var member=(SceneSimulation.Membership)field.get(world);

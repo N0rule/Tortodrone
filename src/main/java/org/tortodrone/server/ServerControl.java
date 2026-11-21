@@ -14,7 +14,7 @@ public final class ServerControl {
     public enum State { STARTING, RUNNING, STOPPING, STOPPED, FAILED }
     public record Snapshot(String version,State state,String endpoint,Instant startedAt,long uptimeSeconds,int maps,int items,
             List<SessionRegistry.Snapshot> sessions,List<SceneRegistry.Status> scenes,
-            List<org.tortodrone.world.SceneCatalog.MapScene> templates,RuntimeMetrics metrics,String failure) { }
+            List<org.tortodrone.core.world.MapScene> templates,RuntimeMetrics metrics,String failure) { }
     private final String version;
     private final Path data;
     private final SessionRegistry sessions=new SessionRegistry();

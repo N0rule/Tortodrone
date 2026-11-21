@@ -9,7 +9,7 @@ import org.tortodrone.core.world.ScenePortals;
 /** Disposable scheduler fault, independent of native assets and player data. */
 public final class SceneSimulationFailureTest {
     public static void main(String[] args)throws Exception {
-        var map=new SceneCatalog.MapScene(999,3<<24,"Fixture","Fixture","","level",1,0,0,0,1,SceneWeaponsTest.openTerrain(),new byte[]{1},ScenePortals.EMPTY);
+        var map=new org.tortodrone.core.world.MapScene(999,3<<24,"Fixture","Fixture","","level",1,0,0,0,1,SceneWeaponsTest.openTerrain(),new byte[]{1},ScenePortals.EMPTY);
         var broken=new SceneRegistry.Instance(705,0,map).simulation();var healthy=new SceneRegistry.Instance(706,0,map).simulation();
         var expected=new IllegalStateException("Expected scheduler diagnostic fixture");int stamp=SceneClock.now();
         var model=new StarterCatalog.Model("Character/PC/Default",Map.of());

@@ -10,6 +10,8 @@ import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.SceneStatus;
+import org.tortodrone.core.party.PartyView;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Stock reader validates stable party snapshots, notification keys and incremental HUD updates. */
 public class PartyCompatibility {
@@ -17,9 +19,9 @@ public class PartyCompatibility {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var scenes=new SceneRegistry(SceneCatalog.load(Path.of("content/maps")));
         var registry=scenes.parties();var alice=knight("Party-Alice");var bob=knight("Party-Bob");
-        var events=new ArrayList<PartyRegistry.Event>();
+        var events=new ArrayList<PartyView.Event>();
         try(var a=registry.join(1001,alice,profile(1),e->{});var b=registry.join(1002,bob,profile(2),events::add)){
-            var before=registry.view(a);registry.invite(a,bob.name());var invite=(PartyRegistry.Invitation)events.stream().filter(e->e instanceof PartyRegistry.Invitation i&&i.add()).findFirst().orElseThrow();
+            var before=registry.view(a);registry.invite(a,bob.name());var invite=(PartyView.Invitation)events.stream().filter(e->e instanceof PartyView.Invitation i&&i.add()).findFirst().orElseThrow();
             var codec=new SessionCodec();var bytes=new ByteArrayOutputStream();
             append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"));
             append(bytes,codec.player((short)3,1002,2,"Fixture"));append(bytes,codec.partyInvitation(1002,invite));
@@ -28,7 +30,7 @@ public class PartyCompatibility {
             registry.state(b,bob,profile(2),new SceneHealth.State(17,200,0,0),SceneStatus.State.NORMAL,false);var hurt=registry.view(a);append(bytes,codec.partyChanges(joined,hurt));
             registry.state(b,bob,profile(2),new SceneHealth.State(17,200,0,0),SceneStatus.State.NORMAL,false,10);var heated=registry.view(a);append(bytes,codec.partyChanges(hurt,heated));
             registry.boot(a,alice.name());var remaining=registry.view(b);append(bytes,codec.partyChanges(heated,remaining));
-            append(bytes,codec.partyInvitation(1002,new PartyRegistry.Invitation(before.oid(),List.of(),0,false)));
+            append(bytes,codec.partyInvitation(1002,new PartyView.Invitation(before.oid(),List.of(),0,false)));
             var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.ql();input.ql();
             var player=(com.threerings.projectx.data.PlayerObject)((ObjectResponse<?>)input.ql()).yo();apply(input,player);
             var nativeInvite=(com.threerings.projectx.social.data.Notification.PartyInvite)player.notifications.iterator().next();

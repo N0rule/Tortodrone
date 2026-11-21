@@ -139,43 +139,14 @@ public final class SceneWeapons {
     public boolean fire(FireCatalog.Action action,ActorState source,int stamp){return execute(action,new Pose(source.x(),source.y(),source.rotation(),source.id(),0,null,source.id(),GearStats.Damage.NONE,targets==null?null:targets.sceneActorSource(source.id())),stamp,0);}
     /** Refuse an unusable consumable before animation or consumption, including nested actions. */
     public static boolean usable(FireCatalog.Action action){
-        return supportedItemAction(action)&&meaningfulItemAction(action);
+        return org.tortodrone.core.world.ItemUseRules.usable(action);
     }
-    private static boolean supportedItemAction(FireCatalog.Action action){
-        if(action==null||!sourceTarget(action.targetType())||!action.facingType().isEmpty())return false;
-        return switch(action.kind()){
-            case COMPOUND,MULTI_PRESPAWNED,RANDOM_EQUAL->action.children().stream().allMatch(SceneWeapons::supportedItemAction);
-            case HEAL,CLEAR_STATUS,APPLY_STATUS,FIRE_EFFECT,DAMAGE_REGION,SWEEP_DAMAGE,IMPULSE_REGION,DESTROY_SOURCE->true;
-            case EMIT_PROJECTILE->supportedItemProjectile(action.actor());
-            default->false;
-        };
-    }
-    /** The ORBITAL visual-only fallback cleanup fuse the native data carries when its
-     * server handlers were stripped; not an authored lifetime. */
-    private static final int ORBITAL_FALLBACK_FUSE = 600000;
     /** Destroyed shots stay tracked this long so late client frames can still resolve them. */
     private static final int DESTROYED_GRACE_MILLIS = 100;
     /** Ceiling on purely visual effect retention before garbage collection. */
     private static final int EFFECT_TTL_MILLIS = 5000;
     /** Orbit integration step: one native render frame (1/60 s). */
     private static final float ORBIT_STEP_SECONDS = .016666668f;
-    private static boolean supportedItemProjectile(FireCatalog.ActorSpec actor){
-        if(actor==null||!Set.of("BULLET","BOMB","LASER","ORBITAL","ORBITAL_BULLET","COMPOUND_ORBITAL_BULLET").contains(actor.nativeType()))return false;
-        // A retained visual without its stripped server handlers is not a usable weapon.
-        // In particular an ORBITAL's fallback cleanup fuse is not an authored lifetime.
-        if(actor.nativeType().equals("ORBITAL")&&actor.fuse()==ORBITAL_FALLBACK_FUSE)return false;
-        if(actor.detonation()!=null&&!supportedItemAction(actor.detonation())||actor.shutdown()!=null&&!supportedItemAction(actor.shutdown()))return false;
-        for(var timer:actor.timers())if(!supportedItemAction(timer.action())||timer.endAction()!=null&&!supportedItemAction(timer.endAction()))return false;
-        return actor.detonation()!=null&&meaningfulItemAction(actor.detonation())
-            ||actor.timers().stream().anyMatch(t->meaningfulItemAction(t.action()));
-    }
-    private static boolean meaningfulItemAction(FireCatalog.Action action){
-        return switch(action.kind()){
-            case COMPOUND,MULTI_PRESPAWNED,RANDOM_EQUAL->action.children().stream().anyMatch(SceneWeapons::meaningfulItemAction);
-            case FIRE_EFFECT->action.config()!=null;
-            default->true;
-        };
-    }
     public void effect(org.tortodrone.core.character.StarterCatalog.Model config,ActorState source,int stamp){
         if(config==null)return;
         // These server-fired effects must reach the controlling client too;

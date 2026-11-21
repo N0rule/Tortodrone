@@ -17,7 +17,7 @@ import org.lwjgl.opengl.GL11;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.world.CollisionMap;
-import org.tortodrone.world.SceneCatalog;
+import org.tortodrone.resources.SceneCatalog;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.character.Currency;
 import org.tortodrone.core.character.Confetti;
@@ -102,7 +102,7 @@ public final class CombatRenderingCheck {
     private long konwayStarted;
     private Confirm conversationResponse;
     private String initialConversationMessage;
-    private SceneCatalog.MapScene trainingMap;
+    private org.tortodrone.core.world.MapScene trainingMap;
     private int vialPickupActor;
     private long vialItemId,vialSearchSince,vialLiftActor,vialQuickbarAwaitSince,vialQuickbarSettled;
     private String vialItemConfig;
@@ -599,7 +599,7 @@ public final class CombatRenderingCheck {
         if(stage==3&&now-started>5_000_000_000L){capture("crash-site-entrance");finishImages();passed=done=true;System.out.println("PASS: stock graphical Crash Site entry and controlled Dungeoneer remain connected for five seconds");app.shutdown();}
     }
     private boolean tutorialOnly;
-    private SceneCatalog.MapScene tutorialMap;
+    private org.tortodrone.core.world.MapScene tutorialMap;
     private int tutorialWaypoint,tutorialNode,tutorialBoss;
     private List<org.tortodrone.world.ScenePathing.Point> tutorialPath=List.of();
     private long tutorialResponseAt,tutorialProgressAt,tutorialCombatAt,tutorialRepathAt,tutorialRouteRetryAt,tutorialEnemySince;
@@ -2049,7 +2049,7 @@ public final class CombatRenderingCheck {
         pickRay.invoke(camera,Math.round(mouseX*scale),Math.round(mouseY*scale),pick);
         return plane.getIntersection(pick,FACE_POINT);
     }
-    private static List<float[]> routeTo(SceneCatalog.MapScene map,float x,float y,float targetX,float targetY){
+    private static List<float[]> routeTo(org.tortodrone.core.world.MapScene map,float x,float y,float targetX,float targetY){
         record Cell(int x,int y){float wx(){return x*.25f;}float wy(){return y*.25f;}}
         Cell start=new Cell(Math.round(x*4),Math.round(y*4));var previous=new HashMap<Cell,Cell>();var pending=new ArrayDeque<Cell>();
         previous.put(start,null);pending.add(start);Cell end=null;int[][] directions={{1,0},{-1,0},{0,1},{0,-1}};
@@ -2100,7 +2100,7 @@ public final class CombatRenderingCheck {
         }
         for(var child:action.children())collectNeedleHeadings(child,headings);
     }
-    private static boolean clearOfPortals(SceneCatalog.MapScene map,float ax,float ay,float bx,float by){
+    private static boolean clearOfPortals(org.tortodrone.core.world.MapScene map,float ax,float ay,float bx,float by){
         int steps=Math.max(1,(int)Math.ceil(Math.hypot(bx-ax,by-ay)/.05));
         for(int i=0;i<=steps;i++){float f=(float)i/steps,x=ax+(bx-ax)*f,y=ay+(by-ay)*f;
             if(map.portals().triggers().stream().anyMatch(t->t.intersects(x,y)))return false;}

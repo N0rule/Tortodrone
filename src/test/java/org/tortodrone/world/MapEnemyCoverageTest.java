@@ -89,7 +89,7 @@ public final class MapEnemyCoverageTest {
      * embedded native graphs and the documented fallback policy. This pins that boundary so a
      * future migration changes this test on purpose.
      */
-    private static void embeddedScheduling(SceneCatalog.MapScene crash,MonsterCatalog catalog)throws Exception {
+    private static void embeddedScheduling(org.tortodrone.core.world.MapScene crash,MonsterCatalog catalog)throws Exception {
         var embedded=new ArrayList<Placement>();
         for(var entry:crash.content().entries())addPlacements(entry,embedded);
         check(embedded.stream().filter(p->p.config().startsWith("Character/NPC/Monster/"))
@@ -114,7 +114,7 @@ public final class MapEnemyCoverageTest {
         }
     }
 
-    private static List<Placement> placements(SceneCatalog.MapScene scene)throws Exception {
+    private static List<Placement> placements(org.tortodrone.core.world.MapScene scene)throws Exception {
         var placements=new ArrayList<Placement>();
         for(var entry:scene.content().entries())addPlacements(entry,placements);
         return placements;

@@ -7,6 +7,7 @@ import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Real ticks: shared publication/diff, authoritative movement, isolation and idle lifecycle. */
 public final class SceneSimulationTest {
@@ -81,7 +82,7 @@ public final class SceneSimulationTest {
         var original=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);
         var entries=original.content().entries().stream().filter(e->e.key().equals("1955")).toList();
         var content=new SceneContent(entries,original.content().scales());
-        var map=new SceneCatalog.MapScene(294,1,"Fixture","Fixture","","training",1,19.5f,-.45f,(float)Math.PI/2,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
+        var map=new org.tortodrone.core.world.MapScene(294,1,"Fixture","Fixture","","training",1,19.5f,-.45f,(float)Math.PI/2,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var simulation=new SceneRegistry.Instance(703,0,map).simulation();
         var first=new LinkedBlockingQueue<SceneSimulation.Snapshot>();var second=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
         int stamp=SceneClock.now();
@@ -110,7 +111,7 @@ public final class SceneSimulationTest {
         for(int n=0;n<60;n++){var snapshot=next(queue);if(stationState(snapshot)==state)return snapshot;}
         throw new AssertionError("Station did not reach state "+state);
     }
-    private static void portals(SceneCatalog.MapScene map,StarterCatalog.Model model)throws Exception {
+    private static void portals(org.tortodrone.core.world.MapScene map,StarterCatalog.Model model)throws Exception {
         var simulation=new SceneRegistry.Instance(702,0,map).simulation();
         var publications=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
         int start=SceneClock.now();
@@ -130,7 +131,7 @@ public final class SceneSimulationTest {
                 "coalescing and readiness changes retain a frozen portal request");
         }
     }
-    private static ActorState actor(int id,int start,SceneCatalog.MapScene map,StarterCatalog.Model model) {
+    private static ActorState actor(int id,int start,org.tortodrone.core.world.MapScene map,StarterCatalog.Model model) {
         return new ActorState(id,1000+id,"Test-"+id,257,start,map.spawnX(),map.spawnY(),0,0,0,0,start,model,false);
     }
     private static SceneSimulation.Snapshot next(BlockingQueue<SceneSimulation.Snapshot> queue)throws Exception {

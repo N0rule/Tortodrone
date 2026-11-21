@@ -1,15 +1,18 @@
-package org.tortodrone.world;
+package org.tortodrone.core.mission;
 
 import java.io.IOException;
 import java.security.*;
 import java.util.*;
+import org.tortodrone.core.world.MapScene;
+import org.tortodrone.core.world.SceneCatalogView;
+import org.tortodrone.core.world.FloorAdvanceRequest;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.SceneElevator;
 import org.tortodrone.core.world.ScenePortals;
 
 /** Allowlisted opening gate evidence. Runtime ownership is separate from scene template IDs. */
-public record OpeningGate(OpeningMission mission,int id,SceneCatalog.MapScene source,SceneCatalog.MapScene destination) {
+public record OpeningGate(OpeningMission mission,int id,org.tortodrone.core.world.MapScene source,org.tortodrone.core.world.MapScene destination) {
     public static final int GENERATOR_GATE=398,GENERATOR_SCENE=337,GENERATOR_EXIT=2930;
     public OpeningGate {
         Objects.requireNonNull(mission);Objects.requireNonNull(source);Objects.requireNonNull(destination);
@@ -27,18 +30,18 @@ public record OpeningGate(OpeningMission mission,int id,SceneCatalog.MapScene so
         var gold=entry(source,"604","Door");var key=entry(source,"3427","DungeonLift");var counter=entry(source,"3563","Door");
         if(!gold.spec().text("door-lock","").equals("gold")||!key.spec().text("actionable-signal","").equals("gold_unlock")||key.spec().flag("can-throw",true)||counter.spec().integer("door-increments",0)!=2)throw new IllegalArgumentException("Generator key/door controls require current preparation");
     }
-    public static OpeningGate available(SceneCatalog catalog,OpeningMission mission){
+    public static OpeningGate available(SceneCatalogView catalog,OpeningMission mission){
         if(mission!=OpeningMission.ANCIENT_GENERATOR)return null;
         try{return new OpeningGate(mission,GENERATOR_GATE,catalog.scene(GENERATOR_SCENE),catalog.scene(218));}
         catch(IOException|IllegalArgumentException unavailable){return null;}
     }
     public ScenePortals.Entrance entrance(){return entrance(source,82);}
     public ScenePortals.Entrance arrival(){return entrance(destination,5158);}
-    public boolean exit(SceneSimulation.FloorAdvanceRequest request){return request!=null&&request.source().entity()!=null&&request.source().entity().entrySource()&&request.source().entity().key().equals(Integer.toString(GENERATOR_EXIT));}
-    private static ScenePortals.Entrance entrance(SceneCatalog.MapScene map,int id){
+    public boolean exit(org.tortodrone.core.world.FloorAdvanceRequest request){return request!=null&&request.source().entity()!=null&&request.source().entity().entrySource()&&request.source().entity().key().equals(Integer.toString(GENERATOR_EXIT));}
+    private static ScenePortals.Entrance entrance(org.tortodrone.core.world.MapScene map,int id){
         return map.portals().entrances().values().stream().filter(e->e.id()==id&&e.x()==map.spawnX()&&e.y()==map.spawnY()&&Math.abs(e.rotation()-map.spawnRotation())<.00001f).findFirst().orElseThrow(()->new IllegalArgumentException("Missing authored gate entrance"));
     }
-    private static SceneContent.Entry entry(SceneCatalog.MapScene map,String key,String kind){
+    private static SceneContent.Entry entry(org.tortodrone.core.world.MapScene map,String key,String kind){
         var matches=map.content().entries().stream().filter(e->e.key().equals(key)&&e.spec().text("kind","").equals(kind)).toList();
         if(matches.size()!=1)throw new IllegalArgumentException("Missing original Generator control "+key);return matches.getFirst();
     }

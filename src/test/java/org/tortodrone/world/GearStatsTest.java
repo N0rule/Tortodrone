@@ -45,7 +45,7 @@ public final class GearStatsTest {
         check(GearStats.damage(stats,new WorldProfile(10,1,1,0,0,1,List.of(gun,costume)),gun,town).apply(100,"")==100,"costume slots do not contribute gear stats");
         var calibur=item(7,"Weapon/Sword/Calibur",WorldProfile.Slot.SWORD,6,9);
         check(GearStats.damage(stats,new WorldProfile(10,1,1,0,0,1,List.of(calibur)),calibur,town).apply(100,"")==100,"higher-tier level bonus retains its depth gate in Training");
-        var registry=content.createScenes();var pair=registry.equipment().forKnight(profile,sword);
+        var registry=org.tortodrone.world.SceneRegistry.create(content);var pair=registry.equipment().forKnight(profile,sword);
         check(Math.abs(pair.weapon().chargeTime()-.16f)<.001,"weapon level charge reduction reaches the authoritative controller");
         check(EquipmentCatalog.chargeTimeMillis(1000,pair.equipment(),pair.weapon())==840,"level charge reduction changes charge readiness");
         var health=new SceneHealth(scene);health.equipment(profile,town);
@@ -71,7 +71,7 @@ public final class GearStatsTest {
         float expected=(float)Math.ceil(SceneDamage.modified(gear.apply(100,""),status.state().modifiers().relativeDamage()));
         check(Math.abs(world.actors().getFirst().entity().health()-(1000-expected)/1000)<.00001,"native capsule buff and level/class modifiers combine in actual server-owned monster health");
     }
-    private static void projectileSnapshot(SceneCatalog.MapScene map,GearStats.Damage damage){
+    private static void projectileSnapshot(org.tortodrone.core.world.MapScene map,GearStats.Damage damage){
         var region=new StarterCatalog.Model("Fixture",Map.of());
         var hit=new FireCatalog.Action(FireCatalog.Kind.DAMAGE_REGION,region,null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
         var bomb=new FireCatalog.ActorSpec("BOMB",region,200,0,0,0,0,0,0,hit);

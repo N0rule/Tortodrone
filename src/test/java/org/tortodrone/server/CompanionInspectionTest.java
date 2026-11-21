@@ -15,6 +15,7 @@ import org.tortodrone.core.town.TownState;
 import org.tortodrone.core.town.TownCatalog;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.resources.SceneCatalog;
 
 /** The WebUI can inspect only a running session's current owned scene membership. */
 public final class CompanionInspectionTest {

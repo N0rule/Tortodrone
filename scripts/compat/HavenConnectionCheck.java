@@ -8,6 +8,7 @@ import com.threerings.util.Name;
 import org.tortodrone.world.*;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Stock network walking exercises every directed town link; routing is test-only static collision. */
 public final class HavenConnectionCheck {
@@ -59,7 +60,7 @@ public final class HavenConnectionCheck {
         }finally{observing[0]=false;client.Q(false);}
     }
     record Cell(int x,int y){float wx(){return x*.25f;}float wy(){return y*.25f;}}
-    static float[][] route(SceneCatalog.MapScene map,ScenePortals.Trigger target,float x,float y) {
+    static float[][] route(org.tortodrone.core.world.MapScene map,ScenePortals.Trigger target,float x,float y) {
         Cell start=new Cell(Math.round(x*4),Math.round(y*4));
         var previous=new HashMap<Cell,Cell>();var queue=new ArrayDeque<Cell>();previous.put(start,null);queue.add(start);
         Cell end=null;int[][] directions={{1,0},{-1,0},{0,1},{0,-1}};
@@ -80,7 +81,7 @@ public final class HavenConnectionCheck {
         }
         if(points.isEmpty())throw new AssertionError("Spawn already in portal");return points.toArray(float[][]::new);
     }
-    static boolean clear(SceneCatalog.MapScene map,ScenePortals.Trigger target,float x,float y) {
+    static boolean clear(org.tortodrone.core.world.MapScene map,ScenePortals.Trigger target,float x,float y) {
         return map.collision().walkable(x,y)&&map.portals().triggers().stream().noneMatch(t->t!=target&&t.intersects(x,y));
     }
     static boolean interior(ScenePortals.Trigger target,float x,float y) {
@@ -88,7 +89,7 @@ public final class HavenConnectionCheck {
         return target.intersects(x-.1f,y)&&target.intersects(x+.1f,y)
             &&target.intersects(x,y-.1f)&&target.intersects(x,y+.1f);
     }
-    static boolean visible(SceneCatalog.MapScene map,ScenePortals.Trigger target,float ax,float ay,float bx,float by) {
+    static boolean visible(org.tortodrone.core.world.MapScene map,ScenePortals.Trigger target,float ax,float ay,float bx,float by) {
         int steps=Math.max(1,(int)Math.ceil(Math.hypot(bx-ax,by-ay)/.05));
         for(int i=0;i<=steps;i++){float f=(float)i/steps;if(!clear(map,target,ax+(bx-ax)*f,ay+(by-ay)*f))return false;}return true;
     }

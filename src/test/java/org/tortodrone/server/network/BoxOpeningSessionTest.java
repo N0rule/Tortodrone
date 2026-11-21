@@ -29,7 +29,7 @@ public final class BoxOpeningSessionTest {
             var knight=characters.create(new Knight(0,"Box-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             db.grantItems("Alice",knight.name(),-1,-1,items.require("lucky_prize_box"),2,-1,-1);
             db.grantItems("Alice",knight.name(),-1,-1,items.require("silver_key"),2,-1,-1);
-            var scenes=snapshot.createScenes();scenes.boxes(BoxCatalog.load(home.resolve("content"),items));
+            var scenes=org.tortodrone.world.SceneRegistry.create(snapshot);scenes.boxes(BoxCatalog.load(home.resolve("content"),items));
             var frames=new java.util.concurrent.LinkedBlockingQueue<byte[]>();
             var socket=new Socket(){public OutputStream getOutputStream(){return new OutputStream(){public void write(int v){throw new AssertionError();}public void write(byte[] frame){frames.add(frame);}};}};
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)) {

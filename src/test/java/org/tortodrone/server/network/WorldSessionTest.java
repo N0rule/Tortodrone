@@ -15,6 +15,7 @@ import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.SceneChat;
+import org.tortodrone.resources.SceneCatalog;
 
 public final class WorldSessionTest {
     public static void main(String[] args) throws Exception {
@@ -26,7 +27,7 @@ public final class WorldSessionTest {
                 "Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             RecordingSocket unavailable=new RecordingSocket();
             try(var output=new SessionOutput(unavailable);var empty=new WorldSession(unavailable,characters,output,new SessionCodec(),1000,1,message->{},
-                    new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneCatalog.empty()))) {
+                    new org.tortodrone.world.SceneRegistry(org.tortodrone.resources.SceneCatalog.empty()))) {
                 refuse(()->empty.select(knight.name(),Map.of(TownSquare.ZONE_RECEIVER,(short)0)));
                 check(!empty.selected()&&!WorldSession.active(1,knight.id()),"missing maps refuse world entry without acquiring a controller");
             }

@@ -5,6 +5,7 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.protocol.SessionCodec;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Regression for private interior identity, capacity, reclamation, and wire OID ranges. */
 public final class InteriorRegistryTest {

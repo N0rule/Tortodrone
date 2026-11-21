@@ -14,6 +14,7 @@ import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Live scene publications must stop before the post-rename output drain closes admission. */
 public final class RenameDrainTest {

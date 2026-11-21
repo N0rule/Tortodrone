@@ -40,7 +40,7 @@ public final class StyleSessionTest {
             refused(()->store.change(account,1,1,initial.revision(),almond,null));
             check(db.worldProfile(account,1,1).equals(initial)&&db.roster(account).equals(beforeRoster)&&store.saved(account,1,1).eyes().isEmpty(),"late failure rolls back inventory, saved style and appearance");
             db.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER fail_style");}return null;});
-            var scenes=content.createScenes();var socket=new Socket(){public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}};
+            var scenes=org.tortodrone.world.SceneRegistry.create(content);var socket=new Socket(){public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}};
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)){
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();
                 short request=20;

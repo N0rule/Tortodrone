@@ -18,13 +18,14 @@ import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.SceneTargeting;
 import org.tortodrone.core.world.SceneConversation;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Headless input driver against original 337 and production gameplay services.
  * Starts at an explicit post-Camp fixture; cannot establish the fresh-knight route. */
 public final class GeneratorPlayCompatibility {
     public static void main(String[] args)throws Exception {
         if(args.length!=4)throw new IllegalArgumentException("GAME BASE RAW337 RAW218");
-        var content=ContentManager.load(Path.of(args[1]));var base=content.createScenes();var maps=new TreeMap<Integer,SceneCatalog.MapScene>();
+        var content=ContentManager.load(Path.of(args[1]));var base=org.tortodrone.world.SceneRegistry.create(content);var maps=new TreeMap<Integer,org.tortodrone.core.world.MapScene>();
         for(var map:base.catalog().scenes())maps.put(map.id(),map);maps.put(337,SceneCatalog.loadTemplate(337,Path.of(args[2])));maps.put(218,SceneCatalog.loadTemplate(218,Path.of(args[3])));
         var registry=new SceneRegistry(SceneCatalog.of(maps,base.catalog().entry().id()));registry.town(content.town());registry.weapons(content.weapons());registry.equipment(content.equipment());registry.fires(content.fires());registry.petFires(content.petFires());SceneRegistry.install(registry);
         check(registry.openingGate(OpeningMission.ANCIENT_GENERATOR)!=null,"current pinned mission preparation required");

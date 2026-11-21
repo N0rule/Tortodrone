@@ -17,6 +17,7 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Capacity refusal keeps a shared pickup claimable, without allocating an extra hidden stack. */
 public final class DungeonConsumablesTest {
@@ -27,7 +28,7 @@ public final class DungeonConsumablesTest {
             var characters=new CharacterStore(db,account,"Collector");var knight=characters.create(new Knight(0,"Collector-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0));
             var source=SceneRegistry.system().catalog();var base=source.entry();var training=source.scene(294).content();
             var content=new SceneContent(List.of(),training.scales(),Map.of(),Map.of("player.base-health",200f),training.items(),Map.of(),training.statuses());
-            var fixtureMap=new SceneCatalog.MapScene(base.id(),base.zone(),base.zoneName(),base.name(),base.image(),base.kind(),base.version(),base.spawnX(),base.spawnY(),base.spawnRotation(),1,base.collision(),base.layout(),ScenePortals.EMPTY,content);
+            var fixtureMap=new org.tortodrone.core.world.MapScene(base.id(),base.zone(),base.zoneName(),base.name(),base.image(),base.kind(),base.version(),base.spawnX(),base.spawnY(),base.spawnRotation(),1,base.collision(),base.layout(),ScenePortals.EMPTY,content);
             var registry=new SceneRegistry(SceneCatalog.of(new TreeMap<>(Map.of(base.id(),fixtureMap)),base.id()));
             var frames=new java.util.concurrent.LinkedBlockingQueue<byte[]>();
             var socket=new Socket(){public OutputStream getOutputStream(){return new OutputStream(){

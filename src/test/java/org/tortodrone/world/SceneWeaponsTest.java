@@ -15,6 +15,7 @@ import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.WeaponCatalog;
 import org.tortodrone.core.world.CollisionMap;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Small scene-clock regression: native emissions, expiry and observer-independent ownership. */
 public final class SceneWeaponsTest {

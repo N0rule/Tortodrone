@@ -15,6 +15,7 @@ import org.tortodrone.core.character.Confetti;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneEntityState;
 import org.tortodrone.core.world.SceneKnightState;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Lightweight, read-only stock config/reader oracle; no server or graphical app. */
 public final class ConfettiCompatibility {

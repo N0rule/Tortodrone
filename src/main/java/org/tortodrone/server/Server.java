@@ -109,7 +109,7 @@ public final class Server {
         long startup=System.nanoTime();
         hostDiagnostics(log);
         var content=initialContent==null?org.tortodrone.resources.ContentManager.load(dataDirectory.getParent(),settings):initialContent;
-        var scenes=content.createScenes();
+        var scenes=org.tortodrone.world.SceneRegistry.create(content);
         org.tortodrone.world.SceneRegistry.install(scenes);
         var catalog=content.items();
         for(String warning:content.warnings())log.warn(warning);

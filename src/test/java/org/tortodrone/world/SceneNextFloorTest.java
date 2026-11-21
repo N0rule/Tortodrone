@@ -19,7 +19,7 @@ public final class SceneNextFloorTest {
         var area=new SceneContent.Entry("1943",1,0,0,new SceneContent.Spec(Map.ofEntries(Map.entry("kind","SceneTrigger"),Map.entry("config","Portals/Next Floor"),Map.entry("scene-sensor","true"),Map.entry("sensor-mask","4"),Map.entry("radius",".4"),Map.entry("event","signal-start"),Map.entry("watch-tag","area:1943"),Map.entry("signal","intersection"),Map.entry("action",Json.stringify(Map.of("kind","next-floor"))))));
         var content=new SceneContent(List.of(area),Map.of(),Map.of(),Map.of("player.base-health",100f),Map.of(),Map.of(),Map.of());
         absentActivator(content,area);
-        var map=new SceneCatalog.MapScene(900001,50332041,"Fixture","Fixture","fixture","level",1,-1,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
+        var map=new org.tortodrone.core.world.MapScene(900001,50332041,"Fixture","Fixture","fixture","level",1,-1,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var scene=new SceneRegistry.Instance(7001,0,map).simulation();var other=new SceneRegistry.Instance(7002,0,map).simulation();
         int now=SceneClock.now();var frames=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
         var one=scene.join(player(21,1001,-1,now),frames::offer);var peer=scene.join(player(22,1002,-3,now),snapshot->{});
@@ -40,7 +40,7 @@ public final class SceneNextFloorTest {
             var timeout=new FloorReport(one,first,reportStamp);
             check(!timeout.ready(reportStamp+FloorReport.TIMEOUT-1)&&timeout.ready(reportStamp+FloorReport.TIMEOUT),"last-floor fallback waits the native 70000ms");
             var immediate=new FloorReport(one,first,reportStamp);check(immediate.report(true,reportStamp)&&immediate.ready(reportStamp),"native continue report completes the last floor immediately");
-            check(!one.ownsFloorAdvance(new SceneSimulation.FloorAdvanceRequest(first.sequence(),first.source(),first.timestamp())),"a reconstructed value cannot forge the server-owned request object");
+            check(!one.ownsFloorAdvance(new org.tortodrone.core.world.FloorAdvanceRequest(first.sequence(),first.source(),first.timestamp())),"a reconstructed value cannot forge the server-owned request object");
             check(peer.takeFloorAdvance()==null&&inactive.takeFloorAdvance()==null&&isolated.takeFloorAdvance()==null,"no peer, unentered knight or other scene inherits the request");
             walk(one,frames,21,-1,(float)Math.PI);walk(one,frames,21,1,0);
             check(one.takeFloorAdvance()==null&&one.ownsFloorAdvance(first),"reentering an exit cannot enqueue a second settlement while its request is active");
@@ -64,7 +64,7 @@ public final class SceneNextFloorTest {
         delayed.advance(1150,List.of(player(22,1002,-3,1150)));
         check(calls[0]==0,"a delayed departed Activator cannot be replaced by an entered peer");
     }
-    private static SceneSimulation.FloorAdvanceRequest awaitRequest(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSimulation.Snapshot> frames)throws Exception{
+    private static org.tortodrone.core.world.FloorAdvanceRequest awaitRequest(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSimulation.Snapshot> frames)throws Exception{
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);
         while(System.nanoTime()<until){var request=member.takeFloorAdvance();if(request!=null)return request;frames.poll(100,TimeUnit.MILLISECONDS);}
         throw new AssertionError("Native floor request was not offered");

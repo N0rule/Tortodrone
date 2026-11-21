@@ -21,7 +21,7 @@ public final class FriendSessionTest {
     public static void main(String[] args)throws Exception {
         Path root=Files.createTempDirectory("tortodrone-friend-session-");
         try{
-            var content=ContentManager.load(Path.of("."));var scenes=content.createScenes();var db=new Database(root,false);
+            var content=ContentManager.load(Path.of("."));var scenes=org.tortodrone.world.SceneRegistry.create(content);var db=new Database(root,false);
             try(var alice=person(db,content.items(),scenes,"Alice");var bob=person(db,content.items(),scenes,"Bobby");var other=person(db,content.items(),scenes,"Other")){
                 check(alice.world.feedInvocation(new SessionDecoder.Invocation(3,11,1,List.of(true,0L,result()))),"current feed request is answered");
                 check(alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,2,List.of(1,List.of(),result()))),"current party-suggestion request is answered");
@@ -114,7 +114,7 @@ public final class FriendSessionTest {
             System.out.println("PASS: native friend request/join/secret join/looking-for-group/remove, Town and Training instance presence/travel, open/private party controls, stranger/offline/private/transition/auth guards");
         }finally{org.tortodrone.support.ContentFixture.delete(root);}
     }
-    private static String destination(SceneCatalog.MapScene map){return map.name().substring("%town:m.".length());}
+    private static String destination(org.tortodrone.core.world.MapScene map){return map.name().substring("%town:m.".length());}
     private static SessionDecoder.Listener confirm(){return new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)5);}
     private static SessionDecoder.Listener result(){return new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)6);}
     private static Object field(Object object,String name)throws Exception{var f=object.getClass().getDeclaredField(name);f.setAccessible(true);return f.get(object);}
@@ -133,7 +133,7 @@ public final class FriendSessionTest {
         var socket=new RecordingSocket();var output=new SessionOutput(socket);var world=new WorldSession(socket,chars,output,new SessionCodec(items),1200+account,1,m->{},scenes);
         world.select(name,Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();return new Person(world,socket,output,chars);
     }
-    private static void move(Person person,SceneCatalog.MapScene map)throws Exception {
+    private static void move(Person person,org.tortodrone.core.world.MapScene map)throws Exception {
         person.world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),map.version(),new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)9))));
         if(!map.town())person.world.subscribeInteriorParty((short)11);
         person.world.subscribe((short)10);person.world.entered();

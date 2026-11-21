@@ -7,6 +7,7 @@ import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.KnightCombat;
 import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Actual retained player fire graphs against prepared Training Hall destructibles. */
 public final class RestorationCombatTest {

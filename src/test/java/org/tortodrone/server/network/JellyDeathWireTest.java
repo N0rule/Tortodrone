@@ -35,7 +35,7 @@ public final class JellyDeathWireTest {
     private static final Map<String,Short> RECEIVERS=Map.of(SceneRegistry.ZONE_RECEIVER,(short)0);
 
     public static void main(String[] args)throws Exception {
-        var content=ContentManager.load(Path.of("."));var registry=content.createScenes();
+        var content=ContentManager.load(Path.of("."));var registry=org.tortodrone.world.SceneRegistry.create(content);
         var previous=SceneRegistry.system();SceneRegistry.install(registry);
         Path home=Files.createTempDirectory("tortodrone-jelly-death-");
         try {
@@ -162,7 +162,7 @@ public final class JellyDeathWireTest {
             if(frame.getClassName().endsWith("WorldSession")&&frame.getMethodName().equals("publish"))return true;
         return false;
     }
-    private static void move(WorldSession world,SceneCatalog.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threeerings.whirled.zone.data.ZoneMoveMarshaller$ZoneMoveMarshaller",(short)1))));}
+    private static void move(WorldSession world,org.tortodrone.core.world.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threeerings.whirled.zone.data.ZoneMoveMarshaller$ZoneMoveMarshaller",(short)1))));}
     private static FireCatalog.DataValue normal(float amount,boolean major){
         return new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",2,"amount",amount,"shouldReact",true,"majorReact",major));
     }

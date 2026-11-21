@@ -12,6 +12,7 @@ import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.SceneCollision;
 import org.tortodrone.core.world.SceneDamage;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Deterministic hitbox and thrown-lift regressions, without accounts or a ticking server. */
 public final class SceneEntitiesTest {
@@ -119,7 +120,7 @@ public final class SceneEntitiesTest {
      *  damage/flame limit until the served 6 Second cleanup fuse expires; oil pots leave nine separate
      *  slick patches; closed Lift Barriers, native lift-collision bit included, catch
      *  thrown pots before they cross. */
-    private static void pots(SceneCatalog.MapScene map)throws java.io.IOException {
+    private static void pots(org.tortodrone.core.world.MapScene map)throws java.io.IOException {
         int stamp=SceneClock.now()+600;
         var leverFields=new HashMap<String,String>();
         leverFields.put("native-type","com.threerings.projectx.dungeon.data.actor.Switch");
@@ -219,7 +220,7 @@ public final class SceneEntitiesTest {
         return actor.entity().status().conditions().stream().anyMatch(c->c.name().equals("Fire"));
     }
 
-    private static void monsterStatus(SceneCatalog.MapScene map) {
+    private static void monsterStatus(org.tortodrone.core.world.MapScene map) {
         var pad=map.content().entries().stream().filter(e->e.spec().child().text("native-type","").endsWith(".Monster")
             &&e.spec().child().number("acquire-distance",0)>0).findFirst().orElseThrow();
         var fields=new HashMap<>(pad.spec().child().fields());
@@ -249,7 +250,7 @@ public final class SceneEntitiesTest {
         check(SceneDamage.amount(SceneLifeTest.damage(40),content,new SceneContent.Spec(Map.of("defense.normal","20")),.5f)==10,
             "defense mitigates the status-adjusted amount");
     }
-    private static void trapOccupants(SceneCatalog.MapScene map) {
+    private static void trapOccupants(org.tortodrone.core.world.MapScene map) {
         var spike=map.content().entries().stream().filter(e->e.spec().text("config","").endsWith("/Spikes")).findFirst().orElseThrow();
         var fields=new HashMap<>(spike.spec().fields());fields.put("cycle","UP");
         var content=new SceneContent(List.of(new SceneContent.Entry("trap",5.5f,-12.5f,0,new SceneContent.Spec(fields))),map.content().scales());
@@ -266,7 +267,7 @@ public final class SceneEntitiesTest {
         world.advance(clock[0],players);
         check(hits.equals(Map.of(219,2,220,2)),"trap resumes for each occupant after its authored refractory");
     }
-    private static void thrown(SceneCatalog.MapScene map,float x,float y,float rotation,boolean clear) {
+    private static void thrown(org.tortodrone.core.world.MapScene map,float x,float y,float rotation,boolean clear) {
         var item=map.content().items().values().stream().filter(s->s.text("kind","").equals("vial")).findFirst().orElseThrow();
         var content=new SceneContent(List.of(),Map.of(),Map.of(),map.content().stats(),Map.of(),Map.of(),Map.of());
         var world=new SceneEntities(content,map.collision(),map.staticCollision());int stamp=SceneClock.now()+10;

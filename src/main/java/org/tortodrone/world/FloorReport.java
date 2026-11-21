@@ -5,11 +5,11 @@ package org.tortodrone.world;
 public final class FloorReport {
     public static final int TIMEOUT=70_000,LEAVE_DELAY=2_400;
     private final SceneSimulation.Membership member;
-    private final SceneSimulation.FloorAdvanceRequest request;
+    private final org.tortodrone.core.world.FloorAdvanceRequest request;
     private final int started;
     private Integer reported;
     private boolean descend,finished;
-    public FloorReport(SceneSimulation.Membership member,SceneSimulation.FloorAdvanceRequest request,int stamp){
+    public FloorReport(SceneSimulation.Membership member,org.tortodrone.core.world.FloorAdvanceRequest request,int stamp){
         if(!member.ownsFloorAdvance(request))throw new IllegalArgumentException("Unowned floor request");
         this.member=member;this.request=request;started=stamp;
     }
@@ -23,6 +23,6 @@ public final class FloorReport {
     /** Physical elevators own their drop delay; do not add the portal's leave delay twice. */
     public boolean votedOrTimedOut(int stamp){return valid()&&(reported!=null||stamp-started>=TIMEOUT);}
     public boolean returning(){return reported!=null&&!descend;}
-    public SceneSimulation.FloorAdvanceRequest request(){return request;}
+    public org.tortodrone.core.world.FloorAdvanceRequest request(){return request;}
     public void finish(){finished=true;}
 }

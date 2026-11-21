@@ -74,7 +74,7 @@ public final class EmoteSessionTest {
 
                 // Move Bob to a different town. His old chat membership must be removed;
                 // a targeted action fails before changing Alice's current pose and cannot leak.
-                int otherScene=registry.catalog().scenes().stream().mapToInt(SceneCatalog.MapScene::id)
+                int otherScene=registry.catalog().scenes().stream().mapToInt(org.tortodrone.core.world.MapScene::id)
                     .filter(id->id!=registry.catalog().entry().id()).findFirst().orElseThrow();
                 bob.invocation(new SessionDecoder.Invocation(3,4,1,List.of(otherScene,
                     registry.catalog().scene(otherScene).version(),

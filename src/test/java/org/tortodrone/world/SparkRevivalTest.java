@@ -20,7 +20,7 @@ public final class SparkRevivalTest {
             entries.add(new SceneContent.Entry("target-"+n,n==0?1.5f:n==1?2.5f:n==2?2.51f:1.7f,n>=3?1:0,0,new SceneContent.Spec(fields)));
         }
         var content=new SceneContent(entries,Map.of(),Map.of(),Map.of("player.base-health",100f),Map.of(),Map.of(),Map.of());
-        var map=new SceneCatalog.MapScene(294,1,"Fixture","Fixture","","training",1,0,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
+        var map=new org.tortodrone.core.world.MapScene(294,1,"Fixture","Fixture","","training",1,0,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var simulation=new SceneRegistry.Instance(7999,0,map).simulation();int now=SceneClock.now();
         var actor=new ActorState(42,1001,"Fixture",0,now,0,0,0,0,0,new StarterCatalog.Model("Fixture",Map.of()));
         try(var member=simulation.join(actor,s->{})){

@@ -159,7 +159,7 @@ public final class MapYaml {
             for(String index:content.getProperty("items","").split(",")){
                 Object action=actions.get(content.getProperty("item."+index+".config"));
                 if(action!=null){String graph=text(action,"item action");
-                    if(!SceneWeapons.usable(FireCatalog.actionJson(graph)))throw new IOException("Unsupported executable capsule graph");
+                    if(!org.tortodrone.core.world.ItemUseRules.usable(FireCatalog.actionJson(graph)))throw new IOException("Unsupported executable capsule graph");
                     content.setProperty("item."+index+".use-action",graph);
                 }
             }
@@ -190,7 +190,7 @@ public final class MapYaml {
                 content.setProperty("item."+index+".config",config);
                 var fields=new TreeMap<String,String>();String itemPrefix="item."+index+".";
                 for(String key:content.stringPropertyNames())if(key.startsWith(itemPrefix))fields.put(key.substring(itemPrefix.length()),content.getProperty(key));
-                SceneEntities.validateItemUse(new SceneContent.Spec(fields));
+                org.tortodrone.core.world.ItemUseRules.validate(new SceneContent.Spec(fields));
             }
             content.setProperty("items",String.join(",",itemOrder));
         }

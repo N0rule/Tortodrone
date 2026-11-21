@@ -22,7 +22,7 @@ public final class SpriteShieldTest {
     public static void main(String[] args)throws Exception {
         var content=ContentManager.load(Path.of("."));var map=content.scenes().scene(294);
         var sceneContent=new SceneContent(List.of(),map.content().scales(),Map.of(),map.content().stats(),map.content().items(),Map.of(),map.content().statuses());
-        var isolated=new SceneCatalog.MapScene(map.id(),map.zone(),map.zoneName(),map.name(),map.image(),"training",map.version(),map.spawnX(),map.spawnY(),0,1,map.collision(),map.layout(),ScenePortals.EMPTY,sceneContent);
+        var isolated=new org.tortodrone.core.world.MapScene(map.id(),map.zone(),map.zoneName(),map.name(),map.image(),"training",map.version(),map.spawnX(),map.spawnY(),0,1,map.collision(),map.layout(),ScenePortals.EMPTY,sceneContent);
         var simulation=new SceneRegistry.Instance(990,1,isolated).simulation();simulation.town(content.town());simulation.petFires(content.petFires());
         int stamp=SceneClock.now();var model=new StarterCatalog.Model("Character/PC/Default",Map.of());
         var member=simulation.join(new ActorState(219,1001,"Aura",0,stamp,map.spawnX(),map.spawnY(),0,0,0,0,stamp,model),snapshot->{});

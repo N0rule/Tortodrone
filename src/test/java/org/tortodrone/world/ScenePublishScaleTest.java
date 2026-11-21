@@ -6,6 +6,7 @@ import org.tortodrone.protocol.SessionCodec;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.core.world.ActorState;
+import org.tortodrone.resources.SceneCatalog;
 
 /**
  * Scale check for the shared town publication path. A shared town ticks one simulation for
@@ -28,14 +29,14 @@ public final class ScenePublishScaleTest {
         System.out.println("PASS: shared scene templates materialize byte-identically per connection, stay cheap for 200 recipients, keep a dense monster map inside the tick SLO and keep occupied scenes off platform threads");
     }
 
-    private static List<ActorState> players(SceneCatalog.MapScene map){
+    private static List<ActorState> players(org.tortodrone.core.world.MapScene map){
         var players=new ArrayList<ActorState>();
         for(int i=0;i<PLAYERS;i++)players.add(new ActorState(1000+i,2000+i,"Scale "+i,256,1,
             map.spawnX(),map.spawnY(),0,0,0,new StarterCatalog.Model("Fixture",Map.of())));
         return players;
     }
 
-    private static void sharedEncoding(SceneCatalog.MapScene map,String label)throws Exception {
+    private static void sharedEncoding(org.tortodrone.core.world.MapScene map,String label)throws Exception {
         var instance=new SceneRegistry.Instance(790,1,map);
         var simulation=instance.simulation();
         var members=new ArrayList<SceneSimulation.Membership>();
@@ -121,14 +122,14 @@ public final class ScenePublishScaleTest {
     }
 
     private static SceneSimulation.EncodedDelta encoded(SceneSimulation.Snapshot current,SceneSimulation.Snapshot baseline,
-            SceneCatalog.MapScene map,SceneRegistry.Instance instance)throws Exception {
+            org.tortodrone.core.world.MapScene map,SceneRegistry.Instance instance)throws Exception {
         return current.encoded(baseline,!map.town(),(delta,effects,combat,interior)->
             SessionCodec.sceneDeltaTemplate(ItemCatalogHolder.CATALOG,instance.oid(),current.timestamp(),
                 delta.added(),delta.updated(),delta.removed(),delta.baseline(),interior,effects,combat));
     }
 
     /** A monster-heavy prepared scene with a full party must stay inside the published tick SLO. */
-    private static void tickCost(SceneCatalog.MapScene map){
+    private static void tickCost(org.tortodrone.core.world.MapScene map){
         var entities=new SceneEntities(map.content(),map.collision(),map.staticCollision(),new Random(1),true,SceneClock.now());
         var players=new ArrayList<ActorState>();
         for(int i=0;i<8;i++)players.add(new ActorState(1000+i,2000+i,"Scale "+i,256,1,
@@ -145,7 +146,7 @@ public final class ScenePublishScaleTest {
     }
 
     /** Many occupied level instances must not reserve one platform thread each. */
-    private static void sceneThreads(SceneCatalog.MapScene map){
+    private static void sceneThreads(org.tortodrone.core.world.MapScene map){
         int before=Thread.getAllStackTraces().size();
         var members=new ArrayList<SceneSimulation.Membership>();
         for(int i=0;i<100;i++){

@@ -18,15 +18,16 @@ import org.tortodrone.core.character.KnightMemory;
 import org.tortodrone.core.world.SceneConversation;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Production session/dialogue/SQLite acceptance from explicit post-floor checkpoints.
  * Camp 218 uses synthetic geometry; this does not exercise either mission floor. */
 public final class OpeningComlinkSessionTest {
     private static final Map<String,Short> RECEIVERS=Map.of(SceneRegistry.ZONE_RECEIVER,(short)0);
     public static void main(String[] args)throws Exception {
-        var content=ContentManager.load(Path.of("."));var base=content.createScenes();var haven=base.catalog().scene(1);
-        var camp=new SceneCatalog.MapScene(218,16777222,"%town:m.fixture","Fixture powered Camp",haven.image(),"town",1,haven.spawnX(),haven.spawnY(),haven.spawnRotation(),1,haven.collision(),haven.layout(),ScenePortals.EMPTY,SceneContent.empty());
-        var maps=new TreeMap<Integer,SceneCatalog.MapScene>();for(var map:base.catalog().scenes())maps.put(map.id(),map);maps.put(218,camp);
+        var content=ContentManager.load(Path.of("."));var base=org.tortodrone.world.SceneRegistry.create(content);var haven=base.catalog().scene(1);
+        var camp=new org.tortodrone.core.world.MapScene(218,16777222,"%town:m.fixture","Fixture powered Camp",haven.image(),"town",1,haven.spawnX(),haven.spawnY(),haven.spawnRotation(),1,haven.collision(),haven.layout(),ScenePortals.EMPTY,SceneContent.empty());
+        var maps=new TreeMap<Integer,org.tortodrone.core.world.MapScene>();for(var map:base.catalog().scenes())maps.put(map.id(),map);maps.put(218,camp);
         var registry=new SceneRegistry(SceneCatalog.of(maps,1));registry.town(content.town());registry.missions(content.missions());registry.comlinks(content.comlinks());
         var previous=SceneRegistry.system();SceneRegistry.install(registry);
         Path home=Files.createTempDirectory("tortodrone-comlinks-");

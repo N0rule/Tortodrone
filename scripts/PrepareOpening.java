@@ -3,7 +3,7 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.resources.MapImport;
-import org.tortodrone.world.TutorialRoute;
+import org.tortodrone.core.mission.TutorialRoute;
 
 /** Prepare a separate opening deployment; never read/copy private runtime state. */
 public final class PrepareOpening {

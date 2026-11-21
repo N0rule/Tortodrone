@@ -1,14 +1,17 @@
-package org.tortodrone.world;
+package org.tortodrone.core.mission;
 
 import java.io.IOException;
 import java.security.*;
 import java.util.*;
+import org.tortodrone.core.world.MapScene;
+import org.tortodrone.core.world.SceneCatalogView;
+import org.tortodrone.core.world.FloorAdvanceRequest;
 import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.ScenePortals;
 
 /** Verified Crash Site exit with direct arrival at Haven's authored default spawn.
  * Native NextFloor remains a generic scene action; this supplies its tutorial party's destination. */
-public record TutorialRoute(SceneCatalog.MapScene source,SceneCatalog.MapScene destination) {
+public record TutorialRoute(org.tortodrone.core.world.MapScene source,org.tortodrone.core.world.MapScene destination) {
     public static final int HAVEN=1;
     public static final int GATE=397,EXIT=1943,CAMP=217,CAMP_ZONE=16777221,CAMP_ENTRANCE=2017;
     public static final int ENTRANCE=2659;
@@ -33,12 +36,12 @@ public record TutorialRoute(SceneCatalog.MapScene source,SceneCatalog.MapScene d
         try{if(exits.size()!=1||!SceneActions.rule(exits.getFirst()).action().equals(new SceneActions.NextFloor()))throw new IllegalArgumentException("Tutorial native exit is unavailable");}
         catch(IOException invalid){throw new IllegalArgumentException("Invalid tutorial native exit",invalid);}
     }
-    public static TutorialRoute available(SceneCatalog catalog){
+    public static TutorialRoute available(SceneCatalogView catalog){
         try{return new TutorialRoute(catalog.scene(398),catalog.scene(HAVEN));}
         catch(IOException|IllegalArgumentException unavailable){return null;}
     }
     // Default town spawns have no native portal entry; use the same ID as normal town travel.
     public ScenePortals.Entrance entrance(){return new ScenePortals.Entrance(1,destination.spawnX(),destination.spawnY(),destination.spawnRotation());}
-    public boolean exit(SceneSimulation.FloorAdvanceRequest request){return request!=null&&request.source().entity()!=null&&request.source().entity().entrySource()&&request.source().entity().key().equals(Integer.toString(EXIT));}
+    public boolean exit(org.tortodrone.core.world.FloorAdvanceRequest request){return request!=null&&request.source().entity()!=null&&request.source().entity().entrySource()&&request.source().entity().key().equals(Integer.toString(EXIT));}
     private static String hash(byte[] bytes){try{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));}catch(NoSuchAlgorithmException impossible){throw new AssertionError(impossible);}}
 }

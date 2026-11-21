@@ -5,6 +5,7 @@ import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.world.*;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Original 337 key/door component test with explicit player poses and carry calls.
  * Does not traverse the floor, fight its enemies or settle a mission. */

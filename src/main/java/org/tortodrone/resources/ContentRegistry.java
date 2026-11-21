@@ -3,10 +3,9 @@ package org.tortodrone.resources;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.core.character.ItemCatalog;
-import org.tortodrone.world.*;
 import org.tortodrone.core.NewsCatalog;
 import org.tortodrone.core.mission.MissionCatalog;
-import org.tortodrone.world.MissionComlinks;
+import org.tortodrone.core.mission.MissionComlinks;
 import org.tortodrone.core.mission.MissionGates;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.town.TownCatalog;
@@ -29,10 +28,5 @@ public record ContentRegistry(List<Pack> packs, Map<String,Resource> resources, 
         Objects.requireNonNull(equipment);Objects.requireNonNull(fires);Objects.requireNonNull(town);Objects.requireNonNull(petFires);
         Objects.requireNonNull(news);Objects.requireNonNull(boxes);Objects.requireNonNull(missions);Objects.requireNonNull(comlinks);Objects.requireNonNull(gates);
     }
-    public SceneRegistry createScenes() {
-        var registry=new SceneRegistry(scenes);
-        registry.boxes(boxes);registry.town(town);registry.petFires(petFires);registry.news(news);
-        registry.weapons(weapons);registry.equipment(equipment);registry.fires(fires);registry.missions(missions);registry.comlinks(comlinks);registry.gates(gates);
-        return registry;
-    }
+
 }

@@ -1,6 +1,9 @@
-package org.tortodrone.world;
+package org.tortodrone.core.mission;
 
 import java.util.*;
+import org.tortodrone.core.world.MapScene;
+import org.tortodrone.core.world.SceneCatalogView;
+import org.tortodrone.core.world.FloorAdvanceRequest;
 import org.tortodrone.core.mission.MissionGates;
 import org.tortodrone.core.world.SceneElevator;
 import org.tortodrone.core.world.ScenePortals;
@@ -14,12 +17,12 @@ import org.tortodrone.core.world.ScenePortals;
  */
 public record MissionRun(String missionId,int gateId,List<Floor> floors,int floor,
         int worldId,int partyOid,String difficulty,
-        SceneCatalog.MapScene destination,ScenePortals.Entrance arrival) {
+        org.tortodrone.core.world.MapScene destination,ScenePortals.Entrance arrival) {
     public static final List<String> DIFFICULTIES=List.of("EASY","MEDIUM","HARD");
     public static final int MAX_FLOORS=64;
 
     /** One authored floor, the entry key of its completing elevator and its arrival point. */
-    public record Floor(SceneCatalog.MapScene scene,String exit,ScenePortals.Entrance entrance,String type) {
+    public record Floor(org.tortodrone.core.world.MapScene scene,String exit,ScenePortals.Entrance entrance,String type) {
         public Floor {
             Objects.requireNonNull(scene);Objects.requireNonNull(entrance);
             if(exit==null||exit.isBlank()||exit.length()>64||exit.chars().anyMatch(Character::isISOControl))
@@ -50,15 +53,15 @@ public record MissionRun(String missionId,int gateId,List<Floor> floors,int floo
 
     /** An imported gate route whose every floor scene, elevator exit and entrance is present.
      *  Returns null when the route is not playable with the bundled content. */
-    public static MissionRun route(MissionGates.Gate gate,SceneCatalog catalog,int worldId,int partyOid,String difficulty,
-            SceneCatalog.MapScene home) {
+    public static MissionRun route(MissionGates.Gate gate,SceneCatalogView catalog,int worldId,int partyOid,String difficulty,
+            org.tortodrone.core.world.MapScene home) {
         Objects.requireNonNull(gate);Objects.requireNonNull(catalog);Objects.requireNonNull(home);
         if(!home.town())return null;
         var floors=new ArrayList<Floor>();
         boolean playable=false;
         for(var wedge:gate.wedges()) {
             if(wedge.scene()<=0||!catalog.contains(wedge.scene()))return null;
-            SceneCatalog.MapScene scene;
+            org.tortodrone.core.world.MapScene scene;
             try{scene=catalog.scene(wedge.scene());}catch(java.io.IOException unavailable){return null;}
             if(scene.town())return null;
             var exit=exits(scene);
@@ -71,7 +74,7 @@ public record MissionRun(String missionId,int gateId,List<Floor> floors,int floo
     }
 
     /** The entry keys of the scene's own completing elevators. */
-    public static List<String> exits(SceneCatalog.MapScene scene) {
+    public static List<String> exits(org.tortodrone.core.world.MapScene scene) {
         var result=new ArrayList<String>();
         for(var entry:scene.content().entries()) {
             if(!entry.spec().fields().containsKey("elevator-mode"))continue;
@@ -81,14 +84,14 @@ public record MissionRun(String missionId,int gateId,List<Floor> floors,int floo
         return List.copyOf(result);
     }
 
-    private static ScenePortals.Entrance spawn(SceneCatalog.MapScene scene) {
+    private static ScenePortals.Entrance spawn(org.tortodrone.core.world.MapScene scene) {
         return scene.portals().entrances().values().stream()
             .filter(e->e.x()==scene.spawnX()&&e.y()==scene.spawnY()&&Math.abs(e.rotation()-scene.spawnRotation())<.00001f)
             .findFirst().orElse(new ScenePortals.Entrance(1,scene.spawnX(),scene.spawnY(),scene.spawnRotation()));
     }
 
     public Floor current(){return floors.get(floor);}
-    public SceneCatalog.MapScene source(){return current().scene();}
+    public org.tortodrone.core.world.MapScene source(){return current().scene();}
     public ScenePortals.Entrance entrance(){return current().entrance();}
     public String exitKey(){return current().exit();}
     public String type(){return current().type();}
@@ -102,7 +105,7 @@ public record MissionRun(String missionId,int gateId,List<Floor> floors,int floo
     }
 
     /** Native NextFloor on this floor's authored completing elevator. */
-    public boolean exit(SceneSimulation.FloorAdvanceRequest request) {
+    public boolean exit(org.tortodrone.core.world.FloorAdvanceRequest request) {
         return request!=null&&request.source().entity()!=null&&request.source().entity().entrySource()
             &&request.source().entity().key().equals(exitKey());
     }

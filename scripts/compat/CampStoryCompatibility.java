@@ -21,7 +21,7 @@ import org.tortodrone.core.world.SceneConversation;
 public final class CampStoryCompatibility {
     private static final Map<String,Short> RECEIVERS=Map.of(SceneRegistry.ZONE_RECEIVER,(short)0);
     public static void main(String[] args)throws Exception {
-        var content=ContentManager.load(Path.of(args[0]));var scenes=content.createScenes();SceneRegistry.install(scenes);
+        var content=ContentManager.load(Path.of(args[0]));var scenes=org.tortodrone.world.SceneRegistry.create(content);SceneRegistry.install(scenes);
         var route=scenes.tutorial();check(route!=null,"original 398/217 content required");
         var map=scenes.catalog().scene(217);check(map.id()==217&&map.version()==373,"pinned initial Camp revision");
         var binding=map.content().conversations().get("Character/NPC/Rescue Camp/Greta 2");

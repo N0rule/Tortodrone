@@ -17,7 +17,7 @@ public final class ContentManagerTest {
     public static void main(String[] args)throws Exception {
         var baseline=ContentManager.load(Path.of("."));
         check(baseline.scenes().scenes().size()==10&&baseline.items().entries().size()==9355,"all verified maps and items retained");
-        var opening=baseline.createScenes().tutorial();
+        var opening=org.tortodrone.world.SceneRegistry.create(baseline).tutorial();
         check(opening!=null&&opening.source().id()==398&&opening.source().version()==2008859103
             &&opening.destination().id()==1&&opening.entrance().id()==1&&opening.entrance().x()==1&&opening.entrance().y()==-30.5f,"bundled defaults route the verified Crash Site exit directly to Haven's authored spawn");
         check(baseline.weapons().weapons().size()==386&&baseline.weapons().shields().size()==123,"verified combat controls retained");
@@ -84,7 +84,7 @@ public final class ContentManagerTest {
             failure(()->ContentFiles.relative(home,"../escape"),"escapes");failure(()->ContentFiles.relative(home,"a/../../escape"),"escapes");
             Path link=home.resolve("link.yml");try{Files.createSymbolicLink(link,bad);failure(()->Yaml.read(link),"Symlink");}catch(UnsupportedOperationException unavailable){ }
             // createScenes consumes the validated Town/pet objects even if source files disappear.
-            Files.move(home.resolve("content/town"),home.resolve("removed-town"));check(changed.createScenes().town()==changed.town(),"published registry performs no Town file reads");
+            Files.move(home.resolve("content/town"),home.resolve("removed-town"));check(org.tortodrone.world.SceneRegistry.create(changed).town()==changed.town(),"published registry performs no Town file reads");
             System.out.println("PASS: unified stock snapshot, readable localized dialogue edits and literal rejection, immutable publication, graphs, portals, Town references, native fingerprints, YAML diagnostics and path safety");
         }finally{ContentFixture.delete(home);}
     }

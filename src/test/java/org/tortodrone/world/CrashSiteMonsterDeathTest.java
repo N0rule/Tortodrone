@@ -69,7 +69,7 @@ public final class CrashSiteMonsterDeathTest {
         // snapshot, until a snapshot stamped after destroyed drops it.
         var real=map.content();
         var content=new SceneContent(List.of(new SceneContent.Entry("jelly",0,0,0,new SceneContent.Spec(jelly))),real.scales(),Map.of(),real.stats(),real.items(),real.cycles(),real.statuses());
-        var fixture=new SceneCatalog.MapScene(9401,50332041,"Fixture","Fixture","Fixture","level",1,1,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
+        var fixture=new org.tortodrone.core.world.MapScene(9401,50332041,"Fixture","Fixture","Fixture","level",1,1,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var simulation=new SceneRegistry.Instance(9401,0,fixture).simulation();
         int now=SceneClock.now();
         try(var member=simulation.join(new ActorState(219,1001,"Knight",0,now,1,0,0,0,0,0,now,new StarterCatalog.Model("Character/PC/Level",Map.of()),false),s->{})){

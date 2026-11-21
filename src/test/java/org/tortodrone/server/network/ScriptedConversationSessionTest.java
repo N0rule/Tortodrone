@@ -17,6 +17,7 @@ import org.tortodrone.core.world.SceneConversation;
 import org.tortodrone.core.world.SceneActions;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Synthetic authored sensor uses real accounts, sessions, native response requests and scene services. */
 public final class ScriptedConversationSessionTest {
@@ -36,8 +37,8 @@ public final class ScriptedConversationSessionTest {
             var boss=new SceneContent.Entry("501",0,0,0,new SceneContent.Spec(Map.of("config","Fixture/Signal","kind","SceneTrigger","event","signal","watch-tag","boss","signal","activate","action","{\"kind\":\"signal\",\"tag\":\"door\",\"name\":\"toggle\"}")));
             var door=new SceneContent.Entry("door",original.spawnX()+5,original.spawnY(),0,new SceneContent.Spec(Map.of("config","Fixture/Door","native-type","com.threerings.projectx.dungeon.data.actor.Door","kind","Door","tags","door","width","1","height","1","collision-flags","1","door-speed","0")));
             var content=new SceneContent(List.of(area,boss,door),original.content().scales(),Map.of(id,definition),original.content().stats(),Map.of(),Map.of(),original.content().statuses());
-            var map=new SceneCatalog.MapScene(900001,16777217,"%town:m.haven","Fixture",original.image(),"town",original.version(),original.spawnX(),original.spawnY(),0,1,original.collision(),original.layout(),ScenePortals.EMPTY,content);
-            var maps=new TreeMap<Integer,SceneCatalog.MapScene>();maps.put(map.id(),map);var registry=new SceneRegistry(SceneCatalog.of(maps,map.id()));
+            var map=new org.tortodrone.core.world.MapScene(900001,16777217,"%town:m.haven","Fixture",original.image(),"town",original.version(),original.spawnX(),original.spawnY(),0,1,original.collision(),original.layout(),ScenePortals.EMPTY,content);
+            var maps=new TreeMap<Integer,org.tortodrone.core.world.MapScene>();maps.put(map.id(),map);var registry=new SceneRegistry(SceneCatalog.of(maps,map.id()));
             var socket1=new RecordingSocket();var socket2=new RecordingSocket();
             try(var output1=new SessionOutput(socket1);var output2=new SessionOutput(socket2);
                     var first=new WorldSession(socket1,firstCharacters,output1,new SessionCodec(),1001,1,message->{},registry);

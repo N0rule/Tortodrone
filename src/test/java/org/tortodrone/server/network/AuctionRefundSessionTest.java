@@ -28,7 +28,7 @@ public final class AuctionRefundSessionTest {
         Path root=Files.createTempDirectory("tortodrone-outbid-session-");
         try {
             var content=ContentManager.load(Path.of("."));var db=new Database(root,true);
-            var scenes=content.createScenes();SceneRegistry.install(scenes);
+            var scenes=org.tortodrone.world.SceneRegistry.create(content);SceneRegistry.install(scenes);
             var house=new AuctionHouse(db,content.items(),content.town());
             var listing=house.createFeatured("Material/Gel Drop",1,100,0,0,1);
             int aw;

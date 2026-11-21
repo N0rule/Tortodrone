@@ -13,6 +13,7 @@ import org.tortodrone.core.town.TownState;
 import org.tortodrone.core.town.TownCatalog;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.WeaponCatalog;
+import org.tortodrone.resources.SceneCatalog;
 
 /** One isolated scene: owned companion, native skill intent, cooldown and departure cleanup. */
 public final class PetCombatTest {

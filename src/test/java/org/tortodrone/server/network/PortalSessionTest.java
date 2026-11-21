@@ -13,6 +13,7 @@ import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
+import org.tortodrone.resources.SceneCatalog;
 
 /** A real scene tick initiates travel; only the chosen destination can consume its arrival. */
 public final class PortalSessionTest {

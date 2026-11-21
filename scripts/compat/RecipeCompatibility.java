@@ -14,6 +14,7 @@ import com.threerings.presents.dobj.*;
 import com.threerings.presents.net.*;
 import com.threerings.projectx.data.PlayerObject;
 import org.tortodrone.core.character.Knight;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Feed real inventory Use publications into the installed stock reader and DSet implementation. */
 public final class RecipeCompatibility {

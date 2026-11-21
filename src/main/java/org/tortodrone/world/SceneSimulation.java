@@ -22,6 +22,8 @@ import org.tortodrone.core.world.KnightCombat;
 import org.tortodrone.core.world.PlayerEmotes;
 import org.tortodrone.core.world.SceneCombatEvent;
 import org.tortodrone.core.world.SceneEffect;
+import org.tortodrone.core.world.SceneFrame;
+import org.tortodrone.core.world.FloorAdvanceRequest;
 import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.SceneKnightState;
 import org.tortodrone.core.world.ScenePetState;
@@ -32,6 +34,7 @@ import org.tortodrone.core.world.SceneElevator;
 import org.tortodrone.core.world.ScenePortals;
 import org.tortodrone.core.world.WeaponCatalog;
 import org.tortodrone.core.world.InputBits;
+import org.tortodrone.core.party.PartyView;
 
 /** One authoritative clock, movement owner and immutable publication per scene instance.
  * Session callbacks only offer publications to bounded mailboxes; no socket or storage work
@@ -69,14 +72,6 @@ public final class SceneSimulation {
             List<ActorState> changedRoles, Map<Integer,ActorState> baseline) {
         public Delta { removed=removed.clone(); }
         @Override public int[] removed(){return removed.length==0?removed:removed.clone();}
-    }
-    /** One encoded scene delta whose symbol references are left as placeholders. Both sides
-     * maintain a per-connection class/string registry, so the bytes may only be shared as a
-     * template: each recipient materializes them with its own codes, and a recipient that has
-     * not seen every symbol yet falls back to a direct per-connection encode. */
-    public record SceneFrame(byte[] template,int oidOffset,int acknowledgeOffset,int pingOffset,
-            int referenceOffset,int elapsedOffset,List<Symbol> types,List<Symbol> interns) {
-        public record Symbol(int offset,String name){ }
     }
     /** A snapshot's delta inputs together with their shared encoding. */
     public record EncodedDelta(Delta delta,List<SceneEffect> effects,List<SceneCombatEvent> combat,SceneFrame frame) { }
@@ -197,7 +192,7 @@ public final class SceneSimulation {
     public record ObjectiveRequest(org.tortodrone.core.character.KnightObjective operation,ActorState source,int timestamp) { }
     public record StoryRequests(List<MemoryRequest> memories,List<ObjectiveRequest> objectives) { }
     /** Membership-owned native NextFloor intent; this is not a completion receipt or travel grant. */
-    public record FloorAdvanceRequest(long sequence,ActorState source,int timestamp) { }
+
     public final class Membership implements AutoCloseable {
         private ActorState appearance;
         private final TownMovement movement;
@@ -515,7 +510,7 @@ public final class SceneSimulation {
         }}
         public boolean authorizeElevator(String key,Set<Integer> expectedMembers){synchronized(SceneSimulation.this){
             check();if(elevatorTrip!=null||activeFloorAdvance!=null||!instance.map().kind().equals("level")||!entities.elevatorEntry(key))return false;
-            if(expectedMembers==null||expectedMembers.isEmpty()||expectedMembers.size()>PartyRegistry.CAPACITY||!expectedMembers.contains(appearance.id())||expectedMembers.stream().anyMatch(id->id==null||id<=0))return false;
+            if(expectedMembers==null||expectedMembers.isEmpty()||expectedMembers.size()>PartyView.CAPACITY||!expectedMembers.contains(appearance.id())||expectedMembers.stream().anyMatch(id->id==null||id<=0))return false;
             elevatorEntry=key;elevatorMembers=Set.copyOf(expectedMembers);return true;
         }}
         public void revokeElevator(){synchronized(SceneSimulation.this){check();cancelElevator(SceneClock.now());elevatorEntry="";elevatorMembers=Set.of();}}

@@ -28,7 +28,7 @@ public final class StatefulCameraSessionTest {
     private static final Map<String,Short> RECEIVERS=Map.of(SceneRegistry.ZONE_RECEIVER,(short)0);
     public static void main(String[] args)throws Exception {
         checkStartupStates();
-        var content=ContentManager.load(Path.of("."));var registry=content.createScenes();
+        var content=ContentManager.load(Path.of("."));var registry=org.tortodrone.world.SceneRegistry.create(content);
         var previous=SceneRegistry.system();SceneRegistry.install(registry);
         Path home=Files.createTempDirectory("tortodrone-stateful-camera-");
         try {
@@ -112,6 +112,6 @@ public final class StatefulCameraSessionTest {
     private static Object entityField(SceneSimulation simulation)throws Exception {synchronized(simulation){var f=SceneSimulation.class.getDeclaredField("entities");f.setAccessible(true);return f.get(simulation);}}
     private static void signal(SceneSimulation simulation,Method signal,Object entities,String tag,String name)throws Exception {synchronized(simulation){signal.invoke(entities,tag,name,SceneClock.now(),"test");}}
     private static Object field(WorldSession world,String name)throws Exception {synchronized(world){var f=WorldSession.class.getDeclaredField(name);f.setAccessible(true);return f.get(world);}}
-    private static void move(WorldSession world,SceneCatalog.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));}
+    private static void move(WorldSession world,org.tortodrone.core.world.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));}
     private static final class RecordingSocket extends Socket {@Override public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}}
 }

@@ -15,6 +15,7 @@ import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.resources.SceneCatalog;
 
 /** Synthetic scene sensor through production membership, session delivery, SQLite and wire output. */
 public final class MemorySessionTest {
@@ -29,8 +30,8 @@ public final class MemorySessionTest {
             var original=SceneRegistry.system().entry().map();
             var sensor=new SceneContent.Entry("2977",original.spawnX(),original.spawnY(),0,new SceneContent.Spec(Map.of("kind","SceneTrigger","config","Player Enter/Base","event","signal-start","watch-tag","area:2977","signal","intersection","scene-sensor","true","sensor-mask","4","radius",".5","action","{\"kind\":\"knight-memory\",\"name\":\"talkto_rhendon_icon\",\"remember\":true}")));
             var content=new SceneContent(List.of(sensor),original.content().scales(),Map.of(),original.content().stats(),Map.of(),Map.of(),original.content().statuses());
-            var map=new SceneCatalog.MapScene(900001,16777217,"%town:m.haven","Fixture",original.image(),"town",original.version(),original.spawnX(),original.spawnY(),0,1,original.collision(),original.layout(),ScenePortals.EMPTY,content);
-            var maps=new TreeMap<Integer,SceneCatalog.MapScene>();maps.put(map.id(),map);var registry=new SceneRegistry(SceneCatalog.of(maps,map.id()));
+            var map=new org.tortodrone.core.world.MapScene(900001,16777217,"%town:m.haven","Fixture",original.image(),"town",original.version(),original.spawnX(),original.spawnY(),0,1,original.collision(),original.layout(),ScenePortals.EMPTY,content);
+            var maps=new TreeMap<Integer,org.tortodrone.core.world.MapScene>();maps.put(map.id(),map);var registry=new SceneRegistry(SceneCatalog.of(maps,map.id()));
             var receivers=Map.of(SceneRegistry.ZONE_RECEIVER,(short)0);var first=new RecordingSocket(alice,one.id());var second=new RecordingSocket(bob,two.id());
             var before=alice.worldProfile(one.name(),1);var peerBefore=bob.worldProfile(two.name(),1);
             try(var out1=new SessionOutput(first);var out2=new SessionOutput(second);

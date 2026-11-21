@@ -100,16 +100,16 @@ public final class CrashSiteMonsterCombatTest {
     }
     /** A real ticking instance: the bundled Jelly Cube's authored 1.5-unit DamageImpulse pushes
      * the knight only when its first swing lands; a protected knight is neither hurt nor pushed. */
-    private static void knockback(SceneCatalog.MapScene crash,Map<String,String> jelly)throws Exception {
+    private static void knockback(org.tortodrone.core.world.MapScene crash,Map<String,String> jelly)throws Exception {
         check(swing(crash,jelly,true)==null,"a protected knight is not pushed");
         var impulse=swing(crash,jelly,false);
         check(impulse!=null&&Math.abs(Math.hypot(impulse.x(),impulse.y())-1.5)<1e-3&&impulse.x()>0&&impulse.duration()==250,
             "a landed Jelly hit pushes the knight 1.5 units for 250 ms away from the Jelly");
     }
-    private static KnightCombat.Impulse swing(SceneCatalog.MapScene crash,Map<String,String> jelly,boolean protect)throws Exception {
+    private static KnightCombat.Impulse swing(org.tortodrone.core.world.MapScene crash,Map<String,String> jelly,boolean protect)throws Exception {
         var real=crash.content();
         var content=new SceneContent(List.of(new SceneContent.Entry("jelly",0,0,0,new SceneContent.Spec(jelly))),real.scales(),Map.of(),real.stats(),real.items(),real.cycles(),real.statuses());
-        var map=new SceneCatalog.MapScene(9398,50332041,"Fixture","Fixture","Fixture","level",1,1,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
+        var map=new org.tortodrone.core.world.MapScene(9398,50332041,"Fixture","Fixture","Fixture","level",1,1,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var simulation=new SceneRegistry.Instance(9398,0,map).simulation();int now=SceneClock.now();
         try(var member=simulation.join(new ActorState(219,1001,"Knight",0,now,1,0,(float)Math.PI,0,0,0,now,new StarterCatalog.Model("Character/PC/Level",Map.of()),false),s->{})){
             member.combat(WeaponCatalog.empty(),new org.tortodrone.core.character.WorldProfile(10,1,1,0,0,1,List.of()));member.enter();

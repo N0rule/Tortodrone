@@ -22,7 +22,7 @@ public final class SlashCommandsSessionTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-slash-commands-");
         try {
-            var content=ContentManager.load(Path.of("."));var scenes=content.createScenes();var db=new Database(home,true);
+            var content=ContentManager.load(Path.of("."));var scenes=org.tortodrone.world.SceneRegistry.create(content);var db=new Database(home,true);
             try(var gm=person(db,content.items(),scenes,"Master",true);var player=person(db,content.items(),scenes,"Player",false);var peer=person(db,content.items(),scenes,"Other",false)) {
                 // Scene chat shares service 12 with the friend list and is addressed at the scene
                 // object, not the global invocation object; it must not be rejected as a friend call.
@@ -175,7 +175,7 @@ public final class SlashCommandsSessionTest {
         var socket=new RecordingSocket();var output=new SessionOutput(socket);var world=new WorldSession(socket,chars,output,new SessionCodec(items),1200+id,1,m->{},scenes,()->{var identity=db.identity(name);return identity!=null&&identity.gameMaster()&&identity.authRevision()==1;});
         world.select(name,Map.of(SceneRegistry.ZONE_RECEIVER,(short)0),room);if(!room){world.subscribe((short)1);world.entered();}var person=new Person(world,socket,output,chars);person.drain();return person;
     }
-    private static void move(Person person,SceneCatalog.MapScene map)throws Exception {
+    private static void move(Person person,org.tortodrone.core.world.MapScene map)throws Exception {
         person.world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),map.version(),new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)9))));
         if(!map.town())person.world.subscribeInteriorParty((short)11);
         person.world.subscribe((short)10);person.world.entered();person.drain();

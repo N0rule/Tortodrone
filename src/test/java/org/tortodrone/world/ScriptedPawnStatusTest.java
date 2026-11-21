@@ -32,7 +32,7 @@ public final class ScriptedPawnStatusTest {
         var plate=new HashMap<String,String>(Map.of("config","Fixture/Pressure","native-type","com.threerings.projectx.dungeon.data.actor.Switch","kind","Switch","switch-mode","pressure","width","2","height","2","state.2.tag","stop","state.2.signal","activate"));
         var trigger=Map.of("config","Fixture/Trigger","kind","SceneTrigger","event","signal","signal","activate","watch-tag","stop","action",graph);
         var content=new SceneContent(List.of(new SceneContent.Entry("plate",0,0,0,new SceneContent.Spec(plate)),new SceneContent.Entry("script",0,0,0,new SceneContent.Spec(trigger))),Map.of(),Map.of(),Map.of("player.base-health",100f),Map.of(),Map.of(),Map.of());
-        var map=new SceneCatalog.MapScene(900001,33554432,"Fixture","Fixture","fixture","training",1,0,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
+        var map=new org.tortodrone.core.world.MapScene(900001,33554432,"Fixture","Fixture","fixture","training",1,0,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var firstScene=new SceneRegistry.Instance(7001,0,map).simulation();var otherScene=new SceneRegistry.Instance(7002,0,map).simulation();
         var frames=new LinkedBlockingQueue<SceneSimulation.Snapshot>();int now=SceneClock.now();
         var one=firstScene.join(player(21,1001,0,now),frames::add);var two=firstScene.join(player(22,1002,.5f,now),snapshot->{});

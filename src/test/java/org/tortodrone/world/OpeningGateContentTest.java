@@ -4,7 +4,8 @@ import java.nio.file.*;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.world.MissionRun;
+import org.tortodrone.core.mission.MissionRun;
+import org.tortodrone.core.mission.OpeningGate;
 
 /** Shipped content advertises the pinned opening gate only when its original floor,
  * destination and generator controls are all present. */
@@ -12,7 +13,7 @@ public final class OpeningGateContentTest {
     private OpeningGateContentTest() { }
     public static void main(String[] args)throws Exception {
         var content=ContentManager.load(Path.of("."));
-        var registry=content.createScenes();
+        var registry=org.tortodrone.world.SceneRegistry.create(content);
         var gate=registry.openingGate(OpeningMission.ANCIENT_GENERATOR);
         check(gate!=null,"shipped content carries the verified Ancient Generator gate");
         check(gate.source().id()==OpeningGate.GENERATOR_SCENE&&gate.destination().id()==218,

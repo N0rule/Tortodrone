@@ -22,7 +22,7 @@ public final class ScriptedSceneEffectTest {
         String graph=Json.stringify(Map.of("kind","limited","limit",1,"action",Map.of("kind","delay","millis",150,"action",Json.parse(json)),"otherwise",Map.of("kind","sequence","actions",List.of(),"stopOnFailure",false)));
         var sensor=new SceneContent.Entry("500",0,0,1.25f,new SceneContent.Spec(Map.ofEntries(Map.entry("config","Fixture/Area"),Map.entry("kind","SceneTrigger"),Map.entry("event","signal-start"),Map.entry("watch-tag","area"),Map.entry("signal","intersection"),Map.entry("scene-sensor","true"),Map.entry("sensor-mask","4"),Map.entry("width","2"),Map.entry("height","2"),Map.entry("action",graph))));
         var content=new SceneContent(List.of(sensor),Map.of());
-        var map=new SceneCatalog.MapScene(900001,33554432,"Fixture","Fixture","fixture","training",1,0,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
+        var map=new org.tortodrone.core.world.MapScene(900001,33554432,"Fixture","Fixture","fixture","training",1,0,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var scene=new SceneRegistry.Instance(7001,0,map).simulation();var isolated=new SceneRegistry.Instance(7002,0,map).simulation();
         var baseline=scene.snapshot();var frames=new LinkedBlockingQueue<SceneSimulation.Snapshot>();int stamp=SceneClock.now();
         var player=new ActorState(21,1001,"Fixture",0,stamp,0,0,0,0,0,new StarterCatalog.Model("Character/PC/Default",Map.of()));
