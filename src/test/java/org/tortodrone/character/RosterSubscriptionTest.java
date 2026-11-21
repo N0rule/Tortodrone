@@ -7,7 +7,7 @@ import org.tortodrone.core.character.Knight;
 
 public final class RosterSubscriptionTest {
     public static void main(String[] args) throws Exception {
-        CharacterStore store = new CharacterStore(); List<List<CharacterStore.RosterEntry>> first = new ArrayList<>(), second = new ArrayList<>();
+        CharacterStore store = new CharacterStore(); List<List<org.tortodrone.core.character.RosterEntry>> first = new ArrayList<>(), second = new ArrayList<>();
         var subscription = store.subscribe(first::add, first::add);
         var another = store.subscribe(second::add, second::add);
         var failed = store.subscribe(ignored -> {}, ignored -> { throw new IOException("closed peer"); });

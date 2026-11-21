@@ -133,7 +133,7 @@ public final class TownStore {
             touch(c,profile.worldId());return new Result(WorldProfiles.load(c,account,knight,auth),null);
         });
     }
-    public static final int SPARK_COST=50;
+    public static final int SPARK_COST=org.tortodrone.core.economy.Fees.SPARK_COST;
     /** Official ItemMarshaller.deleteItem: one owned, non-permanent, unequipped item goes whole. */
     public Result trash(int account,int knight,long auth,long item)throws IOException {
         return change(account,knight,auth,(c,p)->{

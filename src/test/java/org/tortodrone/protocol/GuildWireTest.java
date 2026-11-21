@@ -8,11 +8,11 @@ import static org.tortodrone.support.TestWire.check;
 /** GuildObject and roster entries in the client's declared field order. */
 public final class GuildWireTest {
     public static void main(String[] args) throws Exception {
-        var guild = new GuildStore.Guild(42, "Oracion", 1_324_425_600_000L, "All hail", false,
+        var guild = new org.tortodrone.core.guild.Guild(42, "Oracion", 1_324_425_600_000L, "All hail", false,
             250, 17_700, 1_792_519_460_460L, false, 100, null, null, 0, 0);
-        var view = new GuildStore.View(guild, List.of(
-            new GuildStore.Member(2074963, "Adlmarchus", (byte) 4, 0, 1_789_084_800_000L, 0, 0),
-            new GuildStore.Member(14066812, "Aklesitz", (byte) 1, -2147483647, 1_783_555_200_000L, 0, 0)),
+        var view = new org.tortodrone.core.guild.View(guild, List.of(
+            new org.tortodrone.core.guild.Member(2074963, "Adlmarchus", (byte) 4, 0, 1_789_084_800_000L, 0, 0),
+            new org.tortodrone.core.guild.Member(14066812, "Aklesitz", (byte) 1, -2147483647, 1_783_555_200_000L, 0, 0)),
             List.of());
         var wire = new TestWire();
         var codec = new SessionCodec();
@@ -56,7 +56,7 @@ public final class GuildWireTest {
         check(in.readInt() == 100, "member limit");
         check(in.available() == 0, "the guild object ends where the client's fields do");
 
-        var changes = wire.frame(codec.guildChanges(view, new GuildStore.View(guild,
+        var changes = wire.frame(codec.guildChanges(view, new org.tortodrone.core.guild.View(guild,
             List.of(view.members().getFirst()), List.of())));
         check(wire.type(changes).equals(TestWire.NET + "EventNotification"), "guild delta envelope");
         check(changes.readShort() == -1 && wire.type(changes).equals(TestWire.DOB + "CompoundEvent")

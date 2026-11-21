@@ -1,5 +1,11 @@
 package org.tortodrone.storage;
 
+import org.tortodrone.core.guild.Guild;
+import org.tortodrone.core.guild.LogEntry;
+import org.tortodrone.core.guild.Member;
+import org.tortodrone.core.guild.Page;
+import org.tortodrone.core.guild.View;
+
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
@@ -31,21 +37,6 @@ public final class GuildStore {
     /** Highest valid rank: 0 master, 1 officer, 2 member, 3 veteran, 4 recruit. */
     public static final int RANK_COUNT = 5;
 
-    public record Guild(long id, String name, long formed, String motd, boolean hallOpen,
-            int energy, int upkeepCost, long upkeepTime, boolean inDefault, int memberLimit,
-            String theme, String environment, long hallOpenAt, long renamed) { }
-    public record Member(int worldId, String name, byte rank, int commandOrder, long joined,
-            long lastSession, long lastWithdrawal) { }
-    public record LogEntry(long id, int type, String knightName, long when, List<String> args) {
-        public LogEntry { args = args == null ? null : List.copyOf(args); }
-    }
-    public record Page(int entryCount, List<LogEntry> entries) {
-        public Page { entries = List.copyOf(entries); }
-    }
-    /** A guild row plus its roster, the shape the wire object is built from. */
-    public record View(Guild guild, List<Member> members, List<Integer> expansions) {
-        public View { members = List.copyOf(members); expansions = List.copyOf(expansions); }
-    }
 
     private final Database database;
 

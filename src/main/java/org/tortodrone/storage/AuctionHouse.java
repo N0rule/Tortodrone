@@ -21,7 +21,7 @@ public final class AuctionHouse {
     private static final int[] RARITY_FEES={10,25,50,100,200,500},HOURS={4,12,24,48,72,96,120,144,168};
     private static final float[] MULTIPLIERS={.5f,.6f,.75f,1,0,0,0,0,0,0};
     /** ServerObject mail fees from the archive: a letter costs 25, any attachment adds 75. */
-    public static final int MAIL_FEE=25,MAIL_ATTACH_FEE=75;
+    public static final int MAIL_FEE=org.tortodrone.core.economy.Fees.MAIL_FEE,MAIL_ATTACH_FEE=org.tortodrone.core.economy.Fees.MAIL_ATTACH_FEE;
     /** Stock mail retention: every inbox letter is deleted 30 days after it was sent. */
     static final long MAIL_RETENTION_MS=30L*24*60*60*1000;
     private static final int MAIL_PURGE_BATCH=500;

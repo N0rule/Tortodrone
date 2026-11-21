@@ -22,11 +22,11 @@ public final class PickerPreviewTest {
             try(var accounts=new AccountStore(directory,false,org.tortodrone.core.character.ItemCatalog.starter())){accounts.create("Alice","alice-password".toCharArray());}
             var db=new Database(directory,false);
             CharacterStore store = new CharacterStore(db,1,"Alice");
-            List<List<CharacterStore.RosterEntry>> published = new ArrayList<>();
+            List<List<org.tortodrone.core.character.RosterEntry>> published = new ArrayList<>();
             store.subscribe(published::add, published::add);
             Knight knight = store.create(choices("Picker-Knight"));
             store.create(choices("Second-Knight"));
-            List<CharacterStore.RosterEntry> available = store.available();
+            List<org.tortodrone.core.character.RosterEntry> available = store.available();
             check(available.size() == 2 && available.get(1).knight().name().equals("Second-Knight"),
                 "every saved knight is published with its identity");
             // Starter items are equipped on creation, so the picker matches the held composition.

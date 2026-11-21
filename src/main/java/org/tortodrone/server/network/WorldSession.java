@@ -110,7 +110,7 @@ final class WorldSession implements AutoCloseable {
     private Boolean publishedArsenal;
     private PartyRegistry.Member partyMember;
     private PartyRegistry.View publishedParty;
-    private org.tortodrone.storage.GuildStore.View guildView;
+    private org.tortodrone.core.guild.View guildView;
     private boolean guildSubscribed;
     private final ArrayDeque<PartyRegistry.Event> partyEvents=new ArrayDeque<>();
     private boolean partyRefreshQueued,partyOverflow;
@@ -324,7 +324,7 @@ final class WorldSession implements AutoCloseable {
         if(!before.town().loadouts().equals(after.town().loadouts())||before.town().equippedSprite()!=after.town().equippedSprite()
                 ||!before.town().sprites().equals(after.town().sprites()))output.send(()->codec.loadoutChanges(oid,before,after));
     }
-    private org.tortodrone.storage.GuildStore.View loadGuildView()throws IOException {
+    private org.tortodrone.core.guild.View loadGuildView()throws IOException {
         if(!characters.hasWorldStorage()||profile==null)return null;
         var guild=characters.guilds().guildOf(profile.worldId());
         return guild==null?null:characters.guilds().view(guild.id());
@@ -339,7 +339,7 @@ final class WorldSession implements AutoCloseable {
     }
     synchronized void unsubscribeGuild(int object){if(guildView!=null&&object==org.tortodrone.protocol.SessionCodec.guildOid(guildView.guild().id()))guildSubscribed=false;}
     /** Publish a guild mutation to this session and to every online member of the same guild. */
-    private void guildChanged(org.tortodrone.storage.GuildStore.View before)throws IOException {
+    private void guildChanged(org.tortodrone.core.guild.View before)throws IOException {
         var after=loadGuildView();guildView=after;
         if(after==null){output.send(()->codec.guildCleared(oid));return;}
         output.send(()->codec.guildChanges(before,after));
@@ -357,8 +357,8 @@ final class WorldSession implements AutoCloseable {
             else peer.receiveGuildEnded();
         }
     }
-    private synchronized void receiveGuildChange(org.tortodrone.storage.GuildStore.View before,
-            org.tortodrone.storage.GuildStore.View after)throws IOException {
+    private synchronized void receiveGuildChange(org.tortodrone.core.guild.View before,
+            org.tortodrone.core.guild.View after)throws IOException {
         guildView=after;
         if(guildSubscribed&&!closed)output.send(()->codec.guildChanges(before,after));
     }
@@ -460,8 +460,8 @@ final class WorldSession implements AutoCloseable {
         }
         return true;
     }
-    private static org.tortodrone.storage.GuildStore.View emptyGuildView(org.tortodrone.storage.GuildStore.View view){
-        return new org.tortodrone.storage.GuildStore.View(view.guild(),List.of(),view.expansions());
+    private static org.tortodrone.core.guild.View emptyGuildView(org.tortodrone.core.guild.View view){
+        return new org.tortodrone.core.guild.View(view.guild(),List.of(),view.expansions());
     }
     private static void requireArgs(List<Object> args,int count,Class<?>... types)throws IOException {
         if(args.size()!=count+1)throw new IOException("m.internal_error");

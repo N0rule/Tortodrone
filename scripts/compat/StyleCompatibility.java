@@ -25,7 +25,7 @@ public final class StyleCompatibility {
         append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Alice"));
         var knight=new Knight(1,"Fixture","","",null,null,"Blue",8,3,1,0);
         var eyes=java.util.stream.IntStream.range(0,47).boxed().toList();
-        append(bytes,new SessionCodec().styles(1001,knight,new StyleStore.Saved(List.of(264,277),eyes,List.of(0,2,3,4))));
+        append(bytes,new SessionCodec().styles(1001,knight,new org.tortodrone.core.style.Saved(List.of(264,277),eyes,List.of(0,2,3,4))));
         var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
         var event=(CompoundEvent)((EventNotification)in.qe()).yj();var player=new PlayerObject();
         for(var child:event.xE())child.b(player);

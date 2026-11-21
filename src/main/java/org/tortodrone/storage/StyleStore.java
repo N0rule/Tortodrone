@@ -1,5 +1,7 @@
 package org.tortodrone.storage;
 
+import org.tortodrone.core.style.Saved;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
@@ -16,9 +18,6 @@ public final class StyleStore {
             Objects.requireNonNull(kind);
             if(switch(kind){case Color->value<256||value>511;case Eye->value<0||value>=47;case Height->value<0||value>=5;})throw new IllegalArgumentException("Invalid style");
         }
-    }
-    public record Saved(List<Integer> colors,List<Integer> eyes,List<Integer> heights) {
-        public Saved { colors=List.copyOf(colors);eyes=List.copyOf(eyes);heights=List.copyOf(heights); }
     }
     private final Database database;
     private final ItemCatalog items;

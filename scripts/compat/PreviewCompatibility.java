@@ -28,7 +28,7 @@ public class PreviewCompatibility {
    knights.add(knight);
   }
   for(int eye=0;eye<47;eye++)knights.add(new Knight(1,"Eye-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,eye,1));
-  for(var knight:knights)append(bytes,codec.player((short)3,1001,1,"Alice",Map.of(),List.of(new org.tortodrone.character.CharacterStore.RosterEntry(knight,org.tortodrone.core.character.StarterCatalog.preview(knight)))));
+  for(var knight:knights)append(bytes,codec.player((short)3,1001,1,"Alice",Map.of(),List.of(new org.tortodrone.core.character.RosterEntry(knight,org.tortodrone.core.character.StarterCatalog.preview(knight)))));
   var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();
   for(var knight:knights){
    var player=(PlayerObject)((ObjectResponse)input.qe()).yk();

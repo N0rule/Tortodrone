@@ -1,5 +1,7 @@
 package org.tortodrone.character;
 
+import org.tortodrone.core.character.RosterEntry;
+
 import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
@@ -41,9 +43,6 @@ public final class CharacterStore {
     private final Set<RosterListener> listeners = new LinkedHashSet<>();
 
     /** One published available knight: identity plus the preview model the picker renders. */
-    public record RosterEntry(Knight knight, StarterCatalog.Model preview,int rank) {
-        public RosterEntry(Knight knight,StarterCatalog.Model preview){this(knight,preview,1);}
-    }
 
     @FunctionalInterface public interface RosterListener { void receive(List<RosterEntry> roster) throws IOException; }
     @FunctionalInterface public interface Subscription extends AutoCloseable { @Override void close(); }
