@@ -78,7 +78,7 @@ public final class Server {
                         Runnable setupNotice=()->{if(code!=null&&codePrinted.compareAndSet(false,true))startupLog.localNotice("WebUI first-run setup code: "+code);};
                         if(handler==null)log.info("Shared HTTP listener: "+http.port()+"; WebUI disabled");
                         while(control.awaitStart(settings.webui().enabled())) {
-                            try {run(settings,dataDirectory,log,control,console,content,webReady,setupNotice);content=null;}
+                            try {run(settings,dataDirectory,log,control,console,content,adminAccounts,webReady,setupNotice);content=null;}
                             catch(Exception failed){control.failed(failed);log.error("Server startup failed: "+failed.getMessage());webReady.run();setupNotice.run();if(!settings.webui().enabled())throw failed;}
                             finally{control.stopped();}
                         }
@@ -105,7 +105,7 @@ public final class Server {
         }
     }
 
-    private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,ServerConsole console,org.tortodrone.resources.ContentRegistry initialContent,Runnable webReady,Runnable setupNotice) throws Exception {
+    private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,ServerConsole console,org.tortodrone.resources.ContentRegistry initialContent,AccountStore accounts,Runnable webReady,Runnable setupNotice) throws Exception {
         long startup=System.nanoTime();
         hostDiagnostics(log);
         var content=initialContent==null?org.tortodrone.resources.ContentManager.load(dataDirectory.getParent(),settings):initialContent;
@@ -122,7 +122,8 @@ public final class Server {
             log.info(generate ? "Generating server keypair" : "Loading server keypair");
             PrivateKey key = HandshakeKeys.loadOrCreate(keys);
             if(generate)log.info("Public key : "+Files.readString(keys.resolve("public.txt")).trim());
-            try (AccountStore accounts = new AccountStore(dataDirectory,true,catalog)) {
+            // The console/WebUI and the game share this single account store and writer path.
+            {
                 log.debug("Resources and database initialization elapsed-ms="+((System.nanoTime()-startup)/1000000)+"; weapons="+scenes.weapons().weapons().size());
                 accounts.observeDatabase((operation,millis,failed)->{
                     if(failed)log.warn("Database operation failed; operation="+operation+"; duration-ms="+millis);

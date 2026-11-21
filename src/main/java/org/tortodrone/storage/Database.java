@@ -6,6 +6,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
@@ -122,13 +123,54 @@ public final class Database {
         } catch (SQLException e) { connection.close(); throw e; }
         return connection;
     }
+    private volatile boolean closed;
+    private final ThreadLocal<Boolean> storageThread=ThreadLocal.withInitial(()->Boolean.FALSE);
+    private ExecutorService writer,readers;
+
+    /** One platform writer thread; SQLite never runs JDBC on a session virtual thread. */
+    private synchronized ExecutorService writer() {
+        if(writer==null)writer=Executors.newSingleThreadExecutor(runnable->{
+            Thread thread=new Thread(runnable,"StorageWriter");thread.setDaemon(true);return thread;});
+        return writer;
+    }
+    /** A small platform reader pool; reads never share the writer thread. */
+    private synchronized ExecutorService readers() {
+        if(readers==null)readers=Executors.newFixedThreadPool(4,runnable->{
+            Thread thread=new Thread(runnable,"StorageReader");thread.setDaemon(true);return thread;});
+        return readers;
+    }
     public <T> T read(Work<T> work) throws IOException {
+        if(closed)throw new IOException("Storage is closed");
+        return submit(readers(),"read",work);
+    }
+    public <T> T write(Work<T> work) throws IOException {
+        if(closed)throw new IOException("Storage is closed");
+        return submit(writer(),"write",work);
+    }
+    private <T> T submit(ExecutorService pool,String kind,Work<T> work)throws IOException {
+        // A storage callback may read or write as part of its own transaction; run it inline.
+        if(storageThread.get())return kind.equals("write")?writeDirect(work):readDirect(work);
+        try{return pool.submit(()->{
+            storageThread.set(Boolean.TRUE);
+            try{return kind.equals("write")?writeDirect(work):readDirect(work);}
+            finally{storageThread.remove();}
+        }).get();}
+        catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new IOException("Storage interrupted",interrupted);}
+        catch(ExecutionException failure){
+            Throwable cause=failure.getCause();
+            if(cause instanceof IOException io)throw io;
+            if(cause instanceof RuntimeException runtime)throw runtime;
+            if(cause instanceof Error error)throw error;
+            throw new IOException("Storage failed",cause);
+        }
+    }
+    private <T> T readDirect(Work<T> work) throws IOException {
         long start=System.nanoTime();boolean failed=true;
         try (Connection connection=connect()) {T result=work.run(connection);failed=false;return result;}
         catch(SQLException error){throw failure(error);}
         finally{measured("read",start,failed);}
     }
-    public <T> T write(Work<T> work) throws IOException {
+    private <T> T writeDirect(Work<T> work) throws IOException {
         long start=System.nanoTime();boolean failed=true;
         try(Connection connection=connect();Statement statement=connection.createStatement()) {
             statement.execute("BEGIN IMMEDIATE");
@@ -142,6 +184,17 @@ public final class Database {
             }
         } catch(SQLException error){throw failure(error);}
         finally{measured("write",start,failed);}
+    }
+    /** Stop accepting work and join both dedicated pools before the final checkpoint. */
+    public void close() {
+        ExecutorService stoppingWriter,stoppingReaders;
+        synchronized(this){closed=true;stoppingWriter=writer;stoppingReaders=readers;writer=readers=null;}
+        if(stoppingWriter!=null)stoppingWriter.shutdown();
+        if(stoppingReaders!=null)stoppingReaders.shutdown();
+        try{
+            if(stoppingWriter!=null&&!stoppingWriter.awaitTermination(5,TimeUnit.SECONDS))stoppingWriter.shutdownNow();
+            if(stoppingReaders!=null&&!stoppingReaders.awaitTermination(2,TimeUnit.SECONDS))stoppingReaders.shutdownNow();
+        }catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
     }
     /** Expected business refusal: rollback normally, without reporting a storage failure. */
     public static final class Refused extends IOException {
