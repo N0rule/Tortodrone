@@ -28,8 +28,8 @@ public final class ScenePackExport {
         float targetX=explicitSpawn?Float.parseFloat(args[5]):Float.NaN;
         float targetY=explicitSpawn?Float.parseFloat(args[6]):Float.NaN;
         Entrance entrance=defaultEntrance(scene,manager,explicitSpawn,targetX,targetY);
-        float targetX=args.length==7?Float.parseFloat(args[5]):entrance.x;
-        float targetY=args.length==7?Float.parseFloat(args[6]):entrance.y;
+        targetX=explicitSpawn?Float.parseFloat(args[5]):entrance.x;
+        targetY=explicitSpawn?Float.parseFloat(args[6]):entrance.y;
         if(!Float.isFinite(targetX)||!Float.isFinite(targetY))throw new IOException("Invalid spawn");
         float spawnX=targetX,spawnY=targetY;
         Files.createDirectories(out);
@@ -66,12 +66,21 @@ public final class ScenePackExport {
     }
     private static Entrance defaultEntrance(TudeySceneModel scene,ConfigManager manager,
             boolean explicitSpawn,float targetX,float targetY)throws IOException {
-        var matches=new ArrayList<TudeySceneModel.PlaceableEntry>();
+        var starts=new ArrayList<TudeySceneModel.PlaceableEntry>();
+        var platforms=new ArrayList<TudeySceneModel.PlaceableEntry>();
+        var destinations=new ArrayList<TudeySceneModel.PlaceableEntry>();
         for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)) {
-            // Entrances may be stateful elevator props, not only editor markers (scene 337).
-            if(entry.au(manager))matches.add(entry);
+            // The authored arrival marker is the native level start; PlaceableEntry validity is
+            // true for every placeable and cannot identify an entrance on its own. Party lobbies
+            // author their arrival as the elevator's start platform, and towns use portal
+            // destinations selected by the operator-supplied spawn coordinate.
+            String name=entry.placeable.getName();
+            if("Dynamic/Portal/Level Start".equals(name))starts.add(entry);
+            else if("Dynamic/Elevator/Start Platform".equals(name))platforms.add(entry);
+            else if("Dynamic/Portal/Destination".equals(name))destinations.add(entry);
         }
-        if(matches.isEmpty())throw new IOException("No native default entrance");
+        var matches=!starts.isEmpty()?starts:!platforms.isEmpty()?platforms:destinations;
+        if(matches.isEmpty())throw new IOException("No native level start marker");
         if(matches.size()>1){
             if(!explicitSpawn)throw new IOException("Expected exactly one native default entrance, found "+matches.size());
             // A scene may carry many entrance markers (training halls do). The authored spawn

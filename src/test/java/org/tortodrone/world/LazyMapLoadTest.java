@@ -9,7 +9,7 @@ public final class LazyMapLoadTest {
     public static void main(String[] args) throws Exception {
         var content = ContentManager.load(Path.of(""));
         var catalog = content.scenes();
-        check(catalog.sceneCount() == 9, "all nine maps are indexed");
+        check(catalog.sceneCount() == 10, "all ten maps are indexed");
         check(catalog.loadedCount() == 1, "only the entry scene is loaded at startup");
         catalog.scene(318);
         check(catalog.loadedCount() == 2, "addressing a scene loads exactly that body");

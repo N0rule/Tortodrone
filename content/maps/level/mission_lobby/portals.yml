@@ -1,0 +1,8 @@
+entrances:
+  level_start:
+    id: 956
+    facing: 179.999991348578
+    x: 0.5
+    y: 5.5
+portals: {
+  }

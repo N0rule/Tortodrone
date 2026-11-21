@@ -322,7 +322,7 @@ This validates the pinned scenes, entrances, and route prerequisites. It does **
 
 | Area | Status |
 | --- | --- |
-| **Accounts and world** | Supported: knight management, native Ready Room, authoritative movement and collision, nine bundled maps. |
+| **Accounts and world** | Supported: knight management, native Ready Room, authoritative movement and collision, ten bundled maps. |
 | **Opening route** | Crash Site 398 → Haven directly after the original exit/floor report. Completion, collected heat and Haven return location commit together; no skipped-mission rewards are invented. Use the [manual playtest](docs/content.md#local-crash-site-playtest) for graphical acceptance. Existing legacy Camp checkpoints are preserved; that older mission chain remains incomplete. |
 | **Player systems** | Partial: persistent inventory and currencies, equipment and costumes, weapon combat, heat, and battle sprites. Individual item and action support varies. |
 | **Town and social** | Partial: supported shops and crafting, auctions, Energy Exchange, chat, friends, parties, and eligible friend travel. |

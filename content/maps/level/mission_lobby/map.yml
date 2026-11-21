@@ -1,0 +1,6 @@
+id: 351
+name: Mission Lobby
+type: level
+zone: '33554546'
+defaultSpawn: level_start
+instances: 1

@@ -30,7 +30,7 @@ is a design decision and is not invented.
 
 ```bash
 ./gradlew generateNativeCollision   # derive static collision + collision.bin from every map's scene.dat
-./gradlew compileMapsFromSource -PgameDir=/path/to/read-only-game [-PreplaceMaps]
+./gradlew compileMapsFromSource -PgameDir=/path/to/read-only-game [-PreplaceMaps] [-Ponly=name]
 ./gradlew generateCollision         # recompute collision.bin from existing static-collision.properties
 ./gradlew validateContent
 ./gradlew build
@@ -43,7 +43,24 @@ for a new `.dat` source.
 
 `compileMapsFromSource` invokes the stock exporter for each `map-sources/*/scene.dat`, installs the
 map into the build deployment, and compiles `collision.bin`. `-PreplaceMaps` is for disposable
-build output only; an existing deployment map is refused without it.
+build output only; an existing deployment map is refused without it. `-Ponly=name` compiles one
+source folder, which is how a new map is validated before the whole set is recompiled.
+
+The stock exporter chooses a scene's default arrival from the authored markers, in this order:
+`Dynamic/Portal/Level Start`, then `Dynamic/Elevator/Start Platform` (party lobbies), then
+`Dynamic/Portal/Destination` (towns, selected by an explicit `spawn-x`/`spawn-y` when several
+destinations exist). A scene with none of these cannot be imported without an authored spawn, and
+the importer refuses it instead of inventing a coordinate.
+
+Scene death spawns become bounded actor templates only when every lifecycle action in the
+template is executable. An unsupported leaf (for example the Crash Site knight-part debris) is
+reported in `native/import-report.txt` and left as an unsupported action; it does not fail the
+scene import and it does not silently change the authored graph.
+
+One known re-import gap remains: the Rescue Camp source now fails stock dialogue verification
+because Greta 2's third response uses a native `Conditional` around knight memory/objective
+updates, and the runtime has no memory condition. The shipped `rescue_camp` pack remains valid;
+fixing that response is dialogue work, not a map-pipeline change.
 
 ## Generated artifacts
 
@@ -87,13 +104,19 @@ unified pipeline; `collision.bin` is the only collision artifact.
 
 ## Current status
 
-All nine bundled maps now carry generated exact collision:
+All ten bundled maps now carry generated exact collision:
 
 | Maps | Exact collision |
 | --- | --- |
-| haven, bazaar, arcade, garrison, rescue_camp, advanced_training, crash_site, laboratory, hall_of_heroes | generated and used |
+| haven, bazaar, arcade, garrison, rescue_camp, advanced_training, crash_site, laboratory, hall_of_heroes, mission_lobby | generated and used |
 
-`collision.bin` is 276 KiB for all nine maps in total. `walkability.gz` is no longer required or generated: `collision.bin` is mandatory, and the runtime
+`mission_lobby` is the stock mission ready room (scene 351, `%dungeon:m.mission_lobby`).
+`levels.sql` row 114 names it as the `mission_lobby` scene, so its zone is
+`ZoneUtil.qualifyZoneId(2, 114)`. It has no hostile placements and no portal of its
+own; mission parties are not implemented yet, so it is reachable only through
+`/sgo 351`.
+
+`collision.bin` is 265 KiB for all ten maps in total. `walkability.gz` is no longer required or generated: `collision.bin` is mandatory, and the runtime
 collision view is exact for movement, portal entrances, entities and projectile sweeps. A
 generated town map validates against the full deployment; portals whose destination scene is
 absent are dropped and reported rather than published as dead travel edges.

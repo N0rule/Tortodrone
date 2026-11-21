@@ -107,9 +107,11 @@ val compileMapsFromSource = tasks.register<JavaExec>("compileMapsFromSource") {
     workingDir = projectDir
     val gameDirectory = providers.gradleProperty("gameDir").getOrElse("")
     val replace = providers.gradleProperty("replaceMaps").isPresent
+    val only = providers.gradleProperty("only").orNull
     args = buildList {
         add(gameDirectory); add("map-sources"); add(publicOutput.asFile.absolutePath)
         if (replace) add("--replace")
+        if (only != null) { add("--only"); add(only) }
     }
 }
 val generateNativeCollision = tasks.register<JavaExec>("generateNativeCollision") {

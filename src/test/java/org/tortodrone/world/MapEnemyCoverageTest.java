@@ -20,7 +20,7 @@ public final class MapEnemyCoverageTest {
         var content=ContentManager.load(Path.of("."));
         var catalog=MonsterCatalog.load(Path.of("content/monsters"));
         var scenes=content.scenes().scenes();
-        check(scenes.size()==9,"all nine shipped scenes load");
+        check(scenes.size()==10,"all ten shipped scenes load");
         var totals=new TreeMap<String,Integer>();
         for(var scene:scenes) {
             var placements=placements(scene);
@@ -51,6 +51,7 @@ public final class MapEnemyCoverageTest {
             }
             if(scene.town())check(placements.isEmpty(),"town scene has no hostile placements: "+scene.name());
             if(scene.id()==318)check(placements.isEmpty(),"Hall of Heroes has no hostile placements");
+            if(scene.id()==351)check(placements.isEmpty(),"the Mission Lobby has no hostile placements");
             if(scene.id()==398)check(placements.size()==23,"Crash Site keeps fourteen hostile spawns and nine scripted story actors");
             if(scene.id()==294)check(placements.size()==11,"Advanced Training keeps eleven authored training dummies");
             if(scene.id()==30893)check(expectedTypes.equals(Set.of("companion_cube")),"Laboratory carries only the Companion Cube");
@@ -63,7 +64,7 @@ public final class MapEnemyCoverageTest {
         laboratoryExpansion(content,catalog);
         embeddedScheduling(content.scenes().scene(398),catalog);
         reachableLevels(content);
-        System.out.println("PASS: 9 maps audited; Crash Site and Advanced Training placements resolve to official configs, Laboratory is catalogue-expanded and towns/Hall of Heroes stay empty");
+        System.out.println("PASS: 10 maps audited; Crash Site and Advanced Training placements resolve to official configs, Laboratory is catalogue-expanded and towns/Hall of Heroes/Mission Lobby stay empty");
     }
 
     /** The Laboratory placement is the one migrated type-backed monster and must keep its graph. */

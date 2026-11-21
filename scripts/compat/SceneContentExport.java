@@ -105,28 +105,74 @@ public final class SceneContentExport {
     }
 
     static void writeActorTemplates(ConfigManager cm,Map<String,String> values)throws Exception {
+        var ids=new ArrayList<String>();
         for(int i=0;i<actorTemplates.size();i++){
-            var fields=new TreeMap<String,String>();var reference=actorTemplates.get(i);
-            fields.put("config",reference.getName());
+            var reference=actorTemplates.get(i);
+            if(reference==null)continue;
+            var fields=new TreeMap<String,String>();fields.put("config",reference.getName());
             writeActor(cm,fields,"",reference);
             new org.tortodrone.world.SceneActions.Spawn(fields);
             for(var field:fields.entrySet())values.put("actor-template.spawn_"+i+"."+field.getKey(),field.getValue());
+            ids.add("spawn_"+i);
             // Do not imply parity merely because a cyclic config can now be represented.
             importReport.add("Deferred scene actor template spawn_"+i+": "+reference.getName()+"; retained death graph, other actor handlers still require separate verification");
         }
-        values.put("actor-templates",String.join(",",java.util.stream.IntStream.range(0,actorTemplates.size()).mapToObj(i->"spawn_"+i).toList()));
+        values.put("actor-templates",String.join(",",ids));
         var prepared=new Properties();prepared.setProperty("format","1");prepared.setProperty("layout-sha256","template-validation");
         values.forEach((key,value)->{if(key.equals("actor-templates")||key.startsWith("actor-template."))prepared.setProperty(key,value);});
         org.tortodrone.world.SceneContent.load(prepared,"template-validation");
     }
 
     /** Reserve identity before expanding definitions so legitimate respawn cycles stay finite. */
-    static String deferSceneActor(ConfigReference<ActorConfig> actor)throws IOException {
+    static String deferSceneActor(ConfigManager cm,ConfigReference<ActorConfig> actor)throws Exception {
         String key=org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(actor));
         var existing=actorTemplateIds.get(key);if(existing!=null)return existing;
         if(actorTemplates.size()>=128)throw new IOException("Too many deferred scene actors");
-        String id="spawn_"+actorTemplates.size();actorTemplateIds.put(key,id);
-        var copy=new ConfigReference<ActorConfig>(actor.getName());copy.ld().putAll(actor.ld());actorTemplates.add(copy);return id;
+        int slot=actorTemplates.size();
+        String id="spawn_"+slot;actorTemplateIds.put(key,id);
+        var copy=new ConfigReference<ActorConfig>(actor.getName());copy.ld().putAll(actor.ld());actorTemplates.add(copy);
+        // Reserve the identity before expansion so a cycle stays finite, then prove the whole
+        // graph is executable. A template the runtime refuses must not fail an entire scene:
+        // the caller falls back to the pre-template behaviour and the report names the gap.
+        var fields=new TreeMap<String,String>();
+        try{
+            fields.put("config",copy.getName());
+            writeActor(cm,fields,"",copy);
+            if(representable(fields))return id;
+            importReport.add("Unsupported deferred scene actor "+copy.getName()+" ("+id+"): lifecycle uses an action the runtime cannot execute; death spawn left unsupported");
+        }catch(Exception unsupported){
+            importReport.add("Unsupported deferred scene actor "+copy.getName()+" ("+id+"): "+unsupported.getMessage()+"; death spawn left unsupported");
+        }
+        actorTemplateIds.remove(key);actorTemplates.set(slot,null);return null;
+    }
+
+    /** Strict template validation also rejects unexecutable lifecycle leaves (see SceneActorTemplates). */
+    private static boolean representable(Map<String,String> fields)throws IOException {
+        if(fields.containsKey("startup-action"))return false;
+        for(var field:fields.entrySet()){
+            if(!field.getKey().endsWith("death-action"))continue;
+            if(!representable(org.tortodrone.world.FireCatalog.actionJson(field.getValue()),0))return false;
+        }
+        return true;
+    }
+    private static boolean representable(org.tortodrone.world.FireCatalog.Action action,int depth){
+        if(action==null)return true;
+        if(depth>64)return false;
+        if(java.util.Set.of(org.tortodrone.world.FireCatalog.Kind.UNSUPPORTED,
+                org.tortodrone.world.FireCatalog.Kind.SPAWN_ACTOR,
+                org.tortodrone.world.FireCatalog.Kind.SPAWN_FACING,
+                org.tortodrone.world.FireCatalog.Kind.RANDOM_TRANSLATED).contains(action.kind()))return false;
+        for(var child:action.children())if(!representable(child,depth+1))return false;
+        return representable(action.actor(),depth+1);
+    }
+    private static boolean representable(org.tortodrone.world.FireCatalog.ActorSpec actor,int depth){
+        if(actor==null)return true;
+        if(depth>64)return false;
+        if(!representable(actor.detonation(),depth+1)||!representable(actor.shutdown(),depth+1)
+            ||!representable(actor.startup(),depth+1)||!representable(actor.activation(),depth+1)
+            ||!representable(actor.attachment(),depth+1))return false;
+        for(var timer:actor.timers())if(!representable(timer.action(),depth+1)||!representable(timer.endAction(),depth+1))return false;
+        return true;
     }
 
     private static List<Binding> collectBindings(ConfigManager cm, TudeySceneModel scene)

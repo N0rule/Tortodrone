@@ -76,7 +76,9 @@ public final class MapCompiler {
             if (replace) command.add("--replace");
             run(command);
             var pack = deploymentRoot.resolve("content/maps/" + type + "/" + name);
-            CollisionPackExport.export(pack);
+            // MapImport already compiles stock static collision into collision.bin; only a legacy
+            // pack that still carries static metadata needs the separate conversion step.
+            if (!Files.isRegularFile(pack.resolve("native/collision.bin"))) CollisionPackExport.export(pack);
             var report = new StringBuilder()
                 .append("source=").append(root.resolve(name)).append('\n')
                 .append("scene-id=").append(id).append('\n')

@@ -12,7 +12,7 @@ import static org.tortodrone.support.TestWire.check;
 public final class ContentManagerTest {
     public static void main(String[] args)throws Exception {
         var baseline=ContentManager.load(Path.of("."));
-        check(baseline.scenes().scenes().size()==9&&baseline.items().entries().size()==9355,"all verified maps and items retained");
+        check(baseline.scenes().scenes().size()==10&&baseline.items().entries().size()==9355,"all verified maps and items retained");
         var opening=baseline.createScenes().tutorial();
         check(opening!=null&&opening.source().id()==398&&opening.source().version()==2008859103
             &&opening.destination().id()==1&&opening.entrance().id()==1&&opening.entrance().x()==1&&opening.entrance().y()==-30.5f,"bundled defaults route the verified Crash Site exit directly to Haven's authored spawn");
@@ -69,6 +69,10 @@ public final class ContentManagerTest {
             Files.writeString(duplicateFolder.resolve("map.yml"),mapText.replace("id: 294","id: 295").replace("type: training","type: level"));
             failure(()->MapYaml.folders(home.resolve("content/maps")),"duplicate map folder name");
             ContentFixture.delete(duplicateFolder);
+            Path wrongCategory=home.resolve("content/maps/level/advanced_training");Files.createDirectories(wrongCategory);
+            Files.writeString(wrongCategory.resolve("map.yml"),mapText.replace("id: 294","id: 295"));
+            failure(()->MapYaml.folders(home.resolve("content/maps")),"must live under training/");
+            ContentFixture.delete(wrongCategory);
             Path misc=home.resolve("content/items/misc.yml");String miscOriginal=Files.readString(misc);var miscYaml=Yaml.read(misc);Yaml.map(miscYaml.get("items"),"items").put(first.getKey(),item);Files.delete(misc);Yaml.write(misc,miscYaml);failure(()->ContentManager.load(home),"duplicate item ID");Files.writeString(misc,miscOriginal);
             var town=TownYaml.data(home.resolve("content/town"));var recipe=Yaml.map(Yaml.list(town.get("recipes"),"recipes").getFirst(),"recipe");recipe.put("item","Missing/Item");failure(()->TownYaml.references(town,baseline.items()),"missing item");
             Path bad=home.resolve("invalid.yml");
