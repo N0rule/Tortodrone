@@ -18,6 +18,8 @@
 #   training        Advanced Training Hall movement/combat scenario
 #   camp            Rescue Camp story
 #   preview         seeded knight, GM preview combat to Haven
+#   mission         seeded knight, native Shadow Beast start into lobby 351 with
+#                   MissionPartyObject gate/floor and the o.shadow_beast mission bar
 #   explore <id>    load a scene by native scene id, drive free stock movement
 #   manual          disposable server + interactive client, auto-logged in with
 #                   the owner's Steam launch wrapper (sk-nopad); only for the
@@ -63,7 +65,7 @@ for arg in "$@"; do
             scenarios
             exit 0
             ;;
-        tutorial|crash|ready-room|mail-campaign|mail|forge|haven|training|camp|preview|explore|manual)
+        tutorial|crash|ready-room|mail-campaign|mail|forge|haven|training|camp|preview|mission|explore|manual)
             scenario=$arg
             ;;
         --*)
@@ -99,6 +101,7 @@ case $scenario in
     training) scenario_flags=(--training-only) ;;
     camp) scenario_flags=(--camp-story-only) ;;
     preview) scenario_flags=(--tutorial-only) ;;
+    mission) scenario_flags=(--mission-only) ;;
     explore)
         if [ -z "$scene" ]; then
             echo "graphical-test: explore needs a numeric scene id, e.g. scripts/graphical-test.sh explore 398" >&2

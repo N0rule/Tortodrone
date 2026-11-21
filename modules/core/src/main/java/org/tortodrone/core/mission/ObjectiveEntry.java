@@ -17,7 +17,10 @@ public record ObjectiveEntry(int index, String name, String text, int persistenc
         if (index < 0) throw new IllegalArgumentException("Invalid objective index");
         if (name == null || !name.matches("[A-Za-z0-9_.:-]{1,128}"))
             throw new IllegalArgumentException("Invalid objective name");
-        if (text == null || !text.matches("[a-z]\\.[A-Za-z0-9_.:-]{1,200}"))
+        // The stock mission HUD resolves the text through the connection's default
+        // ("projectx") message bundle, so mission bullets carry the native explicit
+        // bundle prefix: "%mission:o.<id>". Plain keys stay valid for projectx entries.
+        if (text == null || !text.matches("(%[a-z][a-z0-9_-]{0,31}:)?[a-z]\\.[A-Za-z0-9_.:-]{1,200}"))
             throw new IllegalArgumentException("Invalid objective message key");
         if (persistence != KNIGHT && persistence != PARTY)
             throw new IllegalArgumentException("Unsupported objective persistence");

@@ -102,7 +102,7 @@ public final class PartyCodec extends WireWriter {
             out.writeShort(0);out.writeInt(tutorial||mission?1:managed||automatic?PartyView.CAPACITY:training?8:1);out.writeInt(mission?scene.missionGateId():tutorial?org.tortodrone.core.mission.TutorialRoute.GATE:0);
             type(out,"com.threerings.projectx.dungeon.data.LevelPartyMarshaller");out.writeInt(partyOid);out.writeInt(LEVEL_PARTY_SERVICE);
             type(out,WireTypes.DIFFICULTY);out.writeByte(mission?scene.missionDifficulty():tutorial?1:0);
-            emptyDSet(out);emptyCollection(out);out.writeInt(mission?1:0);
+            emptyDSet(out);emptyCollection(out);out.writeInt(mission?scene.missionFloor()+1:0);
             type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(scene.map().kind().equals("level")?0:3);
             primitiveInts(out,mission?new int[]{0,0}:new int[]{0});out.writeBoolean(tutorial||mission||inviteOnly);out.writeBoolean(!tutorial&&!mission&&allowFriends);out.writeBoolean(!tutorial&&!mission&&allowGuild);out.writeBoolean(mission||!tutorial&&!managed);
             type(out,WireTypes.DSET);out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyView.Participant::playerOid)).toList())partyHeat(out,member);
@@ -119,6 +119,36 @@ public final class PartyCodec extends WireWriter {
         });
     }
 
+    /** The scene-owned party attributes that move with an owned run between floors.
+     *
+     * <p>The stock elevator and floor HUD read the party object (not the player), so an
+     * already-subscribed party keeps stale zone/instance/floor data unless the transition
+     * publishes the changed attributes. Every value mirrors the full {@link #party} writer.
+     */
+    public byte[] partySceneChanges(int party,SceneInstanceView before,SceneInstanceView after)throws IOException {
+        var events=new ArrayList<Writer>();
+        if(before.map().zone()!=after.map().zone())events.add(out->attribute(out,party,"zoneId",o->o.writeInt(after.map().zone())));
+        int beforeInstance=before.map().town()?before.oid():0,afterInstance=after.map().town()?after.oid():0;
+        if(beforeInstance!=afterInstance)events.add(out->attribute(out,party,"instanceId",o->o.writeInt(afterInstance)));
+        int beforeDepth=before.hasMission()?1:0,afterDepth=after.hasMission()?1:0;
+        if(beforeDepth!=afterDepth)events.add(out->attribute(out,party,"depth",o->o.writeInt(afterDepth)));
+        int beforeFloor=before.hasMission()?before.missionFloor()+1:0,afterFloor=after.hasMission()?after.missionFloor()+1:0;
+        if(beforeFloor!=afterFloor)events.add(out->attribute(out,party,"floor",o->o.writeInt(afterFloor)));
+        if(pickups(before)!=pickups(after))events.add(out->attribute(out,party,"hasPickups",o->o.writeBoolean(pickups(after))));
+        int beforeLevel=before.map().kind().equals("level")?0:3,afterLevel=after.map().kind().equals("level")?0:3;
+        if(beforeLevel!=afterLevel)events.add(out->attribute(out,party,"levelType",o->{type(o,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");o.writeByte(afterLevel);}));
+        int beforeGate=before.hasMission()?before.missionGateId():0,afterGate=after.hasMission()?after.missionGateId():0;
+        if(beforeGate!=afterGate)events.add(out->attribute(out,party,"gateId",o->o.writeInt(afterGate)));
+        int beforeActual=before.hasMission()?before.missionFloor():0,afterActual=after.hasMission()?after.missionFloor():0;
+        if(beforeActual!=afterActual)events.add(out->attribute(out,party,"actualFloor",o->o.writeInt(afterActual)));
+        if(beforeGate!=afterGate)events.add(out->attribute(out,party,"actualGateId",o->o.writeInt(afterGate)));
+        if(!java.util.Objects.equals(before.missionId(),after.missionId()))events.add(out->attribute(out,party,"missionId",o->string(o,after.missionId())));
+        return frame(out->{eventHeader(out,"CompoundEvent",party);type(out,WireTypes.ARRAY_LIST);out.writeInt(events.size());for(var event:events)event.write(out);});
+    }
+    private static boolean pickups(SceneInstanceView scene){
+        return scene.map().content().items().values().stream()
+            .anyMatch(item->item.text("kind","").equals("vial")||item.text("kind","").equals("capsule"));
+    }
     public byte[] finalFloorReport(int party)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",party);type(out,WireTypes.ARRAY_LIST);out.writeInt(4);
             attribute(out,party,"pendingFloorType",o->{type(o,WireTypes.FLOOR_TYPE);o.writeByte(0);});

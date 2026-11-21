@@ -17,7 +17,7 @@ public final class CheckCombatRendering {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1) {
-            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--opening-tutorial-only|--tutorial-entry-only|--tutorial-only|--ready-room-only|--ready-room-mail-only|--mail-campaign-only|--ready-room-forge-only|--equipment-groups|--items-only|--arsenal-blink-only|--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--depot-only|--hazards-only|--vortex-shield-only|--multiplayer-only|--multiplayer-world-only|--explore-only --scene=<id>|--manual]");
+            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--opening-tutorial-only|--tutorial-entry-only|--tutorial-only|--ready-room-only|--ready-room-mail-only|--mail-campaign-only|--ready-room-forge-only|--equipment-groups|--items-only|--arsenal-blink-only|--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--depot-only|--hazards-only|--vortex-shield-only|--multiplayer-only|--multiplayer-world-only|--explore-only --scene=<id>|--mission-only|--manual]");
         }
         boolean campProgression=Arrays.asList(args).contains("--camp-progression-only");
         boolean campStory=campProgression||Arrays.asList(args).contains("--camp-story-only");
@@ -43,11 +43,12 @@ public final class CheckCombatRendering {
         boolean movementOnly=Arrays.asList(args).contains("--movement-only");
         boolean equipmentGroups=Arrays.asList(args).contains("--equipment-groups");
         boolean exploreOnly=Arrays.asList(args).contains("--explore-only");
+        boolean missionOnly=Arrays.asList(args).contains("--mission-only");
         boolean manual=Arrays.asList(args).contains("--manual");
         int exploreScene=0;
         for(String arg:args)if(arg.startsWith("--scene="))try{exploreScene=Integer.parseInt(arg.substring("--scene=".length()));}catch(NumberFormatException invalid){throw new IllegalArgumentException("Invalid --scene value: "+arg);}
         if(exploreOnly&&exploreScene<=0)throw new IllegalArgumentException("--explore-only needs --scene=<id>");
-        boolean trainingOnly=exploreOnly||manual||tutorialEntryOnly||readyRoomOnly||equipmentGroups||itemsOnly||multiplayerOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
+        boolean trainingOnly=exploreOnly||missionOnly||manual||tutorialEntryOnly||readyRoomOnly||equipmentGroups||itemsOnly||multiplayerOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
         String outputArgument=Arrays.stream(args).skip(1).filter(arg->!arg.startsWith("--")).findFirst().orElse(null);
         Path project = Path.of("").toRealPath();
         Path game = Path.of(args[0]).toRealPath();
@@ -121,7 +122,7 @@ public final class CheckCombatRendering {
                     "-Xms512M", "-Xmx1024M"));
             }
             var seed = new ArrayList<>(base);
-            seed.addAll(List.of("CombatRenderingCheck", mailCampaignOnly?"--seed-mail":campStory?"--seed-camp":freshOpening?"--seed-opening":equipmentGroups?"--seed-equipment":itemsOnly?"--seed-items":multiplayerOnly?"--seed-multiplayer":boxesOnly?"--seed-boxes":depotOnly?"--seed-depot":readyRoomForgeOnly?"--seed-forge":"--seed", scratch.resolve("data").toString()));
+            seed.addAll(List.of("CombatRenderingCheck", mailCampaignOnly?"--seed-mail":campStory?"--seed-camp":freshOpening?"--seed-opening":equipmentGroups?"--seed-equipment":itemsOnly?"--seed-items":multiplayerOnly?"--seed-multiplayer":boxesOnly?"--seed-boxes":depotOnly?"--seed-depot":readyRoomForgeOnly?"--seed-forge":missionOnly?"--seed-mission":"--seed", scratch.resolve("data").toString()));
             if(manual)seed.set(seed.size()-2,"--seed-manual");
             run(seed, "seed", manual?120:45, scratch);
             if(manual)writeManualPrefs(scratch);
@@ -145,7 +146,7 @@ public final class CheckCombatRendering {
             peerCommand.addAll(List.of("CombatRenderingCheck","--peer",port,publicKey.toString(),peerOutput.toString()));
             if(multiplayerOnly)peerCommand.add(sharedWorldOnly?"--multiplayer-world-only":"--multiplayer-only");
             if(equipmentGroups)peerCommand.add("--equipment-groups");
-            Path peerLog=output.resolve("peer-client.log");Process peer=tutorialEntryOnly||readyRoomOnly||itemsOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||exploreOnly||manual?null:start(peerCommand,peerLog,scratch);
+            Path peerLog=output.resolve("peer-client.log");Process peer=tutorialEntryOnly||readyRoomOnly||itemsOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||exploreOnly||missionOnly||manual?null:start(peerCommand,peerLog,scratch);
             long peerDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);
             while(peer!=null&&peer.isAlive()&&!Files.isRegularFile(peerOutput.resolve("peer-ready"))&&System.nanoTime()<peerDeadline)Thread.sleep(50);
             if(peer!=null&&(!peer.isAlive()||!Files.isRegularFile(peerOutput.resolve("peer-ready"))))
@@ -162,7 +163,7 @@ public final class CheckCombatRendering {
             }
             if(exploreOnly)graphical.addAll(List.of("--explore-only","--scene="+exploreScene));
             else if(manual)graphical.add("--manual");
-            else if(trainingOnly)graphical.add(campProgression?"--camp-progression-only":campStory?"--camp-story-only":freshOpening?"--opening-tutorial-only":tutorialOnly?"--tutorial-only":tutorialEntryOnly?"--tutorial-entry-only":mailCampaignOnly?"--mail-campaign-only":readyRoomMailOnly?"--ready-room-mail-only":readyRoomForgeOnly?"--ready-room-forge-only":readyRoomOnly?"--ready-room-only":equipmentGroups?"--equipment-groups":itemsOnly?"--items-only":sharedWorldOnly?"--multiplayer-world-only":multiplayerOnly?"--multiplayer-only":arsenalBlinkOnly?(arsenalStationOnly?"--arsenal-station-only":"--arsenal-blink-only"):boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
+            else if(trainingOnly)graphical.add(campProgression?"--camp-progression-only":campStory?"--camp-story-only":freshOpening?"--opening-tutorial-only":tutorialOnly?"--tutorial-only":tutorialEntryOnly?"--tutorial-entry-only":mailCampaignOnly?"--mail-campaign-only":readyRoomMailOnly?"--ready-room-mail-only":readyRoomForgeOnly?"--ready-room-forge-only":readyRoomOnly?"--ready-room-only":equipmentGroups?"--equipment-groups":itemsOnly?"--items-only":sharedWorldOnly?"--multiplayer-world-only":multiplayerOnly?"--multiplayer-only":arsenalBlinkOnly?(arsenalStationOnly?"--arsenal-station-only":"--arsenal-blink-only"):boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":missionOnly?"--mission-only":"--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = start(graphical, clientLog, scratch);
             if(multiplayerOnly&&!sharedWorldOnly){

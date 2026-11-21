@@ -66,17 +66,19 @@ public final class BootstrapTest {
         var registry=org.tortodrone.world.SceneRegistry.system();
         var available=registry.availableGates();
         check(gates.size()==1+(tutorial==null?0:1)+1+available.size(),"solo interior render transport");
-        var gate=(java.util.Map<?,?>)gates.getFirst();
-        check(gate.get("_gateId").equals(0)&&gate.get("_wheels").equals(java.util.List.of())
+        // A dobj DSet is binary-searched, so entries arrive sorted by gate id;
+        // assert by id instead of by position.
+        var gate=gateById(gates,0);
+        check(gate!=null&&gate.get("_wheels").equals(java.util.List.of())
             &&gate.get("_destId").equals(0),"interior transport exposes no dungeon floors or destination");
         if(tutorial!=null) {
-            var tutorialGate=(java.util.Map<?,?>)gates.get(1);
-            check(tutorialGate.get("_gateId").equals(org.tortodrone.core.mission.TutorialRoute.GATE)
+            var tutorialGate=gateById(gates,org.tortodrone.core.mission.TutorialRoute.GATE);
+            check(tutorialGate!=null
                 &&((java.util.List<?>)tutorialGate.get("_wheels")).size()==1,"tutorial transport gate");
         }
         if(!available.isEmpty()){
-            var missionGate=(java.util.Map<?,?>)gates.getLast();
-            check(missionGate.get("_name").equals("%mission:m."+available.getLast().missionId())
+            var missionGate=gateById(gates,available.getLast().gateId());
+            check(missionGate!=null&&missionGate.get("_name").equals("%mission:m."+available.getLast().missionId())
                 &&((java.util.List<?>)missionGate.get("_wheels")).size()==available.getLast().wedges().size(),
                 "imported mission gate transport");
         }
@@ -106,6 +108,11 @@ public final class BootstrapTest {
 
     private static DataInputStream input(byte[] frame) throws IOException {
         return new DataInputStream(new ByteArrayInputStream(HandshakeCodec.readFrame(new ByteArrayInputStream(frame))));
+    }
+
+    private static java.util.Map<?,?> gateById(java.util.List<?> gates,int id) {
+        for(var candidate:gates)if(((java.util.Map<?,?>)candidate).get("_gateId").equals(id))return (java.util.Map<?,?>)candidate;
+        return null;
     }
 
     private static byte[] request(int type, String name, short id, Integer objectId) throws IOException {

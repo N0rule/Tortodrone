@@ -121,6 +121,8 @@ final class WorldSession implements AutoCloseable {
     private Boolean publishedArsenal;
     private PartyRegistry.Member partyMember;
     private PartyView.View publishedParty;
+    /** The scene whose party attributes the subscribed party object currently reflects. */
+    private org.tortodrone.core.world.SceneInstanceView publishedPartyScene;
     final SessionResponder responder;
     final GuildHandler guilds;
     private final SteamHandler steam;
@@ -150,11 +152,14 @@ final class WorldSession implements AutoCloseable {
         // Publishing it there makes the stock command handler ask to abandon a mission.
         int visibleParty=readyRoom?0:scene.map().town()&&view.members().size()==1&&scenes.parties().owner(partyMember,profile.worldId())==0?0:view.oid();
         if(visibleParty!=announcedPartyOid){
-            boolean changed=announcedPartyOid!=0;announcedPartyOid=visibleParty;subscribedPartyOid=0;publishedParty=null;
+            boolean changed=announcedPartyOid!=0;announcedPartyOid=visibleParty;subscribedPartyOid=0;publishedParty=null;publishedPartyScene=null;
             output.send(()->codec.partyOid(oid,visibleParty));
             if(changed&&!traveling&&!readyRoom&&(!scene.map().town()||portalMove!=null))forcePartyExit();
         }else if(subscribedPartyOid==view.oid()&&publishedParty!=null&&!publishedParty.equals(view)){
             var before=publishedParty;output.send(()->codec.partyChanges(before,view));publishedParty=view;
+        }
+        if(subscribedPartyOid==view.oid()&&publishedPartyScene!=null&&!samePartyScene(publishedPartyScene,sceneNow())){
+            var before=publishedPartyScene;publishedPartyScene=sceneNow();output.send(()->codec.partySceneChanges(view.oid(),before,sceneNow()));
         }
     }
     /** The native friend list's Join affordance is driven by this presence. */
@@ -238,7 +243,9 @@ final class WorldSession implements AutoCloseable {
     private java.util.List<org.tortodrone.core.mission.ObjectiveEntry> wireObjectives(){
         int next=0;var result=new ArrayList<org.tortodrone.core.mission.ObjectiveEntry>(objectives.size()+1);
         for(var value:objectives.values()){result.add(new org.tortodrone.core.mission.ObjectiveEntry(value.index(),value.name(),value.text(),org.tortodrone.core.mission.ObjectiveEntry.KNIGHT));next=Math.max(next,value.index()+1);}
-        if(missionObjective!=null)result.add(new org.tortodrone.core.mission.ObjectiveEntry(next,missionObjective,"o."+missionObjective,org.tortodrone.core.mission.ObjectiveEntry.PARTY));
+        // The HUD resolves the key through the default (projectx) bundle, so the mission
+        // bullet names its own bundle explicitly, exactly like native mission strings.
+        if(missionObjective!=null)result.add(new org.tortodrone.core.mission.ObjectiveEntry(next,missionObjective,"%mission:o."+missionObjective,org.tortodrone.core.mission.ObjectiveEntry.PARTY));
         return result;
     }
     private void publishObjectives()throws IOException {
@@ -1073,15 +1080,27 @@ final class WorldSession implements AutoCloseable {
         if(readyRoom)throw new IOException("The Ready Room has no scene party");
         profile=loadProfile(profile);
         partyState();var view=scenes.parties().view(partyMember);
-        var health=membership.health();var status=membership.status();output.send(()->codec.party(message,view,scene,floorReport!=null&&floorReport.valid()));
-        subscribedPartyOid=view.oid();publishedParty=view;
+        // A solo party is announced while the knight is already travelling, so the stock
+        // client subscribes before the destination scene is current. The party object
+        // belongs to the destination (its gate and mission class), never to the old town.
+        var partyScene=portalMove!=null?portalMove.destination():scene;
+        var health=membership.health();var status=membership.status();output.send(()->codec.party(message,view,partyScene,floorReport!=null&&floorReport.valid()));
+        subscribedPartyOid=view.oid();publishedParty=view;publishedPartyScene=partyScene;
         if(floorReport!=null&&floorReport.valid())output.send(()->scene.run()==null?codec.finalFloorReport(view.oid()):codec.openingFloorReport(view.oid()));
         publishedHealth=health;publishedStatus=status;
         if(deferredMove!=null&&deferredMove.sceneOid()==scene.oid()){
             var move=deferredMove;deferredMove=null;completeMove(move.requestId(),move.zone());
         }
     }
-    synchronized void unsubscribeInteriorParty(int party){if(subscribedPartyOid==party){subscribedPartyOid=0;publishedParty=null;}}
+    /** The scene the party object should describe: the destination while a journey is pending. */
+    private org.tortodrone.core.world.SceneInstanceView sceneNow(){return portalMove!=null?portalMove.destination():scene;}
+    private static boolean samePartyScene(org.tortodrone.core.world.SceneInstanceView a,org.tortodrone.core.world.SceneInstanceView b){
+        return a.map().zone()==b.map().zone()&&a.oid()==b.oid()&&a.map().town()==b.map().town()
+            &&a.hasMission()==b.hasMission()&&a.missionGateId()==b.missionGateId()&&a.missionFloor()==b.missionFloor()
+            &&java.util.Objects.equals(a.missionId(),b.missionId())
+            &&a.map().kind().equals(b.map().kind());
+    }
+    synchronized void unsubscribeInteriorParty(int party){if(subscribedPartyOid==party){subscribedPartyOid=0;publishedParty=null;publishedPartyScene=null;}}
     synchronized boolean interiorPartyInvocation(SessionDecoder.Invocation request)throws IOException {
         if(!ownsInteriorParty(request.oid()))return false;
         if(request.service()==SceneChat.PARTY_SERVICE)return false;

@@ -414,6 +414,7 @@ public final class SessionCodec extends WireWriter {
     public byte[] finalFloorReport(int party)throws IOException { return partyCodec.finalFloorReport(party); }
     public byte[] openingFloorReport(int party)throws IOException { return partyCodec.openingFloorReport(party); }
     public byte[] partyChanges(PartyView.View before,PartyView.View after)throws IOException { return partyCodec.partyChanges(before, after); }
+    public byte[] partySceneChanges(int party,SceneInstanceView before,SceneInstanceView after)throws IOException { return partyCodec.partySceneChanges(party, before, after); }
     public byte[] partyInvitation(int player,PartyView.Invitation invitation)throws IOException { return partyCodec.partyInvitation(player, invitation); }
     public byte[] partyHealth(int partyOid,int playerOid,org.tortodrone.core.world.SceneHealth.State health)throws IOException { return partyCodec.partyHealth(partyOid, playerOid, health); }
     public byte[] partyVitals(int partyOid,int playerOid,org.tortodrone.core.world.SceneHealth.State health,org.tortodrone.core.world.SceneStatus.State status)throws IOException { return partyCodec.partyVitals(partyOid, playerOid, health, status); }

@@ -54,6 +54,7 @@ import org.tortodrone.core.party.PartyView;
 
 /** Bootstrap-owned downstream frames; shares the connection symbol tables. */
 public final class BootstrapCodec extends WireWriter {
+    @FunctionalInterface private interface GateWriter { void write(DataOutputStream out)throws IOException; }
     public BootstrapCodec(WireContext context, ItemCatalog catalog){super(context,catalog);}
     public byte[] bootstrap(int connectionId, int clientOid, String host, int port) throws IOException {
         if (connectionId <= 0 || clientOid <= 0 || port < 1 || port > 65535 || host == null || host.isBlank()) {
@@ -174,18 +175,25 @@ public final class BootstrapCodec extends WireWriter {
             if(soloInteriors){type(out,WireTypes.DSET);out.writeInt(towns.size());for(var town:towns)townSummary(out,town);}
             else emptyDSet(out);
             if(soloInteriors) {
+                // A dobj DSet is binary-searched by key, so the wire order must be
+                // sorted by gate id. Appending mission gates after the fixed 0/397/398
+                // entries hides every imported gate from DSet.f().
+                var gateWriters=new java.util.TreeMap<Integer,GateWriter>();
                 // Stock ElevatorProp dereferences the party's gate even in a
                 // peaceful SUBTOWN. This empty transport entry has no floors,
                 // missions or destination; no dungeon gate service is exposed.
-                type(out,WireTypes.DSET);out.writeInt(1+(tutorial?1:0)+(openingGate!=0?1:0)+missionGates.size());
-                type(out,"com.threerings.projectx.dungeon.data.GateSummary");out.writeBoolean(true);out.writeInt(0);
-                string(out,"");string(out,"");emptyObjectArray(out,WireTypes.COLORIZATION,false);
-                string(out,"");out.writeInt(SceneSources.current().entry().map().zone());
-                for(int i=0;i<5;i++)out.writeInt(0);
-                emptyObjectArray(out,"com.threerings.projectx.dungeon.data.GateSummary$Wheel",false);
-                if(tutorial)tutorialGate(out);
-                if(openingGate!=0)openingGate(out,openingGate);
-                for(var gate:missionGates)missionGate(out,gate);
+                gateWriters.put(0,o->{
+                    type(o,"com.threerings.projectx.dungeon.data.GateSummary");o.writeBoolean(true);o.writeInt(0);
+                    string(o,"");string(o,"");emptyObjectArray(o,WireTypes.COLORIZATION,false);
+                    string(o,"");o.writeInt(SceneSources.current().entry().map().zone());
+                    for(int i=0;i<5;i++)o.writeInt(0);
+                    emptyObjectArray(o,"com.threerings.projectx.dungeon.data.GateSummary$Wheel",false);
+                });
+                if(tutorial)gateWriters.put(org.tortodrone.core.mission.TutorialRoute.GATE,this::tutorialGate);
+                if(openingGate!=0)gateWriters.put(openingGate,o->openingGate(o,openingGate));
+                for(var gate:missionGates)gateWriters.put(gate.gateId(),o->missionGate(o,gate));
+                type(out,WireTypes.DSET);out.writeInt(gateWriters.size());
+                for(var writer:gateWriters.values())writer.write(out);
             } else emptyDSet(out);
             out.writeInt(org.tortodrone.core.economy.Fees.MAIL_FEE); out.writeInt(org.tortodrone.core.economy.Fees.MAIL_ATTACH_FEE); out.writeFloat(.1f); // mail fees, recovered auction sale fee
             out.writeLong(0); string(out, null); emptyCollection(out); // reboot, disabled achievements

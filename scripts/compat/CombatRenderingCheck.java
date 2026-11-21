@@ -120,6 +120,11 @@ public final class CombatRenderingCheck {
     private long exploreTravelAt,exploreStepAt;
     private float exploreFromX,exploreFromY;
     private int exploreDirection;
+    /** Imported mission acceptance: start shadow_beast through the native service and read its bar. */
+    private boolean missionOnly;
+    private boolean missionWorldRequested,missionStarted;
+    private long missionStartedAt;
+    private Confirm missionConfirm;
     private boolean mailCampaign;
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
@@ -138,6 +143,15 @@ public final class CombatRenderingCheck {
         }
         if(args.length==2&&args[0].equals("--seed-opening")){
             try(var store=new AccountStore(Path.of(args[1]))){store.create("LanPlayer","lan-test-password".toCharArray());}return;
+        }
+        if(args.length==2&&args[0].equals("--seed-mission")){
+            seed(Path.of(args[1]));
+            try(var store=new AccountStore(Path.of(args[1]),true)){
+                var profile=store.worldProfile("LanPlayer","Town-Knight");
+                new org.tortodrone.storage.Database(Path.of(args[1]),false).write(c->{try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,32) ON CONFLICT(key) DO UPDATE SET value=32")){
+                    s.setString(1,"knight.progress."+profile.worldId()+".rank");s.executeUpdate();}return null;});
+            }
+            return;
         }
         if(args.length==2&&args[0].equals("--seed-mail")){
             seed(Path.of(args[1]));
@@ -182,14 +196,15 @@ public final class CombatRenderingCheck {
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
         boolean exploreOnly=Arrays.asList(args).contains("--explore-only");
+        boolean missionOnly=Arrays.asList(args).contains("--mission-only");
         boolean manual=Arrays.asList(args).contains("--manual");
         boolean mailCampaign=Arrays.asList(args).contains("--mail-campaign-only");
         int exploreScene=0;
         for(String arg:args)if(arg.startsWith("--scene="))try{exploreScene=Integer.parseInt(arg.substring("--scene=".length()));}catch(NumberFormatException invalid){throw new IllegalArgumentException("Invalid --scene value: "+arg);}
         if(exploreOnly&&exploreScene<=0)throw new IllegalArgumentException("--explore-only needs --scene=<id>");
-        boolean trainingOnly=exploreOnly||manual||mailCampaign||Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
-        if(exploreOnly||manual){if(args.length<4)throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");}
-        else if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
+        boolean trainingOnly=exploreOnly||manual||mailCampaign||Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only")||args[3].equals("--mission-only"));
+        if(exploreOnly||manual||missionOnly){if(args.length<4)throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");}
+        else if(args.length!=((trainingOnly||missionOnly)?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
         var configField=Class.forName("com.threerings.projectx.util.a").getDeclaredField("bNP");configField.setAccessible(true);
@@ -206,6 +221,7 @@ public final class CombatRenderingCheck {
         probe.campProgression=Arrays.asList(args).contains("--camp-progression-only");probe.campProgressionReturn=Arrays.asList(args).contains("--camp-progression-return-only");
         probe.campStory=probe.campProgression||Arrays.asList(args).contains("--camp-story-only");probe.campStoryReturn=Arrays.asList(args).contains("--camp-story-return-only");
         probe.exploreOnly=exploreOnly;probe.exploreScene=exploreScene;
+        probe.missionOnly=missionOnly;
         probe.freshOpening=Arrays.asList(args).contains("--opening-tutorial-only");
         probe.tutorialOnly=probe.freshOpening||Arrays.asList(args).contains("--tutorial-only");
         probe.tutorialEntryOnly=probe.tutorialOnly||Arrays.asList(args).contains("--tutorial-entry-only");
@@ -578,6 +594,49 @@ public final class CombatRenderingCheck {
         capture("explore-"+exploreScene+"-moved");finishImages();passed=done=true;
         System.out.println("PASS: native scene "+exploreScene+" loaded and the controlled knight moved freely ("
             +String.format(java.util.Locale.ROOT,"%.2f",moved)+" units, drift "+String.format(java.util.Locale.ROOT,"%.2f",drift)+")");
+        app.shutdown();
+    }
+    /** Start the imported Shadow Beast mission through the native service and read the lobby bar. */
+    private void missionTick(long now)throws Exception {
+        if(app.CZ()==null||app.Gx()==null)return;
+        if(app.CZ().zoneId==org.tortodrone.core.world.ReadyRoom.ZONE){
+            if(!missionWorldRequested&&!(app.GK().mN()||app.GB())&&Class.forName("com.threerings.projectx.client.dT").isInstance(app.Gx())){
+                app.GI().bU(com.threerings.projectx.client.aU.class).EQ();missionWorldRequested=true;
+            }
+            return;
+        }
+        if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gx())||app.GK().mN()||app.GB())return;
+        var view=new View(app.Gx());if(view.PO()==null)return;
+        if(!missionStarted){
+            if(view.sceneId()!=1)return; // Wait for the entered Haven town.
+            GLFW.glfwFocusWindow(app.getWindow());
+            missionConfirm=new Confirm();
+            ((com.threerings.projectx.mission.client.q)app.GI().bU(com.threerings.projectx.mission.client.q.class))
+                .a("shadow_beast",com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM,true,false,false,missionConfirm);
+            missionStarted=true;missionStartedAt=now;
+            System.out.println("CHECK: native mission start for shadow_beast from Haven");
+            return;
+        }
+        if(!missionConfirm.done)return;
+        if(missionConfirm.reason!=null){
+            // The lobby dispatch can race the enteredPlace callback; retry that one refusal.
+            if("m.internal_error".equals(missionConfirm.reason)&&now-missionStartedAt<12_000_000_000L){missionStarted=false;return;}
+            throw new AssertionError("Native mission start refused: "+missionConfirm.reason);
+        }
+        if(view.sceneId()!=351){
+            if(now-missionStartedAt>30_000_000_000L)throw new AssertionError("Shadow Beast lobby did not load; current scene="+view.sceneId());
+            return;
+        }
+        var party=app.GV().Dc();
+        if(!(party instanceof com.threerings.projectx.dungeon.data.MissionPartyObject mission))
+            throw new AssertionError("Mission scene did not serve MissionPartyObject: "+(party==null?"null":party.getClass().getName()));
+        if(!"shadow_beast".equals(mission.missionId))throw new AssertionError("Mission party id mismatch: "+mission.missionId);
+        if(mission.actualGateId<=0||mission.actualFloor!=0)throw new AssertionError("Mission gate/floor not published: gate="+mission.actualGateId+" floor="+mission.actualFloor);
+        String bar=null;
+        for(var objective:app.CZ().objectives)if(objective.config!=null&&"%mission:o.shadow_beast".equals(objective.config.getText()))bar=objective.config.getText();
+        if(bar==null)throw new AssertionError("PlayerObject.objectives does not carry %mission:o.shadow_beast");
+        capture("mission-lobby-bar");finishImages();passed=done=true;
+        System.out.println("PASS: native shadow_beast start -> authored lobby 351, MissionPartyObject gate="+mission.actualGateId+", objective bar "+bar);
         app.shutdown();
     }
     private boolean tutorialEntryOnly;
@@ -1052,6 +1111,7 @@ public final class CombatRenderingCheck {
                     +(stage==20?konwayState(viewPawn()):""));
             }
             if(exploreOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}exploreTick(now);return;}
+            if(missionOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}missionTick(now);return;}
             if(tutorialEntryOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}tutorialEntryTick(now);return;}
             if(readyRoomOnly){if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}if(campStory&&stage>=2)campStoryTick(new View(app.Gx()),now);else if(readyRoomMailOnly)readyRoomMailTick(now);else if(readyRoomForgeOnly)readyRoomForgeTick(now);else readyRoomTick(now);return;}
             if(!listening){listening=true;app.CZ().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
