@@ -53,18 +53,23 @@ final class SessionOutput implements AutoCloseable {
 
     /** Reliable state change: never dropped. */
     void send(Encoder encoder) throws IOException {
-        encodeAndQueue(encoder,false);
+        org.tortodrone.core.LockOrder.enter(org.tortodrone.core.LockOrder.OUTPUT);
+        try { encodeAndQueue(encoder,false); }
+        finally { org.tortodrone.core.LockOrder.exit(); }
     }
 
     /** Optional update: skipped before encoding when the queue is over budget. */
     boolean sendOptional(Encoder encoder) throws IOException {
-        lock.lock();
+        org.tortodrone.core.LockOrder.enter(org.tortodrone.core.LockOrder.OUTPUT);
         try {
-            if (closed || failure != null || socket.isClosed()) throw new IOException("Downstream connection closed", failure);
-            if (overBudget()) { droppedOptional++; noteOverBudget(); return false; }
-            clearOverBudget();
-        } finally { lock.unlock(); }
-        return encodeAndQueue(encoder,true);
+            lock.lock();
+            try {
+                if (closed || failure != null || socket.isClosed()) throw new IOException("Downstream connection closed", failure);
+                if (overBudget()) { droppedOptional++; noteOverBudget(); return false; }
+                clearOverBudget();
+            } finally { lock.unlock(); }
+            return encodeAndQueue(encoder,true);
+        } finally { org.tortodrone.core.LockOrder.exit(); }
     }
 
     /** True when optional work should be skipped without encoding anything this tick. */

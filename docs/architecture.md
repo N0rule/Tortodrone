@@ -34,6 +34,28 @@ One authenticated connection owns the current account lease; a successful login 
 
 The database currently uses **SQLite schema 18**, WAL, foreign keys, a bounded busy timeout and transactional updates. Known predecessors 9–17 require the explicit offline EconomyUpgrade candidate described in [Content](content.md#upgrading); normal startup and unknown schemas are refused without changing saved state. Schema 18 adds guilds (name, founder and formation time, roster with rank and command order, message of the day, energy well, hall flags, record and expansions) plus the guild invitation carrier in the mailbox. Schema 17 adds administrative mail campaigns with a delivery window, literal text, item gifts, crowns/energy and one delivery marker per knight, plus direct offline letters, custom sender labels and an optional new-knight welcome letter with rewards. Schema 16 adds player-to-player Uplink mail with escrowed items, crowns and energy. Schema 15 makes Depot initialization explicit and adds normalized UTC promotion windows and featured-auction availability. Schema 14 stores the knight rename cooldown, committed atomically with the globally unique name and ticket consumption. After confirming a rename, stop scene/session publishers before draining output and closing the socket; otherwise a late publication can abort the drain and lose the confirmation. The drain runs outside world/storage locks. Use identity checks and `BEGIN IMMEDIATE` for multi-owner item/currency transfers; commit durable data **before** publishing account/world events. Close handlers/sockets before tearing down database, logger and the deployment lock. Persistent keys must survive upgrades.
 
+## Lock order and concurrency
+
+Monitor acquisition follows one written order, checked in development builds:
+
+`ServerControl` (control) → `SceneRegistry` (registry) → scene simulation → `CharacterStore` (character) → `SessionOutput` (output) → storage.
+
+Storage is acquired outside every runtime monitor except the named scene commit paths below, which intentionally hold the scene through the durable commit so departure and competing mutations cannot race the payment. No other path may add storage work under the scene or party monitor.
+
+Named commit-under-lock paths (the only allowed SCENE/party → storage edges):
+
+- solo spark-revive payment;
+- owned-item use;
+- solo floor settlement;
+- solo elevator settlement;
+- party solo-gate and party revive transactions.
+
+`SceneSimulation` never runs a scene tick concurrently with itself. A bounded platform carrier pool drives one serial lane per scene at a fixed 50 ms cadence with no burst catch-up; a scene that overruns is counted and skipped, not restarted back-to-back. The active-scene count is capped, and a tick failure stops only that lane, recycles a private interior, and returns affected sessions through a safe close. Towns use the template's authored `instances` count as their shard policy: a world is assigned by `worldId` across those instances, so increasing the count shards Haven without changing isolated interiors.
+
+`SessionOutput` is bounded by both frames and bytes. Reliable state changes are never dropped; optional scene/effect frames are skipped before encoding when a reader is behind, and a reader that stays over budget for the sustained window is disconnected. Encoding and socket writes stay off the scene thread.
+
+SQLite runs on a single dedicated platform writer and a small platform reader pool; a session virtual thread never runs JDBC. Shutdown stops accept, stops scene lanes, drains delivery, shuts the storage pools down, checkpoints the WAL, and only then closes the database and logger.
+
 ## Wire correctness
 
 The stock client expects exact Narya/Presents serialization, not Java serialization or approximate messages:

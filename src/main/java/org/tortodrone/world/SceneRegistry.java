@@ -152,22 +152,28 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
     public SceneCatalog catalog(){return catalog;}
     /** Inspect only an already allocated instance; release this monitor before entering simulation. */
     public SceneSimulation.Companion companion(int instanceId,int knight) {
-        Instance target=null;
-        synchronized(this) {
-            for(var copies:instances.values())for(var candidate:copies)if(candidate.oid()==instanceId)target=candidate;
-            if(target==null)for(var candidate:interiors.values())if(candidate.oid()==instanceId)target=candidate;
-        }
-        return target==null?null:target.simulation().companion(knight);
+        org.tortodrone.core.LockOrder.enter(org.tortodrone.core.LockOrder.REGISTRY);
+        try {
+            Instance target=null;
+            synchronized(this) {
+                for(var copies:instances.values())for(var candidate:copies)if(candidate.oid()==instanceId)target=candidate;
+                if(target==null)for(var candidate:interiors.values())if(candidate.oid()==instanceId)target=candidate;
+            }
+            return target==null?null:target.simulation().companion(knight);
+        } finally { org.tortodrone.core.LockOrder.exit(); }
     }
     public record Status(int templateId,int instanceId,String name,int players,String state,
             MonsterMetrics.Snapshot monsters) { }
     public synchronized List<Status> statuses() {
+        org.tortodrone.core.LockOrder.enter(org.tortodrone.core.LockOrder.REGISTRY);
+        try {
         var result=new ArrayList<Status>();
         // Interior templates are instantiated per owner; their unused prototype is not active.
         for(var copies:instances.values())for(var instance:copies)if(instance.map().town())
             result.add(status(instance));
         for(var instance:interiors.values())result.add(status(instance));
         return result.stream().sorted(Comparator.comparingInt(Status::templateId).thenComparingInt(Status::instanceId)).toList();
+        } finally { org.tortodrone.core.LockOrder.exit(); }
     }
     private static Status status(Instance instance) {
         int players=instance.simulation().playerCount();
@@ -183,6 +189,8 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
         return destination(scene,worldId,null);
     }
     public synchronized Instance destination(int scene,int worldId,PartyRegistry.Member member)throws IOException {
+        org.tortodrone.core.LockOrder.enter(org.tortodrone.core.LockOrder.REGISTRY);
+        try {
         var map=catalog.scene(scene);
         if(!map.town()) {
             if(worldId<1)throw new IOException("Invalid interior owner");
@@ -200,11 +208,15 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
             var created=monitor(new Instance(oid,0,map,owner,tutorial));created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
         }
         return instance(scene,Math.floorMod(worldId,ensure(scene).size()));
+        } finally { org.tortodrone.core.LockOrder.exit(); }
     }
     public synchronized void release(Instance scene,int worldId) {
-        if(scene==null||scene.map().town())return;
-        var leases=interiorLeases.get(scene);if(leases==null)return;leases.remove(worldId);
-        if(leases.isEmpty()&&scene.simulation().playerCount()==0){interiorLeases.remove(scene);interiors.values().removeIf(value->value==scene);interiorOids.addLast(scene.oid());}
+        org.tortodrone.core.LockOrder.enter(org.tortodrone.core.LockOrder.REGISTRY);
+        try {
+            if(scene==null||scene.map().town())return;
+            var leases=interiorLeases.get(scene);if(leases==null)return;leases.remove(worldId);
+            if(leases.isEmpty()&&scene.simulation().playerCount()==0){interiorLeases.remove(scene);interiors.values().removeIf(value->value==scene);interiorOids.addLast(scene.oid());}
+        } finally { org.tortodrone.core.LockOrder.exit(); }
     }
     /** Allocate only an authenticated private party's sourced mission floor. */
     public synchronized Instance startRun(MissionRun run,int worldId,PartyRegistry.Member member)throws IOException {
