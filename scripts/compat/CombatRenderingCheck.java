@@ -632,6 +632,7 @@ public final class CombatRenderingCheck {
             throw new AssertionError("Mission scene did not serve MissionPartyObject: "+(party==null?"null":party.getClass().getName()));
         if(!"shadow_beast".equals(mission.missionId))throw new AssertionError("Mission party id mismatch: "+mission.missionId);
         if(mission.actualGateId<=0||mission.actualFloor!=0)throw new AssertionError("Mission gate/floor not published: gate="+mission.actualGateId+" floor="+mission.actualFloor);
+        if(mission.visited==null||mission.visited.isEmpty())throw new AssertionError("Mission party publishes no room progress");
         String bar=null;
         for(var objective:app.CZ().objectives)if(objective.config!=null&&"%mission:o.shadow_beast".equals(objective.config.getText()))bar=objective.config.getText();
         if(bar==null)throw new AssertionError("PlayerObject.objectives does not carry %mission:o.shadow_beast");

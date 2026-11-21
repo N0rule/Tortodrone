@@ -405,7 +405,7 @@ public final class SceneSimulation {
         public void enter(Consumer<Snapshot> publication){synchronized(SceneSimulation.this){check();
             publish=Objects.requireNonNull(publication);
             if(!arrived){arrived=true;if(!instance.map().town())health.protectEntry(SceneClock.now());}
-            entered=true;start();}}
+            entered=true;if(!instance.map().town())recordVisited(movement.x(),movement.y());start();}}
         public void pause(){synchronized(SceneSimulation.this){if(detached)return;cancelElevator(SceneClock.now());elevatorEntry="";elevatorMembers=Set.of();entered=false;pendingConversation=null;pendingMemories.clear();pendingObjectives.clear();activeFloorAdvance=pendingFloorAdvance=null;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;pendingAnimated=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
         public void resetInput(){synchronized(SceneSimulation.this){check();pendingAnimated=null;weapons.cancelAttacks(appearance.id());movement.resetInput(SceneClock.now());}}
         public boolean teleport(float x,float y,float rotation){synchronized(SceneSimulation.this){
@@ -574,6 +574,14 @@ public final class SceneSimulation {
     public synchronized void petFires(FireCatalog catalog){petFires=Objects.requireNonNull(catalog);}
     private final SceneWeapons weapons;
     private final SceneEntities entities;
+    /** Native `PartyObject.visited` reveal keys: packed tile coords, oldest first. */
+    private final LinkedHashSet<Integer> visited=new LinkedHashSet<>();
+    private static final int MAX_VISITED=8192;
+    public synchronized java.util.Set<Integer> visited(){return java.util.Set.copyOf(visited);}
+    private void recordVisited(float x,float y){
+        int packed=((int)Math.floor(x)<<16)|((int)Math.floor(y)&0xffff);
+        if(visited.add(packed)&&visited.size()>MAX_VISITED){var oldest=visited.iterator();if(oldest.hasNext()){oldest.next();oldest.remove();}}
+    }
     private final ArrayDeque<SceneCombatEvent> combatEvents=new ArrayDeque<>();
     private long combatSequence;
     private void feedback(SceneCombatEvent event){
@@ -838,6 +846,7 @@ public final class SceneSimulation {
                     }
                 }
                 member.movement.advance(stamp,now);
+                if(!instance.map().town()&&member.portal==null)recordVisited(member.movement.x(),member.movement.y());
                 if(member.dropAt>0&&SceneClock.reached(stamp,member.dropAt)){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
                 member.portal=member.movement.portal();member.advancePet(stamp);
             }

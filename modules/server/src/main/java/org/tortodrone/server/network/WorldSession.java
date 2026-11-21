@@ -123,6 +123,8 @@ final class WorldSession implements AutoCloseable {
     private PartyView.View publishedParty;
     /** The scene whose party attributes the subscribed party object currently reflects. */
     private org.tortodrone.core.world.SceneInstanceView publishedPartyScene;
+    /** The explored-tile keys already sent to the subscribed party. */
+    private java.util.Set<Integer> publishedPartyVisited;
     final SessionResponder responder;
     final GuildHandler guilds;
     private final SteamHandler steam;
@@ -152,14 +154,24 @@ final class WorldSession implements AutoCloseable {
         // Publishing it there makes the stock command handler ask to abandon a mission.
         int visibleParty=readyRoom?0:scene.map().town()&&view.members().size()==1&&scenes.parties().owner(partyMember,profile.worldId())==0?0:view.oid();
         if(visibleParty!=announcedPartyOid){
-            boolean changed=announcedPartyOid!=0;announcedPartyOid=visibleParty;subscribedPartyOid=0;publishedParty=null;publishedPartyScene=null;
+            boolean changed=announcedPartyOid!=0;announcedPartyOid=visibleParty;subscribedPartyOid=0;publishedParty=null;publishedPartyScene=null;publishedPartyVisited=null;
             output.send(()->codec.partyOid(oid,visibleParty));
             if(changed&&!traveling&&!readyRoom&&(!scene.map().town()||portalMove!=null))forcePartyExit();
         }else if(subscribedPartyOid==view.oid()&&publishedParty!=null&&!publishedParty.equals(view)){
             var before=publishedParty;output.send(()->codec.partyChanges(before,view));publishedParty=view;
         }
         if(subscribedPartyOid==view.oid()&&publishedPartyScene!=null&&!samePartyScene(publishedPartyScene,sceneNow())){
-            var before=publishedPartyScene;publishedPartyScene=sceneNow();output.send(()->codec.partySceneChanges(view.oid(),before,sceneNow()));
+            var before=publishedPartyScene;publishedPartyScene=sceneNow();publishedPartyVisited=sceneNow().visited();
+            output.send(()->codec.partySceneChanges(view.oid(),before,sceneNow()));
+        }
+        if(subscribedPartyOid==view.oid()&&publishedPartyVisited!=null){
+            var current=sceneNow().visited();
+            if(!current.equals(publishedPartyVisited)){
+                var previous=publishedPartyVisited;publishedPartyVisited=current;
+                var added=new java.util.ArrayList<Integer>();
+                for(int coord:current)if(!previous.contains(coord))added.add(coord);
+                if(!added.isEmpty())output.send(()->codec.partyVisited(view.oid(),added));
+            }
         }
     }
     /** The native friend list's Join affordance is driven by this presence. */
@@ -1085,7 +1097,7 @@ final class WorldSession implements AutoCloseable {
         // belongs to the destination (its gate and mission class), never to the old town.
         var partyScene=portalMove!=null?portalMove.destination():scene;
         var health=membership.health();var status=membership.status();output.send(()->codec.party(message,view,partyScene,floorReport!=null&&floorReport.valid()));
-        subscribedPartyOid=view.oid();publishedParty=view;publishedPartyScene=partyScene;
+        subscribedPartyOid=view.oid();publishedParty=view;publishedPartyScene=partyScene;publishedPartyVisited=partyScene.visited();
         if(floorReport!=null&&floorReport.valid())output.send(()->scene.run()==null?codec.finalFloorReport(view.oid()):codec.openingFloorReport(view.oid()));
         publishedHealth=health;publishedStatus=status;
         if(deferredMove!=null&&deferredMove.sceneOid()==scene.oid()){
@@ -1100,7 +1112,7 @@ final class WorldSession implements AutoCloseable {
             &&java.util.Objects.equals(a.missionId(),b.missionId())
             &&a.map().kind().equals(b.map().kind());
     }
-    synchronized void unsubscribeInteriorParty(int party){if(subscribedPartyOid==party){subscribedPartyOid=0;publishedParty=null;publishedPartyScene=null;}}
+    synchronized void unsubscribeInteriorParty(int party){if(subscribedPartyOid==party){subscribedPartyOid=0;publishedParty=null;publishedPartyScene=null;publishedPartyVisited=null;}}
     synchronized boolean interiorPartyInvocation(SessionDecoder.Invocation request)throws IOException {
         if(!ownsInteriorParty(request.oid()))return false;
         if(request.service()==SceneChat.PARTY_SERVICE)return false;
@@ -2213,6 +2225,15 @@ final class WorldSession implements AutoCloseable {
             occupantClients=clients;
         }
         occupantRoles=current.roles();
+        if(subscribedPartyOid!=0&&publishedPartyVisited!=null){
+            var explored=scene.visited();
+            if(!explored.equals(publishedPartyVisited)){
+                var previous=publishedPartyVisited;publishedPartyVisited=explored;
+                var added=new ArrayList<Integer>();
+                for(int coord:explored)if(!previous.contains(coord))added.add(coord);
+                if(!added.isEmpty())output.send(()->codec.partyVisited(subscribedPartyOid,added));
+            }
+        }
         short elapsed=(short)Math.max(1,Math.min(Short.MAX_VALUE,stamp-lastStamp));
         var frame=encoded.frame();
         // The first frame for a connection registers the symbols; later ones reuse the shared body.

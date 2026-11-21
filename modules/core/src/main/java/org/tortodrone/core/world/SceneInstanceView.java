@@ -10,4 +10,6 @@ public interface SceneInstanceView {
     int missionFloor();
     String missionId();
     int missionDifficulty();
+    /** Packed native tile coords the party has explored in this scene. */
+    java.util.Set<Integer> visited();
 }

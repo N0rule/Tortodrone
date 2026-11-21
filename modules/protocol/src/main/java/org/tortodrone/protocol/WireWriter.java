@@ -149,6 +149,13 @@ public abstract class WireWriter {
         out.writeBoolean(true); out.writeInt(0);
     }
 
+    /** A non-empty boxed integer set uses the stock field form: non-null flag, size, then
+     *  each element behind the connection-local `java.lang.Integer` class code. */
+    protected void integerSet(DataOutputStream out, java.util.Set<Integer> values) throws IOException {
+        out.writeBoolean(true); out.writeInt(values.size());
+        for(int value:values){type(out,"java.lang.Integer");out.writeInt(value);}
+    }
+
     protected static void string(DataOutputStream out, String value) throws IOException {
         out.writeBoolean(value != null);
         if (value != null) out.writeUTF(value);

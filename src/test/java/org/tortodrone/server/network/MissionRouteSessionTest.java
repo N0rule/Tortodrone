@@ -51,6 +51,7 @@ public final class MissionRouteSessionTest {
                 check(scene(session).missionGateId()==run.gateId()&&scene(session).missionFloor()==0,
                     "the party view exposes the mission gate and current floor");
                 check(session.sceneEntered()&&session.sceneSubscribed(),"the lobby accepts native readiness");
+                check(!scene(session).visited().isEmpty(),"the mission scene records explored room keys for the party");
                 check(socket.text().contains("%mission:o.shadow_beast"),"the mission bar publishes the mission's own o.<id> objective");
                 session.townInvocation(gateStart("shadow_beast",2,0));
                 check(sceneId(session)==351,"a repeated gate start keeps the current mission scene");

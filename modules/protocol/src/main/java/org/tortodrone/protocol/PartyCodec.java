@@ -92,7 +92,7 @@ public final class PartyCodec extends WireWriter {
             type(out,WireTypes.DSET);out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyView.Participant::playerOid)).toList())partyMember(out,member);
             type(out,WireTypes.DSET);out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyView.Participant::playerOid)).toList())partyHealth(out,member);
             type(out,WireTypes.DSET);out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyView.Participant::playerOid)).toList())partyStatus(out,member);
-            emptyCollection(out);out.writeShort(0); // Native party spawn is unset; the scene owns arrival.
+            integerSet(out,scene.visited());out.writeShort(0); // Native party spawn is unset; the scene owns arrival.
             out.writeInt(mission?1:0);out.writeInt(scene.map().zone());out.writeInt(scene.map().town()?scene.oid():0); // depth, zone, instance
             // hasPickups enables the native quickbar/level HUD. Only a scene's own
             // vial/capsule catalogue counts; the global owned-item uses are not pickups.
@@ -148,6 +148,17 @@ public final class PartyCodec extends WireWriter {
     private static boolean pickups(SceneInstanceView scene){
         return scene.map().content().items().values().stream()
             .anyMatch(item->item.text("kind","").equals("vial")||item.text("kind","").equals("capsule"));
+    }
+
+    /** Native `PartyObject.visited` additions; the stock map client reveals around each coord. */
+    public byte[] partyVisited(int party,java.util.Collection<Integer> coords)throws IOException {
+        return frame(out->{
+            eventHeader(out,"CompoundEvent",party);type(out,WireTypes.ARRAY_LIST);out.writeInt(coords.size());
+            for(int coord:coords){
+                type(out,"com.threerings.projectx.dungeon.data.PartyObject$ModifyIntSet");
+                out.writeInt(party);string(out,"visited");out.writeInt(coord);
+            }
+        });
     }
     public byte[] finalFloorReport(int party)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",party);type(out,WireTypes.ARRAY_LIST);out.writeInt(4);

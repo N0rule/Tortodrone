@@ -42,6 +42,7 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
         @Override public int missionFloor(){return run==null?0:run.floor();}
         @Override public String missionId(){return run==null?null:run.missionId();}
         @Override public int missionDifficulty(){return run==null?0:run.difficultyOrdinal();}
+        @Override public java.util.Set<Integer> visited(){return simulation.visited();}
         public int index(){return index;}
         public org.tortodrone.core.world.MapScene map(){return map;}
         public SceneSimulation simulation(){return simulation;}
