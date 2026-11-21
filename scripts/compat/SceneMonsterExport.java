@@ -1,7 +1,8 @@
 import java.util.*;
 import com.threerings.config.ConfigManager;
 import com.threerings.projectx.dungeon.config.*;
-import org.tortodrone.world.FireCatalog;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.Json;
 
 /** Stock attack timings and action graphs; AI choices remain separate prepared rules. */
 public final class SceneMonsterExport {
@@ -52,7 +53,7 @@ public final class SceneMonsterExport {
                     // Archive check_npc_scripts.py/talk: attack activators are the NPC,
                     // not a knight; the recorded Talk target is its PartyMembers.
                     var restored=(com.threerings.projectx.config.ProjectXActionConfig.StartConversation)start.clone();restored.target=new DungeonTargetConfig.PartyMembers();
-                    out.put(fp+"scene-action",org.tortodrone.resources.Json.stringify(talks.prepare(restored)));
+                    out.put(fp+"scene-action",org.tortodrone.core.Json.stringify(talks.prepare(restored)));
                 }else out.put(fp+"action",FireCatalog.actionJson(FireCatalogExport.readFireAction(cm,fireRef.ref,fire)));
             }
             out.put(p+"fires",String.join(",",fires));

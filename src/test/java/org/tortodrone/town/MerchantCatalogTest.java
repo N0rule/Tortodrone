@@ -1,9 +1,10 @@
 package org.tortodrone.town;
 
 import java.util.*;
-import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Hall of Heroes tier stock derived from captured families and original item rarity. */
 public final class MerchantCatalogTest {

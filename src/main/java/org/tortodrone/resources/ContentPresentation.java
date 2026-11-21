@@ -3,6 +3,9 @@ package org.tortodrone.resources;
 import java.nio.file.*;
 import java.util.*;
 import java.security.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.ContentFiles;
 final class ContentPresentation {
  static String digest(Path p)throws Exception{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(p)));}
  static void yaml(Path p,Map<String,Object> m)throws Exception{Files.deleteIfExists(p);Yaml.write(p,m);}

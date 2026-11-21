@@ -1,8 +1,9 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Shared-instance knockback, combat occlusion and independent ignitable oil patches. */
 public final class SharedGameplayTest {

@@ -10,6 +10,7 @@ import org.tortodrone.resources.NewsYaml;
 import org.tortodrone.server.NewsServer;
 import org.tortodrone.support.TestWire;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.NewsCatalog;
 
 /** Uplink News YAML validation, random pack selection, native result serialization and HTTP image serving. */
 public final class NewsTest {

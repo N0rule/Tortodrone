@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.resources.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.ContentFiles;
 
 /** Only news.yml can be replaced. Validate a disposable candidate before atomic publication. */
 final class NewsEditor {

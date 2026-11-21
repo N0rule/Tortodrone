@@ -12,6 +12,9 @@ import org.tortodrone.resources.*;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Duplicate native listener tokens versus distinct consecutive Arsenal opens. */
 public final class BoxOpeningSessionTest {

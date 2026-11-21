@@ -13,6 +13,12 @@ import org.tortodrone.protocol.*;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Three disposable authenticated sessions exercise actual invitation, travel, publication and exit paths. */
 public class CooperativeTrainingTest {
@@ -22,7 +28,7 @@ public class CooperativeTrainingTest {
             var db=new Database(home,true);
             var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
             var scenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));
-            scenes.town(org.tortodrone.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
+            scenes.town(org.tortodrone.core.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
             scenes.weapons(WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv")));
             scenes.fires(FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json")));
             try(var a=new Player(db,items,scenes,"Alice",1001);var b=new Player(db,items,scenes,"Bob",1002);var c=new Player(db,items,scenes,"Carol",1003)){

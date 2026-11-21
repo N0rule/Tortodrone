@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.io.*;
 import org.tortodrone.world.PlayerEmotes;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Compares the complete server emote catalog with installed stock client configs. */
 public final class EmoteCompatibility {
@@ -66,7 +68,7 @@ public final class EmoteCompatibility {
     }
     private static void activities()throws Exception {
         for(boolean interior:new boolean[]{false,true})for(String name:List.of("Attack","Helpme","Follow","Fallback","Wave")){
-            var descriptor=PlayerEmotes.find(name);var model=new org.tortodrone.character.StarterCatalog.Model("Fixture",Map.of());
+            var descriptor=PlayerEmotes.find(name);var model=new org.tortodrone.core.character.StarterCatalog.Model("Fixture",Map.of());
             var first=new org.tortodrone.world.ActorState(42,1001,"Fixture",0,1,0,0,0,0,0,descriptor.activity(),1000,model);
             var moved=new org.tortodrone.world.ActorState(42,1001,"Fixture",0,1,1,0,0,0,2,descriptor.activity(),1000,model);
             var initial=FireCompatibility.read(new org.tortodrone.protocol.SessionCodec().sceneDelta(1001,140,0,(short)0,0,1000,(short)50,List.of(first),List.of(),new int[0],Map.of(),interior));

@@ -1,8 +1,9 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Actual retained player fire graphs against prepared Training Hall destructibles. */
 public final class RestorationCombatTest {

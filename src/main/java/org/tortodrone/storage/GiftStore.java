@@ -3,8 +3,8 @@ package org.tortodrone.storage;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.character.WorldProfile;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.Json;
 
 /** Durable contents for native GiftBoxItem records; ownership follows the box's inventory row. */
 final class GiftStore {

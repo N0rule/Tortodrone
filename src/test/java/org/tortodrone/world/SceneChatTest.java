@@ -3,6 +3,7 @@ package org.tortodrone.world;
 import java.io.IOException;
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 public final class SceneChatTest {
     public static void main(String[] args)throws Exception {

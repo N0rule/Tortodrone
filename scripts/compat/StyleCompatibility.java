@@ -3,7 +3,7 @@ import java.util.*;
 import com.threerings.presents.dobj.*;
 import com.threerings.presents.net.*;
 import com.threerings.projectx.data.*;
-import org.tortodrone.character.Knight;
+import org.tortodrone.core.character.Knight;
 import org.tortodrone.protocol.*;
 import org.tortodrone.storage.StyleStore;
 

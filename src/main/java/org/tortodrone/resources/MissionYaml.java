@@ -3,13 +3,14 @@ package org.tortodrone.resources;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.MissionCatalog;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.mission.MissionCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.world.MissionComlinks;
 import org.tortodrone.world.MissionGates;
 import org.tortodrone.world.MissionRun;
 import org.tortodrone.world.SceneConversation;
-import static org.tortodrone.resources.Yaml.*;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.ContentFiles;
 
 /** Validated reader for the imported stock mission catalogue. No gameplay is implied. */
 public final class MissionYaml {

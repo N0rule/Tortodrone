@@ -7,6 +7,8 @@ import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Exchange turn-in settlement only: ingredient verification, atomic consume/pay and the MEDIUM row. */
 public final class MissionExchangeStoreTest {

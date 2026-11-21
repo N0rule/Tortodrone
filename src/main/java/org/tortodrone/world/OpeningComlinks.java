@@ -1,8 +1,10 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.OpeningMission;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.OpeningMission;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.world.SceneConversation;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Two captured opening comlinks. Only localized/configuration references, no client assets.
  * Edges/presentation: archive dialogue-branch-witnesses.json, live 2026-09-10.

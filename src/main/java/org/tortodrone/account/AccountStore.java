@@ -6,11 +6,12 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.character.CharacterStore;
-import org.tortodrone.character.Knight;
-import org.tortodrone.character.WorldProfile;
-import org.tortodrone.character.Currency;
-import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.Currency;
+import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.storage.Database;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Shared account service for the game server and local administration application. */
 public final class AccountStore implements AutoCloseable {
@@ -22,7 +23,7 @@ public final class AccountStore implements AutoCloseable {
     private record Stored(int id,String username,Passwords.Protection password,boolean gameMaster,long revision,CharacterStore characters) { }
     private final Database database;
     private final ItemCatalog catalog;
-    private final org.tortodrone.town.TownCatalog town;
+    private final org.tortodrone.core.town.TownCatalog town;
     private final Map<String,Stored> memory = new TreeMap<>();
     private final Map<Integer,CharacterStore> rosters = new ConcurrentHashMap<>();
     private final Map<Integer,Attached> sessions = new ConcurrentHashMap<>();
@@ -32,7 +33,7 @@ public final class AccountStore implements AutoCloseable {
 
     /** Isolated wire tests retain their explicit synthetic account, never a production backdoor. */
     public AccountStore(CharacterStore characters) throws IOException {
-        database = null; catalog=characters.catalog();town=org.tortodrone.town.TownCatalog.empty();nextId = characters.accountId()+1;
+        database = null; catalog=characters.catalog();town=org.tortodrone.core.town.TownCatalog.empty();nextId = characters.accountId()+1;
         char[] password = DEFAULT_USERNAME.toCharArray();
         try { memory.put(canonical(characters.username()),new Stored(characters.accountId(),characters.username(),Passwords.protect(password),false,1,characters)); }
         finally { Arrays.fill(password,'\0'); }
@@ -40,15 +41,15 @@ public final class AccountStore implements AutoCloseable {
     public AccountStore(Path directory) throws IOException { this(directory,false); }
     public AccountStore(Path directory,boolean deploymentLocked) throws IOException { this(directory,deploymentLocked,org.tortodrone.resources.ContentManager.load(directory.toAbsolutePath().normalize().getParent())); }
     private AccountStore(Path directory,boolean deploymentLocked,org.tortodrone.resources.ContentRegistry content)throws IOException{this(directory,deploymentLocked,content.items(),content.town());}
-    public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog) throws IOException { this(directory,deploymentLocked,catalog,org.tortodrone.town.TownCatalog.empty()); }
-    public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog,org.tortodrone.town.TownCatalog town) throws IOException { this.catalog=Objects.requireNonNull(catalog);this.town=Objects.requireNonNull(town);database = new Database(directory,deploymentLocked); }
+    public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog) throws IOException { this(directory,deploymentLocked,catalog,org.tortodrone.core.town.TownCatalog.empty()); }
+    public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog,org.tortodrone.core.town.TownCatalog town) throws IOException { this.catalog=Objects.requireNonNull(catalog);this.town=Objects.requireNonNull(town);database = new Database(directory,deploymentLocked); }
     public ItemCatalog catalog(){return catalog;}
-    public org.tortodrone.town.TownCatalog townRules(){return town;}
+    public org.tortodrone.core.town.TownCatalog townRules(){return town;}
     public org.tortodrone.storage.DepotStore depot()throws IOException{if(database==null)throw new IOException("Supply Depot requires SQLite storage");return new org.tortodrone.storage.DepotStore(database,catalog,town);}
     /** Local admin access; no game invocation dispatch exposes these methods. */
     public org.tortodrone.storage.AuctionHouse auctions()throws IOException{
         if(database==null)throw new IOException("Auctions require SQLite storage");
-        return new org.tortodrone.storage.AuctionHouse(database,catalog,org.tortodrone.town.TownCatalog.empty());
+        return new org.tortodrone.storage.AuctionHouse(database,catalog,org.tortodrone.core.town.TownCatalog.empty());
     }
 
     /** Shares the attachment lock with login, so no live session can race the offline write. */

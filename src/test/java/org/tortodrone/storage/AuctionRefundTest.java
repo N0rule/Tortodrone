@@ -7,8 +7,11 @@ import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.support.ContentFixture;
-import org.tortodrone.town.AuctionState;
+import org.tortodrone.core.town.AuctionState;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.Currency;
 
 /** Recipient presence never replaces DB authentication, atomic escrow or offline recovery. */
 public final class AuctionRefundTest {
@@ -45,7 +48,7 @@ public final class AuctionRefundTest {
             var before=db.worldProfile(alice,1,1);refused(()->house.operate(alice,1,999,1,List.of(listing.id(),145),false,Map.of(bw,1L)));
             check(db.worldProfile(alice,1,1).equals(before),"stale bidder cannot debit or refund");
             // Full balances cannot invalidate a legitimate competing bid; escrow stays recoverable in mail.
-            db.setCurrency("Bobby","Bobby-Knight",bob,-1,org.tortodrone.character.Currency.CROWNS,Integer.MAX_VALUE);
+            db.setCurrency("Bobby","Bobby-Knight",bob,-1,org.tortodrone.core.character.Currency.CROWNS,Integer.MAX_VALUE);
             bid(house,alice,listing.id(),145,Map.of(bw,1L));
             check(db.worldProfile(bob,1,1).crowns()==Integer.MAX_VALUE&&db.worldProfile(bob,1,1).town().mail().stream().anyMatch(m->!m.claimed()&&m.crowns()==132),"overflow falls back to durable mail");
             var won=db.worldProfile(alice,1,1);bid(house,alice,listing.id(),160,Map.of(aw,1L));
@@ -58,7 +61,7 @@ public final class AuctionRefundTest {
     private static int create(Database db,ItemCatalog items,String name)throws Exception {
         int id=db.create(name,new Passwords.Protection(new byte[16],new byte[32]),false);
         new CharacterStore(db,id,name,items).create(new Knight(0,name+"-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0));
-        db.setCurrency(name,name+"-Knight",id,-1,org.tortodrone.character.Currency.CROWNS,10000);return id;
+        db.setCurrency(name,name+"-Knight",id,-1,org.tortodrone.core.character.Currency.CROWNS,10000);return id;
     }
     private static void bid(AuctionHouse house,int account,long id,int amount,Map<Integer,Long> online)throws IOException {house.operate(account,1,1,1,List.of(id,amount),false,online);}
     private interface Action {void run()throws Exception;}

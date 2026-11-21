@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.*;
 import org.tortodrone.character.*;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Transient, session-bound parties. Endpoints only enqueue work; they never perform network I/O. */
 public final class PartyRegistry {

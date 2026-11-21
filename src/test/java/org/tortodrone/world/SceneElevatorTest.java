@@ -3,7 +3,7 @@ package org.tortodrone.world;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Predicate;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 
 /** Synthetic geometry: production ride clock, membership authority and normal movement inputs. */

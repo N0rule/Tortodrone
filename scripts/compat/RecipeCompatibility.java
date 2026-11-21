@@ -8,11 +8,12 @@ import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.*;
 import org.tortodrone.storage.Database;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
 import org.tortodrone.world.*;
 import com.threerings.presents.dobj.*;
 import com.threerings.presents.net.*;
 import com.threerings.projectx.data.PlayerObject;
+import org.tortodrone.core.character.Knight;
 
 /** Feed real inventory Use publications into the installed stock reader and DSet implementation. */
 public final class RecipeCompatibility {

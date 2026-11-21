@@ -1,7 +1,7 @@
 package org.tortodrone.web;
 import java.io.IOException;
 import java.util.*;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 /** Serialization is limited to explicitly selected DTOs, records and primitive collections. */
 public final class WebJson {
     private WebJson(){}

@@ -7,8 +7,9 @@ import java.util.concurrent.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.resources.ContentManager;
-import org.tortodrone.town.AuctionState;
+import org.tortodrone.core.town.AuctionState;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 public final class FriendStoreTest {
     public static void main(String[] args)throws Exception {

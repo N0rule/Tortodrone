@@ -3,8 +3,9 @@ package org.tortodrone.world;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.resources.ContentManager;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Original Sealed Sword table/predicate and generic weighted action execution. */
 public final class SpawnTableActionsTest {

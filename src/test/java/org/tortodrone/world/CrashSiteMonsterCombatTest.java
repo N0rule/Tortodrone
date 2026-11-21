@@ -2,9 +2,13 @@ package org.tortodrone.world;
 
 import java.nio.file.Path;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Bundled Crash Site monsters: native depth-0 defense and health, Proto hit values and the
  * MonsterLogic.shouldReact flinch rule through the production entity damage path. */
@@ -102,7 +106,7 @@ public final class CrashSiteMonsterCombatTest {
         var map=new SceneCatalog.MapScene(9398,50332041,"Fixture","Fixture","Fixture","level",1,1,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var simulation=new SceneRegistry.Instance(9398,0,map).simulation();int now=SceneClock.now();
         try(var member=simulation.join(new ActorState(219,1001,"Knight",0,now,1,0,(float)Math.PI,0,0,0,now,new StarterCatalog.Model("Character/PC/Level",Map.of()),false),s->{})){
-            member.combat(WeaponCatalog.empty(),new org.tortodrone.character.WorldProfile(10,1,1,0,0,1,List.of()));member.enter();
+            member.combat(WeaponCatalog.empty(),new org.tortodrone.core.character.WorldProfile(10,1,1,0,0,1,List.of()));member.enter();
             var field=SceneSimulation.Membership.class.getDeclaredField("health");field.setAccessible(true);
             var health=(SceneHealth)field.get(member);int maximum;
             // Entering a level arms the three-second arrival window; the Jelly's first swing

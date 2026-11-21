@@ -5,6 +5,10 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.character.Knight;
 
 /** Launches the stock graphical client against a disposable local combat fixture. */
 public final class CheckCombatRendering {

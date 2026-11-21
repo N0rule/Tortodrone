@@ -14,7 +14,7 @@ import java.nio.file.StandardOpenOption;
 import java.security.PrivateKey;
 import java.util.concurrent.Semaphore;
 import org.tortodrone.account.AccountStore;
-import org.tortodrone.config.ServerSettings;
+import org.tortodrone.core.config.ServerSettings;
 import org.tortodrone.server.network.SecureHandshake;
 import org.tortodrone.server.network.SessionLog;
 import org.tortodrone.server.security.HandshakeKeys;

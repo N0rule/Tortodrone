@@ -3,7 +3,8 @@ package org.tortodrone.storage;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.town.AuctionState;
+import org.tortodrone.core.town.AuctionState;
+import org.tortodrone.core.character.Knight;
 
 /** Mutual knight friendships and native request mail in existing storage namespaces. */
 public final class FriendStore {

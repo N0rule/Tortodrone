@@ -10,6 +10,10 @@ import org.tortodrone.loot.*;
 import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.resources.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Atomicity, identity, concurrent intent and persisted native inventory on disposable SQLite. */
 public final class BoxOpeningTest {

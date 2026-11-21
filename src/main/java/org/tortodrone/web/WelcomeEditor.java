@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.config.ServerSettings;
-import org.tortodrone.resources.ContentFiles;
+import org.tortodrone.core.config.ServerSettings;
+import org.tortodrone.core.ContentFiles;
 
 /** Only the welcome-message line of the active server settings file can be replaced. */
 final class WelcomeEditor {

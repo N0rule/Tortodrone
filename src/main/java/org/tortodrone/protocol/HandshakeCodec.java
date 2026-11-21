@@ -3,6 +3,7 @@ package org.tortodrone.protocol;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import org.tortodrone.core.WireTypes;
 
 /** Verified Presents handshake and connection-local mappings for the bounded session decoder. */
 public final class HandshakeCodec {

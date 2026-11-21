@@ -3,7 +3,8 @@ package org.tortodrone.storage;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.Json;
 
 /**
  * Guild membership, ranks, record, treasury well and hall state.
@@ -633,7 +634,7 @@ public final class GuildStore {
             s.setInt(2, type);
             s.setString(3, knightName);
             s.setLong(4, when);
-            s.setString(5, org.tortodrone.resources.Json.stringify(args == null ? List.of() : args));
+            s.setString(5, org.tortodrone.core.Json.stringify(args == null ? List.of() : args));
             s.executeUpdate();
         }
     }
@@ -661,7 +662,7 @@ public final class GuildStore {
             s.setInt(args.size() + 2, offset);
             try (var r = s.executeQuery()) {
                 while (r.next()) {
-                    var raw = (List<?>) org.tortodrone.resources.Json.parse(r.getString("args"));
+                    var raw = (List<?>) org.tortodrone.core.Json.parse(r.getString("args"));
                     entries.add(new LogEntry(r.getLong("id"), r.getInt("type"), r.getString("knight_name"),
                         r.getLong("when_ms"), raw.stream().map(String::valueOf).toList()));
                 }

@@ -4,7 +4,11 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.world.*;
-import static org.tortodrone.resources.Yaml.*;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Map-local editable intent combined with pinned native layout and source bindings. */
 public final class MapYaml {
@@ -48,10 +52,10 @@ public final class MapYaml {
             .orElseThrow(()->new IOException("Map folder is missing: "+name));
     }
     public static Prepared prepare(Path folder,Path shared)throws IOException {return prepare(folder,shared,null);}
-    public static Prepared prepare(Path folder,Path shared,org.tortodrone.character.ItemCatalog items)throws IOException {
+    public static Prepared prepare(Path folder,Path shared,org.tortodrone.core.character.ItemCatalog items)throws IOException {
         try{return prepareChecked(folder,shared,items);}catch(IOException|IllegalArgumentException invalid){throw new IOException(folder+": "+invalid.getMessage(),invalid);}
     }
-    private static Prepared prepareChecked(Path folder,Path shared,org.tortodrone.character.ItemCatalog items)throws IOException {
+    private static Prepared prepareChecked(Path folder,Path shared,org.tortodrone.core.character.ItemCatalog items)throws IOException {
         Path nativeDir=folder.resolve("native");
         var nativeMetadata=ContentFiles.properties(nativeDir.resolve("metadata.properties"));
         for(String key:nativeMetadata.stringPropertyNames())if(key.startsWith("sha256.")) {

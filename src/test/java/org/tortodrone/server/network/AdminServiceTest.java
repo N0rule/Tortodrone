@@ -12,6 +12,9 @@ import org.tortodrone.storage.Database;
 import org.tortodrone.world.TownSquare;
 import org.tortodrone.support.TestWire;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Stock item/sprite admin tools, server authorization, live pet equipment and persistence. */
 public final class AdminServiceTest {
@@ -20,7 +23,7 @@ public final class AdminServiceTest {
             .equals("com.threerings.projectx.admin.data.ProjectXAdminMarshaller"),
             "stock admin marshaller is advertised in the bootstrap service list");
         Path home = Files.createTempDirectory("tortodrone-admin-service-");
-        try (var accounts = new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
+        try (var accounts = new AccountStore(home,false,org.tortodrone.core.character.ItemCatalog.starter())) {
             var database = new Database(home, false);
             accounts.create("Alice", "alice-password".toCharArray());
             accounts.create("Master", "master-password".toCharArray(), true);
@@ -54,7 +57,7 @@ public final class AdminServiceTest {
             Socket staffSocket = new RecordingSocket();
             var staffFrames = new Frames();
             var scenes=new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneRegistry.system().catalog());
-            scenes.town(org.tortodrone.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
+            scenes.town(org.tortodrone.core.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
             try (var out = new SessionOutput(staffSocket);
                  var world = new WorldSession(staffSocket, staff, out, new SessionCodec(), 1002, 1, message -> {},
                      scenes, () -> true)) {

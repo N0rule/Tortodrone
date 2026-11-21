@@ -8,6 +8,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.tortodrone.protocol.HandshakeCodec;
+import org.tortodrone.core.character.Knight;
 
 /** Synthetic authentication and session client shared by socket and packaged-JAR tests. */
 public final class TestClient {

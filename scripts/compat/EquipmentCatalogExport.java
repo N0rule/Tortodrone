@@ -10,6 +10,7 @@ import org.tortodrone.world.EquipmentCatalog;
 import org.tortodrone.world.EquipmentCatalog.Entry;
 import org.tortodrone.world.EquipmentCatalog.Modifiers;
 import org.tortodrone.world.EquipmentCatalog.WeaponClass;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Exports stock numeric equipment-control modifiers, with no client assets. */
 public final class EquipmentCatalogExport {

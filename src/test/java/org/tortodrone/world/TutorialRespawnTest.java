@@ -2,9 +2,10 @@ package org.tortodrone.world;
 
 import java.nio.file.Path;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Crash Site cannot be left before its exit, so a knight with no Spark must not stay dead:
  * after the free emergency revive, tutorial deaths heal in place after the original 4 s. */

@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import org.tortodrone.server.network.SessionLog;
+import org.tortodrone.core.character.Knight;
 
 /** Operational identities only. Never owns authentication, sockets or gameplay state. */
 public final class SessionRegistry {

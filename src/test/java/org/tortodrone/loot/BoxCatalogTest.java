@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.random.RandomGenerator;
 import org.tortodrone.resources.*;
-import static org.tortodrone.resources.Yaml.*;
+import static org.tortodrone.core.Yaml.*;
 import static org.tortodrone.support.TestWire.check;
 
 /** Reject guessed keys, partial grants and invalid probability graphs before publication. */

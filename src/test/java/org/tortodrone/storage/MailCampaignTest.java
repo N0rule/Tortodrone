@@ -6,6 +6,10 @@ import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.support.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.AuctionState;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Administrative mail campaigns: literal text, gifts, windows, retries, late knights and upgrade. */
 public final class MailCampaignTest {
@@ -17,7 +21,7 @@ public final class MailCampaignTest {
             int aliceAccount = db.create("Alice", protection, false);
             int bobAccount = db.create("Bob", protection, false);
             var items = ItemCatalog.load(ContentFixture.path("items/catalog.json"));
-            var rules = org.tortodrone.town.TownCatalog.load(ContentFixture.path("town/catalog.json"));
+            var rules = org.tortodrone.core.town.TownCatalog.load(ContentFixture.path("town/catalog.json"));
             var aliceKnight = new CharacterStore(db, aliceAccount, "Alice", items).create(knight("Alice-Knight"));
             new CharacterStore(db, bobAccount, "Bob", items).create(knight("Bob-Knight"));
             int alice = db.worldProfile(aliceAccount, aliceKnight.id(), 1).worldId();
@@ -155,7 +159,7 @@ public final class MailCampaignTest {
     private static Knight knight(String name) {
         return new Knight(0, name, "Gear/Helm/Spiral Sallet (Blue)", "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 0);
     }
-    private static List<org.tortodrone.town.AuctionState.Mail> inbox(Database db, int world) throws Exception {
+    private static List<org.tortodrone.core.town.AuctionState.Mail> inbox(Database db, int world) throws Exception {
         return db.read(c -> AuctionHouse.loadMail(c, world));
     }
     private static int version(Database db) throws Exception {

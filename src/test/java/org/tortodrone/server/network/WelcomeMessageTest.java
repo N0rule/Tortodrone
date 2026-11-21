@@ -13,6 +13,7 @@ import org.tortodrone.storage.Database;
 import org.tortodrone.world.SceneRegistry;
 import org.tortodrone.world.TownSquare;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** The configured welcome notice appears once per login, before any scene re-entry. */
 public final class WelcomeMessageTest {

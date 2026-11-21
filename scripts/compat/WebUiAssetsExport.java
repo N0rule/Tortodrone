@@ -13,7 +13,7 @@ import com.threerings.projectx.item.config.ItemConfig;
 import com.threerings.projectx.sprites.config.BattleSpriteConfig;
 import com.threerings.opengl.gui.config.IconConfig;
 import com.threerings.opengl.renderer.config.ColorizationConfig;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import org.tortodrone.server.ClientArtworkApi;
 
 /** Optional offline preparation using the installed client's own resolver and colorizer.

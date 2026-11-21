@@ -7,10 +7,14 @@ import java.sql.DriverManager;
 import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.character.Currency;
+import org.tortodrone.core.character.Currency;
 import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.storage.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.AuctionState;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Disposable escrow regression, including the exact schema-9 predecessor. */
 public final class FeaturedAuctionTest {

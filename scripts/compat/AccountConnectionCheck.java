@@ -8,6 +8,7 @@ import com.threerings.projectx.data.*;
 import com.threerings.projectx.town.data.TownSceneObject;
 import com.threerings.tudey.dobj.SceneDeltaEvent;
 import com.threerings.util.Name;
+import org.tortodrone.core.character.Knight;
 
 /** Stock login/selection across a same-account takeover. Disposable harness only. */
 public final class AccountConnectionCheck {
@@ -17,7 +18,7 @@ public final class AccountConnectionCheck {
                 char[] hash=org.tortodrone.account.AccountStore.transform("lan-test-password".toCharArray());
                 try {
                     var account=store.authenticate("LanPlayer",hash);
-                    account.characters().create(new org.tortodrone.character.Knight(0,"Second-Knight",
+                    account.characters().create(new org.tortodrone.core.character.Knight(0,"Second-Knight",
                         "Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
                 }finally{Arrays.fill(hash,'\0');}
             }

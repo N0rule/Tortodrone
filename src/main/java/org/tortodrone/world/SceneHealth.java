@@ -1,7 +1,11 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.DungeonGear;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Party health is instance state; it is never written to the account database. */
 public final class SceneHealth {
@@ -42,18 +46,18 @@ public final class SceneHealth {
     public List<FireCatalog.Action> takeActions(){return status.takeActions();}
     public void inventory(WorldProfile profile){status.equipment(profile);}
     public void curseItem(long item,int stamp){if(alive()){rawDamage((int)Math.ceil(status.used(item)),stamp);died(stamp);}}
-    public void condition(org.tortodrone.character.StarterCatalog.Model ref,Object data,int stamp){status.applyResolved(ref,data,stamp);}
-    public boolean applyCondition(org.tortodrone.character.StarterCatalog.Model ref,Object data,int stamp){return status.applyResolvedResult(ref,data,stamp);}
+    public void condition(org.tortodrone.core.character.StarterCatalog.Model ref,Object data,int stamp){status.applyResolved(ref,data,stamp);}
+    public boolean applyCondition(org.tortodrone.core.character.StarterCatalog.Model ref,Object data,int stamp){return status.applyResolvedResult(ref,data,stamp);}
     public boolean clearStatus(int mask){return status.clear(mask);}
     public boolean cloaked(){return status.cloaked();}
     public void breakCloak(){status.breakCloak();}
-    public void equipment(WorldProfile profile){equipment(profile,org.tortodrone.town.TownCatalog.empty());}
-    public void equipment(WorldProfile profile,org.tortodrone.town.TownCatalog town){
+    public void equipment(WorldProfile profile){equipment(profile,org.tortodrone.core.town.TownCatalog.empty());}
+    public void equipment(WorldProfile profile,org.tortodrone.core.town.TownCatalog town){
         status.town(town);
         status.equipment(profile);
         int next=town.equipmentBonuses(profile,"").health();var defenses=new HashMap<String,String>();var shield=new HashMap<String,String>();
         for(var item:profile.items())if(item.equippedSlot()!=null&&GEAR.contains(item.equippedSlot())){
-            int vitapod=org.tortodrone.character.DungeonGear.healthBonus(item.config());next+=vitapod>0?vitapod:Math.round(GearStats.value(content.stats(),item,"health-bonus"));
+            int vitapod=org.tortodrone.core.character.DungeonGear.healthBonus(item.config());next+=vitapod>0?vitapod:Math.round(GearStats.value(content.stats(),item,"health-bonus"));
             for(String type:List.of("normal","piercing","elemental","shadow")){
                 var target=item.equippedSlot()==2?shield:defenses;
                 String key="defense."+type;float value=Float.parseFloat(target.getOrDefault(key,"0"));

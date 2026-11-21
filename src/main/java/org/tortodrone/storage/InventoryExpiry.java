@@ -2,6 +2,7 @@ package org.tortodrone.storage;
 
 import java.sql.*;
 import java.util.*;
+import org.tortodrone.core.character.SlotUpgrades;
 
 /** Absolute native item deadlines, stored in the existing authoritative metadata table. */
 final class InventoryExpiry {
@@ -42,7 +43,7 @@ final class InventoryExpiry {
     static void reconcile(Connection c,int world,long now)throws SQLException {
         int weapons=0,trinkets=0;
         try(var s=c.prepareStatement("SELECT i.config FROM inventory_items i JOIN metadata m ON m.key='item.expires.'||i.item_id WHERE i.world_id=? AND m.value>?")) {
-            s.setInt(1,world);s.setLong(2,now);try(var r=s.executeQuery()){while(r.next()){var def=org.tortodrone.character.SlotUpgrades.find(r.getString(1));if(def!=null){weapons+=def.weapons();trinkets+=def.trinkets();}}}
+            s.setInt(1,world);s.setLong(2,now);try(var r=s.executeQuery()){while(r.next()){var def=org.tortodrone.core.character.SlotUpgrades.find(r.getString(1));if(def!=null){weapons+=def.weapons();trinkets+=def.trinkets();}}}
         }
         try(var s=c.prepareStatement("DELETE FROM metadata WHERE key IN (SELECT 'item.weapon-slot.'||item_id FROM inventory_items WHERE world_id=?) AND value>=?")) {
             s.setInt(1,world);s.setInt(2,8+Math.min(2,weapons));s.executeUpdate();

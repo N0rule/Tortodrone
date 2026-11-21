@@ -3,7 +3,7 @@ package org.tortodrone.world;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 
 /** Real scene/membership/lift/input services on synthetic geometry; not a Generator playthrough. */

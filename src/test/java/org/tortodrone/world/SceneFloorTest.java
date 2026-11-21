@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Floor-placeable geometry supplies ground only inside its authored footprint. */
 public final class SceneFloorTest {

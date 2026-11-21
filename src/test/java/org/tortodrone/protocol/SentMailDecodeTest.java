@@ -2,6 +2,7 @@ package org.tortodrone.protocol;
 
 import java.io.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** The stock Uplink.deliver request is a streamable with field-specific encodings. */
 public final class SentMailDecodeTest {

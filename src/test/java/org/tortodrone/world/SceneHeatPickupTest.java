@@ -2,7 +2,7 @@ package org.tortodrone.world;
 
 import java.util.*;
 import java.util.concurrent.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 
 /** Synthetic scene: real ticking pickup claims and scene-owned party credit. */

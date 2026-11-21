@@ -12,6 +12,7 @@ import org.tortodrone.protocol.*;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** Authenticated two-player regression for the stock ProjectX emote invocation. */
 public final class EmoteSessionTest {

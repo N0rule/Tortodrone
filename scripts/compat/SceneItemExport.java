@@ -17,8 +17,9 @@ import com.threerings.projectx.item.config.ItemConfig;
 import com.threerings.tudey.config.ActionConfig;
 import com.threerings.tudey.config.ActorConfig;
 import com.threerings.tudey.config.TargetConfig;
-import org.tortodrone.character.StarterCatalog;
-import org.tortodrone.world.FireCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.Json;
 
 /** Exports numeric and typed action fields for native dungeon capsules and vials. */
 public final class SceneItemExport {
@@ -39,7 +40,7 @@ public final class SceneItemExport {
             var action=gameplay(readAction(manager,((ItemConfig.ActionItem)original).action));
             if(org.tortodrone.world.SceneWeapons.usable(action))actions.put(config.getName(),FireCatalog.actionJson(action));
         }
-        java.nio.file.Files.writeString(out,org.tortodrone.resources.Json.stringify(Map.of("format",1,"actions",actions)),java.nio.file.StandardOpenOption.CREATE_NEW);
+        java.nio.file.Files.writeString(out,org.tortodrone.core.Json.stringify(Map.of("format",1,"actions",actions)),java.nio.file.StandardOpenOption.CREATE_NEW);
         System.out.println("Exported "+actions.size()+" executable capsule actions to "+out);
     }
     /** Mission/statistic counters are outside this gameplay graph; never omit gameplay actions. */

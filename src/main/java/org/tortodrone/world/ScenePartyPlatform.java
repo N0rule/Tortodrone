@@ -1,6 +1,7 @@
 package org.tortodrone.world;
 
 import java.io.IOException;
+import org.tortodrone.world.SceneActions;
 
 /** Prepared native PartyIntersection switch. Counts and action receipts belong to its entity. */
 public record ScenePartyPlatform(SceneActions.Action intersection,SceneActions.Action pressed) {

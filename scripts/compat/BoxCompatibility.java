@@ -9,6 +9,14 @@ import com.threerings.presents.net.*;
 import com.threerings.presents.client.A;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.character.Confetti;
 
 /** Installed, unmodified ItemMarshaller and reader are the wire oracle; no client patching. */
 public final class BoxCompatibility {

@@ -6,8 +6,8 @@ import com.threerings.config.*;
 import com.threerings.tudey.config.PlaceableConfig;
 import com.threerings.tudey.data.TudeySceneModel;
 import com.threerings.projectx.item.config.ItemConfig;
-import org.tortodrone.resources.Json;
-import org.tortodrone.world.FireCatalog;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Read-only stock oracle for placed Town service handlers, shapes and minimap icons. */
 public final class TownServicesExport {

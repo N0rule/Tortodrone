@@ -4,9 +4,12 @@ import java.io.*;
 import java.nio.file.*;
 import java.security.*;
 import java.util.*;
-import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.ContentFiles;
 
 /** Golden compiled defaults from 0078b50, plus sparse edits and immutable identity failures.
  * Laboratory 30893 adopted the catalogue-backed Companion Cube attack graph (pinned by

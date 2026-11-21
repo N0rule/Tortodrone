@@ -6,6 +6,9 @@ import com.threerings.config.*;
 import com.threerings.projectx.dungeon.config.DungeonItemConfig;
 import com.threerings.projectx.item.config.*;
 import org.tortodrone.character.*;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Read-only stock oracle: references and basic facts, no assets or gameplay implementations. */
 public final class ItemCatalogExport {

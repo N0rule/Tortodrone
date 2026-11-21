@@ -3,7 +3,7 @@ package org.tortodrone.benchmark;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.world.*;
 

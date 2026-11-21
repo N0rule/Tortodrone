@@ -2,7 +2,7 @@ import java.nio.file.*;
 import java.util.*;
 import com.threerings.config.*;
 import com.threerings.projectx.item.config.ItemConfig;
-import org.tortodrone.world.FireCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Re-export only recovered legacy/catalyst graphs; merge by weapon/activity to preserve other repairs. */
 public final class RestorationExport {

@@ -1,7 +1,7 @@
 package org.tortodrone.protocol;
 
 import org.tortodrone.support.TestWire;
-import org.tortodrone.town.TownState;
+import org.tortodrone.core.town.TownState;
 import static org.tortodrone.support.TestWire.check;
 
 /** Standalone recipe additions must be framed network notifications, never raw nested events. */

@@ -4,8 +4,9 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.zip.GZIPOutputStream;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Runs the authoritative movement integrator against the live carried-lift collision query. */
 public final class LiftBarrierMovementTest {

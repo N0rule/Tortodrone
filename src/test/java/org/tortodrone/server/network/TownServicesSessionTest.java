@@ -8,9 +8,13 @@ import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.*;
 import org.tortodrone.storage.Database;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.Currency;
 
 /** Native inventory Use dispatch and dialog ownership, on a disposable authenticated session. */
 public final class TownServicesSessionTest {
@@ -21,7 +25,7 @@ public final class TownServicesSessionTest {
             var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
             var characters=new CharacterStore(db,account,"Alice",items);
             var knight=characters.create(new Knight(0,"Service-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
-            db.setCurrency("Alice",knight.name(),account,-1,org.tortodrone.character.Currency.ENERGY,1_000_000);
+            db.setCurrency("Alice",knight.name(),account,-1,org.tortodrone.core.character.Currency.ENERGY,1_000_000);
             String recipe="Recipe/Armor/Padded Armor Recipe";
             db.grantItems("Alice",knight.name(),-1,-1,items.require(recipe),2,-1,-1);
             db.grantItems("Alice",knight.name(),-1,-1,items.require("Upgrade/Rename Knight"),1,-1,-1);

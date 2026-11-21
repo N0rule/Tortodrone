@@ -6,11 +6,16 @@ import java.sql.*;
 import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.character.Currency;
+import org.tortodrone.core.character.Currency;
 import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.storage.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.AuctionState;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Disposable player-to-player mail: fees, escrow, ownership, bounce and schema-16 migration. */
 public final class MailDeliveryTest {

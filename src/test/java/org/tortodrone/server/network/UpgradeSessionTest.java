@@ -11,6 +11,9 @@ import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.SceneRegistry;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.SlotUpgrades;
 
 /** Native Arsenal use/extend dispatch must not grant repeated duration or accept malformed listeners. */
 public final class UpgradeSessionTest {

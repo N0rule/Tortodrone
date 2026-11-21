@@ -3,8 +3,9 @@ package org.tortodrone.resources;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.MissionCatalog;
+import org.tortodrone.core.mission.MissionCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.world.MissionGates;
 
 /** v2 mission folders: domain equivalence with v1, layout marker and refusal rules. */
 public final class MissionV2Test {

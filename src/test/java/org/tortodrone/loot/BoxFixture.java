@@ -3,7 +3,7 @@ package org.tortodrone.loot;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.resources.Yaml;
+import org.tortodrone.core.Yaml;
 
 /** Deliberately synthetic rewards, never shipped as official loot. */
 public final class BoxFixture {

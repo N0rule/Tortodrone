@@ -6,6 +6,7 @@ import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.storage.Database;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 public final class ReturnLocationTest {
     public static void main(String[] args)throws Exception{

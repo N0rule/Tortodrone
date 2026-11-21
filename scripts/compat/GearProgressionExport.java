@@ -3,7 +3,7 @@ import java.nio.file.*;
 import java.util.*;
 import com.threerings.config.*;
 import com.threerings.projectx.item.config.*;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 
 /** Read-only numeric forge/heat rules and resolved UV trees; never exports client assets. */
 public final class GearProgressionExport {

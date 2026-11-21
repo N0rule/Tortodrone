@@ -1,0 +1,62 @@
+package org.tortodrone.core.character;
+
+import java.util.List;
+import org.tortodrone.core.town.TownState;
+
+/** Server-owned character state persisted across sessions. */
+public record WorldProfile(int worldId, int accountId, int knightId, int crowns, int energy,
+        long revision, List<Item> items,KnightProgress progress,org.tortodrone.core.town.TownState town) {
+    public WorldProfile(int worldId,int accountId,int knightId,int crowns,int energy,long revision,List<Item> items,KnightProgress progress){this(worldId,accountId,knightId,crowns,energy,revision,items,progress,org.tortodrone.core.town.TownState.EMPTY);}
+    public WorldProfile(int worldId,int accountId,int knightId,int crowns,int energy,long revision,List<Item> items){this(worldId,accountId,knightId,crowns,energy,revision,items,KnightProgress.RECRUIT);}
+    public WorldProfile { items = List.copyOf(items);java.util.Objects.requireNonNull(progress);java.util.Objects.requireNonNull(town); }
+    public enum Slot {
+        HELM, ARMOR, SWORD, GUN, SHIELD, BOMB, HELM_COSTUME, ARMOR_COSTUME, SHIELD_COSTUME, TRINKET, DUNGEON, OTHER;
+        public boolean weapon() { return this==SWORD || this==GUN || this==BOMB; }
+        /** Schema 17 stores dungeon gear under the generic OTHER slot and overlays it on load. */
+        public String persistedName() { return this==DUNGEON?"OTHER":name(); }
+        public boolean accepts(int index) {
+            return switch(this) {
+                case HELM -> index==0||index==3;
+                case ARMOR -> index==1||index==4;
+                case SHIELD -> index==2||index==14||index==15; // 14 is the client's PvP shield slot
+                case SWORD, GUN, BOMB -> index>=6 && index<=9;
+                case HELM_COSTUME -> index==3;
+                case ARMOR_COSTUME -> index==4;
+                case SHIELD_COSTUME -> index==15;
+                case TRINKET -> index==10 || index==11;
+                case DUNGEON -> index==12;
+                case OTHER -> false;
+            };
+        }
+        public int initialIndex() { return switch(this) {case HELM->0;case ARMOR->1;case SHIELD->2;case SWORD,BOMB->6;case GUN->7;case HELM_COSTUME->3;case ARMOR_COSTUME->4;case SHIELD_COSTUME->15;case TRINKET->10;case DUNGEON->12;case OTHER->-1;}; }
+    }
+    public record Gift(int wrapperId,String wrapperName,String message,List<Item> contents) { public Gift{contents=List.copyOf(contents);} }
+    public record Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot, boolean bound, boolean bindOnEquip, boolean starter, int count, boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants,List<String> additionalAccessories,boolean cursed,Gift gift,Long expiresAt) {
+        public Item(long id,Slot slot,String config,String accessory,int heat,Integer equippedSlot,boolean bound,boolean bindOnEquip,boolean starter,int count,boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants,List<String> additionalAccessories,boolean cursed,Gift gift){this(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,cursed,gift,null);}
+        public Item withEquippedSlot(Integer value){return new Item(id,slot,config,accessory,heat,value,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,cursed,gift,expiresAt);}
+        public Item withExpiration(Long value){return new Item(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,cursed,gift,value);}
+        public boolean expired(long now){return expiresAt!=null&&expiresAt<=now;}
+        public Item(long id,Slot slot,String config,String accessory,int heat,Integer equippedSlot,boolean bound,boolean bindOnEquip,boolean starter,int count,boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants,List<String> additionalAccessories,boolean cursed){this(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,cursed,null);}
+        public Item withGift(Gift value){return new Item(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,cursed,value,expiresAt);}
+        public Item(long id,Slot slot,String config,String accessory,int heat,Integer equippedSlot,boolean bound,boolean bindOnEquip,boolean starter,int count,boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants,List<String> additionalAccessories){this(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,false);}
+        public Item curse(boolean value){return cursed==value?this:new Item(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,value,gift,expiresAt);}
+        public Item(long id,Slot slot,String config,String accessory,int heat,Integer equippedSlot,boolean bound,boolean bindOnEquip,boolean starter,int count,boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants){this(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,List.of());}
+        public List<String> nativeAccessories(String costume){var all=new java.util.ArrayList<String>();if(accessory!=null)all.add(accessory+", "+costume);all.addAll(additionalAccessories);return List.copyOf(all);}
+        public Item{variants=List.copyOf(variants);additionalAccessories=List.copyOf(additionalAccessories);}
+        public Item(long id,Slot slot,String config,String accessory,int heat,Integer equippedSlot,boolean bound,boolean bindOnEquip,boolean starter,int count,boolean permanent){this(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,0,0,List.of());}
+        public Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot, boolean bound, boolean bindOnEquip, boolean starter) {
+            this(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,1,false);
+        }
+        public Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot, boolean bound) {
+            this(id,slot,config,accessory,heat,equippedSlot,bound,true,true);
+        }
+        public Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot) {
+            this(id, slot, config, accessory, heat, equippedSlot, true);
+        }
+    }
+    public long[] equipment() {
+        long[] result=new long[16];
+        for(var item:items)if(item.equippedSlot()!=null)result[item.equippedSlot()]=item.id();
+        return result;
+    }
+}

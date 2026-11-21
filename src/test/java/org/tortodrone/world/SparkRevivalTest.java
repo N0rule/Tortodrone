@@ -2,8 +2,9 @@ package org.tortodrone.world;
 
 import java.io.IOException;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Payment rollback and exactly one native Spark effect/monster impulse after commit. */
 public final class SparkRevivalTest {

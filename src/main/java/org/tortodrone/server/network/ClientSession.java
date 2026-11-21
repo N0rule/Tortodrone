@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.CharacterStore;
-import org.tortodrone.character.Knight;
+import org.tortodrone.core.character.Knight;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.ContentFiles;
 
 /** Isolated versioned-content resolution, adversarial pack validation and read-only resolution. */
 public final class MigrationPackLoaderTest {

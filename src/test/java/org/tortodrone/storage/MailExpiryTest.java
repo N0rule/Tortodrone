@@ -6,11 +6,15 @@ import java.sql.*;
 import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.character.Currency;
+import org.tortodrone.core.character.Currency;
 import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.support.ContentFixture;
-import org.tortodrone.town.*;
+import org.tortodrone.core.town.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.AuctionState;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Stock 30-day mail retention: purge, return unaccepted player attachments and never recover. */
 public final class MailExpiryTest {

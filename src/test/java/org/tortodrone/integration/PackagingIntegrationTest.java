@@ -4,7 +4,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.zip.ZipFile;
 import org.tortodrone.resources.ContentManager;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
 

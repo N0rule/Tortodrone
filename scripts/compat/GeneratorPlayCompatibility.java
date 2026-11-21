@@ -11,6 +11,9 @@ import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
 import static org.tortodrone.server.network.OpeningGateCompatibility.*;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.OpeningMission;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Headless input driver against original 337 and production gameplay services.
  * Starts at an explicit post-Camp fixture; cannot establish the fresh-knight route. */

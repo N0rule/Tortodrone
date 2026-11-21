@@ -4,6 +4,8 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Pawn separation and lunge prediction regressions, independent of scheduler and network timing. */
 public final class MovementCollisionTest {

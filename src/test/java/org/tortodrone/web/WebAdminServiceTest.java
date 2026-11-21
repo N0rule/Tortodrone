@@ -5,11 +5,16 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.*;
-import org.tortodrone.config.ServerSettings;
+import org.tortodrone.core.config.ServerSettings;
 import org.tortodrone.resources.*;
 import org.tortodrone.server.*;
 import org.tortodrone.storage.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Domain adapter parity with ownership, stale-revision and transactional failure assertions. */
 public final class WebAdminServiceTest {
@@ -56,7 +61,7 @@ public final class WebAdminServiceTest {
                     check(compatible.contains(variant),"selected UV remains removable in the picker");
                     for(String candidate:helmDefinition.variants())if(!candidate.equals(variant)) {
                         boolean accepted=true;
-                        try{content.town().validateVariants(org.tortodrone.town.TownCatalog.itemGroup(content.items().find(helmConfig)),List.of(variant,candidate));}
+                        try{content.town().validateVariants(org.tortodrone.core.town.TownCatalog.itemGroup(content.items().find(helmConfig)),List.of(variant,candidate));}
                         catch(IOException rejected){accepted=false;}
                         check(compatible.contains(candidate)==accepted,"picker compatibility agrees with save validation");
                     }

@@ -2,9 +2,13 @@ package org.tortodrone.world;
 
 import java.nio.file.Path;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.FireCatalog;
 
 /** The monster death wire contract, from the native death flow: the killing blow
  *  switches the activity to 2 (DYING) at its own stamp and sets destroyed to
@@ -65,7 +69,7 @@ public final class CrashSiteMonsterDeathTest {
         var simulation=new SceneRegistry.Instance(9401,0,fixture).simulation();
         int now=SceneClock.now();
         try(var member=simulation.join(new ActorState(219,1001,"Knight",0,now,1,0,0,0,0,0,now,new StarterCatalog.Model("Character/PC/Level",Map.of()),false),s->{})){
-            member.combat(WeaponCatalog.empty(),new org.tortodrone.character.WorldProfile(10,1,1,0,0,1,List.of()));
+            member.combat(WeaponCatalog.empty(),new org.tortodrone.core.character.WorldProfile(10,1,1,0,0,1,List.of()));
             member.enter();
             int monster;SceneSimulation.Snapshot before,terminal;
             synchronized(simulation){

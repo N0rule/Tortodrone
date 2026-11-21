@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.storage.Database;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Deployment-local trade ownership. No callback acquires a world or account lock. */
 final class PlayerTrades {

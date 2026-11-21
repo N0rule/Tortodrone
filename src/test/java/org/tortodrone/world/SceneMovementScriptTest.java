@@ -2,6 +2,7 @@ package org.tortodrone.world;
 
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.world.SceneActions;
 
 public final class SceneMovementScriptTest {
     public static void main(String[] args)throws Exception {

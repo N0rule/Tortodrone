@@ -14,6 +14,9 @@ import org.tortodrone.storage.*;
 import org.tortodrone.support.ContentFixture;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.Currency;
 
 /** Actual native bid entry point, deployment-scoped presence and observer publication after commit. */
 public final class AuctionRefundSessionTest {
@@ -57,7 +60,7 @@ public final class AuctionRefundSessionTest {
         int account=db.create(name,new Passwords.Protection(new byte[16],new byte[32]),false);
         var characters=new CharacterStore(db,account,name,items);String knight=name+"-Knight";
         characters.create(new Knight(0,knight,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0));
-        db.setCurrency(name,knight,account,-1,org.tortodrone.character.Currency.CROWNS,10000);
+        db.setCurrency(name,knight,account,-1,org.tortodrone.core.character.Currency.CROWNS,10000);
         var frames=new LinkedBlockingQueue<byte[]>();
         var socket=new Socket(){public OutputStream getOutputStream(){return new OutputStream(){public void write(int b){throw new AssertionError("Complete frames required");}public void write(byte[] bytes){frames.add(bytes);}};}};
         var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),oid,1,m->{},scenes);

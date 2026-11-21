@@ -7,8 +7,17 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.*;
 import java.util.*;
 import org.tortodrone.account.Passwords;
-import org.tortodrone.character.Knight;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.SlotUpgrades;
+import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.character.KnightObjective;
+import org.tortodrone.core.character.KnightMemory;
+import org.tortodrone.core.character.Currency;
+import org.tortodrone.core.character.DungeonGear;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
@@ -233,7 +242,7 @@ public final class Database {
     public WorldProfile completeTutorial(int accountId,int knightId,long authRevision,int worldId,long revision)throws IOException {
         return completeTutorial(accountId,knightId,authRevision,worldId,revision,0,null);
     }
-    public WorldProfile completeTutorial(int accountId,int knightId,long authRevision,int worldId,long revision,float heat,org.tortodrone.town.TownCatalog rules)throws IOException {
+    public WorldProfile completeTutorial(int accountId,int knightId,long authRevision,int worldId,long revision,float heat,org.tortodrone.core.town.TownCatalog rules)throws IOException {
         if(!Float.isFinite(heat)||heat<0||heat>1_000_000||heat>0&&rules==null)throw new IOException("Invalid tutorial heat settlement");
         return write(c->{
             requirePreferenceOwner(c,accountId,authRevision);
@@ -262,7 +271,7 @@ public final class Database {
                 String knight;try(var s=c.prepareStatement("SELECT name FROM knights WHERE account_id=? AND id=?")){
                     s.setInt(1,accountId);s.setInt(2,knightId);try(var r=s.executeQuery()){if(!r.next())throw new IOException("Tutorial knight missing");knight=r.getString(1);}
                 }
-                var bomb=new org.tortodrone.character.WorldProfile.Item(0,org.tortodrone.character.WorldProfile.Slot.BOMB,SKIPPED_CAMP_ATTACHMENT,null,0,null,false,true,false,1,false,0,0,List.of(),List.of(),false);
+                var bomb=new org.tortodrone.core.character.WorldProfile.Item(0,org.tortodrone.core.character.WorldProfile.Slot.BOMB,SKIPPED_CAMP_ATTACHMENT,null,0,null,false,true,false,1,false,0,0,List.of(),List.of(),false);
                 AuctionHouse.systemMail(c,worldId,ORIENTATION_SENDER,"s.skipped_rescue_camp",AuctionHouse.composeMessage("m.skipped_rescue_camp","~"+knight),List.of(bomb));
             }
             try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
@@ -281,14 +290,14 @@ public final class Database {
         return read(c->{c.setAutoCommit(false);requirePreferenceOwner(c,accountId,authRevision);var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
             var result=KnightMemories.load(c,profile.worldId());c.commit();return result;});
     }
-    public MemoryState knightMemories(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.character.KnightMemory> operations)throws IOException {
+    public MemoryState knightMemories(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations)throws IOException {
         var result=knightStory(accountId,knightId,authRevision,worldId,revision,operations,List.of());return new MemoryState(result.profile(),result.memories());
     }
-    public Map<String,org.tortodrone.character.KnightObjective.State> knightObjectives(int accountId,int knightId,long authRevision)throws IOException {
+    public Map<String,org.tortodrone.core.character.KnightObjective.State> knightObjectives(int accountId,int knightId,long authRevision)throws IOException {
         return read(c->{c.setAutoCommit(false);requirePreferenceOwner(c,accountId,authRevision);var profile=WorldProfiles.load(c,accountId,knightId,authRevision);var result=KnightObjectives.load(c,profile.worldId());c.commit();return result;});
     }
-    public record StoryState(WorldProfile profile,Set<String> memories,Map<String,org.tortodrone.character.KnightObjective.State> objectives){public StoryState{memories=Set.copyOf(memories);objectives=Map.copyOf(objectives);}}
-    public StoryState knightStory(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.character.KnightMemory> operations,List<org.tortodrone.character.KnightObjective> objectives)throws IOException {
+    public record StoryState(WorldProfile profile,Set<String> memories,Map<String,org.tortodrone.core.character.KnightObjective.State> objectives){public StoryState{memories=Set.copyOf(memories);objectives=Map.copyOf(objectives);}}
+    public StoryState knightStory(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations,List<org.tortodrone.core.character.KnightObjective> objectives)throws IOException {
         var changes=List.copyOf(operations);if(changes.size()>256)throw new IOException("Too many knight memory operations");
         var objectiveChanges=List.copyOf(objectives);if(objectiveChanges.size()>256)throw new IOException("Too many objective operations");
         return write(c->{
@@ -492,8 +501,8 @@ public final class Database {
         return write(c->{var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);
             if(expectedRevision>=0&&profile.revision()!=expectedRevision)throw new IOException("Knight changed; refresh before editing");
             var old=profile.progress();
-            org.tortodrone.character.KnightProgress next;
-            try{if((rank==null)!=(subrank==null))throw new IllegalArgumentException();next=new org.tortodrone.character.KnightProgress(rank==null?old.rank():rank,subrank==null?old.subrank():subrank,prestige==null?old.prestige():prestige);}
+            org.tortodrone.core.character.KnightProgress next;
+            try{if((rank==null)!=(subrank==null))throw new IllegalArgumentException();next=new org.tortodrone.core.character.KnightProgress(rank==null?old.rank():rank,subrank==null?old.subrank():subrank,prestige==null?old.prestige():prestige);}
             catch(IllegalArgumentException invalid){throw new IOException("Rank must be 1-10, subrank 1-4 and prestige nonnegative",invalid);}
             boolean granted=starterSprite!=null&&TownStore.grantStarterSprite(c,profile,starterSprite);
             if(next.equals(old)&&!granted)return profile;
@@ -507,30 +516,30 @@ public final class Database {
         });
     }
     public WorldProfile currency(String username,String knightName,int expectedAccount,int expectedWorld,
-            org.tortodrone.character.Currency currency,long delta) throws IOException {
+            org.tortodrone.core.character.Currency currency,long delta) throws IOException {
         return balance(username,knightName,expectedAccount,expectedWorld,currency,delta,false);
     }
     public WorldProfile setCurrency(String username,String knightName,int expectedAccount,int expectedWorld,
-            org.tortodrone.character.Currency currency,long amount) throws IOException {
+            org.tortodrone.core.character.Currency currency,long amount) throws IOException {
         return balance(username,knightName,expectedAccount,expectedWorld,currency,amount,true);
     }
     private WorldProfile balance(String username,String knightName,int expectedAccount,int expectedWorld,
-            org.tortodrone.character.Currency currency,long amount,boolean absolute) throws IOException {
+            org.tortodrone.core.character.Currency currency,long amount,boolean absolute) throws IOException {
         return administrativeCurrency(username,knightName,expectedAccount,expectedWorld,currency,amount,absolute,-1);
     }
     public WorldProfile administrativeCurrency(String username,String knightName,int expectedAccount,int expectedWorld,
-            org.tortodrone.character.Currency currency,long amount,boolean absolute,long expectedRevision)throws IOException {
+            org.tortodrone.core.character.Currency currency,long amount,boolean absolute,long expectedRevision)throws IOException {
         Objects.requireNonNull(currency);
         if(absolute ? amount<0||amount>Integer.MAX_VALUE : amount==0||amount<-Integer.MAX_VALUE||amount>Integer.MAX_VALUE)
             throw new IOException(absolute ? "Balance must be between 0 and 2147483647" : "Amount must be between 1 and 2147483647");
         return write(c -> {
             var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);
             if(expectedRevision>=0&&profile.revision()!=expectedRevision)throw new IOException("Balance changed; refresh before editing");
-            long previous=currency==org.tortodrone.character.Currency.CROWNS?profile.crowns():profile.energy();
+            long previous=currency==org.tortodrone.core.character.Currency.CROWNS?profile.crowns():profile.energy();
             long balance=absolute?amount:previous+amount, delta=balance-previous;
             if(balance<0)throw new IOException("Insufficient "+currency.name().toLowerCase(Locale.ROOT));
             if(balance>Integer.MAX_VALUE)throw new IOException("Balance exceeds the supported limit");
-            String column=currency==org.tortodrone.character.Currency.CROWNS?"crowns":"energy";
+            String column=currency==org.tortodrone.core.character.Currency.CROWNS?"crowns":"energy";
             try(var s=c.prepareStatement("UPDATE world_characters SET "+column+"=?,state_revision=state_revision+1 WHERE world_id=?")) {
                 s.setLong(1,balance);s.setInt(2,profile.worldId());s.executeUpdate();
             }
@@ -543,10 +552,10 @@ public final class Database {
     }
     /** Local administrator quantity/removal, audited and published by the existing revision poller. */
     public WorldProfile itemQuantity(String username,String knightName,int expectedAccount,int expectedWorld,
-            long itemId,int quantity,org.tortodrone.character.ItemCatalog catalog) throws IOException {
+            long itemId,int quantity,org.tortodrone.core.character.ItemCatalog catalog) throws IOException {
         return itemQuantity(username,knightName,expectedAccount,expectedWorld,itemId,quantity,catalog,-1);
     }
-    public WorldProfile itemQuantity(String username,String knightName,int expectedAccount,int expectedWorld,long itemId,int quantity,org.tortodrone.character.ItemCatalog catalog,long expectedRevision)throws IOException {
+    public WorldProfile itemQuantity(String username,String knightName,int expectedAccount,int expectedWorld,long itemId,int quantity,org.tortodrone.core.character.ItemCatalog catalog,long expectedRevision)throws IOException {
         if(quantity<0||quantity>9999)throw new IOException("Quantity must be between 0 and 9999");
         return write(c->{
             var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);
@@ -576,7 +585,7 @@ public final class Database {
     private static void equip(Connection c,WorldProfile profile,long itemId,Integer slot)throws SQLException,IOException {
             var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("No such owned item"));
             if(slot!=null && !item.slot().accepts(slot))throw new IOException("Item cannot be equipped in that slot");
-            if(slot!=null&&!org.tortodrone.character.SlotUpgrades.unlocked(profile,slot))throw new IOException("Activate a slot upgrade first");
+            if(slot!=null&&!org.tortodrone.core.character.SlotUpgrades.unlocked(profile,slot))throw new IOException("Activate a slot upgrade first");
             try(var st=c.prepareStatement("DELETE FROM metadata WHERE key IN (SELECT 'item.weapon-slot.'||item_id FROM inventory_items WHERE world_id=?) AND (key=? OR value=?)")) {
                 st.setInt(1,profile.worldId());st.setString(2,"item.weapon-slot."+itemId);if(slot==null)st.setNull(3,Types.INTEGER);else st.setInt(3,slot);st.executeUpdate();
             }
@@ -588,12 +597,12 @@ public final class Database {
             // Slot 12 is the dungeon gear slot. The native client refuses a Vitapod whose
             // capsule tier is not better than the equipped one, and replaces (removes) the old pod.
             if(slot!=null&&slot==12&&item.slot()==WorldProfile.Slot.DUNGEON) {
-                int nextTier=org.tortodrone.character.DungeonGear.vitapodTier(item.config());
+                int nextTier=org.tortodrone.core.character.DungeonGear.vitapodTier(item.config());
                 if(nextTier>0) {
                     var current=profile.items().stream().filter(i->i.id()!=itemId&&Integer.valueOf(12).equals(i.equippedSlot())).findFirst().orElse(null);
-                    if(current!=null&&org.tortodrone.character.DungeonGear.vitapodTier(current.config())>=nextTier)
+                    if(current!=null&&org.tortodrone.core.character.DungeonGear.vitapodTier(current.config())>=nextTier)
                         throw new IOException("A better Vitapod is already equipped");
-                    if(current!=null&&org.tortodrone.character.DungeonGear.vitapodTier(current.config())>0)
+                    if(current!=null&&org.tortodrone.core.character.DungeonGear.vitapodTier(current.config())>0)
                         try(var st=c.prepareStatement("DELETE FROM inventory_items WHERE world_id=? AND item_id=?")){st.setInt(1,profile.worldId());st.setLong(2,current.id());st.executeUpdate();}
                 }
             }
@@ -612,7 +621,7 @@ public final class Database {
             if(slot!=null&&slot==12)try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){st.setString(1,"item.dungeon."+profile.worldId());st.setLong(2,itemId);st.executeUpdate();}
             try(PreparedStatement s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
     }
-    public WorldProfile administrativeEquipment(String username,String knight,int account,int world,long revision,long itemId,Integer slot,String grant,org.tortodrone.character.ItemCatalog catalog,org.tortodrone.town.TownCatalog rules)throws IOException {
+    public WorldProfile administrativeEquipment(String username,String knight,int account,int world,long revision,long itemId,Integer slot,String grant,org.tortodrone.core.character.ItemCatalog catalog,org.tortodrone.core.town.TownCatalog rules)throws IOException {
         return write(c->{
             var profile=administrativeProfile(c,username,knight,account,world);
             if(profile.revision()!=revision)throw new IOException("Inventory changed; refresh before editing");
@@ -631,19 +640,19 @@ public final class Database {
     }
     /** Permission and target identity are checked under the same write lock as allocation. */
     public WorldProfile grantItems(String username,String knightName,int expectedAccount,int expectedWorld,
-            org.tortodrone.character.ItemCatalog.Entry entry,int quantity,int actorAccount,long actorRevision)throws IOException {
-        return grantItems(username,knightName,expectedAccount,expectedWorld,entry,quantity,actorAccount,actorRevision,org.tortodrone.character.ItemModifiers.NONE,org.tortodrone.town.TownCatalog.empty());
+            org.tortodrone.core.character.ItemCatalog.Entry entry,int quantity,int actorAccount,long actorRevision)throws IOException {
+        return grantItems(username,knightName,expectedAccount,expectedWorld,entry,quantity,actorAccount,actorRevision,org.tortodrone.character.ItemModifiers.NONE,org.tortodrone.core.town.TownCatalog.empty());
     }
     public WorldProfile grantItems(String username,String knightName,int expectedAccount,int expectedWorld,
-            org.tortodrone.character.ItemCatalog.Entry entry,int quantity,int actorAccount,long actorRevision,
-            org.tortodrone.character.ItemModifiers modifiers,org.tortodrone.town.TownCatalog rules)throws IOException {
+            org.tortodrone.core.character.ItemCatalog.Entry entry,int quantity,int actorAccount,long actorRevision,
+            org.tortodrone.character.ItemModifiers modifiers,org.tortodrone.core.town.TownCatalog rules)throws IOException {
         return grantItems(username,knightName,expectedAccount,expectedWorld,entry,quantity,actorAccount,actorRevision,modifiers,rules,false,entry.expireDays());
     }
     public WorldProfile grantItems(String username,String knightName,int expectedAccount,int expectedWorld,
-            org.tortodrone.character.ItemCatalog.Entry entry,int quantity,int actorAccount,long actorRevision,
-            org.tortodrone.character.ItemModifiers modifiers,org.tortodrone.town.TownCatalog rules,boolean locked,int expireDays)throws IOException {
+            org.tortodrone.core.character.ItemCatalog.Entry entry,int quantity,int actorAccount,long actorRevision,
+            org.tortodrone.character.ItemModifiers modifiers,org.tortodrone.core.town.TownCatalog rules,boolean locked,int expireDays)throws IOException {
         if(expireDays<0||expireDays>3650||expireDays>0&&entry.permanent())throw new IOException("Expiry must be 0–3650 days and cannot apply to permanent items");
-        if(quantity<1||quantity>org.tortodrone.character.ItemCatalog.GRANT_LIMIT)throw new IOException("Quantity must be between 1 and 20");
+        if(quantity<1||quantity>org.tortodrone.core.character.ItemCatalog.GRANT_LIMIT)throw new IOException("Quantity must be between 1 and 20");
         if(!entry.grantable())throw new IOException("Unsupported item for grants");
         modifiers.validate(entry,rules);
         return write(c->{
@@ -668,7 +677,7 @@ public final class Database {
             if(expectedWorld>=0&&profile.worldId()!=expectedWorld)throw new IOException("Knight changed; refresh");
             // Stack only plain inventory items with identical grant flags; equipment stays distinct.
             var stack=expireDays==0&&entry.stackable()&&modifiers.equals(org.tortodrone.character.ItemModifiers.NONE)?profile.items().stream().filter(i->i.config().equals(entry.config())
-                &&i.slot()==org.tortodrone.character.WorldProfile.Slot.OTHER&&i.expiresAt()==null&&i.bound()==(locked||entry.locked()||entry.permanent())&&i.permanent()==entry.permanent()
+                &&i.slot()==org.tortodrone.core.character.WorldProfile.Slot.OTHER&&i.expiresAt()==null&&i.bound()==(locked||entry.locked()||entry.permanent())&&i.permanent()==entry.permanent()
                 &&i.equippedSlot()==null&&i.level()==0&&i.heatProgress()==0&&i.variants().isEmpty()&&i.count()+quantity<=9999).findFirst().orElse(null):null;
             int instances=stack!=null?0:entry.stackable()?1:quantity;
             long first=0;
@@ -682,7 +691,7 @@ public final class Database {
                     long id=WorldProfiles.allocate(c,"next-item-id",Long.MAX_VALUE);if(i==0)first=id;
                     s.setLong(1,id);s.setInt(2,profile.worldId());s.setString(3,entry.slot().persistedName());s.setString(4,entry.config());s.setBoolean(5,entry.bindOnEquip());
                     s.setInt(6,entry.stackable()?quantity:1);s.setBoolean(7,entry.permanent());s.setBoolean(8,locked||entry.locked()||entry.permanent());
-                    s.setInt(9,modifiers.level());s.setFloat(10,modifiers.heat());s.setString(11,org.tortodrone.resources.Json.stringify(modifiers.variants()));s.executeUpdate();
+                    s.setInt(9,modifiers.level());s.setFloat(10,modifiers.heat());s.setString(11,org.tortodrone.core.Json.stringify(modifiers.variants()));s.executeUpdate();
                     InventoryExpiry.save(c,id,InventoryExpiry.deadline(expireDays));
                 }
             }
@@ -696,18 +705,18 @@ public final class Database {
     }
     /** Local administration only; a stale inspector cannot overwrite newly forged or traded gear. */
     public WorldProfile itemModifiers(String username,String knightName,int expectedAccount,int expectedWorld,long expectedRevision,
-            long itemId,org.tortodrone.character.ItemModifiers modifiers,org.tortodrone.character.ItemCatalog catalog,org.tortodrone.town.TownCatalog rules)throws IOException{
+            long itemId,org.tortodrone.character.ItemModifiers modifiers,org.tortodrone.core.character.ItemCatalog catalog,org.tortodrone.core.town.TownCatalog rules)throws IOException{
         return write(c->{
             var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);if(profile.revision()!=expectedRevision)throw new IOException("Inventory changed; refresh before editing");
             var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("Item is not owned by this knight"));
             modifiers.validate(catalog.require(item.config()),rules);
-            try(var s=c.prepareStatement("UPDATE inventory_items SET level=?,heat_progress=?,variants=? WHERE world_id=? AND item_id=?")){s.setInt(1,modifiers.level());s.setFloat(2,modifiers.heat());s.setString(3,org.tortodrone.resources.Json.stringify(modifiers.variants()));s.setInt(4,profile.worldId());s.setLong(5,itemId);if(s.executeUpdate()!=1)throw new IOException("Item changed");}
+            try(var s=c.prepareStatement("UPDATE inventory_items SET level=?,heat_progress=?,variants=? WHERE world_id=? AND item_id=?")){s.setInt(1,modifiers.level());s.setFloat(2,modifiers.heat());s.setString(3,org.tortodrone.core.Json.stringify(modifiers.variants()));s.setInt(4,profile.worldId());s.setLong(5,itemId);if(s.executeUpdate()!=1)throw new IOException("Item changed");}
             TownStore.touch(c,profile.worldId());event(c,profile.accountId(),"item modifiers; world="+profile.worldId()+"; item="+itemId);
             return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
         });
     }
     /** Web/local administration; expected identity and revision are checked inside BEGIN IMMEDIATE. */
-    public WorldProfile itemAccessory(String username,String knightName,int expectedAccount,int expectedWorld,long expectedRevision,long itemId,String accessory,org.tortodrone.town.TownCatalog rules)throws IOException {
+    public WorldProfile itemAccessory(String username,String knightName,int expectedAccount,int expectedWorld,long expectedRevision,long itemId,String accessory,org.tortodrone.core.town.TownCatalog rules)throws IOException {
         return write(c->{
             var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);
             if(profile.revision()!=expectedRevision)throw new IOException("Inventory changed; refresh before editing");
@@ -721,10 +730,10 @@ public final class Database {
     }
     public List<WorldProfile> trade(WorldProfile first,long firstAuth,Map<Long,Integer> firstItems,int firstCrowns,int firstEnergy,
             WorldProfile second,long secondAuth,Map<Long,Integer> secondItems,int secondCrowns,int secondEnergy)throws IOException {
-        return trade(first,firstAuth,firstItems,firstCrowns,firstEnergy,second,secondAuth,secondItems,secondCrowns,secondEnergy,org.tortodrone.character.ItemCatalog.starter());
+        return trade(first,firstAuth,firstItems,firstCrowns,firstEnergy,second,secondAuth,secondItems,secondCrowns,secondEnergy,org.tortodrone.core.character.ItemCatalog.starter());
     }
     public List<WorldProfile> trade(WorldProfile first,long firstAuth,Map<Long,Integer> firstItems,int firstCrowns,int firstEnergy,
-            WorldProfile second,long secondAuth,Map<Long,Integer> secondItems,int secondCrowns,int secondEnergy,org.tortodrone.character.ItemCatalog catalog)throws IOException {
+            WorldProfile second,long secondAuth,Map<Long,Integer> secondItems,int secondCrowns,int secondEnergy,org.tortodrone.core.character.ItemCatalog catalog)throws IOException {
         var a=Map.copyOf(firstItems);var b=Map.copyOf(secondItems);
         return write(c->TradeTransfer.commit(c,first,firstAuth,a,firstCrowns,firstEnergy,second,secondAuth,b,secondCrowns,secondEnergy,catalog));
     }

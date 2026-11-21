@@ -9,6 +9,9 @@ import org.tortodrone.character.*;
 import org.tortodrone.loot.*;
 import org.tortodrone.resources.ItemYaml;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Shipped estimates use real native identities, retain every category and persist complete bundles. */
 public final class BoxPoolsTest {

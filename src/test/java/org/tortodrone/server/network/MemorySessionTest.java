@@ -12,6 +12,7 @@ import org.tortodrone.protocol.*;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** Synthetic scene sensor through production membership, session delivery, SQLite and wire output. */
 public final class MemorySessionTest {

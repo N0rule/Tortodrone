@@ -7,7 +7,7 @@ import java.sql.*;
 import java.util.*;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-import org.tortodrone.resources.ContentFiles;
+import org.tortodrone.core.ContentFiles;
 
 /** Independent credentials and atomic identity/audit writes. No game account or GM inference. */
 public final class WebIdentityStore {

@@ -13,6 +13,8 @@ import org.tortodrone.storage.Database;
 import org.tortodrone.support.TestWire;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
 
 public final class ReadyRoomSessionTest {
     private static final Map<String,Short> RECEIVERS=Map.of(SceneRegistry.ZONE_RECEIVER,(short)0);

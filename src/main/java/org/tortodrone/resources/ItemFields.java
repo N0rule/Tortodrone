@@ -2,7 +2,8 @@ package org.tortodrone.resources;
 
 import java.io.*;
 import java.util.*;
-import static org.tortodrone.resources.Yaml.*;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.Yaml;
 
 /** Single source for scalar defaults, ranges, diagnostics and the administrator field reference. */
 public final class ItemFields {

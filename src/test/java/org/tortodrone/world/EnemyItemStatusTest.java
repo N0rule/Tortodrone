@@ -1,9 +1,10 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Real item graphs against instance-owned enemies; no accounts or client assets. */
 public final class EnemyItemStatusTest {

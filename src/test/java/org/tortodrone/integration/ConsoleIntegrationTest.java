@@ -9,9 +9,10 @@ import java.util.Comparator;
 import java.util.concurrent.*;
 import org.tortodrone.storage.Database;
 import org.tortodrone.character.CharacterStore;
-import org.tortodrone.character.Knight;
+import org.tortodrone.core.character.Knight;
 import org.tortodrone.support.TestClient;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Currency;
 
 /** Commands run on stdin of the distributed server while actual network sessions remain active. */
 public final class ConsoleIntegrationTest {

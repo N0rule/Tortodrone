@@ -15,6 +15,9 @@ import org.tortodrone.storage.Database;
 import org.tortodrone.support.ContentFixture;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** The mob death VFX wire, end to end: a full Crash Site session fights its jelly
  *  wave until a knight's sword kills one, then the recorded downstream bytes are

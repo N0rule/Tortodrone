@@ -12,6 +12,8 @@ import org.tortodrone.storage.Database;
 import org.tortodrone.support.ContentFixture;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.OpeningMission;
 
 /** Real exit sensor/session/SQLite handoff. Server-side test placement skips combat;
  * this is not a full gameplay or graphical acceptance test. */

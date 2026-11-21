@@ -1,7 +1,7 @@
 import java.nio.file.*;
 import java.security.*;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.world.*;
 
 /** Original 337 key/door component test with explicit player poses and carry calls.

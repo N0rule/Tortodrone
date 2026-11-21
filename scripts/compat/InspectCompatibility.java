@@ -11,8 +11,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.util.*;
-import org.tortodrone.character.Knight;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionCodec;
 

@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.text.Normalizer;
 import java.util.*;
-import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** IDs are assigned once from exact native identities, then stored in bindings (never from translated labels). */
 final class ItemIds {

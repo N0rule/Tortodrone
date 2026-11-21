@@ -5,6 +5,8 @@ import java.util.*;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.resources.ContentRegistry;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.world.SceneActions;
 
 /**
  * Every shipped map's hostile monster placement, not just Crash Site: native configs resolve to

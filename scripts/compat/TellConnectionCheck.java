@@ -5,6 +5,7 @@ import com.threerings.crowd.chat.client.j;
 import com.threerings.crowd.chat.data.UserMessage;
 import com.threerings.presents.dobj.*;
 import com.threerings.util.Name;
+import org.tortodrone.core.character.Knight;
 
 /** Original tell marshaller/reader, private player-object delivery and lifecycle checks. */
 public final class TellConnectionCheck {

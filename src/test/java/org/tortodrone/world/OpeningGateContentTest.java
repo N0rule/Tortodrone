@@ -1,9 +1,10 @@
 package org.tortodrone.world;
 
 import java.nio.file.*;
-import org.tortodrone.character.OpeningMission;
+import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.world.MissionRun;
 
 /** Shipped content advertises the pinned opening gate only when its original floor,
  * destination and generator controls are all present. */

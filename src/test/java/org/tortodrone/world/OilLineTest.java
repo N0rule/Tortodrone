@@ -2,8 +2,10 @@ package org.tortodrone.world;
 
 import java.lang.reflect.*;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.WireTypes;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Official-capture pot torches: Fire Power 100 for a direct Fire Pot, Fire (Scaled)
  *  flags 1 / 0.0 / 0 for oil ignition, and sequential ignition down an oil line. */
@@ -66,8 +68,8 @@ public final class OilLineTest {
     private static StarterCatalog.Model pointHit(Object damage){
         return new StarterCatalog.Model("DamageRegionFromPoint",Map.of(
             "damage",damage,
-            "region",new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.REGION_DEFAULT,Map.of("expansion",0f)),
-            "shape",new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.SHAPE_CIRCLE,
+            "region",new FireCatalog.DataValue(org.tortodrone.core.WireTypes.REGION_DEFAULT,Map.of("expansion",0f)),
+            "shape",new FireCatalog.DataValue(org.tortodrone.core.WireTypes.SHAPE_CIRCLE,
                 List.of(new FireCatalog.FieldValue("radius","float",.1f)))));
     }
     private static void land(SceneEntities world,int id,int stamp)throws Exception {

@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.support.TestDeployment;
 import org.tortodrone.resources.ContentManager;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
 
 /** Real packaged startup and HTTP requests; a tiny owned PNG pack, no installed client. */

@@ -7,12 +7,13 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.character.Currency;
+import org.tortodrone.core.character.Currency;
 import org.tortodrone.protocol.*;
 import org.tortodrone.storage.*;
-import org.tortodrone.town.ExchangeState;
+import org.tortodrone.core.town.ExchangeState;
 import org.tortodrone.world.TownSquare;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** Two authenticated world sessions exercise the actual native invocation and polling paths. */
 public final class EnergyExchangeServiceTest {

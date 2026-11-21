@@ -8,6 +8,8 @@ import org.tortodrone.world.*;
 import com.threerings.config.*;
 import com.threerings.presents.net.EventNotification;
 import com.threerings.tudey.dobj.SceneDeltaEvent;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Small stock-reader oracle for the actual emitted reference argument shapes. */
 public final class FireCompatibility {

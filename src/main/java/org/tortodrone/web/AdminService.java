@@ -7,7 +7,11 @@ import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.*;
 import org.tortodrone.server.*;
 import org.tortodrone.storage.*;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.config.ServerSettings;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.Currency;
 
 /** Typed allowlist over authoritative domain services; never interprets console, SQL or paths. */
 public final class AdminService implements AutoCloseable {
@@ -25,7 +29,7 @@ public final class AdminService implements AutoCloseable {
         this(accounts,control,log,deployment,null);
     }
     public AdminService(AccountStore accounts,ServerControl control,ServerLog log,Path deployment,org.tortodrone.resources.ContentRegistry validatedContent)throws IOException {
-        this(accounts,control,log,deployment,validatedContent,org.tortodrone.config.ServerSettings.defaultPath(deployment));
+        this(accounts,control,log,deployment,validatedContent,org.tortodrone.core.config.ServerSettings.defaultPath(deployment));
     }
     public AdminService(AccountStore accounts,ServerControl control,ServerLog log,Path deployment,org.tortodrone.resources.ContentRegistry validatedContent,Path config)throws IOException {
         this.validatedContent=validatedContent;
@@ -85,7 +89,7 @@ public final class AdminService implements AutoCloseable {
             case "knight-progress"->{return accounts.progress(p.text("username"),p.text("knight"),p.integer("rank"),p.integer("subrank"),p.integer("prestige"),p.positive("accountId"),p.positive("worldId"),p.optional("sprite").isEmpty()?null:p.text("sprite"),p.number("revision"));}
             case "knight-currency"->{
                 String operation=p.text("operation");if(!Set.of("set","delta").contains(operation))throw new IllegalArgumentException("Invalid currency operation");
-                return accounts.administrativeCurrency(p.text("username"),p.text("knight"),org.tortodrone.character.Currency.valueOf(p.text("currency")),p.number("amount"),operation.equals("set"),p.positive("accountId"),p.positive("worldId"),p.number("revision"));
+                return accounts.administrativeCurrency(p.text("username"),p.text("knight"),org.tortodrone.core.character.Currency.valueOf(p.text("currency")),p.number("amount"),operation.equals("set"),p.positive("accountId"),p.positive("worldId"),p.number("revision"));
             }
             case "item-grant"->{return accounts.grantItems(p.text("username"),p.text("knight"),p.text("config"),p.positive("quantity"),p.positive("accountId"),p.positive("worldId"),modifiers(p),p.flag("bound"),p.integer("expireDays"));}
             case "item-quantity"->{return accounts.itemQuantity(p.text("username"),p.text("knight"),p.number("itemId"),p.integer("quantity"),p.positive("accountId"),p.positive("worldId"),p.number("revision"));}
@@ -112,7 +116,7 @@ public final class AdminService implements AutoCloseable {
     }
     @SuppressWarnings("unchecked") private static List<MailCampaignStore.Gift> gifts(String json)throws IOException {
         try{
-            var rows=(List<Object>)org.tortodrone.resources.Json.parse(json);
+            var rows=(List<Object>)org.tortodrone.core.Json.parse(json);
             var gifts=new ArrayList<MailCampaignStore.Gift>(rows.size());
             for(var row:rows){
                 var map=(Map<String,Object>)row;

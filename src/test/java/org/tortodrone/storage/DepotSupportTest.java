@@ -7,6 +7,10 @@ import org.tortodrone.character.*;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.SlotUpgrades;
+import org.tortodrone.core.character.Currency;
 
 /** The nine official Depot offers that earlier releases withheld are deliverable and usable. */
 public final class DepotSupportTest {
@@ -28,7 +32,7 @@ public final class DepotSupportTest {
             var db=new Database(root,false);var depot=new DepotStore(db,items,rules);var town=new TownStore(db,items,rules);
             int account=db.create("Buyer",new Passwords.Protection(new byte[16],new byte[32]),false);
             new CharacterStore(db,account,"Buyer",items).create(knight("Buyer-Knight"));
-            db.currency("Buyer","Buyer-Knight",account,-1,org.tortodrone.character.Currency.ENERGY,100_000);
+            db.currency("Buyer","Buyer-Knight",account,-1,org.tortodrone.core.character.Currency.ENERGY,100_000);
             var snapshot=depot.catalog();var bought=new HashMap<String,Long>();
             for(var name:ITEMS) {
                 var offer=snapshot.offers().stream().filter(o->o.good().item().equals(name)).findFirst().orElseThrow();

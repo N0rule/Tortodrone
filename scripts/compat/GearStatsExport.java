@@ -6,6 +6,8 @@ import com.threerings.projectx.item.config.*;
 import com.threerings.projectx.item.data.*;
 import com.threerings.projectx.dungeon.util.DamageSummary.DamageType;
 import org.tortodrone.resources.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Read-only numeric level/variant extraction. No models, textures or client classes are emitted. */
 public final class GearStatsExport {
@@ -20,7 +22,7 @@ public final class GearStatsExport {
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         var items=ItemYaml.load(content.resolve("items"));int count=0;
         for(var item:items.entries()) {
-            if(!item.grantable()||!Set.of(org.tortodrone.character.WorldProfile.Slot.HELM,org.tortodrone.character.WorldProfile.Slot.ARMOR,org.tortodrone.character.WorldProfile.Slot.SHIELD,org.tortodrone.character.WorldProfile.Slot.TRINKET,org.tortodrone.character.WorldProfile.Slot.SWORD,org.tortodrone.character.WorldProfile.Slot.GUN,org.tortodrone.character.WorldProfile.Slot.BOMB).contains(item.slot()))continue;
+            if(!item.grantable()||!Set.of(org.tortodrone.core.character.WorldProfile.Slot.HELM,org.tortodrone.core.character.WorldProfile.Slot.ARMOR,org.tortodrone.core.character.WorldProfile.Slot.SHIELD,org.tortodrone.core.character.WorldProfile.Slot.TRINKET,org.tortodrone.core.character.WorldProfile.Slot.SWORD,org.tortodrone.core.character.WorldProfile.Slot.GUN,org.tortodrone.core.character.WorldProfile.Slot.BOMB).contains(item.slot()))continue;
             var config=cm.d(ItemConfig.class,item.config());if(config==null)continue;
             var original=config.w(cm);if(!(original instanceof ItemConfig.Level level))continue;
             if(!(original instanceof ItemConfig.Gear||original instanceof ItemConfig.Weapon))continue;

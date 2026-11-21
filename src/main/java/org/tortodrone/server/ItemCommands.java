@@ -3,6 +3,8 @@ package org.tortodrone.server;
 import java.io.IOException;
 import org.tortodrone.character.*;
 import org.tortodrone.account.AccountStore;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Shared console syntax. The caller supplies its trusted permission boundary. */
 public final class ItemCommands {

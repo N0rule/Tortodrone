@@ -9,6 +9,8 @@ import org.tortodrone.resources.*;
 import org.tortodrone.server.*;
 import org.tortodrone.storage.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.character.Knight;
 
 /** Native tooltip examples plus offline equipment ownership, rollback and attachment safety. */
 public final class WebGearTest {

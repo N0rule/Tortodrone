@@ -3,7 +3,9 @@ package org.tortodrone.resources;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.news.NewsCatalog;
+import org.tortodrone.core.NewsCatalog;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.ContentFiles;
 
 /** Strict startup reader for content/shared/news/news.yml; an absent file leaves Uplink News disabled. */
 public final class NewsYaml {

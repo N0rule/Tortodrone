@@ -3,10 +3,14 @@ package org.tortodrone.resources;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.support.ContentFixture;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.FireCatalog;
 
 /** A synthetic response/presentation graft on the existing verified training pack tests import only. */
 public final class ScriptedConversationImportTest {

@@ -4,6 +4,8 @@ import java.io.*;
 import java.nio.file.*;
 import java.security.*;
 import java.util.*;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.config.ServerSettings;
 
 /** External immutable map packs. Templates are distinct from runtime place objects. */
 public final class SceneCatalog {
@@ -118,7 +120,7 @@ public final class SceneCatalog {
     public static SceneCatalog load(Path directory)throws IOException {
         if(!Files.exists(directory.resolve("catalog.properties"))&&unifiedMaps(directory)) {
             Path deployment=directory.toAbsolutePath().getParent().getParent();
-            String start=org.tortodrone.config.ServerSettings.read(org.tortodrone.config.ServerSettings.defaultPath(deployment)).startupMap();
+            String start=org.tortodrone.core.config.ServerSettings.read(org.tortodrone.core.config.ServerSettings.defaultPath(deployment)).startupMap();
             return org.tortodrone.resources.ContentManager.loadMaps(directory,start,null);
         }
         var settings=properties(directory.resolve("catalog.properties"));
@@ -138,7 +140,7 @@ public final class SceneCatalog {
     }
     /** Compatibility/import boundary; runtime versioned packs register scenes in their manifest. */
     public static Map<Integer,Path> folders(Path directory)throws IOException {
-        org.tortodrone.resources.ContentFiles.safe(directory);
+        org.tortodrone.core.ContentFiles.safe(directory);
         if(!Files.isDirectory(directory))throw new IOException("Missing map catalog: "+directory);
         var result=new TreeMap<Integer,Path>();
         try(var paths=Files.list(directory)) {
@@ -146,7 +148,7 @@ public final class SceneCatalog {
             while(iterator.hasNext()) {
                 Path folder=iterator.next();
                 if(++entries>512)throw new IOException("Map catalog exceeds entry limit");
-                org.tortodrone.resources.ContentFiles.safe(folder);
+                org.tortodrone.core.ContentFiles.safe(folder);
                 if(!Files.isDirectory(folder))continue;
                 int id=number(properties(folder.resolve("map.properties")),"scene-id",1,Integer.MAX_VALUE);
                 if(result.putIfAbsent(id,folder)!=null)throw new IOException("Duplicate scene ID");
@@ -166,7 +168,7 @@ public final class SceneCatalog {
         if(folders.size()>64)throw new IOException("Too many map templates");
         var scenes=new TreeMap<Integer,MapScene>();
         for(var registered:new TreeMap<>(folders).entrySet()) {
-            Path folder=registered.getValue();org.tortodrone.resources.ContentFiles.safe(folder);
+            Path folder=registered.getValue();org.tortodrone.core.ContentFiles.safe(folder);
             Path descriptor=folder.resolve("map.properties");
             if(!descriptor.toRealPath().getParent().equals(folder.toRealPath()))throw new IOException("Map descriptor escapes its pack");
             var p=properties(descriptor);
@@ -182,7 +184,7 @@ public final class SceneCatalog {
             Path collisionFile=folder.resolve("collision.bin");
             if(!Files.isRegularFile(collisionFile))throw new IOException("Map has no compiled collision.bin: "+id);
             String expected=required(p,"collision-sha256");
-            if(!expected.equals(org.tortodrone.resources.ContentFiles.digest(collisionFile)))throw new IOException("Collision checksum mismatch: "+id);
+            if(!expected.equals(org.tortodrone.core.ContentFiles.digest(collisionFile)))throw new IOException("Collision checksum mismatch: "+id);
             MapCollision exact=MapCollision.read(collisionFile);
             if(!Objects.equals(exact.layoutHash(),required(p,"scene-sha256")))throw new IOException("Collision layout hash mismatch: "+id);
             float x=coordinate(p,"spawn-x"),y=coordinate(p,"spawn-y");

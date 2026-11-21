@@ -3,7 +3,7 @@ package org.tortodrone.web;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.config.ServerSettings;
+import org.tortodrone.core.config.ServerSettings;
 import static org.tortodrone.support.TestWire.check;
 
 /** Only the welcome setting is replaced, preserving the rest of the active settings file. */

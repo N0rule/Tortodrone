@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.*;
 import org.tortodrone.character.*;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Native cosmetic kits and saved styles, committed with inventory and roster revisions. */
 public final class StyleStore {

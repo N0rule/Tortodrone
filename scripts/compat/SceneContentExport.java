@@ -29,6 +29,10 @@ import com.threerings.tudey.config.HandlerConfig;
 import com.threerings.tudey.config.PlaceableConfig;
 import com.threerings.tudey.config.TileConfig;
 import com.threerings.tudey.data.TudeySceneModel;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Exports numeric and config-reference content for a captured native scene. */
 public final class SceneContentExport {
@@ -89,7 +93,7 @@ public final class SceneContentExport {
         }
         for(var startup:startups){
             String index=Integer.toString(indexes.size()),p="entry."+index+".";indexes.add(index);
-            var fields=Map.ofEntries(Map.entry("kind","SceneTrigger"),Map.entry("config","@startup"),Map.entry("source-key",startup.key()),Map.entry("state-key",startup.key()+":startup:"+startup.handler()),Map.entry("event","signal-start"),Map.entry("watch-tag","startup:"+startup.key()+":"+startup.handler()),Map.entry("signal","startup"),Map.entry("scene-startup","true"),Map.entry("action",org.tortodrone.resources.Json.stringify(startup.action())));
+            var fields=Map.ofEntries(Map.entry("kind","SceneTrigger"),Map.entry("config","@startup"),Map.entry("source-key",startup.key()),Map.entry("state-key",startup.key()+":startup:"+startup.handler()),Map.entry("event","signal-start"),Map.entry("watch-tag","startup:"+startup.key()+":"+startup.handler()),Map.entry("signal","startup"),Map.entry("scene-startup","true"),Map.entry("action",org.tortodrone.core.Json.stringify(startup.action())));
             fields.forEach((k,v)->values.put(p+k,v));values.put(p+"x",Float.toString(startup.x()));values.put(p+"y",Float.toString(startup.y()));values.put(p+"rotation",Float.toString(startup.rotation()));
         }
         collectTriggers(cm,scene,values,indexes);
@@ -125,7 +129,7 @@ public final class SceneContentExport {
 
     /** Reserve identity before expanding definitions so legitimate respawn cycles stay finite. */
     static String deferSceneActor(ConfigManager cm,ConfigReference<ActorConfig> actor)throws Exception {
-        String key=org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(actor));
+        String key=org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(actor));
         var existing=actorTemplateIds.get(key);if(existing!=null)return existing;
         if(actorTemplates.size()>=128)throw new IOException("Too many deferred scene actors");
         int slot=actorTemplates.size();
@@ -151,21 +155,21 @@ public final class SceneContentExport {
         if(fields.containsKey("startup-action"))return false;
         for(var field:fields.entrySet()){
             if(!field.getKey().endsWith("death-action"))continue;
-            if(!representable(org.tortodrone.world.FireCatalog.actionJson(field.getValue()),0))return false;
+            if(!representable(org.tortodrone.core.world.FireCatalog.actionJson(field.getValue()),0))return false;
         }
         return true;
     }
-    private static boolean representable(org.tortodrone.world.FireCatalog.Action action,int depth){
+    private static boolean representable(org.tortodrone.core.world.FireCatalog.Action action,int depth){
         if(action==null)return true;
         if(depth>64)return false;
-        if(java.util.Set.of(org.tortodrone.world.FireCatalog.Kind.UNSUPPORTED,
-                org.tortodrone.world.FireCatalog.Kind.SPAWN_ACTOR,
-                org.tortodrone.world.FireCatalog.Kind.SPAWN_FACING,
-                org.tortodrone.world.FireCatalog.Kind.RANDOM_TRANSLATED).contains(action.kind()))return false;
+        if(java.util.Set.of(org.tortodrone.core.world.FireCatalog.Kind.UNSUPPORTED,
+                org.tortodrone.core.world.FireCatalog.Kind.SPAWN_ACTOR,
+                org.tortodrone.core.world.FireCatalog.Kind.SPAWN_FACING,
+                org.tortodrone.core.world.FireCatalog.Kind.RANDOM_TRANSLATED).contains(action.kind()))return false;
         for(var child:action.children())if(!representable(child,depth+1))return false;
         return representable(action.actor(),depth+1);
     }
-    private static boolean representable(org.tortodrone.world.FireCatalog.ActorSpec actor,int depth){
+    private static boolean representable(org.tortodrone.core.world.FireCatalog.ActorSpec actor,int depth){
         if(actor==null)return true;
         if(depth>64)return false;
         if(!representable(actor.detonation(),depth+1)||!representable(actor.shutdown(),depth+1)
@@ -235,7 +239,7 @@ public final class SceneContentExport {
         if (action == null) return;
         if (depth > 32) throw new IOException("Startup compound nesting exceeds limit at " + sourceKey);
         if(action instanceof ActionConfig.Random){
-            var graph=sceneAction(action,0,cm);org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(graph));
+            var graph=sceneAction(action,0,cm);org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(graph));
             startups.add(new Startup(sourceKey,handlerIndex,x,y,rotation,graph));return;
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.FireAction wrapper){
@@ -286,7 +290,7 @@ public final class SceneContentExport {
                         fields.put("kind","SceneTrigger");fields.put("config",reference.getName());fields.put("source-key",source);fields.put("handler-index",Integer.toString(i));
                         fields.put("state-key",source+":removed-group");fields.put("event","removed");fields.put("all","true");fields.put("watch-tag",group.tags().get(i));fields.put("removed-group",String.join(",",group.tags()));
                         fields.put("x",Float.toString(finite(point.x,"trigger x")));fields.put("y",Float.toString(finite(point.y,"trigger y")));fields.put("rotation",Float.toString(finite(rotation,"trigger rotation")));
-                        fields.put("action",org.tortodrone.resources.Json.stringify(group.action()));
+                        fields.put("action",org.tortodrone.core.Json.stringify(group.action()));
                         org.tortodrone.world.SceneActions.rule(new org.tortodrone.world.SceneContent.Entry(source,point.x,point.y,rotation,new org.tortodrone.world.SceneContent.Spec(fields)));
                         String index=Integer.toString(indexes.size());indexes.add(index);fields.forEach((k,v)->values.put("entry."+index+"."+k,v));
                     }
@@ -323,10 +327,10 @@ public final class SceneContentExport {
                     }
                     var graph=counterGraph==null?sceneAction(((HandlerConfig.ActionHandlerConfig)handler).action,0,cm):counterGraph;
                     if(handler.getClass()==HandlerConfig.Timer.class){var timer=(HandlerConfig.Timer)handler;graph=timerAction(timer,graph);}
-                    var parsed=org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(graph));
+                    var parsed=org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(graph));
                     try{for(String tag:tags)new org.tortodrone.world.SceneActions.Rule(key(entry.getKey())+":"+hi,fields.get("event"),tag,fields.getOrDefault("signal",""),Boolean.parseBoolean(fields.getOrDefault("all","false")),parsed,fields.get("state-key"),"entry:"+key(entry.getKey()));}
                     catch(IllegalArgumentException invalid){throw new IOException("Invalid complete native handler: "+invalid.getMessage(),invalid);}
-                    fields.put("action",org.tortodrone.resources.Json.stringify(graph));
+                    fields.put("action",org.tortodrone.core.Json.stringify(graph));
                     for(int ti=0;ti<tags.size();ti++){
                         if(tags.get(ti).isBlank())throw new IOException("Handler tag is empty");
                         String index=Integer.toString(indexes.size());indexes.add(index);
@@ -381,7 +385,7 @@ public final class SceneContentExport {
         }
         var action=((ActionConfig.Conditional)changed.action).action;
         if(!(reference.ld().get("Action") instanceof ActionConfig supplied)||!Objects.equals(supplied,action))throw new IOException("Two-tag removal action binding changed");
-        var graph=sceneAction(action,0,cm);org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(graph));
+        var graph=sceneAction(action,0,cm);org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(graph));
         return new RemovedGroup(List.copyOf(tags),graph);
     }
     private static boolean strippedGuard(ActionConfig action){
@@ -446,8 +450,8 @@ public final class SceneContentExport {
                 String index=Integer.toString(indexes.size()),prefix="entry."+index+".";
                 var fields=new TreeMap<String,String>();fields.put("kind","SceneTrigger");fields.put("config",entry.area.getName());fields.put("source-key",key(entry.getKey()));fields.put("handler-index",Integer.toString(hi));fields.put("state-key",key(entry.getKey())+":"+hi);
                 fields.put("x",Float.toString(point.x));fields.put("y",Float.toString(point.y));fields.put("rotation","0");fields.put("event",event);fields.put("watch-tag","area:"+entry.getKey()+":"+hi);fields.put("signal","intersection");
-                fields.put("scene-sensor","true");fields.put("sensor-mask",Integer.toString(mask));fields.put("interaction-area","true");fields.put("source-shape",org.tortodrone.world.FireCatalog.modelJson(new org.tortodrone.character.StarterCatalog.Model("shape",Map.of("value",FireCatalogExport.argumentValue(polygon)))));
-                fields.put("action",org.tortodrone.resources.Json.stringify(sceneAction(action,0,cm,true)));
+                fields.put("scene-sensor","true");fields.put("sensor-mask",Integer.toString(mask));fields.put("interaction-area","true");fields.put("source-shape",org.tortodrone.core.world.FireCatalog.modelJson(new org.tortodrone.core.character.StarterCatalog.Model("shape",Map.of("value",FireCatalogExport.argumentValue(polygon)))));
+                fields.put("action",org.tortodrone.core.Json.stringify(sceneAction(action,0,cm,true)));
                 indexes.add(index);for(var field:fields.entrySet())values.put(prefix+field.getKey(),field.getValue());
             }catch(IOException unsupported){importReport.add("Unsupported complete area handler at "+entry.getKey()+" / "+hi+": "+unsupported.getMessage());}
         }
@@ -574,7 +578,7 @@ public final class SceneContentExport {
             if(cm==null)throw new IOException("Scene effect requires native preparation");
             var config=effect.effect.a(cm,com.threerings.tudey.config.EffectConfig.class);
             if(config==null||config.a(effect.effect,0,new com.threerings.tudey.data.EntityKey.Entry(1),new com.threerings.math.Vector2f(),0).getClass()!=com.threerings.tudey.data.effect.Effect.class)throw new IOException("Unsupported native scene effect subtype");
-            String model=org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(effect.effect));
+            String model=org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(effect.effect));
             if(!cosmeticEffect(config)){
                 String tag;
                 if(effect.location instanceof com.threerings.tudey.config.TargetConfig.Source)tag="";
@@ -629,7 +633,7 @@ public final class SceneContentExport {
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ProgressEvent event){
             var fields=Map.<String,Object>of("kind","progress-event","level",event.level,"progress",event.progress);
-            org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(fields));return fields;
+            org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.NextFloor next){
             if(!(next.target instanceof com.threerings.tudey.config.TargetConfig.Activator))throw new IOException("Unsupported NextFloor target");
@@ -639,7 +643,7 @@ public final class SceneContentExport {
             if(!pawnActivator||!(memory.target instanceof com.threerings.tudey.config.TargetConfig.Activator)
                     ||memory.persistence!=null&&memory.persistence!=com.threerings.projectx.config.Persistence.KNIGHT)throw new IOException("Unsupported scene memory scope/target");
             var fields=Map.<String,Object>of("kind","knight-memory","name",memory.name,"remember",memory.persistence!=null);
-            org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(fields));return fields;
+            org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
         }
         if(action instanceof com.threerings.projectx.config.ProjectXActionConfig.SetObjective objective){
             if(!pawnActivator||!(objective.target instanceof com.threerings.tudey.config.TargetConfig.Activator)
@@ -651,15 +655,15 @@ public final class SceneContentExport {
                 text=simple.text;
             }
             var fields=new LinkedHashMap<String,Object>();fields.put("kind","knight-objective");fields.put("name",objective.name);fields.put("text",text);
-            org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(fields));return fields;
+            org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ApplyStatus status){
             if(cm==null||!pawnTarget(status.target))throw new IOException("Unsupported scripted status target");
-            org.tortodrone.world.FireCatalog.Action prepared;
+            org.tortodrone.core.world.FireCatalog.Action prepared;
             try{prepared=FireCatalogExport.readAction(cm,status);}catch(Exception invalid){throw new IOException("Unresolved scripted status",invalid);}
-            if(prepared.kind()!=org.tortodrone.world.FireCatalog.Kind.APPLY_STATUS)throw new IOException("Unresolved scripted status");
-            var fields=Map.<String,Object>of("kind","pawn-status","config",org.tortodrone.world.FireCatalog.modelJson(prepared.config()));
-            org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(fields));return fields;
+            if(prepared.kind()!=org.tortodrone.core.world.FireCatalog.Kind.APPLY_STATUS)throw new IOException("Unresolved scripted status");
+            var fields=Map.<String,Object>of("kind","pawn-status","config",org.tortodrone.core.world.FireCatalog.modelJson(prepared.config()));
+            org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(fields));return fields;
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ClearStatus status){
             if(!pawnTarget(status.target)||status.mask<0)throw new IOException("Unsupported scripted status clear target/mask");
@@ -732,8 +736,8 @@ public final class SceneContentExport {
                     ||!(shape instanceof com.threerings.tudey.shape.config.ShapeConfig.Point))throw new IOException("Unsupported effect impulse region/location");
             try{
                 var prepared=FireCatalogExport.readAction(cm,impulse);var data=new TreeMap<>(prepared.config().arguments());data.put("shape",FireCatalogExport.argumentValue(shape));
-                var model=new org.tortodrone.character.StarterCatalog.Model("ImpartImpulse",data);new org.tortodrone.world.SceneActions.Impulse(model);
-                return Map.of("kind","source-impulse","config",org.tortodrone.world.FireCatalog.modelJson(model));
+                var model=new org.tortodrone.core.character.StarterCatalog.Model("ImpartImpulse",data);new org.tortodrone.world.SceneActions.Impulse(model);
+                return Map.of("kind","source-impulse","config",org.tortodrone.core.world.FireCatalog.modelJson(model));
             }catch(Exception invalid){throw new IOException("Unsupported native effect impulse",invalid);}
         }
         if(action instanceof ActionConfig.None||action!=null&&action.getClass()==ActionConfig.SpawnActor.class
@@ -835,7 +839,7 @@ public final class SceneContentExport {
                 if(child==null||!Float.isFinite(child.weight)||child.weight<0||!child.dropModifierTag.isEmpty())throw new IOException("Unimplemented random table weight modifier");
                 actions.add(sceneTableEntry(cm,child.entry,depth+1));weights.add(child.weight);
             }
-            var result=Map.<String,Object>of("kind","weighted-choice","actions",actions,"weights",weights);org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(result));return result;
+            var result=Map.<String,Object>of("kind","weighted-choice","actions",actions,"weights",weights);org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(result));return result;
         }
         throw new IOException("Unsupported complete scene table entry: "+entry.getClass().getName());
     }
@@ -1002,12 +1006,12 @@ public final class SceneContentExport {
             if(!java.util.Set.of("scene","fire").contains(shutdownMode))throw new IOException("Unsupported script shutdown mode");
             if(scriptedActor(reference.getName())&&shutdownMode.equals("scene")){
                 var shutdown=new ArrayList<Object>();sceneShutdown(cm,monster.handlers,shutdown,scriptShutdownArguments(config,reference),0);
-                if(!shutdown.isEmpty())put(out,prefix+"scene-shutdown-action",org.tortodrone.resources.Json.stringify(Map.of("kind","sequence","actions",shutdown,"stopOnFailure",false)));
+                if(!shutdown.isEmpty())put(out,prefix+"scene-shutdown-action",org.tortodrone.core.Json.stringify(Map.of("kind","sequence","actions",shutdown,"stopOnFailure",false)));
             }else{
-                var death=new ArrayList<org.tortodrone.world.FireCatalog.Action>();deathActions(cm,monster.handlers,death,0);
+                var death=new ArrayList<org.tortodrone.core.world.FireCatalog.Action>();deathActions(cm,monster.handlers,death,0);
                 if(!death.isEmpty()){
-                    var action=new org.tortodrone.world.FireCatalog.Action(org.tortodrone.world.FireCatalog.Kind.COMPOUND,null,null,"Source","","",0,0,0,0,true,0,0,0,0,false,death,"");
-                    put(out,prefix+"death-action",org.tortodrone.world.FireCatalog.actionJson(action));
+                    var action=new org.tortodrone.core.world.FireCatalog.Action(org.tortodrone.core.world.FireCatalog.Kind.COMPOUND,null,null,"Source","","",0,0,0,0,true,0,0,0,0,false,death,"");
+                    put(out,prefix+"death-action",org.tortodrone.core.world.FireCatalog.actionJson(action));
                 }
             }
         }
@@ -1020,7 +1024,7 @@ public final class SceneContentExport {
         if (isKind(original, "Trap")) writeTrap(out, prefix, original);
         if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Block){
             for(String field:List.of("fuse","color","hits"))addOptionalNumber(out,prefix+"block-"+field,field(original,field));
-            if(field(original,"detonationAction") instanceof ActionConfig action)out.put(prefix+"detonation-action",org.tortodrone.world.FireCatalog.actionJson(FireCatalogExport.readAction(cm,action)));
+            if(field(original,"detonationAction") instanceof ActionConfig action)out.put(prefix+"detonation-action",org.tortodrone.core.world.FireCatalog.actionJson(FireCatalogExport.readAction(cm,action)));
         }
         if(original instanceof com.threerings.projectx.config.ProjectXActorConfig.Lift lift)writeLift(cm,out,prefix,reference,lift,false);
         if (isKind(original, "Switch") || isKind(original, "DumbSwitch")) {
@@ -1120,11 +1124,11 @@ public final class SceneContentExport {
             else if(step instanceof com.threerings.tudey.config.ScriptConfig.Action action){
                 if(!(action.action instanceof ActionConfig.SetVariable variable)||!variable.name.isEmpty()||!(variable.target instanceof com.threerings.tudey.config.TargetConfig.Source)||!(variable.value instanceof com.threerings.tudey.config.ExpressionConfig.Constant constant)||!constant.value.isEmpty())throw new IOException("Native stripped script Action footprint changed");
                 String restored=rules.getProperty(base+"action");if(restored==null)throw new IOException("Unverified stripped script Action at "+i);
-                org.tortodrone.world.SceneActions.parse(restored);value=Map.of("kind","action","action",org.tortodrone.resources.Json.parse(restored));
+                org.tortodrone.world.SceneActions.parse(restored);value=Map.of("kind","action","action",org.tortodrone.core.Json.parse(restored));
             }else throw new IOException("Unsupported complete native script step "+step.getClass().getName());
             steps.add(value);
         }
-        out.put(prefix+"script.program",org.tortodrone.resources.Json.stringify(steps));
+        out.put(prefix+"script.program",org.tortodrone.core.Json.stringify(steps));
         var fields=new TreeMap<String,String>();out.forEach((key,value)->{if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),value);});org.tortodrone.world.SceneScript.read(new org.tortodrone.world.SceneContent.Spec(fields));
     }
     static Map<String,Object> scriptShutdownArguments(ActorConfig config,ConfigReference<ActorConfig> reference)throws IOException {
@@ -1170,7 +1174,7 @@ public final class SceneContentExport {
         var parameter=config.getParameter(name);return parameter instanceof com.threerings.config.Parameter.Direct direct&&direct.paths.length==1&&direct.paths[0].equals(path);
     }
     private static void deathActions(ConfigManager cm,HandlerConfig[] handlers,
-            List<org.tortodrone.world.FireCatalog.Action> actions,int depth)throws Exception {
+            List<org.tortodrone.core.world.FireCatalog.Action> actions,int depth)throws Exception {
         if(handlers==null)return;
         if(depth>16)throw new IOException("Cyclic monster death handler references");
         for(var handler:handlers){
@@ -1186,7 +1190,7 @@ public final class SceneContentExport {
     static void writeLift(ConfigManager cm,Map<String,String> out,String prefix,ConfigReference<ActorConfig> reference,
             com.threerings.projectx.config.ProjectXActorConfig.Lift lift,boolean geometry)throws Exception {
         if(geometry){
-            out.put(prefix+"config",reference.getName());out.put(prefix+"config-json",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(reference)));
+            out.put(prefix+"config",reference.getName());out.put(prefix+"config-json",org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(reference)));
             out.put(prefix+"native-type",lift.a(reference,1,0,new com.threerings.math.Vector2f(),0).getClass().getName());
             out.put(prefix+"kind",lift.getClass().getSimpleName());writeGeometry(out,prefix,lift.shape);
             out.put(prefix+"speed",Float.toString(lift.speed));
@@ -1194,7 +1198,7 @@ public final class SceneContentExport {
         for(String name:List.of("canThrow","throwTime","fallSpeed","thrownCollisionFlags","thrownCollisionMask","fuse","explodeOnImpact","snapTag","actionableSignal"))addOptional(out,prefix+kebab(name),field(lift,name));
         if(lift.description!=null)out.put(prefix+"description",lift.description.getName());
         for(var handler:lift.handlers)if(handler instanceof HandlerConfig.Signal signal&&signal.action!=null){
-            out.put(prefix+"land-action",org.tortodrone.world.FireCatalog.actionJson(FireCatalogExport.readAction(cm,signal.action)));break;
+            out.put(prefix+"land-action",org.tortodrone.core.world.FireCatalog.actionJson(FireCatalogExport.readAction(cm,signal.action)));break;
         }
     }
 
@@ -1277,8 +1281,8 @@ public final class SceneContentExport {
             var restoredInner=(ActionConfig.Compound)inner.clone();restoredInner.actions=inner.actions.clone();var restoredNext=(ActionConfig.Signal)next.clone();restoredNext.name="next";restoredInner.actions[1]=restoredNext;
             var restoredGuard=(ActionConfig.Conditional)guard.clone();var limit=new com.threerings.tudey.config.ConditionConfig.Limit();limit.limit=1;restoredGuard.condition=limit;restoredGuard.action=restoredInner;
             var restoredOuter=(ActionConfig.Compound)outer.clone();restoredOuter.actions=outer.actions.clone();restoredOuter.actions[0]=restoredGuard;
-            out.put(prefix+"switch-mode","party");out.put(prefix+"party-intersection-action",org.tortodrone.resources.Json.stringify(sceneAction(restoredOuter,0,cm)));
-            out.put(prefix+"state.1.scene-action",org.tortodrone.resources.Json.stringify(sceneAction(pressed,0,cm)));
+            out.put(prefix+"switch-mode","party");out.put(prefix+"party-intersection-action",org.tortodrone.core.Json.stringify(sceneAction(restoredOuter,0,cm)));
+            out.put(prefix+"state.1.scene-action",org.tortodrone.core.Json.stringify(sceneAction(pressed,0,cm)));
         }
         if(reference.getName().startsWith("Dynamic/Breakable Objects/")&&original instanceof ActorConfig.Original actor){
             for(var handler:actor.handlers)if(handler instanceof com.threerings.projectx.dungeon.config.DungeonHandlerConfig.Damage damage){
@@ -1292,7 +1296,7 @@ public final class SceneContentExport {
             var effect=cm.d(com.threerings.tudey.config.EffectConfig.class,"Objects/Monster Objects/Beast Bell/Ring bell, beast stun");
             var status=bellStatus(effect.action);
             if(status==null||!(effect.shape instanceof com.threerings.tudey.shape.config.ShapeConfig.Circle circle))throw new IOException("Beast Bell effect layout changed");
-            out.put(prefix+"state.1.status",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(status)));
+            out.put(prefix+"state.1.status",org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(status)));
             out.put(prefix+"state.1.status-radius",Float.toString(circle.radius));out.put(prefix+"state.1.status-tag","fam_beast");
         }
         if(mode!=null){
@@ -1316,10 +1320,10 @@ public final class SceneContentExport {
                     for(var option:choice.options)if(option.name.equals(size)){
                         // Native Choice values survive even though the handler's shape field is stripped.
                         Object values=field(option,"_arguments");if(values instanceof Map<?,?> map&&map.get("Intersect Shape")!=null)
-                            out.put(prefix+"sensor",org.tortodrone.world.FireCatalog.modelJson(new org.tortodrone.character.StarterCatalog.Model("metadata",Map.of("value",FireCatalogExport.argumentValue(map.get("Intersect Shape"))))));
+                            out.put(prefix+"sensor",org.tortodrone.core.world.FireCatalog.modelJson(new org.tortodrone.core.character.StarterCatalog.Model("metadata",Map.of("value",FireCatalogExport.argumentValue(map.get("Intersect Shape"))))));
                     }
                 }
-                out.put(prefix+"hazard-action",org.tortodrone.world.FireCatalog.actionJson(FireCatalogExport.readAction(cm,fire)));
+                out.put(prefix+"hazard-action",org.tortodrone.core.world.FireCatalog.actionJson(FireCatalogExport.readAction(cm,fire)));
             }
         }
         if(out.containsKey(prefix+"heal-pad")){
@@ -1329,7 +1333,7 @@ public final class SceneContentExport {
             }
             out.put(prefix+"heal-interval",Objects.toString(args.get("Interval"),"1.0"));
             if(field(original,"handlers") instanceof HandlerConfig[] handlers)for(var handler:handlers)if(handler instanceof HandlerConfig.Timer timer&&timer.action instanceof ActionConfig.Conditional conditional)
-                out.put(prefix+"heal-action",org.tortodrone.world.FireCatalog.actionJson(FireCatalogExport.readAction(cm,conditional.action)));
+                out.put(prefix+"heal-action",org.tortodrone.core.world.FireCatalog.actionJson(FireCatalogExport.readAction(cm,conditional.action)));
         }
     }
     private static ConfigReference<com.threerings.projectx.dungeon.config.StatusConditionConfig> bellStatus(ActionConfig action){
@@ -1381,7 +1385,7 @@ public final class SceneContentExport {
         addOptionalNumber(out, prefix + "delay", field(generator, "delay"));
         addOptionalNumber(out, prefix + "warning", field(generator, "warning"));
         Object damage=field(generator,"damage");
-        if(damage!=null)out.put(prefix+"generated-damage",org.tortodrone.world.FireCatalog.modelJson(new org.tortodrone.character.StarterCatalog.Model("metadata",Map.of("value",FireCatalogExport.argumentValue(damage)))));
+        if(damage!=null)out.put(prefix+"generated-damage",org.tortodrone.core.world.FireCatalog.modelJson(new org.tortodrone.core.character.StarterCatalog.Model("metadata",Map.of("value",FireCatalogExport.argumentValue(damage)))));
         Object actorReference = field(generator, "actor");
         if (!(actorReference instanceof ConfigReference<?> reference)) {
             throw new IOException("Generator has no actor reference");
@@ -1396,7 +1400,7 @@ public final class SceneContentExport {
         throws Exception {
         if (shape == null) return;
         put(out, prefix + "shape", shape.getClass().getSimpleName());
-        put(out,prefix+"source-shape",org.tortodrone.world.FireCatalog.modelJson(new org.tortodrone.character.StarterCatalog.Model("shape",Map.of("value",FireCatalogExport.argumentValue(shape)))));
+        put(out,prefix+"source-shape",org.tortodrone.core.world.FireCatalog.modelJson(new org.tortodrone.core.character.StarterCatalog.Model("shape",Map.of("value",FireCatalogExport.argumentValue(shape)))));
         addOptionalNumber(out, prefix + "radius", field(shape, "radius"));
         addOptionalNumber(out, prefix + "width", field(shape, "width"));
         addOptionalNumber(out, prefix + "height", field(shape, "height"));
@@ -1423,7 +1427,7 @@ public final class SceneContentExport {
                 if(!rules.getProperty(prefix+"initial-footprint","").equals("rhendon-rc-intro"))throw new IOException("Unverified conversation initial action");
                 String initialAction=rules.getProperty(prefix+"initial-action");
                 var original=((ActionConfig.Compound)((ActionConfig.Conditional)conversation.initialAction).elseAction).actions[0];
-                if(!org.tortodrone.world.SceneActions.parse(initialAction).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(sceneAction(original,0,cm,true)))))throw new IOException("Conversation initial memory changed");
+                if(!org.tortodrone.world.SceneActions.parse(initialAction).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(sceneAction(original,0,cm,true)))))throw new IOException("Conversation initial memory changed");
                 put(out,prefix+"initial-action",initialAction);
             }
             Object model=script==null?field(cm.d(ActorConfig.class,actorName).al(cm).sprite,"model"):script.model;
@@ -1433,20 +1437,20 @@ public final class SceneContentExport {
             put(out,prefix+"actor",actorName);put(out,prefix+"name",speaker);
             if(script!=null){
                 verifyConversationInitial(conversation.initialAction,rules.getProperty(prefix+"initial"));
-                if(script.sourceCloseAnimation!=null)put(out,prefix+"source-close-animation",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(script.sourceCloseAnimation)));
-                if(script.music!=null)put(out,prefix+"music",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(script.music)));
+                if(script.sourceCloseAnimation!=null)put(out,prefix+"source-close-animation",org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(script.sourceCloseAnimation)));
+                if(script.music!=null)put(out,prefix+"music",org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(script.music)));
             }
             put(out,prefix+"initial",rules.getProperty(prefix+"initial"));put(out,prefix+"bundle",conversation.bundle);
-            if(model instanceof ConfigReference<?> r)put(out,prefix+"model",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(r)));
+            if(model instanceof ConfigReference<?> r)put(out,prefix+"model",org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(r)));
             List<String> nodes=new ArrayList<>();
             for(int i=0;i<conversation.nodes.length;i++){
                 if(!(conversation.nodes[i] instanceof com.threerings.projectx.config.ConversationConfig.SimpleNode node))throw new IOException("Unsupported conversation node");
                 String np=prefix+"node."+i+".";nodes.add(Integer.toString(i));
                 if(!node.name.equals(rules.getProperty(np+"name"))||!node.message.equals(rules.getProperty(np+"message")))throw new IOException("Authored conversation node changed");
                 put(out,np+"name",node.name);put(out,np+"message",node.message);put(out,np+"responses",Integer.toString(node.responses.length));
-                if(node.animation!=null)put(out,np+"animation",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(node.animation)));
-                if(node.userInterface!=null)put(out,np+"interface",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(node.userInterface)));
-                if(node.sourceTransient!=null)put(out,np+"transient",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(node.sourceTransient)));
+                if(node.animation!=null)put(out,np+"animation",org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(node.animation)));
+                if(node.userInterface!=null)put(out,np+"interface",org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(node.userInterface)));
+                if(node.sourceTransient!=null)put(out,np+"transient",org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(node.sourceTransient)));
                 for(int j=0;j<node.responses.length;j++){
                     if(!(node.responses[j] instanceof com.threerings.projectx.config.ConversationConfig.SimpleResponse response))throw new IOException("Unsupported conversation response");
                     String rp=np+"response."+j+".";
@@ -1497,7 +1501,7 @@ public final class SceneContentExport {
                     &&clear.target instanceof com.threerings.tudey.config.TargetConfig.Activator)return;
             if(footprint.equals("default-tagged-guard")&&restored!=null){
                 var unwrapped=withoutDefaultTaggedGuards(action,0);
-                if(org.tortodrone.world.SceneActions.parse(restored).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(sceneAction(unwrapped,0,null,true)))))return;
+                if(org.tortodrone.world.SceneActions.parse(restored).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(sceneAction(unwrapped,0,null,true)))))return;
             }
             throw new IOException("Sourced conversation response footprint changed");
         }
@@ -1508,7 +1512,7 @@ public final class SceneContentExport {
         if(action instanceof ActionConfig.Compound compound&&compound.actions!=null&&compound.actions.length==1){verifyConversationResponse(compound.actions[0],destination,restored,"");return;}
         if(!destination.isEmpty()&&restored==null&&action instanceof com.threerings.projectx.config.ProjectXActionConfig.ConversationJump jump
                 &&jump.target instanceof com.threerings.tudey.config.TargetConfig.Activator&&jump.node.equals(destination))return;
-        if(destination.isEmpty()&&restored!=null&&org.tortodrone.world.SceneActions.parse(restored).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(sceneAction(action,0,null,true)))))return;
+        if(destination.isEmpty()&&restored!=null&&org.tortodrone.world.SceneActions.parse(restored).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.core.Json.stringify(sceneAction(action,0,null,true)))))return;
         throw new IOException("Scripted conversation response changed ("+(action==null?"null":action.getClass().getName())
             +(action instanceof com.threerings.projectx.config.ProjectXActionConfig.ConversationJump jump?", node="+jump.node+", target="+jump.target.getClass().getName():"")
             +(action instanceof com.threerings.projectx.config.ProjectXActionConfig.ClearDialog clear?", target="+clear.target.getClass().getName():"")+"); refusing to omit authored siblings");
@@ -1572,9 +1576,9 @@ public final class SceneContentExport {
             if (!Double.isFinite(number)) throw new IOException("Non-finite config argument");
             return "double|" + number;
         }
-        if(value instanceof ConfigReference<?> r)return "model|"+org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(r));
+        if(value instanceof ConfigReference<?> r)return "model|"+org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(r));
         if (value instanceof Enum<?> enumeration) return enumValue(enumeration);
-        return "data|"+org.tortodrone.world.FireCatalog.modelJson(new org.tortodrone.character.StarterCatalog.Model(
+        return "data|"+org.tortodrone.core.world.FireCatalog.modelJson(new org.tortodrone.core.character.StarterCatalog.Model(
             "content-argument",Map.of("value",FireCatalogExport.argumentValue(value))));
     }
 

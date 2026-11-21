@@ -10,8 +10,8 @@ import java.util.TreeMap;
 
 import com.threerings.config.ConfigManager;
 import com.threerings.projectx.dungeon.config.StatusConditionConfig;
-import org.tortodrone.character.StarterCatalog;
-import org.tortodrone.world.FireCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Exports bounded native status defaults and modifier fields for scene combat. */
 public final class SceneStatusExport {

@@ -3,7 +3,7 @@ package org.tortodrone.world;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.character.WorldProfile;
 import static org.tortodrone.support.TestWire.check;
 
 public final class EquipmentCatalogTest {

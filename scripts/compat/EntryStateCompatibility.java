@@ -1,5 +1,5 @@
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.world.*;
 

@@ -4,8 +4,9 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.tortodrone.resources.*;
-import org.tortodrone.town.TownCatalog;
-import static org.tortodrone.resources.Yaml.*;
+import org.tortodrone.core.town.TownCatalog;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.Json;
 
 /** Immutable captured defaults, bundled in both executables; never administrator configuration. */
 public final class DepotSeed {

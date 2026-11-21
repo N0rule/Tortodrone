@@ -17,9 +17,10 @@ import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.tortodrone.config.ServerSettings;
+import org.tortodrone.core.config.ServerSettings;
 import org.tortodrone.support.CharacterScenario;
 import org.tortodrone.support.TestClient;
+import org.tortodrone.core.character.Knight;
 
 /** Starts the distributable JAR; needs only Java, with no launcher or game files. */
 public final class ServerIntegrationTest {
@@ -310,7 +311,7 @@ public final class ServerIntegrationTest {
         check(before.equals(database(data).list()), "failed account commands preserve accounts");
         Path config = data.resolve("server.properties");
         Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nlog-mode=debug\n");
-        java.util.List<org.tortodrone.character.Knight> profile;
+        java.util.List<org.tortodrone.core.character.Knight> profile;
         byte[] keyBytes;
         try (Running server = new Running(jar, config, directory)) {
             int port = server.ready();

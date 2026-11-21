@@ -5,9 +5,12 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.*;
-import org.tortodrone.character.Currency;
+import org.tortodrone.core.character.Currency;
 import org.tortodrone.storage.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Local-admin gear grants and live depot quote/transaction boundaries. */
 public final class TownAdministrationTest {

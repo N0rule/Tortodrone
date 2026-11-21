@@ -3,9 +3,12 @@ package org.tortodrone.storage;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.character.Knight;
-import org.tortodrone.character.WorldProfile;
-import org.tortodrone.character.WorldProfile.Slot;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.WorldProfile.Slot;
+import org.tortodrone.core.character.SlotUpgrades;
+import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.character.DungeonGear;
 
 /** Current character schema and owned starter-kit storage. Called inside the same transaction as its roster mutation. */
 final class WorldProfiles {
@@ -92,7 +95,7 @@ final class WorldProfiles {
             s.setInt(1,worldId); try (ResultSet r = s.executeQuery()) {
                 while (r.next()) {
                     String config=r.getString("config");Slot slot=Slot.valueOf(r.getString("slot"));
-                    if(slot==Slot.OTHER&&org.tortodrone.character.DungeonGear.vitapodTier(config)>0)slot=Slot.DUNGEON;
+                    if(slot==Slot.OTHER&&org.tortodrone.core.character.DungeonGear.vitapodTier(config)>0)slot=Slot.DUNGEON;
                     items.add(new WorldProfile.Item(r.getLong("item_id"),slot,config,r.getString("accessory"),r.getInt("heat"),(Integer)r.getObject("equipped_slot"),r.getBoolean("bound"),r.getBoolean("bind_on_equip"),r.getBoolean("starter"),r.getInt("count"),r.getBoolean("permanent"),r.getInt("level"),r.getFloat("heat_progress"),TownStore.variants(r.getString("variants")),TownStore.strings(r.getString("accessories"))));
                 }
             }
@@ -129,8 +132,8 @@ final class WorldProfiles {
             }}
         }
         try{
-            var profile=new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items,new org.tortodrone.character.KnightProgress(rank/10,rank%10,prestige,opening),TownStore.load(c,worldId));
-            var visible=items.stream().map(item->item.equippedSlot()!=null&&!org.tortodrone.character.SlotUpgrades.unlocked(profile,item.equippedSlot())?item.withEquippedSlot(null):item).toList();
+            var profile=new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items,new org.tortodrone.core.character.KnightProgress(rank/10,rank%10,prestige,opening),TownStore.load(c,worldId));
+            var visible=items.stream().map(item->item.equippedSlot()!=null&&!org.tortodrone.core.character.SlotUpgrades.unlocked(profile,item.equippedSlot())?item.withEquippedSlot(null):item).toList();
             return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,visible,profile.progress(),profile.town());
         }
         catch(IllegalArgumentException invalid){throw new IOException("Invalid saved knight progress",invalid);}

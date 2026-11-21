@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.util.*;
 import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Basic scene-only checks against the shipped native-derived shield graphs. */
 public final class ShieldActionsTest {

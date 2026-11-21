@@ -7,12 +7,14 @@ import java.util.concurrent.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.Database;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Global names are arbitrated in SQLite, including separate tools. */
 public final class GlobalKnightNameTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-global-names-");
-        try(var accounts=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
+        try(var accounts=new AccountStore(home,false,org.tortodrone.core.character.ItemCatalog.starter())) {
             accounts.create("Alice","alice-password".toCharArray());accounts.create("Bob","bob-password".toCharArray());
             var db=new Database(home,false);var alice=new CharacterStore(db,1,"Alice");
             var bob=new CharacterStore(new Database(home,false),2,"Bob");

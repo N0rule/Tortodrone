@@ -3,8 +3,9 @@ package org.tortodrone.resources;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.ItemCatalog;
-import static org.tortodrone.resources.Yaml.*;
+import org.tortodrone.core.character.ItemCatalog;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.Yaml;
 
 /** Schema-aware reference translation. Non-item namespaces (recipes, actors, accessories, fires) stay distinct. */
 final class ItemReferences {

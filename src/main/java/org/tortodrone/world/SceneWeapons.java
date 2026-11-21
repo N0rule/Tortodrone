@@ -1,6 +1,9 @@
 package org.tortodrone.world;
 
 import java.util.*;
+import org.tortodrone.core.WireTypes;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Scene-owned stock fire actions, with contact and damage resolved by instance entities. */
 public final class SceneWeapons {
@@ -10,17 +13,17 @@ public final class SceneWeapons {
         default ActorState actor(int id){return null;}
         default boolean attachable(int id){return false;}
         default boolean contact(float x,float y,float rotation,int owner,Object shape,int mask){return contact(x,y,owner);}
-        void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner);
-        default void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object sourceShape){damage(region,x,y,rotation,stamp,owner);}
-        default void sweep(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Set<Integer> hit){damage(region,x,y,rotation,stamp,owner);}
-        default void sweep(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object shape,Set<Integer> hit){sweep(region,x,y,rotation,stamp,owner,hit);}
-        default void impulse(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){ }
+        void damage(org.tortodrone.core.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner);
+        default void damage(org.tortodrone.core.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object sourceShape){damage(region,x,y,rotation,stamp,owner);}
+        default void sweep(org.tortodrone.core.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Set<Integer> hit){damage(region,x,y,rotation,stamp,owner);}
+        default void sweep(org.tortodrone.core.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object shape,Set<Integer> hit){sweep(region,x,y,rotation,stamp,owner,hit);}
+        default void impulse(org.tortodrone.core.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){ }
         default boolean monsters(Object region,float x,float y,float rotation){return false;}
-        default boolean spawnPickup(org.tortodrone.character.StarterCatalog.Model specification,float x,float y,float rotation,int stamp){return false;}
+        default boolean spawnPickup(org.tortodrone.core.character.StarterCatalog.Model specification,float x,float y,float rotation,int stamp){return false;}
         default Object sceneActorSource(int source){return null;}
         default boolean spawnSceneActor(String template,float x,float y,float rotation,int stamp,Object source){return false;}
     }
-    public record PetAction(FireCatalog.Kind kind,org.tortodrone.character.StarterCatalog.Model config,int owner,int timestamp) { }
+    public record PetAction(FireCatalog.Kind kind,org.tortodrone.core.character.StarterCatalog.Model config,int owner,int timestamp) { }
     private java.util.function.Consumer<PetAction> petActions=ignored->{};
     public void petActions(java.util.function.Consumer<PetAction> sink){petActions=Objects.requireNonNull(sink);}
     private Targets targets;
@@ -40,18 +43,18 @@ public final class SceneWeapons {
         Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId){this(x,y,rotation,ownerId,ownerOid,shape,actorId,GearStats.Damage.NONE);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape){this(x,y,rotation,ownerId,ownerOid,shape,ownerId);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid){this(x,y,rotation,ownerId,ownerOid,null);}
-        org.tortodrone.character.StarterCatalog.Model region(org.tortodrone.character.StarterCatalog.Model model){
+        org.tortodrone.core.character.StarterCatalog.Model region(org.tortodrone.core.character.StarterCatalog.Model model){
             if(damage==GearStats.Damage.NONE)return model;
-            var args=new HashMap<>(model.arguments());args.put("equipment-damage",damage);return new org.tortodrone.character.StarterCatalog.Model(model.name(),args);
+            var args=new HashMap<>(model.arguments());args.put("equipment-damage",damage);return new org.tortodrone.core.character.StarterCatalog.Model(model.name(),args);
         }
-        org.tortodrone.character.StarterCatalog.Model region(FireCatalog.Action action){
+        org.tortodrone.core.character.StarterCatalog.Model region(FireCatalog.Action action){
             var model=region(action.config());
             // Older prepared ShieldBash sweeps stored the sensor's damage mask here.
             // The native DamageTargetFromPoint uses the ordinary 1|128 occlusion mask.
             int mask=model.name().equals("ShieldBash")?129:action.collisionMask();
             if(mask==0)return model;
             var args=new HashMap<>(model.arguments());args.put("collision-mask",mask);
-            return new org.tortodrone.character.StarterCatalog.Model(model.name(),args);
+            return new org.tortodrone.core.character.StarterCatalog.Model(model.name(),args);
         }
     }
     private static final class Run {
@@ -164,7 +167,7 @@ public final class SceneWeapons {
             default->true;
         };
     }
-    public void effect(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp){
+    public void effect(org.tortodrone.core.character.StarterCatalog.Model config,ActorState source,int stamp){
         if(config==null)return;
         // These server-fired effects must reach the controlling client too;
         // _clientOid denotes a pre-executed effect that client already showed.
@@ -310,7 +313,7 @@ public final class SceneWeapons {
         // otherwise a tangent impact can miss the victim through rounding.
         if(shot.spec.collisionShape()!=null){
             float dx=x-shot.x,dy=y-shot.y,c=(float)Math.cos(shot.rotation),s=(float)Math.sin(shot.rotation);
-            var translation=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.VECTOR2F,Map.of("x",dx*c+dy*s,"y",-dx*s+dy*c));
+            var translation=new FireCatalog.DataValue(org.tortodrone.core.WireTypes.VECTOR2F,Map.of("x",dx*c+dy*s,"y",-dx*s+dy*c));
             var transform=new FireCatalog.DataValue("com.threerings.math.Transform2D",Map.of("_translation",translation,"_rotation",0f,"_scale",1f));
             var end=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$TransformedShape",Map.of("shape",shot.spec.collisionShape(),"transform",transform));
             shot.contactShape=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Compound",Map.of("shapes",new FireCatalog.ListValue("com.threerings.tudey.shape.config.ShapeConfig",List.of(shot.spec.collisionShape(),end))));
@@ -447,7 +450,7 @@ public final class SceneWeapons {
             // MultiSpawnPrespawned), also selecting Pollinator's pollen colour.
             if(!action.parameter().isEmpty()&&!action.values().isEmpty()){
                 var arguments=new HashMap<>(spec.config().arguments());arguments.put(action.parameter(),action.values().get(Math.floorMod(seed,action.values().size())));
-                var config=new org.tortodrone.character.StarterCatalog.Model(spec.config().name(),arguments);
+                var config=new org.tortodrone.core.character.StarterCatalog.Model(spec.config().name(),arguments);
                 spec=new FireCatalog.ActorSpec(spec.nativeType(),config,spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),spec.orbit(),spec.collisionMask(),spec.collisionShape(),spec.timers(),spec.shutdown(),spec.startup(),spec.attachment(),spec.activation(),spec.activatesAttachments());
             }
             if(source.pierce.forwardOnly()&&spec.orbit()!=null)spec=forwardOnly(spec);

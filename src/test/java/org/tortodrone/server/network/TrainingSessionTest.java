@@ -8,12 +8,17 @@ import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.character.Currency;
+import org.tortodrone.core.character.Currency;
 import org.tortodrone.protocol.*;
 import org.tortodrone.storage.*;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Disposable native party chat and Spark request path; no graphical client or owner data. */
 public final class TrainingSessionTest {

@@ -3,6 +3,7 @@ package org.tortodrone.world;
 import java.util.HashMap;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
 
 /** The damage summary's performance must classify natively (DamageSummary.getPerformance over
  *  applyDefense's ratio): each dealt part is compared with the same part mitigated by the

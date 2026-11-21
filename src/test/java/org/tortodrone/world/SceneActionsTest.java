@@ -2,8 +2,11 @@ package org.tortodrone.world;
 
 import java.io.IOException;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Json;
+import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Exercises the real entity removal and dynamic-door collision paths, with explicit tick times. */
 public final class SceneActionsTest {
@@ -44,7 +47,7 @@ public final class SceneActionsTest {
     private static SceneContent.Entry entry(String key,float x,float y,Map<String,String> fields){return new SceneContent.Entry(key,x,y,0,new SceneContent.Spec(fields));}
     private static void spawning(CollisionMap terrain)throws Exception {
         var fields=Map.of("config","Fixture/Spawned","kind","Monster","native-type","com.threerings.projectx.dungeon.data.actor.Monster","health","10","damage-mask","2","tags","wave miniboss","death-time","0","collision-flags","1","radius","0.4","activate-time","10");
-        String action=org.tortodrone.resources.Json.stringify(Map.of("kind","spawn","fields",fields,"activate",true));
+        String action=org.tortodrone.core.Json.stringify(Map.of("kind","spawn","fields",fields,"activate",true));
         var parsed=SceneActions.parse(action);check(parsed instanceof SceneActions.Spawn,"typed spawn metadata");
         var seed=entry("seed",0,0,Map.of("config","Fixture/Seed","native-type","com.threerings.projectx.dungeon.data.actor.Monster","kind","Monster","health","1","damage-mask","2","tags","seed","death-time","0"));
         var trigger=new SceneContent.Entry("spawnpoint",5,0,1.25f,new SceneContent.Spec(Map.of("config","Trigger/Removed","kind","SceneTrigger","event","removed","watch-tag","seed","action",action)));

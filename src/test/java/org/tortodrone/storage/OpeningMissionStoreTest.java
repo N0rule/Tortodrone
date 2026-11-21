@@ -8,6 +8,11 @@ import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.KnightObjective;
+import org.tortodrone.core.character.OpeningMission;
+import org.tortodrone.core.character.KnightMemory;
 
 /** Settlement/storage only. Direct terminal calls here do not establish playable floors. */
 public final class OpeningMissionStoreTest {

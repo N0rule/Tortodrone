@@ -7,12 +7,17 @@ import java.util.concurrent.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.Database;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Disposable current-schema player inventory ownership/stack/binding regression. */
 public final class PlayerItemTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-player-items-");
-        try(var accounts=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
+        try(var accounts=new AccountStore(home,false,org.tortodrone.core.character.ItemCatalog.starter())) {
             accounts.create("Alice","alice-password".toCharArray());accounts.create("Other","other-password".toCharArray());
             var db=new Database(home,false);var chars=new CharacterStore(db,1,"Alice");
             chars.create(new Knight(0,"Saved-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
@@ -35,7 +40,7 @@ public final class PlayerItemTest {
             store.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER reject_audit");}return null;});
             var upgrade=org.tortodrone.resources.ItemYaml.load(Path.of("content/items")).require("trinket_slot");
             var tickets=store.grantItems("Alice","Saved-Knight",1,saved.worldId(),upgrade,2,-1,-1).items().stream().filter(i->i.config().equals(upgrade.config())).toList();
-            var town=new org.tortodrone.storage.TownStore(store,ItemCatalog.starter(),org.tortodrone.town.TownCatalog.empty());
+            var town=new org.tortodrone.storage.TownStore(store,ItemCatalog.starter(),org.tortodrone.core.town.TownCatalog.empty());
             for(var ticket:tickets)town.activateUpgrade(1,1,1,ticket.id());
             for(var slot:List.of(WorldProfile.Slot.HELM_COSTUME,WorldProfile.Slot.ARMOR_COSTUME,WorldProfile.Slot.SHIELD_COSTUME,WorldProfile.Slot.TRINKET)) {
                 var e=new ItemCatalog.Entry("Costume/"+slot,102,"Costume","m.costume",0,false,slot,true,true,Map.of("Helmet",new StarterCatalog.Model("test",Map.of())));

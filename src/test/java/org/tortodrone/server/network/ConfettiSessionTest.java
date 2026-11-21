@@ -11,6 +11,10 @@ import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.*;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.Confetti;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Lightweight storage/session coverage; no external server or graphical client. */
 public final class ConfettiSessionTest {
@@ -71,7 +75,7 @@ public final class ConfettiSessionTest {
                 var prompt=entities.interaction(.45199376f,14.619257f,1.28f);
                 check(prompt!=null&&entities.actor(prompt.actorId()).entity().key().equals("3733"),"auction building interaction reaches the captured public counter position");
                 var source=entities.actor(prompt.actorId());
-                var open=WorldSession.class.getDeclaredMethod("openTownDialog",org.tortodrone.town.TownCatalog.Station.class,ActorState.class);open.setAccessible(true);
+                var open=WorldSession.class.getDeclaredMethod("openTownDialog",org.tortodrone.core.town.TownCatalog.Station.class,ActorState.class);open.setAccessible(true);
                 open.invoke(world,scenes.town().station("scene.1.placed.3733"),source);
                 var dialog=WorldSession.class.getDeclaredField("townDialog");dialog.setAccessible(true);check(dialog.get(world)==null,"auction opens through a controller action without installing a scene modal");
                 var search=new SessionDecoder.AuctionSearch(true,null,null,0,true,false);

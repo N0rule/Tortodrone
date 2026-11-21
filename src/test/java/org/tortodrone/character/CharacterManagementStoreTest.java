@@ -10,13 +10,15 @@ import java.util.concurrent.Executors;
 import org.tortodrone.support.TestWire;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.Database;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Edits/deletions must preserve identities and remain atomic on failure and contention. */
 public final class CharacterManagementStoreTest {
     public static void main(String[] args) throws Exception {
         Path directory = Files.createTempDirectory("tortodrone-management-test-");
         try {
-            try(var accounts=new AccountStore(directory,false,org.tortodrone.character.ItemCatalog.starter())){accounts.create("Alice","alice-password".toCharArray());}
+            try(var accounts=new AccountStore(directory,false,org.tortodrone.core.character.ItemCatalog.starter())){accounts.create("Alice","alice-password".toCharArray());}
             var db=new Database(directory,false);
             CharacterStore store = new CharacterStore(db,1,"Alice");
             for(String valid:List.of("Abcd","Ab-Cd","Abcde-Fghij-Klmno","Abcdefghijklmnopqr","Abba"))

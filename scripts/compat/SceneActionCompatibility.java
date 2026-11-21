@@ -2,8 +2,12 @@ import java.io.IOException;
 import java.util.*;
 import com.threerings.tudey.config.ActionConfig;
 import com.threerings.tudey.config.TargetConfig;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightObjective;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Installed stock configuration classes -> allowlisted metadata -> authoritative scheduler. */
 public final class SceneActionCompatibility {
@@ -12,8 +16,8 @@ public final class SceneActionCompatibility {
         tags.derived=new com.threerings.tudey.config.TagConfig();tags.derived.tags=new String[]{"inherited"};
         tagWire(FireCatalogExport.argumentValue(tags),new String[]{"direct","inherited"});
         var manyTags=new com.threerings.tudey.config.TagConfig();manyTags.tags=new String[]{"a","b","c","d","e","f","g","h","i"};tagWire(FireCatalogExport.argumentValue(manyTags),manyTags.tags);
-        var legacy=new org.tortodrone.character.StarterCatalog.Model("Fixture",Map.of("Tags",new org.tortodrone.world.FireCatalog.ListValue("com.threerings.tudey.config.TagConfig",List.of("direct","inherited"))));
-        var restoredTags=org.tortodrone.world.FireCatalog.modelJson(org.tortodrone.world.FireCatalog.modelJson(legacy)).arguments().get("Tags");
+        var legacy=new org.tortodrone.core.character.StarterCatalog.Model("Fixture",Map.of("Tags",new org.tortodrone.core.world.FireCatalog.ListValue("com.threerings.tudey.config.TagConfig",List.of("direct","inherited"))));
+        var restoredTags=org.tortodrone.core.world.FireCatalog.modelJson(org.tortodrone.core.world.FireCatalog.modelJson(legacy)).arguments().get("Tags");
         tagWire(restoredTags,new String[]{"direct","inherited"});
         System.out.println("PASS: stock reader accepts native iterable TagConfig and legacy imported tags as TagConfig, including inherited String arrays");
         var tagFields=new TreeMap<String,String>();SceneContentExport.writeTags(tagFields,"",tags);
@@ -200,13 +204,13 @@ public final class SceneActionCompatibility {
         var feronMovement=org.tortodrone.world.SceneMovementScript.read(new org.tortodrone.world.SceneContent.Spec(feronSpawn.fields()));
         if(feronMovement==null||feronMovement.rotation()!=4.712389f||feronMovement.waitMillis()!=750||!feronMovement.goal().equals("feron_goal"))throw new AssertionError("Feron's fixed native orientation was replaced by a missing parameter");
         var deferred=FireCatalogExport.readSceneAction(cm,recursive);
-        if(deferred.kind()!=org.tortodrone.world.FireCatalog.Kind.SPAWN_SCENE_ACTOR||deferred.actor()!=null)throw new AssertionError("Scene actor embedded into projectile metadata");
+        if(deferred.kind()!=org.tortodrone.core.world.FireCatalog.Kind.SPAWN_SCENE_ACTOR||deferred.actor()!=null)throw new AssertionError("Scene actor embedded into projectile metadata");
         var templates=new TreeMap<String,String>();SceneContentExport.writeActorTemplates(cm,templates);
         var templateProperties=new Properties();templateProperties.putAll(templates);templateProperties.setProperty("format","1");templateProperties.setProperty("layout-sha256","native-fixture");
         var cyclicContent=org.tortodrone.world.SceneContent.load(templateProperties,"native-fixture");
         if(cyclicContent.actorTemplates().size()<2||cyclicContent.actorTemplates().size()>128||cyclicContent.actorTemplates().values().stream().noneMatch(s->s.text("config","").endsWith("Unique/Parts/Downed Knight")))throw new AssertionError("Native companion cycle lost a definition");
         System.out.println("PASS: installed Feron Goal/Wait/fixed orientation and finite, validated native Unique Sword Knight/Downed Knight death-spawn definitions (other companion handlers not implemented)");
-        if(FireCatalogExport.readSceneAction(cm,new ActionConfig.SpawnActor()).kind()!=org.tortodrone.world.FireCatalog.Kind.COMPOUND)throw new AssertionError("Refusal poisoned later action preparation");
+        if(FireCatalogExport.readSceneAction(cm,new ActionConfig.SpawnActor()).kind()!=org.tortodrone.core.world.FireCatalog.Kind.COMPOUND)throw new AssertionError("Refusal poisoned later action preparation");
         delayed.variance=50;
         if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(delayed,0))) instanceof SceneActions.Delay varying)||varying.variance()!=50)throw new AssertionError("Native variance field lost");
         signal.target=new TargetConfig.Source();
@@ -229,9 +233,9 @@ public final class SceneActionCompatibility {
         objective.name="findRhendon";objective.persistence=com.threerings.projectx.config.Persistence.KNIGHT;
         objective.objective=new com.threerings.projectx.config.ObjectiveConfig.Simple();
         ((com.threerings.projectx.config.ObjectiveConfig.Simple)objective.objective).text="m.find_rhendon";
-        if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(objective,0,null,true))).equals(new SceneActions.Objective(new org.tortodrone.character.KnightObjective("findRhendon","m.find_rhendon"))))throw new AssertionError("Native KNIGHT objective lost its message");
+        if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(objective,0,null,true))).equals(new SceneActions.Objective(new org.tortodrone.core.character.KnightObjective("findRhendon","m.find_rhendon"))))throw new AssertionError("Native KNIGHT objective lost its message");
         objective.objective=null;
-        if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(objective,0,null,true))).equals(new SceneActions.Objective(new org.tortodrone.character.KnightObjective("findRhendon",null))))throw new AssertionError("Null objective config with KNIGHT persistence must erase the objective");
+        if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(objective,0,null,true))).equals(new SceneActions.Objective(new org.tortodrone.core.character.KnightObjective("findRhendon",null))))throw new AssertionError("Null objective config with KNIGHT persistence must erase the objective");
         objective.persistence=com.threerings.projectx.config.Persistence.SCENE;
         try{SceneContentExport.sceneAction(objective,0,null,true);throw new AssertionError("Unimplemented objective scope accepted");}catch(IOException expected){}
         objective.persistence=com.threerings.projectx.config.Persistence.KNIGHT;objective.target=new TargetConfig.Source();
@@ -340,7 +344,7 @@ public final class SceneActionCompatibility {
         System.out.println("PASS: stock action fields, delayed signal timing, Limit condition, signal transitions, inherited/recovered tags, compound targets, destruction guards, full-compound refusal, variance and target guards");
     }
     private static void tagWire(Object tags,String[] expected)throws Exception {
-        var model=new org.tortodrone.character.StarterCatalog.Model("Fixture",Map.of("Tags",tags));
+        var model=new org.tortodrone.core.character.StarterCatalog.Model("Fixture",Map.of("Tags",tags));
         var codec=new org.tortodrone.protocol.SessionCodec();var bytes=new java.io.ByteArrayOutputStream();
         var delta=codec.sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(),List.of(),new int[0],Map.of(),true,List.of(new org.tortodrone.world.SceneEffect(1,model,100,0,0,0,1001)));
         for(var frame:List.of(org.tortodrone.protocol.HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),org.tortodrone.protocol.HandshakeCodec.authenticationResponse((short)2,true,"fixture","Fixture"),delta))bytes.write(frame,4,frame.length-4);

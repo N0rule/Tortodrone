@@ -6,6 +6,10 @@ import java.util.concurrent.*;
 import java.util.function.Predicate;
 import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.AnimatedItems;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Delayed capsule actions follow the owned use activity, including combat interruptions. */
 public final class SceneItemUseTest {

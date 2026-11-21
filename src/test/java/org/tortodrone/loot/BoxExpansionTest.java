@@ -4,6 +4,8 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.resources.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
 
 /** Analytical graph equivalence; sampling cannot establish rare event or bundle fidelity. */
 public final class BoxExpansionTest {

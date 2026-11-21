@@ -5,7 +5,12 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.character.*;
 import org.tortodrone.world.*;
-import static org.tortodrone.resources.Yaml.*;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Migration-only reader for effective native-path YAML, including sparse inherited defaults. */
 final class LegacyItemYaml {

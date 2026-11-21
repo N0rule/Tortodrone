@@ -2,8 +2,11 @@ package org.tortodrone.world;
 
 import java.io.IOException;
 import java.util.*;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Synthetic geometry: production counter scheduling and native door collision, not a floor drive. */
 public final class SceneSignalCounterTest {
@@ -49,8 +52,8 @@ public final class SceneSignalCounterTest {
         bindings.add(entry("counter",0,1,Map.of("kind","SceneTrigger","config","Fixture/Counter","event","signal","watch-tag","counter","signal","increment","action",Json.stringify(Map.of("kind","count","threshold",2,"action",Map.of("kind","signal","tag","door","name","open"))))));
         var scene=new SceneEntities(new SceneContent(bindings,Map.of()),terrain);int now=scene.actors().getFirst().created()+100;
         var shape=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",.1f));
-        var hit=new org.tortodrone.character.StarterCatalog.Model("DamageRegion",Map.of("shape",shape,"damage",new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",2,"amount",10f))));
-        var wrong=new org.tortodrone.character.StarterCatalog.Model("DamageRegion",Map.of("shape",shape,"damage",new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",1,"amount",10f))));
+        var hit=new org.tortodrone.core.character.StarterCatalog.Model("DamageRegion",Map.of("shape",shape,"damage",new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",2,"amount",10f))));
+        var wrong=new org.tortodrone.core.character.StarterCatalog.Model("DamageRegion",Map.of("shape",shape,"damage",new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",1,"amount",10f))));
         scene.damage(wrong,0,0,0,now,219);scene.advance(now,List.of());
         check(scene.actors().stream().filter(a->a.entity().kind().equals("Switch")).allMatch(a->a.entity().state()==0),"lever rejects the wrong native damage mask");
         scene.damage(hit,0,0,0,now+1,219);scene.advance(now+1,List.of());check(!scene.walkable(3,0,219),"one activated lever cannot open the two-control gate");

@@ -4,9 +4,15 @@ import java.net.*;
 import java.nio.file.Path;
 import java.util.*;
 import org.tortodrone.character.*;
-import org.tortodrone.town.*;
+import org.tortodrone.core.town.*;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.town.TownState;
+import org.tortodrone.core.town.TownCatalog;
 
 /** The WebUI can inspect only a running session's current owned scene membership. */
 public final class CompanionInspectionTest {

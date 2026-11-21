@@ -6,9 +6,13 @@ import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.character.Currency;
+import org.tortodrone.core.character.Currency;
 import org.tortodrone.storage.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.ExchangeState;
 
 /** Escrow conservation, matching, rollback and ownership over a disposable SQLite order book. */
 public final class EnergyExchangeTest {

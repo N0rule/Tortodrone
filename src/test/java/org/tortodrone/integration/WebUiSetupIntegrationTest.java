@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import org.tortodrone.support.TestDeployment;
 import static org.tortodrone.support.TestWire.check;
 

@@ -4,10 +4,13 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.character.Currency;
+import org.tortodrone.core.character.Currency;
 import org.tortodrone.support.ContentFixture;
-import org.tortodrone.town.*;
+import org.tortodrone.core.town.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Guild formation, invitation mail, ranks, record and well, end to end on one database. */
 public final class GuildStoreTest {

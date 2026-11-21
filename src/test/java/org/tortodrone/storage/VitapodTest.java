@@ -7,6 +7,9 @@ import org.tortodrone.character.*;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.DungeonGear;
 
 /** Native Vitapods are slot-12 dungeon gear with a passive capsule health bonus. */
 public final class VitapodTest {

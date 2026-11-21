@@ -8,8 +8,11 @@ import java.util.concurrent.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.*;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Real predecessor layout, deployment exclusion, atomic rename and persisted cooldown. */
 public final class RenameMigrationTest {

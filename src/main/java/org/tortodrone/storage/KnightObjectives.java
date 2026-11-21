@@ -3,7 +3,7 @@ package org.tortodrone.storage;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.character.KnightObjective;
+import org.tortodrone.core.character.KnightObjective;
 
 /** Bounded objective identities/configuration in existing SQLite metadata, within caller transaction. */
 final class KnightObjectives {

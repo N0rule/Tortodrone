@@ -3,8 +3,8 @@ package org.tortodrone.storage;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.character.ItemCatalog;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** SQLite is the sole catalog authority. Quotes and purchases use the same effective-offer resolver. */
 public final class DepotStore {

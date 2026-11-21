@@ -1,5 +1,7 @@
 package org.tortodrone.world;
 
+import org.tortodrone.core.world.FireCatalog;
+
 /** Native prepared shape geometry, evaluated in its source actor's local coordinates. */
 public final class SceneShape {
     private SceneShape() { }

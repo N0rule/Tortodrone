@@ -10,6 +10,10 @@ import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.*;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.Currency;
+import org.tortodrone.core.character.Confetti;
+import org.tortodrone.core.town.AuctionState;
 
 /** Native increment boundaries, per-unit ordering and compatible scheduled featured publication. */
 public final class AuctionParityTest {
@@ -19,7 +23,7 @@ public final class AuctionParityTest {
             var content=ContentManager.load(Path.of("."));var items=content.items();var rules=content.town();
             var db=new Database(root,false);int owner=db.create("Alice",new Passwords.Protection(new byte[16],new byte[32]),false);
             new CharacterStore(db,owner,"Alice",items).create(new Knight(0,"Auction-Alice","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0));
-            db.currency("Alice","Auction-Alice",owner,-1,org.tortodrone.character.Currency.CROWNS,10000);
+            db.currency("Alice","Auction-Alice",owner,-1,org.tortodrone.core.character.Currency.CROWNS,10000);
             var house=new AuctionHouse(db,items,rules);
             var confetti=house.createFeatured("Usable/Confetti, Leaf",1,10,10,0,2);
             var usable=new SessionDecoder.AuctionSearch(true,new SessionDecoder.EnumValue("com.threerings.projectx.item.data.ItemCodes$Group",17),null,0,true,false);

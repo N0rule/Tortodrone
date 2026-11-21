@@ -14,6 +14,7 @@ import org.tortodrone.storage.Database;
 import org.tortodrone.support.ContentFixture;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** Crash Site stateful cameras and pulse cables spawn inert the native way: the authored
  * "Startup State: Off" choice has the placeable's Startup handler signal each DumbSwitch to

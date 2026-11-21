@@ -6,6 +6,11 @@ import java.util.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.Database;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightProgress;
 
 public final class KnightProgressTest {
     public static void main(String[] args)throws Exception{

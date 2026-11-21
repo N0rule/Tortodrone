@@ -1,7 +1,10 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Instance-local status conditions and the native modifier/expiry snapshots. */
 public final class SceneStatus {
@@ -32,10 +35,10 @@ public final class SceneStatus {
     private final Map<String,Active> active=new LinkedHashMap<>();
     private long applications;
     private final Map<Integer,Integer> shieldCooloff=new HashMap<>();
-    private org.tortodrone.character.WorldProfile equipment;
-    private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
-    public void town(org.tortodrone.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
-    public void equipment(org.tortodrone.character.WorldProfile profile){equipment=profile;}
+    private org.tortodrone.core.character.WorldProfile equipment;
+    private org.tortodrone.core.town.TownCatalog town=org.tortodrone.core.town.TownCatalog.empty();
+    public void town(org.tortodrone.core.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
+    public void equipment(org.tortodrone.core.character.WorldProfile profile){equipment=profile;}
     public record Pulse(Object damage,float radius,int mask) { }
     private final ArrayDeque<Pulse> pulses=new ArrayDeque<>();
     private final ArrayDeque<FireCatalog.Action> actions=new ArrayDeque<>();

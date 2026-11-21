@@ -3,7 +3,7 @@ package org.tortodrone.storage;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.town.ExchangeState;
+import org.tortodrone.core.town.ExchangeState;
 
 /** Player-funded price/time order book. Every debit, match, refund and delivery commits together. */
 public final class EnergyExchange {

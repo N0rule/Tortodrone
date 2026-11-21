@@ -1,5 +1,5 @@
 package org.tortodrone.world;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 /** Immutable downstream actor snapshot; client positions are never accepted. */
 public record ActorState(int id,int clientOid,String name,int color,int created,float x,float y,float rotation,float direction,int flags,int activity,int activityStarted,StarterCatalog.Model config,boolean gameMaster,KnightCombat.State combat,ProjectileState projectile,SceneEntityState entity,InteractionState interaction,SceneKnightState sceneKnight,ScenePetState pet) {
     public ActorState(int id,int clientOid,String name,int color,int created,float x,float y,float rotation,float direction,int flags,int activity,int activityStarted,StarterCatalog.Model config,boolean gameMaster,KnightCombat.State combat,ProjectileState projectile,SceneEntityState entity,InteractionState interaction,SceneKnightState sceneKnight) {

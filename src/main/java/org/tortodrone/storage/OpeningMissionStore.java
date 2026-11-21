@@ -4,7 +4,15 @@ import java.io.*;
 import java.sql.*;
 import java.util.*;
 import org.tortodrone.character.*;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightObjective;
+import org.tortodrone.core.character.OpeningCompletion;
+import org.tortodrone.core.character.OpeningMission;
+import org.tortodrone.core.character.KnightMemory;
+import org.tortodrone.core.mission.MissionCatalog;
 
 /** Authenticated, atomic story-mission settlement. Only production scene/conversation terminal
  * handlers may call complete; there is no client completion RPC. Uses the existing schema. */

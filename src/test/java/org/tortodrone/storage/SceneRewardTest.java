@@ -6,8 +6,11 @@ import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.town.*;
+import org.tortodrone.core.town.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** A native scene receipt is a global one-shot reward across accounts, retries and restarts. */
 public final class SceneRewardTest {

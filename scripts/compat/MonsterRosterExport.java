@@ -7,7 +7,7 @@ import com.threerings.config.*;
 import com.threerings.projectx.config.DescriptionConfig;
 import com.threerings.projectx.dungeon.config.DungeonActorConfig;
 import com.threerings.tudey.config.ActorConfig;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 
 /**
  * Read-only roster export for every spawnable stock monster description.

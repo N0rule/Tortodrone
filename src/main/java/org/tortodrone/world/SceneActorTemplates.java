@@ -2,6 +2,8 @@ package org.tortodrone.world;
 
 import java.io.IOException;
 import java.util.*;
+import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Scene-local entity definitions; cycles are references, never recursive projectile payloads. */
 final class SceneActorTemplates {

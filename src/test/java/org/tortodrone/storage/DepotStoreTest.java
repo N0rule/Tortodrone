@@ -10,8 +10,13 @@ import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.resources.*;
 import org.tortodrone.support.*;
-import org.tortodrone.town.*;
+import org.tortodrone.core.town.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.Currency;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Captured seed fidelity, explicit upgrades and timed authenticated transaction safety. */
 public final class DepotStoreTest {
@@ -30,7 +35,7 @@ public final class DepotStoreTest {
             for(String invalid:List.of("{}",Files.readString(Path.of("src/main/resources/seeds/supply-depot.json")).replaceFirst("\\\"count\\\":1","\\\"count\\\":0")))refused(()->DepotSeed.parse(invalid));
             int account=db.create("Alice",new Passwords.Protection(new byte[16],new byte[32]),false);
             new CharacterStore(db,account,"Alice",items).create(knight("Depot-Alice"));
-            db.currency("Alice","Depot-Alice",account,-1,org.tortodrone.character.Currency.CROWNS,1000);
+            db.currency("Alice","Depot-Alice",account,-1,org.tortodrone.core.character.Currency.CROWNS,1000);
             var saved=depot.save(1,new DepotStore.Offer(-1,new TownCatalog.Good("Material/Gel Drop",3,20,0,2,"",0),false,true));
             var base=saved.offers().getLast();var town=new TownStore(db,items,rules);var quote=new DepotStore.Quote(saved.revision(),base);
             saved=depot.save(saved.revision(),new DepotStore.Offer(base.id(),new TownCatalog.Good("Material/Gel Drop",3,25,0,2,"",0),false,true));

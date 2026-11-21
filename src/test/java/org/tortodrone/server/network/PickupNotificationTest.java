@@ -7,10 +7,12 @@ import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.SessionCodec;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** A lost downstream connection after commit cannot leave an awarded actor claimable. */
 public final class PickupNotificationTest {

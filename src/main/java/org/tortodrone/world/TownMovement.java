@@ -1,6 +1,12 @@
 package org.tortodrone.world;
 
 import java.util.ArrayDeque;
+import org.tortodrone.core.WireTypes;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.AnimatedItems;
+import org.tortodrone.core.character.Confetti;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Server-owned movement on the scene clock. Client frames never provide positions. */
 public final class TownMovement {
@@ -115,7 +121,7 @@ public final class TownMovement {
         // configured duration from the first scene publication, just as item poses.
         if(activityData==null&&PlayerEmotes.byActivity(activity)==null)return;
         activityStarted=stamp;
-        if(activity==ANIMATED_ITEM&&activityData instanceof org.tortodrone.character.StarterCatalog.Model item)
+        if(activity==ANIMATED_ITEM&&activityData instanceof org.tortodrone.core.character.StarterCatalog.Model item)
             animatedItemMillis=animatedDuration(item.name(),stamp);
     }
     public Object activityData(){return activityData;}
@@ -123,29 +129,29 @@ public final class TownMovement {
         return portal==null&&(activity==0||activity==INVENTORY||activity==INVENTORY_END)
             &&(combat==null||combat.canOverride());
     }
-    public boolean openBox(java.util.List<org.tortodrone.character.StarterCatalog.Model> references,int stamp){
+    public boolean openBox(java.util.List<org.tortodrone.core.character.StarterCatalog.Model> references,int stamp){
         if(!canOpenBox()||references.size()<2)return false;
         if(combat!=null)combat.reset(stamp);
         setActivity(OPEN_BOX,stamp);activityData=java.util.List.copyOf(references);
         rotation=-(float)Math.PI/2;updateFlags();return true;
     }
     public boolean confetti(String config,int stamp){
-        if(!canOpenBox()||!org.tortodrone.character.Confetti.supports(config))return false;
+        if(!canOpenBox()||!org.tortodrone.core.character.Confetti.supports(config))return false;
         if(combat!=null)combat.reset(stamp);
-        setActivity(ANIMATED_ITEM,stamp);animatedItemMillis=org.tortodrone.character.Confetti.duration(config,stamp);
-        activityData=new org.tortodrone.character.StarterCatalog.Model(config,java.util.Map.of());updateFlags();return true;
+        setActivity(ANIMATED_ITEM,stamp);animatedItemMillis=org.tortodrone.core.character.Confetti.duration(config,stamp);
+        activityData=new org.tortodrone.core.character.StarterCatalog.Model(config,java.util.Map.of());updateFlags();return true;
     }
     public boolean animatedItem(String config,int stamp){
-        if(!canOpenBox()||!org.tortodrone.character.AnimatedItems.supports(config))return false;
+        if(!canOpenBox()||!org.tortodrone.core.character.AnimatedItems.supports(config))return false;
         if(combat!=null)combat.reset(stamp);
         setActivity(ANIMATED_ITEM,stamp);animatedItemMillis=animatedDuration(config,stamp);
-        activityData=new org.tortodrone.character.StarterCatalog.Model(config,java.util.Map.of());updateFlags();return true;
+        activityData=new org.tortodrone.core.character.StarterCatalog.Model(config,java.util.Map.of());updateFlags();return true;
     }
     private static int animatedDuration(String config,int stamp){
-        return org.tortodrone.character.Confetti.supports(config)?org.tortodrone.character.Confetti.duration(config,stamp)
-            :org.tortodrone.character.AnimatedItems.duration(config);
+        return org.tortodrone.core.character.Confetti.supports(config)?org.tortodrone.core.character.Confetti.duration(config,stamp)
+            :org.tortodrone.core.character.AnimatedItems.duration(config);
     }
-    public boolean useItem(org.tortodrone.character.StarterCatalog.Model item,int stamp){
+    public boolean useItem(org.tortodrone.core.character.StarterCatalog.Model item,int stamp){
         if(!canUseItem()||combat!=null&&!combat.canOverride())return false;
         if(combat!=null)combat.reset(stamp);setActivity(USE_ITEM,stamp);activityData=item;updateFlags();return true;
     }
@@ -170,7 +176,7 @@ public final class TownMovement {
     private MapCollision exactCollision;
     private java.util.Set<Integer> disabledCollision=java.util.Set.of();
     private int collisionMask=43;
-    private static final Object PAWN_SHAPE=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.SHAPE_CIRCLE,
+    private static final Object PAWN_SHAPE=new FireCatalog.DataValue(org.tortodrone.core.WireTypes.SHAPE_CIRCLE,
         java.util.List.of(new FireCatalog.FieldValue("radius","float",ScenePortals.PAWN_RADIUS)));
     public void staticCollision(SceneCollision geometry,int mask){staticCollision=java.util.Objects.requireNonNull(geometry);collisionMask=mask;}
     /** Prefer the compiled exact collision; the sampled grid is only a legacy fallback. */

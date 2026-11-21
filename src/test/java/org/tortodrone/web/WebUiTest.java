@@ -7,10 +7,12 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import org.tortodrone.account.AccountStore;
-import org.tortodrone.character.ItemCatalog;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.Json;
 import org.tortodrone.server.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.config.ServerSettings;
+import org.tortodrone.core.config.WebSettings;
 
 /** Real single-listener HTTP requests, disposable identities and game data only. */
 public final class WebUiTest {
@@ -96,7 +98,7 @@ public final class WebUiTest {
                     check(request("GET","/admin/%2e%2e/data/webui.sqlite",null,authenticated()).status==404,"encoded traversal rejected");
                     check(request("GET","/admin/assets/secret.key",null,authenticated()).status==404,"static allowlist");
                     var welcome=(Map<?,?>)Json.parse(get("welcome").body);
-                    check(welcome.get("message").equals(org.tortodrone.config.ServerSettings.DEFAULT_WELCOME_MESSAGE),"welcome setting is readable");
+                    check(welcome.get("message").equals(org.tortodrone.core.config.ServerSettings.DEFAULT_WELCOME_MESSAGE),"welcome setting is readable");
                     check(post("welcome-save",Map.of("message","Welcome, knight!","revision",welcome.get("revision"),"confirmation","welcome-save")).status==200&&Files.readString(root.resolve("config/server.yml")).contains("welcome-message: 'Welcome, knight!'"),"welcome setting writes server.yml");
                     var latestWelcome=(Map<?,?>)Json.parse(get("welcome").body);
                     var invalidWelcome=post("welcome-save",Map.of("message","x".repeat(257),"revision",latestWelcome.get("revision"),"confirmation","welcome-save"));
@@ -120,7 +122,7 @@ public final class WebUiTest {
                 httpMode(root,news,frontend,identities,service);
                 automaticHttpMode(root,news,frontend,identities,service);
                 cookie=null;csrf=null;
-                try(var http=NewsServer.start(InetAddress.getLoopbackAddress(),org.tortodrone.config.ServerSettings.DEFAULT_NEWS_PORT,news,x->{})){
+                try(var http=NewsServer.start(InetAddress.getLoopbackAddress(),org.tortodrone.core.config.ServerSettings.DEFAULT_NEWS_PORT,news,x->{})){
                     port=http.port();check(port==8080&&request("GET","/news/public.png",null,Map.of()).status==200,"public News on default port 8080");
                 }catch(java.net.BindException occupied){System.out.println("SKIP: port 8080 already occupied; default configuration and ephemeral listener verified");}
                 try(var http=NewsServer.start(InetAddress.getLoopbackAddress(),0,news,x->{})){
@@ -222,7 +224,7 @@ public final class WebUiTest {
     private static void automaticHttpMode(Path root,Path news,Path frontend,WebIdentityStore identities,AdminService service)throws Exception {
         Path config=root.resolve("automatic-http.yml");
         Files.writeString(config,"server-ip: 0.0.0.0\nwebui-enabled: true\nwebui-public-url: http://0.0.0.0\nwebui/content_url-port: 0\nwebui-tls-mode: http\n");
-        var settings=org.tortodrone.config.ServerSettings.read(config);
+        var settings=org.tortodrone.core.config.ServerSettings.read(config);
         var security=new WebSecurity(settings.webui(),identities,root.resolve("automatic-without-proxy-key"));
         try(var http=NewsServer.start(InetAddress.getByName(settings.bind()),settings.httpPort(),news,x->{},new AdminHandler(security,identities,service,frontend))){
             port=http.port();String authority="127.0.0.1:"+port;

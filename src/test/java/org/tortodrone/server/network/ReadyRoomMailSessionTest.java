@@ -12,6 +12,8 @@ import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.*;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Stock uplink/social services stay reachable from the client-local Ready Room. */
 public final class ReadyRoomMailSessionTest {

@@ -4,7 +4,10 @@ import java.io.*;
 import java.nio.channels.*;
 import java.nio.file.*;
 import java.util.*;
-import static org.tortodrone.resources.Yaml.*;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.config.ServerSettings;
 
 /** Transactional installation of a compatible, prepared native scene into the unified tree. */
 public final class MapImport {
@@ -59,7 +62,7 @@ public final class MapImport {
                 var preparedBindings=map(Json.parseCatalog(Files.readString(prepared.resolve("native/bindings.json"))),"bindings");
                 String supported="Supported actors="+map(preparedBindings.get("actors"),"actors").size()+", NPC conversations="+map(preparedBindings.get("npcs"),"npcs").size()+", portal triggers="+map(preparedBindings.get("portals"),"portals").size()+"\n";
                 Files.writeString(prepared.resolve("native/import-report.txt"),"Prepared native identity and default entrance retained. Supported extracted bindings were validated.\nCached scenes cannot establish missing server scripts, AI, rewards or portal actions; no behaviors invented.\nReview unresolved localization in NPC YAML and verify travel with an isolated stock client.\n"+supported+sourceReport+String.join("\n",exporter.report())+"\n");
-                ContentManager.load(staging,org.tortodrone.config.ServerSettings.read(org.tortodrone.config.ServerSettings.defaultPath(root)));
+                ContentManager.load(staging,org.tortodrone.core.config.ServerSettings.read(org.tortodrone.core.config.ServerSettings.defaultPath(root)));
                 if(!initialInputs.equals(ContentManager.inputs(root)))throw new IOException("Deployment content/config changed during import; no map published");
                 Path backup=null;
                 try{

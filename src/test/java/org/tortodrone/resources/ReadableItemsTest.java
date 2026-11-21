@@ -7,8 +7,12 @@ import java.util.*;
 import org.tortodrone.character.*;
 import org.tortodrone.world.*;
 import org.tortodrone.support.ContentFixture;
-import static org.tortodrone.resources.Yaml.*;
+import static org.tortodrone.core.Yaml.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Whole-catalog equivalence, effective legacy edits, strict diagnostics and stable reference identities. */
 public final class ReadableItemsTest {

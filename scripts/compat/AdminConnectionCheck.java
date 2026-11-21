@@ -3,6 +3,7 @@ import java.nio.file.*;
 import java.util.*;
 import com.samskivert.util.at;
 import com.threerings.config.ConfigReference;
+import org.tortodrone.core.character.Knight;
 
 /** Live original F3 dashboard: the stock admin service and its ItemCreator, authorized on the server. */
 public final class AdminConnectionCheck {
@@ -112,7 +113,7 @@ public final class AdminConnectionCheck {
     }
     private static void seed(org.tortodrone.account.AccountStore tools, String user, String name) throws Exception {
         char[] hash = org.tortodrone.account.AccountStore.transform("lan-test-password".toCharArray());
-        try { tools.authenticate(user, hash).characters().create(new org.tortodrone.character.Knight(0, name,
+        try { tools.authenticate(user, hash).characters().create(new org.tortodrone.core.character.Knight(0, name,
             "Gear/Helm/Spiral Sallet (Blue)", "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 0)); }
         finally { Arrays.fill(hash, '\0'); }
     }

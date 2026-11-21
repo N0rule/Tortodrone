@@ -14,6 +14,12 @@ import org.tortodrone.protocol.*;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.character.OpeningMission;
+import org.tortodrone.core.character.KnightMemory;
 
 /** Original-map native protocol/entry acceptance from an explicit post-Camp fixture.
  * Does not claim to play Generator encounters or settle its final exit. */

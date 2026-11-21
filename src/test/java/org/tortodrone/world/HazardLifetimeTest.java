@@ -2,6 +2,8 @@ package org.tortodrone.world;
 
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Count region applications independently of probabilistic Fire/status protection. */
 public final class HazardLifetimeTest {
@@ -16,7 +18,7 @@ public final class HazardLifetimeTest {
             Object damage=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",Map.of("flags",4));
             spawn.invoke(world,"Fixture",damage,1f,6000,Map.of("hazard-active-lifetime",Integer.toString(active)),map.spawnX(),map.spawnY(),1000);
             var hazard=world.actors().getFirst();
-            var player=new ActorState(7,1001,"Fixture",0,1000,map.spawnX(),map.spawnY(),0,0,0,new org.tortodrone.character.StarterCatalog.Model("Fixture",Map.of()));
+            var player=new ActorState(7,1001,"Fixture",0,1000,map.spawnX(),map.spawnY(),0,0,0,new org.tortodrone.core.character.StarterCatalog.Model("Fixture",Map.of()));
             var occupants=List.of(player);
             world.advance(1000,occupants);check(hits[0]==1,"fresh hazard applies one region");
             // Skipping several cadences makes a region otherwise due on either side of expiry.

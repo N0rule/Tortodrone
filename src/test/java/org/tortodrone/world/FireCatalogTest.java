@@ -2,8 +2,10 @@ package org.tortodrone.world;
 
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.world.FireCatalog;
 
 public final class FireCatalogTest {
     public static void main(String[] args) throws Exception {
@@ -43,11 +45,11 @@ public final class FireCatalogTest {
             var oldAction=new FireCatalog.Action(FireCatalog.Kind.EMIT_PROJECTILE,null,actor,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
             var oldRef=new FireCatalog.FireRef(new StarterCatalog.Model("Fire/Legacy",Map.of()),0,0,true,0,0,0,oldAction,null);
             Path legacy=root.resolve("legacy.json");FireCatalog.write(legacy,List.of(new FireCatalog.AttackFire("Weapon/Legacy",292,new StarterCatalog.Model("Attack/Legacy",Map.of()),1,List.of(oldRef))),Map.of());
-            Object oldDocument=legacyFields(org.tortodrone.resources.Json.parse(Files.readString(legacy)));
+            Object oldDocument=legacyFields(org.tortodrone.core.Json.parse(Files.readString(legacy)));
             @SuppressWarnings("unchecked") var oldRoot=(Map<String,Object>)oldDocument;oldRoot.put("version",1);
-            Files.writeString(legacy,org.tortodrone.resources.Json.stringify(oldRoot));
+            Files.writeString(legacy,org.tortodrone.core.Json.stringify(oldRoot));
             check(FireCatalog.load(legacy).find("Weapon/Legacy",292).fireRefs().getFirst().action().actor().equals(actor),"previous fire format remains readable without orbital or argument-change fields");
-            oldRoot.put("version",2);Files.writeString(legacy,org.tortodrone.resources.Json.stringify(oldRoot));
+            oldRoot.put("version",2);Files.writeString(legacy,org.tortodrone.core.Json.stringify(oldRoot));
             try{FireCatalog.load(legacy);throw new AssertionError("Missing v2 fields accepted");}catch(java.io.IOException expected){}
             System.out.println("PASS: bounded fire graph JSON, argument-preserving reference lookup, orbital metadata, unsupported action reporting");
         } finally {

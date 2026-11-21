@@ -7,6 +7,7 @@ import com.threerings.projectx.social.data.*;
 import com.threerings.projectx.uplink.data.*;
 import com.threerings.projectx.uplink.client.UplinkService;
 import com.threerings.util.Name;
+import org.tortodrone.core.character.Knight;
 
 /** Stock network check. Seed and run only against a disposable deployment; never an owner database. */
 public final class FriendConnectionCheck {
@@ -34,7 +35,7 @@ public final class FriendConnectionCheck {
             var db=new org.tortodrone.storage.Database(data,true);
             for(String[] entry:List.of(new String[]{"LanPlayer","Friend-Alice"},new String[]{"PeerPlayer","Friend-Bob"})) {
                 int id=db.create(entry[0],org.tortodrone.account.Passwords.protect("lan-test-password".toCharArray()),false);
-                new org.tortodrone.character.CharacterStore(db,id,entry[0],content.items()).create(new org.tortodrone.character.Knight(0,entry[1],"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
+                new org.tortodrone.character.CharacterStore(db,id,entry[0],content.items()).create(new org.tortodrone.core.character.Knight(0,entry[1],"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             }
             return;
         }

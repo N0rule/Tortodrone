@@ -6,6 +6,8 @@ import org.tortodrone.protocol.*;
 import org.tortodrone.world.*;
 import com.threerings.projectx.dungeon.data.*;
 import com.threerings.presents.net.*;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Stock reader validates stable party snapshots, notification keys and incremental HUD updates. */
 public class PartyCompatibility {

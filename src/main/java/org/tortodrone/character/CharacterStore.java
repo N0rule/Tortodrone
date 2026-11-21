@@ -5,6 +5,14 @@ import java.nio.file.Path;
 import java.util.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.Database;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightObjective;
+import org.tortodrone.core.character.KnightMemory;
+import org.tortodrone.core.mission.MissionCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Account-owned roster with transactional SQLite saves. */
 public final class CharacterStore {
@@ -17,10 +25,10 @@ public final class CharacterStore {
     public ItemCatalog catalog(){return catalog;}
     public org.tortodrone.storage.EnergyExchange exchange()throws IOException{if(database==null)throw new IOException("Energy Exchange requires SQLite storage");return new org.tortodrone.storage.EnergyExchange(database);}
     public org.tortodrone.storage.FriendStore friends()throws IOException{if(database==null)throw new IOException("Friend lists require SQLite storage");return new org.tortodrone.storage.FriendStore(database);}
-    public org.tortodrone.storage.DepotStore depot(org.tortodrone.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Supply Depot requires SQLite storage");return new org.tortodrone.storage.DepotStore(database,catalog,rules);}
+    public org.tortodrone.storage.DepotStore depot(org.tortodrone.core.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Supply Depot requires SQLite storage");return new org.tortodrone.storage.DepotStore(database,catalog,rules);}
     public org.tortodrone.storage.StyleStore styles()throws IOException{if(database==null)throw new IOException("Styles require SQLite storage");return new org.tortodrone.storage.StyleStore(database,catalog);}
-    public org.tortodrone.storage.AuctionHouse auction(org.tortodrone.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Auctions require SQLite storage");return new org.tortodrone.storage.AuctionHouse(database,catalog,rules);}
-    public org.tortodrone.storage.TownStore town(org.tortodrone.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Town operations require SQLite storage");return new org.tortodrone.storage.TownStore(database,catalog,rules);}
+    public org.tortodrone.storage.AuctionHouse auction(org.tortodrone.core.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Auctions require SQLite storage");return new org.tortodrone.storage.AuctionHouse(database,catalog,rules);}
+    public org.tortodrone.storage.TownStore town(org.tortodrone.core.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Town operations require SQLite storage");return new org.tortodrone.storage.TownStore(database,catalog,rules);}
     public org.tortodrone.storage.GuildStore guilds()throws IOException{if(database==null)throw new IOException("Guilds require SQLite storage");return new org.tortodrone.storage.GuildStore(database);}
     public org.tortodrone.storage.BoxOpeningService boxes(org.tortodrone.loot.BoxCatalog boxes)throws IOException {
         if(database==null)throw new IOException("Box opening requires SQLite storage");
@@ -81,7 +89,7 @@ public final class CharacterStore {
         if(database==null)throw new IOException("Item grants require SQLite storage");
         var entry=catalog.require(config);
         return database.grantItems(username,name,accountId,-1,entry,quantity,accountId,revision,
-            ItemModifiers.NONE,org.tortodrone.town.TownCatalog.empty(),locked,expireDays==0?entry.expireDays():expireDays);
+            ItemModifiers.NONE,org.tortodrone.core.town.TownCatalog.empty(),locked,expireDays==0?entry.expireDays():expireDays);
     }
 
     public synchronized void refresh()throws IOException {
@@ -244,7 +252,7 @@ public final class CharacterStore {
     public WorldProfile completeTutorial(int knightId,long authRevision,WorldProfile expected)throws IOException {
         return completeTutorial(knightId,authRevision,expected,0,null);
     }
-    public WorldProfile completeTutorial(int knightId,long authRevision,WorldProfile expected,float heat,org.tortodrone.town.TownCatalog rules)throws IOException {
+    public WorldProfile completeTutorial(int knightId,long authRevision,WorldProfile expected,float heat,org.tortodrone.core.town.TownCatalog rules)throws IOException {
         if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid tutorial owner");
         return database.completeTutorial(accountId,knightId,authRevision,expected.worldId(),expected.revision(),heat,rules);
     }
@@ -255,7 +263,7 @@ public final class CharacterStore {
     public Map<String,KnightObjective.State> knightObjectives(int knightId,long authRevision)throws IOException {
         if(database==null)throw new IOException("Objectives require SQLite storage");return database.knightObjectives(accountId,knightId,authRevision);
     }
-    public org.tortodrone.storage.OpeningMissionStore openingMissions(org.tortodrone.town.TownCatalog rules,org.tortodrone.character.MissionCatalog missions)throws IOException {
+    public org.tortodrone.storage.OpeningMissionStore openingMissions(org.tortodrone.core.town.TownCatalog rules,org.tortodrone.core.mission.MissionCatalog missions)throws IOException {
         if(database==null)throw new IOException("Opening missions require SQLite storage");return new org.tortodrone.storage.OpeningMissionStore(database,catalog,rules,missions);
     }
     public Database.StoryState knightStory(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> memories,List<KnightObjective> objectives)throws IOException {

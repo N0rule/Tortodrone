@@ -6,9 +6,10 @@ import com.threerings.projectx.dungeon.config.*;
 import com.threerings.projectx.item.config.ItemConfig;
 import com.threerings.tudey.config.*;
 import com.threerings.tudey.data.actor.Actor;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.world.*;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Read-only retail oracle: retained skill parameters, intentional Ban Stick damage,
  * generator add/delta state, and the complete native Spark particle reference.

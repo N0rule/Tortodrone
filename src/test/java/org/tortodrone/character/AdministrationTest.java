@@ -7,6 +7,10 @@ import java.util.concurrent.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.Database;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.Currency;
 
 /** Independent stores race through SQLite, with exact audit/revision/rollback acceptance. */
 public final class AdministrationTest {

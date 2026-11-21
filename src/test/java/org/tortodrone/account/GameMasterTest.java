@@ -5,13 +5,14 @@ import java.net.Socket;
 import java.nio.file.*;
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Separate local tool and live server lease share durable, immediately revocable roles. */
 public final class GameMasterTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-gm-");
         try {
-            try(var server=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter());var tool=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
+            try(var server=new AccountStore(home,false,org.tortodrone.core.character.ItemCatalog.starter());var tool=new AccountStore(home,false,org.tortodrone.core.character.ItemCatalog.starter())) {
                 server.create("Staff","staff-password".toCharArray(),true);
                 server.create("Player","player-password".toCharArray());
                 var identity=AccountStoreTest.login(server,"Staff","staff-password");
@@ -36,7 +37,7 @@ public final class GameMasterTest {
                     try{lease.gameMaster();throw new AssertionError("Old auth revision retained GM access");}catch(IOException expected){}
                 }
             }
-            try(var restored=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
+            try(var restored=new AccountStore(home,false,org.tortodrone.core.character.ItemCatalog.starter())) {
                 check(AccountStoreTest.login(restored,"Staff","new-password").gameMaster(),"role persists through restart and password change");
             }
             System.out.println("PASS: durable GM roles, separate-tool grant/revocation, target guards and stale authenticated privilege denial");

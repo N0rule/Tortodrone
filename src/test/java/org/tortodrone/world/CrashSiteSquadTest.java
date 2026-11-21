@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.*;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** The Crash Site Knight Squad holds at its spawns until the ambush strip's "start knights"
  * trigger signals activate, then waits its authored 500 ms and walks to its waypoints. */

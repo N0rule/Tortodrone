@@ -1,6 +1,8 @@
 package org.tortodrone.world;
 
 import java.util.*;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.world.SceneActions;
 
 /**
  * Immutable behaviour parsed once from a prepared actor spec and shared by every instance.
@@ -11,7 +13,7 @@ import java.util.*;
  */
 public record PreparedActor(
         String kind,
-        org.tortodrone.character.StarterCatalog.Model config,
+        org.tortodrone.core.character.StarterCatalog.Model config,
         SceneMovementScript script,
         SceneScript program,
         SceneTargeting targeting,

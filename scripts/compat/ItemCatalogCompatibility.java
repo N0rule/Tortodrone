@@ -4,6 +4,10 @@ import java.util.*;
 import com.threerings.config.*;
 import com.threerings.projectx.item.config.*;
 import org.tortodrone.character.*;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Stock metadata and equipment-model check, using unchanged installed classes. */
 public final class ItemCatalogCompatibility {

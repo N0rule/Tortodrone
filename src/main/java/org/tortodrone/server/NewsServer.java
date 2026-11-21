@@ -9,11 +9,12 @@ import java.nio.file.*;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
-import org.tortodrone.resources.ContentFiles;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.NewsCatalog;
 
 /** One shared HTTP listener: public stock-client News and optional isolated administration routes. */
 public final class NewsServer implements AutoCloseable {
-    private static final long MAX_IMAGE_BYTES=org.tortodrone.news.NewsCatalog.MAX_IMAGE_BYTES;
+    private static final long MAX_IMAGE_BYTES=org.tortodrone.core.NewsCatalog.MAX_IMAGE_BYTES;
     private final HttpServer server;
     private final ExecutorService executor;
     private NewsServer(HttpServer server,ExecutorService executor){this.server=server;this.executor=executor;}

@@ -10,6 +10,8 @@ import com.threerings.util.Name;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Installed-client trade wire oracle. Run with the stock game jars on the classpath. */
 public final class TradeCompatibility {
@@ -27,11 +29,11 @@ public final class TradeCompatibility {
 
     /** Independent stock decoder applies the emulator's actual events to native objects. */
     private static void serverFrames()throws Exception {
-        var knight=new org.tortodrone.character.Knight(1,"First-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,1);
-        var other=new org.tortodrone.character.Knight(1,"Second-Knight",knight.helm(),knight.armor(),null,null,"Blue",1,2,0,1);
-        var item=new org.tortodrone.character.WorldProfile.Item(17,org.tortodrone.character.WorldProfile.Slot.SWORD,"Weapon/Sword/Calibur",null,0,null,false,true,false);
-        var first=new org.tortodrone.character.WorldProfile(10,1,1,100,40,1,List.of(item));
-        var second=new org.tortodrone.character.WorldProfile(11,2,1,50,30,1,List.of());
+        var knight=new org.tortodrone.core.character.Knight(1,"First-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,1);
+        var other=new org.tortodrone.core.character.Knight(1,"Second-Knight",knight.helm(),knight.armor(),null,null,"Blue",1,2,0,1);
+        var item=new org.tortodrone.core.character.WorldProfile.Item(17,org.tortodrone.core.character.WorldProfile.Slot.SWORD,"Weapon/Sword/Calibur",null,0,null,false,true,false);
+        var first=new org.tortodrone.core.character.WorldProfile(10,1,1,100,40,1,List.of(item));
+        var second=new org.tortodrone.core.character.WorldProfile(11,2,1,50,30,1,List.of());
         var empty=new org.tortodrone.protocol.SessionCodec.TradeView(1001,knight,first,List.of(),other,second,List.of(),0,0,0,0,1,0,0,false);
         var offered=new org.tortodrone.protocol.SessionCodec.TradeView(1001,knight,first,List.of(item),other,second,List.of(),12,0,0,0,2,2,0,false);
         var removed=new org.tortodrone.protocol.SessionCodec.TradeView(1001,knight,first,List.of(),other,second,List.of(),0,0,0,0,3,0,0,false);
@@ -44,7 +46,7 @@ public final class TradeCompatibility {
         append(bytes,codec.tradeNotification(1002,other.name(),true));append(bytes,codec.tradeDialog(1002,empty,987654L));
         append(bytes,codec.tradeObject((short)4,empty));append(bytes,codec.tradeChanges(empty,offered));append(bytes,codec.tradeChanges(offered,removed));
         append(bytes,codec.tradeNotification(1002,other.name(),false));append(bytes,codec.tradeDialog(1002,null,987654L));
-        append(bytes,codec.itemChanges(1002,knight,first,new org.tortodrone.character.WorldProfile(10,1,1,100,40,2,List.of())));
+        append(bytes,codec.itemChanges(1002,knight,first,new org.tortodrone.core.character.WorldProfile(10,1,1,100,40,2,List.of())));
         var input=new v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();
         var player=(com.threerings.projectx.data.PlayerObject)((com.threerings.presents.net.ObjectResponse)input.qe()).yk();
         apply(input,player);

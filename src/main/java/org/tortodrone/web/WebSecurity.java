@@ -8,7 +8,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.util.*;
-import org.tortodrone.resources.ContentFiles;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.config.WebSettings;
 
 /** Transport-specific ingress validation, origin checks and bounded in-memory sessions. */
 public final class WebSecurity {

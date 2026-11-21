@@ -6,6 +6,8 @@ import java.util.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** First-run creation/checkpoints use production storage, without simulating a successful fight. */
 public final class OpeningProgressTest {

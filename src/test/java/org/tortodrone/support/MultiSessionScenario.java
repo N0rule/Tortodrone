@@ -6,6 +6,7 @@ import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** Real authenticated account replacement, independent accounts and abrupt reconnect. */
 public final class MultiSessionScenario {

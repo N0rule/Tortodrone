@@ -4,7 +4,10 @@ import java.io.*;
 import java.nio.channels.*;
 import java.nio.file.*;
 import java.util.*;
-import static org.tortodrone.resources.Yaml.*;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.ContentFiles;
 
 /** Offline, candidate-only conversion of effective customized unified item content. Never opens SQLite. */
 public final class ItemMigration {

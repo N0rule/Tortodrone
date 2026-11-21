@@ -3,6 +3,8 @@ import java.nio.file.*;
 import java.util.*;
 import com.threerings.config.*;
 import com.threerings.tudey.data.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Read-only extraction of actors from the already selected layouts into a fresh staging directory. */
 public final class TownSceneExport {
@@ -15,9 +17,9 @@ public final class TownSceneExport {
         if(args[1].equals("--accessories")){
             var models=new ArrayList<Object>();for(var config:manager.be(com.threerings.projectx.item.config.AccessoryConfig.class).kR()){
                 var accessory=manager.d(com.threerings.projectx.item.config.AccessoryConfig.class,config.getName());
-                if(accessory!=null&&accessory.model!=null)models.add(Map.of("config",config.getName(),"parameter",accessory.location.code(),"model",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(accessory.model))));
+                if(accessory!=null&&accessory.model!=null)models.add(Map.of("config",config.getName(),"parameter",accessory.location.code(),"model",org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(accessory.model))));
             }
-            Files.writeString(output.resolve("accessory-models.json"),org.tortodrone.resources.Json.stringify(models));System.out.println("Extracted accessory model references: "+models.size());return;
+            Files.writeString(output.resolve("accessory-models.json"),org.tortodrone.core.Json.stringify(models));System.out.println("Extracted accessory model references: "+models.size());return;
         }
         try(var dirs=Files.list(Path.of(args[1]))){for(Path dir:dirs.filter(Files::isDirectory).sorted().toList()){
             if(dir.getFileName().toString().equals("advanced_training"))continue;
@@ -27,10 +29,10 @@ public final class TownSceneExport {
             var placements=new ArrayList<Object>();
             for(Object raw:scene.aez())if(raw instanceof TudeySceneModel.PlaceableEntry entry){
                 var point=entry.ax(manager);var q=entry.transform.tL();float rotation=(float)Math.IEEEremainder(Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))-Math.PI/2,2*Math.PI);
-                placements.add(Map.of("kind","placeable","key",String.valueOf(entry.getKey()),"x",point.x,"y",point.y,"rotation",rotation,"config",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(entry.placeable))));
+                placements.add(Map.of("kind","placeable","key",String.valueOf(entry.getKey()),"x",point.x,"y",point.y,"rotation",rotation,"config",org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(entry.placeable))));
             }
-            for(Object raw:scene.aez())if(raw instanceof TudeySceneModel.AreaEntry entry){var point=entry.ax(manager);var vertices=new ArrayList<Object>();for(var vertex:entry.vertices)vertices.add(Map.of("x",vertex.x,"y",vertex.y));placements.add(Map.of("kind","area","key",String.valueOf(entry.getKey()),"x",point.x,"y",point.y,"rotation",0,"vertices",vertices,"config",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(entry.area))));}
-            Files.writeString(staged.resolve("placements.json"),org.tortodrone.resources.Json.stringify(placements));
+            for(Object raw:scene.aez())if(raw instanceof TudeySceneModel.AreaEntry entry){var point=entry.ax(manager);var vertices=new ArrayList<Object>();for(var vertex:entry.vertices)vertices.add(Map.of("x",vertex.x,"y",vertex.y));placements.add(Map.of("kind","area","key",String.valueOf(entry.getKey()),"x",point.x,"y",point.y,"rotation",0,"vertices",vertices,"config",org.tortodrone.core.world.FireCatalog.modelJson(FireCatalogExport.model(entry.area))));}
+            Files.writeString(staged.resolve("placements.json"),org.tortodrone.core.Json.stringify(placements));
             SceneContentExport.export(Path.of(args[0]),manager,scene,staged);
             System.out.println("Extracted Town actors: "+dir.getFileName());
         }}

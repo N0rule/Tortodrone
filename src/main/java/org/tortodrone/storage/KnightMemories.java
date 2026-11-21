@@ -3,7 +3,7 @@ package org.tortodrone.storage;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.character.KnightMemory;
+import org.tortodrone.core.character.KnightMemory;
 
 /** KNIGHT-scoped native memory names in existing metadata; no schema migration. */
 final class KnightMemories {

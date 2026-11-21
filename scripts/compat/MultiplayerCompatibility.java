@@ -9,6 +9,9 @@ import com.threerings.presents.dobj.*;
 import com.threerings.projectx.data.actor.Knight;
 import com.threerings.tudey.data.TudeySceneObject;
 import com.threerings.tudey.dobj.SceneDeltaEvent;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Retail-reader regression for two connection identities, native membership events and private reveals. */
 public final class MultiplayerCompatibility {
@@ -30,7 +33,7 @@ public final class MultiplayerCompatibility {
             append(bytes,codec.sceneDelta(observer,registry.entry().oid(),0,(short)0,0,1000,(short)50,List.of(a,b),List.of(),new int[0],Map.of(),false));
             append(bytes,codec.sceneDelta(observer,registry.entry().oid(),0,(short)0,1000,1050,(short)50,List.of(),List.of(opening),new int[0],Map.of(a.id(),a),false));
             append(bytes,codec.occupantChanges(registry.entry().oid(),Map.of(a.id(),a.clientOid(),b.id(),b.clientOid()),List.of(b)));
-            var knight=new org.tortodrone.character.Knight(1,"Fixture-A","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);
+            var knight=new org.tortodrone.core.character.Knight(1,"Fixture-A","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);
             var participant=new PartyRegistry.Participant(1002,42,0,knight,new WorldProfile(42,1,1,0,0,1,List.of()),new SceneHealth.State(200,200,0),SceneStatus.State.NORMAL);
             // A public Training party can be subscribed while the client still displays Haven.
             // Its one-time HUD inputs must already describe the destination party.

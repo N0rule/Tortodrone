@@ -12,6 +12,9 @@ import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.*;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.WireTypes;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Stock arsenal services (forge, equip, loadouts) stay reachable from the client-local Ready Room. */
 public final class ReadyRoomArsenalSessionTest {

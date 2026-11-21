@@ -5,6 +5,10 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.server.ItemCommands;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 public final class ItemCatalogTest {
     public static void main(String[] args)throws Exception {

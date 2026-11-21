@@ -3,7 +3,7 @@ package org.tortodrone.server.network;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.tortodrone.character.CharacterStore;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.character.WorldProfile;
 import static org.tortodrone.support.TestWire.check;
 
 /** Deterministically checks shutdown's lock ordering; no SQLite or sockets are needed. */

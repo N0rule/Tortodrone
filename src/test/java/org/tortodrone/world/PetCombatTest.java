@@ -3,8 +3,14 @@ package org.tortodrone.world;
 import java.nio.file.Path;
 import java.util.*;
 import org.tortodrone.character.*;
-import org.tortodrone.town.*;
+import org.tortodrone.core.town.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.town.TownState;
+import org.tortodrone.core.town.TownCatalog;
 
 /** One isolated scene: owned companion, native skill intent, cooldown and departure cleanup. */
 public final class PetCombatTest {

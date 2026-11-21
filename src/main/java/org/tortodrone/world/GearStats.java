@@ -1,8 +1,8 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.WorldProfile;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Numeric stock level tables and variants, evaluated against the authoritative loadout. */
 public final class GearStats {

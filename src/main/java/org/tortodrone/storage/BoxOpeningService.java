@@ -7,6 +7,10 @@ import java.security.SecureRandom;
 import org.tortodrone.character.*;
 import org.tortodrone.loot.*;
 import org.tortodrone.protocol.SessionDecoder;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** One authenticated BEGIN IMMEDIATE write: consume, grant, reload, commit; never publish here. */
 public final class BoxOpeningService {
@@ -54,7 +58,7 @@ public final class BoxOpeningService {
             var delivery=plan(profile,all?null:held,key,prizes);
             if(!all)TownStore.consume(c,profile,boxId,1);
             if(key!=null)TownStore.consume(c,profile,key.id(),1);
-            var inventory=new TownStore(database,items,org.tortodrone.town.TownCatalog.empty());
+            var inventory=new TownStore(database,items,org.tortodrone.core.town.TownCatalog.empty());
             var result=new LinkedHashMap<Object,Integer>();
             for(var grant:delivery) {
                 if(grant.granted==0)continue;

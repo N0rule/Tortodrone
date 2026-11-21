@@ -8,9 +8,10 @@ import com.threerings.projectx.dungeon.config.*;
 import com.threerings.projectx.item.config.ItemConfig;
 import com.threerings.math.Vector2f;
 import com.threerings.tudey.config.*;
-import org.tortodrone.character.StarterCatalog;
-import org.tortodrone.world.FireCatalog;
-import org.tortodrone.world.FireCatalog.*;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.world.FireCatalog.*;
+import org.tortodrone.core.Json;
 
 /** Exports numeric stock attack/fire-action references; never copies client assets or code. */
 public final class FireCatalogExport {
@@ -69,8 +70,8 @@ public final class FireCatalogExport {
         FireCatalog.write(out.resolve("fires.json"), entries, UNSUPPORTED);
         if(previous!=null){
             // Preserve raw rows outside this repair, including their original numeric precision.
-            @SuppressWarnings("unchecked") var document=(Map<String,Object>)org.tortodrone.resources.Json.parse(Files.readString(Path.of(args[2])),128);
-            @SuppressWarnings("unchecked") var generated=(Map<String,Object>)org.tortodrone.resources.Json.parse(Files.readString(out.resolve("fires.json")),128);
+            @SuppressWarnings("unchecked") var document=(Map<String,Object>)org.tortodrone.core.Json.parse(Files.readString(Path.of(args[2])),128);
+            @SuppressWarnings("unchecked") var generated=(Map<String,Object>)org.tortodrone.core.Json.parse(Files.readString(out.resolve("fires.json")),128);
             @SuppressWarnings("unchecked") var generatedRows=(List<Map<String,Object>>)generated.get("entries");
             var rows=new HashMap<String,Map<String,Object>>();for(var row:generatedRows)if(((Number)row.get("activity")).intValue()==290&&repaired.contains(row.get("weapon")))rows.put((String)row.get("weapon"),row);
             @SuppressWarnings("unchecked") var existingRows=(List<Map<String,Object>>)document.get("entries");
@@ -78,7 +79,7 @@ public final class FireCatalogExport {
             @SuppressWarnings("unchecked") var unsupported=(Map<String,Object>)document.get("unsupported");
             var actual=new TreeMap<String,Integer>();countUnsupported(document.get("entries"),actual);
             unsupported.keySet().removeIf(type->type.startsWith("com.")&&!actual.containsKey(type));unsupported.putAll(actual);
-            Files.writeString(out.resolve("fires.json"),org.tortodrone.resources.Json.stringify(document,128)+"\n");
+            Files.writeString(out.resolve("fires.json"),org.tortodrone.core.Json.stringify(document,128)+"\n");
         }
         var loaded = FireCatalog.load(out.resolve("fires.json"));
         System.out.printf("PASS: exported %d weapon/shield attack entries; %d fire refs; %d projectile actor emissions; %d unsupported action types%n",
@@ -342,7 +343,7 @@ public final class FireCatalogExport {
         float x=0,y=0,rotation=0,variance=0;boolean relative=true;
         if(spawn instanceof ActionConfig.SpawnTransformedActor transformed){x=transformed.translation.x;y=transformed.translation.y;}
         if(spawn instanceof ActionConfig.SpawnRotatedActor rotated){rotation=rotated.rotation;variance=rotated.rotationVariance;relative=rotated.relative;}
-        return new Action(Kind.SPAWN_PICKUP,new StarterCatalog.Model("Pickup",Map.of("fields",org.tortodrone.resources.Json.stringify(fields))),null,target(spawn.location),"","",x,y,rotation,variance,relative,0,0,0,0,false,List.of(),"");
+        return new Action(Kind.SPAWN_PICKUP,new StarterCatalog.Model("Pickup",Map.of("fields",org.tortodrone.core.Json.stringify(fields))),null,target(spawn.location),"","",x,y,rotation,variance,relative,0,0,0,0,false,List.of(),"");
     }
     /** Preserve source table weights and bound actor arguments; never sample a table at export time. */
     private static Action tableEntry(ConfigManager manager,SpawnTableConfig.Entry entry,DungeonActionConfig.TableSpawn spawn,int depth)throws Exception {

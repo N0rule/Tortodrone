@@ -3,8 +3,9 @@ package org.tortodrone.resources;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.ItemCatalog;
-import static org.tortodrone.resources.Yaml.*;
+import org.tortodrone.core.character.ItemCatalog;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.Json;
 
 /** One owner per Town section; existing transaction rules consume the compiled catalog. */
 public final class TownYaml {

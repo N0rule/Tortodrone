@@ -1,8 +1,9 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.world.SceneActions;
 
 public final class SceneChoiceTest {
     public static void main(String[] args)throws Exception {

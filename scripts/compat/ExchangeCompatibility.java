@@ -4,8 +4,8 @@ import com.threerings.presents.client.A;
 import com.threerings.presents.dobj.*;
 import com.threerings.presents.net.*;
 import org.tortodrone.protocol.*;
-import org.tortodrone.town.ExchangeState;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.town.ExchangeState;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Native Energy Exchange object, RPC and response oracle; no client modifications or graphics. */
 public final class ExchangeCompatibility {

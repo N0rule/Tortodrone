@@ -3,6 +3,8 @@ package org.tortodrone.world;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.Confetti;
 
 public final class TownMovementTest {
     private static CollisionMap corridor;
@@ -40,10 +42,10 @@ public final class TownMovementTest {
     }
     private static void boxes(){
         var player=movement();player.resetInput(1000);
-        var refs=new java.util.ArrayList<org.tortodrone.character.StarterCatalog.Model>();
-        refs.add(new org.tortodrone.character.StarterCatalog.Model("Upgrade/Prize Box/Dark Harvest Prize Box, Complete",java.util.Map.of()));
-        refs.add(new org.tortodrone.character.StarterCatalog.Model("Usable/Confetti, Dark Harvest",java.util.Map.of()));
-        refs.add(new org.tortodrone.character.StarterCatalog.Model("Costume/Recolor Sets/Helm/Crescent Helm/Crescent Helm, Nova",java.util.Map.of()));
+        var refs=new java.util.ArrayList<org.tortodrone.core.character.StarterCatalog.Model>();
+        refs.add(new org.tortodrone.core.character.StarterCatalog.Model("Upgrade/Prize Box/Dark Harvest Prize Box, Complete",java.util.Map.of()));
+        refs.add(new org.tortodrone.core.character.StarterCatalog.Model("Usable/Confetti, Dark Harvest",java.util.Map.of()));
+        refs.add(new org.tortodrone.core.character.StarterCatalog.Model("Costume/Recolor Sets/Helm/Crescent Helm/Crescent Helm, Nova",java.util.Map.of()));
         check(player.openBox(refs,1000),"box activity starts from idle");refs.clear();
         check(player.activity()==265&&((java.util.List<?>)player.activityData()).size()==3&&Math.abs(player.rotation()+Math.PI/2)<.00001,"captured opening activity, immutable box/reward references and native facing");
         check(!player.canOpenBox()&&!player.emote(PlayerEmotes.find("Sit"),1000,1000),"opening cannot restart or be replaced by an emote");

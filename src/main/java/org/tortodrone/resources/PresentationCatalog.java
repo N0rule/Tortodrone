@@ -3,6 +3,7 @@ package org.tortodrone.resources;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
+import org.tortodrone.core.Yaml;
 
 /** Immutable offline tooltip metadata; never participates in game mutations or combat. */
 public record PresentationCatalog(Map<String,Object> variants,Map<String,Object> items,

@@ -6,7 +6,9 @@ import com.threerings.presents.net.*;
 import com.threerings.util.Name;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.*;
-import org.tortodrone.town.TownState;
+import org.tortodrone.core.town.TownState;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.KnightProgress;
 
 /** Read-only stock marshallers/readers for native slash commands and named loadouts. */
 public final class CommandCompatibility {

@@ -12,6 +12,7 @@ import org.tortodrone.protocol.*;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.TownSquare;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** Tell ownership/authentication gates; the installed fixture verifies the full wire schema. */
 public final class TellSessionTest {

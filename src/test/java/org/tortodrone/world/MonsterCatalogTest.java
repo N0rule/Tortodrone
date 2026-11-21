@@ -5,7 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.*;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
 
 /** Generated catalogue contract: format, fingerprints, fail-closed refusals and overlay limits. */

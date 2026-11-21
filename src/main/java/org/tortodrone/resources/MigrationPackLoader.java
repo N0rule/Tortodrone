@@ -3,8 +3,13 @@ package org.tortodrone.resources;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.world.*;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.NewsCatalog;
+import org.tortodrone.core.config.ServerSettings;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Offline migration resolution for versioned and legacy packs. No downloads, data writes, implicit custom packs or partial publication. */
 final class MigrationPackLoader {
@@ -13,10 +18,10 @@ final class MigrationPackLoader {
             Map<String,String> requires,Map<String,String> overrides) { }
     private MigrationPackLoader() { }
     public static ContentRegistry load(Path deployment) throws IOException {
-        return load(deployment, org.tortodrone.config.ServerSettings.read(
-            org.tortodrone.config.ServerSettings.defaultPath(deployment)));
+        return load(deployment, org.tortodrone.core.config.ServerSettings.read(
+            org.tortodrone.core.config.ServerSettings.defaultPath(deployment)));
     }
-    public static ContentRegistry load(Path deployment,org.tortodrone.config.ServerSettings settings) throws IOException {
+    public static ContentRegistry load(Path deployment,org.tortodrone.core.config.ServerSettings settings) throws IOException {
         deployment=deployment.toAbsolutePath().normalize();ContentFiles.safe(deployment);
         var declarations=new LinkedHashMap<Path,String>();
         String legacy=settings.legacyContent();
@@ -105,12 +110,12 @@ final class MigrationPackLoader {
         int entryId;
         try {entryId=Integer.parseInt(entry.getProperty("entry-scene",""));}catch(NumberFormatException invalid){throw new IOException("Invalid entry-scene",invalid);}
         var scenes=SceneCatalog.load(folders,entryId);
-        var items=ItemCatalog.load(resources.get("items").path());
+        var itemsPath=resources.get("items").path();var items=java.nio.file.Files.isDirectory(itemsPath)?org.tortodrone.resources.ItemYaml.load(itemsPath):org.tortodrone.core.character.ItemCatalog.load(itemsPath);
         var weapons=WeaponCatalog.load(resources.get("weapons").path());
         var equipment=EquipmentCatalog.load(resources.get("equipment").path());
         var fires=FireCatalog.load(resources.get("fires").path());
         if(resources.containsKey("pet-fires"))FireCatalog.load(resources.get("pet-fires").path());
-        if(resources.containsKey("town"))org.tortodrone.town.TownCatalog.load(resources.get("town").path());
+        if(resources.containsKey("town"))org.tortodrone.core.town.TownCatalog.load(resources.get("town").path());
         for(var weapon:weapons.weapons())requireItem(items,weapon.config());
         for(var shield:weapons.shields())requireItem(items,shield.config());
         for(var item:equipment.entries())requireItem(items,item.config());
@@ -119,9 +124,9 @@ final class MigrationPackLoader {
         // Recheck fingerprints after parsing, so changing inputs cannot publish a mixed startup snapshot.
         for(var resource:resources.values())if(!ContentFiles.digest(resource.path()).equals(resource.sha256()))throw new IOException("Content changed during loading: "+resource.path());
         return new ContentRegistry(packs,resources,scenes,items,weapons,equipment,fires,warnings,
-            resources.containsKey("town")?org.tortodrone.town.TownCatalog.load(resources.get("town").path()):org.tortodrone.town.TownCatalog.empty(),
+            resources.containsKey("town")?org.tortodrone.core.town.TownCatalog.load(resources.get("town").path()):org.tortodrone.core.town.TownCatalog.empty(),
             resources.containsKey("pet-fires")?FireCatalog.load(resources.get("pet-fires").path()):FireCatalog.empty(),
-            org.tortodrone.news.NewsCatalog.disabled(),org.tortodrone.loot.BoxCatalog.empty());
+            org.tortodrone.core.NewsCatalog.disabled(),org.tortodrone.loot.BoxCatalog.empty());
     }
     private static void requireItem(ItemCatalog items,String config) throws IOException {if(items.find(config)==null)throw new IOException("Combat reference has no item definition: "+config);}
     static int sceneId(String key) throws IOException {

@@ -4,6 +4,13 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.world.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.config.ServerSettings;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Atomic startup compilation. No pack selection, runtime downloads or content writes. */
 public final class ContentManager {
@@ -25,9 +32,9 @@ public final class ContentManager {
         var c=load(Path.of(args[0]));var all=c.scenes().scenes();System.out.println("PASS: unified content; "+all.size()+" maps, "+c.items().entries().size()+" items, "+c.weapons().weapons().size()+" weapons, "+c.missions().size()+" missions");
     }
     public static ContentRegistry load(Path deployment)throws IOException {
-        return load(deployment,org.tortodrone.config.ServerSettings.read(org.tortodrone.config.ServerSettings.defaultPath(deployment)));
+        return load(deployment,org.tortodrone.core.config.ServerSettings.read(org.tortodrone.core.config.ServerSettings.defaultPath(deployment)));
     }
-    public static ContentRegistry load(Path deployment,org.tortodrone.config.ServerSettings settings)throws IOException {
+    public static ContentRegistry load(Path deployment,org.tortodrone.core.config.ServerSettings settings)throws IOException {
         Path root=deployment.toAbsolutePath().normalize(),content=root.resolve("content");ContentFiles.safe(content);
         if(!Files.isDirectory(content.resolve("maps")))throw new IOException("Unified content/maps is missing. Use ContentMigration /old-deployment /new-candidate; legacy packs are migration-only.");
         if(!settings.contentPacks().equals("vanilla"))throw new IOException("content-packs selection requires explicit ContentMigration; unified startup never ignores custom selection");
@@ -43,7 +50,7 @@ public final class ContentManager {
             var boxes=org.tortodrone.loot.BoxCatalog.load(content,definitions.items());
             var news=NewsYaml.load(content.resolve("shared/news"));
             var townData=TownYaml.data(content.resolve("town"),definitions.items());TownYaml.references(townData,definitions.items());
-            var town=org.tortodrone.town.TownCatalog.fromData(townData);
+            var town=org.tortodrone.core.town.TownCatalog.fromData(townData);
             var presentation=PresentationCatalog.load(content.resolve("shared/presentation.yml"));
             var missionDefinitions=MissionYaml.definitions(content);
             var missions=missionDefinitions.missions();
@@ -63,11 +70,11 @@ public final class ContentManager {
         }catch(IllegalArgumentException invalid){throw new IOException("Invalid unified content: "+invalid.getMessage(),invalid);}
     }
     /** Map-only preparation for import/native compatibility tools; runtime uses the full snapshot. */
-    public static SceneCatalog loadMaps(Path maps,String start,org.tortodrone.town.TownCatalog town)throws IOException {
+    public static SceneCatalog loadMaps(Path maps,String start,org.tortodrone.core.town.TownCatalog town)throws IOException {
         var items=Files.exists(maps.getParent().resolve("_internal/item-bindings.json"))?ItemYaml.load(maps.getParent().resolve("items")):null;
         return loadMaps(maps,start,town,items,MonsterCatalog.load(maps.getParent().resolve("monsters")));
     }
-    private static SceneCatalog loadMaps(Path maps,String start,org.tortodrone.town.TownCatalog town,org.tortodrone.character.ItemCatalog items,MonsterCatalog monsters)throws IOException {
+    private static SceneCatalog loadMaps(Path maps,String start,org.tortodrone.core.town.TownCatalog town,org.tortodrone.core.character.ItemCatalog items,MonsterCatalog monsters)throws IOException {
         try {
             var folders=MapYaml.folders(maps);
             var startEntry=folders.entrySet().stream().filter(e->e.getValue().getFileName().toString().equals(start)).findFirst().orElseThrow(()->new IOException("startup-map is missing: "+start));
@@ -78,7 +85,7 @@ public final class ContentManager {
             return SceneCatalog.lazy(folders,entry,entryScene,folder->loadMap(folder,shared,town,items,monsters));
         }catch(IllegalArgumentException invalid){throw new IOException(maps+": "+invalid.getMessage(),invalid);}
     }
-    private static SceneCatalog.MapScene loadMap(Path folder,Path shared,org.tortodrone.town.TownCatalog town,org.tortodrone.character.ItemCatalog items,MonsterCatalog monsters)throws IOException {
+    private static SceneCatalog.MapScene loadMap(Path folder,Path shared,org.tortodrone.core.town.TownCatalog town,org.tortodrone.core.character.ItemCatalog items,MonsterCatalog monsters)throws IOException {
         var prepared=MapYaml.prepare(folder,shared,items);var p=prepared.descriptor();Path nativeDir=prepared.nativeDirectory();
         byte[] layout=Files.readAllBytes(nativeDir.resolve("scene.dat"));
         if(layout.length<16||layout.length>900_000||layout[0]!=(byte)0xfa||layout[1]!=(byte)0xce||layout[2]!=(byte)0xaf||layout[3]!=0x0e)throw new IOException(nativeDir+": invalid native scene header/size");
@@ -106,7 +113,7 @@ public final class ContentManager {
         var portals=ScenePortals.load(prepared.portals(),digest,collision);
         return new SceneCatalog.MapScene(Integer.parseInt(p.getProperty("scene-id")),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,portals,actors,SceneCollision.fromMapCollision(exact),exact,monsters);
     }
-    private static void requireItem(org.tortodrone.character.ItemCatalog items,String config)throws IOException{if(items.find(config)==null)throw new IOException("Combat references missing item: "+config);}
+    private static void requireItem(org.tortodrone.core.character.ItemCatalog items,String config)throws IOException{if(items.find(config)==null)throw new IOException("Combat references missing item: "+config);}
     static Map<String,String> inputs(Path root)throws IOException {
         var result=new TreeMap<String,String>();long size=0;int count=0;
         for(String directory:List.of("content","config")) {

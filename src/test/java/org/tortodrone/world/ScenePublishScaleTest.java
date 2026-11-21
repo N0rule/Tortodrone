@@ -1,9 +1,10 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.protocol.SessionCodec;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.ItemCatalog;
 
 /**
  * Scale check for the shared town publication path. A shared town ticks one simulation for
@@ -160,6 +161,6 @@ public final class ScenePublishScaleTest {
     }
 
     private static final class ItemCatalogHolder {
-        static final org.tortodrone.character.ItemCatalog CATALOG=org.tortodrone.character.ItemCatalog.starter();
+        static final org.tortodrone.core.character.ItemCatalog CATALOG=org.tortodrone.core.character.ItemCatalog.starter();
     }
 }

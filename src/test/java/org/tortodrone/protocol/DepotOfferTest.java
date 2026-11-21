@@ -2,7 +2,7 @@ package org.tortodrone.protocol;
 
 import java.util.*;
 import org.tortodrone.support.TestWire;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
 import static org.tortodrone.support.TestWire.check;
 
 /** Featured offers must survive serialization into the native Specials filter. */

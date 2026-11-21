@@ -1,7 +1,8 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.SlotUpgrades;
 
 /** Stock 2026 interior input state. Peaceful town Knights never instantiate this controller. */
 public final class KnightCombat {
@@ -141,7 +142,7 @@ public final class KnightCombat {
     }
     public void input(int flags,int changed,int time,float facing,float direction,boolean baseAllows) {
         advance(time,facing);
-        if(!baseAllows){if(canOverride()){int index=(flags&InputBits.WEAPON_SLOT_MASK)>>>InputBits.WEAPON_SLOT_SHIFT;if(index<org.tortodrone.character.SlotUpgrades.weapons(profile))select(6+index);}return;}
+        if(!baseAllows){if(canOverride()){int index=(flags&InputBits.WEAPON_SLOT_MASK)>>>InputBits.WEAPON_SLOT_SHIFT;if(index<org.tortodrone.core.character.SlotUpgrades.weapons(profile))select(6+index);}return;}
         if(activity==CHARGE&&(flags&InputBits.ACTION)==0) {
             if(definition!=null)startAttack(time-started>=EquipmentCatalog.chargeTimeMillis(definition.chargeTime(),equipmentModifiers,weaponModifiers)?CHARGED:nextNormal(time),time);
             else clear(time);
@@ -172,7 +173,7 @@ public final class KnightCombat {
         if(canOverride()) {
             int index=(flags&InputBits.WEAPON_SLOT_MASK)>>>InputBits.WEAPON_SLOT_SHIFT;
             // The profile owns the unlocked native weapon slots; input only selects an owned slot.
-            if(index<org.tortodrone.character.SlotUpgrades.weapons(profile))select(6+index);
+            if(index<org.tortodrone.core.character.SlotUpgrades.weapons(profile))select(6+index);
         }
     }
     private boolean canCharge(){return definition!=null&&definition.charged()!=null&&definition.incomplete()!=null;}

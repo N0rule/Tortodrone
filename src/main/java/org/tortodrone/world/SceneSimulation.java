@@ -3,6 +3,18 @@ package org.tortodrone.world;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.character.KnightObjective;
+import org.tortodrone.core.character.KnightMemory;
+import org.tortodrone.core.character.AnimatedItems;
+import org.tortodrone.world.SceneConversation;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.town.TownState;
+import org.tortodrone.core.town.SpriteRules;
+import org.tortodrone.core.town.TownCatalog;
 
 /** One authoritative clock, movement owner and immutable publication per scene instance.
  * Session callbacks only offer publications to bounded mailboxes; no socket or storage work
@@ -28,14 +40,14 @@ public final class SceneSimulation {
         try{
             T result=payment.commit();int stamp=SceneClock.now();
             target.health.revive(stamp);target.movement.resurrect(stamp);
-            weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Spark Rez",Map.of()),target.actor(),stamp);
+            weapons.effect(new org.tortodrone.core.character.StarterCatalog.Model("Player/Spark Rez",Map.of()),target.actor(),stamp);
             entities.reviveImpulse(target.actor(),stamp);
             return result;
         }finally{target.revivePending=false;}
     }
-    private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
+    private org.tortodrone.core.town.TownCatalog town=org.tortodrone.core.town.TownCatalog.empty();
     private final String pickupEpoch=UUID.randomUUID().toString();
-    public synchronized void town(org.tortodrone.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
+    public synchronized void town(org.tortodrone.core.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
     public record Delta(List<ActorState> added, List<ActorState> updated, int[] removed,
             List<ActorState> changedRoles, Map<Integer,ActorState> baseline) {
         public Delta { removed=removed.clone(); }
@@ -164,8 +176,8 @@ public final class SceneSimulation {
     }
     /** A null definition is the native ClearDialog operation, delivered on the session thread. */
     public record ConversationRequest(SceneConversation definition,ActorState source,int timestamp) { }
-    public record MemoryRequest(org.tortodrone.character.KnightMemory operation,ActorState source,int timestamp) { }
-    public record ObjectiveRequest(org.tortodrone.character.KnightObjective operation,ActorState source,int timestamp) { }
+    public record MemoryRequest(org.tortodrone.core.character.KnightMemory operation,ActorState source,int timestamp) { }
+    public record ObjectiveRequest(org.tortodrone.core.character.KnightObjective operation,ActorState source,int timestamp) { }
     public record StoryRequests(List<MemoryRequest> memories,List<ObjectiveRequest> objectives) { }
     /** Membership-owned native NextFloor intent; this is not a completion receipt or travel grant. */
     public record FloorAdvanceRequest(long sequence,ActorState source,int timestamp) { }
@@ -173,7 +185,7 @@ public final class SceneSimulation {
         private ActorState appearance;
         private final TownMovement movement;
         private KnightCombat combat;
-        private org.tortodrone.character.WorldProfile combatProfile;
+        private org.tortodrone.core.character.WorldProfile combatProfile;
         private final Consumer<Snapshot> initialPublish;
         private Consumer<Snapshot> publish;
         private boolean entered, detached, arrived;
@@ -184,8 +196,8 @@ public final class SceneSimulation {
         {health.tutorialRespawn(instance.tutorial()!=null);}
         private float floorHeat;
         private boolean revivePending;
-        private org.tortodrone.town.TownState.Sprite sprite;
-        private org.tortodrone.town.TownState.Harness harness;
+        private org.tortodrone.core.town.TownState.Sprite sprite;
+        private org.tortodrone.core.town.TownState.Harness harness;
         private final int petId=nextPetId++;
         private final int[] nextSkill=new int[3];
         private int petSkill,knightSkill,petStarted,petRearm,petClear,lastSkillInput,petShield,petShieldMaximum;
@@ -197,7 +209,7 @@ public final class SceneSimulation {
         private ActorState petActor(){
             if(instance.map().town()||!entered||sprite==null)return null;
             var state=new ScenePetState(appearance.id(),sprite,harness,petFollow,java.util.Arrays.stream(nextSkill).boxed().toList(),petShield,petShieldMaximum,petShieldPower);
-            return new ActorState(petId,0,"",0,appearance.created(),petSkill==0||petFollow?movement.x():petX,petSkill==0||petFollow?movement.y():petY,petSkill==0?movement.rotation():petRotation,0,0,petSkill,petStarted,new org.tortodrone.character.StarterCatalog.Model("Sprite/Base",Map.of()),false,null,null,null,null,null,state);
+            return new ActorState(petId,0,"",0,appearance.created(),petSkill==0||petFollow?movement.x():petX,petSkill==0||petFollow?movement.y():petY,petSkill==0?movement.rotation():petRotation,0,0,petSkill,petStarted,new org.tortodrone.core.character.StarterCatalog.Model("Sprite/Base",Map.of()),false,null,null,null,null,null,state);
         }
         private void advancePet(int stamp){
             if(sprite==null||instance.map().town())return;
@@ -207,7 +219,7 @@ public final class SceneSimulation {
             if(input==0){lastSkillInput=0;return;}
             if(input==lastSkillInput||petSkill!=0||!health.alive())return;
             lastSkillInput=input;int skill=input-1;
-            if(!org.tortodrone.town.SpriteRules.unlocked(sprite.level(),skill)||stamp<nextSkill[skill])return;
+            if(!org.tortodrone.core.town.SpriteRules.unlocked(sprite.level(),skill)||stamp<nextSkill[skill])return;
             var def=town.sprite(sprite.config());if(def==null||skill>=def.skills().size())return;
             var ability=def.skills().get(skill);String name=ability.attacks().get(sprite.ultimates().get(skill));
             String damage=town.harnessDamage(harness==null?"Iron Harness":harness.config());if(damage==null)damage="NORMAL";
@@ -223,7 +235,7 @@ public final class SceneSimulation {
             weapons.attack(petId,new KnightCombat.AttackStart(attack.weaponConfig(),292,stamp,land,petClear-stamp),attack);
         }
 
-        private org.tortodrone.character.KnightProgress progress=org.tortodrone.character.KnightProgress.RECRUIT;
+        private org.tortodrone.core.character.KnightProgress progress=org.tortodrone.core.character.KnightProgress.RECRUIT;
         private long pendingItem;private int itemLand;private SceneContent.Spec itemSpec;
         private final ArrayDeque<Long> usedItems=new ArrayDeque<>();
         public List<Long> takeUsedItems(){synchronized(SceneSimulation.this){check();var used=List.copyOf(usedItems);usedItems.clear();return used;}}
@@ -236,7 +248,7 @@ public final class SceneSimulation {
             if(!spec.text("kind","").equals("capsule"))return false;
             if(spec.integer("heal",0)<=0)try{if(!SceneWeapons.usable(FireCatalog.actionJson(spec.text("use-action",""))))return false;}
             catch(java.io.IOException invalid){return false;}
-            int stamp=SceneClock.now();if(!movement.useItem(new org.tortodrone.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))return false;
+            int stamp=SceneClock.now();if(!movement.useItem(new org.tortodrone.core.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))return false;
             // The native use activity is accepted even when a Health Capsule has
             // nothing to heal. This attempt has no item action or consumption.
             if(spec.integer("heal",0)>0&&health.state().current()>=health.state().maximum())return true;
@@ -255,20 +267,20 @@ public final class SceneSimulation {
             switch(kind){
                 case "heal" -> {
                     int heal=spec.integer("heal",0);if(heal<=0)throw new java.io.IOException("m.internal_error");
-                    if(!movement.useItem(new org.tortodrone.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))throw new java.io.IOException("e.not_use_busy");
+                    if(!movement.useItem(new org.tortodrone.core.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))throw new java.io.IOException("e.not_use_busy");
                     if(health.state().current()>=health.state().maximum())return new ItemUse<>(false,null);
                     T result=payment.commit();health.heal(heal);return new ItemUse<>(true,result);
                 }
                 case "lethal" -> {
                     Object damage;
                     try{damage=FireCatalog.valueJson(spec.text("damage",""));}catch(java.io.IOException invalid){throw new java.io.IOException("m.internal_error",invalid);}
-                    if(!movement.useItem(new org.tortodrone.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))throw new java.io.IOException("e.not_use_busy");
+                    if(!movement.useItem(new org.tortodrone.core.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))throw new java.io.IOException("e.not_use_busy");
                     T result=payment.commit();var hit=health.hit(damage,stamp);
                     if(hit.amount()>0)feedback(new SceneCombatEvent(0,stamp,appearance.id(),hit.feedback(),0,movement.x(),movement.y(),movement.rotation(),"NORMAL"));
                     updateLife(stamp);return new ItemUse<>(true,result);
                 }
                 case "spawn-actor" -> {
-                    if(!movement.useItem(new org.tortodrone.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))throw new java.io.IOException("e.not_use_busy");
+                    if(!movement.useItem(new org.tortodrone.core.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))throw new java.io.IOException("e.not_use_busy");
                     int actor=entities.spawnItemActor(actor(),spec.section("actor."),stamp);
                     if(actor==0)throw new java.io.IOException("e.not_use_busy");
                     T result;
@@ -287,14 +299,14 @@ public final class SceneSimulation {
             }
         }}
         /** Server-only notification after a committed item/economy operation. */
-        public void effect(org.tortodrone.character.StarterCatalog.Model effect){synchronized(SceneSimulation.this){
+        public void effect(org.tortodrone.core.character.StarterCatalog.Model effect){synchronized(SceneSimulation.this){
             check();if(entered&&portal==null)weapons.effect(effect,actor(),SceneClock.now());
         }}
         public SceneHealth.State health(){synchronized(SceneSimulation.this){check();return health.state();}}
         public boolean arsenalZone(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&arsenalZones.stream().anyMatch(e->e.spec().contains(e.x(),e.y(),e.rotation(),movement.x(),movement.y(),ScenePortals.PAWN_RADIUS));}}
         public boolean equipmentAllowed(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&health.alive()&&(!instance.map().kind().equals("level")||arsenalZone());}}
-        private List<org.tortodrone.character.WorldProfile.Item> carriedItems=List.of();
-        public void inventory(org.tortodrone.character.WorldProfile profile){synchronized(SceneSimulation.this){
+        private List<org.tortodrone.core.character.WorldProfile.Item> carriedItems=List.of();
+        public void inventory(org.tortodrone.core.character.WorldProfile profile){synchronized(SceneSimulation.this){
             check();carriedItems=profile.items();health.inventory(profile);entities.reconsiderPickups(appearance.id());
         }}
         /**
@@ -399,7 +411,7 @@ public final class SceneSimulation {
                 if(accepted&&loading&&!instance.map().town())health.protectLoading(SceneClock.now());
                 return accepted;}
         }
-        public void equipment(org.tortodrone.character.WorldProfile profile) {
+        public void equipment(org.tortodrone.core.character.WorldProfile profile) {
             synchronized(SceneSimulation.this){check();
                 int priorSprite=sprite==null?0:sprite.id();
                 combatProfile=profile;carriedItems=profile.items();progress=profile.progress();sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);
@@ -407,13 +419,13 @@ public final class SceneSimulation {
                     weapons.cancel(petId);petSkill=petShield=petShieldMaximum=0;petShieldPower=null;petFollow=false;
                     // Preserve the recharge deadlines: swapping sprites cannot bypass cooldowns.
                 }
-                harness=sprite==null?null:profile.town().harnesses().stream().filter(h->h.id()==sprite.harness()).findFirst().orElse(new org.tortodrone.town.TownState.Harness(0,"Iron Harness"));if(combat!=null){var before=combat.state().weapon();combat.equipment(profile);
+                harness=sprite==null?null:profile.town().harnesses().stream().filter(h->h.id()==sprite.harness()).findFirst().orElse(new org.tortodrone.core.town.TownState.Harness(0,"Iron Harness"));if(combat!=null){var before=combat.state().weapon();combat.equipment(profile);
                 if(!Objects.equals(before,combat.state().weapon()))weapons.cancelAttacks(appearance.id());}health.equipment(profile,town);}
         }
-        public void combat(WeaponCatalog catalog,org.tortodrone.character.WorldProfile profile) {
+        public void combat(WeaponCatalog catalog,org.tortodrone.core.character.WorldProfile profile) {
             combat(catalog,EquipmentCatalog.empty(),profile);
         }
-        public void combat(WeaponCatalog catalog,EquipmentCatalog modifiers,org.tortodrone.character.WorldProfile profile) {
+        public void combat(WeaponCatalog catalog,EquipmentCatalog modifiers,org.tortodrone.core.character.WorldProfile profile) {
             synchronized(SceneSimulation.this){check();if(instance.map().town())throw new IllegalStateException("Town Knights are peaceful");
                 combatProfile=profile;progress=profile.progress();combat=new KnightCombat(catalog,modifiers);combat.equipment(profile);health.equipment(profile,town);combat.attacks(attack->{health.breakCloak();if(attack.activity()>=KnightCombat.INCOMPLETE&&combat.state().weapon()!=null)health.curseItem(combat.state().weapon().id(),attack.started());if(health.alive())weapons.attack(appearance.id(),attack);});movement.combat(combat);}
         }
@@ -425,7 +437,7 @@ public final class SceneSimulation {
         }
         public boolean canOpenBox(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&health.alive()&&lift==0&&pendingItem==0&&movement.canOpenBox();}}
         /** Called only with committed rewards; no storage or network work under the scene lock. */
-        public void openBox(List<org.tortodrone.character.StarterCatalog.Model> references){
+        public void openBox(List<org.tortodrone.core.character.StarterCatalog.Model> references){
             synchronized(SceneSimulation.this){check();if(!canOpenBox())return;
                 weapons.cancelAttacks(appearance.id());movement.openBox(references,SceneClock.now());}
         }
@@ -446,7 +458,7 @@ public final class SceneSimulation {
             if(health.alive()){if(movement.dead()){
                 movement.resurrect(stamp);
                 if(!health.takeQuietRevival()){
-                    weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Emergency Rez",Map.of()),actor(),stamp);
+                    weapons.effect(new org.tortodrone.core.character.StarterCatalog.Model("Player/Emergency Rez",Map.of()),actor(),stamp);
                     entities.reviveImpulse(actor(),stamp);
                 }
             }return;}
@@ -457,7 +469,7 @@ public final class SceneSimulation {
             if(lift!=0)entities.dropLift(lift,actor(),stamp);
             lift=dropAt=interactionTarget=0;pendingItem=0;itemSpec=null;pendingAnimated=null;
             movement.die(stamp);
-            if((health.state().reviveFlags()&8)!=0)weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Pre Emergency Rez",Map.of()),actor(),stamp);
+            if((health.state().reviveFlags()&8)!=0)weapons.effect(new org.tortodrone.core.character.StarterCatalog.Model("Player/Pre Emergency Rez",Map.of()),actor(),stamp);
         }
         public void appearance(ActorState actor) {
             synchronized(SceneSimulation.this){check();if(actor.id()!=appearance.id()||actor.clientOid()!=appearance.clientOid())throw new IllegalArgumentException("Actor ownership changed");appearance=actor;}
@@ -678,7 +690,7 @@ public final class SceneSimulation {
             switch(action.kind()){
                 case HEAL->member.health.heal(((Number)action.config().arguments().getOrDefault("current",0)).intValue());
                 case CLEAR_STATUS->member.health.clearStatus(((Number)action.config().arguments().getOrDefault("mask",0)).intValue());
-                case APPLY_STATUS->{if(action.config()!=null&&action.config().arguments().get("reference") instanceof org.tortodrone.character.StarterCatalog.Model ref){
+                case APPLY_STATUS->{if(action.config()!=null&&action.config().arguments().get("reference") instanceof org.tortodrone.core.character.StarterCatalog.Model ref){
                     Object data=action.config().arguments().get("data");float radius=((Number)action.config().arguments().getOrDefault("radius",0)).floatValue();
                     for(var target:members.values())if(target.entered&&(target==member||radius>0&&Math.hypot(target.movement.x()-member.movement.x(),target.movement.y()-member.movement.y())<=radius)){
                         target.health.condition(ref,data,action.timestamp());if(data instanceof FireCatalog.DataValue value&&value.type().endsWith("$SpriteShield"))target.auraOwner=member.appearance.id();
@@ -689,7 +701,7 @@ public final class SceneSimulation {
                     var defenses=new HashMap<String,String>();Object defense=action.config().arguments().get("defense");
                     for(String type:List.of("normal","piercing","elemental","shadow")){
                         Object scale=SceneDamage.field(defense,type);
-                        if(scale instanceof org.tortodrone.character.StarterCatalog.Model model)defenses.put("defense."+type,Float.toString(instance.map().content().scales().getOrDefault(model.name(),0f)));
+                        if(scale instanceof org.tortodrone.core.character.StarterCatalog.Model model)defenses.put("defense."+type,Float.toString(instance.map().content().scales().getOrDefault(model.name(),0f)));
                         else if(scale instanceof Number n)defenses.put("defense."+type,n.toString());
                     }
                     member.petShieldDefense=new SceneContent.Spec(defenses);
@@ -783,8 +795,8 @@ public final class SceneSimulation {
                 if(member.pendingAnimated!=null){
                     String config=member.pendingAnimated;
                     if(member.movement.activity()!=TownMovement.ANIMATED_ITEM)member.pendingAnimated=null;
-                    else if(stamp-member.movement.activityStarted()>=org.tortodrone.character.AnimatedItems.land(config)){
-                        for(var effect:org.tortodrone.character.AnimatedItems.effects(config))weapons.effect(effect,member.actor(),stamp);
+                    else if(stamp-member.movement.activityStarted()>=org.tortodrone.core.character.AnimatedItems.land(config)){
+                        for(var effect:org.tortodrone.core.character.AnimatedItems.effects(config))weapons.effect(effect,member.actor(),stamp);
                         member.pendingAnimated=null;
                     }
                 }

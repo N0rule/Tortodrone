@@ -15,10 +15,12 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.tortodrone.account.AccountStore;
-import org.tortodrone.character.Knight;
+import org.tortodrone.core.character.Knight;
 import org.tortodrone.world.CollisionMap;
 import org.tortodrone.world.SceneCatalog;
-import org.tortodrone.world.FireCatalog;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.character.Currency;
+import org.tortodrone.core.character.Confetti;
 
 /** Unchanged native controller/sprite/framebuffer probe; launched only by CheckCombatRendering. */
 public final class CombatRenderingCheck {
@@ -163,8 +165,8 @@ public final class CombatRenderingCheck {
             if(args[0].equals("--seed-boxes"))seedBoxes(Path.of(args[1]));
             if(args[0].equals("--seed-forge"))forgeSeed(Path.of(args[1]));
             if(args[0].equals("--seed-depot"))try(var store=new AccountStore(Path.of(args[1]))){
-                store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.CROWNS,100000,-1,-1);
-                store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.ENERGY,100000,-1,-1);
+                store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.core.character.Currency.CROWNS,100000,-1,-1);
+                store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.core.character.Currency.ENERGY,100000,-1,-1);
                 var depot=store.depot();var snapshot=depot.snapshot();
                 var key=snapshot.offers().stream().filter(o->o.good().item().equals("Ticket/Keys/Silver Key")).findFirst().orElseThrow();
                 depot.schedule(snapshot.revision(),new org.tortodrone.storage.DepotStore.Promotion(0,key.id(),0,Long.MAX_VALUE,0,500,750,true,false));

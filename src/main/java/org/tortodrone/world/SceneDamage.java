@@ -1,6 +1,7 @@
 package org.tortodrone.world;
 
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Stock numeric damage summaries; geometry and mutable targets belong to the scene. */
 public final class SceneDamage {

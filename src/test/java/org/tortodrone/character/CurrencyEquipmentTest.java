@@ -2,10 +2,13 @@ package org.tortodrone.character;
 import java.io.*;import java.nio.file.*;import java.util.*;import java.util.concurrent.*;
 import org.tortodrone.account.AccountStore;import org.tortodrone.storage.Database;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.Currency;
 public final class CurrencyEquipmentTest {
  public static void main(String[]args)throws Exception {
   Path home=Files.createTempDirectory("tortodrone-balances-");
-  try(var accounts=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
+  try(var accounts=new AccountStore(home,false,org.tortodrone.core.character.ItemCatalog.starter())) {
    accounts.create("Alice","alice-password".toCharArray());accounts.create("Bob","bob-password".toCharArray());
    var db=new Database(home,false);var characters=new CharacterStore(db,1,"Alice");
    var knight=characters.create(new Knight(0,"Alice-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));

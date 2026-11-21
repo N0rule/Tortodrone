@@ -3,7 +3,7 @@ package org.tortodrone.resources;
 import java.io.*;
 import java.util.*;
 import org.tortodrone.world.WeaponCatalog;
-import static org.tortodrone.resources.Yaml.*;
+import static org.tortodrone.core.Yaml.*;
 import static org.tortodrone.resources.ItemFields.*;
 
 /** Presentation adapter only: the validated native combat records and state machine stay unchanged. */

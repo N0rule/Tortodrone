@@ -1,7 +1,14 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.WireTypes;
+import org.tortodrone.core.character.KnightObjective;
+import org.tortodrone.core.character.KnightMemory;
+import org.tortodrone.world.SceneConversation;
+import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Instance-owned native actors, pad regeneration, movement and damage targets. */
 public final class SceneEntities implements SceneWeapons.Targets {
@@ -308,13 +315,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private static StarterCatalog.Model fireStatus(int power){
         return new StarterCatalog.Model("Fire",Map.of(
             "Chance",1f,"Power",power,
-            "Status Chance",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_CHANCE,"ULTRA",5),
-            "Status Power",new FireCatalog.EnumValue(org.tortodrone.protocol.WireTypes.STATUS_POWER,"MODERATE",2)));
+            "Status Chance",new FireCatalog.EnumValue(org.tortodrone.core.WireTypes.STATUS_CHANCE,"ULTRA",5),
+            "Status Power",new FireCatalog.EnumValue(org.tortodrone.core.WireTypes.STATUS_POWER,"MODERATE",2)));
     }
     private static final Map<String,Pot> POTS=Map.of(
         "Dynamic/Lift Objects/Clay Pot",new Pot(.5f,null,null,null,0,0),
         "Dynamic/Lift Objects/Fire Pot",new Pot(1f,fireStatus(80),
-            new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.DAMAGE_STATUS,Map.of(
+            new FireCatalog.DataValue(org.tortodrone.core.WireTypes.DAMAGE_STATUS,Map.of(
                 "flags",2,"statusCondition",fireStatus(100))),
             "Bomb/Monster/ScorcherTorch",1f,6000),
         "Dynamic/Lift Objects/Oil Pot",new Pot(1f,null,null,"Bomb/Monster/Oil Slick",.45f,15000));
@@ -389,17 +396,17 @@ public final class SceneEntities implements SceneWeapons.Targets {
     @FunctionalInterface public interface DialogClearSink {boolean clear(int target,int stamp);}
     private DialogClearSink dialogClearSink=(target,stamp)->false;
     public void dialogClears(DialogClearSink sink){dialogClearSink=Objects.requireNonNull(sink);}
-    @FunctionalInterface public interface EffectSink { void fire(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp); }
+    @FunctionalInterface public interface EffectSink { void fire(org.tortodrone.core.character.StarterCatalog.Model config,ActorState source,int stamp); }
     private EffectSink effectSink=(config,source,stamp)->{};
     public void effects(EffectSink sink){effectSink=Objects.requireNonNull(sink);}
     /** Simulation-only request sink. Never perform storage or network work in this callback. */
     @FunctionalInterface public interface FloorAdvanceSink { boolean request(ActorState player,ActorState source,int stamp); }
     private FloorAdvanceSink floorAdvanceSink=(player,source,stamp)->false;
     public void floorAdvances(FloorAdvanceSink sink){floorAdvanceSink=Objects.requireNonNull(sink);}
-    @FunctionalInterface public interface MemorySink {boolean apply(ActorState player,org.tortodrone.character.KnightMemory operation,ActorState source,int stamp);}
+    @FunctionalInterface public interface MemorySink {boolean apply(ActorState player,org.tortodrone.core.character.KnightMemory operation,ActorState source,int stamp);}
     private MemorySink memorySink=(player,operation,source,stamp)->false;
     public void memories(MemorySink sink){memorySink=Objects.requireNonNull(sink);}
-    @FunctionalInterface public interface ObjectiveSink {boolean apply(ActorState player,org.tortodrone.character.KnightObjective operation,ActorState source,int stamp);}
+    @FunctionalInterface public interface ObjectiveSink {boolean apply(ActorState player,org.tortodrone.core.character.KnightObjective operation,ActorState source,int stamp);}
     private ObjectiveSink objectiveSink=(player,operation,source,stamp)->false;
     public void objectives(ObjectiveSink sink){objectiveSink=Objects.requireNonNull(sink);}
     private List<ActorState> players=List.of();
@@ -504,7 +511,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     @Override public boolean spawnPickup(StarterCatalog.Model specification,float x,float y,float rotation,int stamp){
         if(specification==null||!(specification.arguments().get("fields") instanceof String json)||entities.size()+pendingActors.size()>=4096)return false;
         try{
-            if(!(org.tortodrone.resources.Json.parse(json) instanceof Map<?,?> raw))return false;
+            if(!(org.tortodrone.core.Json.parse(json) instanceof Map<?,?> raw))return false;
             var fields=new HashMap<String,String>();for(var entry:raw.entrySet()){
                 if(!(entry.getKey() instanceof String key)||!(entry.getValue() instanceof String value))return false;
                 fields.put(key,value);
@@ -750,10 +757,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 // Native Extra Action torch: applies its status damage region to everything
                 // inside the patch on the Floor trap cadence (hazard-refractory, default 500).
                 e.hazardNext=stamp+e.spec.integer("hazard-refractory",500);
-                var shape=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.SHAPE_CIRCLE,
+                var shape=new FireCatalog.DataValue(org.tortodrone.core.WireTypes.SHAPE_CIRCLE,
                     List.of(new FireCatalog.FieldValue("radius","float",e.spec.number("radius",0))));
                 var hitArgs=new LinkedHashMap<String,Object>(Map.of("damage",e.hazardStatus,
-                    "region",new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.REGION_DEFAULT,Map.of(
+                    "region",new FireCatalog.DataValue(org.tortodrone.core.WireTypes.REGION_DEFAULT,Map.of(
                         "location",new FireCatalog.DataValue("com.threerings.tudey.config.TargetConfig$Source",List.of()),"expansion",0f))));
                 hitArgs.put("shape",shape);
                 damage(new StarterCatalog.Model("DamageRegionFromPoint",hitArgs),e.x,e.y,e.rotation,stamp,e.id,null);
@@ -980,7 +987,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private void potLand(Entity e,int stamp){
         var pot=POTS.get(e.spec.config().name());if(pot==null)return;
         var damages=new ArrayList<Object>();
-        if(pot.ailment()!=null)damages.add(new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.DAMAGE_STATUS,
+        if(pot.ailment()!=null)damages.add(new FireCatalog.DataValue(org.tortodrone.core.WireTypes.DAMAGE_STATUS,
             Map.of("flags",2,"statusCondition",pot.ailment())));
         damages.add(new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$DepthScale",Map.of(
             "depthScale",new StarterCatalog.Model("PC/Damage/Base/Default",Map.of()),
@@ -988,7 +995,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var args=new LinkedHashMap<String,Object>(Map.of("damage",new FireCatalog.DataValue(
                 "com.threerings.projectx.dungeon.config.DamageConfig$Compound",Map.of("damages",
                     new FireCatalog.ListValue("com.threerings.projectx.dungeon.config.DamageConfig",damages))),
-            "region",new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.REGION_DEFAULT,Map.of(
+            "region",new FireCatalog.DataValue(org.tortodrone.core.WireTypes.REGION_DEFAULT,Map.of(
                 "location",new FireCatalog.DataValue("com.threerings.tudey.config.TargetConfig$Source",List.of()),"expansion",pot.blast()))));
         var prepared=e.spec.model("source-shape");
         if(prepared!=null)args.put("shape",prepared.arguments().get("value"));
@@ -1024,7 +1031,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return null;
     }
     private boolean oilSpawnClear(float x,float y,float radius,int source){
-        var circle=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.SHAPE_CIRCLE,Map.of("radius",radius));
+        var circle=new FireCatalog.DataValue(org.tortodrone.core.WireTypes.SHAPE_CIRCLE,Map.of("radius",radius));
         if(staticCollision.isEmpty()?!terrain.walkable(x,y):!staticCollision.floorSupported(x,y)||!staticCollision.clear(3,circle,x,y,0,disabledCollisionSources()))return false;
         for(var e:entities.values())if(e.id!=source&&e.destroyed==Integer.MAX_VALUE&&e.carrier==0
                 &&(e.config.name().equals("Bomb/Monster/Oil Slick")||(e.collisionFlags&3)!=0)
@@ -1036,7 +1043,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         oil.ignited=true;
         // Capture: oil-ignited torches use Fire (Scaled), flags 1, Chance 0.0 / Power 0.
         var fire=new StarterCatalog.Model("Fire (Scaled)",Map.of("Chance",0f,"Power",0));
-        var damage=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.DAMAGE_STATUS,Map.of("statusCondition",fire,"flags",1));
+        var damage=new FireCatalog.DataValue(org.tortodrone.core.WireTypes.DAMAGE_STATUS,Map.of("statusCondition",fire,"flags",1));
         hazard("Bomb/Monster/ScorcherTorch",damage,1f,4000,
             Map.of("config.argument.Lifetime","string|2 Seconds","config.argument.Nature","string|Neutral","hazard-active-lifetime","2000"),oil.x,oil.y,stamp).owner=oil.owner;
     }
@@ -1630,7 +1637,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var condition=e.spec.model("state."+state+".status");
         if(condition!=null){
             String tag=e.spec.text("state."+state+".status-tag","");float radius=e.spec.number("state."+state+".status-radius",0);
-            var damage=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.DAMAGE_STATUS,Map.of("statusCondition",condition));
+            var damage=new FireCatalog.DataValue(org.tortodrone.core.WireTypes.DAMAGE_STATUS,Map.of("statusCondition",condition));
             for(var target:entities.values())if(target.kind.equals("Monster")&&target.destroyed==Integer.MAX_VALUE&&(tag.isBlank()||Arrays.asList(target.spec.text("tags","").split(",")).contains(tag))&&Math.hypot(target.x-e.x,target.y-e.y)<=radius+target.spec.number("radius",0))target.status.apply(damage,stamp);
         }
         signal(e.spec.text("state."+state+".tag",""),e.spec.text("state."+state+".signal",""),stamp,"actor:"+e.id);
@@ -1664,7 +1671,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var origin=scriptSource(source,stamp);if(origin==null)return false;
         return floorAdvanceSink.request(player,origin,stamp);
     }
-    private boolean setMemory(org.tortodrone.character.KnightMemory operation,int stamp,String source,String activator){
+    private boolean setMemory(org.tortodrone.core.character.KnightMemory operation,int stamp,String source,String activator){
         var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&playerActive.test(p.id())).findFirst().orElse(null);
         var origin=scriptSource(source,stamp);
         return player!=null&&origin!=null&&memorySink.apply(player,operation,origin,stamp);
@@ -2025,10 +2032,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     /** Retail Bomb/Revive/Revive: radius 2, level 13, five-unit radial impulse over 400 ms. */
     public void reviveImpulse(ActorState player,int stamp){
-        var region=new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.REGION_DEFAULT,Map.of("shape",
-            new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.SHAPE_CIRCLE,Map.of("radius",2f))));
+        var region=new FireCatalog.DataValue(org.tortodrone.core.WireTypes.REGION_DEFAULT,Map.of("shape",
+            new FireCatalog.DataValue(org.tortodrone.core.WireTypes.SHAPE_CIRCLE,Map.of("radius",2f))));
         var impulse=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.ImpulseConfig$DamageImpulse",Map.of("level",13,"duration",400,
-            "translation",new FireCatalog.DataValue(org.tortodrone.protocol.WireTypes.VECTOR2F,Map.of("x",5f,"y",0f))));
+            "translation",new FireCatalog.DataValue(org.tortodrone.core.WireTypes.VECTOR2F,Map.of("x",5f,"y",0f))));
         impulse(new StarterCatalog.Model("ImpartImpulse",Map.of("region",region,"impulse",impulse,"flags",2)),player.x(),player.y(),0,stamp,player.id());
     }
     @Override public void impulse(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){
@@ -2149,7 +2156,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         fields.put("vacuum-speed","8");
         fields.put("lifespan","120000");
         try{
-            var json=org.tortodrone.resources.Json.stringify(fields);
+            var json=org.tortodrone.core.Json.stringify(fields);
             spawnPickup(new StarterCatalog.Model("Pickup",Map.of("fields",json)),e.x,e.y,e.rotation,stamp);
         }catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared heart pickup",invalid);}
     }

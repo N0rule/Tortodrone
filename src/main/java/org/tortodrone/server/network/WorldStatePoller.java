@@ -5,7 +5,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.character.CharacterStore;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Batched world and social reads per deployment every 250 ms, outside scene and session locks.
  * The existing account watcher/transactional permission checks remain authoritative.

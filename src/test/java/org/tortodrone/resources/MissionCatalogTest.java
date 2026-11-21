@@ -2,7 +2,7 @@ package org.tortodrone.resources;
 
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.MissionCatalog;
+import org.tortodrone.core.mission.MissionCatalog;
 import static org.tortodrone.support.TestWire.check;
 
 /** The complete imported stock mission catalogue and its validation boundaries. */

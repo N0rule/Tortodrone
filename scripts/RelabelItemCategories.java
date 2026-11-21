@@ -1,6 +1,8 @@
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.resources.Yaml;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.Confetti;
 
 /**
  * Re-labels the administrator-only item categories to the vanilla Arsenal tabs.

@@ -2,9 +2,11 @@ package org.tortodrone.world;
 
 import java.util.*;
 import java.util.concurrent.*;
-import org.tortodrone.character.StarterCatalog;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Synthetic area exercises the production tick and existing scene effect publication queue. */
 public final class ScriptedSceneEffectTest {

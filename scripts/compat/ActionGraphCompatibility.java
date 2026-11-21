@@ -1,6 +1,6 @@
 import java.util.*;
 import com.threerings.tudey.config.ActionConfig;
-import org.tortodrone.world.FireCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Native Random graphs retain their weights, null alternatives and failure semantics. */
 public final class ActionGraphCompatibility {

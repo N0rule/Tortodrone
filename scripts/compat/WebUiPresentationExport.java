@@ -7,6 +7,7 @@ import com.threerings.projectx.item.data.*;
 import com.threerings.projectx.sprites.config.BattleSpriteConfig;
 import com.threerings.projectx.dungeon.util.DamageSummary;
 import org.tortodrone.resources.*;
+import org.tortodrone.core.Json;
 
 /** Offline, read-only native tooltip facts. Emits data, never client classes or artwork. */
 public final class WebUiPresentationExport {

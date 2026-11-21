@@ -4,7 +4,9 @@ import java.nio.file.*;
 import java.io.*;
 import java.util.*;
 import java.util.zip.GZIPOutputStream;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Small scene-clock regression: native emissions, expiry and observer-independent ownership. */
 public final class SceneWeaponsTest {
@@ -243,10 +245,10 @@ public final class SceneWeaponsTest {
         var gun=new WeaponCatalog.Weapon("Gun",1200,0,0,false,true,1,1,List.of(hit),null,null,null);
         var byClass=new EnumMap<EquipmentCatalog.WeaponClass,EquipmentCatalog.Modifiers>(EquipmentCatalog.WeaponClass.class);
         for(var type:EquipmentCatalog.WeaponClass.values())byClass.put(type,new EquipmentCatalog.Modifiers(0,0,.125f,0));
-        var gear=new EquipmentCatalog(List.of(new EquipmentCatalog.Entry("Gun",org.tortodrone.character.WorldProfile.Slot.GUN,byClass)));
+        var gear=new EquipmentCatalog(List.of(new EquipmentCatalog.Entry("Gun",org.tortodrone.core.character.WorldProfile.Slot.GUN,byClass)));
         var combat=new KnightCombat(new WeaponCatalog(List.of(gun),List.of(),2000),gear);
-        combat.equipment(new org.tortodrone.character.WorldProfile(10,1,1,0,0,1,List.of(
-            new org.tortodrone.character.WorldProfile.Item(1,org.tortodrone.character.WorldProfile.Slot.GUN,"Gun",null,0,6,true))));
+        combat.equipment(new org.tortodrone.core.character.WorldProfile(10,1,1,0,0,1,List.of(
+            new org.tortodrone.core.character.WorldProfile.Item(1,org.tortodrone.core.character.WorldProfile.Slot.GUN,"Gun",null,0,6,true))));
         combat.attacks(start->weapons.attack(10,start));combat.reset(100);combat.input(4,100,100,0,0,true);
         var owner=new ActorState(10,1001,"Fixture",257,100,0,0,0,0,0,292,100,model);
         // Native fire animation speed is fireSpeed * attackSpeed: land=120,

@@ -7,6 +7,7 @@ import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.storage.Database;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** Account inspection visibility is private, revision-guarded metadata outside character state. */
 public final class InspectionPreferenceTest {

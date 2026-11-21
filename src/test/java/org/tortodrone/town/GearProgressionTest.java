@@ -7,6 +7,13 @@ import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.storage.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.town.GearRules;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Ownership, crystal/heat atomicity and UV retention using disposable inventory. */
 public final class GearProgressionTest {
@@ -44,7 +51,7 @@ public final class GearProgressionTest {
             var before=db.worldProfile(staff,1,1);town.forge(staff,1,1,calibur.id(),cost,0);var after=db.worldProfile(staff,1,1);
             check(after.items().stream().noneMatch(i->i.config().equals("Rarity/Fire Crystal/Warm"))&&item(after,calibur.id()).level()==1&&after.crowns()==before.crowns(),"paid forge consumes the correct rarity crystal without an invented Crown cost");
             // A deterministic zero-probability fixture verifies failure without changing live odds.
-            @SuppressWarnings("unchecked") var root=(Map<String,Object>)org.tortodrone.resources.Json.parse(Files.readString(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
+            @SuppressWarnings("unchecked") var root=(Map<String,Object>)org.tortodrone.core.Json.parse(Files.readString(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
             for(Object raw:(List<?>)root.get("forgeTables")){
                 @SuppressWarnings("unchecked") var table=(Map<String,Object>)raw;
                 for(Object value:(List<?>)table.get("rows")){

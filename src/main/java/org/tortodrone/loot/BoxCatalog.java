@@ -4,10 +4,12 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.resources.*;
-import static org.tortodrone.resources.Yaml.*;
+import static org.tortodrone.core.Yaml.*;
 import static org.tortodrone.loot.BoxDefinition.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.ContentFiles;
 
 /** Explicit native key bindings and fail-closed, readable loot definitions. */
 public final class BoxCatalog {

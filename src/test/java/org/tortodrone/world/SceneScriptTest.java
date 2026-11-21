@@ -1,9 +1,12 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.world.SceneConversation;
+import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Synthetic geometry: real scene scripts, pathing, weapon damage and source-owned lifecycle. */
 public final class SceneScriptTest {

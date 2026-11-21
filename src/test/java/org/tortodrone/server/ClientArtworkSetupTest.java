@@ -8,7 +8,7 @@ import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
 
 /** All inputs/outputs and child processes are disposable; no installed game is needed. */

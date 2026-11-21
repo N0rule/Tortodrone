@@ -7,6 +7,8 @@ import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Unsupported saved schemas are refused, never rewritten, imported or reset. */
 public final class DatabaseSchemaTest {

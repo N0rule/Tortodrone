@@ -1,6 +1,6 @@
 package org.tortodrone.world;
 
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Native ephemeral actor state; ownership never grants inventory or player mutations. */
 public record ProjectileState(String nativeType,StarterCatalog.Model config,int ownerOid,

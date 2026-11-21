@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.tortodrone.core.WireTypes;
+import org.tortodrone.core.character.Knight;
 
 /** A bounded, explicit Presents subset. Never loads classes named by the peer. */
 public final class SessionDecoder {

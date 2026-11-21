@@ -7,6 +7,7 @@ import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 public final class NamedLoadoutsTest {
     public static void main(String[] args)throws Exception {

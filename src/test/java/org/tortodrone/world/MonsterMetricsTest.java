@@ -2,6 +2,7 @@ package org.tortodrone.world;
 
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
 
 /**
  * Phase 10: per-scene monster gauges, spawn/despawn counters and bounded tick percentiles.

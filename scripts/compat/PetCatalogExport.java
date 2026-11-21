@@ -4,7 +4,8 @@ import java.util.*;
 import com.threerings.config.*;
 import com.threerings.projectx.dungeon.config.*;
 import com.threerings.projectx.sprites.config.BattleSpriteConfig;
-import org.tortodrone.world.FireCatalog;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Read-only stock skill-graph extraction. The archive supplies additional stripped server fields. */
 public final class PetCatalogExport {
@@ -28,7 +29,7 @@ public final class PetCatalogExport {
                 if(!Objects.equals(metadata.get("land"),attack.QP())||!Objects.equals(metadata.get("clear"),attack.QN()))
                     throw new IOException("Existing Sprite attack timing differs: "+entry.weaponConfig());
                 metadata.put("rearm",attack.QO());
-                updated.add(new FireCatalog.AttackFire(entry.weaponConfig(),entry.activity(),new org.tortodrone.character.StarterCatalog.Model(entry.attack().name(),metadata),entry.fireSpeed(),entry.fireRefs()));
+                updated.add(new FireCatalog.AttackFire(entry.weaponConfig(),entry.activity(),new org.tortodrone.core.character.StarterCatalog.Model(entry.attack().name(),metadata),entry.fireSpeed(),entry.fireRefs()));
             }
             Files.createDirectories(out);FireCatalog.write(out.resolve("fires.json"),updated,previous.unsupportedTypes());
             System.out.println("PASS: refreshed native rearm timing for "+updated.size()+" Sprite attacks; preserved all action graphs");return;

@@ -5,7 +5,12 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.character.*;
 import org.tortodrone.world.*;
-import static org.tortodrone.resources.Yaml.*;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Administrator YAML → normalized catalogs. Native inventory identities never leave the internal bindings. */
 public final class ItemYaml {

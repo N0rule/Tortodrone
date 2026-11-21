@@ -8,6 +8,10 @@ import com.threerings.presents.dobj.CompoundEvent;
 import com.threerings.presents.net.EventNotification;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.*;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.AnimatedItems;
 
 /** Read-only oracle for every player firework/firefly reference and timed upgrade attribute. */
 public final class AnimatedItemsCompatibility {

@@ -9,13 +9,17 @@ import java.util.List;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.Database;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** The character picker must render each knight's currently equipped appearance. */
 public final class PickerPreviewTest {
     public static void main(String[] args) throws Exception {
         Path directory = Files.createTempDirectory("tortodrone-picker-test-");
         try {
-            try(var accounts=new AccountStore(directory,false,org.tortodrone.character.ItemCatalog.starter())){accounts.create("Alice","alice-password".toCharArray());}
+            try(var accounts=new AccountStore(directory,false,org.tortodrone.core.character.ItemCatalog.starter())){accounts.create("Alice","alice-password".toCharArray());}
             var db=new Database(directory,false);
             CharacterStore store = new CharacterStore(db,1,"Alice");
             List<List<CharacterStore.RosterEntry>> published = new ArrayList<>();

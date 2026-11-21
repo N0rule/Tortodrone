@@ -6,8 +6,11 @@ import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Collected floor heat and the tutorial receipt must settle in one SQLite transaction. */
 public final class TutorialHeatRewardTest {

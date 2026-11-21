@@ -2,8 +2,12 @@ package org.tortodrone.world;
 
 import java.io.IOException;
 import java.util.*;
-import org.tortodrone.resources.Json;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.WireTypes;
+import org.tortodrone.core.character.KnightObjective;
+import org.tortodrone.core.character.KnightMemory;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
@@ -57,7 +61,7 @@ public final class SceneActions {
         public Impulse{
             Objects.requireNonNull(config);
             if(!config.name().equals("ImpartImpulse")||!config.arguments().keySet().equals(Set.of("region","impulse","impulse-origin","flags","shape"))
-                    ||!(config.arguments().get("region") instanceof FireCatalog.DataValue region)||!region.type().equals(org.tortodrone.protocol.WireTypes.REGION_DEFAULT)
+                    ||!(config.arguments().get("region") instanceof FireCatalog.DataValue region)||!region.type().equals(org.tortodrone.core.WireTypes.REGION_DEFAULT)
                     ||!(config.arguments().get("shape") instanceof FireCatalog.DataValue shape)||!shape.type().equals("com.threerings.tudey.shape.config.ShapeConfig$Point")
                     ||!(config.arguments().get("flags") instanceof Number flags)||flags.doubleValue()!=flags.intValue()||flags.intValue()<0||flags.intValue()>65535
                     ||!(config.arguments().get("impulse") instanceof FireCatalog.DataValue impulse)||!impulse.type().equals("com.threerings.projectx.dungeon.config.ImpulseConfig$DamageImpulse"))throw new IllegalArgumentException("Unsupported scripted point impulse");
@@ -65,7 +69,7 @@ public final class SceneActions {
             bounded(impulse,"duration",3_600_000,true);bounded(impulse,"level",1_000_000,true);bounded(region,"expansion",1_000_000,false);
         }
         private static void vector(Object value){
-            if(!(value instanceof FireCatalog.DataValue data)||!data.type().equals(org.tortodrone.protocol.WireTypes.VECTOR2F))throw new IllegalArgumentException("Invalid impulse vector");
+            if(!(value instanceof FireCatalog.DataValue data)||!data.type().equals(org.tortodrone.core.WireTypes.VECTOR2F))throw new IllegalArgumentException("Invalid impulse vector");
             for(String axis:List.of("x","y"))if(!(SceneDamage.field(data,axis) instanceof Number n)||!Double.isFinite(n.doubleValue())||Math.abs(n.doubleValue())>1_000_000)throw new IllegalArgumentException("Invalid impulse vector component");
         }
         private static void bounded(Object data,String field,int limit,boolean integral){
@@ -84,8 +88,8 @@ public final class SceneActions {
     @FunctionalInterface public interface NearestSignals {boolean apply(NearestSignal signal,int stamp,String source);}
     private NearestSignals nearestSignals=(signal,stamp,source)->false;
     public void nearestSignals(NearestSignals sink){nearestSignals=Objects.requireNonNull(sink);}
-    public record Objective(org.tortodrone.character.KnightObjective mutation) implements Action {public Objective{Objects.requireNonNull(mutation);}}
-    @FunctionalInterface public interface Objectives {boolean apply(org.tortodrone.character.KnightObjective operation,int stamp,String source,String activator);}
+    public record Objective(org.tortodrone.core.character.KnightObjective mutation) implements Action {public Objective{Objects.requireNonNull(mutation);}}
+    @FunctionalInterface public interface Objectives {boolean apply(org.tortodrone.core.character.KnightObjective operation,int stamp,String source,String activator);}
     private Objectives objectives=(operation,stamp,source,activator)->false;
     public void objectives(Objectives sink){objectives=Objects.requireNonNull(sink);}
     public record Choice(List<Action> actions,List<Float> weights) implements Action {
@@ -97,7 +101,7 @@ public final class SceneActions {
         }
     }
     /** The native KNIGHT memory target is its living Activator, never a client-selected knight. */
-    public record Memory(org.tortodrone.character.KnightMemory mutation) implements Action {public Memory{Objects.requireNonNull(mutation);}}
+    public record Memory(org.tortodrone.core.character.KnightMemory mutation) implements Action {public Memory{Objects.requireNonNull(mutation);}}
     /** Native PartyBase target Activator; routing and settlement belong to its server-owned party. */
     public record NextFloor() implements Action { }
     public record Signal(String tag,String name) implements Action {
@@ -208,7 +212,7 @@ public final class SceneActions {
     @FunctionalInterface public interface Conversations { boolean apply(Conversation operation,int stamp,String source,String activator); }
     @FunctionalInterface public interface Effects { boolean apply(SourceEffect operation,int stamp,String source); }
     @FunctionalInterface public interface FloorAdvances { boolean apply(int stamp,String source,String activator); }
-    @FunctionalInterface public interface Memories { boolean apply(org.tortodrone.character.KnightMemory operation,int stamp,String source,String activator); }
+    @FunctionalInterface public interface Memories { boolean apply(org.tortodrone.core.character.KnightMemory operation,int stamp,String source,String activator); }
     @FunctionalInterface public interface PawnStatuses { boolean apply(PawnStatus operation,int stamp,String source); }
     @FunctionalInterface public interface SpawnActors { boolean apply(Spawn actor,int stamp,String source); }
     @FunctionalInterface public interface SourcedSpawnActors { boolean apply(Spawn actor,int stamp,String source,String activator); }
@@ -519,8 +523,8 @@ public final class SceneActions {
             return new Choice(children,numbers);
         }
         if("next-floor".equals(kind)&&map.keySet().equals(Set.of("kind")))return new NextFloor();
-        if("knight-objective".equals(kind)&&map.keySet().equals(Set.of("kind","name","text")))return new Objective(new org.tortodrone.character.KnightObjective(string(map.get("name")),map.get("text")==null?null:string(map.get("text"))));
-        if("knight-memory".equals(kind)&&map.keySet().equals(Set.of("kind","name","remember"))&&map.get("remember") instanceof Boolean remember)return new Memory(new org.tortodrone.character.KnightMemory(string(map.get("name")),remember));
+        if("knight-objective".equals(kind)&&map.keySet().equals(Set.of("kind","name","text")))return new Objective(new org.tortodrone.core.character.KnightObjective(string(map.get("name")),map.get("text")==null?null:string(map.get("text"))));
+        if("knight-memory".equals(kind)&&map.keySet().equals(Set.of("kind","name","remember"))&&map.get("remember") instanceof Boolean remember)return new Memory(new org.tortodrone.core.character.KnightMemory(string(map.get("name")),remember));
         if("progress-event".equals(kind)&&map.keySet().equals(Set.of("kind","level","progress")))return new ProgressEvent(string(map.get("level")),string(map.get("progress")));
         if("source-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config")))return new SourceEffect(FireCatalog.modelJson(string(map.get("config"))));
         if("tagged-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config","tag")))return new SourceEffect(FireCatalog.modelJson(string(map.get("config"))),tag(map.get("tag")));

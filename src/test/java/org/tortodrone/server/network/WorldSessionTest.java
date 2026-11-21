@@ -11,11 +11,14 @@ import org.tortodrone.protocol.*;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.TownSquare;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 public final class WorldSessionTest {
     public static void main(String[] args) throws Exception {
         Path home=Files.createTempDirectory("tortodrone-town-sessions-");
-        try(var accounts=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
+        try(var accounts=new AccountStore(home,false,org.tortodrone.core.character.ItemCatalog.starter())) {
             accounts.create("Alice","alice-password".toCharArray());
             var characters=new CharacterStore(new Database(home,false),1,"Alice");
             var knight=characters.create(new Knight(0,"Town-Knight","Gear/Helm/Spiral Sallet (Blue)",

@@ -7,6 +7,8 @@ import java.util.concurrent.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.KnightMemory;
 
 public final class KnightMemoriesTest {
     private static final String INTRO="talkto_rhendon_icon";

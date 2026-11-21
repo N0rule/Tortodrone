@@ -13,6 +13,7 @@ import com.threerings.config.ConfigManager;
 import com.threerings.projectx.dungeon.config.DefenseConfig;
 import com.threerings.projectx.dungeon.util.DamageSummary;
 import com.threerings.projectx.item.config.ItemConfig;
+import org.tortodrone.core.character.Knight;
 
 /** Exports stock Training depth-zero player base-health and unvarianted gear stats. */
 public final class ScenePlayerStatsExport {

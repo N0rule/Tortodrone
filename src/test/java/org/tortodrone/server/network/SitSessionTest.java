@@ -12,6 +12,7 @@ import org.tortodrone.protocol.*;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.TownSquare;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** Exercise action readiness, original listener validation and immediate credential revocation. */
 public final class SitSessionTest {

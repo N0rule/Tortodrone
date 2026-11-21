@@ -7,6 +7,9 @@ import org.tortodrone.world.*;
 import com.threerings.presents.net.EventNotification;
 import com.threerings.tudey.dobj.SceneDeltaEvent;
 import com.threerings.projectx.dungeon.data.actor.Dungeoneer;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Small unchanged-stock-reader check for native weapon state and its delta mask. */
 public final class WeaponCompatibility {

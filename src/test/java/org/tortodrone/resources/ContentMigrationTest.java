@@ -6,6 +6,7 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Yaml;
 
 public final class ContentMigrationTest {
     public static void main(String[] args)throws Exception {

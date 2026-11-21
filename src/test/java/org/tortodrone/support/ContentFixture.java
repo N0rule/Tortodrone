@@ -4,8 +4,10 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.resources.*;
-import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.world.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.ContentFiles;
 
 /** Disposable legacy fixtures derived from the one unified source for reader/migration regressions. */
 public final class ContentFixture {

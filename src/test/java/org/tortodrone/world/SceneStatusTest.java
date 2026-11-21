@@ -4,6 +4,9 @@ import java.nio.file.Path;
 import java.util.*;
 import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Focused status and emergency revive checks against the prepared Training Hall rules. */
 public final class SceneStatusTest {

@@ -7,6 +7,8 @@ import java.util.concurrent.*;
 import org.tortodrone.support.TestWire;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.Database;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Persistence failures and competing creations must never lose or duplicate characters. */
 public final class CharacterStoreTest {
@@ -61,7 +63,7 @@ public final class CharacterStoreTest {
         }
     }
     private static CharacterStore store(Path directory) throws IOException {
-        try(var accounts=new AccountStore(directory,false,org.tortodrone.character.ItemCatalog.starter())) {
+        try(var accounts=new AccountStore(directory,false,org.tortodrone.core.character.ItemCatalog.starter())) {
             if(accounts.list().isEmpty())accounts.create("Alice","alice-password".toCharArray());
         }
         return new CharacterStore(new Database(directory,false),1,"Alice");

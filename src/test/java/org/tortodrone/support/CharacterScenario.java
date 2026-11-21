@@ -3,6 +3,7 @@ package org.tortodrone.support;
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
+import org.tortodrone.core.character.Knight;
 
 /** Creation, saved roster, and failure callback checks reusable across server restarts. */
 public final class CharacterScenario {

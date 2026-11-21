@@ -3,7 +3,7 @@ import java.util.*;
 import com.threerings.config.*;
 import com.threerings.tudey.config.*;
 import com.threerings.projectx.dungeon.config.*;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 
 /** Stock attack configuration plus a read-only captured activity ledger; no behavior is invented. */
 public final class MonsterChainCompatibility {

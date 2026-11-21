@@ -1,12 +1,16 @@
 import java.io.*;
 import java.util.*;
 import org.tortodrone.character.*;
-import org.tortodrone.town.*;
+import org.tortodrone.core.town.*;
 import org.tortodrone.protocol.*;
 import com.threerings.io.v;
 import com.threerings.presents.dobj.*;
 import com.threerings.presents.net.*;
 import com.threerings.projectx.data.PlayerObject;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightProgress;
 
 /** Focused stock-reader check for Town messages; no server or graphical client is launched. */
 public final class TownCompatibility {

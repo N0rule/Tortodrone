@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.Semaphore;
-import org.tortodrone.resources.ContentFiles;
+import org.tortodrone.core.ContentFiles;
 
 /** Administration policy is scoped to /admin; News never passes through this handler. */
 public final class AdminHandler implements HttpHandler {

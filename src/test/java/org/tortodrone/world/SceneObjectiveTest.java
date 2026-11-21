@@ -3,8 +3,11 @@ package org.tortodrone.world;
 import java.io.*;
 import java.util.*;
 import org.tortodrone.character.*;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightObjective;
+import org.tortodrone.world.SceneActions;
 
 public final class SceneObjectiveTest {
     public static void main(String[] args)throws Exception {

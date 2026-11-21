@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.character.*;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightMemory;
+import org.tortodrone.world.SceneActions;
 
 /** Synthetic native-shaped sensor; real scene 2977 is covered by tutorial-opening-check. */
 public final class SceneMemoryTest {

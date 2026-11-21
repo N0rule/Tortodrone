@@ -5,6 +5,9 @@ import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Basic lifecycle regressions using disposable scene state and authoritative input. */
 public final class SceneLifeTest {

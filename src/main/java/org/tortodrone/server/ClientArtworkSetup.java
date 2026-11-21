@@ -8,8 +8,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
-import org.tortodrone.resources.Json;
-import org.tortodrone.resources.ContentFiles;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.ContentFiles;
 
 /** Pre-listener local artwork preparation. Installed game files are always read-only. */
 public final class ClientArtworkSetup {

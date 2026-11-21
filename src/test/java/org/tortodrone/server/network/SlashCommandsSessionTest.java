@@ -13,6 +13,8 @@ import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
 
 public final class SlashCommandsSessionTest {
     public static void main(String[] args)throws Exception {

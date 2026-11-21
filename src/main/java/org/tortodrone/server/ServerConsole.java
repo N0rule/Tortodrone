@@ -5,9 +5,10 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import org.tortodrone.account.AccountStore;
-import org.tortodrone.character.Currency;
+import org.tortodrone.core.character.Currency;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.UserInterruptException;
+import org.tortodrone.core.character.Knight;
 
 /** Local server terminal. Commands never accept passwords as arguments or echo input to logs. */
 final class ServerConsole implements AutoCloseable {

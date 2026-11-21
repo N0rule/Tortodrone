@@ -11,8 +11,13 @@ import com.threerings.tudey.dobj.SceneDeltaEvent;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.*;
 import org.tortodrone.resources.*;
-import org.tortodrone.town.*;
+import org.tortodrone.core.town.*;
 import org.tortodrone.world.*;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.character.Confetti;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Focused retail-reader oracle. No sockets, client process, preferences or persistent state. */
 public final class GameplayCompatibility {

@@ -17,7 +17,8 @@ import com.threerings.projectx.dungeon.config.DungeonItemConfig;
 import com.threerings.projectx.item.config.ItemConfig;
 import com.threerings.tudey.config.ActionConfig;
 import com.threerings.tudey.config.TargetConfig;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Exports instant heals, self-damage, spawn-actor props and carryable lifts for owned bag items. */
 public final class ItemUseExport {
@@ -83,7 +84,7 @@ public final class ItemUseExport {
         var damage = damageTarget(action);
         if (damage == null) return null;
         var use = itemUse("lethal");
-        use.put("damage", org.tortodrone.world.FireCatalog.valueJson(FireCatalogExport.argumentValue(damage)));
+        use.put("damage", org.tortodrone.core.world.FireCatalog.valueJson(FireCatalogExport.argumentValue(damage)));
         return use;
     }
 

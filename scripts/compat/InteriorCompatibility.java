@@ -30,14 +30,14 @@ import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.*;
-import org.tortodrone.character.Knight;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.world.ActorState;
 import org.tortodrone.world.SceneCatalog;
 import org.tortodrone.world.SceneRegistry;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Stock-reader oracle for native dungeon party, interior place and Dungeoneer messages. */
 public final class InteriorCompatibility {

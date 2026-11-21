@@ -9,6 +9,9 @@ import org.tortodrone.character.*;
 import org.tortodrone.protocol.*;
 import org.tortodrone.resources.ItemYaml;
 import org.tortodrone.world.*;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.Confetti;
 
 /** Lightweight, read-only stock config/reader oracle; no server or graphical app. */
 public final class ConfettiCompatibility {

@@ -7,6 +7,9 @@ import org.tortodrone.world.*;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.ContentFiles;
 
 /** Real administrator edits, unchanged defaults, bounded inputs and failed snapshot isolation. */
 public final class ContentManagerTest {

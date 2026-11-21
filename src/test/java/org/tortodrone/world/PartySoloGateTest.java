@@ -5,6 +5,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
 
 public final class PartySoloGateTest {
     public static void main(String[] args)throws Exception {

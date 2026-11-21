@@ -3,6 +3,14 @@ package org.tortodrone.world;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
+import org.tortodrone.core.NewsCatalog;
+import org.tortodrone.core.character.OpeningMission;
+import org.tortodrone.core.mission.MissionCatalog;
+import org.tortodrone.world.MissionComlinks;
+import org.tortodrone.world.MissionGates;
+import org.tortodrone.world.MissionRun;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Server-assigned scene instances; a client scene version is never an instance selector. */
 public final class SceneRegistry {
@@ -29,27 +37,27 @@ public final class SceneRegistry {
     private final TutorialRoute tutorial;
     private final OpeningGate generator;
     public TutorialRoute tutorial(){return tutorial;}
-    public OpeningGate openingGate(org.tortodrone.character.OpeningMission mission){return mission==org.tortodrone.character.OpeningMission.ANCIENT_GENERATOR?generator:null;}
+    public OpeningGate openingGate(org.tortodrone.core.character.OpeningMission mission){return mission==org.tortodrone.core.character.OpeningMission.ANCIENT_GENERATOR?generator:null;}
     private MissionGates gates=MissionGates.empty();
     public MissionGates gates(){return gates;}
     public void gates(MissionGates value){gates=Objects.requireNonNull(value);}
     private final PartyRegistry parties=new PartyRegistry();
     public PartyRegistry parties(){return parties;}
-    private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
-    public org.tortodrone.town.TownCatalog town(){return town;}
-    public void town(org.tortodrone.town.TownCatalog catalog){town=Objects.requireNonNull(catalog);equipment.town(town);for(var copies:instances.values())for(var instance:copies)instance.simulation().town(town);}
-    private org.tortodrone.character.MissionCatalog missions=org.tortodrone.character.MissionCatalog.empty();
-    public org.tortodrone.character.MissionCatalog missions(){return missions;}
-    public void missions(org.tortodrone.character.MissionCatalog catalog){missions=Objects.requireNonNull(catalog);}
+    private org.tortodrone.core.town.TownCatalog town=org.tortodrone.core.town.TownCatalog.empty();
+    public org.tortodrone.core.town.TownCatalog town(){return town;}
+    public void town(org.tortodrone.core.town.TownCatalog catalog){town=Objects.requireNonNull(catalog);equipment.town(town);for(var copies:instances.values())for(var instance:copies)instance.simulation().town(town);}
+    private org.tortodrone.core.mission.MissionCatalog missions=org.tortodrone.core.mission.MissionCatalog.empty();
+    public org.tortodrone.core.mission.MissionCatalog missions(){return missions;}
+    public void missions(org.tortodrone.core.mission.MissionCatalog catalog){missions=Objects.requireNonNull(catalog);}
     private org.tortodrone.world.MissionComlinks comlinks=org.tortodrone.world.MissionComlinks.empty();
     public org.tortodrone.world.MissionComlinks comlinks(){return comlinks;}
     public void comlinks(org.tortodrone.world.MissionComlinks catalog){comlinks=Objects.requireNonNull(catalog);}
     private org.tortodrone.loot.BoxCatalog boxes=org.tortodrone.loot.BoxCatalog.empty();
     public org.tortodrone.loot.BoxCatalog boxes(){return boxes;}
     public void boxes(org.tortodrone.loot.BoxCatalog catalog){boxes=Objects.requireNonNull(catalog);}
-    private org.tortodrone.news.NewsCatalog news=org.tortodrone.news.NewsCatalog.disabled();
-    public org.tortodrone.news.NewsCatalog news(){return news;}
-    public void news(org.tortodrone.news.NewsCatalog catalog){news=Objects.requireNonNull(catalog);}
+    private org.tortodrone.core.NewsCatalog news=org.tortodrone.core.NewsCatalog.disabled();
+    public org.tortodrone.core.NewsCatalog news(){return news;}
+    public void news(org.tortodrone.core.NewsCatalog catalog){news=Objects.requireNonNull(catalog);}
     private WeaponCatalog weapons=WeaponCatalog.empty();
     private EquipmentCatalog equipment=EquipmentCatalog.empty();
     public EquipmentCatalog equipment(){return equipment;}
@@ -76,7 +84,7 @@ public final class SceneRegistry {
     public int channelType(int oid){for(int base:channelZones.values()){if(oid==base)return 6;if(oid==base+1)return 7;}return -1;}
     public SceneChat channel(int oid){var channel=channels.get(oid);if(channel==null)throw new IllegalArgumentException("Unknown chat channel");return channel;}
     public SceneRegistry(SceneCatalog catalog) {
-        this.catalog=catalog;tutorial=TutorialRoute.available(catalog);generator=OpeningGate.available(catalog,org.tortodrone.character.OpeningMission.ANCIENT_GENERATOR);
+        this.catalog=catalog;tutorial=TutorialRoute.available(catalog);generator=OpeningGate.available(catalog,org.tortodrone.core.character.OpeningMission.ANCIENT_GENERATOR);
         int chatOid=1_500_000_000;
         for(int zone:catalog.zoneIds()) {
             channelZones.put(zone,chatOid);channels.put(chatOid,new SceneChat());channels.put(chatOid+1,new SceneChat());chatOid+=2;
@@ -197,7 +205,7 @@ public final class SceneRegistry {
     public List<MissionGates.Gate> availableGates(){
         var result=new ArrayList<MissionGates.Gate>();
         for(var gate:gates.gates()){
-            if(openingGate(org.tortodrone.character.OpeningMission.byId(gate.missionId()))!=null)continue;
+            if(openingGate(org.tortodrone.core.character.OpeningMission.byId(gate.missionId()))!=null)continue;
             if(missionRoute(gate.missionId(),1,1,"EASY")!=null)result.add(gate);
         }
         return List.copyOf(result);

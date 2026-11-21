@@ -5,10 +5,12 @@ import java.nio.channels.*;
 import java.nio.file.*;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.resources.*;
-import org.tortodrone.town.TownCatalog;
-import static org.tortodrone.resources.Yaml.*;
+import org.tortodrone.core.town.TownCatalog;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.ContentFiles;
 
 /** Explicit offline 9..17 -> 18 candidate. Source DB, content and keys are never replaced. */
 public final class EconomyUpgrade {

@@ -15,6 +15,7 @@ import org.tortodrone.protocol.*;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
+import org.tortodrone.core.character.Knight;
 
 /** Original-map protocol oracle and premature-report/session rejection checks.
  * This does not pretend to drive the opening encounters or a complete knight playthrough. */

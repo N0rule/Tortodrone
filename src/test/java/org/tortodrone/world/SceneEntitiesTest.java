@@ -2,8 +2,10 @@ package org.tortodrone.world;
 
 import java.nio.file.Path;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Deterministic hitbox and thrown-lift regressions, without accounts or a ticking server. */
 public final class SceneEntitiesTest {
@@ -40,7 +42,7 @@ public final class SceneEntitiesTest {
         check(townEntities.actors().stream().noneMatch(a->a.id()==auction.id()),"placed interaction helpers are not published as debug actors");
         var auctionPrompt=townEntities.interaction(.45199376f,14.619257f,1.28f);
         check(auctionPrompt!=null&&auctionPrompt.action().equals("Shop")&&"3733".equals(auctionPrompt.entryKey()),"Auction House uses the native crowns prompt and placed entry identity");
-        var hall=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(318);var rules=org.tortodrone.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
+        var hall=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(318);var rules=org.tortodrone.core.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
         check(hall.content().conversations().size()==9,"all captured Hall of Heroes vendors have authored conversations");
         for(var dialogue:hall.content().conversations().values()){
             String station=dialogue.nodes().get(dialogue.initial()).responses().getFirst().station();var service=rules.station(station);

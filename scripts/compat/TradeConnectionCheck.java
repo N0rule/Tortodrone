@@ -11,6 +11,9 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.Currency;
 
 /** Two-stock-client trade integration check. Item IDs and player identities are inputs from disposable setup. */
 public final class TradeConnectionCheck {
@@ -269,9 +272,9 @@ public final class TradeConnectionCheck {
                 second=accounts.worldProfile("PeerPlayer","Peer-Knight");
                 sword=second.items().stream().filter(i->i.config().equals("Weapon/Sword/Calibur")&&!i.bound()&&!i.permanent()&&i.equippedSlot()==null).findFirst().orElseThrow();}
             for(var target:List.of(new Object[]{"LanPlayer","Town-Knight",first},new Object[]{"PeerPlayer","Peer-Knight",second})) {
-                String user=(String)target[0],knight=(String)target[1];var profile=(org.tortodrone.character.WorldProfile)target[2];
-                if(profile.crowns()!=100)profile=accounts.currency(user,knight,org.tortodrone.character.Currency.CROWNS,100L-profile.crowns(),-1,-1);
-                if(profile.energy()!=100)profile=accounts.currency(user,knight,org.tortodrone.character.Currency.ENERGY,100L-profile.energy(),-1,-1);
+                String user=(String)target[0],knight=(String)target[1];var profile=(org.tortodrone.core.character.WorldProfile)target[2];
+                if(profile.crowns()!=100)profile=accounts.currency(user,knight,org.tortodrone.core.character.Currency.CROWNS,100L-profile.crowns(),-1,-1);
+                if(profile.energy()!=100)profile=accounts.currency(user,knight,org.tortodrone.core.character.Currency.ENERGY,100L-profile.energy(),-1,-1);
             }
             result.setProperty("lanItemId",Long.toString(stack.id()));result.setProperty("peerItemId",Long.toString(sword.id()));
             result.setProperty("lanItemCount",Integer.toString(stack.count()));result.setProperty("peerItemConfig",sword.config());

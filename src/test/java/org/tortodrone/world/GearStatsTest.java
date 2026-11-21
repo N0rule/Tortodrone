@@ -5,6 +5,9 @@ import java.util.*;
 import org.tortodrone.character.*;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Leveled equipment must change authoritative damage, mitigation and timing. */
 public final class GearStatsTest {

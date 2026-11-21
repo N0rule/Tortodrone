@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.world.SceneCatalog;
+import org.tortodrone.core.ContentFiles;
 
 /** Read-only legacy layout detection and migration source. Old precedence is preserved, never copied into or over live data. */
 final class LegacyContentSource {

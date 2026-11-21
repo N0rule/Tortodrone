@@ -3,7 +3,10 @@ package org.tortodrone.world;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.world.SceneConversation;
+import org.tortodrone.world.SceneActions;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Prepared native actor bindings. Runtime instances never depend on client resources. */
 public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses,List<MapIcon> mapIcons,Map<String,Spec> actorTemplates) {

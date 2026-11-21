@@ -2,7 +2,8 @@ package org.tortodrone.world;
 
 import java.io.IOException;
 import java.util.*;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
+import org.tortodrone.world.SceneActions;
 
 /** Bounded native scripted-behavior metadata. Execution stays in SceneEntities. */
 public record SceneScript(List<Step> steps) {

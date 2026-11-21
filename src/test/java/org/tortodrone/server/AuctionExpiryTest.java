@@ -3,9 +3,9 @@ package org.tortodrone.server;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
-import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.storage.*;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
 import static org.tortodrone.support.TestWire.check;
 
 /** The server-owned worker settles with no account, character, session or auction UI open. */

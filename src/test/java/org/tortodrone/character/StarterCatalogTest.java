@@ -4,6 +4,10 @@ import java.util.*;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.support.TestWire;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 public final class StarterCatalogTest {
     public static void main(String[] args) throws Exception {

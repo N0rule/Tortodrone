@@ -5,9 +5,13 @@ import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.storage.*;
-import org.tortodrone.resources.Json;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.town.TownCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** A configured death graph runs through the shared scene and the persistent reward transaction. */
 public final class DeathLootPipelineTest {

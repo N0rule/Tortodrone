@@ -1,9 +1,10 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.world.SceneActions;
 
 /** Synthetic graph/geometry; real entity creation, pickup admission and ownership. */
 public final class SceneHeatSpawnTest {

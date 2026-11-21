@@ -8,9 +8,12 @@ import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.*;
 import org.tortodrone.storage.Database;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.Currency;
 
 /** A source connection lost after commit cannot suppress the effect for scene observers. */
 public final class TownEffectCommitTest {
@@ -22,7 +25,7 @@ public final class TownEffectCommitTest {
             for(boolean learn:List.of(true,false)){
                 var db=new Database(home.resolve(learn?"recipe":"energy"),true);int account=db.create("Learner",new Passwords.Protection(new byte[16],new byte[32]),false);
                 var characters=new CharacterStore(db,account,"Learner",items);var knight=characters.create(new Knight(0,"Learner-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0));
-                String recipe="Recipe/Armor/Padded Armor Recipe";db.grantItems("Learner",knight.name(),-1,-1,items.require(recipe),1,-1,-1);db.setCurrency("Learner",knight.name(),account,-1,org.tortodrone.character.Currency.ENERGY,1_000_000);
+                String recipe="Recipe/Armor/Padded Armor Recipe";db.grantItems("Learner",knight.name(),-1,-1,items.require(recipe),1,-1,-1);db.setCurrency("Learner",knight.name(),account,-1,org.tortodrone.core.character.Currency.ENERGY,1_000_000);
                 var socket=new Socket(){public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}};
                 try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1201,1,m->{},registry)){
                     synchronized(world){

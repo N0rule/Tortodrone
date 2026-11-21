@@ -2,17 +2,23 @@ package org.tortodrone.resources;
 
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.core.character.ItemCatalog;
 import org.tortodrone.world.*;
+import org.tortodrone.core.NewsCatalog;
+import org.tortodrone.core.mission.MissionCatalog;
+import org.tortodrone.world.MissionComlinks;
+import org.tortodrone.world.MissionGates;
+import org.tortodrone.core.world.FireCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** One fully validated immutable definition snapshot; mutable scene instances remain in SceneRegistry. */
 public record ContentRegistry(List<Pack> packs, Map<String,Resource> resources, SceneCatalog scenes,
         ItemCatalog items, WeaponCatalog weapons, EquipmentCatalog equipment, FireCatalog fires,
-        List<String> warnings, org.tortodrone.town.TownCatalog town, FireCatalog petFires,
-        org.tortodrone.news.NewsCatalog news, org.tortodrone.loot.BoxCatalog boxes, PresentationCatalog presentation,
-        org.tortodrone.character.MissionCatalog missions, MissionComlinks comlinks, MissionGates gates) {
-    public ContentRegistry(List<Pack> packs,Map<String,Resource> resources,SceneCatalog scenes,ItemCatalog items,WeaponCatalog weapons,EquipmentCatalog equipment,FireCatalog fires,List<String> warnings,org.tortodrone.town.TownCatalog town,FireCatalog petFires,org.tortodrone.news.NewsCatalog news,org.tortodrone.loot.BoxCatalog boxes){this(packs,resources,scenes,items,weapons,equipment,fires,warnings,town,petFires,news,boxes,PresentationCatalog.empty(),org.tortodrone.character.MissionCatalog.empty(),MissionComlinks.empty(),MissionGates.empty());}
-    public ContentRegistry(List<Pack> packs,Map<String,Resource> resources,SceneCatalog scenes,ItemCatalog items,WeaponCatalog weapons,EquipmentCatalog equipment,FireCatalog fires,List<String> warnings,org.tortodrone.town.TownCatalog town,FireCatalog petFires,org.tortodrone.news.NewsCatalog news,org.tortodrone.loot.BoxCatalog boxes,PresentationCatalog presentation){this(packs,resources,scenes,items,weapons,equipment,fires,warnings,town,petFires,news,boxes,presentation,org.tortodrone.character.MissionCatalog.empty(),MissionComlinks.empty(),MissionGates.empty());}
+        List<String> warnings, org.tortodrone.core.town.TownCatalog town, FireCatalog petFires,
+        org.tortodrone.core.NewsCatalog news, org.tortodrone.loot.BoxCatalog boxes, PresentationCatalog presentation,
+        org.tortodrone.core.mission.MissionCatalog missions, MissionComlinks comlinks, MissionGates gates) {
+    public ContentRegistry(List<Pack> packs,Map<String,Resource> resources,SceneCatalog scenes,ItemCatalog items,WeaponCatalog weapons,EquipmentCatalog equipment,FireCatalog fires,List<String> warnings,org.tortodrone.core.town.TownCatalog town,FireCatalog petFires,org.tortodrone.core.NewsCatalog news,org.tortodrone.loot.BoxCatalog boxes){this(packs,resources,scenes,items,weapons,equipment,fires,warnings,town,petFires,news,boxes,PresentationCatalog.empty(),org.tortodrone.core.mission.MissionCatalog.empty(),MissionComlinks.empty(),MissionGates.empty());}
+    public ContentRegistry(List<Pack> packs,Map<String,Resource> resources,SceneCatalog scenes,ItemCatalog items,WeaponCatalog weapons,EquipmentCatalog equipment,FireCatalog fires,List<String> warnings,org.tortodrone.core.town.TownCatalog town,FireCatalog petFires,org.tortodrone.core.NewsCatalog news,org.tortodrone.loot.BoxCatalog boxes,PresentationCatalog presentation){this(packs,resources,scenes,items,weapons,equipment,fires,warnings,town,petFires,news,boxes,presentation,org.tortodrone.core.mission.MissionCatalog.empty(),MissionComlinks.empty(),MissionGates.empty());}
     public record Pack(String id,String version) { }
     public record Resource(String pack,Path path,String sha256) { }
     public ContentRegistry {

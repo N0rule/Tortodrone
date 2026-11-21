@@ -9,6 +9,7 @@ import com.threerings.projectx.town.data.TownSceneObject;
 import com.threerings.crowd.chat.data.UserMessage;
 import com.threerings.tudey.dobj.SceneDeltaEvent;
 import com.threerings.util.Name;
+import org.tortodrone.core.character.Knight;
 
 /** Live roles and original staff broadcast RPC; all data belongs to CheckClientWorld. */
 public final class GameMasterConnectionCheck {

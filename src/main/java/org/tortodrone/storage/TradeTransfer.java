@@ -3,8 +3,8 @@ package org.tortodrone.storage;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.character.WorldProfile;
-import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Two-owner exchange, entirely inside the deployment's BEGIN IMMEDIATE transaction. */
 final class TradeTransfer {

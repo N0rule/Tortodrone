@@ -5,7 +5,10 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.*;
 import org.tortodrone.character.*;
-import org.tortodrone.town.TownState;
+import org.tortodrone.core.town.TownState;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.SlotUpgrades;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Named equipment snapshots in the existing integer metadata namespace; no schema migration. */
 final class NamedLoadouts {
@@ -63,7 +66,7 @@ final class NamedLoadouts {
             for(var entry:values.entrySet()){s.setString(1,key(p.worldId(),storedName)+entry.getKey());s.setLong(2,entry.getValue());s.executeUpdate();}
         }
     }
-    static void equip(Connection c,WorldProfile p,String name,org.tortodrone.town.TownCatalog rules)throws SQLException,IOException {
+    static void equip(Connection c,WorldProfile p,String name,org.tortodrone.core.town.TownCatalog rules)throws SQLException,IOException {
         validate(name);var saved=p.town().loadouts().stream().filter(l->l.name().equalsIgnoreCase(name)).findFirst().orElseThrow(()->new IOException("No saved loadout with that name"));
         var used=new HashSet<Long>();
         for(int slot=0;slot<16;slot++) {

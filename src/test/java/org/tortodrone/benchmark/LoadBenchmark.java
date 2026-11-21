@@ -18,6 +18,8 @@ import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.storage.Database;
 import org.tortodrone.support.*;
 import org.tortodrone.world.SceneRegistry;
+import org.tortodrone.core.Yaml;
+import org.tortodrone.core.character.Knight;
 
 /** Real TCP/AES/password logins and town movement against a disposable packaged server.
  * Header-only downstream reader: compatibility fixtures validate actor payloads separately. */
@@ -50,7 +52,7 @@ public final class LoadBenchmark {
         try {
             TestDeployment.copyServer(Path.of(System.getProperty("tortodrone.serverJar","build/tortodrone.jar")),home.resolve("tortodrone.jar"));
             Path manifest=home.resolve("content/maps/town/haven/map.yml");
-            var settings=org.tortodrone.resources.Yaml.read(manifest);settings.put("instances",instances);Files.delete(manifest);org.tortodrone.resources.Yaml.write(manifest,settings);
+            var settings=org.tortodrone.core.Yaml.read(manifest);settings.put("instances",instances);Files.delete(manifest);org.tortodrone.core.Yaml.write(manifest,settings);
             Path data=home.resolve("data");int maximum=Arrays.stream(sizes).max().orElseThrow();
             try(var accounts=new AccountStore(data)) {
                 var database=new Database(data,false);

@@ -2,9 +2,10 @@ package org.tortodrone.world;
 
 import java.nio.file.Path;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.world.SceneActions;
 
 /** The tutorial Jelly Cube's Roundhouse resolves Damage Region=Medium (Circle 1.5), but
  *  the exported fire action carries the choice-less base circle (1.0), so the resolved

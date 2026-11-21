@@ -3,6 +3,8 @@ package org.tortodrone.town;
 import org.tortodrone.protocol.*;
 import org.tortodrone.support.TestWire;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.town.AuctionState;
 
 /** Wiki spans plus the archive's captured TWO_DAYS/VERY_LONG observation. */
 public final class AuctionTimeTest {
@@ -25,7 +27,7 @@ public final class AuctionTimeTest {
         System.out.println("PASS: auction time-left thresholds, terminal precedence and native VERY_LONG serialization");
     }
     private static AuctionState.Listing listing(long expires,boolean ended,boolean cancelled) {
-        var item=new org.tortodrone.character.WorldProfile.Item(1,org.tortodrone.character.WorldProfile.Slot.OTHER,"Material/Gel Drop",null,0,null,false,false,false,1,false,0,0,java.util.List.of());
+        var item=new org.tortodrone.core.character.WorldProfile.Item(1,org.tortodrone.core.character.WorldProfile.Slot.OTHER,"Material/Gel Drop",null,0,null,false,false,false,1,false,0,0,java.util.List.of());
         return new AuctionState.Listing(1,1,item,10,0,0,expires,ended,cancelled,false,false,0);
     }
 }

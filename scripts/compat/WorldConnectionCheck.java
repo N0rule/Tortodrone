@@ -1,4 +1,6 @@
 import com.samskivert.util.at;import com.threerings.presents.client.*;import com.threerings.presents.dobj.*;import com.threerings.projectx.client.aU;import com.threerings.projectx.data.*;import com.threerings.projectx.town.data.*;import com.threerings.whirled.zone.data.*;import com.threerings.whirled.data.*;import com.threerings.crowd.data.*;import com.threerings.tudey.data.*;import com.threerings.tudey.dobj.*;import com.threerings.projectx.item.data.*;import com.threerings.util.Name;import java.nio.file.*;import java.util.*;import java.util.concurrent.*;import java.util.function.*;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.Currency;
 public class WorldConnectionCheck {
  static void registerSceneReceiver(Client client)throws Exception {
   Class<?> receiver=Class.forName("com.threerings.whirled.zone.a.f");
@@ -154,7 +156,7 @@ public class WorldConnectionCheck {
    waitFor(()->deltas>=combatCount+4);
    if(controlled(player).adU()!=0||controlled(player).bR(2))throw new AssertionError("Town combat input changed activity/movement");
    System.out.println("PASS: peaceful town stance, ignored combat inputs and live equipment/loadout observer updates");
-   if(fresh)try(var accounts=new org.tortodrone.account.AccountStore(Path.of(args[1]).getParent().getParent())){accounts.currency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.CROWNS,100,-1,-1);accounts.currency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.ENERGY,25,-1,-1);}
+   if(fresh)try(var accounts=new org.tortodrone.account.AccountStore(Path.of(args[1]).getParent().getParent())){accounts.currency("LanPlayer","Town-Knight",org.tortodrone.core.character.Currency.CROWNS,100,-1,-1);accounts.currency("LanPlayer","Town-Knight",org.tortodrone.core.character.Currency.ENERGY,25,-1,-1);}
    waitFor(()->player.crowns==100&&player.energy==25);System.out.println("PASS: local administration changes live crowns and energy counters");
    multiplayer(args,queue,fresh,player,client);
   }finally{observing[0]=false;client.Q(false);}

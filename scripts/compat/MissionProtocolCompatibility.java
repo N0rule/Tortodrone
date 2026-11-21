@@ -5,6 +5,12 @@ import org.tortodrone.protocol.*;
 import com.threerings.presents.net.*;
 import com.threerings.projectx.data.*;
 import com.threerings.projectx.mission.data.*;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.character.OpeningCompletion;
+import org.tortodrone.core.character.OpeningMission;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Installed native reader/application oracle; no live gameplay is claimed. */
 public final class MissionProtocolCompatibility {
@@ -43,7 +49,7 @@ public final class MissionProtocolCompatibility {
         if(generator==null||!generator.difficulty.name().equals("EASY")||player.completedMissions.size()!=2)throw new AssertionError("Reconnect receipt/difficulty framing differs");
         for(int i=0;i<panels.size();i++){
             apply(((EventNotification)input.ql()).yn(),player);var panel=panels.get(i);var definition=dialogs.get(i);var opened=(ConversationDialogInfo)player.sceneDialog;
-            var image=panel.userInterface().arguments().get("image");if(image==org.tortodrone.world.FireCatalog.NullValue.INSTANCE)image=null;
+            var image=panel.userInterface().arguments().get("image");if(image==org.tortodrone.core.world.FireCatalog.NullValue.INSTANCE)image=null;
             if(!opened.bundle.equals("mission")||!opened.name.equals(definition.name())||!opened.message.equals(panel.message())||!opened.model.getName().equals("character/npc/crew/model_kora.dat")||!opened.model.ld().get("Variant").equals("comlink")
                 ||!opened.userInterface.getName().equals(panel.userInterface().name())||!Objects.equals(opened.userInterface.ld().get("image"),image)||!opened.music.getName().equals("Custom/Mission/Comlink")||opened.responses.length!=panel.responses().size())throw new AssertionError("Native comlink panel differs: "+panel.id());
             for(int r=0;r<opened.responses.length;r++)if(!opened.responses[r].equals(panel.responses().get(r).text()))throw new AssertionError("Native choice differs");

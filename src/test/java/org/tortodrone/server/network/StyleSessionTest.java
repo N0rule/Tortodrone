@@ -11,6 +11,9 @@ import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.*;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.Currency;
 
 /** Native Use/applyStyle routing and atomic cosmetic ownership on disposable SQLite state. */
 public final class StyleSessionTest {
@@ -25,7 +28,7 @@ public final class StyleSessionTest {
             int bob=db.create("Bob",password,false);new CharacterStore(db,bob,"Bob",items).create(choices("Style-Bob"));
             for(String config:List.of("Upgrade/Eye/Almond","Upgrade/Eye/Happy","Upgrade/Height/Tall","Upgrade/Color/Amber"))
                 db.grantItems("Alice",knight.name(),-1,-1,items.require(config),2,-1,-1);
-            db.currency("Alice",knight.name(),account,-1,org.tortodrone.character.Currency.CROWNS,3000);
+            db.currency("Alice",knight.name(),account,-1,org.tortodrone.core.character.Currency.CROWNS,3000);
             var store=characters.styles();var initial=db.worldProfile(account,1,1);long almond=id(initial,"Upgrade/Eye/Almond");
             refused(()->store.change(account,1,-1,initial.revision(),almond,null));
             refused(()->store.change(account,1,99,initial.revision(),almond,null));

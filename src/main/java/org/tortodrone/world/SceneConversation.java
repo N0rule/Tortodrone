@@ -2,7 +2,8 @@ package org.tortodrone.world;
 
 import java.io.*;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Authored conversation graph; bindings and node jumps are prepared data, not guessed nodes. */
 public record SceneConversation(String actor,String name,String bundle,String initial,

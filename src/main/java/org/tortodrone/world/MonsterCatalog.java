@@ -5,9 +5,9 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import org.tortodrone.resources.ContentFiles;
-import org.tortodrone.resources.Json;
-import org.tortodrone.resources.Yaml;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.Yaml;
 
 /**
  * Generated monster type catalogue and the small hand-authored AI overlay.

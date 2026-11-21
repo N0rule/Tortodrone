@@ -4,7 +4,8 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Stock level-zero control modifiers for grantable items, keyed by item and weapon class. */
 public final class EquipmentCatalog {
@@ -47,8 +48,8 @@ public final class EquipmentCatalog {
     private final Map<String, Entry> entries;
     private Map<String,Float> stats=Map.of();
     public void stats(Map<String,Float> values){stats=Map.copyOf(values);}
-    private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
-    public void town(org.tortodrone.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
+    private org.tortodrone.core.town.TownCatalog town=org.tortodrone.core.town.TownCatalog.empty();
+    public void town(org.tortodrone.core.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
 
     public EquipmentCatalog(Collection<Entry> entries) {
         var map = new TreeMap<String, Entry>();

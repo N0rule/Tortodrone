@@ -2,7 +2,7 @@ package org.tortodrone.world;
 
 import java.util.*;
 import java.util.random.RandomGenerator;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 
 /** Allowlisted native Targeting with single or distance-weighted PathAttack choices. */
 public record SceneTargeting(float expansion,int evaluation,int interval,List<Mode> modes,int idleAttack,int monsterMask,boolean includePlayers) {

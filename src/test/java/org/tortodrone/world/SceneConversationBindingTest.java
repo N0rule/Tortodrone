@@ -2,8 +2,10 @@ package org.tortodrone.world;
 
 import java.io.IOException;
 import java.util.*;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.world.SceneConversation;
+import org.tortodrone.world.SceneActions;
 
 /** Content ownership distinguishes real placed NPCs from reachable scene-started conversations. */
 public final class SceneConversationBindingTest {

@@ -4,7 +4,8 @@ import java.io.*;
 import java.nio.channels.*;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.config.ServerSettings;
+import org.tortodrone.core.config.ServerSettings;
+import org.tortodrone.core.ContentFiles;
 
 /** Reviewable migration candidate only. Never changes source content, config, keys or SQLite. */
 public final class ContentMigration {

@@ -2,8 +2,9 @@ package org.tortodrone.world;
 
 import java.io.IOException;
 import java.util.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.world.SceneActions;
 
 /** Synthetic geometry isolates native subset addressing; original Generator export is checked separately. */
 public final class SceneNearestSignalTest {

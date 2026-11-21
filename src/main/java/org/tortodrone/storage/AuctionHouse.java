@@ -5,8 +5,13 @@ import java.sql.*;
 import java.util.*;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.SessionDecoder;
-import org.tortodrone.resources.Json;
-import org.tortodrone.town.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.town.*;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.town.AuctionState;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Durable auction escrow and mail settlement, atomically protected by SQLite's write lock. */
 public final class AuctionHouse {

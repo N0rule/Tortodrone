@@ -5,10 +5,13 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.character.Currency;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.character.Currency;
+import org.tortodrone.core.Json;
 import org.tortodrone.storage.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Constant catalogues and repeated item handles must share their persisted limit. */
 public final class ShopLimitTest {

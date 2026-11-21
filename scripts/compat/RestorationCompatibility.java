@@ -3,9 +3,10 @@ import java.util.*;
 import com.threerings.config.*;
 import com.threerings.opengl.model.config.*;
 import com.threerings.tudey.data.actor.Actor;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.world.*;
+import org.tortodrone.core.world.FireCatalog;
 
 
 /** Installed-client actor initialization and retained orbit-gun model skeletons. */

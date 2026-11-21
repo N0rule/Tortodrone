@@ -4,8 +4,22 @@ import java.io.*;
 import java.sql.*;
 import java.util.*;
 import org.tortodrone.character.*;
-import org.tortodrone.resources.Json;
-import org.tortodrone.town.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.town.*;
+import org.tortodrone.core.WireTypes;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.SlotUpgrades;
+import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.character.Currency;
+import org.tortodrone.core.character.AnimatedItems;
+import org.tortodrone.core.character.Confetti;
+import org.tortodrone.core.town.TownState;
+import org.tortodrone.core.town.GearRules;
+import org.tortodrone.core.town.SpriteRules;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Town inventory/progression mutations share the existing authenticated SQLite write transaction. */
 public final class TownStore {
@@ -364,8 +378,8 @@ public final class TownStore {
                 if(amount<0)throw new IOException("Crown grant must be nonnegative");
                 credit(c,p.worldId(),amount,0);
             }else if(method==44) {
-                org.tortodrone.character.KnightProgress progress;
-                try{progress=new org.tortodrone.character.KnightProgress((Integer)args.get(0),(Integer)args.get(1),p.progress().prestige());}
+                org.tortodrone.core.character.KnightProgress progress;
+                try{progress=new org.tortodrone.core.character.KnightProgress((Integer)args.get(0),(Integer)args.get(1),p.progress().prestige());}
                 catch(IllegalArgumentException invalid){throw new IOException("Rank must be 1–10 and subrank 1–4");}
                 try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")) {
                     st.setString(1,WorldProfiles.progressKey(p.worldId(),"rank"));st.setInt(2,progress.rank()*10+progress.subrank());st.executeUpdate();
@@ -712,7 +726,7 @@ public final class TownStore {
                     if(level>=99&&perkLevel>5)return null;
                     boolean grant=SpriteRules.grantsPerk(level);level=Math.min(99,level+1);heat=0;
                     if(grant&&perkLevel<=5){var candidates=new ArrayList<Integer>();for(int i=0;i<rules.perks().size();i++)if(rules.perks().get(i).tier()==perkLevel&&!perks.contains(i))candidates.add(i);
-                        if(!candidates.isEmpty()){int granted=candidates.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(candidates.size()));perks.add(granted);result=new org.tortodrone.protocol.SessionDecoder.EnumValue(org.tortodrone.protocol.WireTypes.SPRITE_PERK,granted);
+                        if(!candidates.isEmpty()){int granted=candidates.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(candidates.size()));perks.add(granted);result=new org.tortodrone.protocol.SessionDecoder.EnumValue(org.tortodrone.core.WireTypes.SPRITE_PERK,granted);
                             if(perk!=null&&rules.perks().get(granted).previous().equals(rules.perks().get(perk).name()))perk=granted;
                             int total=0;for(var candidate:rules.perks())if(candidate.tier()==perkLevel)total++;if(perks.size()==total){perkLevel++;perks.clear();}
                         }

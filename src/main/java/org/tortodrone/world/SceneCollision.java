@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.*;
 import java.util.*;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Immutable native static-collision metadata for projectile profiles. */
 public final class SceneCollision {

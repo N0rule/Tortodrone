@@ -10,11 +10,11 @@ import com.threerings.presents.net.EventNotification;
 import com.threerings.projectx.craft.data.CraftMarshaller;
 import com.threerings.presents.client.A;
 import com.threerings.projectx.data.ProjectXSceneMarshaller;
-import org.tortodrone.character.KnightProgress;
+import org.tortodrone.core.character.KnightProgress;
 import org.tortodrone.protocol.*;
-import org.tortodrone.town.TownCatalog;
-import org.tortodrone.character.ItemCatalog;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Current installed marshallers are the oracle: craft invocation, dialog close and reply wire layouts. */
 public final class CraftCompatibility {

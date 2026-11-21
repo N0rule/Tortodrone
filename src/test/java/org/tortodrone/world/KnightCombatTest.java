@@ -1,7 +1,7 @@
 package org.tortodrone.world;
 
 import java.util.*;
-import org.tortodrone.character.WorldProfile;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Bounded input/state regression. Timings are fixture data, never production defaults. */
 public final class KnightCombatTest {

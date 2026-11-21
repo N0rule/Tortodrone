@@ -2,6 +2,8 @@ import java.nio.file.*;
 import java.security.*;
 import java.util.*;
 import org.tortodrone.world.*;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Original content and isolated control-chain regression; never a full gameplay acceptance. */
 public final class CheckChasm {
@@ -39,7 +41,7 @@ public final class CheckChasm {
         world.advance(stamp+701,List.of());require(world.walkable(door.x(),door.y(),219),"First native doorway collision opens after animation");
         var lever=entry(world,"701");var other=entry(world,"2896");var gate=tag(world,"door 2a");
         require(world.specification(lever.id()).text("switch-mode","").equals("damage-once")&&world.specification(other.id()).text("switch-mode","").equals("damage-once"),"Both original one-time levers must accept native weapon damage");
-        var hit=new org.tortodrone.character.StarterCatalog.Model("DamageRegion",Map.of("shape",new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",.1f)),"damage",new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",2,"amount",1f))));
+        var hit=new org.tortodrone.core.character.StarterCatalog.Model("DamageRegion",Map.of("shape",new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",.1f)),"damage",new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",2,"amount",1f))));
         world.damage(hit,lever.x(),lever.y(),0,stamp+800,219);world.advance(stamp+800,List.of());require((tag(world,"door 2a").flags()&2)==0,"First lever leaves the second gate closed");
         world.damage(hit,lever.x(),lever.y(),0,stamp+2400,219);world.advance(stamp+2400,List.of());require((tag(world,"door 2a").flags()&2)==0&&entry(world,"701").entity().state()==1,"Repeated hits never replace the distinct second lever");
         world.damage(hit,other.x(),other.y(),0,stamp+2500,219);world.advance(stamp+2500,List.of());require((tag(world,"door 2a").flags()&6)==6,"Second distinct lever drives original marker 714 and opens its authored door");
@@ -50,6 +52,6 @@ public final class CheckChasm {
     }
     private static ActorState entry(SceneEntities world,String key){return world.actors().stream().filter(a->a.entity()!=null&&a.entity().key().equals(key)).findFirst().orElseThrow(()->new IllegalStateException("Missing original actor entry "+key));}
     private static ActorState tag(SceneEntities world,String tag){return world.actors().stream().filter(a->Arrays.asList(world.specification(a.id()).text("tags","").split(",")).contains(tag)).findFirst().orElseThrow(()->new IllegalStateException("Missing original tag "+tag));}
-    private static ActorState player(ActorState at,int stamp){return new ActorState(219,1001,"ControlFixture",0,stamp,at.x(),at.y(),0,0,0,new org.tortodrone.character.StarterCatalog.Model("Character/PC/Default",Map.of()));}
+    private static ActorState player(ActorState at,int stamp){return new ActorState(219,1001,"ControlFixture",0,stamp,at.x(),at.y(),0,0,0,new org.tortodrone.core.character.StarterCatalog.Model("Character/PC/Default",Map.of()));}
     private static void require(boolean valid,String message){if(!valid)throw new IllegalStateException(message);}
 }

@@ -1,7 +1,7 @@
 import java.io.*;
 import java.util.*;
 import org.tortodrone.protocol.*;
-import org.tortodrone.character.KnightObjective;
+import org.tortodrone.core.character.KnightObjective;
 import com.threerings.presents.net.*;
 import com.threerings.presents.dobj.*;
 import com.threerings.projectx.data.*;

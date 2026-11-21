@@ -6,6 +6,9 @@ import org.tortodrone.character.*;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.DepotSeed;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.KnightProgress;
+import org.tortodrone.core.town.DepotGate;
 
 /** Supply Depot rank availability and the plain default catalogue. */
 public final class DepotGateTest {

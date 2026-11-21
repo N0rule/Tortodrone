@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import org.tortodrone.server.ItemCommands;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Derived identity must be independent of exporter ordering and preserve grant boundaries. */
 public final class ItemIdentityTest {

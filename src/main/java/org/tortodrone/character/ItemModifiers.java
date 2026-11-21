@@ -2,7 +2,8 @@ package org.tortodrone.character;
 
 import java.io.IOException;
 import java.util.List;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
+import org.tortodrone.core.character.ItemCatalog;
 
 /** Explicit local-admin gear state. Levels are stored zero-based; heat is a fraction. */
 public record ItemModifiers(int level,float heat,List<String> variants) {

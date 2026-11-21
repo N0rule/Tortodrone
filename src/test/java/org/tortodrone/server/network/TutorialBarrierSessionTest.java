@@ -12,6 +12,7 @@ import org.tortodrone.storage.Database;
 import org.tortodrone.support.ContentFixture;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
 
 /** Real Crash Site breakable-barrier combat: first wall of the authored exit corridor.
  * Verified against the stock flow: movement stops at the barrier, sword attacks destroy

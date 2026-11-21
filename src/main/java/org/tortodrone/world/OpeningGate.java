@@ -3,7 +3,7 @@ package org.tortodrone.world;
 import java.io.IOException;
 import java.security.*;
 import java.util.*;
-import org.tortodrone.character.OpeningMission;
+import org.tortodrone.core.character.OpeningMission;
 
 /** Allowlisted opening gate evidence. Runtime ownership is separate from scene template IDs. */
 public record OpeningGate(OpeningMission mission,int id,SceneCatalog.MapScene source,SceneCatalog.MapScene destination) {

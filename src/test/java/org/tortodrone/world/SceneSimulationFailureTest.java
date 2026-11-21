@@ -1,7 +1,7 @@
 package org.tortodrone.world;
 
 import java.util.Map;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 import static org.tortodrone.support.TestWire.check;
 
 /** Disposable scheduler fault, independent of native assets and player data. */

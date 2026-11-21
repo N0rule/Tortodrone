@@ -3,7 +3,7 @@ import java.util.*;
 import com.threerings.config.*;
 import com.threerings.tudey.data.TudeySceneModel;
 import com.threerings.tudey.config.PlaceableConfig;
-import org.tortodrone.resources.Json;
+import org.tortodrone.core.Json;
 
 /** Read-only authored entry/handler inspection, not a scene-playability checker. */
 public final class SceneEntryInspect {

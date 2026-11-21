@@ -5,7 +5,14 @@ import java.util.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.*;
 import org.tortodrone.server.ServerControl;
-import org.tortodrone.town.*;
+import org.tortodrone.core.town.*;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
+import org.tortodrone.core.character.SlotUpgrades;
+import org.tortodrone.core.town.TownState;
+import org.tortodrone.core.town.SpriteRules;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Read-only presentation facts. Mutable state continues to belong to domain services. */
 final class AdminViews {

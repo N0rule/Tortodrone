@@ -8,6 +8,9 @@ import org.tortodrone.character.*;
 import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.resources.ContentManager;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.Currency;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Native harness prerequisites, GM perk progression, ownership and refused-payment rollback. */
 public final class SpriteServicesTest {
@@ -32,7 +35,7 @@ public final class SpriteServicesTest {
             check(town.availability(gm,1,1,station,0).get(base)==1&&town.availability(gm,1,1,station,0).get(advanced)==0,"merchant requires the native predecessor");
             var denied=db.worldProfile(gm,1,1);var failures=new ArrayList<Boolean>();db.observe((operation,millis,failed)->{if(operation.equals("write"))failures.add(failed);});
             refused(()->town.installHarnesses(gm,1,1,station,0,Set.of(base)));check(db.worldProfile(gm,1,1).equals(denied)&&failures.equals(List.of(false)),"insufficient funds rolls back without a database failure warning");
-            db.currency("Alice","Alice-Knight",gm,-1,org.tortodrone.character.Currency.CROWNS,200000);
+            db.currency("Alice","Alice-Knight",gm,-1,org.tortodrone.core.character.Currency.CROWNS,200000);
             var bought=town.installHarnesses(gm,1,1,station,0,Set.of(base)).profile();long harness=bought.town().harnesses().getFirst().id();
             check(bought.crowns()==192000,"base harness charges 8000 crowns");refused(()->town.installHarnesses(gm,1,1,station,0,Set.of(base)));refused(()->town.installHarnesses(gm,1,1,station,0,Set.of(elite)));
             town.sprite(gm,1,1,5,List.of(sprite.id(),harness),true);
@@ -43,7 +46,7 @@ public final class SpriteServicesTest {
             System.out.println("PASS: native harness catalogue/prerequisites/prices/upgrades, GM perk progression, ownership, restart and expected purchase rollback logging");
         }finally{org.tortodrone.support.ContentFixture.delete(root);}
     }
-    private static int index(List<org.tortodrone.town.TownCatalog.Good> goods,org.tortodrone.resources.ContentRegistry content,String config){for(int i=0;i<goods.size();i++)if(config.equals(content.town().item(goods.get(i).item()).get("harness")))return i;throw new AssertionError(config);}
+    private static int index(List<org.tortodrone.core.town.TownCatalog.Good> goods,org.tortodrone.resources.ContentRegistry content,String config){for(int i=0;i<goods.size();i++)if(config.equals(content.town().item(goods.get(i).item()).get("harness")))return i;throw new AssertionError(config);}
     private interface Work{void run()throws Exception;}
     private static void refused(Work work)throws Exception{try{work.run();throw new AssertionError("Expected refusal");}catch(IOException expected){}}
 }

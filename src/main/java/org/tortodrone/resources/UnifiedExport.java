@@ -5,8 +5,11 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.zip.ZipFile;
 import org.tortodrone.world.*;
-import org.tortodrone.config.ServerSettings;
-import static org.tortodrone.resources.Yaml.*;
+import org.tortodrone.core.config.ServerSettings;
+import static org.tortodrone.core.Yaml.*;
+import org.tortodrone.core.Json;
+import org.tortodrone.core.ContentFiles;
+import org.tortodrone.core.world.FireCatalog;
 
 /** Explicit conversion of already validated legacy resources. No player state is read or written. */
 final class UnifiedExport {

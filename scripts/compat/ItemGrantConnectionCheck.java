@@ -5,6 +5,9 @@ import com.threerings.presents.dobj.*;
 import com.threerings.projectx.item.data.*;
 import com.threerings.crowd.chat.data.SystemMessage;
 import org.tortodrone.character.*;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Actual stock speak/equip readers and DSet observer callbacks, with disposable accounts only. */
 public final class ItemGrantConnectionCheck {
@@ -90,7 +93,7 @@ public final class ItemGrantConnectionCheck {
                 if(java.util.stream.StreamSupport.stream(player.player.items.spliterator(),false).anyMatch(i->i.VA()==recipe.VA()))throw new AssertionError("Removed recipe remains in client inventory");
                 tools.grantItems("ItemPlayer","Grant-Knight","Recipe/Sword/Calibur Recipe",1,stored.accountId(),stored.worldId());
                 WorldConnectionCheck.waitFor(()->player.player.items.size()==10);
-                for(var slot:List.of(org.tortodrone.character.WorldProfile.Slot.ARMOR_COSTUME,org.tortodrone.character.WorldProfile.Slot.SHIELD_COSTUME)) {
+                for(var slot:List.of(org.tortodrone.core.character.WorldProfile.Slot.ARMOR_COSTUME,org.tortodrone.core.character.WorldProfile.Slot.SHIELD_COSTUME)) {
                     var definition=tools.catalog().entries().stream().filter(e->e.slot()==slot&&e.grantable()).findFirst().orElseThrow();
                     int beforeCount=player.player.items.size();tools.grantItems("ItemPlayer","Grant-Knight",definition.config(),1,-1,-1);
                     WorldConnectionCheck.waitFor(()->player.player.items.size()==beforeCount+1);
@@ -111,14 +114,14 @@ public final class ItemGrantConnectionCheck {
                     if(reEquip.reason!=null)throw new AssertionError("Costume re-equip refused");
                 }
                 var currentKnight=tools.knights("ItemPlayer").stream().filter(k->k.name().equals("Grant-Knight")).findFirst().orElseThrow();
-                var appearance=WorldCompatibility.reference(org.tortodrone.character.StarterCatalog.town(currentKnight,tools.worldProfile("ItemPlayer","Grant-Knight"),tools.catalog()));
+                var appearance=WorldCompatibility.reference(org.tortodrone.core.character.StarterCatalog.town(currentKnight,tools.worldProfile("ItemPlayer","Grant-Knight"),tools.catalog()));
                 WorldConnectionCheck.waitFor(()->appearance.equals(player.actor.Mv().kW().get("Model")));
             }
             try(var reconnect=new GameMasterConnectionCheck.Endpoint(args,queue,"ItemPlayer","Grant-Knight")) {
                 if(reconnect.player.items.size()!=12||find(reconnect,"Material/Brimstone").getCount()!=10||(reconnect.player.equipment[3]==0||reconnect.player.equipment[4]==0||reconnect.player.equipment[15]==0)||!WorldConnectionCheck.bound(reconnect.player,reconnect.player.equipment[6]))throw new AssertionError("Reconnect lost owned grant/binding/loadout");
                 // The picker renders the AvailableKnight model verbatim; it must show the current outfit, not the creation one.
                 var knight=tools.knights("ItemPlayer").stream().filter(k->k.name().equals("Grant-Knight")).findFirst().orElseThrow();
-                var expected=WorldCompatibility.reference(org.tortodrone.character.StarterCatalog.equipped(knight,tools.worldProfile("ItemPlayer","Grant-Knight"),tools.catalog()));
+                var expected=WorldCompatibility.reference(org.tortodrone.core.character.StarterCatalog.equipped(knight,tools.worldProfile("ItemPlayer","Grant-Knight"),tools.catalog()));
                 var actual=Arrays.stream(reconnect.player.availableKnights)
                     .filter(entry->entry.name.toString().equals("Grant-Knight")).findFirst().orElseThrow().model;
                 if(!actual.equals(expected))

@@ -7,6 +7,10 @@ import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.storage.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.Currency;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Upgrade transfer and post-debit rollback on real, disposable SQLite inventory. */
 public final class CraftTransferTest {
@@ -18,7 +22,7 @@ public final class CraftTransferTest {
             var rules=TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
             new CharacterStore(db,account,"Crafter",items).create(new Knight(0,"Craft-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0));
             var store=new TownStore(db,items,rules);var recipe=rules.recipe("Armor/Dusker Coat");
-            db.setCurrency("Crafter","Craft-Knight",account,-1,org.tortodrone.character.Currency.CROWNS,100000);
+            db.setCurrency("Crafter","Craft-Knight",account,-1,org.tortodrone.core.character.Currency.CROWNS,100000);
             var ids=new ArrayList<Long>();long precursor=0;
             for(var i:recipe.ingredients()) {
                 db.grantItems("Crafter","Craft-Knight",account,-1,items.require(i.item()),i.count(),-1,-1);

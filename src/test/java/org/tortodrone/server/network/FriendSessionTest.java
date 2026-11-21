@@ -12,6 +12,9 @@ import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.*;
 import org.tortodrone.world.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.town.TownCatalog;
 
 /** Actual native social IDs, authenticated friend travel and private/transition isolation. */
 public final class FriendSessionTest {
@@ -117,7 +120,7 @@ public final class FriendSessionTest {
     private static Object field(Object object,String name)throws Exception{var f=object.getClass().getDeclaredField(name);f.setAccessible(true);return f.get(object);}
     private static PartyRegistry.Member partyMember(WorldSession world)throws Exception{return (PartyRegistry.Member)field(world,"partyMember");}
     private static void await(java.util.function.BooleanSupplier ready)throws Exception{long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);while(System.nanoTime()<end){if(ready.getAsBoolean())return;Thread.sleep(20);}throw new AssertionError("Party presence did not refresh");}
-    private static void befriend(Person requester,Person target,String targetName,org.tortodrone.town.TownCatalog town)throws Exception{
+    private static void befriend(Person requester,Person target,String targetName,org.tortodrone.core.town.TownCatalog town)throws Exception{
         requester.world.friendInvocation(new SessionDecoder.Invocation(3,12,1,List.of(targetName,"Hello","Friend request",confirm())));
         var profile=target.chars.worldProfile(targetName,1);var mail=profile.town().mail().getFirst();
         target.chars.auction(town).mail(profile.accountId(),profile.knightId(),1,2,List.of(mail.id()));

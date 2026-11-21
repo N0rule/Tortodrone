@@ -3,7 +3,7 @@ package org.tortodrone.world;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.world.*;
-import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Real original scene/encounter fixture; pawn starts at the native ambush strip. */
 public class TutorialSquadCompatibility {

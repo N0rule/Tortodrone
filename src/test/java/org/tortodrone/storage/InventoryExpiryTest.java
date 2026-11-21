@@ -6,8 +6,12 @@ import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
 import org.tortodrone.resources.*;
-import org.tortodrone.town.TownCatalog;
+import org.tortodrone.core.town.TownCatalog;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.SlotUpgrades;
 
 /** Timed box prizes retain their absolute deadline through persistence and ownership changes. */
 public final class InventoryExpiryTest {

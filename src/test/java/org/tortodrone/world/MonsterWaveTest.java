@@ -2,6 +2,7 @@ package org.tortodrone.world;
 
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.world.FireCatalog;
 
 /**
  * Phase 7 wave controller contract: concurrency, total, per-tick spawn cap, generation drop and

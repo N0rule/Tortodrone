@@ -7,6 +7,10 @@ import java.util.concurrent.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.*;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.OpeningMission;
 
 /** Transaction tests only; no claim of a completed gameplay playthrough. */
 public final class TutorialCompletionTest {

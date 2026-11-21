@@ -7,6 +7,8 @@ import org.tortodrone.character.*;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
 
 /** Formerly unsupported native gear now grants and equips in its real inventory slot. */
 public final class GearSupportTest {

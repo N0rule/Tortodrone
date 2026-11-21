@@ -8,6 +8,10 @@ import com.threerings.presents.dobj.*;
 import com.threerings.projectx.data.*;
 import com.threerings.projectx.town.data.TownSceneObject;
 import com.threerings.tudey.dobj.*;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.character.StarterCatalog;
 
 /** Optional independent reader fixture using the read-only installed client. */
 public final class WorldCompatibility {
@@ -26,7 +30,7 @@ public final class WorldCompatibility {
                 throw new AssertionError("Stock login rejection code/identity mismatch");
         }
         System.out.println("PASS: stock authentication reader preserves distinct unknown-user/password errors without client identity changes");
-        var knight=new org.tortodrone.character.Knight(1,"World-Knight","Gear/Helm/Spiral Sallet (Blue)",
+        var knight=new org.tortodrone.core.character.Knight(1,"World-Knight","Gear/Helm/Spiral Sallet (Blue)",
             "Gear/Armor/Spiral Culet (Blue)","Helm/Top/Headband/Headband",null,"Blue",1,2,0,1);
         var items=List.of(
             new WorldProfile.Item(1,WorldProfile.Slot.HELM,knight.helm(),knight.helmAccessory(),0,0),
