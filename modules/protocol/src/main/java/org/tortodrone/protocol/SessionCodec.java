@@ -119,28 +119,17 @@ public final class SessionCodec {
     public static final int MAX_DOWNSTREAM_FRAME = 1024 * 1024;
     public static final int TCP_MESSAGES_PER_SECOND = 100;
     private static final String PREFIX = WireTypes.NET_PREFIX;
-    private final Map<String, Integer> classes = new HashMap<>();
-    private final Map<String, Integer> interns = new HashMap<>();
-    /** Template mode records symbol positions instead of registering per-connection codes. */
-    private boolean templating;
-    private ArrayList<org.tortodrone.core.world.SceneFrame.Symbol> templateTypes, templateInterns;
-    /** Resolved codes for the template being published this tick; one entry is enough because a
-     * recipient materializes the same frame repeatedly before the next tick replaces it. */
-    private org.tortodrone.core.world.SceneFrame resolvedFrame;
-    private int[] resolvedCodes;
+    /** Per-connection class and intern tables shared by every feature codec. */
+    private final WireContext context = new WireContext();
     private final ItemCatalog itemCatalog;
     public SessionCodec(){this(ItemCatalog.starter());}
     /** Shared server catalogue; scene templates use it without a connection registry. */
     public ItemCatalog catalog(){return itemCatalog;}
     public SessionCodec(ItemCatalog catalog) {
         itemCatalog=java.util.Objects.requireNonNull(catalog);
-        // HandshakeCodec has already introduced these five downstream mappings.
-        classes.put(PREFIX + "SecureResponse", 1);
-        classes.put(PREFIX + "AuthResponseData", 2);
-        classes.put(PREFIX + "AuthResponse", 3);
-        classes.put("com.threerings.projectx.data.ProjectXAuthResponseData", 4);
-        classes.put(WireTypes.NAME, 5);
     }
+    /** Shared symbol tables and template materialization for this connection. */
+    public WireContext context(){return context;}
 
     public byte[] bootstrap(int connectionId, int clientOid, String host, int port) throws IOException {
         if (connectionId <= 0 || clientOid <= 0 || port < 1 || port > 65535 || host == null || host.isBlank()) {
@@ -647,12 +636,7 @@ public final class SessionCodec {
     }
 
     private void intern(DataOutputStream out, String value) throws IOException {
-        if(templating){templateInterns.add(new org.tortodrone.core.world.SceneFrame.Symbol(out.size(),value));out.writeShort(0);return;}
-        Integer code = interns.get(value);
-        if (code == null) {
-            code = interns.size() + 1; interns.put(value, code);
-            out.writeShort(-code); out.writeUTF(value);
-        } else out.writeShort(code);
+        context.intern(out,value);
     }
 
     public byte[] selected(int oid, Knight knight, WorldProfile profile) throws IOException {
@@ -1390,7 +1374,7 @@ public final class SessionCodec {
             List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline,
             boolean interior,List<SceneEffect> effects,List<SceneCombatEvent> combat)throws IOException {
         var codec=new SessionCodec(catalog);
-        codec.templateTypes=new ArrayList<>();codec.templateInterns=new ArrayList<>();codec.templating=true;
+        codec.context.beginTemplate();
         try{
             var body=new ByteArrayOutputStream(4096);
             var out=new DataOutputStream(body);
@@ -1410,9 +1394,9 @@ public final class SessionCodec {
             template[0]=(byte)(total>>>24);template[1]=(byte)(total>>>16);template[2]=(byte)(total>>>8);template[3]=(byte)total;
             System.arraycopy(body.toByteArray(),0,template,4,body.size());
             return new org.tortodrone.core.world.SceneFrame(template,4+oidOffset,4+acknowledgeOffset,4+pingOffset,
-                4+referenceOffset,4+elapsedOffset,shift(codec.templateTypes),shift(codec.templateInterns));
+                4+referenceOffset,4+elapsedOffset,shift(codec.context.templateTypes()),shift(codec.context.templateInterns()));
         } finally {
-            codec.templating=false;codec.templateTypes=null;codec.templateInterns=null;
+            codec.context.endTemplate();
         }
     }
     /** Frame body offsets become frame offsets once the four-byte length prefix is prepended. */
@@ -1426,25 +1410,7 @@ public final class SessionCodec {
      * which also registers them for later ticks. Called with the encoder's output lock held, so
      * the symbol maps cannot change underneath it. */
     public byte[] materialize(org.tortodrone.core.world.SceneFrame frame,int oid,int acknowledge,short ping,int reference,short elapsed){
-        if(frame==null)return null;
-        int[] codes;
-        if(resolvedFrame==frame)codes=resolvedCodes;
-        else{
-            codes=new int[frame.types().size()+frame.interns().size()];
-            int index=0;
-            for(var symbol:frame.types()){var code=classes.get(symbol.name());if(code==null)return null;codes[index++]=code;}
-            for(var symbol:frame.interns()){var code=interns.get(symbol.name());if(code==null)return null;codes[index++]=code;}
-            resolvedFrame=frame;resolvedCodes=codes;
-        }
-        byte[] data=frame.template().clone();
-        integer(data,frame.oidOffset(),oid);integer(data,frame.acknowledgeOffset(),acknowledge);
-        data[frame.pingOffset()]=(byte)(ping>>>8);data[frame.pingOffset()+1]=(byte)ping;
-        integer(data,frame.referenceOffset(),reference);
-        data[frame.elapsedOffset()]=(byte)(elapsed>>>8);data[frame.elapsedOffset()+1]=(byte)elapsed;
-        int index=0;
-        for(int i=0;i<frame.types().size();i++)shortValue(data,frame.types().get(i).offset(),codes[index++]);
-        for(int i=0;i<frame.interns().size();i++)shortValue(data,frame.interns().get(i).offset(),codes[index++]);
-        return data;
+        return context.materialize(frame,oid,acknowledge,ping,reference,elapsed);
     }
     private static void integer(byte[] data,int at,int value){
         data[at]=(byte)(value>>>24);data[at+1]=(byte)(value>>>16);data[at+2]=(byte)(value>>>8);data[at+3]=(byte)value;
@@ -1977,16 +1943,7 @@ public final class SessionCodec {
     }
 
     void type(DataOutputStream out, String name) throws IOException {
-        if(templating){templateTypes.add(new org.tortodrone.core.world.SceneFrame.Symbol(out.size(),name));out.writeShort(0);return;}
-        Integer code = classes.get(name);
-        if (code != null) {
-            out.writeShort(code);
-        } else {
-            int next = classes.size() + 1;
-            out.writeShort(-next);
-            out.writeUTF(name);
-            classes.put(name, next);
-        }
+        context.type(out,name);
     }
 
     private static byte[] frame(Writer writer) throws IOException {
