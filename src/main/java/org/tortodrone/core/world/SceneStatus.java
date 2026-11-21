@@ -1,4 +1,5 @@
 package org.tortodrone.core.world;
+import org.tortodrone.world.SceneClock;
 
 import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
@@ -220,19 +221,19 @@ public final class SceneStatus {
         var finished=new ArrayList<StarterCatalog.Model>();
         for(var iterator=active.entrySet().iterator();iterator.hasNext();){var entry=iterator.next();var a=entry.getValue();
             if(entry.getKey().equals("Fire")&&moving)a.expires-=(int)(elapsed*.25f);
-            if(stamp>=a.expires){iterator.remove();queueAction(a,"finished-action");if(entry.getKey().equals("Sleep")&&SceneDamage.field(a.data,"finishedStatus") instanceof StarterCatalog.Model ref)finished.add(ref);if(monster&&entry.getKey().equals("Freeze"))damage.accept(lerp(scale(a,"damageStart"),scale(a,"damageEnd"),a.strength));continue;}
-            if(SceneDamage.number(a.data,"signalInterval",0)>0&&stamp>=a.nextSignal){queueAction(a,"signal-action");a.nextSignal=stamp+Math.max(1,(int)SceneDamage.number(a.data,"signalInterval",0));}
-            if(entry.getKey().equals("Shield")&&stamp>=a.nextTick){a.shield+=(int)Math.ceil(scale(a,"healScale"));a.nextTick=stamp+Math.max(1,(int)SceneDamage.number(a.data,"healthRegenInterval",500));}
-            if(entry.getKey().equals("Fire")&&stamp>=a.nextTick){damage.accept(lerp(scale(a,"damageStart"),scale(a,"damageEnd"),a.strength));a.nextTick=stamp+Math.max(1,(int)SceneDamage.number(a.data,"damageInterval",2000));
+            if(SceneClock.reached(stamp,a.expires)){iterator.remove();queueAction(a,"finished-action");if(entry.getKey().equals("Sleep")&&SceneDamage.field(a.data,"finishedStatus") instanceof StarterCatalog.Model ref)finished.add(ref);if(monster&&entry.getKey().equals("Freeze"))damage.accept(lerp(scale(a,"damageStart"),scale(a,"damageEnd"),a.strength));continue;}
+            if(SceneDamage.number(a.data,"signalInterval",0)>0&&SceneClock.reached(stamp,a.nextSignal)){queueAction(a,"signal-action");a.nextSignal=stamp+Math.max(1,(int)SceneDamage.number(a.data,"signalInterval",0));}
+            if(entry.getKey().equals("Shield")&&SceneClock.reached(stamp,a.nextTick)){a.shield+=(int)Math.ceil(scale(a,"healScale"));a.nextTick=stamp+Math.max(1,(int)SceneDamage.number(a.data,"healthRegenInterval",500));}
+            if(entry.getKey().equals("Fire")&&SceneClock.reached(stamp,a.nextTick)){damage.accept(lerp(scale(a,"damageStart"),scale(a,"damageEnd"),a.strength));a.nextTick=stamp+Math.max(1,(int)SceneDamage.number(a.data,"damageInterval",2000));
                 if(Math.random()<.3f+a.strength&&SceneDamage.field(a.data,"fireSpread") instanceof FireCatalog.DataValue spread&&SceneDamage.field(spread,"statusCondition") instanceof StarterCatalog.Model ref){
                     var args=new HashMap<>(ref.arguments());args.put("Power",parameter(a.reference,"Power",a.spec.number("effective-power",0),"Status Power","status-power.")*.75f);
                     var fields=new ArrayList<FireCatalog.FieldValue>();for(var f:spread.fields())fields.add(f.name().equals("statusCondition")?new FireCatalog.FieldValue(f.name(),f.type(),new StarterCatalog.Model(ref.name(),args)):f);
                     pulses.add(new Pulse(new FireCatalog.DataValue(spread.type(),fields),.5f,129));
                 }}
-            if(entry.getKey().equals("Sleep")&&stamp>=a.nextTick){heal.accept(monster?parameter(a,"minHealthRegen","maxHealthRegen"):parameter(a,"minPlayerHealthRegen","maxPlayerHealthRegen"));a.nextTick=stamp+Math.max(1,(int)SceneDamage.number(a.data,"healthRegenInterval",2000));}
+            if(entry.getKey().equals("Sleep")&&SceneClock.reached(stamp,a.nextTick)){heal.accept(monster?parameter(a,"minHealthRegen","maxHealthRegen"):parameter(a,"minPlayerHealthRegen","maxPlayerHealthRegen"));a.nextTick=stamp+Math.max(1,(int)SceneDamage.number(a.data,"healthRegenInterval",2000));}
             if(entry.getKey().equals("Shock")){
-                if(a.shockUntil>0&&stamp>=a.shockUntil){a.shockUntil=0;a.nextShock=stamp+(int)lerp(SceneDamage.number(a.data,"minSpasmInterval",1000),SceneDamage.number(a.data,"maxSpasmInterval",4000),(float)Math.random());}
-                if(a.shockUntil==0&&stamp>=a.nextShock){a.shockUntil=stamp+Math.max(1,(int)parameter(a,"minSpasmDuration","maxSpasmDuration"));a.nextShock=a.shockUntil;
+                if(a.shockUntil>0&&SceneClock.reached(stamp,a.shockUntil)){a.shockUntil=0;a.nextShock=stamp+(int)lerp(SceneDamage.number(a.data,"minSpasmInterval",1000),SceneDamage.number(a.data,"maxSpasmInterval",4000),(float)Math.random());}
+                if(a.shockUntil==0&&SceneClock.reached(stamp,a.nextShock)){a.shockUntil=stamp+Math.max(1,(int)parameter(a,"minSpasmDuration","maxSpasmDuration"));a.nextShock=a.shockUntil;
                     Object arc=SceneDamage.field(a.data,monster?"monsterArcDamage":"arcDamage");if(arc instanceof FireCatalog.DataValue)pulses.add(new Pulse(arc,SceneDamage.number(a.data,"arcExpand",1),(int)SceneDamage.number(a.data,"arcCollisionMask",1)));}
             }
         }

@@ -225,13 +225,13 @@ public final class SceneSimulation {
         }
         private void advancePet(int stamp){
             if(sprite==null||instance.map().town())return;
-            if(petSkill!=0&&stamp>=petClear){petSkill=0;petStarted=petClear;}
-            else if(petSkill!=0&&stamp>=petRearm)petFollow=true;
+            if(petSkill!=0&&SceneClock.reached(stamp,petClear)){petSkill=0;petStarted=petClear;}
+            else if(petSkill!=0&&SceneClock.reached(stamp,petRearm))petFollow=true;
             int input=(movement.inputFlags()&InputBits.SPRITE_SKILL_MASK)>>>InputBits.SPRITE_SKILL_SHIFT;
             if(input==0){lastSkillInput=0;return;}
             if(input==lastSkillInput||petSkill!=0||!health.alive())return;
             lastSkillInput=input;int skill=input-1;
-            if(!org.tortodrone.core.town.SpriteRules.unlocked(sprite.level(),skill)||stamp<nextSkill[skill])return;
+            if(!org.tortodrone.core.town.SpriteRules.unlocked(sprite.level(),skill)||SceneClock.before(stamp,nextSkill[skill]))return;
             var def=town.sprite(sprite.config());if(def==null||skill>=def.skills().size())return;
             var ability=def.skills().get(skill);String name=ability.attacks().get(sprite.ultimates().get(skill));
             String damage=town.harnessDamage(harness==null?"Iron Harness":harness.config());if(damage==null)damage="NORMAL";
@@ -809,7 +809,7 @@ public final class SceneSimulation {
                 if(member.health.status().modifiers().shocked()&&member.lift!=0){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
                 if(member.pendingItem!=0){
                     if(member.movement.activity()!=TownMovement.USE_ITEM){member.pendingItem=0;member.itemSpec=null;}
-                    else if(stamp>=member.itemLand){
+                    else if(SceneClock.reached(stamp,member.itemLand)){
                         boolean used;
                         if(member.itemSpec.integer("heal",0)>0){
                             used=member.health.heal(member.itemSpec.integer("heal",0));
@@ -831,7 +831,7 @@ public final class SceneSimulation {
                     }
                 }
                 member.movement.advance(stamp,now);
-                if(member.dropAt>0&&stamp>=member.dropAt){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
+                if(member.dropAt>0&&SceneClock.reached(stamp,member.dropAt)){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
                 member.portal=member.movement.portal();member.advancePet(stamp);
             }
             var players=members.values().stream().filter(m->m.entered).map(Membership::actor).toList();

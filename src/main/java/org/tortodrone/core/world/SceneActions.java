@@ -1,4 +1,5 @@
 package org.tortodrone.core.world;
+import org.tortodrone.world.SceneClock;
 
 import java.io.IOException;
 import java.util.*;
@@ -362,7 +363,7 @@ public final class SceneActions {
     /** Equal-time actions retain authored order; overdue work executes on the current scene tick. */
     public void advance(int stamp){
         if(closed)return;
-        if(advanced&&stamp<lastAdvanced)throw new IllegalArgumentException("Scene action clock moved backwards");
+        if(advanced&&SceneClock.before(stamp,lastAdvanced))throw new IllegalArgumentException("Scene action clock moved backwards");
         int[] budget={MAX_PER_TICK};
         drain(stamp,budget);
         if(!advanced||stamp!=lastAdvanced){

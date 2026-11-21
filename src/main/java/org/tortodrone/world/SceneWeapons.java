@@ -189,7 +189,7 @@ public final class SceneWeapons {
                     if(fired>=cutoff){run.done[i]=true;continue;}
                     if(ref.action().kind()==FireCatalog.Kind.SWEEP_DAMAGE){
                         float c=(float)Math.cos(pose.rotation),s=(float)Math.sin(pose.rotation);
-                        if(stamp<cutoff&&targets!=null)targets.sweep(pose.region(ref.action()),pose.x+ref.action().x()*c-ref.action().y()*s,pose.y+ref.action().x()*s+ref.action().y()*c,pose.rotation,stamp,pose.ownerId,run.hit);
+                        if(SceneClock.before(stamp,cutoff)&&targets!=null)targets.sweep(pose.region(ref.action()),pose.x+ref.action().x()*c-ref.action().y()*s,pose.y+ref.action().x()*s+ref.action().y()*c,pose.rotation,stamp,pose.ownerId,run.hit);
                     }else execute(ref.action(),pose,ref.advance()?Math.max(fired,lastStamp):fired,0,fired);
                     run.loops[i]++;
                     if(refractory<=0)run.done[i]=true;

@@ -1,6 +1,7 @@
 package org.tortodrone.core.world;
 
 import java.util.*;
+import org.tortodrone.world.SceneClock;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.character.DungeonGear;
@@ -71,8 +72,8 @@ public final class SceneHealth {
     }
     public State state(){return new State(current,maximum,bonus,(emergencyRevive?1:0)|(emergencyAt!=0?8:0));}
     public boolean alive(){return current>0;}
-    public boolean invulnerable(int stamp){return stamp<invulnerableUntil;}
-    public void protectEntry(int stamp){if(alive())invulnerableUntil=Math.max(invulnerableUntil,stamp+ENTRY_PROTECTION_MILLIS);}
+    public boolean invulnerable(int stamp){return SceneClock.before(stamp,invulnerableUntil);}
+    public void protectEntry(int stamp){if(alive())invulnerableUntil=invulnerableUntil==0?stamp+ENTRY_PROTECTION_MILLIS:SceneClock.later(invulnerableUntil,stamp+ENTRY_PROTECTION_MILLIS);}
     /** Native DungeoneerLogic.INITIAL_INVULNERABILITY: five seconds of spawn protection
      * armed by finishedLoading when the client's first input ends the loading pose. */
     public static final int INITIAL_INVULNERABILITY_MILLIS = 5000;
@@ -83,7 +84,7 @@ public final class SceneHealth {
     public static final int SPARK_REVIVE_PROTECTION_MILLIS = 2000;
     public static final int EMERGENCY_REVIVE_PROTECTION_MILLIS = 5000;
     public static final int EMERGENCY_REVIVE_DELAY_MILLIS = 5000;
-    public void protectLoading(int stamp){if(alive())invulnerableUntil=Math.max(invulnerableUntil,stamp+INITIAL_INVULNERABILITY_MILLIS);}
+    public void protectLoading(int stamp){if(alive())invulnerableUntil=invulnerableUntil==0?stamp+INITIAL_INVULNERABILITY_MILLIS:SceneClock.later(invulnerableUntil,stamp+INITIAL_INVULNERABILITY_MILLIS);}
     /** Archive emergency revive: five-second delay and five seconds of invulnerability. */
     private void died(int stamp){if(!alive()){status.clear();if(emergencyRevive&&emergencyAt==0)emergencyAt=stamp+EMERGENCY_REVIVE_DELAY_MILLIS;
         else if(!emergencyRevive&&emergencyAt==0&&tutorialRespawn&&respawnAt==0)respawnAt=stamp+TUTORIAL_RESPAWN_MILLIS;}}
@@ -127,8 +128,8 @@ public final class SceneHealth {
     public boolean heal(int amount){amount=(int)Math.ceil(amount*status.state().modifiers().heal());if(amount<=0||current==0||current==maximum)return false;current=Math.min(maximum,current+amount);return true;}
     public void advance(int stamp,int elapsed,boolean moving){
         if(!alive()){
-            if(emergencyAt!=0&&stamp>=emergencyAt){emergencyRevive=false;revive(stamp);invulnerableUntil=stamp+EMERGENCY_REVIVE_PROTECTION_MILLIS;}
-            else if(respawnAt!=0&&stamp>=respawnAt){
+            if(emergencyAt!=0&&SceneClock.reached(stamp,emergencyAt)){emergencyRevive=false;revive(stamp);invulnerableUntil=stamp+EMERGENCY_REVIVE_PROTECTION_MILLIS;}
+            else if(respawnAt!=0&&SceneClock.reached(stamp,respawnAt)){
                 current=Math.min(maximum,TUTORIAL_RESPAWN_HEALTH);status.clear();respawnAt=0;quietRevival=true;
             }
             return;

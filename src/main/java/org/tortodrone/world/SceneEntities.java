@@ -735,7 +735,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 if(e.trip!=null)cancelElevator(e.trip,stamp);
                 // Monster destroyed time already includes the native death animation.
                 // Retain one short publication grace, rather than counting it twice.
-                if(e.scriptDestroyed?stamp>e.destroyed:stamp-e.destroyed>=100){
+                if(e.scriptDestroyed?stamp-e.destroyed>0:stamp-e.destroyed>=100){
                     actions.cancelSource("actor:"+e.id);
                     if(e.shutdown!=null){
                         if(effectSources.size()>=4096||nextEffectSource==Long.MAX_VALUE)throw new IllegalStateException("Too many scene shutdown contexts");
@@ -757,7 +757,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.kind.equals("Pickup")&&e.spec.integer("lifespan",0)>0&&stamp-e.created>e.spec.integer("lifespan",0)-5000)e.flags|=2;
             if(e.kind.equals("Generator")&&e.nextGeneration>0){
                 e.flags=stamp+e.spec.integer("warning",0)>=e.nextGeneration?2:0;
-                if(stamp>=e.nextGeneration){e.flags&=~2;generate(e,e.nextGeneration);}
+                if(SceneClock.reached(stamp,e.nextGeneration)){e.flags&=~2;generate(e,e.nextGeneration);}
             }
             if(e.kind.equals("Trap"))cycle(e,stamp);
             if(e.spec.fields().containsKey("hazard-lifetime")&&stamp-e.created>=e.spec.integer("hazard-lifetime",0)){
@@ -776,7 +776,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 hitArgs.put("shape",shape);
                 damage(new StarterCatalog.Model("DamageRegionFromPoint",hitArgs),e.x,e.y,e.rotation,stamp,e.id,null);
             }
-            if(e.detonateAt>0&&stamp>=e.detonateAt){
+            if(e.detonateAt>0&&SceneClock.reached(stamp,e.detonateAt)){
                 e.destroyed=e.detonateAt;
                 String graph=e.spec.text("detonation-action","");if(!graph.isBlank())try{attack.accept(e.snapshot(),FireCatalog.actionJson(graph));}catch(java.io.IOException invalid){throw new IllegalStateException("Invalid block detonation",invalid);}
                 continue;
@@ -784,7 +784,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.kind.equals("Door")&&(e.flags&4)!=0&&stamp-e.stateEntered>e.spec.integer("door-speed",0))e.flags&=~4;
             if(e.kind.equals("Switch"))switches(e,stamp,players);
             if(e.elevator!=null)elevator(e,stamp,players);
-            if(e.spec.flag("heal-pad",false)&&stamp>=e.nextHeal){
+            if(e.spec.flag("heal-pad",false)&&SceneClock.reached(stamp,e.nextHeal)){
                 e.nextHeal=stamp+Math.round(e.spec.number("heal-interval",0)*1000);
                 for(var player:players)if(e.spec.contains(e.x,e.y,e.rotation,player.x(),player.y(),ScenePortals.PAWN_RADIUS)
                     &&playerHeal.test(player.id(),e.spec.integer("heal",0))){
@@ -795,7 +795,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.kind.equals("Trap")&&e.state==2&&e.spec.fields().containsKey("sensor")){
                 Object sensor=e.spec.model("sensor").arguments().get("value");float c=(float)Math.cos(e.rotation),s=(float)Math.sin(e.rotation);
                 for(var player:players){float dx=player.x()-e.x,dy=player.y()-e.y;
-                    if(stamp>=e.hazardHits.getOrDefault(player.id(),0)&&SceneShape.intersects(sensor,dx*c+dy*s,-dx*s+dy*c,ScenePortals.PAWN_RADIUS)){
+                    if(SceneClock.reached(stamp,e.hazardHits.getOrDefault(player.id(),0))&&SceneShape.intersects(sensor,dx*c+dy*s,-dx*s+dy*c,ScenePortals.PAWN_RADIUS)){
                         try{attack.accept(e.snapshot(),FireCatalog.actionJson(e.spec.text("hazard-action","")));}
                         catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared trap action",invalid);}
                         e.hazardHits.put(player.id(),stamp+e.spec.integer("hazard-refractory",0));
@@ -919,7 +919,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(alive<wave.previousAlive)wave.nextSpawn=Math.max(wave.nextSpawn,stamp+wave.group.respawnDelayMs());
             wave.previousAlive=alive;
             while(wave.spawned<wave.group.total()&&alive<wave.group.maxAlive()
-                    &&stamp>=wave.nextSpawn&&spawnedThisTick<MAX_WAVE_SPAWNS_PER_TICK
+                    &&SceneClock.reached(stamp,wave.nextSpawn)&&spawnedThisTick<MAX_WAVE_SPAWNS_PER_TICK
                     &&liveMonsters()<MAX_ALIVE_MONSTERS){
                 spawnWaveMonster(wave,stamp);wave.spawned++;alive++;spawnedThisTick++;
                 wave.nextSpawn=stamp+wave.group.intervalMs();
@@ -1129,7 +1129,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             moveEntity(e,tx,ty);
             if(Math.hypot(tx-e.x,ty-e.y)<.0001){e.path=List.of();return true;}
         }
-        if(e.path.isEmpty()&&stamp>=e.nextPath){
+        if(e.path.isEmpty()&&SceneClock.reached(stamp,e.nextPath)){
             if(!pathBudget.acquire(e.id))return false;
             var path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
             double length=0;float px=e.x,py=e.y;for(var point:path){length+=Math.hypot(point.x()-px,point.y()-py);px=point.x();py=point.y();}
@@ -1192,7 +1192,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         boolean outside=Math.hypot(e.x-e.binding.x(),e.y-e.binding.y())>e.wander.radius();
         float inward=(float)Math.atan2(e.binding.y()-e.y,e.binding.x()-e.x);
         boolean away=Math.abs(Math.IEEEremainder(inward-e.rotation,2*Math.PI))>Math.PI/2;
-        if(e.wanderPhase==0||e.wanderPhase==2&&(stamp>=e.wanderNext||outside&&away)){
+        if(e.wanderPhase==0||e.wanderPhase==2&&(SceneClock.reached(stamp,e.wanderNext)||outside&&away)){
             // Wander/Base uses uniform [-pi,pi] direction changes and no pauses.
             // A full-circle uniform turn has the same law around any reflection base.
             e.wanderRotation=(float)(random.nextDouble()*2*Math.PI-Math.PI);e.wanderPhase=1;e.flags&=~2;
@@ -1217,7 +1217,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private void follow(Entity e,int stamp,float elapsed,List<ActorState> occupants){
         if(e.activity!=0)return;
-        if(stamp>=e.nextFollow){
+        if(SceneClock.reached(stamp,e.nextFollow)){
             var target=occupants.stream().filter(p->playerActive.test(p.id())).min(Comparator.comparingDouble(p->Math.hypot(p.x()-e.x,p.y()-e.y))).orElse(null);
             e.followTarget=target==null?0:target.id();e.path=List.of();e.nextFollow=stamp+e.follow.evaluation();
             if(target!=null){
@@ -1264,7 +1264,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(!e.status.state().modifiers().canMove())return;
         float tx=e.homeX,ty=e.homeY;
         if(!entitySegment(e,e.x,e.y,tx,ty)){
-            if(e.path.isEmpty()&&stamp<e.nextPath)return;
+            if(e.path.isEmpty()&&SceneClock.before(stamp,e.nextPath))return;
             if(e.path.isEmpty()||!entitySegment(e,e.x,e.y,e.path.getFirst().x(),e.path.getFirst().y())){
                 if(!pathBudget.acquire(e.id))return;
                 e.path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
@@ -1283,14 +1283,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
     /** Activation ladder: cheap distance decisions gate the full pursuit/attack tick. */
     private void think(Entity e,int stamp,float elapsed,List<ActorState> occupants){
         // Recent damage overrides the leash briefly: a hit monster answers before walking home.
-        if(e.returning){if(stamp<e.engagedUntil)e.returning=false;else{returnHome(e,stamp,elapsed);return;}}
+        if(e.returning){if(SceneClock.before(stamp,e.engagedUntil))e.returning=false;else{returnHome(e,stamp,elapsed);return;}}
         // An authored attack sequence, including chains, must finish even if the target leaves.
         if(e.activity>=4){e.band=SceneMonsterBand.ENGAGED;e.nextThink=stamp;move(e,stamp,elapsed,occupants);return;}
         float nearest=Float.POSITIVE_INFINITY;
         for(var player:occupants)if(playerActive.test(player.id())&&playerTargetable.test(player.id()))
             nearest=Math.min(nearest,(float)Math.hypot(player.x()-e.x,player.y()-e.y));
         float radius=e.activationRadius;
-        boolean forced=stamp<e.engagedUntil;
+        boolean forced=SceneClock.before(stamp,e.engagedUntil);
         if(e.leashRadius>0&&!forced&&e.band!=SceneMonsterBand.DORMANT
                 &&Math.hypot(e.x-e.homeX,e.y-e.homeY)>e.leashRadius){
             e.returning=true;e.activity=0;e.fired.clear();e.path=List.of();
@@ -1299,7 +1299,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         // A dormant monster still watches for an approaching player every tick; the
         // cadence below only decides when it reacquires and how often it re-checks.
         if(e.band==SceneMonsterBand.DORMANT&&(nearest<=radius||forced)){e.band=SceneMonsterBand.ALERT;e.nextThink=stamp;}
-        boolean think=stamp>=e.nextThink;
+        boolean think=SceneClock.reached(stamp,e.nextThink);
         if(think){
             SceneMonsterBand next=nearest<=radius
                 ?(e.target!=0||e.activity>=4?SceneMonsterBand.ENGAGED:SceneMonsterBand.ALERT)
@@ -1339,7 +1339,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(e.targeting!=null&&e.activity==3)return;
         if(e.targeting!=null){
             e.victims.keySet().removeIf(id->players.stream().noneMatch(p->p.id()==id&&targetActive(p)));
-            if(stamp>=e.nextAcquire){
+            if(SceneClock.reached(stamp,e.nextAcquire)){
                 for(var player:players)if(targetActive(player)
                         &&acquireIntersects(e,player)&&e.victims.size()<256)e.victims.putIfAbsent(player.id(),new Entity.Threat(0,0));
                 double best=Double.NEGATIVE_INFINITY;e.target=0;
@@ -1349,7 +1349,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 }
                 e.nextAcquire=stamp+e.targeting.evaluation();e.targetModeUpdate=true;
             }
-        }else if(stamp>=e.nextAcquire){
+        }else if(SceneClock.reached(stamp,e.nextAcquire)){
             float nearest=distance;e.target=0;
             for(var player:players)if(playerActive.test(player.id())&&playerTargetable.test(player.id())){float d=(float)Math.hypot(player.x()-e.x,player.y()-e.y);if(d<nearest){nearest=d;e.target=player.id();}}
             e.nextAcquire=stamp+e.spec.integer("acquisition-interval",0);
@@ -1361,7 +1361,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         e.speed=target==null?e.spec.number("speed",0):e.spec.number("targeted-speed",e.spec.number("speed",0));
         if(e.targeting!=null){
             if(target==null){e.targetMode=null;e.targetModeUpdate=false;}
-            else if(e.targetModeUpdate&&e.activity<4&&stamp>=e.nextAttack){
+            else if(e.targetModeUpdate&&e.activity<4&&SceneClock.reached(stamp,e.nextAttack)){
                 e.targetMode=e.targeting.choose(nearest,random);e.targetModeUpdate=false;
                 e.targetRotation=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
             }
@@ -1384,7 +1384,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(target!=null)e.idleAttackDone=false;
         if(e.activity>=4){
             var motion=e.attackMotion.get(slot);
-            if(motion!=null&&stamp>=e.activityStarted+motion.delay()&&e.fired.add("@impulse")){
+            if(motion!=null&&SceneClock.reached(stamp,e.activityStarted+motion.delay())&&e.fired.add("@impulse")){
                 if(modifiers.canMove()&&(motion.x()!=0||motion.y()!=0)){
                     float c=(float)Math.cos(e.rotation),s=(float)Math.sin(e.rotation);
                     var impulse=new KnightCombat.Impulse(e.activityStarted+motion.delay(),motion.duration(),motion.x()*c-motion.y()*s,motion.x()*s+motion.y()*c);
@@ -1396,7 +1396,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 if(fire.isBlank()||e.fired.contains(fire))continue;
                 String fp=prefix+"fire."+fire+".";
                 int due=e.activityStarted+Math.round((e.spec.integer(prefix+"land",0)+e.spec.integer(fp+"delay",0)/e.spec.number(prefix+"fire-speed",1))/e.attackSpeed);
-                if(stamp>=due){
+                if(SceneClock.reached(stamp,due)){
                     var sceneAction=e.sceneFireActions.get(fp+"scene-action");
                     if(sceneAction!=null)actions.perform(sceneAction,stamp,"actor:"+e.id,"actor:"+e.id);
                     else try{attack.accept(e.snapshot(),FireCatalog.actionJson(e.spec.text(fp+"action","")));}
@@ -1416,7 +1416,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(target!=null)e.wanderPhase=0;
         float attackDistance=e.targeting==null?nearest:target==null?Float.POSITIVE_INFINITY:targetDistance(e,target);
         float attackRange=e.targeting==null?e.spec.number("attack-distance",0):e.targetMode==null?0:Math.min(e.targetMode.range(),e.meleeRangeCaps.getOrDefault(e.targetMode.attack(),Float.MAX_VALUE));
-        if(target!=null&&e.activity==0&&slot>=0&&(e.targeting==null?stamp>=e.nextAttack:stamp>e.nextAttack)&&attackDistance<=attackRange&&modifiers.attackSpeed()>0
+        if(target!=null&&e.activity==0&&slot>=0&&(e.targeting==null?SceneClock.reached(stamp,e.nextAttack):stamp-e.nextAttack>0)&&attackDistance<=attackRange&&modifiers.attackSpeed()>0
                 &&sight(e,target.x(),target.y())){
             if(e.targeting!=null&&e.targetMode.faces()&&modifiers.canRotate()){
                 float angle=(float)Math.atan2(target.y()-e.y,target.x()-e.x),delta=(float)Math.IEEEremainder(angle-e.rotation,2*Math.PI);
@@ -1435,7 +1435,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(e.speed*modifiers.speed()<=0)return;
         float tx=target.x(),ty=target.y();
         if(!entitySegment(e,e.x,e.y,tx,ty)){
-            if(e.path.isEmpty()&&stamp<e.nextPath)return;
+            if(e.path.isEmpty()&&SceneClock.before(stamp,e.nextPath))return;
             if(e.path.isEmpty()||Math.hypot(tx-e.pathX,ty-e.pathY)>=1
                     ||!entitySegment(e,e.x,e.y,e.path.getFirst().x(),e.path.getFirst().y())){
                 if(!pathBudget.acquire(e.id))return;
@@ -1568,8 +1568,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }else if(mode.equals("button-once")){
             if(e.state==0&&players.stream().anyMatch(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS)))setSwitch(e,1,stamp);
         }else if(mode.equals("button")||mode.equals("damage-timed")){
-            if(e.state!=0&&stamp>=e.nextSwitch)setSwitch(e,0,stamp);
-            if(mode.equals("button")&&e.state==0&&stamp>=e.nextSwitch&&players.stream().anyMatch(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS))){
+            if(e.state!=0&&SceneClock.reached(stamp,e.nextSwitch))setSwitch(e,0,stamp);
+            if(mode.equals("button")&&e.state==0&&SceneClock.reached(stamp,e.nextSwitch)&&players.stream().anyMatch(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS))){
                 setSwitch(e,1,stamp);e.nextSwitch=stamp+e.spec.integer("switch-delay",0);
             }
         }
@@ -1938,7 +1938,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     // hit here so the next sensor cannot damage them again on
                     // the same tick or before the authored refractory deadline.
                     if(source!=null&&source.kind.equals("Trap")){
-                        if(stamp<source.hazardHits.getOrDefault(player.id(),0))continue;
+                        if(SceneClock.before(stamp,source.hazardHits.getOrDefault(player.id(),0)))continue;
                         source.hazardHits.put(player.id(),stamp+source.spec.integer("hazard-refractory",0));
                     }
                     // Native DamageRegionFromPoint pushes every actor the region damaged.
@@ -1965,7 +1965,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.kind.equals("Switch")){
                 String mode=e.spec.text("switch-mode","");
                 Object switchDamage=SceneDamage.prune(damage,e.spec.integer("switch-damage-mask",255));
-                if(mode.startsWith("damage-")&&(!mode.equals("damage-once")||e.state==0)&&stamp>=e.nextSwitch&&SceneDamage.amount(switchDamage,content,e.spec,multiplier)>0){
+                if(mode.startsWith("damage-")&&(!mode.equals("damage-once")||e.state==0)&&SceneClock.reached(stamp,e.nextSwitch)&&SceneDamage.amount(switchDamage,content,e.spec,multiplier)>0){
                     setSwitch(e,e.state==0?1:0,stamp);e.nextSwitch=stamp+e.spec.integer(mode.equals("damage-timed")?"switch-delay":"switch-cooldown",0);
                 }
                 continue;
@@ -2054,7 +2054,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(e.impulse==null)return;float portion=e.impulse.fraction(stamp)-e.impulse.fraction(e.impulseAdvanced);e.impulseAdvanced=stamp;
         float dx=e.impulse.x()*portion,dy=e.impulse.y()*portion;int steps=Math.max(1,(int)Math.ceil(Math.hypot(dx,dy)/.1));
         for(int i=0;i<steps;i++){if(!moveEntity(e,e.x+dx/steps,e.y+dy/steps))break;}
-        if(stamp>=e.impulse.started()+e.impulse.duration())e.impulse=null;
+        if(SceneClock.reached(stamp,e.impulse.started()+e.impulse.duration()))e.impulse=null;
     }
     private void blockHit(Entity e,int stamp){
         e.hitTime=stamp;

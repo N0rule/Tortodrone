@@ -415,7 +415,7 @@ public final class TownMovement {
     public float y() { return y; }
     public float rotation() { return rotation; }
     public float direction() { return direction; }
-    public int flags() { return flags|(timestamp<warpUntil?1:0)|(combat==null?0:combat.flags()); }
+    public int flags() { return flags|(SceneClock.before(timestamp,warpUntil)?1:0)|(combat==null?0:combat.flags()); }
     public int inputFlags(){return inputFlags;}
     public int activity() { return combat!=null&&combat.activity()!=0?combat.activity():activity; }
     public int activityStarted() { return combat!=null&&(combat.activity()!=0||activity==0&&combat.started()-activityStarted>0)?combat.started():activityStarted; }
