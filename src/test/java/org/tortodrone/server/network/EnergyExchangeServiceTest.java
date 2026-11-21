@@ -41,7 +41,7 @@ public final class EnergyExchangeServiceTest {
         }finally{WorldStatePoller.awaitStopped();try(var files=Files.walk(root)){for(var path:files.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
     private static SessionDecoder.Invocation request(int method,Object... arguments){var values=new ArrayList<Object>(Arrays.asList(arguments));values.add(new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$"+(method==1?"ConfirmMarshaller":"ResultMarshaller"),(short)10));return new SessionDecoder.Invocation(SessionCodec.EXCHANGE_OID,SessionCodec.EXCHANGE_SERVICE,method,values);}
-    private static long revision(WorldSession world)throws Exception{synchronized(world){var f=WorldSession.class.getDeclaredField("exchangeRevision");f.setAccessible(true);return f.getLong(world);}}
+    private static long revision(WorldSession world)throws Exception{synchronized(world){var h=WorldSession.class.getDeclaredField("exchangeHandler");h.setAccessible(true);var handler=h.get(world);var f=handler.getClass().getDeclaredField("revision");f.setAccessible(true);return f.getLong(handler);}}
     private static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0);}
     private static final class RecordingSocket extends Socket {private final OutputStream sink=OutputStream.nullOutputStream();@Override public OutputStream getOutputStream(){return sink;}}
     @FunctionalInterface private interface Condition{boolean value()throws Exception;}
