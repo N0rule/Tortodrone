@@ -123,6 +123,9 @@ final class WorldSession implements AutoCloseable {
     private PartyView.View publishedParty;
     final SessionResponder responder;
     final GuildHandler guilds;
+    private final SteamHandler steam;
+    private final BillingHandler billing;
+    private final AuctionHandler auction;
     private final ArrayDeque<PartyView.Event> partyEvents=new ArrayDeque<>();
     private boolean partyRefreshQueued,partyOverflow;
     private int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
@@ -178,21 +181,7 @@ final class WorldSession implements AutoCloseable {
     }
     /** Verified stock SteamMarshaller: 2[int] and 5[boolean] are unacknowledged client reports;
      * purchase, profile and friend-invite requests carry listeners and receive native failure. */
-    boolean steamInvocation(SessionDecoder.Invocation request)throws IOException {
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.STEAM_SERVICE)return false;
-        var args=request.arguments();
-        if(request.method()==2||request.method()==5){
-            Object value=args.size()==1?args.get(0):null;
-            if(request.method()==2?!(value instanceof Integer):!(value instanceof Boolean))
-                throw new SessionDecoder.Rejected("Invalid steam client report");
-            return true;
-        }
-        for(Object argument:args)
-            if(argument instanceof SessionDecoder.Listener listener)
-                output.send(()->codec.invocationFailure(oid,listener.requestId(),
-                    "Steam features are not available on this server."));
-        return true;
-    }
+    boolean steamInvocation(SessionDecoder.Invocation request)throws IOException{return steam.invocation(request);}
     boolean partyInvocation(SessionDecoder.Invocation request)throws IOException {
         var args=request.arguments();
         boolean response=request.oid()==SessionCodec.INVOCATION_OID&&request.service()==SessionCodec.SOCIAL_SERVICE&&request.method()==5
@@ -214,7 +203,6 @@ final class WorldSession implements AutoCloseable {
     }
     private Map<Integer,Integer> occupantClients=Map.of();
     private Map<Integer,Boolean> occupantRoles=Map.of();
-    private static final String DISABLED="Sorry, but P2W features are disabled on this server.";
     private org.tortodrone.core.town.TownCatalog.Station townDialog;
     private ActorState townSource;
     private long townCreated;
@@ -321,10 +309,10 @@ final class WorldSession implements AutoCloseable {
         var available=characters.town(scenes.town()).availability(characters.accountId(),knight.id(),authRevision,townDialog,townShopCycle);
         output.send(()->codec.townShop(oid,goods,available));
     }
-    private void townChanged(org.tortodrone.storage.TownStore.Result result)throws IOException {
+    void townChanged(org.tortodrone.storage.TownStore.Result result)throws IOException {
         townChanged(result,true);
     }
-    private void townChanged(org.tortodrone.storage.TownStore.Result result,boolean publishTown)throws IOException {
+    void townChanged(org.tortodrone.storage.TownStore.Result result,boolean publishTown)throws IOException {
         var before=visibleProfile();profile=result.profile();updateAppearance();var after=visibleProfile();
         // The durable operation already committed. A failed buyer connection must
         // not suppress its shared scene effect for remaining observers.
@@ -516,23 +504,7 @@ final class WorldSession implements AutoCloseable {
         conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);conversationX=own.x();conversationY=own.y();
         output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,conversationSource,conversationCreated));
     }
-    synchronized boolean auctionInvocation(SessionDecoder.Invocation request)throws IOException {
-        if(request.oid()!=SessionCodec.INVOCATION_OID)return false;var a=request.arguments();int method=request.method();
-        boolean auction=request.service()==SessionCodec.AUCTION_SERVICE,mail=request.service()==SessionCodec.UPLINK_SERVICE&&(method==1||method==2||method==4||method==5||method==6||method==11);
-        if(!auction&&!mail)return false;
-        boolean resultListener=auction||method==6;
-        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.LISTENER_PREFIX+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid auction/mail listener");
-        boolean valid=auction?switch(method){case 1->a.size()==3&&a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 2,7->a.size()==2&&a.get(0) instanceof Long;case 3,4->a.size()==1;case 5->a.size()==3&&a.get(0) instanceof org.tortodrone.core.wire.AuctionSearch&&a.get(1) instanceof Integer;case 6->a.size()==7&&a.get(0) instanceof Long&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer&&a.get(3) instanceof Integer&&a.get(4) instanceof org.tortodrone.core.wire.EnumValue e&&e.type().equals("com.threerings.projectx.auction.data.Duration")&&a.get(5) instanceof Boolean;default->false;}:a.size()==2&&(method==5?a.get(0) instanceof org.tortodrone.core.wire.SentMail:method==6?a.get(0)==null||a.get(0) instanceof long[]:method==11?a.get(0) instanceof long[]:a.get(0) instanceof Long);
-        if(!valid)throw new SessionDecoder.Rejected("Invalid auction/mail arguments");
-        // The stock uplink window serves mail wherever a knight is selected; the auction
-        // station is a town place, so its operations keep the scene requirement.
-        try{if(closed||!selected())throw new IOException("m.internal_error");
-            if(auction&&(!entered||!subscribed))throw new IOException("Enter a scene first");
-            if(trade.active()&&(auction&&(method==1||method==2||method==6)||mail&&(method==1||method==2||method==5)))throw new IOException("Finish the trade first");
-            var house=characters.auction(scenes.town());var result=auction?house.operate(characters.accountId(),knight.id(),authRevision,method,a,roles.gameMaster(),auctionPresence(characters.worldStorageFile())):house.mail(characters.accountId(),knight.id(),authRevision,method,a);
-            townChanged(result);if(resultListener)output.send(()->codec.townResult(oid,listener.requestId(),result.result(),profile));else output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-        }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
-    }
+    boolean auctionInvocation(SessionDecoder.Invocation request)throws IOException{return auction.invocation(request);}
 
     boolean friendInvocation(SessionDecoder.Invocation request)throws IOException {
         int method=request.method();
@@ -734,26 +706,7 @@ final class WorldSession implements AutoCloseable {
      * No payment operation, account lookup or entitlement mutation is supported.
      * Current stock IDs: 6=[int,String,Confirm], 7=[int,String,Result],
      * 8=[long,boolean,Confirm]. Older archives incorrectly place method 8 at 7. */
-    synchronized boolean billingInvocation(SessionDecoder.Invocation request)throws IOException {
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.BILLING_SERVICE)return false;
-        var a=request.arguments();
-        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)
-                ||!Set.of(org.tortodrone.core.WireTypes.CONFIRM_LISTENER,
-                    org.tortodrone.core.WireTypes.RESULT_LISTENER).contains(listener.type()))return true;
-        boolean result=listener.type().endsWith("$ResultMarshaller");
-        boolean buy=result&&switch(request.method()){
-            case 1->a.size()==4&&a.get(0) instanceof String&&a.get(1) instanceof Integer&&a.get(2) instanceof Boolean;
-            case 2->a.size()==9&&a.get(0) instanceof String&&a.get(1) instanceof String
-                &&a.get(2) instanceof Integer&&a.get(3) instanceof Integer&&a.get(4) instanceof String
-                &&a.get(5) instanceof String&&a.get(6) instanceof Integer&&a.get(7) instanceof Boolean;
-            default->false;
-        };
-        // Native buy callbacks accept BillingResponseCode.ERROR (-1). All other calls,
-        // including getBillingInfo and unknown shapes, use the native requestFailed path.
-        output.send(buy?()->codec.townResult(oid,listener.requestId(),-1,profile)
-            :()->codec.invocationFailure(oid,listener.requestId(),DISABLED));
-        return true;
-    }
+    boolean billingInvocation(SessionDecoder.Invocation request)throws IOException{return billing.invocation(request);}
 
     private record BoxRequest(int world,short request) { }
     private record ConfettiReply(long item,String failure) { }
@@ -1127,6 +1080,9 @@ final class WorldSession implements AutoCloseable {
         guilds=new GuildHandler(this);
         trade=new TradeHandler(this);
         exchangeHandler=new ExchangeHandler(this);
+        steam=new SteamHandler(this);
+        billing=new BillingHandler(this);
+        auction=new AuctionHandler(this);
     }
 
     synchronized boolean selected() { return knight != null; }
@@ -1134,6 +1090,11 @@ final class WorldSession implements AutoCloseable {
     SessionOutput output(){return output;}
     SessionCodec codec(){return codec;}
     Socket socket(){return socket;}
+    boolean sceneEntered(){return entered;}
+    boolean sceneSubscribed(){return subscribed;}
+    SceneRegistry sceneRegistry(){return scenes;}
+    boolean gameMasterRole()throws IOException{return roles.gameMaster();}
+    TradeHandler tradeHandler(){return trade;}
     CharacterStore charactersStore(){return characters;}
     Knight selectedKnight(){return knight;}
     WorldProfile currentProfile(){return profile;}
