@@ -5,10 +5,11 @@ Behaviour is defined by source and tests; this file records what the current bui
 and tools actually produce. It is not a milestone diary.
 
 Recorded on 2026-11-21 from commit `3e8f15d3be10e7b59d27e11b5bdbcc845339c7c6`
-with `VERSION` `0.41.16` (not bumped in Phase 0). One pre-existing working-tree edit
-to `LoadBenchmark` was present during the measurements; it does not change the
-recorded constants below. Host/JDK: Temurin OpenJDK 25.0.5, Linux 7.3.5 x86_64,
-Intel i5-8250U (4 cores/8 threads), 15 GiB RAM.
+with `VERSION` `0.41.16` (not bumped in Phase 0). The tick, DB and town/session
+measurements below use the `LoadBenchmark` repair described under Queue; it is
+test-only, so the artefact values still come from the same packaged sources.
+Host/JDK: Temurin OpenJDK 25.0.5, Linux 7.3.5 x86_64, Intel i5-8250U (4 cores/8
+threads), 15 GiB RAM.
 
 ## Artefacts
 
@@ -54,12 +55,23 @@ Source-verified structure behind these numbers:
 - `MonsterMetrics` keeps a 256-sample tick window and exposes p50/p99, but only as part
   of the scene status object. No sampler records cadence lateness, lock wait,
   publication/delivery time or per-tick allocation.
-- The existing load tool cannot provide a live scene tick series: its town workload
-  fails before subscription (see Queue below). Scene metrics are emitted through
-  `System.Logger` at DEBUG with no JUL configuration, so the shipped server log does
-  not record them either.
+- Scene metrics are emitted through `System.Logger` at DEBUG with no JUL
+  configuration, so the shipped server log does not record them; the WebUI `status`
+  response is the readable path.
 
-Not baselined, owned by Phase 4: lock wait, tick work/lateness p50/p99/max under the
+Live tick work sampled through the WebUI `status` route during the 16-client town
+run (two instances, eight players each):
+
+| Run | tick p50 | tick p99 |
+| --- | --- | --- |
+| 30 s, 16 clients | 0.414 / 0.420 ms | 0.739 / 0.735 ms |
+| 20 s, 16 clients | 0.92 / 0.92 ms | 18.5 / 25.2 ms |
+
+These are per-tick work samples from the 256-sample window, not cadence lateness: the
+scheduler re-arms after the task returns, so a late tick is not visible here. The p99
+spread between the two runs is real and uncontrolled.
+
+Not baselined, owned by Phase 4: lock wait, tick cadence/lateness p50/p99/max under the
 defined load, publication/delivery time, GC/allocation, overrun policy.
 
 ## Queue and session baseline
@@ -89,19 +101,30 @@ Source-verified bounds:
 - There is no queue-depth-in-frames, queue-depth-in-bytes, overflow, throttle,
   disconnect or largest-frame counter.
 
-Town/scene workload is **not measured**: the only existing load tool cannot enter a
-scene. Reproduced with the smallest case:
+Town/scene workload with the repaired tool:
 
 ```text
-./gradlew benchmark --args="--seconds 5 --clients 1 --instances 1"
+./gradlew benchmark --args="--seconds 20 --clients 16 --instances 2"
+16,town,20,16,16,0,2475.81,0.35,0.76,3.09,320,19.66,3136,2.48,0.37,1004.00,84,2
 ```
 
-Every client fails with `IOException: Missing scene subscription`. `LoadBenchmark`
-subscribes to template id `10 + (id+1) % instances`, but Haven is template id `1` and
-a scene subscription is matched against the live instance OID (`world.ownsScene`,
-`ClientSession`), which the server never advertises as a template id. The benchmark's
-`FIRST_SCENE` is stale; this is a tool defect, not a server failure. Fixing the
-benchmark is not Phase 0 work and would be its own change.
+All 16 clients selected a knight, left the Ready Room, entered a live town instance
+(two instances, eight players each) and produced 3,136 input frames and 2.48 MiB
+downstream in 20 s with no failures. A second 20 s run produced
+`16,town,20,16,16,0,2706.17,0.44,1.08,4.11,320,19.65,3120,2.48,0.36,1103.04,83,2`;
+login p95 and the CPU/RSS columns vary run to run.
+
+The old flow was stale, not the server: it subscribed to template id
+`10 + (id+1) % instances`, but a scene subscription is matched against the live
+instance OID (`world.ownsScene`, `ClientSession`), which is never a template id, so
+the server refused the subscription. The repaired `enter` follows the stock client and
+`ReadyRoomSessionTest`: register the zone receiver, select via character method 4,
+load the client-local Ready Room with its own zone move, request return-to-game
+(KnightMarshaller method 11), read the `forceScene` zone/template, send the zone move,
+and take the live OID from the `moveSucceeded` callback
+(`InvocationResponseEvent`, callback 3, argument `scene.oid()`). It then subscribes,
+sends `enteredPlace` and waits for the initial delta. The OID is never derived from a
+template id.
 
 Not baselined, owned by Phase 4: per-session frame/byte depth, overflow/throttle/
 disconnect counts, largest frame, retained snapshots, heap per slow reader.
@@ -124,11 +147,25 @@ Source-verified settings and write path:
   same file (two instances, `Server.run` and the enclosing `AdminService` account
   store).
 
-No transaction-latency, `SQLITE_BUSY`, WAL-size, checkpoint or sweep-cost baseline was
-captured: the load tool's scene workload is unusable (above), and the session-only
-run exits before the WebUI status can be read, so the counters have no recorded
-sample. The queue/tick sections state the same limit. Phase 4 owns these
-measurements; this file does not claim them.
+Measured in the town runs above, reading the WebUI `status` response. The 20 s
+sample is the final counter read of the run reported as the second 20 s row; the 30 s
+sample was taken during load. The counters are process-wide static counters, so they
+include the game store and the WebUI identity store:
+
+| Run | Operations | ≥100 ms | Maximum | Failures | Rollbacks |
+| --- | --- | --- | --- | --- | --- |
+| 20 s, 16 clients (end of run) | 2,090 | 1 | 151 ms | 0 | 0 |
+| 30 s, 16 clients (during load) | 2,625 | 2 | 140 ms | 0 | 0 |
+
+Procedure with existing tools only: start
+`./gradlew benchmark --args="--seconds 20 --clients 16 --instances 2"`, read the fresh
+`WebUI Ready http://127.0.0.1:<port>` URL and `WebUI first-run setup code` from that
+deployment's `server-16.log`, complete `/admin/api/setup`, then poll
+`/admin/api/status`. The counters reset on process exit, so a sample must be taken
+while the run's disposable server is alive.
+
+No `SQLITE_BUSY`, WAL-size, checkpoint or sweep-cost series was captured; the
+diagnostics expose the aggregate only. Phase 4 owns those measurements.
 
 ## Thread inventory (verified against source)
 
@@ -183,9 +220,11 @@ exceptions are named in the plan and stay Phase 4 work.
 2. The plan describes "two additional queues" for delivery without saying they are
    unbounded deques; `SessionOutput`'s 64 slots are the only bounded queue.
 3. The plan requires tick/DB/queue baselines "using existing tools"; the existing
-   tools expose scene hot-path cost and session ping/bytes/threads, but no tick
-   cadence series, DB latency counters or queue depth, and the load tool's scene
-   workload is broken. This file records that gap instead of inventing numbers.
+   tools expose scene hot-path cost, session ping/bytes/threads, live scene tick
+   p50/p99 and aggregate DB counters, but no cadence-lateness series, no
+   per-operation DB latency and no queue depth. The load tool's scene workload was
+   broken in the first baseline pass; this follow-up repairs it and records the
+   measured values and remaining gaps instead of inventing numbers.
 
 ## Required wire evidence and its source
 

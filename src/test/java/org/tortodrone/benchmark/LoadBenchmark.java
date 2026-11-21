@@ -24,7 +24,6 @@ import org.tortodrone.world.SceneRegistry;
 public final class LoadBenchmark {
     private static final String PASSWORD="benchmark-password";
     private static final String DELTA="com.threerings.tudey.dobj.SceneDeltaEvent";
-    private static final int FIRST_SCENE=10;
     private static final Set<Socket> SOCKETS=ConcurrentHashMap.newKeySet();
     private static volatile Process server;
     private static final class Metrics {
@@ -78,9 +77,9 @@ public final class LoadBenchmark {
     private static boolean run(Path home,int count,int seconds,boolean town,int instances,Path report)throws Exception {
         Files.writeString(home.resolve("data/server.properties"),"server-ip=127.0.0.1\nserver-port=0\nlog-mode=normal\nmax-clients="+count+"\n");
         Path log=home.resolve("server-"+count+".log");
-        server=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"-Xmx512m","-Xss256k","-jar",home.resolve("tortodrone.jar").toString(),"--nogui")
+        server=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"-Xmx512m","-Xss256k","-jar",home.resolve("tortodrone.jar").toString(),"--nogui","--skip-client-assets")
             .redirectErrorStream(true).redirectOutput(log.toFile()).start();
-        int port=0;long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(20);
+        int port=0;long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(180);
         while(System.nanoTime()<deadline) {
             var match=Pattern.compile("Listening on 127\\.0\\.0\\.1:(\\d+)").matcher(Files.readString(log));
             if(match.find()){port=Integer.parseInt(match.group(1));break;}
@@ -122,7 +121,7 @@ public final class LoadBenchmark {
                 TestClient.authenticate(peer,key,"Bench"+id,PASSWORD,"success",20000,(socket,wire,oid)->{
                     metrics.login.add((System.nanoTime()-login)/1_000_000d);
                     var writer=new TestWire.Writer(TestWire.NET+"SecureRequest",TestWire.NET+"PublicKeyCredentials","[Ljava.lang.String;",TestWire.NET+"AESAuthRequest");
-                    var reader=new Headers(FIRST_SCENE+Math.floorMod(id+1,instances));
+                    var reader=new Headers();
                     if(town)enter(socket,writer,reader,oid,id);else {
                         writer.send(socket.getOutputStream(),out->{writer.message(out,"SubscribeRequest",30);out.writeInt(oid);});
                         wire.snapshot(wire.frame(socket.getInputStream()),(short)30,oid);
@@ -181,7 +180,8 @@ public final class LoadBenchmark {
         finally{if(!released[0]){ramp.release();settled.countDown();}SOCKETS.removeIf(Socket::isClosed);}
     }
     private static void enter(Socket socket,TestWire.Writer writer,Headers reader,int oid,int id)throws Exception {
-        // Register the real zone receiver, select the saved knight, subscribe, then enteredPlace.
+        // Register the real zone receiver, select the saved knight, leave the client-local
+        // Ready Room, then enter the town instance the server reports in moveSucceeded.
         writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",20);writer.type(out,TestWire.DOB+"EntryAddedEvent");out.writeInt(oid);out.writeBoolean(true);out.writeUTF("receivers");writer.type(out,"com.threerings.presents.client.InvocationReceiver$Registration");out.writeBoolean(true);out.writeUTF(SceneRegistry.ZONE_RECEIVER);out.writeShort(0);});
         writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",21);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(3);out.writeInt(1);out.writeByte(4);out.writeBoolean(true);out.writeInt(3);writer.type(out,"com.threerings.util.Name");out.writeBoolean(true);out.writeUTF(name(id));out.writeShort(0);writer.type(out,TestWire.INV+"ConfirmMarshaller");out.writeShort(22);});
         // Confirm selection before subscribing, preserving all header mappings seen en route.
@@ -193,14 +193,72 @@ public final class LoadBenchmark {
             }
             if(i==9)throw new IOException("No selection confirmation");
         }
-        writer.send(socket.getOutputStream(),out->{writer.message(out,"SubscribeRequest",23);out.writeInt(reader.scene);});
-        var response=frame(socket);String responseType=reader.type(response);
-        if((TestWire.NET+"UpdateThrottleMessage").equals(responseType)){
-            if(response.readShort()!=-1||response.readInt()!=org.tortodrone.protocol.SessionCodec.TCP_MESSAGES_PER_SECOND)throw new IOException("Invalid TCP throttle");
-            response=frame(socket);responseType=reader.type(response);
+        // The stock client completes its Ready Room load, then requests its return-to-game
+        // destination; that forceScene names the zone and template the zone move must carry.
+        writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",24);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(3);out.writeInt(5);out.writeByte(1);out.writeBoolean(true);out.writeInt(4);writer.type(out,"java.lang.Integer");out.writeInt(org.tortodrone.world.ReadyRoom.ZONE);writer.type(out,"java.lang.Integer");out.writeInt(org.tortodrone.world.ReadyRoom.SCENE);writer.type(out,"java.lang.Integer");out.writeInt(1);writer.type(out,"com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller");out.writeShort(24);});
+        writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",25);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(3);out.writeInt(1);out.writeByte(11);out.writeBoolean(false);});
+        int zone=-1,template=-1;var forceSeen=new StringBuilder();
+        long forceDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);
+        while(zone<0||template<0) {
+            if(System.nanoTime()>forceDeadline)throw new IOException("No return-to-game scene destination; frames="+forceSeen);
+            var in=frame(socket);String type=reader.type(in);forceSeen.append(type).append(',');in.readShort();
+            if(!(TestWire.NET+"EventNotification").equals(type))continue;
+            String inner=reader.type(in);
+            if(!(TestWire.DOB+"InvocationNotificationEvent").equals(inner))continue;
+            in.readInt();in.readShort();in.readByte();if(!in.readBoolean())continue;
+            if(in.readInt()!=2)continue;
+            reader.type(in);zone=in.readInt();
+            reader.type(in);template=in.readInt();
         }
-        if(!(TestWire.NET+"ObjectResponse").equals(responseType)||response.readShort()!=23)throw new IOException("Missing scene subscription");
-        writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",24);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(reader.scene);out.writeInt(10);out.writeByte(1);out.writeBoolean(false);});
+        // A zone move answered by moveSucceeded is the only source of the live instance OID;
+        // the client never derives it from a template id.
+        final int moveRequest=26;final int targetZone=zone,targetTemplate=template;
+        writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",moveRequest);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(3);out.writeInt(5);out.writeByte(1);out.writeBoolean(true);out.writeInt(4);writer.type(out,"java.lang.Integer");out.writeInt(targetZone);writer.type(out,"java.lang.Integer");out.writeInt(targetTemplate);writer.type(out,"java.lang.Integer");out.writeInt(1);writer.type(out,"com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller");out.writeShort(moveRequest);});
+        int place=-1;var moveSeen=new StringBuilder();
+        long moveDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);
+        while(place<0) {
+            if(System.nanoTime()>moveDeadline)throw new IOException("No moveSucceeded for the town instance; frames="+moveSeen);
+            var in=frame(socket);String type=reader.type(in);moveSeen.append(type).append(',');in.readShort();
+            if(!(TestWire.NET+"EventNotification").equals(type))continue;
+            if(!(TestWire.DOB+"InvocationResponseEvent").equals(reader.type(in)))continue;
+            in.readInt();
+            if(in.readShort()!=moveRequest)continue;
+            byte method=in.readByte();boolean present=in.readBoolean();int count=present?in.readInt():0;
+            if(method==0){
+                String reason="";if(present&&count>0){in.readShort();reason=in.readUTF();}
+                throw new IOException("Town move refused: "+reason);
+            }
+            if(method!=3||count!=4)throw new IOException("Unexpected moveSucceeded shape: method="+method+", args="+count);
+            // sceneMove writes value(scene.oid()): a two-byte class code followed by the int.
+            // A header-only reader cannot learn codes first declared inside a skipped body,
+            // so read the fixed Integer payload rather than requiring the code to be known.
+            in.readShort();place=in.readInt();
+        }
+        reader.scene=place;
+        final int subscriptionScene=place;
+        writer.send(socket.getOutputStream(),out->{writer.message(out,"SubscribeRequest",23);out.writeInt(subscriptionScene);});
+        long subscribeDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);
+        while(System.nanoTime()<subscribeDeadline) {
+            var response=frame(socket);String responseType=reader.type(response);
+            if((TestWire.NET+"UpdateThrottleMessage").equals(responseType)){
+                if(response.readShort()!=-1||response.readInt()!=org.tortodrone.protocol.SessionCodec.TCP_MESSAGES_PER_SECOND)throw new IOException("Invalid TCP throttle");
+                continue;
+            }
+            if((TestWire.NET+"ObjectResponse").equals(responseType)){
+                if(response.readShort()!=23)throw new IOException("Unexpected object response while subscribing");
+                enteredPlace(socket,writer,reader,subscriptionScene);
+                return;
+            }
+            if((TestWire.NET+"FailureResponse").equals(responseType)){
+                response.readShort();response.readInt();String reason=response.readBoolean()?response.readUTF():"";
+                throw new IOException("Scene subscription refused: "+reason+" (oid="+place+")");
+            }
+            // sceneLocation and other entry updates may precede the object response.
+        }
+        throw new IOException("No scene subscription response (oid="+place+")");
+    }
+    private static void enteredPlace(Socket socket,TestWire.Writer writer,Headers reader,int subscriptionScene)throws IOException {
+        writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",27);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(subscriptionScene);out.writeInt(10);out.writeByte(1);out.writeBoolean(false);});
         long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);
         while(System.nanoTime()<deadline) {
             var in=frame(socket);if((TestWire.NET+"EventNotification").equals(reader.type(in))){in.readShort();if(DELTA.equals(reader.type(in))){reader.delta(in);reader.wasDelta=false;return;}}
@@ -215,13 +273,13 @@ public final class LoadBenchmark {
         byte[] body=new byte[size-4];in.readFully(body);return body;
     }
     private static final class Headers {
-        final int scene;
-        Headers(int scene){this.scene=scene;}
+        int scene;
         final Map<Integer,String> types=new HashMap<>();final AtomicInteger timestamp=new AtomicInteger();boolean wasDelta;
         String type(DataInputStream in)throws IOException {int code=in.readShort();if(code<0){String name=in.readUTF();types.put(-code,name);return name;}return types.get(code);}
         void delta(DataInputStream in)throws IOException {in.readInt();if(in.readInt()!=scene)throw new IOException("Wrong delta scene");in.readInt();in.readShort();in.readInt();timestamp.set(in.readInt());wasDelta=true;}
     }
-    private static String name(int id){return "Load-"+(char)('A'+id/676)+(char)('A'+id/26%26)+(char)('A'+id%26);}
+    /** Id 0 would be "Load-AAA", which the stock name policy refuses for three identical letters. */
+    private static String name(int id){id++;return "Load-"+(char)('A'+id/676)+(char)('A'+id/26%26)+(char)('A'+id%26);}
     private static double percentile(Queue<Double> values,double quantile){if(values.isEmpty())return Double.NaN;var sorted=values.stream().mapToDouble(Double::doubleValue).sorted().toArray();return sorted[(int)Math.ceil(sorted.length*quantile)-1];}
     private static long cpuNanos(){return server.info().totalCpuDuration().orElse(Duration.ZERO).toNanos();}
     private static long[] sample(){
