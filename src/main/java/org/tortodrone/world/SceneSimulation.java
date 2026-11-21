@@ -792,10 +792,16 @@ public final class SceneSimulation {
         if(scheduled){scheduled=false;SceneScheduler.shared().stop(instance.oid());}
         previous=null;
     }
+    /** Per-tick observations sampled without holding the scene monitor. */
+    private long tickLockWaitNanos,tickWorkNanos,tickMaxWorkNanos;
+    public record TickMetrics(long ticks,long lockWaitNanos,long workNanos,long maxWorkNanos){ }
+    public synchronized TickMetrics tickMetrics(){return new TickMetrics(tickCount,tickLockWaitNanos,tickWorkNanos,tickMaxWorkNanos);}
     private void tick() {
-        long tickStarted=System.nanoTime();
+        long entered=System.nanoTime();
         Snapshot publication;List<Consumer<Snapshot>> recipients;
         synchronized(this) {
+            long lockWait=System.nanoTime()-entered;
+            long tickStarted=System.nanoTime();
             if(!scheduled)return;
             int stamp=SceneClock.now();long now=System.nanoTime()/1_000_000L;
             if(previous!=null&&stamp-previous.timestamp()<=0)return;
@@ -840,7 +846,10 @@ public final class SceneSimulation {
             entities.advance(stamp,players);var sources=new ArrayList<>(players);for(var member:members.values()){var pet=member.petActor();if(pet!=null)sources.add(pet);}weapons.advance(stamp,sources);
             combatEvents.removeIf(event->stamp-event.timestamp()>5000);
             publication=capture(stamp,previous);previous=publication;tickCount++;
-            entities.tickDuration(System.nanoTime()-tickStarted);
+            tickWorkNanos=System.nanoTime()-tickStarted;
+            tickLockWaitNanos=lockWait;
+            if(tickWorkNanos>tickMaxWorkNanos)tickMaxWorkNanos=tickWorkNanos;
+            entities.tickDuration(tickWorkNanos);
             if(stamp-lastMetricLog>=30_000){
                 lastMetricLog=stamp;
                 var m=entities.metrics();

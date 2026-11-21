@@ -250,6 +250,35 @@ or decompiled file is committed. A layout without evidence is a Phase 2 blocker.
 | **Lobby wedge chain** | Lobby scene and each floor present for a route | The plan records only `shadow_beast` (lobby 351; floors 380, 382, 384) with the complete chain; the other four bundled routes are recorded as blocked |
 | Cross-feature golden stream | Byte-identical combined stream across features | **Scaffolding only.** `WireFixture`/`SyntheticWireFixtureTest` (Phase 0); the actual goldens are Phase 7 work |
 
+## Phase 4 concurrency measurements
+
+Recorded from `ConcurrencyMeasurementTest` on 2026-11-21. Host: Linux/amd64, 8
+logical CPUs, Temurin OpenJDK 25.0.5, default test heap (~2.9 GiB maximum). The
+synthetic load is eight entered players in Haven for two seconds plus a temporary
+SQLite store; it is not the full 16-client, dual-heap load described in
+`docs/redesign.md`, so treat the numbers as a working baseline rather than the
+final gate measurement.
+
+| Measurement | Value |
+| --- | --- |
+| Scene ticks in 2 s | 38 |
+| Last lock wait / tick work / max tick work | 0.2 µs / 550.7 µs / 22,781 µs |
+| Scheduler cadence lateness p50 / p99 / max | 0.0 / 0.0 / 0.0 ms |
+| Scheduler overruns | 0 |
+| SQLite 200 writes / 200 reads, average | 938.0 µs / 231.1 µs |
+| SQLite operations / slow / failures / rollbacks / max | 402 / 1 / 0 / 0 / 115 ms |
+| WAL bytes before checkpoint | 0 |
+| Checkpoint | 1.5 ms |
+| Resting platform threads / peak | 15 / 20 |
+| Snapshot allocation per call | 16,958 B |
+| GC collections / time | 24 / 622 ms |
+| Scheduler shutdown drain | 0.4 ms |
+
+The first write includes schema initialization, which explains the 115 ms maximum;
+later writes stay sub-millisecond. The per-session output budget, overflow and
+disconnect policy is covered by `SessionOutputBudgetTest`, and the scheduler serial
+lane, cap, failure isolation and shutdown by `SceneSchedulerTest`.
+
 ## Refresh procedure
 
 Run only when this baseline must be replaced, not per change:
