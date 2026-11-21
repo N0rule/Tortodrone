@@ -1,6 +1,8 @@
 # Phase 0 baseline (0.42.0 redesign)
 
-This is the fixed starting point for the redesign's measurements and evidence gates.
+This is the fixed starting point for the redesign's measurements and evidence gates. Its
+schema numbers and upgrade notes describe the pre-0.42.0 build that was measured; the
+0.42.0 persistence reset is recorded in [architecture](architecture.md#main-components).
 Behaviour is defined by source and tests; this file records what the current build
 and tools actually produce. It is not a milestone diary.
 

@@ -110,16 +110,7 @@ public final class MailDeliveryTest {
             refused(()->house.mail(alice,1,1,5,List.of(mail("Bob-Knight","x".repeat(51),"long subject",Map.of(),0,0))));
             check(db.worldProfile(alice,1,1).items().equals(snapshot.items())||itemCount(db.worldProfile(alice,1,1),"Material/Gel Drop")==gelBefore,"refused sends never consume an item");
 
-            int preserved=mailbox(db,bob).size();
-            downgradeTo15(db,home);
-            var upgraded=org.tortodrone.support.SchemaFixture.upgrade(home);
-            check(version(upgraded)==Database.SCHEMA_VERSION,"schema 15 upgrades to the current schema");
-            check(hasMailColumn(upgraded,"sender")&&hasMailColumn(upgraded,"energy")&&hasMailColumn(upgraded,"attachments")&&hasMailColumn(upgraded,"mail_type"),"the mail migration adds sender, energy, attachments and type");
-            check(mailbox(upgraded,bob).size()==preserved,"pre-migration mail survives the candidate export");
-            var recovered=new AuctionHouse(upgraded,items,rules);
-            recovered.mail(bob,1,1,5,List.of(mail("Alice-Knight","after upgrade","still deliverable",Map.of(),0,0)));
-            check(mailbox(upgraded,alice).stream().anyMatch(m->m.subject().equals("after upgrade")),"mail works on the migrated database");
-            System.out.println("PASS: player mail fees, multi-item/crown/energy escrow, ownership, GM bounce, rollback and schema-16 migration");
+            System.out.println("PASS: player mail fees, multi-item/crown/energy escrow, ownership, GM bounce and rollback");
         }finally{try(var files=Files.walk(home)){for(var path:files.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
 
@@ -132,22 +123,7 @@ public final class MailDeliveryTest {
     private static int itemCount(WorldProfile profile,String config){
         return profile.items().stream().filter(i->i.config().equals(config)).mapToInt(WorldProfile.Item::count).sum();
     }
-    private static void downgradeTo15(Database db,Path home)throws Exception{
-        try(var c=DriverManager.getConnection("jdbc:sqlite:"+db.file());var s=c.createStatement()){
-            s.execute("PRAGMA foreign_keys=OFF");s.execute("BEGIN IMMEDIATE");
-            s.execute("ALTER TABLE town_mail RENAME TO town_mail_v15");
-            s.execute("CREATE TABLE town_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,sent INTEGER NOT NULL,subject TEXT NOT NULL,body TEXT NOT NULL,crowns INTEGER NOT NULL DEFAULT 0,item TEXT,claimed INTEGER NOT NULL DEFAULT 0,is_read INTEGER NOT NULL DEFAULT 0,auction INTEGER REFERENCES town_auctions(id))");
-            s.execute("INSERT INTO town_mail(id,world_id,sent,subject,body,crowns,item,claimed,is_read,auction) SELECT id,world_id,sent,subject,body,crowns,item,claimed,is_read,auction FROM town_mail_v15");
-            s.execute("DROP TABLE town_mail_v15");
-            s.execute("PRAGMA user_version=15");s.execute("COMMIT");
-        }
-    }
-    private static int version(Database db)throws IOException{
-        return db.read(c->{try(var s=c.createStatement();var r=s.executeQuery("PRAGMA user_version")){r.next();return r.getInt(1);}});
-    }
-    private static boolean hasMailColumn(Database db,String name)throws IOException{
-        return db.read(c->{try(var s=c.prepareStatement("SELECT 1 FROM pragma_table_info('town_mail') WHERE name=?")){s.setString(1,name);try(var r=s.executeQuery()){return r.next();}}});
-    }
+
     private static Knight choices(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0);}
     private interface Checked{void run()throws Exception;}
     private static void refused(Checked work)throws Exception{try{work.run();throw new AssertionError("Expected refusal");}catch(IOException expected){}}

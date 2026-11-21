@@ -952,37 +952,18 @@ loadable; the importer does not guess a replacement for that missing reference. 
 are reported or rejected, never fabricated. Test imported layouts with an isolated
 stock client. No proprietary assets/captures belong in Git.
 
-## Upgrading
+## Database baseline
 
-The current database schema is **17**. A database on known predecessor schemas
-9–17 requires an **explicit offline upgrade candidate**; normal startup refuses
-those versions and all unknown versions, leaving saved state unchanged. Never
-reset the database or regenerate keys.
-
-1. Stop the server; back up the complete `data/`, `content/` and `config/`,
-   including WAL/SHM and keys. A legacy deployment that still contains Depot YAML
-   must keep it until export: preparation refuses to replace it beside an existing
-   database.
-2. With the new JAR, export to a fresh directory outside the source deployment:
-
-   ```sh
-   java -cp /new/tortodrone.jar org.tortodrone.storage.EconomyUpgrade /old/deployment /backup/economy-candidate
-   ```
-
-3. Review the candidate DB and `economy-upgrade.txt`. The tool holds the deployment
-   lock, uses SQLite `VACUUM INTO` for a consistent source copy, upgrades only that
-   copy in one transaction and runs foreign-key/integrity checks before publication.
-   Existing managed offers, IDs, enabled state and revision are retained, including
-   an empty catalog; managed upgrades do not read obsolete Depot YAML. Revision-zero installs import their exact effective old YAML
-   once, including local edits; missing legacy input is refused instead of replaced
-   with stock defaults. ContentMigration's `legacy-depot-import.json` is also a
-   migration-only input. Purchase history and unrelated player/auction state stay
-   unchanged. Unknown schemas and failed imports publish no candidate.
-4. Prepare new content in a separate directory, apply/review your overrides and
-   remove the legacy Depot section from the new `shops.yml`. Validate with
-   ContentManager. Install the reviewed candidate `tortodrone.db` while stopped,
-   retaining the original keys and other runtime files. Do not mix an old DB's
-   WAL/SHM with the candidate; retain those old files together in the stopped backup.
+The 0.42.0 baseline is SQLite `user_version=1` with the fixed project
+`application_id`. A fresh deployment creates that baseline, records it in
+`schema_migrations`, and from then on applies ordered, versioned steps in one
+transaction after a consistent `VACUUM INTO` backup. Startup refuses an unknown
+marker, an unsupported version and every pre-0.42.0 database without changing
+it; there is no automatic or offline conversion of earlier layouts. Keep the
+stopped `data/` tree as a backup, preserve `data/keys/`, and start a new baseline
+rather than editing a saved file by hand. The running console command `backup`
+writes a consistent snapshot to `data/backups/` while the server continues
+serving.
 
 Build preparation replaces only recognized unmodified defaults and fills missing
 files. Conflicting customized content stops preparation before planned content

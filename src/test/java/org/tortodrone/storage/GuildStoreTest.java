@@ -101,22 +101,6 @@ public final class GuildStoreTest {
             catch (java.io.IOException expected) { gone = true; }
             check(gone, "a guild with no members is disbanded");
 
-            // Schema 17 (a database written before guild tables existed) upgrades to 18.
-            db.write(c -> {
-                try (var s = c.createStatement()) {
-                    s.execute("DROP TABLE guild_log");
-                    s.execute("DROP TABLE guild_members");
-                    s.execute("DROP TABLE guild_expansions");
-                    s.execute("DROP TABLE guilds");
-                    s.execute("PRAGMA user_version=17");
-                }
-                return null;
-            });
-            var upgraded = org.tortodrone.support.SchemaFixture.upgrade(home);
-            check(new GuildStore(upgraded).guildOf(aliceWorld) == null, "the 17 to 18 upgrade recreates an empty guild store");
-            upgraded.setCurrency("Alice", "Alice-Knight", alice, -1, Currency.CROWNS, 10_000);
-            check(new GuildStore(upgraded).form(alice, 1, 1, "Upgraded Guild").profile().crowns() == 8000,
-                "guilds can be formed on the upgraded schema");
         } finally {
             try (var paths = Files.walk(home)) {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path);

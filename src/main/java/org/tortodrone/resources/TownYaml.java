@@ -25,7 +25,7 @@ public final class TownYaml {
         Map.entry("variantTables","config root"));
     private TownYaml() { }
     public static Map<String,Object> data(Path directory)throws IOException {return data(directory,false,referenceItems(directory));}
-    /** Offline upgrade only; the runtime parser rejects depot YAML. */
+    /** Migration-only input; the runtime parser rejects depot YAML. */
     public static Map<String,Object> migrationData(Path directory)throws IOException {return data(directory,true,referenceItems(directory));}
     private static ItemCatalog referenceItems(Path directory)throws IOException {
         return Files.exists(directory.resolve("../_internal/item-bindings.json"))?ItemYaml.load(directory.resolve("../items").normalize()):null;

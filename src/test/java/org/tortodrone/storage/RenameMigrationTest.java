@@ -28,12 +28,6 @@ public final class RenameMigrationTest {
             new CharacterStore(db,b,"Bob",items).create(knight("Bob-Knight"));
             db.grantItems("Alice","Alice-Knight",a,-1,items.require("Upgrade/Rename Knight"),2,-1,-1);
             var before=db.worldProfile(a,1,1);
-            db.write(c->{try(var s=c.createStatement()){org.tortodrone.support.SchemaFixture.depotBefore15(c);s.execute("ALTER TABLE knights DROP COLUMN last_renamed");s.execute("PRAGMA user_version=13");}return null;});
-            try(var channel=FileChannel.open(home.resolve("server.lock"),StandardOpenOption.CREATE,StandardOpenOption.WRITE);var lock=channel.lock()){
-                refused(()->new Database(home,false));
-                check(version(db)==13,"locked predecessor is untouched");
-            }
-            db=org.tortodrone.support.SchemaFixture.upgrade(home);check(version(db)==Database.SCHEMA_VERSION&&db.worldProfile(a,1,1).equals(before),"schema 13 upgrades without losing items or identity");
             var store=new TownStore(db,items,rules);store.canRename(a,1,1);
             refused(()->store.rename(a,1,1,"Bob-Knight"));
             refused(()->store.rename(a,1,1,"Alice-Knight"));
@@ -72,7 +66,7 @@ public final class RenameMigrationTest {
             check(tickets(reopened.worldProfile(b,1,1))+tickets(reopened.worldProfile(carol,1,1))==1&&(clock(reopened,b)>0)!=(clock(reopened,carol)>0),"losing duplicate retains ticket and unused clock");
             reopened.write(c->{try(var s=c.createStatement()){s.execute("PRAGMA user_version=999");}return null;});
             refused(()->new Database(home,false));check(version(reopened)==999,"unknown schema remains untouched");
-            System.out.println("PASS: fresh/schema-13/reopen/unknown migrations, lock exclusion, rename ownership/auth/duplicate/ticket rollback and persistent cooldown");
+            System.out.println("PASS: fresh/reopen/unknown-refusal, rename ownership/auth/duplicate/ticket rollback and persistent cooldown");
         }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
     }
     private static int tickets(WorldProfile p){return p.items().stream().filter(i->i.config().equals("Upgrade/Rename Knight")).mapToInt(WorldProfile.Item::count).sum();}

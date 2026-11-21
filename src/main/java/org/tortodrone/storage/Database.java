@@ -23,7 +23,8 @@ import org.tortodrone.core.mission.TutorialRoute;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
-    public static final int SCHEMA_VERSION = 18;
+    public static final int SCHEMA_VERSION = SchemaMigrations.LATEST;
+    public static final int APPLICATION_ID = SchemaMigrations.APPLICATION_ID;
     public static final class KnightNameInUse extends IOException {
         private KnightNameInUse(SQLException cause) { super("That knight name is already in use",cause); }
     }
@@ -48,78 +49,127 @@ public final class Database {
     private boolean initialized;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
 
-    private final boolean upgradeCandidate;
-    private final DepotSeed.Data legacyDepot;
-    public Database(Path directory, boolean deploymentLocked) throws IOException { this(directory,deploymentLocked,false,null); }
-    Database(Path directory,boolean deploymentLocked,boolean upgradeCandidate,DepotSeed.Data legacyDepot)throws IOException {
-        this.upgradeCandidate=upgradeCandidate;this.legacyDepot=legacyDepot;
+    public Database(Path directory, boolean deploymentLocked) throws IOException {
         file = directory.toAbsolutePath().normalize().resolve("tortodrone.db");
         try { Class.forName("org.sqlite.JDBC"); }
         catch (ClassNotFoundException e) { throw new IOException("Missing bundled SQLite driver", e); }
         Files.createDirectories(file.getParent());
-        if (Files.exists(file)) {
-            if((version()==9||version()==10||version()==11||version()==12||version()==13||version()==14||version()==15||version()==16||version()==17)&&!deploymentLocked){
-                try(var channel=FileChannel.open(directory.resolve("server.lock"),StandardOpenOption.CREATE,StandardOpenOption.WRITE);var lock=channel.tryLock()){
-                    if(lock==null)throw new IOException("Stop the server before upgrading the database");requireCurrentVersion();
-                }catch(OverlappingFileLockException live){throw new IOException("Stop the server before upgrading the database",live);}
-            }else requireCurrentVersion();
-            initialized=true;
-            DepotStore.alignDefaults(this);
-            return;
-        }
-        if (deploymentLocked) initialize();
-        else {
-            try (var channel = FileChannel.open(directory.resolve("server.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-                 var lock = channel.tryLock()) {
-                if (lock == null) throw new IOException("Stop the server before initializing the database");
-                if (Files.exists(file)) requireCurrentVersion(); else initialize();
-            } catch (OverlappingFileLockException e) { throw new IOException("Database initialization is already in progress", e); }
-        }
-        initialized=true;
+        if (Files.exists(file)) openExisting(directory, deploymentLocked);
+        else if (deploymentLocked) initialize();
+        else initializeUnderLock(directory);
+        initialized = true;
+        DepotStore.alignDefaults(this);
     }
-    private void requireCurrentVersion() throws IOException {
-        int version = version();
-        if(version==9||version==10||version==11||version==12||version==13||version==14||version==15||version==16||version==17){
-            if(!upgradeCandidate)throw new IOException("Database schema "+version+" requires offline EconomyUpgrade; export and review a fresh candidate. Saved data was not changed");
-            // Only known predecessors are eligible; unknown versions remain untouched.
-            try(var c=connect();var statement=c.createStatement()){
-                statement.execute("PRAGMA foreign_keys=OFF");statement.execute("BEGIN IMMEDIATE");
-                try{
-                    int lockedVersion;try(var r=statement.executeQuery("PRAGMA user_version")){r.next();lockedVersion=r.getInt(1);}
-                    if(lockedVersion==9){AuctionSchema.upgrade(c);DepotStore.initialize(c);}
-                    else if(lockedVersion==10)DepotStore.initialize(c);
-                    else if(lockedVersion!=11&&lockedVersion!=12&&lockedVersion!=13&&lockedVersion!=14&&lockedVersion!=15&&lockedVersion!=16&&lockedVersion!=17&&lockedVersion!=SCHEMA_VERSION)throw new IOException("Database schema changed during upgrade");
-                    if(lockedVersion<12)EnergyExchange.initialize(c);
-                    if(lockedVersion<13)GiftStore.initialize(c);
-                    if(lockedVersion<14)TownStore.knightRenameClock(c);
-                    if(lockedVersion<15)DepotStore.upgrade(c,legacyDepot);
-                    if(lockedVersion<16)AuctionSchema.mailColumns(c);
-                    if(lockedVersion<17)MailCampaignStore.initialize(c);
-                    if(lockedVersion<18){GuildStore.initialize(c);TownStore.guildMailColumns(c);}
-                    try(var r=statement.executeQuery("PRAGMA foreign_key_check")){if(r.next())throw new IOException("Database upgrade failed foreign key validation");}
-                    statement.execute("PRAGMA user_version="+SCHEMA_VERSION);statement.execute("COMMIT");
-                }catch(SQLException|IOException|RuntimeException failure){statement.execute("ROLLBACK");throw failure;}
-                finally{statement.execute("PRAGMA foreign_keys=ON");}
-            }catch(SQLException failure){throw failure(failure);}
-            return;
+    /**
+     * Open the 0.42.0 baseline. A database without the project marker is a pre-0.42.0 or
+     * unknown file and is refused untouched; the marker is never written by a read.
+     */
+    private void openExisting(Path directory, boolean deploymentLocked) throws IOException {
+        if (applicationId() != SchemaMigrations.APPLICATION_ID) {
+            int marker = applicationId();
+            throw new IOException((marker == 0
+                ? "This database predates Tortodrone 0.42.0 and has no project marker; saved data was not changed. Use the last 0.41.x build if it must be exported."
+                : "Unsupported database application_id " + marker + "; saved data was not changed"));
         }
-        if (version != SCHEMA_VERSION) throw new IOException("Unsupported database schema " + version
-            + "; expected " + SCHEMA_VERSION + ". Inspect a backup or use a supported explicit upgrade; saved data was not changed");
+        int version = version();
+        if (version < SchemaMigrations.BASELINE || version > SchemaMigrations.LATEST)
+            throw new IOException("Unsupported database schema " + version + "; expected "
+                + SchemaMigrations.LATEST + ". Saved data was not changed");
+        if (version == SchemaMigrations.LATEST) return;
+        if (deploymentLocked) migrate(version);
+        else migrateUnderLock(directory, version);
+    }
+    private void initializeUnderLock(Path directory) throws IOException {
+        try (var channel = FileChannel.open(directory.resolve("server.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+             var lock = channel.tryLock()) {
+            if (lock == null) throw new IOException("Stop the server before initializing the database");
+            if (Files.exists(file)) openExisting(directory, false); else initialize();
+        } catch (OverlappingFileLockException e) { throw new IOException("Database initialization is already in progress", e); }
+    }
+    private void migrateUnderLock(Path directory, int from) throws IOException {
+        try (var channel = FileChannel.open(directory.resolve("server.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+             var lock = channel.tryLock()) {
+            if (lock == null) throw new IOException("Stop the server before upgrading the database");
+            int current = version();
+            if (current == SchemaMigrations.LATEST) return;
+            if (current != from) throw new IOException("Database schema changed during upgrade");
+            migrate(from);
+        } catch (OverlappingFileLockException e) { throw new IOException("Stop the server before upgrading the database", e); }
+    }
+    /** Back up the baseline, then run the ordered steps under one transaction. */
+    private void migrate(int from) throws IOException {
+        Path backups = file.getParent().resolve("backups");
+        Files.createDirectories(backups);
+        backup(backups.resolve("tortodrone-pre-" + from + "-to-" + SchemaMigrations.LATEST + "-"
+            + System.currentTimeMillis() + ".db"));
+        try (Connection connection = connect(); Statement statement = connection.createStatement()) {
+            statement.execute("PRAGMA foreign_keys=OFF");
+            statement.execute("BEGIN IMMEDIATE");
+            try {
+                int locked; try (var r = statement.executeQuery("PRAGMA user_version")) { r.next(); locked = r.getInt(1); }
+                if (locked != from) throw new IOException("Database schema changed during upgrade");
+                SchemaMigrations.apply(connection, from);
+                try (var check = statement.executeQuery("PRAGMA foreign_key_check")) {
+                    if (check.next()) throw new IOException("Database upgrade failed foreign key validation");
+                }
+                statement.execute("PRAGMA user_version=" + SchemaMigrations.LATEST);
+                statement.execute("COMMIT");
+            } catch (SQLException | IOException | RuntimeException failure) {
+                try { statement.execute("ROLLBACK"); } catch (SQLException rollback) { failure.addSuppressed(rollback); }
+                throw failure;
+            } finally {
+                try { statement.execute("PRAGMA foreign_keys=ON"); } catch (SQLException ignored) { }
+            }
+        } catch (SQLException error) { throw failure(error); }
     }
     public Path file() { return file; }
     /** Fold the WAL back into the main file after every writer has stopped. */
-    public void checkpoint() {
+    public void checkpoint() { checkpoint(true); }
+    private void checkpoint(boolean truncate) {
         try (Connection connection = connect(); var statement = connection.createStatement()) {
-            statement.execute("PRAGMA wal_checkpoint(TRUNCATE)");
+            statement.execute("PRAGMA wal_checkpoint(" + (truncate ? "TRUNCATE" : "PASSIVE") + ")");
         } catch (SQLException ignored) {
             // Shutdown must not fail because the file was already closed or removed.
         }
+    }
+    /** Current WAL size; used by the maintenance alarm and shutdown report. */
+    public long walBytes() {
+        Path wal = Path.of(file + "-wal");
+        try { return Files.isRegularFile(wal) ? Files.size(wal) : 0; } catch (IOException ignored) { return 0; }
+    }
+    /**
+     * Periodic maintenance: checkpoint a WAL that has grown past {@code alarmBytes} and
+     * report the observed size so the caller can raise an alarm. Never drops writes.
+     */
+    public long maintain(long alarmBytes) {
+        long before = walBytes();
+        if (before >= alarmBytes) checkpoint(false);
+        return before;
+    }
+    /** Consistent single-file backup using SQLite's own snapshot; the target must not exist. */
+    public Path backup(Path target) throws IOException {
+        Path normalized = target.toAbsolutePath().normalize();
+        Files.createDirectories(normalized.getParent());
+        if (Files.exists(normalized)) throw new IOException("Backup target already exists: " + normalized);
+        read(connection -> {
+            try (PreparedStatement statement = connection.prepareStatement("VACUUM INTO ?")) {
+                statement.setString(1, normalized.toString());
+                statement.execute();
+            }
+            return null;
+        });
+        return normalized;
     }
     private Connection connect() throws SQLException {
         if (!Files.isRegularFile(file)) throw new SQLException("Database file is missing or not a regular file");
         Connection connection = DriverManager.getConnection("jdbc:sqlite:" + file);
         try (Statement statement = connection.createStatement()) {
-            statement.execute("PRAGMA foreign_keys=ON"); statement.execute("PRAGMA busy_timeout=5000");
+            statement.execute("PRAGMA foreign_keys=ON");
+            statement.execute("PRAGMA busy_timeout=5000");
+            statement.execute("PRAGMA synchronous=NORMAL");
+            statement.execute("PRAGMA wal_autocheckpoint=1000");
+            statement.execute("PRAGMA journal_size_limit=67108864");
+            statement.execute("PRAGMA cache_size=-32768");
         } catch (SQLException e) { connection.close(); throw e; }
         return connection;
     }
@@ -203,28 +253,31 @@ public final class Database {
     private int version() throws IOException {
         return read(connection -> { try (Statement s = connection.createStatement(); ResultSet r = s.executeQuery("PRAGMA user_version")) { r.next(); return r.getInt(1); } });
     }
+    private int applicationId() throws IOException {
+        return read(connection -> { try (Statement s = connection.createStatement(); ResultSet r = s.executeQuery("PRAGMA application_id")) { r.next(); return r.getInt(1); } });
+    }
     private void initialize() throws IOException {
         Files.createFile(file);
-        if (Files.getFileStore(file).supportsFileAttributeView("posix")) Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
-        read(connection -> { try (Statement s = connection.createStatement()) { s.execute("PRAGMA journal_mode=WAL"); } return null; });
-        write(connection -> {
-            try (Statement s = connection.createStatement()) {
-                s.execute("CREATE TABLE metadata(key TEXT PRIMARY KEY, value INTEGER NOT NULL)");
-                s.execute("INSERT INTO metadata VALUES('next-account-id',1)");
-                s.execute("CREATE TABLE accounts(id INTEGER PRIMARY KEY CHECK(id>0), username TEXT NOT NULL, name_key TEXT NOT NULL UNIQUE, salt BLOB NOT NULL CHECK(length(salt)=16), verifier BLOB NOT NULL CHECK(length(verifier)=32), game_master INTEGER NOT NULL DEFAULT 0 CHECK(game_master IN(0,1)), auth_revision INTEGER NOT NULL DEFAULT 1, revision INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL, next_knight_id INTEGER NOT NULL DEFAULT 1 CHECK(next_knight_id>0))");
-                s.execute("CREATE TABLE knights(account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, id INTEGER NOT NULL CHECK(id>0), name TEXT NOT NULL, name_key TEXT NOT NULL, helm TEXT NOT NULL, armor TEXT NOT NULL, helm_accessory TEXT, armor_accessory TEXT, costume TEXT NOT NULL, color INTEGER NOT NULL CHECK(color BETWEEN 0 AND 255), height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4), eye INTEGER NOT NULL CHECK(eye BETWEEN 0 AND 46), created_at INTEGER NOT NULL, PRIMARY KEY(account_id,id), UNIQUE(account_id,name_key))");
-                s.execute("CREATE TABLE account_events(id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL, action TEXT NOT NULL, created_at INTEGER NOT NULL)");
-            }
-            WorldProfiles.initialize(connection);
-            TownStore.initialize(connection);
-            GuildStore.initialize(connection);
-            DepotStore.upgrade(connection,DepotSeed.bundled());
-            try (Statement s = connection.createStatement()) {
-                s.execute("CREATE UNIQUE INDEX global_knight_names ON knights(name_key)");
-                s.execute("PRAGMA user_version="+SCHEMA_VERSION);
-            }
-            return null;
-        });
+        try {
+            if (Files.getFileStore(file).supportsFileAttributeView("posix"))
+                Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
+            read(connection -> { try (Statement statement = connection.createStatement()) {
+                statement.execute("PRAGMA journal_mode=WAL"); } return null; });
+            // The marker is written before the first table so a partial initialization is
+            // distinguishable from a pre-0.42.0 file and can never be adopted silently.
+            write(connection -> { try (Statement statement = connection.createStatement()) {
+                statement.execute("PRAGMA application_id=" + SchemaMigrations.APPLICATION_ID); } return null; });
+            write(connection -> {
+                SchemaMigrations.baseline(connection);
+                try (Statement statement = connection.createStatement()) {
+                    statement.execute("PRAGMA user_version=" + SchemaMigrations.LATEST);
+                }
+                return null;
+            });
+        } catch (IOException | RuntimeException failure) {
+            try { Files.deleteIfExists(file); } catch (IOException ignored) { }
+            throw failure;
+        }
     }
     /** Availability is advisory; the unique index arbitrates competing writes. */
     public boolean knightNameInUse(String name,int accountId,int knightId)throws IOException {

@@ -59,9 +59,8 @@ public final class TownStore {
             try(var s=c.createStatement()){s.execute("ALTER TABLE town_mail ADD COLUMN "+column[0]+" "+column[1]);}
         }
     }
-    /** Stored thirty-day rename clock; 0 means the knight has never been renamed. Idempotent:
-     *  databases created at schema 14 already carry the column, so the 13&rarr;14 upgrade and
-     *  fresh initialization share one guarded ALTER. */
+    /** Stored thirty-day rename clock; 0 means the knight has never been renamed. The
+     *  baseline adds the column once, so the create and migrate paths share one guard. */
     static void knightRenameClock(Connection c)throws SQLException{
         try(var r=c.createStatement().executeQuery("SELECT 1 FROM pragma_table_info('knights') WHERE name='last_renamed'")){
             if(r.next())return;

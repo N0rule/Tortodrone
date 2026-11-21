@@ -29,6 +29,7 @@ public final class AccountStore implements AutoCloseable {
     private final Map<Integer,Attached> sessions = new ConcurrentHashMap<>();
     private final Map<Integer,Object> attachmentLocks = new ConcurrentHashMap<>();
     private ScheduledExecutorService watcher;
+    private ScheduledExecutorService maintenance;
     private int nextId = 1;
 
     /** Isolated wire tests retain their explicit synthetic account, never a production backdoor. */
@@ -100,6 +101,25 @@ public final class AccountStore implements AutoCloseable {
     }
     public void observeDatabase(Database.Observer observer) {if(database!=null)database.observe(observer);}
     public Path databaseFile() { return database == null ? null : database.file(); }
+    /** Consistent snapshot written while the server keeps running; storage owns the mechanism. */
+    public Path backup(Path target) throws IOException {
+        if (database == null) throw new IOException("Backups require SQLite storage");
+        return database.backup(target);
+    }
+    /**
+     * Periodic WAL maintenance. A checkpoint runs only after the WAL crosses the alarm size,
+     * and the observed size is reported so the caller can warn without blocking writes.
+     */
+    public synchronized void watchStorage(long alarmBytes, java.util.function.LongConsumer alarm) {
+        if (database == null || maintenance != null) return;
+        maintenance = Executors.newSingleThreadScheduledExecutor(task -> {
+            Thread thread = new Thread(task, "StorageMaintenance"); thread.setDaemon(true); return thread;
+        });
+        maintenance.scheduleWithFixedDelay(() -> {
+            try { long wal = database.maintain(alarmBytes); if (wal >= alarmBytes) alarm.accept(wal); }
+            catch (RuntimeException ignored) { }
+        }, 60, 60, TimeUnit.SECONDS);
+    }
 
     public synchronized List<Summary> list() throws IOException {
         if (database != null) return database.list().stream().map(a -> new Summary(a.id(),a.username(),a.gameMaster(),a.knights(),a.createdAt())).toList();
@@ -294,7 +314,7 @@ public final class AccountStore implements AutoCloseable {
         }),250,250,TimeUnit.MILLISECONDS);
     }
     @Override public void close() {
-        synchronized(this){if (watcher != null) watcher.shutdownNow();}
+        synchronized(this){if (watcher != null) watcher.shutdownNow(); if (maintenance != null) maintenance.shutdownNow();}
         List.copyOf(sessions.values()).forEach(Attached::close);
         if (database != null) { database.close(); database.checkpoint(); }
     }

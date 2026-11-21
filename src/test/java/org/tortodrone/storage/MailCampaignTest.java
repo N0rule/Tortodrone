@@ -140,18 +140,7 @@ public final class MailCampaignTest {
                 && welcomeLetter.crowns() == 10 && welcomeLetter.energy() == 5 && welcomeLetter.items().size() == 1, "welcome mail carries its custom sender, plain text, crowns, energy and gift");
             campaigns.saveWelcome(true, 5, null, "Updated welcome", "New instructions.", 0, 0, List.of());
 
-            db.write(c -> { try (var s = c.createStatement()) { s.execute("PRAGMA user_version=16"); } return null; });
-            var upgraded = SchemaFixture.upgrade(home);
-            check(version(upgraded) == Database.SCHEMA_VERSION, "schema 16 upgrades to the campaign-aware schema");
-            var upgradedHouse = new AuctionHouse(upgraded, items, rules);
-            check(upgradedHouse.campaigns().list().stream().anyMatch(c -> c.subject().equals("Supply drop")), "campaigns survive the explicit upgrade");
-            check(upgradedHouse.campaigns().welcome().enabled() && upgradedHouse.campaigns().welcome().subject().equals("Updated welcome"), "the welcome letter survives the explicit upgrade");
-            int postAccount = upgraded.create("Post", protection, false);
-            var postKnight = new CharacterStore(upgraded, postAccount, "Post", items).create(knight("Post-Knight"));
-            int postWorld = upgraded.worldProfile(postAccount, postKnight.id(), 1).worldId();
-            check(upgradedHouse.campaigns().deliver(postWorld) && inbox(upgraded, postWorld).stream().anyMatch(m -> m.subject().endsWith("Supply drop")), "a freshly upgraded database still delivers active campaigns");
-            check(inbox(upgraded, midWorld).stream().anyMatch(m -> m.subject().endsWith("Direct gift")), "direct offline mail survives the explicit upgrade");
-            System.out.println("PASS: admin mail campaigns store literal text, gifts, crowns and energy; deliver once per knight including late knights; honour windows and cancellation; send direct offline mail with no item timer until claim; apply stock item expiry on claim; deliver an optional welcome once; survive schema 16 to 17 and claim native mail");
+            System.out.println("PASS: admin mail campaigns store literal text, gifts, crowns and energy; deliver once per knight including late knights; honour windows and cancellation; send direct offline mail with no item timer until claim; apply stock item expiry on claim; deliver an optional welcome once and claim native mail");
         } finally {
             try (var paths = Files.walk(home)) { for (var path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path); }
         }

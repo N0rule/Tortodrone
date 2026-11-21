@@ -22,7 +22,7 @@ public final class DepotStore {
     private final Database database;
     private final ItemCatalog items;
     public DepotStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;}
-    // Schema 11 base, also used by the explicit 9..14 candidate upgrade.
+    // Managed Depot base table; the baseline adds promotions in the same transaction.
     static void initialize(Connection c)throws SQLException {
         try(var s=c.createStatement()){s.execute("CREATE TABLE town_depot_offers(id INTEGER PRIMARY KEY AUTOINCREMENT,item TEXT NOT NULL,count INTEGER NOT NULL CHECK(count BETWEEN 1 AND 9999),crowns INTEGER NOT NULL CHECK(crowns>=0),energy INTEGER NOT NULL CHECK(energy>=0),purchase_limit INTEGER NOT NULL CHECK(purchase_limit>=0),featured INTEGER NOT NULL CHECK(featured IN(0,1)),enabled INTEGER NOT NULL CHECK(enabled IN(0,1)))");}
     }

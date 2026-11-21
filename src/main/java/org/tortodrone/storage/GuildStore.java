@@ -42,7 +42,7 @@ public final class GuildStore {
 
     public GuildStore(Database database) { this.database = Objects.requireNonNull(database); }
 
-    /** Idempotent schema creation shared by fresh databases and the explicit 17 &rarr; 18 upgrade. */
+    /** Guild tables for the 0.42.0 baseline. */
     public static void initialize(Connection c) throws SQLException {
         try (var s = c.createStatement()) {
             s.execute("CREATE TABLE IF NOT EXISTS guilds("

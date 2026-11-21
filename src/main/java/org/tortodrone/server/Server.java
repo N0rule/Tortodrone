@@ -130,7 +130,9 @@ public final class Server {
                     else if(millis>=100)log.debug("Slow database operation; operation="+operation+"; duration-ms="+millis);
                 });
                 accounts.watchSessions();
-                log.info("Database: SQLite WAL; schema="+org.tortodrone.storage.Database.SCHEMA_VERSION);
+                accounts.watchStorage(64L*1024*1024,bytes->log.warn("SQLite WAL is large; bytes="+bytes+"; a maintenance checkpoint is pending"));
+                log.info("Database: SQLite WAL; schema="+org.tortodrone.storage.Database.SCHEMA_VERSION
+                    +"; application="+Integer.toHexString(org.tortodrone.storage.Database.APPLICATION_ID));
                 log.info("Loaded " + scenes.catalog().sceneCount() + " maps, "
                     + catalog.entries().size() + " items, " + accounts.list().size() + " accounts");
                 listener.bind(new InetSocketAddress(address, settings.port()));

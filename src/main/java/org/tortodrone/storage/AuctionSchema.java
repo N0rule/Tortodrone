@@ -2,7 +2,7 @@ package org.tortodrone.storage;
 
 import java.sql.*;
 
-/** The sole supported in-place upgrade: existing schema-9 auction escrow is copied intact. */
+/** Auction escrow tables; the 0.42.0 baseline creates the current layout directly. */
 final class AuctionSchema {
     private AuctionSchema() { }
     static void create(Connection c)throws SQLException {

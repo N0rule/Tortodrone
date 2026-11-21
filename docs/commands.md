@@ -275,6 +275,7 @@ The server terminal accepts these forms with an optional leading `/`. These are 
 |---|---|---|
 | `help [command] [action]` | Show all commands or help for one command. | `help account create` |
 | `status` | Show version, uptime, sessions, resources and memory. | `status` |
+| `backup [directory \| file.db]` | Write a consistent SQLite snapshot while the server keeps running. | `backup` |
 | `players` | List current TCP sessions, verified identities and locations. | `players` |
 | `session <session-id>` | Inspect an active connection. | `session 1` |
 | `inspect <knight-name>` | Inspect persistent identity, balances and inventory count. | `inspect Jane` |

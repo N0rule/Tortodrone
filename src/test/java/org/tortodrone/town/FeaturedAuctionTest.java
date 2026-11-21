@@ -55,28 +55,11 @@ public final class FeaturedAuctionTest {
             check(player.item().id()==sword,"escrow retains original item-instance identity for durable inspection");
             house.operate(bob,1,1,1,List.of(player.id(),150),false);
             refused(()->house.operate(alice,1,1,6,List.of(sword,1,100,1000,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.auction.data.Duration",0),true),true));
-            // The predecessor has no system listings; remove only this fixture's finished system history.
-            downgradeFixture(db);
-            try(var channel=FileChannel.open(home.resolve("server.lock"),StandardOpenOption.CREATE,StandardOpenOption.WRITE);var lock=channel.lock()){
-                refused(()->new Database(home,false));
-            }
-            var reopened=org.tortodrone.support.SchemaFixture.upgrade(home);var recovered=new AuctionHouse(reopened,items,rules);
-            var migrated=recovered.overview().getFirst().listing();check(migrated.id()==player.id()&&migrated.bid()==150&&!migrated.featured(),"schema-9 player escrow and bid survive migration");
-            recovered.cancel(player.id());recovered.settleExpired();check(recovered.deliveries(player.id()).size()==2,"migrated cancellation returns item and bidder refund atomically");
-            check(new Database(home,false).worldProfile(bob,1,1).town().mail().stream().anyMatch(m->m.crowns()==150),"pending refunds survive restart");
-            System.out.println("PASS: featured bids/stock, permissions, escrow refunds, mail ownership, idempotent expiry and schema-9 migration");
+            System.out.println("PASS: featured bids/stock, permissions, escrow refunds, mail ownership and idempotent expiry");
         }finally{try(var files=Files.walk(home)){for(var path:files.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
     private static int dbWorld(Database db,int account){try{return db.worldProfile(account,1,1).worldId();}catch(IOException failure){throw new UncheckedIOException(failure);}}
     private static void expire(Database db,long id)throws IOException{db.write(c->{try(var s=c.prepareStatement("UPDATE town_auctions SET expires=0 WHERE id=?")){s.setLong(1,id);s.executeUpdate();}return null;});}
-    private static void downgradeFixture(Database db)throws Exception{
-        try(var c=DriverManager.getConnection("jdbc:sqlite:"+db.file());var s=c.createStatement()){
-            s.execute("PRAGMA foreign_keys=OFF");s.execute("BEGIN IMMEDIATE");org.tortodrone.support.SchemaFixture.depotBefore15(c);s.execute("DELETE FROM metadata WHERE key LIKE 'supply-depot-%'");s.execute("DROP TABLE town_gifts");s.execute("DROP TABLE town_depot_offers");s.execute("DROP TABLE town_energy_offers");
-            s.execute("DELETE FROM town_mail WHERE auction IN(SELECT id FROM town_auctions WHERE seller IS NULL)");s.execute("DELETE FROM town_auction_bids WHERE auction IN(SELECT id FROM town_auctions WHERE seller IS NULL)");s.execute("DELETE FROM town_auctions WHERE seller IS NULL");
-            s.execute("CREATE TABLE old_auctions(id INTEGER PRIMARY KEY AUTOINCREMENT,seller INTEGER NOT NULL REFERENCES world_characters(world_id),item TEXT NOT NULL,start_bid INTEGER NOT NULL,buy_price INTEGER NOT NULL,bid INTEGER NOT NULL,bidder INTEGER REFERENCES world_characters(world_id),expires INTEGER NOT NULL,ended INTEGER NOT NULL DEFAULT 0,cancelled INTEGER NOT NULL DEFAULT 0,fee INTEGER NOT NULL DEFAULT 0)");
-            s.execute("INSERT INTO old_auctions SELECT id,seller,item,start_bid,buy_price,bid,bidder,expires,ended,cancelled,fee FROM town_auctions");s.execute("DROP TABLE town_auctions");s.execute("ALTER TABLE old_auctions RENAME TO town_auctions");s.execute("ALTER TABLE town_mail DROP COLUMN auction");s.execute("PRAGMA user_version=9");s.execute("COMMIT");
-        }
-    }
     private static Knight choices(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0);}
     private interface Checked{void run()throws Exception;}
     private static void refused(Checked work)throws Exception{try{work.run();throw new AssertionError("Expected refusal");}catch(IOException expected){}}

@@ -52,10 +52,7 @@ public final class GiftWrappingTest {
             db.write(c->{try(var st=c.createStatement()){st.execute("DROP TRIGGER reject_unwrap");}return null;});
             opened=town.unwrap(b,1,1,stackBox.id()).profile();
             check(opened.items().stream().filter(i->i.config().equals(material)).count()==1&&opened.items().stream().anyMatch(i->i.id()==existing&&i.count()==9),"unwrap merges a compatible stack and preserves its identity");
-            // Known predecessor upgrade is additive; no player rows or original item state change.
-            db.write(c->{try(var st=c.createStatement()){org.tortodrone.support.SchemaFixture.depotBefore15(c);st.execute("DROP TABLE town_gifts");st.execute("PRAGMA user_version=12");}return null;});
-            check(org.tortodrone.support.SchemaFixture.upgrade(home).worldProfile(b,1,1).equals(opened),"known schema-12 upgrade preserves inventory");
-            System.out.println("PASS: gift ownership/rollback, native pairing, persistence, trade, properties, duplicate unwrap and additive schema upgrade");
+            System.out.println("PASS: gift ownership/rollback, native pairing, persistence, trade, properties and duplicate unwrap");
         }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
     private static long id(WorldProfile p,String name){return p.items().stream().filter(i->i.config().equals(name)).findFirst().orElseThrow().id();}

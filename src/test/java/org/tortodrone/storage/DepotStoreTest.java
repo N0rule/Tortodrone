@@ -69,33 +69,12 @@ public final class DepotStoreTest {
             saved=depot.save(saved.revision(),new DepotStore.Offer(-1,new TownCatalog.Good("Material/Gel Drop",1,1,0,2,"",0),false,true));
             var shared=saved.offers().getLast();var sharedQuote=new DepotStore.Quote(saved.revision(),shared);refused(()->town.depot(account,1,1,shared.id(),1,sharedQuote));
             check(new DepotStore(new Database(root.resolve("new"),false),items,rules).promotions().equals(depot.promotions()),"schedules and cancellations survive restart");
-            // An administrator-managed empty catalog is intentionally empty, even after upgrade.
+            // An administrator-managed empty catalog is intentionally empty.
             Path empty=root.resolve("empty");var emptyDb=new Database(empty,false);emptyDb.write(c->{try(var s=c.createStatement()){s.execute("DELETE FROM town_depot_offers");}return null;});
             check(new DepotStore(new Database(empty,false),items,rules).snapshot().offers().isEmpty(),"empty managed catalog never reseeds");
-            emptyDb.write(c->{SchemaFixture.depotBefore15(c);try(var s=c.createStatement()){s.execute("PRAGMA user_version=14");}return null;});
-            check(new DepotStore(EconomyUpgrade.export(empty,root.resolve("empty-candidate"),null),items,rules).snapshot().offers().isEmpty(),"empty managed upgrade stays empty");
-            Path cli=root.resolve("managed-cli");Files.createDirectories(cli.resolve("data"));Files.copy(emptyDb.file(),cli.resolve("data/tortodrone.db"));
-            EconomyUpgrade.main(new String[]{cli.toString(),root.resolve("managed-cli-candidate").toString()});
-            check(new DepotStore(new Database(root.resolve("managed-cli-candidate"),false),items,rules).snapshot().offers().isEmpty(),"managed CLI upgrade never reads missing or obsolete YAML");
-            // Managed edits, revision and historical ledger survive a supported offline upgrade.
-            var historical=db.worldProfile(account,1,1);long revision=depot.snapshot().revision();
-            db.write(c->{SchemaFixture.depotBefore15(c);try(var s=c.createStatement()){s.execute("PRAGMA user_version=14");}return null;});
-            byte[] original=Files.readAllBytes(db.file());refused(()->new Database(root.resolve("new"),false));
-            var upgraded=EconomyUpgrade.export(root.resolve("new"),root.resolve("managed-candidate"),null);
-            check(upgraded.worldProfile(account,1,1).equals(historical)&&new DepotStore(upgraded,items,rules).snapshot().revision()==revision,"managed state/revision survive candidate export");
-            check(Arrays.equals(original,Files.readAllBytes(db.file())),"source DB bytes unchanged");
-            check(upgraded.read(c->{try(var s=c.createStatement();var r=s.executeQuery("SELECT SUM(purchased) FROM town_purchases WHERE catalog='Supply Depot'")){r.next();return r.getInt(1);}})==2,"historical purchase counts survive unchanged");
-            // Revision-zero YAML fallback imports its exact modified order/prices once, never the stock seed.
-            Path old=root.resolve("legacy");var oldDb=new Database(old,false);
-            oldDb.write(c->{SchemaFixture.depotBefore15(c);try(var s=c.createStatement()){s.execute("DELETE FROM town_depot_offers");s.execute("DELETE FROM metadata WHERE key='supply-depot-revision'");s.execute("PRAGMA user_version=14");}return null;});
-            refused(()->EconomyUpgrade.export(old,root.resolve("missing-import"),null));check(!Files.exists(root.resolve("missing-import")),"missing legacy source never substitutes seed");
-            var imported=new DepotSeed.Data(0,"Fixture edited YAML",List.of(new DepotStore.Offer(0,new TownCatalog.Good("Material/Gel Drop",4,123,0,2,"",0),true,true)),Map.of());
-            var migrated=EconomyUpgrade.export(old,root.resolve("legacy-candidate"),imported);check(new DepotStore(migrated,items,rules).snapshot().offers().equals(imported.offers()),"exact edited YAML imported with existing handles");
-            var bad=new DepotSeed.Data(0,"invalid fixture",List.of(imported.offers().getFirst(),imported.offers().getFirst()),Map.of());
-            refused(()->EconomyUpgrade.export(old,root.resolve("bad-candidate"),bad));check(!Files.exists(root.resolve("bad-candidate")),"failed import publishes no partially initialized catalog");
-            try(var channel=FileChannel.open(old.resolve("server.lock"),StandardOpenOption.WRITE);var lock=channel.lock()){refused(()->EconomyUpgrade.export(old,root.resolve("locked"),imported));}
+
             var shops=Yaml.read(Path.of("content/town/shops.yml"));check(!shops.containsKey("depot"),"no editable Depot defaults");
-            System.out.println("PASS: complete supported 328-offer seed, explicit marker, restart/empty/managed/legacy upgrades, source preservation, rollback, temporal boundaries, native sale fields, stale quotes, shared limits, ownership and concurrent purchases");
+            System.out.println("PASS: complete supported 328-offer seed, explicit marker, restart, empty managed catalog, rollback, temporal boundaries, native sale fields, stale quotes, shared limits, ownership and concurrent purchases");
         }finally{ContentFixture.delete(root);}
     }
     private static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0);}

@@ -52,7 +52,7 @@ public final class MailCampaignStore {
         this.items = Objects.requireNonNull(items);
     }
 
-    /** Fresh databases and the explicit 16 to 17 upgrade share one idempotent creation. */
+    /** Mail campaign tables for the 0.42.0 baseline. */
     static void initialize(Connection c) throws SQLException {
         try (var s = c.createStatement()) {
             s.execute("CREATE TABLE IF NOT EXISTS mail_campaigns("

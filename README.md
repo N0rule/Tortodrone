@@ -268,7 +268,7 @@ To update:
 4. Start the new version and verify login and the WebUI.
 
 > [!CAUTION]
-> Do not delete the database or regenerate keys to fix a login problem. Unknown database schemas are refused instead of migrated automatically. Older schemas require the explicit [offline upgrade](docs/content.md#upgrading).
+> Do not delete the database or regenerate keys to fix a login problem. The 0.42.0 baseline uses a fixed marker and schema 1; a pre-0.42.0 or unknown database is refused untouched instead of migrated. Use the console `backup` command before replacing saved state.
 
 ## Run from source
 

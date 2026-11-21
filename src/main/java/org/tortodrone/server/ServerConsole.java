@@ -103,7 +103,7 @@ final class ServerConsole implements AutoCloseable {
         }
         boolean group=command.equals("account")||command.equals("knight")||command.equals("currency")||command.equals("webui");
         if(ConsoleHelp.known(command) && words.length==1 && !command.equals("items")
-                && !command.equals("status") && !command.equals("stop") && !command.equals("players")
+                && !command.equals("status") && !command.equals("backup") && !command.equals("stop") && !command.equals("players")
                 && !command.equals("start") && !command.equals("restart") && !command.equals("shutdown")) {
             showHelp(ConsoleHelp.topic(command,""));return;
         }
@@ -119,7 +119,16 @@ final class ServerConsole implements AutoCloseable {
                 showHelp(ConsoleHelp.topic(command,words[1]));return;
             }
         }
-        if(command.equals("giveitem")||command.equals("items")) {
+        if(command.equals("backup")&&words.length<=2) {
+            if(accounts.databaseFile()==null)throw new IOException("Backups require persistent SQLite storage");
+            java.nio.file.Path data=accounts.databaseFile().getParent();
+            java.nio.file.Path requested=words.length==2?java.nio.file.Path.of(words[1]):data.resolve("backups");
+            boolean file=requested.getFileName().toString().endsWith(".db");
+            if(!file)java.nio.file.Files.createDirectories(requested);
+            java.nio.file.Path target=file?requested:requested.resolve("tortodrone-"+System.currentTimeMillis()+".db");
+            java.nio.file.Path written=accounts.backup(target);
+            log.info("Database backup written: "+written+" ("+java.nio.file.Files.size(written)+" bytes); the server keeps running.");
+        } else if(command.equals("giveitem")||command.equals("items")) {
             try {
                 log.info(ItemCommands.execute(String.join(" ",words),accounts.catalog(),
                     (user,name,config,count)->accounts.grantItems(user,name,config,count,-1,-1)));

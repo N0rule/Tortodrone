@@ -11,6 +11,7 @@ final class ConsoleHelp {
         new Entry("prestige","","prestige <knight-name> <total>","Set a saved nonnegative prestige total.","prestige Jane 5000"),
         new Entry("help", "", "help [command] [action]", "Show all commands or help for one command.", "help account create"),
         new Entry("status", "", "status", "Show version, uptime, sessions, resources and memory.", "status"),
+        new Entry("backup", "", "backup [directory | file.db]", "Write a consistent SQLite snapshot while the server keeps running.", "backup"),
         new Entry("players", "", "players", "List current TCP sessions, verified identities and locations.", "players"),
         new Entry("session", "", "session <session-id>", "Inspect an active connection.", "session 1"),
         new Entry("inspect", "", "inspect <knight-name>", "Inspect persistent identity, balances and inventory count.", "inspect Jane"),
@@ -54,7 +55,7 @@ final class ConsoleHelp {
         var lines=new java.util.ArrayList<String>();
         lines.add("Server console commands:");
         lines.add("  help [command] [action]  Show detailed usage and an example.");
-        lines.add("  status | stop           Show status or stop the game listener (exits without WebUI).");
+        lines.add("  status | backup | stop  Show status, write a database snapshot, or stop the listener.");
         lines.add("  account (alias: ac)     List, create, check, reset or delete accounts; manage GM roles.");
         lines.add("  webui                   List, create, recover or revoke WebUI accounts.");
         lines.add("  start | restart | shutdown   Control the game listener or confirm full shutdown.");

@@ -38,7 +38,7 @@ final class UnifiedExport {
         if(town.containsKey("depot")) {
             // Legacy import artifact only; never loaded as a runtime catalog.
             Files.writeString(target.resolve("legacy-depot-import.json"),Json.stringify(Map.of("depot",town.get("depot")))+"\n",StandardOpenOption.CREATE_NEW);
-            report.add("Legacy Depot preserved as legacy-depot-import.json; import explicitly with EconomyUpgrade, not YAML runtime configuration");
+            report.add("Legacy Depot preserved as legacy-depot-import.json for audit; runtime offers live in SQLite");
         }
         for(var section:TownYaml.SECTIONS.entrySet()) {var data=new LinkedHashMap<String,Object>();for(String key:section.getValue()){data.put(key,town.getOrDefault(key,List.of()));handled.add(key);}write(content.resolve("town/"+section.getKey()+".yml"),data);}
         if(!handled.containsAll(town.keySet()))throw new IOException("Unconverted Town sections: "+town.keySet().stream().filter(k->!handled.contains(k)).toList());
