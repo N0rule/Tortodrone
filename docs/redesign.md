@@ -8,8 +8,15 @@ This is a design and sequencing document. It describes the intended end state an
 the order of work. Current behaviour is defined by source and tests, not by this
 file.
 
+This is a **full redesign**, not a feature patch. Code moves into six modules, the
+three god classes are split by responsibility, persistence is rebuilt at schema 1,
+content becomes mission-owned, and every unimplemented gameplay system gets a
+reserved code package and content folder now — even when its implementation is
+several releases away. The phases differ in risk and order, not in ambition.
+
 **Release target: `0.42.0`** — a behavioural release with a new database schema and
-content format. It is not `1.0.0`, and pre-`0.42.0` user data is not migrated.
+content format. It is not `1.0.0`. Pre-`0.42.0` user data is not migrated in this
+release; explicit migrations are added for later releases.
 
 ## Fixed constraints
 
@@ -56,8 +63,9 @@ Costs and guardrails:
 - **No minimization.** `minimize()` is unsafe here because SQLite JDBC, JLine
   providers and reflective service loading are resolved at runtime. A smaller JAR
   is not worth a server that fails only in production.
-- **Notices stay inside the JAR.** Third-party licence material is packaged under
-  `META-INF/` and assembled into `licenses/` on release.
+- **No licence packaging step.** Release packaging does not add project licence or
+  notice files. Bundled dependencies keep their own terms; this plan neither
+  relicenses them nor adds enforcement around them.
 - **One archive, not one class loader.** Shadow does not isolate dependencies. If
   two libraries ever need conflicting versions, relocate or remove one; do not add
   a second class loader.
@@ -67,6 +75,7 @@ Alternatives rejected:
 | Alternative | Why not |
 | --- | --- |
 | Application distribution with `lib/` | Violates the single-JAR contract and makes partial updates possible. |
+| Bootstrap JAR that downloads libraries on first run | Adds a network dependency to startup, allows version drift, breaks air-gapped hosts and turns a supply-chain failure into a server that will not boot. With three runtime dependencies there is nothing to gain. |
 | `Class-Path` manifest entries | Still multiple files, with fragile relative paths. |
 | `jlink` / `jpackage` | Bundles a platform-specific JDK, grows the download and complicates updates. |
 | A framework boot loader | Adds a packaging framework to solve a problem Shadow already solves. |
@@ -80,6 +89,12 @@ find build -maxdepth 1 -name '*.jar'
 ```
 
 Gradle scratch output stays under `.build/`; it is not a deployment artifact.
+
+A download-on-first-run bootstrap is deliberately not used. Minecraft server
+launchers do it because their dependency graphs are large and change often. Here the
+runtime is three libraries and the current archive is about 16 MiB, so downloading
+them would add startup failure modes, version drift and an air-gap problem without
+any meaningful size benefit. Ship the dependencies inside the one JAR.
 
 ## Concurrency model
 
@@ -285,6 +300,29 @@ Rules:
 - Importers are the only writers of the new layout, and support `--check`.
 - Catalogue equivalence between v1 and v2 is the gate for deleting v1.
 
+### What `format.txt` is
+
+`content/format.txt` is a one-line layout version marker, not a manifest, catalogue
+or checksum file. Its whole content is the version the tree uses:
+
+```text
+2
+```
+
+The loader reads it before walking `content/` and uses it to choose the parser:
+`1` is the current split-file layout (`rank.yml`, `grants.yml`, `comlinks.yml`,
+`routes.yml`), `2` is the per-mission folder layout. It is explicit instead of
+inferred from directory shape, so:
+
+- a half-migrated tree fails immediately instead of being guessed at;
+- a future format `3` can be added without changing the detection rules;
+- an unknown or missing version is refused with a clear operator message;
+- the version is independent of the per-file provenance manifest, which answers
+  "who wrote this file", not "how is this tree shaped".
+
+`format.txt` is not user-editable content. Importers and the content migration task
+write it; startup only reads it.
+
 ## Database
 
 SQLite remains the correct choice: single node, no external service, ACID economy,
@@ -304,6 +342,17 @@ Target:
 - Batch related writes in one transaction; commit before publishing events.
 - Unknown existing database: refuse startup with an actionable message. Never
   auto-migrate, auto-delete or silently open pre-`0.42.0` data.
+
+Migration policy:
+
+- `0.42.0` is a clean baseline. Data from earlier schemas is not read or converted.
+- From `0.42.0` onward, schema changes use explicit, ordered, versioned migration
+  steps with a recorded schema version, run in one transaction, and refuse unknown
+  versions instead of guessing.
+- The migration runner exists from the first release even though this release has
+  nothing to migrate. Adding it later would force another data reset.
+- Downgrades are not supported. A backup is taken before an upgrade, and an
+  operator must archive or remove pre-`0.42.0` data deliberately.
 
 PostgreSQL is revisited only if measured multi-node or concurrency requirements
 appear. The repository boundary keeps that possible.
@@ -332,7 +381,7 @@ appear. The repository boundary keeps that possible.
 | 1. Content v2 | Per-mission folders, `shared/` root, reserved `systems/` folders, v1/v2 loader, importer and manifest changes | v1/v2 catalogues identical; validation green |
 | 2. Mission runtime | Objective model and `objectives.yml`, mission bar/DSet, room progress, gate map, party config, gate-conversation lobbies, exchange draw, reward wheel | One rank mission runs floor-by-floor with live objectives and settles; one graphical scenario |
 | 3. Boundaries | Move code into the six modules, introduce domain view contracts, break the known cycles, add the architecture check | Exactly one JAR; dependency check green; no behaviour change |
-| 4. Persistence reset | Schema 1, repositories, transaction services, online backup, remove upgrade paths | Storage, trade, auction, mail and inventory tests green |
+| 4. Persistence reset | Schema 1 baseline, repositories, transaction services, online backup, versioned migration runner (no pre-0.42.0 upgrade) | Storage, trade, auction, mail and inventory tests green |
 | 5. Session and codec split | Router and feature handlers, `WorldSession` facade, per-feature codecs over golden fixtures | Per-feature session and wire tests green |
 | 6. Concurrency hardening | Explicit scene scheduler, connection/output lifecycle, budgets and profiling, allocation reduction | Tick and queue budgets met under the defined load |
 | 7. New systems | Arcade, guild hall, PvP, events, Shadow Lairs, achievements — each its own epic with reserved folders already in place | Per-epic acceptance; no shared abstraction invented ahead of two real users |
@@ -348,7 +397,8 @@ regressions.
   documented.
 - The 108 rank missions have a room-level runtime: objectives, mission bar, progress
   and settlement.
-- Database is schema 1 with no upgrade path from earlier schemas.
+- Database is schema 1, with no upgrade path from pre-`0.42.0` data and a versioned
+  migration runner ready for later releases.
 - Six modules with no forbidden dependency edge.
 - `WorldSession` is a facade; feature handlers and codecs are independently tested.
 - Wire layouts are byte-verified.
