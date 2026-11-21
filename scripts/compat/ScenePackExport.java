@@ -37,9 +37,11 @@ public final class ScenePackExport {
         var p=new Properties();p.setProperty("kind",kind);p.setProperty("scene-id",Integer.toString(scene.sceneId));
         p.setProperty("zone-id",args[3]);p.setProperty("zone-name",args[4]);p.setProperty("name",scene.name);
         p.setProperty("version",Integer.toString(scene.version));
-        if(!(scene.aev() instanceof com.threerings.projectx.data.ProjectXSceneConfig projectConfig)||projectConfig.NQ()==null)
-            throw new IOException("Missing native scene background");
-        p.setProperty("image",projectConfig.NQ());p.setProperty("instances","1");
+        if(!(scene.aev() instanceof com.threerings.projectx.data.ProjectXSceneConfig projectConfig))
+            throw new IOException("Unsupported scene configuration");
+        // Authored scenes without a loading background are served by the stock client with
+        // its own default image, so exporting that fallback preserves the native behavior.
+        p.setProperty("image",projectConfig.NQ()==null?"default.jpg":projectConfig.NQ());p.setProperty("instances","1");
         p.setProperty("spawn-rotation",Float.toString(entrance.rotation));
         p.setProperty("spawn-x",Float.toString(spawnX));p.setProperty("spawn-y",Float.toString(spawnY));
         p.setProperty("scene-sha256",digest(out.resolve("scene.dat")));
