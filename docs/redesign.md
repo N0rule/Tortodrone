@@ -8,15 +8,19 @@ This is a design and sequencing document. Current behaviour is defined by source
 tests, not by this file.
 
 This is a **full redesign**, not a feature patch. Code moves into enforced modules,
-the three god classes are split by responsibility, persistence is rebuilt around a
-new baseline, content becomes mission-owned, and every unimplemented gameplay system
-gets a reserved code package and content folder now — even when its implementation
-is several releases away. The phases differ in risk and order, not in ambition.
+the four god classes — `WorldSession`, the scene classes, `Database` and
+`CharacterStore` — are split by responsibility, persistence is rebuilt around a new
+baseline, content becomes mission-owned, and every unimplemented gameplay system gets
+a reserved code package and content folder in this release — even when its
+implementation is several releases away. The phases differ in risk and order, not in
+ambition.
 
 **Release target: `0.42.0`** — a behavioural release with a new database baseline
 and content format. It is not `1.0.0`. Pre-`0.42.0` user data is not migrated in this
-release. `VERSION` moves to `0.42.0` at Phase 0, before any schema or data-format
-change, so a `0.41.x` build can never open the new baseline.
+release. `VERSION` moves to `0.42.0` when the persistence reset lands (Phase 5). The
+data guard is the baseline marker described under Database, not the version string:
+an older build refuses the new baseline because it does not know the schema, and the
+marker keeps a pre-`0.42.0` database from being mistaken for the new one.
 
 ## Fixed constraints
 
@@ -30,8 +34,9 @@ change, so a `0.41.x` build can never open the new baseline.
 6. SQLite writes stay atomic. Durable state commits before world events publish.
 7. Scene instances own simulation state. Client input is intent, not position.
 8. No new network or database I/O inside a scene tick or a scene/storage lock. The
-   existing commit-under-lock paths are named, bounded and tested; they are not
-   claimed away.
+   commit-under-lock paths that exist today are named below; Phase 4 bounds or
+   refactors them. They are neither bounded nor tested yet, and this plan does not
+   claim otherwise.
 9. The runtime reads only project-owned formats. Installed client data, extracted
    assets and decompiled material never ship.
 10. Verification stays focused: targeted `testUnit` programs and one graphical
@@ -66,10 +71,12 @@ Costs and guardrails:
 - **One archive, not one class loader.** Shadow does not isolate dependencies. If
   two libraries ever need conflicting versions, relocate or remove one; do not add
   a second class loader.
-- **Licence packaging is unchanged until the cutover.** `build.gradle.kts` embeds
-  `LICENSE`/`NOTICE` and `portableZip` ships them today. The cutover removes that
-  project packaging step as a build-only change; until then the plan does not
-  pretend it is already gone.
+- **Gradle modules are source boundaries, not JPMS modules.** The shaded JAR stays a
+  plain classpath archive with one class loader; `module-info.class` is not added.
+- **Licence packaging is out of scope and unchanged.** `build.gradle.kts` embeds
+  `LICENSE`/`NOTICE` and `portableZip` ships `docs/LICENSE`, `docs/NOTICE`,
+  `docs/THIRD-PARTY.md` and `docs/licenses/`. This redesign neither adds nor removes
+  that work; bundled dependency terms remain their own regardless.
 
 Alternatives rejected:
 
@@ -103,7 +110,7 @@ real inventory that Phase 0 must baseline:
 | Client accept | Main thread accepts; one platform thread per connection; a semaphore bounds connections. |
 | Session output | One writer platform thread per session; bounded queue of 64 **frames**; frames may be up to 1 MiB. |
 | Session delivery | Per-session `SceneDelivery` virtual thread plus two additional queues. |
-| Scene tick | One virtual thread per active scene; fixed 50 ms delay; the whole tick and snapshot capture run under the scene monitor. |
+| Scene tick | A scheduled task on the shared `ForkJoinPool`, re-armed per idle transition; fixed 50 ms delay; the whole tick and snapshot capture run under the scene monitor. |
 | Parallelism | Across scenes only. A single scene is never ticked concurrently. |
 | Storage | A fresh SQLite connection per transaction; WAL; `busy_timeout=5000`; game and admin paths use **two `Database` instances on the same file**. |
 | Account watcher | A database read per session every 250 ms. |
@@ -142,11 +149,15 @@ No new commit-under-lock path may be added.
   threads. JDBC never runs on a virtual thread; sqlite-jdbc uses native frames and
   can pin carriers. Game and admin share one writer service, not two `Database`
   instances on the same file.
-- **Connections:** virtual threads for blocking reads, with a bounded connection
-  limit that also bounds concurrent handshakes.
-- **Output:** bounded by **bytes and frames** per session, not frames alone. Define
-  the overflow policy explicitly: throttle, drop to a lower update rate, or
-  disconnect. Encoding stays off the scene thread where possible.
+- **Connections:** virtual threads for socket reads and session work, with a bounded
+  connection limit that also bounds concurrent handshakes. Any JDBC call from a
+  session is dispatched to the storage executor; it never runs on a carrier.
+- **Output:** bounded by **bytes and frames** per session. Policy: when a session
+  exceeds its byte budget, drop optional update frames (snapshots beyond the newest,
+  effect chatter) rather than reliable state changes; a client that stays over budget
+  for a sustained window is disconnected. The scene never waits on a slow client and
+  the slow client never causes another client to lose state. Encoding stays off the
+  scene thread where possible.
 - **Scenes:** an explicit scheduler with a bounded carrier pool and one serial
   execution lane per scene. Fixed 50 ms cadence, no burst catch-up, active-scene
   cap, and an overrun policy (log, skip, or evict) chosen from measurement.
@@ -185,9 +196,11 @@ outside all of them except the named commit paths.
 
 1. Per scene: lock wait, tick work, publication and delivery, and cadence lateness —
    p50/p99/max, sampled outside the scene monitor.
-2. A defined load: clients, scenes, actors per scene, party sizes, and the workload
-   mix (idle town, full interior, revive, owned-item use, elevator settlement) on a
-   stated hardware and heap size.
+2. A defined load, recorded with the measurement host (CPU model, cores, RAM, JDK
+   build): 16 clients at the shipped default, one 8-player interior, one town
+   instance, plus the workload mix (idle, full interior, revive, owned-item use,
+   elevator settlement), at `-Xmx512m` and `-Xmx1g`. Instrumentation is Phase 4 work;
+   the numbers do not exist yet.
 3. Tick gap and input latency while a revive/settlement transaction runs against a
    contended database.
 4. Database wait, `SQLITE_BUSY` count, transaction duration, WAL bytes, checkpoint
@@ -208,14 +221,23 @@ At the time of writing:
 - 53 imported gate routes; one fully playable route beyond the pinned opening gate:
   `shadow_beast` (scenes 351, 380, 382, 384).
 - 17 map folders under `content/maps`.
-- 251 `*Test.java` programs; 254 test files declare `main()` and run through the
-  standalone runner.
+- 251 `*Test.java` programs; `testUnit` selects 245 of them (six integration tests are
+  excluded). Three further files declare `main()` as benchmarks or the harness rather
+  than tests: `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
 - `build/tortodrone.jar` is 15,780,467 bytes (about 15 MiB).
 
-**108 rank missions is not 108 playable routes.** Many routes still resolve to
-unbundled scenes or live-only packs. The 0.42.0 runtime must make every route whose
-floors are bundled playable, and keep unresolved routes hidden with an explicit
-reason. It must not claim all 108 are playable.
+**108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
+every floor present under `content/maps`, and only one of those also has a complete
+lobby-to-level wedge chain:
+
+- `shadow_beast` — lobby 351, floors 380, 382, 384;
+- `ancient_generator` — route wants lobby 351 then 337, but the shipped opening gate
+  goes directly to 337;
+- `choose_your_sprite` and `laboratory_visit` — lobby-only wedge (scene 30893);
+- `hall_of_heroes_4` — lobby-only wedge (scene 318).
+
+The 0.42.0 runtime must play every route that is startable from shipped content, and
+hide the rest with a recorded reason. It must not claim all 108 are playable.
 
 Evidence rules:
 
@@ -229,7 +251,7 @@ Evidence rules:
 
 ### Current graph
 
-The current code is not a six-module graph. The package graph contains a strongly
+The current code is not a module graph at all. The package graph contains a strongly
 connected component spanning:
 
 ```text
@@ -238,15 +260,20 @@ account, character, loot, protocol, resources, storage, town, world
 
 Known concrete cycles:
 
-- `protocol` imports `world`, `storage`, `town` and `character` (47 world imports in
-  `SessionCodec` alone);
+- `protocol` imports `world`, `storage`, `town` and `character` — 11 `world` import
+  lines and 49 fully-qualified references in `SessionCodec` alone;
 - `storage` imports `protocol` (`AuctionHouse`, `BoxOpeningService`);
 - `resources` imports `world` (`MissionComlinks`, `MissionGates`, `SceneConversation`,
-  `FireCatalog`, and `SceneEntities.validateItemUse`);
-- `server` imports `web`, while the WebUI is wired back into `Server`.
+  `FireCatalog`), and also `news` and `config` (`NewsYaml`, `ContentMigration`);
+- `world` imports `config` and `news` (`SceneRegistry`, `SceneCatalog`), and
+  `protocol` (`TownMovement`, `SceneActions`, `SceneWeapons`, `SceneEntities`,
+  `SceneEntityState`);
+- `server` imports `web`, while the WebUI is wired back into `Server`;
+- `resources` calls `SceneEntities.validateItemUse` from `MapYaml`.
 
-Therefore **module extraction is not the first step**. Phases 0–3 break these edges
-in-package; only then can Gradle enforce them.
+Therefore **module extraction is not the first step**. Phase 3 breaks these edges
+in-package; Phases 0–2 must not add new ones. Only after Phase 3 can Gradle enforce
+them.
 
 ### Target modules
 
@@ -274,7 +301,9 @@ Allowed edges:
 :core     -> none
 ```
 
-`news`, `config` and `web` live in `:server`; `account`, `character` storage,
+`news`, `config` and `web` are server-owned, but the **settings value type** and the
+**news read model** are read by loaders, so those types move to `:core` and are
+passed in rather than fetched from statics. `account`, `character` storage,
 `storage`, `loot` opening and `town` services live in `:gameplay`; character, town
 and loot **models** move to `:core`. `resources` becomes `:content`. Split packages
 are expected: a package is assigned by extracted type, not by its current name.
@@ -284,15 +313,19 @@ are expected: a package is assigned by extracted type, not by its current name.
 1. Move shared model types out of `world`, `storage` and `town` into `:core`: scene
    content specs, fire graphs, mission gates/comlinks/conversations, item and
    character read views.
-2. Replace `protocol → world/storage/town` with `:core` view contracts. `SessionCodec`
-   keeps a facade and receives views, not live scenes or profiles.
-3. Remove `storage → protocol` by moving request/decoder-owned types to `:core` or
+2. Move the `ServerSettings` value type and the `NewsCatalog` read model into `:core`,
+   then pass them into `:content` loaders instead of reading `config`/`news` statics
+   from `resources` and `world`.
+3. Replace `protocol → world/storage/town` with `:core` view contracts. `SessionCodec`
+   keeps a facade and receives views, not live scenes or profiles. Move the
+   `WireTypes` constants to `:core` so `world` stops importing `protocol`.
+4. Remove `storage → protocol` by moving request/decoder-owned types to `:core` or
    handling them in `:gameplay`.
-4. Move `SceneEntities.validateItemUse` out of the content path into `:world`
-   validation.
-5. Break `server ↔ web` by making the WebUI depend on server-owned interfaces, or by
+5. Remove the `MapYaml` call into `SceneEntities.validateItemUse`. Validation stays in
+   `:world`; the loader receives a validator function.
+6. Break `server ↔ web` by making the WebUI depend on server-owned interfaces, or by
    moving `AdminService` construction behind a server boundary.
-6. Only then create Gradle projects and the dependency check. Use `jdeps`/bytecode as
+7. Only then create Gradle projects and the dependency check. Use `jdeps`/bytecode as
    well as imports; fully qualified references hide edges.
 
 ### Codec split
@@ -312,13 +345,16 @@ class table, intern table and connection-local state. Before splitting:
 - `SceneSimulation`/`SceneEntities` → one shared mutable entity model plus
   `MovementSystem`, `CombatSystem`, `StatusSystem`, `PortalSystem`,
   `ElevatorSystem`, `SnapshotBuilder` and an explicit callback contract. The
-  current ten callback sinks are part of that contract, not incidental wiring.
+  current eleven callback fields are part of that contract, not incidental wiring.
 - `Database` → transaction/schema owner plus repositories. Every write currently
   runs an expiry sweep; the split must preserve or deliberately replace it.
 - `CharacterStore` is a storage facade returning `storage.*` types. Split the model
   from the store before claiming a `character`/`storage` boundary.
 
-Reserved packages contain `package-info.java` describing the contract:
+Reserved packages and their content folders are created in Phase 1, each with a
+`package-info.java` (and a `README.md` under the matching content folder) describing
+the contract and the evidence it still needs. Phase 9 fills them; it does not create
+them:
 `gameplay/mission/{objective,prestige,gateconversation,missiontest}`,
 `world/arcade`, `gameplay/guildhall`, `gameplay/pvp`, `gameplay/events`,
 `gameplay/lairs`, `gameplay/achievements`.
@@ -331,7 +367,7 @@ The existing roots are **already the shared area**:
 
 ```text
 content/items, content/maps, content/monsters, content/town, content/loot,
-content/news, content/shared, content/_internal
+content/shared (including shared/news), content/_internal
 ```
 
 They stay where they are in 0.42.0. Moving them under a second `content/shared/`
@@ -339,7 +375,7 @@ root would break `ContentManager`, `MapYaml`, `ItemYaml`, `TownYaml`, `BoxCatalo
 `MapImport`, `ItemMigration`, `ContentPresentation` and `BuildTools`, and would make
 `maps.getParent().resolve("shared")` resolve to `content/shared/shared`.
 
-The redesign adds two things:
+For missions, the redesign adds:
 
 - `content/missions/<mission-id>/` for mission-owned records;
 - `content/shared/missions/` for records shared by the catalogue.
@@ -351,7 +387,6 @@ content/
   loot/
   maps/{level,town,training}/<scene>/
   monsters/
-  news/
   town/
   shared/
     combat.yml
@@ -398,7 +433,10 @@ content/
 Rules:
 
 - A mission folder owns only mission-specific records. Reused maps, items, monsters,
-  towns, loot and shared mission groups/properties stay in the existing roots.
+  towns and loot stay in the existing roots. Shared mission `groups.yml` and
+  `properties.yml` move from `content/missions/` to `content/shared/missions/`.
+- A shared scene is never copied into a mission folder. Mission folders reference
+  scenes by level or id; the lobby scene 351 stays shared by every route that uses it.
 - `mission.yml` contains the complete row, including `requirement` and `rewards`
   references. There is no separate `rewards.yml`, `exchange.yml`,
   `gate-conversation.yml` or `tests.yml`; those are row fields or requirement types,
@@ -410,9 +448,13 @@ Rules:
   above (the last optional and only when supported). Reserved `systems/` folders
   contain a `README.md`, not empty YAML with invented fields.
 - Rank, prestige, expansion and hidden remain mission families in `mission.yml`.
-- The v1 reader stays for one release. The v2 reader is recursive, removes the
-  16-file cap and reads `content/shared/missions/groups.yml` and `properties.yml`.
-- `_internal/` does not move. Its files are loader inputs, not provenance.
+- **v1 stays readable for one release.** `0.42.0` ships and validates v2, but the v1
+  reader remains so an existing tree still boots; it is deleted in `0.43.0`. The v2
+  reader is recursive, removes the 16-file cap and reads
+  `content/shared/missions/groups.yml` and `properties.yml`.
+- `_internal/` does not move. It holds loader inputs and provenance metadata. Only
+  `default-source.properties` and `provenance/` are touched, and only for path
+  regeneration.
 
 ### `format.txt`
 
@@ -442,12 +484,13 @@ working.
 - Add a deterministic, idempotent offline v1→v2 converter. It reads only the
   checked-in v1 tree, writes a temporary v2 tree, validates it, then swaps
   atomically. It does not depend on external captures.
-- Add `--check` to all four mission importers, not just `import_missions.py`. All
-  writers use a temporary file/directory and atomic replacement; a partial write
-  must not create a mixed tree.
-- The manifest moves to v2 **per-file** `owned.*` and `source.*` keys, regenerated
-  from the converted tree. A folder digest may exist as an optional summary, but it
-  is not the conflict unit; one edited mission must yield one file conflict.
+- Add `--check` to all four mission importers, not just `import_missions.py`, and
+  give all four temporary-file/directory writes with atomic replacement. Today all
+  four call `Path.write_text` directly, so a partial run can produce a mixed tree.
+- The manifest is already per-file: 549 `owned.*` and 394 `source.*` keys in
+  `_internal/default-source.properties`. Keep per-file keys and regenerate mission
+  paths from the converted tree. A folder digest may exist as an optional summary,
+  but it is not the conflict unit; one edited mission must yield one file conflict.
 - Customized deployments: map each old path to its new path, preserve owner edits,
   and fail with an actionable list when a mapping is ambiguous. “Rebuild by hand” is
   a documented fallback, not the default.
@@ -457,8 +500,10 @@ working.
 “Catalogues identical” is too narrow. The v1/v2 gate requires:
 
 - per-domain semantic dumps (missions, groups, properties, grants, comlinks, gates);
-- unchanged asset domains (items, maps, monsters, town, news, presentation);
-- byte equality for `_internal/`;
+- unchanged asset domains (items, maps, monsters, town, presentation, shared news);
+- byte equality for `_internal/` **excluding** `default-source.properties`, which is
+  regenerated; the manifest is compared semantically instead (same file set and
+  digests after path mapping);
 - unknown/mixed/reserved-file rejection tests;
 - converter idempotence and a boot test on the converted deployment;
 - an ownership-placement diff for every moved mission record.
@@ -470,39 +515,52 @@ WAL readers, one-file backup and a mature JDBC driver already inside the JAR.
 
 ### Baseline marker
 
-`SCHEMA_VERSION=1` cannot be used alone: historical schema 1 exists and is currently
-refused by `DatabaseSchemaTest`. A pre-0.42.0 database must remain distinguishable
-from the new baseline even if its `user_version` is 1.
+`SCHEMA_VERSION=1` cannot identify the new baseline on its own. Earlier releases used
+schema versions up to 18, and `DatabaseSchemaTest` already treats `user_version=1` as
+a refused case. A pre-`0.42.0` database must stay distinguishable from the new
+baseline.
 
-Use a separate marker:
-
-- `PRAGMA application_id` with a fixed project value, plus `user_version=1`; or
-- a `meta(baseline=42)` row written before any other table.
+Use `PRAGMA application_id` with a fixed project value as the marker, plus
+`user_version` as the schema version. `application_id` is written before any table,
+and the schema version counts from 1 at the baseline.
 
 Open rules:
 
 | State | Behaviour |
 | --- | --- |
-| Marker present, schema 1 | Open. |
-| No marker, `user_version` 1–18 | Refuse as pre-0.42.0; do not modify. |
-| Marker present, unknown version | Refuse; do not guess. |
-| Marker absent, empty file | Initialize the new baseline. |
+| Empty file, no marker | Initialize the new baseline (`application_id` and `user_version=1`). |
+| Marker present, `user_version` = 1 | Open. |
+| Marker present, `user_version` = 2..N where N is this build's version | Run ordered migrations from the stored version to N. |
+| Marker present, `user_version` > this build's version | Refuse: downgrade. |
+| Marker present, unparseable/zero schema version | Refuse. |
+| No project marker, non-empty database | Refuse as pre-`0.42.0` or unknown; do not modify. |
 | Unknown `application_id` | Refuse. |
 
-`DatabaseSchemaTest` must be rewritten to assert all of the above, including that a
-refused database is byte-identical afterwards.
+`DatabaseSchemaTest` must be rewritten to assert every row, including that a refused
+database is byte-identical afterwards and that a real fixture for each refused
+version exists instead of a bare `user_version` stamp.
 
 ### Migrations
 
 - `0.42.0` is a clean baseline; no pre-`0.42.0` conversion.
 - From the baseline onward, schema changes use ordered, versioned steps in one
-  transaction, recorded in a migration table.
+  transaction, recorded in a migration table. A known version below the build's
+  version migrates forward; a version above it is refused.
 - Take a backup before an upgrade under the deployment lock.
 - Use `PRAGMA foreign_keys=OFF`, run the steps, run `foreign_key_check`, then commit;
   roll back on any failure.
-- Refuse unknown versions and downgrades. Never auto-migrate.
+- Refuse unknown versions. Never auto-migrate or guess.
 - The migration runner exists from the first release even though this release has
   nothing to migrate.
+
+### Schema targets
+
+- Tables are `STRICT`, so a wrong type fails instead of being silently coerced.
+- Foreign keys are declared and enforced (`PRAGMA foreign_keys=ON` per connection).
+- Item instances are one row per instance; no relational state is stored as JSON.
+- Every foreign-key column and every lookup a store performs has an index.
+- The write path does not run a global expiry sweep on every transaction; expiry
+  runs on its own schedule and its cost is measured.
 
 ### SQLite operations
 
@@ -520,7 +578,7 @@ refused database is byte-identical afterwards.
 ## Verification
 
 - Unit programs stay standalone `main` programs under the existing runner. Do not
-  migrate 251 programs to JUnit as part of this work.
+  migrate the 245 programs selected by `testUnit` to JUnit as part of this work.
 - Selected runs: `./gradlew testUnit -PunitTests=A,B`.
 - Compile/package check: `./gradlew build`.
 - Wire changes: structural decoding plus **synthetic** cross-feature golden fixtures.
@@ -540,16 +598,16 @@ refused database is byte-identical afterwards.
 
 | Phase | Work | Exit gate |
 | --- | --- | --- |
-| 0. Baseline | Set `VERSION` to `0.42.0`; record content hash, JAR size, tick/DB/queue baselines; write the current thread/lock inventory; identify required wire evidence; add synthetic fixture scaffolding | `build` and selected tests green; baselines recorded |
-| 1. Content v2 | Mission folders, `shared/missions/`, `format.txt`, recursive v2 reader, converter, per-file manifest, `--check` on all importers | v1/v2 mission domains identical; converted deployment boots; mixed/unknown trees refused |
-| 2. Mission runtime | Wire evidence for MissionObject/objectives, mission bar, gate map, party config, reward wheel and lobby; objective model and `objectives.yml`; room progress; exchange draw; settle-once | `shadow_beast` runs floor-by-floor with live objectives, bar and room progress; one `mission` graphical scenario; no invented layouts |
-| 3. Cycle breaking | Move shared models to `:core`; replace protocol→world/storage/town with view contracts; remove storage→protocol and content→world; break server↔web | No forbidden edge in the target graph; no behaviour change |
-| 4. Concurrency contract | Split current/ target lock order; bound or refactor every commit-under-lock path; platform-thread storage executor; byte-based output budget; scene scheduler, failure and shutdown contracts; clock fix | The eight measurements exist; budgets defined; lock-order and commit-path tests green |
-| 5. Persistence reset | Baseline marker, schema 1, repositories, one writer, migration runner, backup, SQLite settings, remove pre-0.42.0 upgrade paths | Historical schemas refused untouched; migration and backup tests green |
+| 0. Baseline | Record the `sha256` of `content/` and of `build/tortodrone.jar`, the JAR size, and tick/DB/queue baselines using existing tools; write the current thread/lock inventory; list the required wire evidence with its evidence source; add synthetic fixture scaffolding | `build` and selected tests green; the baseline file and evidence list exist and are committed |
+| 1. Content v2 | Mission folders, `shared/missions/`, `format.txt`, recursive v2 reader, converter, per-file manifest, `--check` and atomic writes on all four importers; create reserved `systems/` folders and `package-info.java` skeletons | v1/v2 mission domains identical and `_internal` equal excluding the manifest; converted deployment boots; mixed/unknown trees refused; reserved paths exist |
+| 2. Mission runtime | Wire evidence for MissionObject/objectives, mission bar, gate map, party config, reward wheel and lobby; objective model and `objectives.yml`; room progress; exchange draw; settle-once; add a `mission` graphical scenario | `shadow_beast` runs floor-by-floor with live objectives, bar and room progress; the four other bundled routes are either playable or recorded as blocked with the exact missing wedge/floor; no invented layouts |
+| 3. Cycle breaking | Move shared models, settings/news types and `WireTypes` to `:core`; replace protocol→world/storage/town with view contracts; remove storage→protocol, resources→world, resources/world→config/news, world→protocol, server↔web | No forbidden **package** edge under the Phase 3 rules, checked with `jdeps`/bytecode; no behaviour change. Gradle enforcement is Phase 6 |
+| 4. Concurrency contract | Split current/target lock order and add `CharacterStore`, `SessionOutput`, `ServerControl` and the registry; add the eight measurements; bound or refactor every commit-under-lock path; platform-thread storage executor and single writer service; byte-based output budget and overflow policy; scene scheduler with active-scene cap, town sharding, failure/recycle and shutdown contracts; clock fix | The eight measurements exist on the recorded load; budgets defined; lock-order, commit-path, overflow, active-scene/town-sharding, scene-failure and shutdown tests green |
+| 5. Persistence reset | `VERSION` to `0.42.0`; baseline marker, schema 1, repositories, migration runner, backup, SQLite settings, remove pre-`0.42.0` upgrade paths, real fixtures for every refused version | Historical versions refused untouched; marker/migration/backup tests green; a 0.41.x build refuses the new baseline |
 | 6. Module extraction | Create the seven Gradle projects and enforcement; keep one shaded JAR; preserve `testUnit`/packaging paths | Exactly one JAR; dependency check green; packaging integration green |
 | 7. Session and codec split | `WireContext`, cross-feature synthetic goldens, router and feature handlers, `WorldSession` facade, per-feature codecs | Per-feature session and wire tests green |
-| 8. Cutover | Delete v1 mission reader and compatibility shims; remove project licence/notice packaging; update `docs/architecture.md`, `docs/content.md`, `docs/operations.md`; tag `0.42.0` | Release build uses only v2 content and the new baseline; docs match |
-| 9. Post-0.42.0 systems | Arcade, guild hall, PvP, events, Shadow Lairs, achievements — each its own epic using the reserved packages and folders | Per-epic acceptance; no shared abstraction invented ahead of two real users |
+| 8. Cutover | Ship v2 content; delete the compatibility paths that the new modules supersede, keeping the v1 mission reader; update `docs/architecture.md`, `docs/content.md`, `docs/operations.md`; tag `0.42.0` | Release build uses v2 content and the new baseline; no canonical doc still describes schema 18 or the pre-`0.42.0` mission layout except the one-release compatibility note; v1 still boots read-only |
+| 9. Post-0.42.0 systems | Arcade, guild hall, PvP, events, Shadow Lairs, achievements — each its own epic filling the reserved packages and folders | Per-epic acceptance; no shared abstraction invented ahead of two real users |
 
 Phases 3–7 are separate changes. Combining them hides correctness and performance
 regressions. Phase 9 is explicitly outside the 0.42.0 definition of done.
@@ -557,11 +615,13 @@ regressions. Phase 9 is explicitly outside the 0.42.0 definition of done.
 ## Definition of done for `0.42.0`
 
 - `./gradlew build` yields exactly one `tortodrone.jar`.
-- Content is v2 for missions, with the existing shared roots unchanged and
-  `systems/` reserved folders documented.
-- Every rank route whose floors are bundled is playable with objectives, mission
-  bar, room progress and one settlement. Unresolved routes stay hidden with an
-  explicit reason; “108 playable” is not claimed.
+- Content is v2 for missions, with the existing shared roots unchanged, v1 still
+  readable for one release, and `systems/` reserved folders and packages present and
+  documented.
+- Every route that is startable from shipped content is playable with objectives,
+  mission bar, room progress and one settlement — at minimum `shadow_beast`. The other
+  four bundled routes are either playable or recorded as blocked with the exact
+  missing wedge or floor. “108 playable” is not claimed.
 - Database uses the new baseline marker, schema 1, no pre-`0.42.0` upgrade, and a
   versioned migration runner for future releases.
 - Seven modules with no forbidden dependency edge.
