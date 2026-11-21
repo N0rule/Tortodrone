@@ -2,5 +2,5 @@ id: 217
 name: Rescue Camp|Before Night Falls
 type: town
 zone: '16777221'
-defaultSpawn: default_spawn
+defaultSpawn: level_start
 instances: 1

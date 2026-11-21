@@ -388,6 +388,20 @@ public final class SceneContentExport {
         return action instanceof ActionConfig.Conditional gate&&gate.elseAction==null&&gate.condition instanceof com.threerings.tudey.config.ConditionConfig.Tagged tag
             &&tag.tag.isEmpty()&&!tag.all&&tag.target instanceof com.threerings.tudey.config.TargetConfig.Source;
     }
+    /** The packed client wraps the archived authored action in the default empty
+     * Tagged("")/Source guard (the condition class default, which no knight satisfies);
+     * conversation.xml carries the unguarded compound. Remove only that placeholder and
+     * only where the caller pins the result against a capture-backed authored action. */
+    private static ActionConfig withoutDefaultTaggedGuards(ActionConfig action,int depth)throws IOException {
+        if(depth>16||action==null)throw new IOException("Invalid conversation action graph");
+        if(strippedGuard(action))return withoutDefaultTaggedGuards(((ActionConfig.Conditional)action).action,depth+1);
+        if(action instanceof ActionConfig.Compound compound&&compound.actions!=null&&compound.actions.length<=256){
+            var copy=(ActionConfig.Compound)compound.clone();copy.actions=new ActionConfig[compound.actions.length];
+            for(int i=0;i<copy.actions.length;i++)copy.actions[i]=withoutDefaultTaggedGuards(compound.actions[i],depth+1);
+            return copy;
+        }
+        return action;
+    }
     private static void collectAreaTriggers(ConfigManager cm,TudeySceneModel scene,Map<String,String> values,List<String> indexes)throws Exception {
         for(var entry:scene.ci(TudeySceneModel.AreaEntry.class)){
             var reference=entry.area;
@@ -1476,6 +1490,10 @@ public final class SceneContentExport {
         if(!footprint.isEmpty()){
             if(footprint.equals("clear-dialog-activator")&&restored==null&&action instanceof com.threerings.projectx.config.ProjectXActionConfig.ClearDialog clear
                     &&clear.target instanceof com.threerings.tudey.config.TargetConfig.Activator)return;
+            if(footprint.equals("default-tagged-guard")&&restored!=null){
+                var unwrapped=withoutDefaultTaggedGuards(action,0);
+                if(org.tortodrone.world.SceneActions.parse(restored).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(sceneAction(unwrapped,0,null,true)))))return;
+            }
             throw new IOException("Sourced conversation response footprint changed");
         }
         if(strippedConversationAction(action))return;

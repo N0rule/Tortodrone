@@ -57,10 +57,14 @@ template is executable. An unsupported leaf (for example the Crash Site knight-p
 reported in `native/import-report.txt` and left as an unsupported action; it does not fail the
 scene import and it does not silently change the authored graph.
 
-One known re-import gap remains: the Rescue Camp source now fails stock dialogue verification
-because Greta 2's third response uses a native `Conditional` around knight memory/objective
-updates, and the runtime has no memory condition. The shipped `rescue_camp` pack remains valid;
-fixing that response is dialogue work, not a map-pipeline change.
+Rescue Camp's Greta 2 conversation needed one dialogue exception: the packed client wraps the
+archived authored `SetObjective` in its class-default empty `Tagged("")`/`Source` condition, while
+the captured `conversation.xml` carries the unguarded `SetMemory` + `SetObjective` compound. The
+exporter removes that placeholder only for the allowlisted `default-tagged-guard` footprint and
+only when the remaining graph exactly equals the captured authored action. Real guards, changed
+objectives and unfootprinted responses are refused. `compileMapsFromSource -Ponly=rescue_camp`
+therefore regenerates the shipped pack, and `camp-story-check` exercises the resulting Greta
+memory and objective at runtime.
 
 ## Generated artifacts
 

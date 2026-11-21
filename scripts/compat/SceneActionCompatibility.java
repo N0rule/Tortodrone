@@ -237,6 +237,23 @@ public final class SceneActionCompatibility {
         objective.persistence=com.threerings.projectx.config.Persistence.KNIGHT;objective.target=new TargetConfig.Source();
         try{SceneContentExport.sceneAction(objective,0,null,true);throw new AssertionError("Arbitrary objective target accepted");}catch(IOException expected){}
         System.out.println("PASS: native SetObjective KNIGHT set/erase, including retained KNIGHT persistence with null config; unsupported scope/target refused");
+        var gretaMemory=new com.threerings.projectx.config.ProjectXActionConfig.SetMemory();
+        gretaMemory.name="talkedGreta2";gretaMemory.persistence=com.threerings.projectx.config.Persistence.KNIGHT;
+        var gretaObjective=new com.threerings.projectx.config.ProjectXActionConfig.SetObjective();
+        gretaObjective.name="findRhendon";gretaObjective.persistence=com.threerings.projectx.config.Persistence.KNIGHT;
+        gretaObjective.objective=new com.threerings.projectx.config.ObjectiveConfig.Simple();((com.threerings.projectx.config.ObjectiveConfig.Simple)gretaObjective.objective).text="m.find_rhendon";
+        var placeholderGuard=new com.threerings.tudey.config.ConditionConfig.Tagged();placeholderGuard.tag="";placeholderGuard.target=new TargetConfig.Source();
+        var guardedObjective=new ActionConfig.Conditional();guardedObjective.condition=placeholderGuard;guardedObjective.action=gretaObjective;guardedObjective.elseAction=null;
+        var gretaCompound=new ActionConfig.Compound();gretaCompound.stopOnFailure=false;gretaCompound.actions=new ActionConfig[]{gretaMemory,guardedObjective};
+        String gretaAction="{\"kind\":\"sequence\",\"stopOnFailure\":false,\"actions\":[{\"kind\":\"knight-memory\",\"name\":\"talkedGreta2\",\"remember\":true},{\"kind\":\"knight-objective\",\"name\":\"findRhendon\",\"text\":\"m.find_rhendon\"}]}";
+        SceneContentExport.verifyConversationResponse(gretaCompound,"",gretaAction,"default-tagged-guard");
+        if(!(gretaCompound.actions[1] instanceof ActionConfig.Conditional))throw new AssertionError("Default-guard verification mutated the native graph");
+        try{SceneContentExport.verifyConversationResponse(gretaCompound,"",gretaAction,"");throw new AssertionError("Default placeholder guard accepted without an authored footprint");}catch(IOException expected){}
+        placeholderGuard.tag="real guard";
+        try{SceneContentExport.verifyConversationResponse(gretaCompound,"",gretaAction,"default-tagged-guard");throw new AssertionError("Authored non-empty guard was stripped");}catch(IOException expected){}
+        placeholderGuard.tag="";
+        try{SceneContentExport.verifyConversationResponse(gretaCompound,"",gretaAction.replace("findRhendon","otherObjective"),"default-tagged-guard");throw new AssertionError("Changed objective accepted through the placeholder footprint");}catch(IOException expected){}
+        System.out.println("PASS: Rescue Camp Greta's default empty Tagged(\"\") placeholder is removed only for its authored objective footprint; real guards and changed objectives are refused");
         var progress=new com.threerings.projectx.dungeon.config.DungeonActionConfig.ProgressEvent();progress.level="tutorial";progress.progress="10_Move";
         if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(progress,0))).equals(new SceneActions.ProgressEvent("tutorial","10_Move")))throw new AssertionError("Native analytics vocabulary lost");
         progress.level="";
