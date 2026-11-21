@@ -61,7 +61,9 @@ public final class BootstrapTest {
         var interiorServer=wire.snapshot(input(outgoing.server((short) 17,true)),(short) 17,1);
         var gates=(java.util.List<?>)interiorServer.get("gates");
         var tutorial=org.tortodrone.world.SceneRegistry.system().tutorial();
-        check(gates.size()==(tutorial==null?1:2),"solo interior render transport");
+        var registry=org.tortodrone.world.SceneRegistry.system();
+        var available=registry.availableGates();
+        check(gates.size()==1+(tutorial==null?0:1)+1+available.size(),"solo interior render transport");
         var gate=(java.util.Map<?,?>)gates.getFirst();
         check(gate.get("_gateId").equals(0)&&gate.get("_wheels").equals(java.util.List.of())
             &&gate.get("_destId").equals(0),"interior transport exposes no dungeon floors or destination");
@@ -69,6 +71,12 @@ public final class BootstrapTest {
             var tutorialGate=(java.util.Map<?,?>)gates.get(1);
             check(tutorialGate.get("_gateId").equals(org.tortodrone.world.TutorialRoute.GATE)
                 &&((java.util.List<?>)tutorialGate.get("_wheels")).size()==1,"tutorial transport gate");
+        }
+        if(!available.isEmpty()){
+            var missionGate=(java.util.Map<?,?>)gates.getLast();
+            check(missionGate.get("_name").equals("%mission:m."+available.getLast().missionId())
+                &&((java.util.List<?>)missionGate.get("_wheels")).size()==available.getLast().wedges().size(),
+                "imported mission gate transport");
         }
         var config = wire.snapshot(input(outgoing.configuration((short) 15)), (short) 15, 2);
         check(config.get("dconfigService") == null && config.get("removed").equals(java.util.List.of()), "configuration schema");

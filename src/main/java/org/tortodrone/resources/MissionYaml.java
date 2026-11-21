@@ -6,6 +6,8 @@ import java.util.*;
 import org.tortodrone.character.MissionCatalog;
 import org.tortodrone.character.StarterCatalog;
 import org.tortodrone.world.MissionComlinks;
+import org.tortodrone.world.MissionGates;
+import org.tortodrone.world.MissionRun;
 import org.tortodrone.world.SceneConversation;
 import static org.tortodrone.resources.Yaml.*;
 
@@ -16,25 +18,26 @@ public final class MissionYaml {
         "prestige","briefing","cardImage","missionProps","rewards","requirement","repeatable","rescueCamp","retired","test",
         "inTest","rank","subrank","needMission","daily","onceOnly","restrictions","group","tier");
 
-    public record Definitions(MissionCatalog missions,MissionComlinks comlinks) { }
+    public record Definitions(MissionCatalog missions,MissionComlinks comlinks,MissionGates gates) { }
 
     public static MissionCatalog load(Path directory)throws IOException{return definitions(directory).missions();}
 
     public static Definitions definitions(Path directory)throws IOException {
-        if(!Files.exists(directory))return new Definitions(MissionCatalog.empty(),MissionComlinks.empty());
+        if(!Files.exists(directory))return new Definitions(MissionCatalog.empty(),MissionComlinks.empty(),MissionGates.empty());
         ContentFiles.safe(directory);if(!Files.isDirectory(directory))throw new IOException("Mission catalogue is not a directory: "+directory);
         var missions=new LinkedHashMap<String,MissionCatalog.Entry>();
         var groups=new LinkedHashMap<String,MissionCatalog.Group>();
         var properties=new LinkedHashMap<String,MissionCatalog.Property>();
         var grants=new LinkedHashMap<String,List<MissionCatalog.Grant>>();
         var comlinks=new LinkedHashMap<String,SceneConversation>();
+        var gates=new LinkedHashMap<String,MissionGates.Gate>();
         try(var paths=Files.list(directory)) {
             var files=paths.filter(Files::isRegularFile).sorted().toList();
             if(files.size()>16)throw new IOException("Too many mission files: "+directory);
             for(Path file:files) {
                 if(!file.getFileName().toString().matches("[a-z][a-z0-9_-]*\\.yml"))throw new IOException("Invalid mission file name: "+file);
                 var root=read(file);var sections=root.keySet();
-                if(sections.size()!=1)throw new IOException(file+": expected one of missions, groups, properties, grants or comlinks");
+                if(sections.size()!=1)throw new IOException(file+": expected one of missions, groups, properties, grants, comlinks or routes");
                 String section=sections.iterator().next();
                 switch(section) {
                     case "missions" -> {
@@ -69,6 +72,12 @@ public final class MissionYaml {
                             if(comlinks.putIfAbsent(id,comlink(id,map(row.getValue(),file+" comlink "+id),file+" comlink "+id))!=null)throw new IOException(file+": duplicate comlink mission "+id);
                         }
                     }
+                    case "routes" -> {
+                        for(var row:map(root.get("routes"),file+" routes").entrySet()) {
+                            String id=row.getKey();if(!id.matches("[a-z][a-z0-9_]{0,127}"))throw new IOException(file+": invalid route mission id "+id);
+                            if(gates.putIfAbsent(id,gate(id,map(row.getValue(),file+" route "+id),file+" route "+id))!=null)throw new IOException(file+": duplicate route mission "+id);
+                        }
+                    }
                     default -> throw new IOException(file+": unknown section "+section);
                 }
             }
@@ -80,7 +89,45 @@ public final class MissionYaml {
             if(mission==null)throw new IOException(directory+": comlink for missing mission "+id);
             if(!mission.requirement().type().equals("conversation")&&!mission.requirement().type().equals("gate_conversation"))throw new IOException(directory+": comlink mission is not a conversation: "+id);
         }
-        try{return new Definitions(catalog,new MissionComlinks(comlinks));}catch(IllegalArgumentException invalid){throw new IOException(directory+": "+invalid.getMessage(),invalid);}
+        for(String id:gates.keySet()) {
+            var mission=catalog.mission(id);
+            if(mission==null)throw new IOException(directory+": route for missing mission "+id);
+            if(!mission.requirement().type().equals("gate")&&!mission.requirement().type().equals("gate_conversation"))throw new IOException(directory+": route mission is not a gate: "+id);
+        }
+        try{return new Definitions(catalog,new MissionComlinks(comlinks),MissionGates.of(gates));}catch(IllegalArgumentException invalid){throw new IOException(directory+": "+invalid.getMessage(),invalid);}
+    }
+
+    private static MissionGates.Gate gate(String id,Map<String,Object> row,String where)throws IOException {
+        fields(row,where,"gateId","icon","colors","description","sourceId","destId","priority","tokens","flags","wheels");
+        var colors=new ArrayList<Integer>();
+        for(Object raw:list(row.get("colors"),where+" colors")) {
+            if(colors.size()>=8)throw new IOException(where+": too many colors");
+            colors.add(integer(raw,where+" color"));
+        }
+        var wedges=new ArrayList<MissionGates.Wedge>();
+        for(Object rawWheel:list(row.get("wheels"),where+" wheels")) {
+            var wheel=map(rawWheel,where+" wheel");
+            fields(wheel,where+" wheel","skip","velocity","start","lengths","wedges");
+            var lengths=list(wheel.get("lengths"),where+" lengths");
+            if(lengths.size()!=1)throw new IOException(where+": only single-wedge wheels are imported");
+            float length=decimal(lengths.getFirst(),where+" length");
+            int skip=integer(wheel.getOrDefault("skip",0),where+" skip");
+            float velocity=decimal(wheel.getOrDefault("velocity",0),where+" velocity");
+            long start=longValue(wheel.getOrDefault("start",0),where+" start");
+            for(Object rawWedge:list(wheel.get("wedges"),where+" wedges")) {
+                if(wedges.size()>=MissionRun.MAX_FLOORS)throw new IOException(where+": too many floors");
+                var wedge=map(rawWedge,where+" wedge");
+                fields(wedge,where+" wedge","scene","level","name","icon","description","type","restricted");
+                wedges.add(new MissionGates.Wedge(integer(wedge.get("scene"),where+" scene"),text(wedge.get("level"),where+" level"),
+                    text(wedge.get("name"),where+" name"),text(wedge.get("icon"),where+" icon"),
+                    text(wedge.get("description"),where+" description"),text(wedge.get("type"),where+" type"),
+                    flag(wedge.get("restricted"),where+" restricted"),skip,velocity,start,length));
+            }
+        }
+        return new MissionGates.Gate(id,integer(row.get("gateId"),where+" gateId"),text(row.get("icon"),where+" icon"),colors,
+            text(row.get("description"),where+" description"),integer(row.get("sourceId"),where+" sourceId"),
+            integer(row.get("destId"),where+" destId"),integer(row.get("priority"),where+" priority"),
+            integer(row.get("tokens"),where+" tokens"),integer(row.get("flags"),where+" flags"),wedges);
     }
 
     private static SceneConversation comlink(String id,Map<String,Object> row,String where)throws IOException {

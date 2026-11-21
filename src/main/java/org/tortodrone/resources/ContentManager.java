@@ -59,7 +59,7 @@ public final class ContentManager {
             for(var item:definitions.equipment().entries())requireItem(definitions.items(),item.config());
             for(var fire:fires.entries())if(!controls.contains(fire.weaponConfig().toLowerCase(Locale.ROOT)))throw new IOException("Fire graph has no weapon/shield controls: "+fire.weaponConfig());
             if(!before.equals(inputs(root)))throw new IOException("Content changed during startup loading; restart with stable input files");
-            return new ContentRegistry(List.of(),Map.of(),catalog,definitions.items(),definitions.weapons(),definitions.equipment(),fires,warnings,town,pet,news,boxes,presentation,missions,missionDefinitions.comlinks());
+            return new ContentRegistry(List.of(),Map.of(),catalog,definitions.items(),definitions.weapons(),definitions.equipment(),fires,warnings,town,pet,news,boxes,presentation,missions,missionDefinitions.comlinks(),missionDefinitions.gates());
         }catch(IllegalArgumentException invalid){throw new IOException("Invalid unified content: "+invalid.getMessage(),invalid);}
     }
     /** Map-only preparation for import/native compatibility tools; runtime uses the full snapshot. */

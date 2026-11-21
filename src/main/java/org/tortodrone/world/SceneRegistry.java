@@ -12,13 +12,13 @@ public final class SceneRegistry {
         private final SceneCatalog.MapScene map;
         private final SceneSimulation simulation;
         private final TutorialRoute tutorial;
-        private final OpeningGate.Attempt opening;
+        private final MissionRun run;
         public Instance(int oid,int index,SceneCatalog.MapScene map){this(oid,index,map,0);}
         private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner){this(oid,index,map,partyOwner,null);}
         private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner,TutorialRoute tutorial){this(oid,index,map,partyOwner,tutorial,null);}
-        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner,TutorialRoute tutorial,OpeningGate.Attempt opening){this.oid=oid;this.index=index;this.map=map;this.partyOwner=partyOwner;this.tutorial=tutorial!=null&&tutorial.source()==map?tutorial:null;this.opening=opening;simulation=new SceneSimulation(this);}
+        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner,TutorialRoute tutorial,MissionRun run){this.oid=oid;this.index=index;this.map=map;this.partyOwner=partyOwner;this.tutorial=tutorial!=null&&tutorial.source()==map?tutorial:null;this.run=run;simulation=new SceneSimulation(this);}
         public TutorialRoute tutorial(){return tutorial;}
-        public OpeningGate.Attempt opening(){return opening;}
+        public MissionRun run(){return run;}
         public int partyOwner(){return partyOwner;}
         public int oid(){return oid;}
         public int index(){return index;}
@@ -30,6 +30,9 @@ public final class SceneRegistry {
     private final OpeningGate generator;
     public TutorialRoute tutorial(){return tutorial;}
     public OpeningGate openingGate(org.tortodrone.character.OpeningMission mission){return mission==org.tortodrone.character.OpeningMission.ANCIENT_GENERATOR?generator:null;}
+    private MissionGates gates=MissionGates.empty();
+    public MissionGates gates(){return gates;}
+    public void gates(MissionGates value){gates=Objects.requireNonNull(value);}
     private final PartyRegistry parties=new PartyRegistry();
     public PartyRegistry parties(){return parties;}
     private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
@@ -153,21 +156,54 @@ public final class SceneRegistry {
         if(leases.isEmpty()&&scene.simulation().playerCount()==0){interiorLeases.remove(scene);interiors.values().removeIf(value->value==scene);interiorOids.addLast(scene.oid());}
     }
     /** Allocate only an authenticated private party's sourced mission floor. */
-    public synchronized Instance startOpening(OpeningGate gate,int worldId,PartyRegistry.Member member,String difficulty)throws IOException {
-        if(gate==null||gate.source()!=catalog.scene(gate.source().id())||gate.destination()!=catalog.scene(gate.destination().id())||member==null||member.worldId!=worldId)throw new IOException("Invalid mission route owner");
+    public synchronized Instance startRun(MissionRun run,int worldId,PartyRegistry.Member member)throws IOException {
+        if(run==null||run.worldId()!=worldId||member==null||member.worldId!=worldId
+            ||run.source()!=catalog.scene(run.source().id())||!run.destination().town())throw new IOException("Invalid mission route owner");
         var view=parties.view(member);
         return parties.soloGate(member,view.oid(),()->{
-        var attempt=new OpeningGate.Attempt(gate,worldId,view.oid(),difficulty);
-        var key=new InteriorKey(gate.source().id(),worldId);
+        var key=new InteriorKey(run.source().id(),worldId);
         if(interiors.containsKey(key)||interiorOids.isEmpty())throw new IOException("Mission instance is unavailable");
         // Construct before changing party state or consuming a reusable place OID.
-        var created=new Instance(interiorOids.getFirst(),0,gate.source(),0,null,attempt);
+        var created=new Instance(interiorOids.getFirst(),0,run.source(),0,null,run);
         created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);
         parties.enterOpening(member);interiorOids.removeFirst();interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
         });
     }
+    /** Allocate the next floor of an owned run; the current floor is released on arrival. */
+    public synchronized Instance advanceRun(MissionRun run,int worldId,PartyRegistry.Member member)throws IOException {
+        if(run==null||run.lastFloor()||run.worldId()!=worldId||member==null||member.worldId!=worldId)throw new IOException("Invalid mission route owner");
+        var next=run.advance();
+        if(next.source()!=catalog.scene(next.source().id()))throw new IOException("Invalid mission route floor");
+        var view=parties.view(member);
+        return parties.soloGate(member,view.oid(),()->{
+        var key=new InteriorKey(next.source().id(),worldId);
+        if(interiors.containsKey(key)||interiorOids.isEmpty())throw new IOException("Mission instance is unavailable");
+        var created=new Instance(interiorOids.getFirst(),0,next.source(),0,null,next);
+        created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);
+        interiorOids.removeFirst();interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
+        });
+    }
+    /** The imported gate definition for a rank mission, or null when it is not importable. */
+    public MissionGates.Gate gate(String missionId){return gates.gate(missionId);}
+    /** A playable run for the mission, or null when any floor is missing from the bundle.
+     *  Gate-conversation missions wait for their lobby conversation semantics. */
+    public MissionRun missionRoute(String missionId,int worldId,int partyOid,String difficulty){
+        var entry=missions.mission(missionId);
+        if(entry==null||!entry.requirement().type().equals("gate"))return null;
+        var gate=gates.gate(missionId);
+        return gate==null?null:MissionRun.route(gate,catalog,worldId,partyOid,difficulty,catalog.entry());
+    }
+    /** Imported gates whose whole route is present; the opening gate keeps its pinned card. */
+    public List<MissionGates.Gate> availableGates(){
+        var result=new ArrayList<MissionGates.Gate>();
+        for(var gate:gates.gates()){
+            if(openingGate(org.tortodrone.character.OpeningMission.byId(gate.missionId()))!=null)continue;
+            if(missionRoute(gate.missionId(),1,1,"EASY")!=null)result.add(gate);
+        }
+        return List.copyOf(result);
+    }
     public boolean authorized(Instance scene,int world,PartyRegistry.Member member){
-        if(scene.opening()!=null)return scene.opening().worldId()==world&&parties.owns(member,scene.opening().partyOid());
+        if(scene.run()!=null)return scene.run().worldId()==world&&parties.owns(member,scene.run().partyOid());
         if(scene.partyOwner()==0)return true;
         try{return parties.owner(member,world)==scene.partyOwner();}catch(IOException invalid){return false;}
     }

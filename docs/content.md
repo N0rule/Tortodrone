@@ -510,19 +510,29 @@ prestige, advances rank through the stock promotion rule and publishes the nativ
 settlement and item deltas; a repeat gate completion only records a higher
 difficulty band. Conversation missions complete on their closing comlink response,
 and the nine rank exchanges consume exactly their ingredient list through
-mission-service id 1. The opening gate remains the only playable dungeon route:
-generic dungeon routes, objective progress, prestige/expansion missions, the
-gate-conversation lobbies and the mission bar are not implemented. A deployment
-without `content/missions/` keeps an empty catalogue and logs a startup warning.
+mission-service id 1.
+
+`routes.yml` imports the live `MissionGateSummary` capture: gate identity, colours,
+flags and the ordered wheels. A route is playable only when every wedge resolves to
+a bundled canonical scene, each floor has exactly one gate-completing elevator and
+at least one floor is a non-lobby level; the server then advertises that gate and
+runs the floors in order, settling the mission once on the final floor. Unresolved
+floors keep scene 0 and stay hidden. Objective progress, prestige/expansion
+missions, the gate-conversation lobbies and the mission bar remain unimplemented.
+A deployment without `content/missions/` keeps an empty catalogue and logs a
+startup warning.
 
 The checked-in import contains 273 missions (108 rank, 147 prestige, 3 expansion and
-15 hidden), one group and 27 properties. Refresh it deterministically with:
+15 hidden), one group, 27 properties and 53 gate routes (1 fully playable besides
+the pinned opening gate). Refresh it deterministically with:
 
 ```sh
 python3 scripts/content/import_missions.py --source /path/to/exported/config
 python3 scripts/content/import_mission_rewards.py --source /path/to/exported/config
 python3 scripts/content/import_mission_comlinks.py --source /path/to/exported/config
-# Add --check to any of them to verify without writing.
+python3 scripts/content/import_mission_routes.py --gates /path/to/live-MissionGateSummary.json \
+  --levels /path/to/deployed-levels.tsv
+# Add --check to any of the first three to verify without writing.
 ```
 
 ## Map identity, actors, portals and traps

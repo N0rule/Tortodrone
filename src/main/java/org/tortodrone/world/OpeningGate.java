@@ -40,9 +40,4 @@ public record OpeningGate(OpeningMission mission,int id,SceneCatalog.MapScene so
         if(matches.size()!=1)throw new IllegalArgumentException("Missing original Generator control "+key);return matches.getFirst();
     }
     private static String hash(byte[] layout){try{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(layout));}catch(NoSuchAlgorithmException impossible){throw new AssertionError(impossible);}}
-    /** Server-issued solo attempt; never deserialized from the client. */
-    public record Attempt(OpeningGate gate,int worldId,int partyOid,String difficulty){
-        public Attempt {Objects.requireNonNull(gate);if(worldId<1||partyOid<1||!List.of("EASY","MEDIUM","HARD").contains(difficulty))throw new IllegalArgumentException("Invalid opening gate attempt");}
-        public int difficultyOrdinal(){return List.of("EASY","MEDIUM","HARD").indexOf(difficulty);}
-    }
 }
