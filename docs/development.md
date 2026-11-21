@@ -162,6 +162,8 @@ Benchmarks copy packaged resources into disposable deployments, simulate clients
 
 `benchmarkScenes` creates no accounts or sockets. It warms interaction, collision, entity advancement and snapshot paths, then prints microseconds and allocated bytes per operation. Compare the same iteration count/JVM/host; these figures do not measure graphical FPS or complete request latency. Decoded immutable actor references are shared, while collision poses and simulation state remain owned by each scene instance.
 
+The 0.42.0 redesign's Phase 0 artefact digests, verified thread/lock inventory and wire-evidence list are recorded in [Baseline](baseline.md).
+
 For a reported Haven dialog backlog, the focused stock scenario is:
 
 ```sh
