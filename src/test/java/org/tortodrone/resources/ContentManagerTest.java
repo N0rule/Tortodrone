@@ -16,7 +16,7 @@ import org.tortodrone.core.world.SceneContent;
 public final class ContentManagerTest {
     public static void main(String[] args)throws Exception {
         var baseline=ContentManager.load(Path.of("."));
-        check(baseline.scenes().scenes().size()==10&&baseline.items().entries().size()==9355,"all verified maps and items retained");
+        check(baseline.scenes().scenes().size()==17&&baseline.items().entries().size()==9355,"all verified maps and items retained");
         var opening=org.tortodrone.world.SceneRegistry.create(baseline).tutorial();
         check(opening!=null&&opening.source().id()==398&&opening.source().version()==2008859103
             &&opening.destination().id()==1&&opening.entrance().id()==1&&opening.entrance().x()==1&&opening.entrance().y()==-30.5f,"bundled defaults route the verified Crash Site exit directly to Haven's authored spawn");

@@ -19,9 +19,15 @@ public final class SceneScheduler implements AutoCloseable {
     /** Hard bound on concurrently scheduled scene lanes; one per scene with an entered player. */
     public static final int DEFAULT_MAX_ACTIVE_SCENES = 256;
     private static final int MEASUREMENT_WINDOW = 256;
-    private static final SceneScheduler SHARED = new SceneScheduler();
+    private static volatile SceneScheduler shared = new SceneScheduler();
 
-    public static SceneScheduler shared() { return SHARED; }
+    public static SceneScheduler shared() { return shared; }
+
+    /** Test hook: the standalone suite shares one JVM, so a shutdown-drain measurement replaces
+     *  the closed instance before later programs use the shared lane pool again. */
+    static void resetSharedForTests() {
+        if (shared.closed) shared = new SceneScheduler();
+    }
 
     private record Lane(int oid, ScheduledFuture<?> future, Runnable tick) { }
 

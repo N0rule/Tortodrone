@@ -135,6 +135,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public int spawnItemActor(ActorState player,SceneContent.Spec actor,int stamp){return spawns.itemActor(player,actor,stamp);}
     public int liftItem(ActorState player,SceneContent.Spec lift,int stamp){return spawns.liftItem(player,lift,stamp);}
     public void soloRewards(boolean value){spawns.soloRewards(value);}
+    public boolean soloRewards(){return spawns.soloRewards();}
+    /** Test seam: the authored signal dispatch now lives in {@link SceneLogic}. */
+    void signal(String tag,String name,int stamp,String source){logic.signal(tag,name,stamp,source);}
     void generate(SceneEntity pad,int stamp){spawns.generate(pad,stamp);}
     public void discard(int id){var entity=entities.get(id);if(entity!=null)unlink(entity);}
     /** Native collision bit 1 << 13 ("lift" in the 2026 mask.properties registry): the served
@@ -549,6 +552,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public java.util.Set<Integer> disabledCollisionSources(){return collisions.disabledSources();}
     public SceneCollision.Penetration penetration(float x,float y,int ignore){return collisions.penetration(x,y,ignore);}
     @Override public boolean contact(float x,float y,int owner){return collisions.contact(x,y,owner);}
+    @Override public boolean attachable(int id){return collisions.attachable(id);}
     @Override public int contactActor(float x,float y,float rotation,int owner,Object shape,int mask){return collisions.contactActor(x,y,rotation,owner,shape,mask);}
     @Override public boolean contact(float x,float y,float rotation,int owner,Object shape,int mask){return collisions.contact(x,y,rotation,owner,shape,mask);}
     /** Land one carried pot; pot behavior lives in PotSystem. */

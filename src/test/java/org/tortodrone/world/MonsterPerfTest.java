@@ -67,7 +67,10 @@ public final class MonsterPerfTest {
      *  a failed path search to an unreachable room. */
     private static void engaged() throws Exception {
         var maps = ContentManager.load(Path.of(".")).scenes().scenes();
-        var map = maps.stream().max(Comparator.comparingInt(scene -> scene.content().entries().size())).orElseThrow();
+        // Pin the perf arena instead of taking the largest map: new content imports would
+        // otherwise silently redefine this measurement (Ironclaw's 775-entry workshop only
+        // admits 32 of the 64 clear cells into acquisition range).
+        var map = maps.stream().filter(scene -> scene.id() == 337).findFirst().orElseThrow();
         var terrain = map.collision();
         float[] spawn = walkableSpawn(terrain, map.spawnX(), map.spawnY());
         var points = clearArena(terrain, map.content().entries(), spawn, 64);

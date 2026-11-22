@@ -123,6 +123,8 @@ public final class ConcurrencyMeasurementTest {
         long drainStarted=System.nanoTime();
         SceneScheduler.shared().close();
         System.out.printf(Locale.ROOT,"shutdownDrainMs=%.1f%n",(System.nanoTime()-drainStarted)/1_000_000.0);
+        // The standalone suite keeps one JVM: restore the shared lane pool for later programs.
+        SceneScheduler.resetSharedForTests();
         System.out.println("PASS: Phase 4 concurrency measurements recorded on this host");
     }
 }

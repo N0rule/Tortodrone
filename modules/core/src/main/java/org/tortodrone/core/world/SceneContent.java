@@ -129,14 +129,24 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
         var p=new Properties();try(var in=Files.newInputStream(file)){p.load(in);}
         return load(p,layoutHash);
     }
+    /** Every property whose key starts with {@code prefix}, with the prefix removed. */
+    private static TreeMap<String,String> fields(java.util.NavigableSet<String> names,Properties p,String prefix){
+        var fields=new TreeMap<String,String>();
+        for(String key:names.subSet(prefix,true,prefix+'\uffff',true))fields.put(key.substring(prefix.length()),p.getProperty(key));
+        return fields;
+    }
     public static SceneContent load(Properties p,String layoutHash)throws IOException {
         if(!"1".equals(p.getProperty("format"))||!layoutHash.equals(p.getProperty("layout-sha256")))throw new IOException("Scene content does not match layout");
         var entries=new ArrayList<Entry>();var scales=new TreeMap<String,Float>();var stats=new TreeMap<String,Float>();var keys=new HashSet<String>();
+        // One sorted name snapshot: Properties.stringPropertyNames() rebuilds a set of
+        // every key, and the per-entry/per-item scans below would otherwise repeat that
+        // allocation thousands of times on the largest imported maps. The sorted set turns
+        // each "keys starting with this prefix" scan into a range lookup instead.
+        var names=new TreeSet<>(p.stringPropertyNames());
         try {
             for(String id:p.getProperty("entries","").split(",")) {
                 if(id.isBlank())continue;if(entries.size()>=2048)throw new IllegalArgumentException("Too many actors");
-                String prefix="entry."+id+".";var fields=new TreeMap<String,String>();
-                for(String key:p.stringPropertyNames())if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),p.getProperty(key));
+                var fields=fields(names,p,"entry."+id+".");
                 var spec=new Spec(fields);String key=spec.text("source-key","");
                 if(key.isBlank()||!keys.add(key+":"+spec.text("handler-index",""))||spec.text("config","").isBlank()||spec.text("kind","").isBlank())throw new IllegalArgumentException("Invalid binding");
                 float x=finite(spec.number("x",Float.NaN)),y=finite(spec.number("y",Float.NaN)),rotation=finite(spec.number("rotation",Float.NaN));
@@ -144,30 +154,28 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
                 if(spec.text("kind","").equals("SceneTrigger"))SceneActions.rule(new Entry(key,x,y,rotation,spec));
                 entries.add(new Entry(key,x,y,rotation,spec));
             }
-            for(String key:p.stringPropertyNames())if(key.startsWith("scale."))scales.put(key.substring(6),finite(Float.parseFloat(p.getProperty(key))));
-            for(String key:p.stringPropertyNames())if(key.startsWith("destination.")||key.startsWith("player.")||key.startsWith("gear.")||key.startsWith("monster.")||key.startsWith("status-power.")||key.startsWith("status-chance."))stats.put(key,finite(Float.parseFloat(p.getProperty(key))));
+            for(String key:names)if(key.startsWith("scale."))scales.put(key.substring(6),finite(Float.parseFloat(p.getProperty(key))));
+            for(String key:names)if(key.startsWith("destination.")||key.startsWith("player.")||key.startsWith("gear.")||key.startsWith("monster.")||key.startsWith("status-power.")||key.startsWith("status-chance."))stats.put(key,finite(Float.parseFloat(p.getProperty(key))));
             var items=new TreeMap<String,Spec>();
             for(String id:p.getProperty("items","").split(",")){
                 if(id.isBlank())continue;if(items.size()>=256)throw new IllegalArgumentException("Too many scene items");
-                var fields=new TreeMap<String,String>();String prefix="item."+id+".";
-                for(String key:p.stringPropertyNames())if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),p.getProperty(key));
+                var fields=fields(names,p,"item."+id+".");
                 var spec=new Spec(fields);String name=spec.text("config","");if(name.isBlank()||items.putIfAbsent(name,spec)!=null)throw new IllegalArgumentException("Invalid scene item");
             }
             var cycles=new TreeMap<String,Spec>();
-            for(String key:p.stringPropertyNames())if(key.startsWith("cycle.")){
+            for(String key:names)if(key.startsWith("cycle.")){
                 String[] split=key.split("\\.",3);if(split.length!=3)throw new IllegalArgumentException("Invalid trap cycle");
                 var fields=new TreeMap<String,String>(cycles.getOrDefault(split[1],new Spec(Map.of())).fields());fields.put(split[2],p.getProperty(key));cycles.put(split[1],new Spec(fields));
             }
             var statuses=new TreeMap<String,Spec>();
             for(String id:p.getProperty("statuses","").split(",")){
                 if(id.isBlank())continue;if(statuses.size()>=256)throw new IllegalArgumentException("Too many status configs");
-                var fields=new TreeMap<String,String>();String prefix="status."+id+".";
-                for(String key:p.stringPropertyNames())if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),p.getProperty(key));
+                var fields=fields(names,p,"status."+id+".");
                 var spec=new Spec(fields);String name=spec.text("config","");if(name.isBlank()||statuses.putIfAbsent(name,spec)!=null)throw new IllegalArgumentException("Invalid status config");
             }
             var icons=new LinkedHashSet<MapIcon>();
             for(var entry:entries){String icon=entry.spec().text("minimap-icon","");if(!icon.isEmpty())icons.add(new MapIcon(icon,entry.x(),entry.y()));}
-            for(String key:new TreeSet<>(p.stringPropertyNames()))if(key.startsWith("minimap.")&&key.endsWith(".icon")){
+            for(String key:names)if(key.startsWith("minimap.")&&key.endsWith(".icon")){
                 String prefix=key.substring(0,key.length()-4);String icon=p.getProperty(key);
                 icons.add(new MapIcon(icon,finite(Float.parseFloat(p.getProperty(prefix+"x"))),finite(Float.parseFloat(p.getProperty(prefix+"y")))));
             }
@@ -176,8 +184,7 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
             for(String id:p.getProperty("actor-templates","").split(",")){
                 if(id.isBlank())continue;
                 if(templates.size()>=128||!id.matches("spawn_[0-9]{1,3}"))throw new IllegalArgumentException("Invalid or oversized scene actor template table");
-                var fields=new TreeMap<String,String>();String prefix="actor-template."+id+".";
-                for(String key:p.stringPropertyNames())if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),p.getProperty(key));
+                var fields=fields(names,p,"actor-template."+id+".");
                 if(templates.putIfAbsent(id,new Spec(fields))!=null)throw new IllegalArgumentException("Duplicate scene actor template");
             }
             var content=new SceneContent(entries,scales,SceneConversation.load(p),stats,items,cycles,statuses,List.copyOf(icons),templates);content.validateConversations();return content;

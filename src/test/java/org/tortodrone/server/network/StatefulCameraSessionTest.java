@@ -88,21 +88,30 @@ public final class StatefulCameraSessionTest {
         var content=ContentManager.load(Path.of("."));
         for(var folder:MapYaml.folders(Path.of("content/maps")).entrySet()) {
             var prepared=MapYaml.prepare(folder.getValue(),Path.of("content/shared"),content.items());
-            int beacons=0,borders=0;
+            int beacons=0,borders=0,startupOff=0;
             for(String id:prepared.content().getProperty("entries","").split(",")) {
                 String config=prepared.content().getProperty("entry."+id+".config","");
                 String states=prepared.content().getProperty("entry."+id+".switch-states","");
                 String startup=prepared.content().getProperty("entry."+id+".startup-state","");
                 if(config.equals("Static/Stateful Props/Beacons, Floor/Recolor, On-Off")){
                     beacons++;
-                    check(states.equals("2")&&startup.equals("1"),"rescue camp beacon "+id+" prepares native startup state 1: "+states+"/"+startup);
+                    check(states.equals("2"),"stateful beacon "+id+" prepares its native state count: "+states);
+                    // Authored "Startup State: Off" is prepared as native state 1 with START
+                    // cleared. "On" keeps the Switch constructor default (state 0 with START),
+                    // so the exporter emits no startup-state field for it.
+                    if(!startup.isBlank()){
+                        startupOff++;
+                        check(startup.equals("1"),"authored-off beacon "+id+" prepares native startup state 1: "+startup);
+                    }
                 }else if(config.startsWith("Dynamic/Misc/Border/Stateful/")){
                     borders++;
                     if(!states.isBlank())check(states.equals("2")&&startup.isBlank(),"bazaar border "+id+" prepares only its native state count: "+states+"/"+startup);
                 }
             }
-            if(folder.getValue().getFileName().toString().equals("rescue_camp"))check(beacons==14,"fourteen rescue camp beacons: "+beacons);
-            if(folder.getValue().getFileName().toString().equals("bazaar"))check(borders==5,"five bazaar stateful borders: "+borders);
+            String folderName=folder.getValue().getFileName().toString();
+            if(folderName.equals("rescue_camp"))check(beacons==14&&startupOff==14,"fourteen rescue camp beacons start Off at native state 1: "+beacons+"/"+startupOff);
+            if(folderName.equals("rescue_camp_state_2"))check(beacons==14&&startupOff==0,"fourteen powered-camp beacons keep the On default: "+beacons+"/"+startupOff);
+            if(folderName.equals("bazaar"))check(borders==5,"five bazaar stateful borders: "+borders);
         }
     }
 

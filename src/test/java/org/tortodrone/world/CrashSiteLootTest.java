@@ -49,7 +49,6 @@ public final class CrashSiteLootTest {
     }
     private static boolean soloRewards(SceneRegistry.Instance instance)throws Exception {
         var field=SceneSimulation.class.getDeclaredField("entities");field.setAccessible(true);
-        var flag=SceneEntities.class.getDeclaredField("soloRewards");flag.setAccessible(true);
-        return flag.getBoolean(field.get(instance.simulation()));
+        return ((SceneEntities)field.get(instance.simulation())).soloRewards();
     }
 }

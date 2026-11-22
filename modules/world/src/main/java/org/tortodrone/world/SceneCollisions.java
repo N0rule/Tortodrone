@@ -63,6 +63,11 @@ final class SceneCollisions {
     boolean contact(float x,float y,int owner){
         return contact(x,y,0,owner,null,-1);
     }
+    /** A live monster can carry an attached weapon/orbital tag. */
+    boolean attachable(int id){
+        var e=scene.entity(id);
+        return e!=null&&e.kind.equals("Monster")&&e.health>0&&e.destroyed==Integer.MAX_VALUE;
+    }
     int contactActor(float x,float y,float rotation,int owner,Object shape,int mask){
         for(var e:scene.entityValues())if(e.id!=owner&&e.carrier==0&&e.destroyed==Integer.MAX_VALUE
             &&(e.collisionFlags&mask)!=0&&!(e.kind.equals("Door")&&(e.flags&2)!=0)

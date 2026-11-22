@@ -24,6 +24,7 @@ final class SceneSpawns {
     record SpawnSource(SceneEntities scene,int id,int faction,String identity) { }
     /** Set for instances that never admit a second member (the private tutorial). */
     void soloRewards(boolean value){soloRewards=value;}
+    boolean soloRewards(){return soloRewards;}
 
     int itemActor(ActorState player,SceneContent.Spec actor,int stamp){
         if(scene.entityCount()+scene.pendingCount()>=4096)return 0;
