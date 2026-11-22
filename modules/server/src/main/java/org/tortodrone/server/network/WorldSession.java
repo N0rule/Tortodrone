@@ -127,6 +127,7 @@ final class WorldSession implements AutoCloseable {
     private final AuctionHandler auction;
     private final StyleHandler styles;
     private final BoxHandler boxes;
+    private final ItemUseHandler itemUse;
     private int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
     private SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null,membership.floorHeat());}
@@ -681,9 +682,6 @@ final class WorldSession implements AutoCloseable {
      * 8=[long,boolean,Confirm]. Older archives incorrectly place method 8 at 7. */
     boolean billingInvocation(SessionDecoder.Invocation request)throws IOException{return billing.invocation(request);}
 
-    private record ConfettiReply(long item,String failure) { }
-    private final RequestReceipts<ConfettiReply> confettiReplies=new RequestReceipts<>();
-
     synchronized boolean townInvocation(SessionDecoder.Invocation request)throws IOException {
         if(styles.invocation(request))return true;
         if(boxes.invocation(request))return true;
@@ -972,6 +970,7 @@ final class WorldSession implements AutoCloseable {
         friends=new FriendHandler(this);
         styles=new StyleHandler(this);
         boxes=new BoxHandler(this);
+        itemUse=new ItemUseHandler(this);
     }
 
     synchronized boolean selected() { return knight != null; }
@@ -985,6 +984,15 @@ final class WorldSession implements AutoCloseable {
     boolean sceneTravelPending(){return portalMove!=null;}
     boolean canOpenBox(){return membership!=null&&membership.canOpenBox();}
     void openBox(java.util.List<StarterCatalog.Model> references){membership.openBox(references);}
+    void confetti(String config){membership.confetti(config);}
+    void animatedAction(String config){membership.animatedAction(config);}
+    SceneSimulation.Membership.ItemUse<org.tortodrone.storage.TownStore.Result> useOwnedItem(long id,
+            org.tortodrone.core.world.SceneContent.Spec spec,SceneSimulation.RevivePayment<org.tortodrone.storage.TownStore.Result> payment)throws IOException{
+        return membership.useOwnedItem(id,spec,payment);
+    }
+    boolean useTemporaryItem(long id,org.tortodrone.core.world.SceneContent.Spec spec){return membership.useItem(id,spec);}
+    org.tortodrone.core.world.SceneContent.Spec persistentItemSpec(String config){return scene==null?null:scene.map().content().items().get(config);}
+    org.tortodrone.core.world.SceneContent.Spec temporaryItemSpec(long id){var item=temporaryItems.get(id);return item==null?null:persistentItemSpec(item.config());}
     void publishPartyState()throws IOException{partyState();}
     WorldProfile loadOwnProfile()throws IOException,CharacterStore.Refused{return characters.worldProfile(knight.name(),authRevision,profile);}
     void refreshKnight(){knight=characters.roster().stream().filter(k->k.id()==knight.id()).findFirst().orElseThrow();}
@@ -1356,57 +1364,7 @@ final class WorldSession implements AutoCloseable {
             return true;
         }
         // ItemMarshaller 1 (Trash) is dispatched in townInvocation; scene item use is 14 only.
-        if(request.oid()==SessionCodec.INVOCATION_OID&&service==SessionCodec.ITEM_SERVICE&&request.method()==14){
-            if(args.size()!=3||!(args.getFirst() instanceof Long id)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.CONFIRM_LISTENER)||args.get(1)!=null)throw new SessionDecoder.Rejected("Invalid item use request");
-            if(!selected()||!subscribed||!entered||portalMove!=null){output.send(()->codec.invocationFailure(oid,listener.requestId(),"Enter a scene first"));return true;}
-            int confettiWorld=profile.worldId();short confettiRequest=listener.requestId();var receipt=confettiReplies.get(confettiWorld,confettiRequest);
-            if(receipt!=null){
-                try{characters.worldProfile(knight.name(),authRevision,profile);}
-                catch(CharacterStore.Refused failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));return true;}
-                if(receipt.item()!=id||receipt.failure()!=null)output.send(()->codec.invocationFailure(oid,listener.requestId(),receipt.failure()==null?"m.internal_error":receipt.failure()));
-                else output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
-            }
-            var held=profile.items().stream().filter(i->i.id()==id).findFirst().orElse(null);
-            if(held!=null&&(Confetti.supports(held.config())||org.tortodrone.core.character.AnimatedItems.supports(held.config()))){
-                try{
-                    var current=characters.worldProfile(knight.name(),authRevision,profile);
-                    if(trade.active())throw new IOException("Finish the trade first");
-                    if(!membership.canOpenBox())throw new IOException("e.not_use_busy");
-                    var store=characters.town(scenes.town());
-                    var result=Confetti.supports(held.config())?store.confetti(characters.accountId(),knight.id(),authRevision,current.revision(),id)
-                        :store.animatedItem(characters.accountId(),knight.id(),authRevision,current.revision(),id);
-                    confettiReplies.put(confettiWorld,confettiRequest,new ConfettiReply(id,null));
-                    String config=(String)result.result();
-                    if(Confetti.supports(config))membership.confetti(config);else membership.animatedAction(config);
-                    townChanged(result,false);
-                    output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-                }catch(CharacterStore.Refused|IOException failure){
-                    confettiReplies.putIfAbsent(confettiWorld,confettiRequest,new ConfettiReply(id,failure.getMessage()));
-                    output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));
-                }
-                return true;
-            }
-            var persistent=held==null?null:scene.map().content().items().get(held.config());
-            if(persistent!=null&&Set.of("heal","lethal","spawn-actor","lift").contains(persistent.text("kind",""))){
-                try{
-                    var current=characters.worldProfile(knight.name(),authRevision,profile);
-                    if(trade.active())throw new IOException("Finish the trade first");
-                    var store=characters.town(scenes.town());
-                    var outcome=membership.useOwnedItem(id,persistent,
-                        ()->store.useItem(characters.accountId(),knight.id(),authRevision,current.revision(),id));
-                    confettiReplies.put(confettiWorld,confettiRequest,new ConfettiReply(id,null));
-                    if(outcome.consumed())townChanged(outcome.payment(),false);
-                    output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-                }catch(CharacterStore.Refused|IOException failure){
-                    confettiReplies.putIfAbsent(confettiWorld,confettiRequest,new ConfettiReply(id,failure.getMessage()));
-                    output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));
-                }
-                return true;
-            }
-            var item=temporaryItems.get(id);var spec=item==null||!selected()?null:scene.map().content().items().get(item.config());
-            if(spec!=null&&membership.useItem(id,spec))output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            else output.send(()->codec.invocationFailure(oid,listener.requestId(),"That item cannot be used now"));return true;
-        }
+        if(itemUse.invocation(request,args))return true;
         // Arsenal's equip action uses method 3, distinct from moveItem (method 9).
         if (service == SessionCodec.ITEM_SERVICE && request.method() == 3) {
             if (args.size() != 3 || !(args.get(0) instanceof Long)
