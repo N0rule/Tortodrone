@@ -12,13 +12,12 @@ public final class HazardLifetimeTest {
     public static void main(String[] args)throws Exception {
         var map=SceneRegistry.defaultEntry().map();
         var content=new SceneContent(List.of(),Map.of(),Map.of(),Map.of(),Map.of(),Map.of(),Map.of());
-        var spawn=SceneEntities.class.getDeclaredMethod("hazard",String.class,Object.class,float.class,int.class,Map.class,float.class,float.class,int.class);
-        spawn.setAccessible(true);
+
         for(int active:new int[]{4000,6000})for(int offset:new int[]{-1,0,1}){
             var world=new SceneEntities(content,map.collision());
             int[] hits={0};world.playerHits(hit->hits[0]++);
             Object damage=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",Map.of("flags",4));
-            spawn.invoke(world,"Fixture",damage,1f,6000,Map.of("hazard-active-lifetime",Integer.toString(active)),map.spawnX(),map.spawnY(),1000);
+            world.hazard("Fixture",damage,1f,6000,Map.of("hazard-active-lifetime",Integer.toString(active)),map.spawnX(),map.spawnY(),1000);
             var hazard=world.actors().getFirst();
             var player=new ActorState(7,1001,"Fixture",0,1000,map.spawnX(),map.spawnY(),0,0,0,new org.tortodrone.core.character.StarterCatalog.Model("Fixture",Map.of()));
             var occupants=List.of(player);

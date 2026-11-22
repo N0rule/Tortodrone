@@ -78,9 +78,8 @@ public final class OilLineTest {
     }
     private static void land(SceneEntities world,int id,int stamp)throws Exception {
         var entities=SceneEntities.class.getDeclaredField("entities");entities.setAccessible(true);
-        var entity=((Map<?,?>)entities.get(world)).get(id);
-        var method=SceneEntities.class.getDeclaredMethod("potLand",entity.getClass(),int.class);method.setAccessible(true);
-        method.invoke(world,entity,stamp);
+        var entity=(SceneEntity)((Map<?,?>)entities.get(world)).get(id);
+        world.potLand(entity,stamp);
     }
     private static Object hazardStatus(SceneEntities world,int id)throws Exception {
         var entities=SceneEntities.class.getDeclaredField("entities");entities.setAccessible(true);
