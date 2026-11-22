@@ -38,15 +38,15 @@ public final class CommandCompatibility {
         chat.by("Away");checkInvocation(1,List.of("Away"),false);
         chat.by(null);checkInvocation(1,Collections.singletonList(null),false);
         var codec=new SessionCodec();var bytes=new ByteArrayOutputStream();
-        append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
-        append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Alice"));
-        append(bytes,codec.player((short)3,1001,1,"Alice"));
-        append(bytes,codec.chatChannel((short)4,1500000000,6));append(bytes,codec.chatChannel((short)5,1500000001,7));
+        Harness.append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
+        Harness.append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Alice"));
+        Harness.append(bytes,codec.player((short)3,1001,1,"Alice"));
+        Harness.append(bytes,codec.chatChannel((short)4,1500000000,6));Harness.append(bytes,codec.chatChannel((short)5,1500000001,7));
         var equipment=new ArrayList<Long>(Collections.nCopies(16,0L));equipment.set(6,123L);
         var saved=new TownState.Loadout("Battle",equipment,0,0,null);
         var state=new TownState(List.of(),List.of(),0,List.of(),List.of(),List.of(saved,new TownState.Loadout("alpha",equipment,0,0,null)));
-        append(bytes,codec.loadouts(1001,new WorldProfile(1,1,1,0,0,1,List.of(),KnightProgress.RECRUIT,state)));
-        append(bytes,codec.tellSucceeded(1001,(short)6,"Away"));
+        Harness.append(bytes,codec.loadouts(1001,new WorldProfile(1,1,1,0,0,1,List.of(),KnightProgress.RECRUIT,state)));
+        Harness.append(bytes,codec.tellSucceeded(1001,(short)6,"Away"));
         var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
         var player=(com.threerings.projectx.data.PlayerObject)((ObjectResponse<?>)in.qe()).yk();
         for(int i=0;i<2;i++) {
@@ -62,7 +62,6 @@ public final class CommandCompatibility {
         require(in.available()==0,"no trailing bytes");
         System.out.println("PASS: native GM who/kick/go/summon/move/accessory, save/equip loadout, away/back RPCs, ChatObject channel layouts, named loadout encoding and tell-away callback");
     }
-    private static void append(ByteArrayOutputStream stream,byte[] frame){stream.write(frame,4,frame.length-4);}
     private static void checkInvocation(int method,List<?> args,boolean confirm)throws Exception {
         var buffer=new ByteArrayOutputStream();var out=new com.threerings.io.w(buffer);out.bf(new ForwardEventRequest(captured));out.flush();
         var parsed=(SessionDecoder.Invocation)new HandshakeCodec().sessionRequest(buffer.toByteArray()).event();

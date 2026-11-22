@@ -12,9 +12,7 @@ public final class PetCatalogExport {
     public static void main(String[] args)throws Exception{
         Path game=Path.of(args[0]).toRealPath(),out=Path.of(args[1]).toAbsolutePath().normalize();
         if(Files.exists(out)||out.startsWith(game))throw new IOException("Choose a fresh directory outside the installation");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
-        var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
+        var manager=NativeConfig.load(game);
         if(args.length==3){
             var previous=FireCatalog.load(Path.of(args[2]));var updated=new ArrayList<FireCatalog.AttackFire>();
             for(var entry:previous.entries()){

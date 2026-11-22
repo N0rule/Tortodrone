@@ -23,14 +23,14 @@ public class PartyCompatibility {
         try(var a=registry.join(1001,alice,profile(1),e->{});var b=registry.join(1002,bob,profile(2),events::add)){
             var before=registry.view(a);registry.invite(a,bob.name());var invite=(PartyView.Invitation)events.stream().filter(e->e instanceof PartyView.Invitation i&&i.add()).findFirst().orElseThrow();
             var codec=new SessionCodec();var bytes=new ByteArrayOutputStream();
-            append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"));
-            append(bytes,codec.player((short)3,1002,2,"Fixture"));append(bytes,codec.partyInvitation(1002,invite));
-            append(bytes,codec.party((short)4,before,scenes.entry()));
-            registry.respond(b,"PARTY_INV:"+before.oid(),1);var joined=registry.view(a);append(bytes,codec.partyChanges(before,joined));
-            registry.state(b,bob,profile(2),new SceneHealth.State(17,200,0,0),SceneStatus.State.NORMAL,false);var hurt=registry.view(a);append(bytes,codec.partyChanges(joined,hurt));
-            registry.state(b,bob,profile(2),new SceneHealth.State(17,200,0,0),SceneStatus.State.NORMAL,false,10);var heated=registry.view(a);append(bytes,codec.partyChanges(hurt,heated));
-            registry.boot(a,alice.name());var remaining=registry.view(b);append(bytes,codec.partyChanges(heated,remaining));
-            append(bytes,codec.partyInvitation(1002,new PartyView.Invitation(before.oid(),List.of(),0,false)));
+            Harness.append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));Harness.append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"));
+            Harness.append(bytes,codec.player((short)3,1002,2,"Fixture"));Harness.append(bytes,codec.partyInvitation(1002,invite));
+            Harness.append(bytes,codec.party((short)4,before,scenes.entry()));
+            registry.respond(b,"PARTY_INV:"+before.oid(),1);var joined=registry.view(a);Harness.append(bytes,codec.partyChanges(before,joined));
+            registry.state(b,bob,profile(2),new SceneHealth.State(17,200,0,0),SceneStatus.State.NORMAL,false);var hurt=registry.view(a);Harness.append(bytes,codec.partyChanges(joined,hurt));
+            registry.state(b,bob,profile(2),new SceneHealth.State(17,200,0,0),SceneStatus.State.NORMAL,false,10);var heated=registry.view(a);Harness.append(bytes,codec.partyChanges(hurt,heated));
+            registry.boot(a,alice.name());var remaining=registry.view(b);Harness.append(bytes,codec.partyChanges(heated,remaining));
+            Harness.append(bytes,codec.partyInvitation(1002,new PartyView.Invitation(before.oid(),List.of(),0,false)));
             var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.ql();input.ql();
             var player=(com.threerings.projectx.data.PlayerObject)((ObjectResponse<?>)input.ql()).yo();apply(input,player);
             var nativeInvite=(com.threerings.projectx.social.data.Notification.PartyInvite)player.notifications.iterator().next();
@@ -51,7 +51,6 @@ public class PartyCompatibility {
     private static Knight knight(String name){return new Knight(1,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
     private static WorldProfile profile(int id){return new WorldProfile(id,id,1,0,0,1,List.of());}
     private static void heat(LevelPartyObject party,int player){var heat=party.heat.f(player);if(heat==null||heat.Rc()!=player||heat.amount!=0||heat.promoAmount!=0||heat.lockboxPrizes!=null||heat.superPrize||heat.goldWheel)throw new AssertionError("Native empty Heat entry differs for owner "+player);}
-    private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
     private static void apply(com.threerings.io.v input,com.threerings.presents.dobj.DObject object)throws Exception{var event=((EventNotification)input.ql()).yn();if(event instanceof com.threerings.presents.dobj.CompoundEvent compound)for(var child:compound.xI()){
             if(object instanceof PartyObject party&&child instanceof com.threerings.presents.dobj.EntryAddedEvent<?> added&&added.getName().equals("members")){
                 if(party.health.f((Integer)added.getKey())==null||party.status.f((Integer)added.getKey())==null||((LevelPartyObject)party).heat.f((Integer)added.getKey())==null)throw new AssertionError("Member HUD notified before health/status/heat entries");

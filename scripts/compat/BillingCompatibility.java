@@ -17,10 +17,10 @@ public final class BillingCompatibility {
         m.a(0,"",null);check(m,7,Integer.class,String.class,InvocationMarshaller.ResultMarshaller.class);
         m.a(0L,false,null);check(m,8,Long.class,Boolean.class,InvocationMarshaller.ConfirmMarshaller.class);
         var bytes=new ByteArrayOutputStream();
-        append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
-        append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"fixture","Fixture"));
-        var codec=new SessionCodec();append(bytes,codec.invocationFailure(1001,(short)7,"Billing disabled"));
-        append(bytes,codec.townResult(1001,(short)8,-1,null));
+        Harness.append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
+        Harness.append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"fixture","Fixture"));
+        var codec=new SessionCodec();Harness.append(bytes,codec.invocationFailure(1001,(short)7,"Billing disabled"));
+        Harness.append(bytes,codec.townResult(1001,(short)8,-1,null));
         var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
         var failure=(InvocationResponseEvent)((EventNotification)in.qe()).yj();
         var result=(InvocationResponseEvent)((EventNotification)in.qe()).yj();
@@ -40,5 +40,4 @@ public final class BillingCompatibility {
         var decoded=(SessionDecoder.Invocation)new HandshakeCodec().sessionRequest(bytes.toByteArray()).event();
         if(decoded.method()!=method||decoded.arguments().size()!=types.length||!(decoded.arguments().getLast() instanceof SessionDecoder.Listener))throw new AssertionError("Native request rejected");
     }
-    private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
 }

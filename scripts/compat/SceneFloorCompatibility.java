@@ -8,9 +8,7 @@ import org.tortodrone.core.world.SceneCollision;
 /** Stock getFloorZ is the oracle for terrain plus authored floorTile placeables. */
 public final class SceneFloorCompatibility {
     public static void main(String[] args)throws Exception {
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
-        var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        var cm=NativeConfig.load(Path.of(args[0]));
         byte[] bytes=Files.readAllBytes(Path.of(args[1]));var scene=(TudeySceneModel)com.threerings.export.util.b.e(bytes);scene.init(cm);
         String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));var floor=SceneCollision.load(Path.of(args[2]),hash);
         int comparisons=0,platforms=0;

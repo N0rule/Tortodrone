@@ -8,17 +8,16 @@ import com.threerings.whirled.zone.data.ZoneSummary;
 
 /** Read-only installed-client oracle; no game process, account or preferences required. */
 public final class ReadyRoomCompatibility {
-    private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var bytes=new ByteArrayOutputStream();var codec=new SessionCodec();
-        append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
-        append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic-session","RoomUser"));
-        append(bytes,codec.readyRoomMove(1001,(short)7));
-        append(bytes,codec.readyRoomMove(1002,(short)8));
-        append(bytes,codec.player((short)3,1001,1,"RoomUser"));
-        append(bytes,codec.readyRoomLocation(1001));
-        append(bytes,codec.forceDestination(1001,(short)4,ReadyRoom.ZONE,ReadyRoom.SCENE));
+        Harness.append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
+        Harness.append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic-session","RoomUser"));
+        Harness.append(bytes,codec.readyRoomMove(1001,(short)7));
+        Harness.append(bytes,codec.readyRoomMove(1002,(short)8));
+        Harness.append(bytes,codec.player((short)3,1001,1,"RoomUser"));
+        Harness.append(bytes,codec.readyRoomLocation(1001));
+        Harness.append(bytes,codec.forceDestination(1001,(short)4,ReadyRoom.ZONE,ReadyRoom.SCENE));
         var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.ql();input.ql();
         for(int request=7;request<=8;request++){
             var event=(InvocationResponseEvent)((EventNotification)input.ql()).yn();

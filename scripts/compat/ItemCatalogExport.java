@@ -17,9 +17,7 @@ public final class ItemCatalogExport {
         Path game=Path.of(args[0]).toRealPath(),out=Path.of(args[1]).toAbsolutePath().normalize();
         Path ancestor=out;while(!Files.exists(ancestor))ancestor=ancestor.getParent();
         if(ancestor.toRealPath().startsWith(game)||Files.exists(out))throw new IOException("Choose a fresh output directory outside the installation");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
-        var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
+        var manager=NativeConfig.load(game);
         var entries=new ArrayList<ItemCatalog.Entry>();
         for(var config:manager.bd(ItemConfig.class).kK()) {
             var item=config.w(manager);WorldProfile.Slot slot=null;

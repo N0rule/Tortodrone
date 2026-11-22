@@ -16,10 +16,8 @@ public final class ItemCatalogCompatibility {
         if(args.length<2||args.length>3||args.length==3&&!args[2].equals("--sample"))
             throw new IllegalArgumentException("Usage: ItemCatalogCompatibility game-directory catalog.json [--sample]");
         boolean sample=args.length==3;
-        System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
-        var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
+        NativeConfig.ordinal();
+        var manager=NativeConfig.load(Path.of(args[0]));
         var catalog=ItemCatalog.load(Path.of(args[1]));int checked=0;
         var selected=sample?sampleEntries(catalog):catalog.entries().stream().filter(ItemCatalog.Entry::grantable).toList();
         var selectedConfigs=selected.stream().map(e->e.config().toLowerCase(Locale.ROOT)).collect(java.util.stream.Collectors.toSet());

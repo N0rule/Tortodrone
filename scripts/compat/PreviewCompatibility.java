@@ -10,14 +10,11 @@ import com.threerings.presents.net.*;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.StarterCatalog;
 public class PreviewCompatibility {
- static void append(ByteArrayOutputStream s,byte[] f){s.write(f,4,f.length-4);}
  public static void main(String[] args)throws Exception {
-  System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
-  var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-  resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
-  var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
+  NativeConfig.ordinal();
+  var manager=NativeConfig.load(Path.of(args[0]));
   var builder=Arrays.stream(Class.forName("com.threerings.projectx.item.b.b").getMethods()).filter(m->m.getName().equals("a")&&Arrays.equals(m.getParameterTypes(),new Class[]{int.class,boolean.class,boolean.class,ProjectXCodes.EyeType.class,ProjectXCodes.KnightHeight.class,Collection.class,Collection.class})).findFirst().orElseThrow();
-  var bytes=new ByteArrayOutputStream();append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic-session","Alice"));
+  var bytes=new ByteArrayOutputStream();Harness.append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));Harness.append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic-session","Alice"));
   var codec=new SessionCodec();var knights=new ArrayList<Knight>();
   for(String line:Files.readAllLines(Path.of(args[1]))) {
    if(line.startsWith("#")||line.isBlank())continue;
@@ -28,7 +25,7 @@ public class PreviewCompatibility {
    knights.add(knight);
   }
   for(int eye=0;eye<47;eye++)knights.add(new Knight(1,"Eye-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,eye,1));
-  for(var knight:knights)append(bytes,codec.player((short)3,1001,1,"Alice",Map.of(),List.of(new org.tortodrone.core.character.RosterEntry(knight,org.tortodrone.core.character.StarterCatalog.preview(knight)))));
+  for(var knight:knights)Harness.append(bytes,codec.player((short)3,1001,1,"Alice",Map.of(),List.of(new org.tortodrone.core.character.RosterEntry(knight,org.tortodrone.core.character.StarterCatalog.preview(knight)))));
   var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();
   for(var knight:knights){
    var player=(PlayerObject)((ObjectResponse)input.qe()).yk();

@@ -16,24 +16,23 @@ import org.tortodrone.core.world.SceneConversation;
 
 /** Installed native reader/application oracle; no live gameplay is claimed. */
 public final class MissionProtocolCompatibility {
-    private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
     private static void apply(com.threerings.presents.dobj.DEvent event,PlayerObject player){if(event instanceof com.threerings.presents.dobj.CompoundEvent compound){for(var child:compound.xI())apply(child,player);}else event.b(player);}
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var bytes=new ByteArrayOutputStream();var codec=new SessionCodec();
-        append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","MissionUser"));
-        append(bytes,codec.bootstrap(1,1001,"127.0.0.1",47624));append(bytes,codec.missionObject((short)3));append(bytes,codec.player((short)4,1001,1,"MissionUser"));
-        append(bytes,codec.completedMissions(1001,List.of()));
+        Harness.append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));Harness.append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","MissionUser"));
+        Harness.append(bytes,codec.bootstrap(1,1001,"127.0.0.1",47624));Harness.append(bytes,codec.missionObject((short)3));Harness.append(bytes,codec.player((short)4,1001,1,"MissionUser"));
+        Harness.append(bytes,codec.completedMissions(1001,List.of()));
         var before=new WorldProfile(1,1,1,0,0,1,List.of(),new KnightProgress(1,1,0,1));var after=new WorldProfile(1,1,1,0,0,2,List.of(),new KnightProgress(1,2,10,1));
         var receipt=new OpeningCompletion(OpeningMission.SECURING_CAMP,1770000000000L,null);
-        append(bytes,codec.missionSettlement(1001,before,after,receipt,1770000000001L));
-        append(bytes,codec.completedMissions(1001,List.of(receipt,new OpeningCompletion(OpeningMission.ANCIENT_GENERATOR,1770000000002L,"EASY"))));
+        Harness.append(bytes,codec.missionSettlement(1001,before,after,receipt,1770000000001L));
+        Harness.append(bytes,codec.completedMissions(1001,List.of(receipt,new OpeningCompletion(OpeningMission.ANCIENT_GENERATOR,1770000000002L,"EASY"))));
         var source=new org.tortodrone.core.world.ActorState(21,1,"ReaderFixture",0,1000,0,0,0,0,0,new StarterCatalog.Model("Character/PC/Default",Map.of()));
         var panels=new ArrayList<org.tortodrone.core.world.SceneConversation.Node>();var dialogs=new ArrayList<org.tortodrone.core.world.SceneConversation>();
         for(var mission:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN)){
             var conversation=org.tortodrone.world.OpeningComlinks.get(mission);String node=conversation.initial();
             while(!node.isEmpty()){
-                var panel=conversation.nodes().get(node);panels.add(panel);dialogs.add(conversation);append(bytes,codec.conversationDialog(1001,10,conversation,node,source,1770000000010L+panels.size()));
+                var panel=conversation.nodes().get(node);panels.add(panel);dialogs.add(conversation);Harness.append(bytes,codec.conversationDialog(1001,10,conversation,node,source,1770000000010L+panels.size()));
                 node=panel.responses().get(panel.responses().size()-1).destination();
             }
         }

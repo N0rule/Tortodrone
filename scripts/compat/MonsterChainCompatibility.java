@@ -10,9 +10,7 @@ import org.tortodrone.core.world.SceneActions;
 public final class MonsterChainCompatibility {
     private static final String GIANT="Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant";
     public static void main(String[] args)throws Exception {
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
-        var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        var cm=NativeConfig.load(Path.of(args[0]));
         var monster=(DungeonActorConfig.Monster)new ConfigReference<ActorConfig>(GIANT).a(cm,ActorConfig.class).al(cm);
         var fields=new TreeMap<String,String>();SceneMonsterExport.export(cm,fields,"",monster);
         var head=(AttackConfig.Chain)AttackConfig.b(cm,monster.attacks[0].ref);var follow=AttackConfig.b(cm,monster.attacks[1].ref);

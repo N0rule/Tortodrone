@@ -16,9 +16,7 @@ public final class TownServicesExport {
         Path game=Path.of(args[0]).toRealPath(),out=Path.of(args[2]).toAbsolutePath();
         Path ancestor=out;while(!Files.exists(ancestor))ancestor=ancestor.getParent();
         if(Files.exists(out)||ancestor.toRealPath().startsWith(game))throw new IOException("Choose fresh output outside the stock installation");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
-        var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
+        var manager=NativeConfig.load(game);
         var layouts=new TreeMap<String,Object>();
         try(var dirs=Files.list(Path.of(args[1]))){for(var dir:dirs.filter(Files::isDirectory).sorted().toList()){
             if(!Files.exists(dir.resolve("scene.dat")))continue;

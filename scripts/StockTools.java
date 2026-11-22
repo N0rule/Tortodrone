@@ -263,6 +263,9 @@ public final class StockTools {
             sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));
         }
         if(sources.isEmpty())sources.add(project.resolve("scripts/compat/" + fixture + ".java"));
+        // Probes share assertions/frame helpers; add the sibling sources so an explicit javac run resolves them.
+        sources.add(project.resolve("scripts/compat/Harness.java"));
+        sources.add(project.resolve("scripts/compat/NativeConfig.java"));
         Path scratch = Files.createTempDirectory("tortodrone-stock-tool-");
         try {
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code") + File.separator + "*"

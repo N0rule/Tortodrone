@@ -11,10 +11,8 @@ import org.tortodrone.core.world.SceneContent;
 public final class HazardCompatibility {
     @SuppressWarnings("unchecked")
     public static void main(String[] args)throws Exception {
-        System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
-        var resources=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resources.getClass().getMethod("gf",String.class).invoke(resources,Path.of(args[0]).resolve("rsrc").toString());
-        var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resources,null,"config/");manager.init();
+        NativeConfig.ordinal();
+        var manager=NativeConfig.load(Path.of(args[0]));
         var map=SceneRegistry.defaultEntry().map();
         var world=new SceneEntities(new SceneContent(List.of(),Map.of()),map.collision());
         var spawn=SceneEntities.class.getDeclaredMethod("hazard",String.class,Object.class,float.class,int.class,Map.class,float.class,float.class,int.class);spawn.setAccessible(true);

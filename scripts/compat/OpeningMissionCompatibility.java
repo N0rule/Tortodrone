@@ -11,9 +11,7 @@ import org.tortodrone.core.world.FireCatalog;
 /** Read-only current-client opening mission/response oracle; never samples reward tables. */
 public final class OpeningMissionCompatibility {
     public static void main(String[] args)throws Exception {
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
-        var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        var cm=NativeConfig.load(Path.of(args[0]));
         for(String name:List.of("Rank/01/1.1/Rhendon Mission Intro","Rank/01/1.2/The Ancient Generator","Rank/01/1.3/First Contact B","Rank/01/1.4/Crossing the Chasm B","Rank/02/2.1/Welcome to Haven!")){
             var mission=(MissionConfig.Rank)cm.d(MissionConfig.class,name).V(cm);
             var prepared=org.tortodrone.core.character.OpeningMission.byId(mission.id);

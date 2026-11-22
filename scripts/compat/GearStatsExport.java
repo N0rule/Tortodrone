@@ -18,9 +18,7 @@ public final class GearStatsExport {
         Path game=Path.of(args[0]).toRealPath(),content=Path.of(args[1]).toRealPath(),out=Path.of(args[2]).toAbsolutePath().normalize();
         Path ancestor=out;while(!Files.exists(ancestor))ancestor=ancestor.getParent();
         if(Files.exists(out)||ancestor.toRealPath().startsWith(game))throw new IOException("Choose a fresh output outside the installation");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
-        var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        var cm=NativeConfig.load(game);
         var items=ItemYaml.load(content.resolve("items"));int count=0;
         for(var item:items.entries()) {
             if(!item.grantable()||!Set.of(org.tortodrone.core.character.WorldProfile.Slot.HELM,org.tortodrone.core.character.WorldProfile.Slot.ARMOR,org.tortodrone.core.character.WorldProfile.Slot.SHIELD,org.tortodrone.core.character.WorldProfile.Slot.TRINKET,org.tortodrone.core.character.WorldProfile.Slot.SWORD,org.tortodrone.core.character.WorldProfile.Slot.GUN,org.tortodrone.core.character.WorldProfile.Slot.BOMB).contains(item.slot()))continue;
