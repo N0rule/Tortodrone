@@ -62,6 +62,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final HeartDrops hearts=new HeartDrops(this);
     private final DamageSystem damageSystem=new DamageSystem(this);
     private final SceneLogic logic=new SceneLogic(this);
+    private final LiftSystem lifts=new LiftSystem(this);
     public void elevators(ElevatorControl control){elevatorSystem.control(control);}
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
@@ -455,50 +456,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var e=spawn(binding,binding.spec(),null,stamp);e.vial=item;
         if(!carry(e.id,player,stamp)){unlink(e);return 0;}return e.id;
     }
-    public boolean canThrow(int id){var e=entities.get(id);return e!=null&&e.spec.flag("can-throw",false);}
-    private SceneEntity snapTarget(SceneEntity lift,ActorState player){
-        String tag=lift.spec.text("snap-tag","");if(tag.isBlank())return null;
-        float ox=content.stats().getOrDefault("player.interaction-offset-x",.7f),oy=content.stats().getOrDefault("player.interaction-offset-y",0f);
-        float c=(float)Math.cos(player.rotation()),s=(float)Math.sin(player.rotation());
-        float x=player.x()+ox*c-oy*s,y=player.y()+ox*s+oy*c;
-        return entities.values().stream().filter(e->e.destroyed==Integer.MAX_VALUE&&Arrays.asList(e.spec.text("tags","").split(",")).contains(tag)
-                &&e.spec.contains(e.x,e.y,e.rotation,x,y,content.stats().getOrDefault("player.interaction-radius",.4f)))
-            .min(Comparator.comparingDouble(e->Math.hypot(e.x-x,e.y-y))).orElse(null);
-    }
-    public boolean prepareDrop(int id,ActorState player){
-        var e=entities.get(id);if(e==null||e.carrier!=player.id())return false;
-        var target=snapTarget(e,player);e.dropPoint=target==null?null:new SceneLiftState.Point(target.x,target.y);return target!=null;
-    }
-    public void throwLift(int id,ActorState player,int stamp){
-        var e=entities.get(id);if(e==null||e.carrier!=player.id())return;
-        e.carrier=0;e.owner=player.id();e.ownerOid=player.clientOid();e.flags=e.flags&~4|2;e.faction=player.id();e.excluded=new int[0];
-        e.x=player.x();e.y=player.y();e.rotation=e.direction=player.rotation();e.thrownAt=stamp;spatial.move(e);
-        e.z=content.stats().getOrDefault("player.lift-height",0f);
-    }
-    public void dropLift(int id,ActorState player,int stamp){
-        var e=entities.get(id);if(e==null||e.carrier!=player.id())return;
-        // Native Dungeoneer.drop invokes the current actionable with the dropped
-        // lift as Activator. Test that owned prompt before releasing the carrier.
-        var prompt=interaction(player.x(),player.y(),player.rotation(),player.id(),id);
-        var unlock=e.spec.text("actionable-signal","").equals("gold_unlock")&&prompt!=null&&prompt.action().equals("UnlockGold")?entities.get(prompt.actorId()):null;
-        e.carrier=0;e.flags&=~6;e.z=0;
-        float distance=(ScenePortals.PAWN_RADIUS+e.spec.number("radius",0))*1.01f;
-        var target=snapTarget(e,player);
-        float x=target==null?player.x()+(float)Math.cos(player.rotation())*distance:target.x;
-        float y=target==null?player.y()+(float)Math.sin(player.rotation())*distance:target.y;
-        if(terrain.walkable(x,y)&&walkable(x,y,e.id)){e.x=x;e.y=y;}else {e.x=player.x();e.y=player.y();}spatial.move(e);
-        e.dropPoint=new SceneLiftState.Point(e.x,e.y);
-        e.rotation=e.direction=player.rotation();e.faction=player.id();e.excluded=new int[0];
-        if(unlock!=null&&unlock.kind.equals("Door")&&unlock.spec.text("door-lock","").equals("gold")&&(unlock.flags&2)==0){
-            entitySignal(unlock,"open",stamp);e.destroyed=stamp;e.scriptDestroyed=true;e.status.clear();return;
-        }
-        if(e.vial!=null)land(e,stamp);
-    }
-    public void releaseLifts(int player,int stamp){
-        for(var e:List.copyOf(entities.values()))if(e.carrier==player){
-            e.carrier=0;e.flags&=~6;if(e.vial!=null)e.destroyed=stamp;
-        }
-    }
+    public boolean canThrow(int id){return lifts.canThrow(id);}
+    public boolean prepareDrop(int id,ActorState player){return lifts.prepareDrop(id,player);}
+    public void throwLift(int id,ActorState player,int stamp){lifts.throwLift(id,player,stamp);}
+    public void dropLift(int id,ActorState player,int stamp){lifts.dropLift(id,player,stamp);}
+    public void releaseLifts(int player,int stamp){lifts.releaseLifts(player,stamp);}
     public List<Pickup> takePickups(int player){return interactions.takePickups(player);}
     public List<Pickup> pendingPickups(int player){return interactions.pendingPickups(player);}
     public int heatClaim(int player,int actor){return interactions.heatClaim(player,actor);}
@@ -615,7 +577,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     else think(e,stamp,elapsed,players);
                 }
             }
-            if(liftKind(e.kind))lift(e,stamp,elapsed,players);
+            if(liftKind(e.kind))lifts.lift(e,stamp,elapsed,players);
             if(e.activity==1&&stamp-e.activityStarted>=e.spec.integer("react-time",0)||e.activity==3&&stamp-e.activityStarted>=e.spec.integer("activate-time",0))e.activity=0;
         }
         for(var e:List.copyOf(entities.values()))for(var pulse:e.status.takePulses())statusPulse(e.id,pulse,e.x,e.y,stamp);
@@ -701,34 +663,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     /** Secondary burn/spasm damage retains its collision mask and excludes the affected source. */
     public void statusPulse(int source,SceneStatus.Pulse pulse,float x,float y,int stamp){statusSystem.pulse(source,pulse,x,y,stamp);}
-    private void lift(SceneEntity e,int stamp,float elapsed,List<ActorState> players){
-        if(e.carrier!=0){for(var player:players)if(player.id()==e.carrier){e.x=player.x();e.y=player.y();e.rotation=player.rotation();spatial.move(e);return;}return;}
-        if((e.flags&2)==0)return;
-        float distance=e.speed*elapsed;boolean collided=false;
-        int steps=Math.max(1,(int)Math.ceil(Math.abs(distance)/.1f));
-        // Thrown lifts also collide with the native lift bit, so closed Lift Barriers catch them.
-        int thrownMask=e.spec.integer("thrown-collision-mask",-1);
-        int flightMask=thrownMask>=0?thrownMask|LIFT_COLLISION:thrownMask;
-        for(int step=0;step<steps;step++){
-            float x=e.x+(float)Math.cos(e.direction)*distance/steps,y=e.y+(float)Math.sin(e.direction)*distance/steps;
-            boolean clear=staticCollision.isEmpty()||e.shape==null?terrain.walkableSegment(e.x,e.y,x,y):
-                staticCollision.clearSegment(flightMask,e.shape,e.x,e.y,x,y,e.rotation,disabledCollisionSources());
-            if(!clear){collided=true;break;}
-            e.x=x;e.y=y;spatial.move(e);
-            // Execute the landing action at the colliding substep. Keeping the
-            // previous clear pose left a thrown vial outside the victim's shape.
-            if(contact(x,y,e.rotation,e.id,e.shape,flightMask)){collided=true;break;}
-        }
-        if(stamp-e.thrownAt>=e.spec.integer("throw-time",0))e.z=Math.max(0,e.z-e.spec.number("fall-speed",0)*elapsed);
-        if(collided||e.z<=0||stamp-e.thrownAt>=e.spec.integer("fuse",0))land(e,stamp);
-    }
-    private void land(SceneEntity e,int stamp){
-        e.flags&=~2;
-        pots.land(e,stamp);
-        String graph=e.vial==null?e.spec.text("land-action",""):e.vial.text("use-action","");
-        if(!graph.isBlank())try{attack.accept(e.snapshot(),FireCatalog.actionJson(graph));}catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared lift action",invalid);}
-        if(e.spec.flag("destroy-on-land",false))e.destroyed=stamp;
-    }
+    void liftTick(SceneEntity e,int stamp,float elapsed,List<ActorState> players){lifts.lift(e,stamp,elapsed,players);}
     private void scriptedMovement(SceneEntity e,int stamp,float elapsed){movementSystem.scriptedMovement(e,stamp,elapsed);}
     /** Per attack slot, the damage circle radius its first fire action can reach. A
      *  monster that stops at the native targeting range can be unable to land a melee
