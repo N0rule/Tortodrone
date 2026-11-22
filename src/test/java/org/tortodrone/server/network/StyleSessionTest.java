@@ -19,6 +19,7 @@ import org.tortodrone.core.character.Currency;
 public final class StyleSessionTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-styles-");
+        var previous=org.tortodrone.world.SceneRegistry.system();
         try {
             var content=ContentManager.load(Path.of("."));var items=content.items();
             check(items.entries().stream().filter(i->StyleStore.kit(i.config())!=null).count()==75,"all 75 playable kit mappings resolve");
@@ -40,7 +41,7 @@ public final class StyleSessionTest {
             refused(()->store.change(account,1,1,initial.revision(),almond,null));
             check(db.worldProfile(account,1,1).equals(initial)&&db.roster(account).equals(beforeRoster)&&store.saved(account,1,1).eyes().isEmpty(),"late failure rolls back inventory, saved style and appearance");
             db.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER fail_style");}return null;});
-            var scenes=org.tortodrone.world.SceneRegistry.create(content);var socket=new Socket(){public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}};
+            var scenes=org.tortodrone.world.SceneRegistry.create(content);org.tortodrone.world.SceneRegistry.install(scenes);var socket=new Socket(){public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}};
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)){
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();
                 short request=20;
@@ -75,7 +76,7 @@ public final class StyleSessionTest {
                 check(reopened.saved(account,1,1).equals(saved)&&reopened.saved(bob,1,1).eyes().isEmpty(),"unlocks persist and stay owned across restart");
             }
             System.out.println("PASS: 75 style mappings; native Use/reapply; one-item consumption; Crown fee; persistence; ownership, auth, revision and rollback");
-        }finally{org.tortodrone.support.ContentFixture.delete(home);}
+        }finally{org.tortodrone.world.SceneRegistry.install(previous);org.tortodrone.support.ContentFixture.delete(home);}
     }
     private static SessionDecoder.Listener listener(short id){return new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",id);}
     private static long id(WorldProfile p,String config){return p.items().stream().filter(i->i.config().equals(config)).findFirst().orElseThrow().id();}
