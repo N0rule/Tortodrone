@@ -27,25 +27,7 @@ boxes:
           - item: glowing
             quantity: 60
             binding: bound
-      bonus_variant:
-        chance: 100%
-        rolls: 1
-        entries:
-        - weight: 100
-          rewards:
-          - item: variants_1
-            quantity: 1
-            binding: bound
-        - weight: 69
-          rewards:
-          - item: variants_2
-            quantity: 1
-            binding: bound
-        - weight: 30
-          rewards:
-          - item: variants_3
-            quantity: 1
-            binding: bound
+      bonus_variant: {shared: bonus_variant}
       bonus_orb:
         chance: 100%
         rolls: 1
@@ -60,30 +42,7 @@ boxes:
           - item: advanced
             quantity: 1
             binding: bound
-      bonus_upgrade:
-        chance: 1%
-        rolls: 1
-        entries:
-        - weight: 100
-          rewards:
-          - item: trinket_slot
-            quantity: 1
-            binding: bound
-        - weight: 50
-          rewards:
-          - item: weapon_slot
-            quantity: 1
-            binding: bound
-        - weight: 10
-          rewards:
-          - item: coin_bonus
-            quantity: 1
-            binding: bound
-        - weight: 1
-          rewards:
-          - item: heat_bonus_s909083618_3f30bba58f51
-            quantity: 1
-            binding: bound
+      bonus_upgrade: {shared: bonus_upgrade}
     guaranteed:
     - item: spark_of_life
       quantity: 6

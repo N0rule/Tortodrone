@@ -29,6 +29,7 @@ public final class BoxCatalog {
         var root=map(Json.parseCatalog(Files.readString(file)),file.toString());fields(root,file.toString(),"format","version","boxes");
         if(!"tortodrone-box-bindings".equals(root.get("format"))||integer(root.get("version"),"box bindings version")!=1)throw new IOException("Unsupported box bindings");
         var nativeBoxes=map(root.get("boxes"),"box bindings");var definitions=new HashMap<String,BoxDefinition>();var tables=new HashMap<String,String>();
+        var sharedLibrary=sharedLibrary(content,items);
         for(Path yaml:yamlFiles(content.resolve("loot/boxes"))) {
             var data=read(yaml);fields(data,yaml.toString(),"boxes");
             for(var row:map(data.get("boxes"),"boxes").entrySet()) {
@@ -45,17 +46,14 @@ public final class BoxCatalog {
                 var groups=new LinkedHashMap<String,Group>();
                 for(var g:map(value.getOrDefault("groups",Map.of()),id).entrySet()) {
                     String name=g.getKey();if(!name.matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid reward group: "+name);
-                    var m=map(g.getValue(),name);fields(m,name,"chance","rolls","entries");
-                    int chance=chance(m.get("chance"));int rolls=integer(m.get("rolls"),name);if(rolls<1||rolls>100)throw new IOException("Invalid roll count");
-                    var entries=new ArrayList<Entry>();long total=0;
-                    for(var entry:list(m.get("entries"),name)) {
-                        var e=map(entry,name);fields(e,name,"weight","rewards");
-                        int weight=integer(e.get("weight"),name);if(weight<1)throw new IOException("Weights must be positive");
-                        total+=weight;if(total>1_000_000_000_000L)throw new IOException("Weight sum exceeds limit");
-                        entries.add(new Entry(weight,rewards(e.get("rewards"),items)));
-                    }
-                    if(entries.isEmpty())throw new IOException("Empty reward group: "+name);
-                    groups.put(name,new Group(chance,rolls,entries,total));
+                    var m=map(g.getValue(),name);Group group;
+                    if(m.containsKey("shared")) {
+                        fields(m,name,"shared");
+                        String reference=text(m.get("shared"),name+" shared group");
+                        group=sharedLibrary.get(reference);
+                        if(group==null)throw new IOException("Unknown shared loot group: "+reference);
+                    } else group=group(name,m,items);
+                    groups.put(name,group);
                 }
                 var guaranteed=rewards(value.getOrDefault("guaranteed",List.of()),items);
                 var box=new BoxDefinition(id,config,kind,keys,status,evidence,groups,guaranteed);
@@ -73,6 +71,32 @@ public final class BoxCatalog {
         // Nested boxes stay unopened. Reject automatic reward cycles even across box definitions.
         for(var box:definitions.values())nested(box,definitions,new HashSet<>());
         return new BoxCatalog(definitions,tables);
+    }
+    /** Shared reward bodies; a box references one with {@code {shared: <name>}}. */
+    private static Map<String,Group> sharedLibrary(Path content,ItemCatalog items)throws IOException {
+        Path file=content.resolve("shared/loot/groups.yml");
+        if(!Files.exists(file))return Map.of();
+        var data=read(file);fields(data,"shared loot groups","groups");
+        var groups=new LinkedHashMap<String,Group>();
+        for(var row:map(data.get("groups"),"shared loot groups").entrySet()) {
+            String name=row.getKey();
+            if(!name.matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid shared loot group: "+name);
+            groups.put(name,group(name,map(row.getValue(),name),items));
+        }
+        return Map.copyOf(groups);
+    }
+    private static Group group(String name,Map<String,Object> value,ItemCatalog items)throws IOException {
+        fields(value,name,"chance","rolls","entries");
+        int chance=chance(value.get("chance"));int rolls=integer(value.get("rolls"),name);if(rolls<1||rolls>100)throw new IOException("Invalid roll count");
+        var entries=new ArrayList<Entry>();long total=0;
+        for(var entry:list(value.get("entries"),name)) {
+            var e=map(entry,name);fields(e,name,"weight","rewards");
+            int weight=integer(e.get("weight"),name);if(weight<1)throw new IOException("Weights must be positive");
+            total+=weight;if(total>1_000_000_000_000L)throw new IOException("Weight sum exceeds limit");
+            entries.add(new Entry(weight,rewards(e.get("rewards"),items)));
+        }
+        if(entries.isEmpty())throw new IOException("Empty reward group: "+name);
+        return new Group(chance,rolls,entries,total);
     }
     private static List<Path> yamlFiles(Path directory)throws IOException {
         ContentFiles.safe(directory);if(!Files.isDirectory(directory))throw new IOException("Missing loot/boxes directory");

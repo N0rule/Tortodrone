@@ -31,15 +31,5 @@ boxes:
         - {weight: 2, rewards: [{item: orbit_aura, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: plasma_wings_blue, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: plasma_wings_gold, quantity: 1, binding: catalog}]}
-      choices_confetti_equinox_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_equinox, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: []}
-      choices_confetti_equinox_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_equinox, quantity: 1, binding: catalog}]}
-        - {weight: 9, rewards: []}
+      choices_confetti_equinox_2: {shared: choices_confetti_equinox}
+      choices_confetti_equinox_3: {shared: choices_confetti_equinox_2}

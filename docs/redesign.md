@@ -414,6 +414,8 @@ content/
     mechanics.yml
     presentation.yml
     news/
+    loot/
+      groups.yml
     missions/
       groups.yml
       properties.yml

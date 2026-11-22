@@ -186,8 +186,10 @@ The graphical harness can also inject reproducible transport lag for spike inves
 - New maps, missions, weapons and other content must not copy an existing file
   verbatim. Opt a map into `content/shared/mechanics.yml` when several maps need the
   same mechanic override, and keep only a genuine map-specific delta in its
-  `mechanics.yml`. `checkContentDuplication` fails unlisted copies; treat stale
-  allowlist entries as removal work, not as permission for new duplication.
+  `mechanics.yml`. Reference a repeated loot reward body from
+  `content/shared/loot/groups.yml` with `{shared: <name>}` instead of copying its
+  group. `checkContentDuplication` fails unlisted copies; treat stale allowlist
+  entries as removal work, not as permission for new duplication.
 - Do not commit installed game assets, third-party material without appropriate rights, private captures, secrets, `data/`, `build/` or `.build/`.
 - Review `git status`, `git diff` and `git diff --check`; report **only tests actually run**, with failures and what remains unverified. Avoid repeated runs after passing checks without relevant changes.
 - Bump `VERSION` only for deliberate behavioral releases. Release workflow tags must match `v<VERSION>`; CI tests/builds do not substitute for native graphical verification. See [Operations](operations.md).

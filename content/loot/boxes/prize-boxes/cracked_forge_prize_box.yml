@@ -27,36 +27,5 @@ boxes:
           - item: cracked
             quantity: 15
             binding: bound
-      bonus_variant:
-        chance: 100%
-        rolls: 1
-        entries:
-        - weight: 100
-          rewards:
-          - item: variants_1
-            quantity: 1
-            binding: bound
-      bonus_upgrade:
-        chance: 1%
-        rolls: 1
-        entries:
-        - weight: 100
-          rewards:
-          - item: trinket_slot
-            quantity: 1
-            binding: bound
-        - weight: 50
-          rewards:
-          - item: weapon_slot
-            quantity: 1
-            binding: bound
-        - weight: 10
-          rewards:
-          - item: coin_bonus
-            quantity: 1
-            binding: bound
-        - weight: 1
-          rewards:
-          - item: heat_bonus_s909083618_3f30bba58f51
-            quantity: 1
-            binding: bound
+      bonus_variant: {shared: bonus_variant_2}
+      bonus_upgrade: {shared: bonus_upgrade}

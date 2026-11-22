@@ -24,20 +24,7 @@ boxes:
         - {weight: 18, rewards: [{group: choices_celestial_nav_helm_2}]}
         - {weight: 2, rewards: [{group: choices_plasma_wings_gold_3}]}
         - {weight: 1, rewards: [{item: celestial_vortex, quantity: 1, binding: catalog}]}
-      choices_celestial_nav_helm_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: celestial_nav_helm, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: celestial_nav_suit, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: galactic_guardian_helm, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: galactic_guardian_vest, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: cat_tail_celestial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: wolver_tail_celestial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: plume_celestial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: mech_tennas_celestial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: spike_mohawk_celestial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: bolted_vee_celestial, quantity: 1, binding: catalog}]}
+      choices_celestial_nav_helm_2: {shared: choices_celestial_nav_helm}
       choices_plasma_wings_gold_3:
         chance: 100%
         rolls: 1
@@ -47,15 +34,5 @@ boxes:
         - {weight: 1, rewards: [{item: dragon_wings_celestial, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: valkyrie_wings_celestial, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: orbit_aura, quantity: 1, binding: catalog}]}
-      choices_confetti_fall_equinox_4:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_fall_equinox, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: []}
-      choices_confetti_fall_equinox_5:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_fall_equinox, quantity: 1, binding: catalog}]}
-        - {weight: 9, rewards: []}
+      choices_confetti_fall_equinox_4: {shared: choices_confetti_fall_equinox}
+      choices_confetti_fall_equinox_5: {shared: choices_confetti_fall_equinox_2}

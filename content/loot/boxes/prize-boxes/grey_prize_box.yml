@@ -124,11 +124,4 @@ boxes:
         - {weight: 1, rewards: [{item: mohawk_grey, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: spike_mohawk_grey, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: wide_vee_grey, quantity: 1, binding: catalog}]}
-      choices_large_fireworks_silver_8:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: large_fireworks_silver, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: medium_fireworks_silver, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: small_fireworks_silver, quantity: 1, binding: catalog}]}
-        - {weight: 2, rewards: [{item: confetti_silver, quantity: 1, binding: catalog}]}
+      choices_large_fireworks_silver_8: {shared: choices_large_fireworks_silver}

@@ -45,90 +45,12 @@ boxes:
         - {weight: 280, rewards: [{item: sensor_unit_divine, quantity: 1, binding: unbound}]}
         - {weight: 280, rewards: [{item: sensor_unit_volcanic, quantity: 1, binding: unbound}]}
         - {weight: 140, rewards: [{item: sensor_unit_prismatic, quantity: 1, binding: unbound}]}
-      com_unit:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: com_unit_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: com_unit_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: com_unit_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: com_unit_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: com_unit_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: com_unit_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: com_unit_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: com_unit_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: com_unit_volcanic, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: com_unit_prismatic, quantity: 1, binding: unbound}]}
-      goggles:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: goggles_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: goggles_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: goggles_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: goggles_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: goggles_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: goggles_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: goggles_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: goggles_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: goggles_volcanic, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: goggles_prismatic, quantity: 1, binding: unbound}]}
-      knight_vision_goggles:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: knight_vision_goggles_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: knight_vision_goggles_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: knight_vision_goggles_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: knight_vision_goggles_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: knight_vision_goggles_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: knight_vision_goggles_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: knight_vision_goggles_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: knight_vision_goggles_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: knight_vision_goggles_volcanic, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: knight_vision_goggles_prismatic, quantity: 1, binding: unbound}]}
-      scarf:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: scarf_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: scarf_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: scarf_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: scarf_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: scarf_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: scarf_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: scarf_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: scarf_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: scarf_volcanic, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: scarf_prismatic, quantity: 1, binding: unbound}]}
-      mohawk:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: mohawk_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mohawk_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mohawk_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mohawk_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mohawk_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mohawk_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mohawk_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: mohawk_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: mohawk_volcanic, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: mohawk_prismatic, quantity: 1, binding: unbound}]}
-      bomb_bandolier:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: bomb_bundle_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bomb_bundle_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bomb_bundle_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bomb_bundle_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bomb_bundle_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bomb_bundle_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bomb_bundle_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: bomb_bundle_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: bomb_bundle_volcanic, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: bomb_bundle_prismatic, quantity: 1, binding: unbound}]}
+      com_unit: {shared: com_unit}
+      goggles: {shared: goggles}
+      knight_vision_goggles: {shared: knight_vision_goggles}
+      scarf: {shared: scarf}
+      mohawk: {shared: mohawk}
+      bomb_bandolier: {shared: bomb_bandolier}
       accessories:
         chance: 100%
         rolls: 1

@@ -38,6 +38,7 @@ content/
     statuses.yml
     combat.yml               shared numeric balance and sparse gear defenses
     mechanics.yml            opt-in map mechanic overrides shared by several maps
+    loot/groups.yml          reward bodies referenced by several boxes
     news/news.yml            Uplink News packs and their images
   missions/                  imported stock mission, group and prestige definitions
   _internal/                 item bindings/arguments, Town defaults, fire graphs, provenance
@@ -1243,6 +1244,29 @@ loot YAML contains no native paths, stock numbers or serialization metadata.
 loot tables. Edit or move an existing definition when supplying a pool; duplicate
 IDs across files are rejected. Key options must exactly match
 `_internal/box-bindings.json`, including their order.
+
+Reward groups repeated across several boxes live once in
+`content/shared/loot/groups.yml`. A local group then becomes a reference instead
+of a copy:
+
+```yaml
+groups:
+  main:
+    chance: "100%"
+    rolls: 1
+    entries:
+      - {weight: 1, rewards: [{group: main_pool}]}
+  main_pool: {shared: confetti_bundle}
+```
+
+The local group keeps its name and position in this box's graph; load time expands
+`{shared: <name>}` to the exact body from the shared file, including nested
+`{group: ...}` rewards, which resolve against the referencing box. A group is
+either a shared reference or a complete local body, never both, and unknown
+references, unknown fields, invalid names or an unreadable shared file fail
+startup. Add a shared body only when at least two boxes genuinely need the same
+one; new loot must reference an existing body rather than copy it. Use a local
+body when the values differ, even slightly.
 
 The following is an **illustrative custom test distribution, not an official Iron
 Lockbox pool**. It must never be labeled `verified` on the strength of this example.

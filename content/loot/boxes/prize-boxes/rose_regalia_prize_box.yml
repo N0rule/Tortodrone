@@ -34,15 +34,5 @@ boxes:
         - {weight: 1, rewards: [{item: tabard_of_the_fire_rose, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: tabard_of_the_freeze_rose, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: tabard_of_the_poison_rose, quantity: 1, binding: catalog}]}
-      choices_confetti_leaf_4:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_leaf, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: []}
-      choices_confetti_leaf_5:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_leaf, quantity: 1, binding: catalog}]}
-        - {weight: 19, rewards: []}
+      choices_confetti_leaf_4: {shared: choices_confetti_leaf}
+      choices_confetti_leaf_5: {shared: choices_confetti_leaf_2}

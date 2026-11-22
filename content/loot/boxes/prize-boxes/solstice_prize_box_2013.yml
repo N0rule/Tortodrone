@@ -27,16 +27,5 @@ boxes:
         - {weight: 5, rewards: [{item: snowfall_aura, quantity: 1, binding: catalog}]}
         - {weight: 3, rewards: [{item: crown_winter, quantity: 1, binding: catalog}]}
         - {weight: 3, rewards: [{item: crown_summer, quantity: 1, binding: catalog}]}
-      choices_confetti_summer_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 9, rewards: []}
-        - {weight: 10, rewards: [{item: confetti_summer, quantity: 1, binding: catalog}, {item: confetti_winter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: confetti_summer, quantity: 2, binding: catalog}, {item: confetti_winter, quantity: 2, binding: catalog}]}
-      choices_snow_bucket_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: snow_bucket, quantity: 1, binding: catalog}]}
-        - {weight: 9, rewards: []}
+      choices_confetti_summer_2: {shared: choices_confetti_summer_2}
+      choices_snow_bucket_3: {shared: choices_snow_bucket}

@@ -15,30 +15,10 @@ boxes:
         - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}, {item: flawed_snowball, quantity: 1, binding: catalog},
             {group: choices_confetti_winter_1}, {group: choices_flawed_snowball_2}, {group: choices_confetti_winter_3}, {group: choices_flawed_snowball_4},
             {group: choices_side_blade_freeze_5}, {group: choices_trinket_slot_9}]}
-      choices_confetti_winter_1:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: []}
-      choices_flawed_snowball_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: []}
-      choices_confetti_winter_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
-        - {weight: 4, rewards: []}
-      choices_flawed_snowball_4:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
-        - {weight: 4, rewards: []}
+      choices_confetti_winter_1: {shared: choices_confetti_winter}
+      choices_flawed_snowball_2: {shared: choices_flawed_snowball}
+      choices_confetti_winter_3: {shared: choices_confetti_winter_2}
+      choices_flawed_snowball_4: {shared: choices_flawed_snowball_2}
       choices_side_blade_freeze_5:
         chance: 100%
         rolls: 1
@@ -103,11 +83,4 @@ boxes:
         entries:
         - {weight: 1, rewards: [{group: choices_trinket_slot_10}]}
         - {weight: 99, rewards: []}
-      choices_trinket_slot_10:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 100, rewards: [{item: trinket_slot, quantity: 1, binding: catalog}]}
-        - {weight: 50, rewards: [{item: weapon_slot, quantity: 1, binding: catalog}]}
-        - {weight: 10, rewards: [{item: coin_bonus, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: heat_bonus_s909083618_3f30bba58f51, quantity: 1, binding: catalog}]}
+      choices_trinket_slot_10: {shared: choices_trinket_slot}

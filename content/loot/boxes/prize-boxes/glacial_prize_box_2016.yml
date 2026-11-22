@@ -25,28 +25,9 @@ boxes:
         - {weight: 16, rewards: [{group: choices_gremlin_suit_glacial_6}]}
         - {weight: 28, rewards: [{group: choices_gremlin_helm_glacial_7}]}
         - {weight: 30, rewards: [{group: choices_bunny_tail_glacial_8}]}
-      choices_permafrost_aura_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: permafrost_aura, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: apocrean_disciple_wings_arctic, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: pauldrons_arctic, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: crown_arctic, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: shackles_arctic, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: crystalline_defender, quantity: 1, binding: catalog}]}
-      choices_arctic_rogue_mail_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: arctic_rogue_mail, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: arctic_acolyte_mantle, quantity: 1, binding: catalog}]}
-      choices_arctic_rogue_mask_4:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: arctic_rogue_mask, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: arctic_acolyte_hood, quantity: 1, binding: catalog}]}
+      choices_permafrost_aura_2: {shared: choices_permafrost_aura}
+      choices_arctic_rogue_mail_3: {shared: choices_arctic_rogue_mail}
+      choices_arctic_rogue_mask_4: {shared: choices_arctic_rogue_mask}
       choices_side_blade_glacial_5:
         chance: 100%
         rolls: 1
@@ -66,43 +47,6 @@ boxes:
         - {weight: 1, rewards: [{item: bolted_vee_glacial, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: headband_glacial, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: maid_headband_glacial, quantity: 1, binding: catalog}]}
-      choices_gremlin_suit_glacial_6:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: gremlin_suit_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: onesie_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: mechaknight_suit_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: spiraltail_mail_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: stranger_robe_glacial, quantity: 1, binding: catalog}]}
-      choices_gremlin_helm_glacial_7:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: gremlin_helm_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: night_cap_round_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: mechaknight_helm_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: spiraltail_mask_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: stranger_helm_glacial, quantity: 1, binding: catalog}]}
-      choices_bunny_tail_glacial_8:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: bunny_tail_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: cat_tail_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: clockwork_crest_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: mechaknight_exhaust_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: extension_cord_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: extra_vertical_vents_broken_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: extra_vertical_vents_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: gear_halo_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: grand_topper_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: gremlin_goggles_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: pony_tail_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: sealed_pauldrons_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: spiralhorns_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: spiraltail_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: tome_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: whiskers_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: wind_up_key_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: wrench_glacial, quantity: 1, binding: catalog}]}
+      choices_gremlin_suit_glacial_6: {shared: choices_gremlin_suit_glacial}
+      choices_gremlin_helm_glacial_7: {shared: choices_gremlin_helm_glacial}
+      choices_bunny_tail_glacial_8: {shared: choices_bunny_tail_glacial}

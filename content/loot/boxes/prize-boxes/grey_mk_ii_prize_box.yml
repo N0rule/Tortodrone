@@ -62,14 +62,7 @@ boxes:
         - {weight: 1, rewards: [{item: pig_tail_grey, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: razorback_pack_grey, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: trotters_grey, quantity: 1, binding: catalog}]}
-      choices_large_fireworks_silver_5:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: large_fireworks_silver, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: medium_fireworks_silver, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: small_fireworks_silver, quantity: 1, binding: catalog}]}
-        - {weight: 2, rewards: [{item: confetti_silver, quantity: 1, binding: catalog}]}
+      choices_large_fireworks_silver_5: {shared: choices_large_fireworks_silver}
       choices_owlite_wand_grey_6:
         chance: 100%
         rolls: 1

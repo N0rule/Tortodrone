@@ -21,57 +21,9 @@ boxes:
         - {weight: 6, rewards: [{group: choices_crescent_helm_glacial_3}]}
         - {weight: 4, rewards: [{group: choices_side_blade_glacial_4}]}
         - {weight: 3, rewards: [{group: choices_arctic_rogue_mask_5}]}
-      choices_brigandine_glacial_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: brigandine_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: cloak_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: cuirass_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: culet_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: draped_armor_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: flak_jacket_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: fur_coat_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: plate_mail_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: raiment_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: scale_mail_glacial, quantity: 1, binding: catalog}]}
-      choices_crescent_helm_glacial_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: crescent_helm_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: fur_cap_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: hood_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: pith_helm_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: plate_helm_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: round_helm_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: sallet_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: scale_helm_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: tailed_helm_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: winged_helm_glacial, quantity: 1, binding: catalog}]}
-      choices_side_blade_glacial_4:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: side_blade_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: wings_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: bomb_bundle_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: crest_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: parrying_blade_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: plume_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: ribbon_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: scarf_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: glasses_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: pipe_and_mustache_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: power_scanner_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: shades_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: com_unit_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: mecha_wings_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: vertical_vents_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: bolted_vee_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: headband_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: maid_headband_glacial, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: toupee_glacial, quantity: 1, binding: catalog}]}
+      choices_brigandine_glacial_2: {shared: choices_brigandine_glacial}
+      choices_crescent_helm_glacial_3: {shared: choices_crescent_helm_glacial}
+      choices_side_blade_glacial_4: {shared: choices_side_blade_glacial}
       choices_arctic_rogue_mask_5:
         chance: 100%
         rolls: 1

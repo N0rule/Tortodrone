@@ -29,32 +29,10 @@ boxes:
         - {weight: 30, rewards: [{group: choices_bench_charred_4}]}
         - {weight: 7, rewards: [{group: choices_rug_restored_5}]}
         - {weight: 3, rewards: [{group: choices_tapestry_stand_charred_6}]}
-      choices_bench_restored_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: bench_restored, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: chair_restored, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: table_restored, quantity: 1, binding: catalog}]}
-      choices_bench_charred_4:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: bench_charred, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: chair_charred, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: table_charred, quantity: 1, binding: catalog}]}
-      choices_rug_restored_5:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: rug_restored, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: tapestry_stand_restored, quantity: 1, binding: catalog}]}
-      choices_tapestry_stand_charred_6:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: tapestry_stand_charred, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: rug_charred, quantity: 1, binding: catalog}]}
+      choices_bench_restored_3: {shared: choices_bench_restored}
+      choices_bench_charred_4: {shared: choices_bench_charred}
+      choices_rug_restored_5: {shared: choices_rug_restored}
+      choices_tapestry_stand_charred_6: {shared: choices_tapestry_stand_charred}
       choices_bone_pile_skulls_7:
         chance: 100%
         rolls: 1
@@ -64,16 +42,7 @@ boxes:
         - {weight: 45, rewards: [{group: choices_ancient_tome_13}]}
         - {weight: 1, rewards: [{item: cursed_tome, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: mystical_tome, quantity: 1, binding: catalog}]}
-      choices_bone_pile_skulls_8:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: bone_pile_skulls, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: bone_pile_stack, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: luggage_pile_a, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: luggage_pile_b, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: item_1unit_stack_a, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: item_1unit_stack_b, quantity: 1, binding: catalog}]}
+      choices_bone_pile_skulls_8: {shared: choices_bone_pile_skulls}
       choices_item_5000_9:
         chance: 100%
         rolls: 1
@@ -81,39 +50,7 @@ boxes:
         - {weight: 2, rewards: [{group: choices_item_5000_10}]}
         - {weight: 1, rewards: [{item: bedroll_01, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{group: choices_spiral_order_cool_tone_s1371394632__11}]}
-      choices_item_5000_10:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 18, rewards: [{item: item_5000, quantity: 1, binding: bound}]}
-        - {weight: 1, rewards: [{item: item_10000, quantity: 1, binding: bound}]}
-        - {weight: 1, rewards: [{item: item_20000, quantity: 1, binding: bound}]}
-      choices_spiral_order_cool_tone_s1371394632__11:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 2, rewards: [{item: spiral_order_cool_tone_s1371394632_5516a72f2840, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: spiral_order_cool_tone_s1939081200_6d12faddab38, quantity: 1, binding: catalog}]}
-      choices_divan_green_12:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: divan_green, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: divan_violet, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: chair_green, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: chair_violet, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: wood_default, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: antique, quantity: 1, binding: catalog}]}
-      choices_ancient_tome_13:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: ancient_tome, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: blue_lamp_s1197269104_d71c159f7b6c, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: green_lamp_s3889851587_d62b5290d717, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: orange_lamp_s292461212_87089bae1162, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: violet_lamp_s2296542955_9490ff80eceb, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: blue_lamp_s2729131511_e65aade2cf5b, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: green_lamp_s4132945948_cabe329d6d96, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: orange_lamp_s3533419107_b8fdc248747c, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: violet_lamp_s1242533554_0c6bab0f95d4, quantity: 1, binding: catalog}]}
+      choices_item_5000_10: {shared: choices_item_5000}
+      choices_spiral_order_cool_tone_s1371394632__11: {shared: choices_spiral_order_cool_tone_s1371394632_}
+      choices_divan_green_12: {shared: choices_divan_green}
+      choices_ancient_tome_13: {shared: choices_ancient_tome}

@@ -59,90 +59,12 @@ boxes:
         - {weight: 280, rewards: [{item: shoulder_booster_divine, quantity: 1, binding: unbound}]}
         - {weight: 280, rewards: [{item: shoulder_booster_volcanic, quantity: 1, binding: unbound}]}
         - {weight: 140, rewards: [{item: shoulder_booster_prismatic, quantity: 1, binding: unbound}]}
-      bolted_vee:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: bolted_vee_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bolted_vee_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bolted_vee_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bolted_vee_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bolted_vee_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bolted_vee_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: bolted_vee_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: bolted_vee_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: bolted_vee_vol, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: bolted_vee_prismatic, quantity: 1, binding: unbound}]}
-      game_face:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: game_face_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: game_face_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: game_face_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: game_face_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: game_face_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: game_face_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: game_face_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: game_face_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: game_face_vol, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: game_face_prismatic, quantity: 1, binding: unbound}]}
-      mecha_wings:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: mecha_wings_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mecha_wings_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mecha_wings_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mecha_wings_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mecha_wings_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mecha_wings_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: mecha_wings_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: mecha_wings_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: mecha_wings_volcanic, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: mecha_wings_prismatic, quantity: 1, binding: unbound}]}
-      spike_mohawk:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: spike_mohawk_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: spike_mohawk_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: spike_mohawk_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: spike_mohawk_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: spike_mohawk_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: spike_mohawk_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: spike_mohawk_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: spike_mohawk_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: spike_mohawk_volcanic, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: spike_mohawk_prismatic, quantity: 1, binding: unbound}]}
-      vertical_vents:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: vertical_vents_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: vertical_vents_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: vertical_vents_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: vertical_vents_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: vertical_vents_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: vertical_vents_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: vertical_vents_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: vertical_vents_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: vertical_vents_volcanic, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: vertical_vents_prismatic, quantity: 1, binding: unbound}]}
-      wide_vee:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 900, rewards: [{item: wide_vee_blue, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: wide_vee_gold, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: wide_vee_green, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: wide_vee_heavy, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: wide_vee_pink, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: wide_vee_purple, quantity: 1, binding: unbound}]}
-        - {weight: 900, rewards: [{item: wide_vee_red, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: wide_vee_divine, quantity: 1, binding: unbound}]}
-        - {weight: 280, rewards: [{item: wide_vee_volcanic, quantity: 1, binding: unbound}]}
-        - {weight: 140, rewards: [{item: wide_vee_prismatic, quantity: 1, binding: unbound}]}
+      bolted_vee: {shared: bolted_vee}
+      game_face: {shared: game_face}
+      mecha_wings: {shared: mecha_wings}
+      spike_mohawk: {shared: spike_mohawk}
+      vertical_vents: {shared: vertical_vents}
+      wide_vee: {shared: wide_vee}
       accessories:
         chance: 100%
         rolls: 1

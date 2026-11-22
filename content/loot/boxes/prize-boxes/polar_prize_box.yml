@@ -25,70 +25,11 @@ boxes:
         - {weight: 2, rewards: [{item: halo_polar, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: wolver_tail_polar, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: leaf_aura_divine, quantity: 1, binding: catalog}]}
-      choices_side_blade_polar_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: side_blade_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: wings_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: bomb_bundle_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: crest_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: parrying_blade_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: plume_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: ribbon_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: scarf_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: pipe_and_mustache_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: power_scanner_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: glasses_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: shades_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: com_unit_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: mecha_wings_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: vertical_vents_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: bolted_vee_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: headband_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: maid_headband_polar, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: toupee_polar, quantity: 1, binding: catalog}]}
-      choices_polar_wolf_hood_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: polar_wolf_hood, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: polar_wolf_hood_black, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: polar_wolf_hood_white, quantity: 1, binding: catalog}]}
-      choices_polar_wolf_coat_4:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: polar_wolf_coat, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: polar_wolf_coat_black, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: polar_wolf_coat_white, quantity: 1, binding: catalog}]}
-      choices_snow_bucket_5:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 3, rewards: [{item: snow_bucket, quantity: 1, binding: catalog}]}
-        - {weight: 17, rewards: []}
-      choices_confetti_winter_6:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: []}
-      choices_flawed_snowball_7:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: []}
-      choices_confetti_winter_8:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
-        - {weight: 4, rewards: []}
-      choices_flawed_snowball_9:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
-        - {weight: 4, rewards: []}
+      choices_side_blade_polar_2: {shared: choices_side_blade_polar}
+      choices_polar_wolf_hood_3: {shared: choices_polar_wolf_hood}
+      choices_polar_wolf_coat_4: {shared: choices_polar_wolf_coat}
+      choices_snow_bucket_5: {shared: choices_snow_bucket_2}
+      choices_confetti_winter_6: {shared: choices_confetti_winter}
+      choices_flawed_snowball_7: {shared: choices_flawed_snowball}
+      choices_confetti_winter_8: {shared: choices_confetti_winter_2}
+      choices_flawed_snowball_9: {shared: choices_flawed_snowball_2}
