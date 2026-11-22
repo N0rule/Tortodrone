@@ -56,6 +56,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private final ElevatorSystem elevatorSystem=new ElevatorSystem(this);
     private final SceneCollisions collisions=new SceneCollisions(this);
+    private final WaveSystem waveSystem=new WaveSystem(this);
     public void elevators(ElevatorControl control){elevatorSystem.control(control);}
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
@@ -233,15 +234,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final boolean spatialQuery;
     private final java.util.random.RandomGenerator random;
     /** Catalogue for wave spawns; an empty catalogue refuses every type id. */
-    private final MonsterCatalog monsters;
-    private final Map<String,Wave> waves=new LinkedHashMap<>();
+    final MonsterCatalog monsters;
     private long generation=1;
-    private static final class Wave {
-        final MonsterGroup group;
-        int spawned,previousAlive,nextSpawn=Integer.MIN_VALUE;
-        boolean cleared;
-        Wave(MonsterGroup group){this.group=group;}
-    }
     private record Link(SceneEntity entity,int stamp,boolean ghost) { }
     private final ArrayDeque<Link> links=new ArrayDeque<>();
     /** A knight hit; impulse is the region's DamageImpulse, applied only if the hit lands. */
@@ -374,7 +368,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         interactionCandidates.remove(entity);
         spatial.remove(entity);
     }
-    private SceneEntity spawn(SceneContent.Entry binding,SceneContent.Spec spec,SceneEntity pad,int stamp){
+    SceneEntity spawn(SceneContent.Entry binding,SceneContent.Spec spec,SceneEntity pad,int stamp){
         String nativeType=spec.text("native-type","");String kind=nativeType.substring(nativeType.lastIndexOf('.')+1);
         if(!SUPPORTED.contains(kind))throw new IllegalArgumentException("Unsupported prepared scene actor: "+kind);
         var entity=new SceneEntity(nextId++,stamp,binding,spec,pad,content);insert(entity);
@@ -589,7 +583,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var players=occupants.stream().filter(p->p.activity()!=TownMovement.DYING&&p.activity()!=TownMovement.DEAD&&p.activity()!=TownMovement.RESURRECT).toList();
         this.players=players;
         combatSystem.beginTick((int)entities.values().stream().filter(e->e.kind.equals("Monster")&&e.destroyed==Integer.MAX_VALUE&&e.band==SceneMonsterBand.ENGAGED).count());
-        advanceWaves(stamp);
+        waveSystem.advance(stamp);
         for(var station:arsenalProps.entrySet()){
             var zone=station.getKey();
             // Proximity retains an interacted station; it must not open a closed one.
@@ -704,23 +698,6 @@ public final class SceneEntities implements SceneWeapons.Targets {
         actions.advance(stamp);
         if(!effectSources.isEmpty())effectSources.keySet().retainAll(actions.workSources());
     }
-    /** Register a wave for this scene generation. Unknown or unsupported types fail here,
-     *  before any actor is created. */
-    public void addWave(MonsterGroup group){
-        Objects.requireNonNull(group);
-        if(group.generation()!=generation)throw new IllegalArgumentException("Monster group belongs to a stale scene generation");
-        if(waves.containsKey(group.id()))throw new IllegalArgumentException("Duplicate monster group: "+group.id());
-        try{monsters.spawnable(group.typeId());}
-        catch(java.io.IOException refused){throw new IllegalArgumentException("Monster group "+group.id()+": "+refused.getMessage(),refused);}
-        for(var anchor:group.anchors()){
-            if(!terrain.walkable(anchor.x(),anchor.y()))
-                throw new IllegalArgumentException("Monster group anchor is outside walkable terrain: "+anchor);
-            if(!staticCollision.isEmpty()&&(!staticCollision.floorSupported(anchor.x(),anchor.y())
-                ||staticCollision.penetration(pawnCollisionMask,anchor.x(),anchor.y(),ScenePortals.PAWN_RADIUS).present()))
-                throw new IllegalArgumentException("Monster group anchor is blocked: "+anchor);
-        }
-        waves.put(group.id(),new Wave(group));
-    }
     /**
      * Spawn catalogue-backed monsters for an authorized administrator. The complete request is
      * validated before insertion, so an unknown/unsupported type, blocked position or room/cap
@@ -768,62 +745,28 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     /** Current scene generation. A wave created for an older generation is dropped, never replayed. */
     public long generation(){return generation;}
-    /** Move to a later scene generation, removing every wave and wave actor that cannot belong to it. */
-    public void generation(long next){
-        if(next<=generation)throw new IllegalArgumentException("Scene generation must move forward");
-        if(next==Long.MAX_VALUE)throw new IllegalArgumentException("Scene generation is exhausted");
-        for(var wave:List.copyOf(waves.values()))if(wave.group.generation()!=next)dropWave(wave);
-        generation=next;
-    }
-    int waveSpawned(String id){var wave=waves.get(id);return wave==null?0:wave.spawned;}
-    int waveAlive(String id){
-        int alive=0;
-        for(var e:entities.values())if(id.equals(e.waveId)&&e.kind.equals("Monster")&&e.destroyed==Integer.MAX_VALUE)alive++;
-        return alive;
-    }
-    boolean waveCleared(String id){var wave=waves.get(id);return wave!=null&&wave.cleared;}
-    int liveMonsters(){return (int)entities.values().stream().filter(e->e.kind.equals("Monster")&&e.destroyed==Integer.MAX_VALUE).count();}
-    private void advanceWaves(int stamp){
-        int spawnedThisTick=0;
-        for(var wave:List.copyOf(waves.values())){
-            if(wave.group.generation()!=generation){dropWave(wave);continue;}
-            int alive=waveAlive(wave.group.id());
-            if(alive<wave.previousAlive)wave.nextSpawn=Math.max(wave.nextSpawn,stamp+wave.group.respawnDelayMs());
-            wave.previousAlive=alive;
-            while(wave.spawned<wave.group.total()&&alive<wave.group.maxAlive()
-                    &&SceneClock.reached(stamp,wave.nextSpawn)&&spawnedThisTick<MAX_WAVE_SPAWNS_PER_TICK
-                    &&liveMonsters()<MAX_ALIVE_MONSTERS){
-                spawnWaveMonster(wave,stamp);wave.spawned++;alive++;spawnedThisTick++;
-                wave.nextSpawn=stamp+wave.group.intervalMs();
-            }
-            if(!wave.cleared&&wave.spawned==wave.group.total()&&alive==0){
-                wave.cleared=true;
-                if(!wave.group.onCleared().isEmpty())actions.signal(wave.group.id(),wave.group.onCleared(),stamp,"wave:"+wave.group.id());
-            }
-        }
-    }
-    private void spawnWaveMonster(Wave wave,int stamp){
-        MonsterType type;
-        try{type=monsters.spawnable(wave.group.typeId());}
-        catch(java.io.IOException refused){throw new IllegalStateException("Wave type became unavailable: "+wave.group.typeId(),refused);}
-        var fields=monsters.fields(type);
-        var anchor=wave.group.anchors().get(wave.spawned%wave.group.anchors().size());
-        var binding=new SceneContent.Entry("wave:"+wave.group.id()+":"+(wave.spawned+1),anchor.x(),anchor.y(),0,new SceneContent.Spec(fields));
-        var entity=spawn(binding,binding.spec(),null,stamp);
-        entity.waveId=wave.group.id();entity.monsterType=type.id();
-    }
-    private void dropWave(Wave wave){
-        for(var entity:List.copyOf(entities.values()))if(wave.group.id().equals(entity.waveId))despawn(entity);
-        waves.remove(wave.group.id());
-    }
+    /** Register a wave for this scene generation. Unknown or unsupported types fail before creation. */
+    public void addWave(MonsterGroup group){waveSystem.add(group);}
+    int waveSpawned(String id){return waveSystem.spawned(id);}
+    int waveAlive(String id){return waveSystem.alive(id);}
+    boolean waveCleared(String id){return waveSystem.cleared(id);}
+    int liveMonsters(){return waveSystem.liveMonsters();}
     /** Immediate removal without death actions; status, paths, claims and source effects are cleared. */
-    private void despawn(SceneEntity entity){
+    void despawn(SceneEntity entity){
         actions.cancelSource("actor:"+entity.id);
         entity.status.clear();entity.path=List.of();entity.impulse=null;entity.target=0;entity.targetMode=null;
         entity.targetModeUpdate=false;entity.flags=0;entity.claim=0;entity.claimTaken=false;
         entity.carrier=0;entity.owner=0;entity.ownerOid=0;
         unlink(entity);
         var removedVariables=logicVariables.remove("actor:"+entity.id);if(removedVariables!=null)variableCount-=removedVariables.size();
+    }
+
+    /** Move to a later scene generation, removing every wave and wave actor that cannot belong to it. */
+    public void generation(long next){
+        if(next<=generation)throw new IllegalArgumentException("Scene generation must move forward");
+        if(next==Long.MAX_VALUE)throw new IllegalArgumentException("Scene generation is exhausted");
+        waveSystem.retain(next);
+        generation=next;
     }
     /** Secondary burn/spasm damage retains its collision mask and excludes the affected source. */
     public void statusPulse(int source,SceneStatus.Pulse pulse,float x,float y,int stamp){statusSystem.pulse(source,pulse,x,y,stamp);}
