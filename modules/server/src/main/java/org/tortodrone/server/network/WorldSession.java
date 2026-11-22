@@ -122,8 +122,8 @@ final class WorldSession implements AutoCloseable {
     private void partyState()throws IOException{parties.state();}
     void offerParty(PartyView.Event event){parties.offer(event);}
     void offerPartyEvent(PartyView.Event event){publications.offerParty(event);}
-    private void deliverParty(PartyView.Event event)throws IOException{parties.deliver(event);}
-    private void refreshParty()throws IOException{parties.refresh();}
+    void deliverParty(PartyView.Event event)throws IOException{parties.deliver(event);}
+    void refreshParty()throws IOException{parties.refresh();}
     void refreshParty(boolean traveling)throws IOException{parties.refresh(traveling);}
     /** The native friend list's Join affordance is driven by this presence. */
     FriendPresence presence(PartyView.View view)throws IOException {
@@ -445,6 +445,20 @@ final class WorldSession implements AutoCloseable {
         partyState();leaveChat();runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();runtime.membership().pause();
     }
     void resetReferences(){reference=acknowledge=0;}
+    void applySelectionFlags(boolean gm,boolean hidden){gameMaster=gm;inspectionHidden=hidden;}
+    void setSelectedKnight(Knight value){knight=value;}
+    void setPartyMember(PartyRegistry.Member value){partyMember=value;}
+    void setCompletedOpening(Map<String,OpeningCompletion> value){completedOpening=value;}
+    java.util.Collection<OpeningCompletion> completedOpeningValues(){return completedOpening.values();}
+    void setFriendOnline(boolean value){friendOnline=value;}
+    void publishStyles()throws IOException{styles.publish();}
+    void startDelivery(){
+        publications.start("SceneDelivery-"+oid,publisher::publish,this::deliverParty,failure->{
+            log.warn("Scene delivery closed; "+deliveryFailure(failure));close();
+            try{socket.close();}catch(IOException ignored){}
+        });
+    }
+
     void markSceneCreated(){created=SceneClock.now();}
     FloorHandler floorsHandler(){return floors;}
     OpeningMission arrivalComlink(){return arrivalComlink;}
@@ -619,86 +633,14 @@ final class WorldSession implements AutoCloseable {
 
     synchronized void select(String name, Map<String, Short> receivers)
             throws IOException, CharacterStore.Refused {
-        select(name,receivers,false);
+        runtime.select(name,receivers);
     }
 
     boolean openingAvailable(){return scenes.tutorial()!=null;}
     /** Incomplete Crash Site knights resume a private floor; completed knights stage locally. */
     synchronized void select(String name, Map<String, Short> receivers, boolean stageInReadyRoom)
             throws IOException, CharacterStore.Refused {
-        long selectionStarted=System.nanoTime();
-        if(closed||socket.isClosed())throw new IOException("Session is closed");
-        if (selected()) throw new IOException("A character is already selected; reconnect to change characters");
-        if(scenes.catalog().isEmpty())throw new IOException("Maps are unavailable; install default maps and restart the server");
-        gameMaster=roles.gameMaster();
-        inspectionHidden=characters.inspectionHidden(authRevision);
-        // Picker edits/deletes use this same account lock around their online check and save.
-        synchronized (characters) {
-            var loaded = characters.worldProfile(name, authRevision);
-            for(var item:loaded.items())if(!item.starter()) {
-                var entry=characters.catalog().require(item.config());
-                if(entry.slot()!=item.slot())throw new IOException("Saved item category differs from the deployed catalogue");
-            }
-            var choice = characters.roster().stream().filter(k -> k.id() == loaded.knightId())
-                .findFirst().orElseThrow(() -> new IOException("No such knight"));
-            int saved=characters.lastTownScene(choice.id(),authRevision);
-            int destination=scenes.catalog().towns().stream().filter(map->map.id()==saved)
-                .mapToInt(org.tortodrone.core.world.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
-            if(loaded.progress().crashSiteIncomplete()){
-                if(scenes.tutorial()==null)throw new IOException("The opening adventure is unavailable; please try again later");
-                destination=scenes.tutorial().source().id();stageInReadyRoom=false;
-            }else if(loaded.progress().openingStage()==1||loaded.progress().openingStage()==2){
-                destination=loaded.progress().openingStage()==1?217:218;
-                if(!scenes.catalog().scene(destination).town())throw new IOException("The opening camp is unavailable; please try again later");
-            }
-            synchronized (ACTIVE) {
-                if (ACTIVE.containsKey(loaded.worldId())) throw new IOException("This knight is already online");
-                profile = loaded;
-                knight = choice;
-                runtime.scene(scenes.destination(destination,loaded.worldId()));
-                ACTIVE.put(loaded.worldId(), this);
-            }
-        }
-        created = SceneClock.now();
-        if(characters.hasWorldStorage()){
-            var house=characters.services().auction(scenes.town());
-            boolean delivered=house.deliverCampaigns(profile.worldId());
-            if(house.deliverWelcome(profile.worldId(),knight.createdAt()))delivered=true;
-            if(delivered)profile=characters.worldProfile(knight.name(),authRevision,profile);
-        }
-        if(characters.hasWorldStorage()){characters.services().friends().session(characters.accountId(),knight.id(),authRevision);profile=characters.worldProfile(knight.name(),authRevision,profile);}
-        guilds.reload();
-        friendOnline=true;
-        runtime.readyRoom(stageInReadyRoom);
-        if(runtime.readyRoom())friendLocation=new FriendPresence("~",ReadyRoom.ZONE,0);
-        else attach();
-        partyMember=scenes.parties().join(oid,knight,profile,this::offerParty);
-        if(profile.progress().crashSiteIncomplete())scenes.parties().enterTutorial(partyMember);
-        partyState();
-        if(characters.hasWorldStorage())memories=characters.knightMemories(knight.id(),authRevision);
-        if(characters.hasWorldStorage())objectives=characters.knightObjectives(knight.id(),authRevision);
-        if(characters.hasWorldStorage())completedOpening=characters.services().openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
-        output.send(() -> codec.selected(oid, knight, profile, guilds.guildInfo()));
-        output.send(() -> codec.knightMemories(oid,memories));
-        publishObjectives();
-        output.send(()->codec.completedMissions(oid,completedOpening.values()));
-        output.send(() -> codec.townState(oid,profile));
-        styles.publish();
-        output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
-        if(characters.hasWorldStorage())refreshFriends(null,characters.services().friends().snapshot(),friendPresence(characters.worldStorageFile()));
-        refreshParty();
-        receiverChanged(receivers);
-        log.selected(knight.id(),profile.worldId(),knight.name());
-        log.info("Character selected; knight=" + knight.name() + " (#" + profile.worldId() + "); rosterId="+knight.id());
-        if(!runtime.readyRoom())monitorScene();
-        // Party events belong to the selected session, not its scene subscription.
-        // Ready Room is client-local and never calls entered(); delaying this worker
-        // until then strands invitations and can overflow the queue on world return.
-        publications.start("SceneDelivery-"+oid,publisher::publish,this::deliverParty,failure->{
-            log.warn("Scene delivery closed; "+deliveryFailure(failure));close();
-            try{socket.close();}catch(IOException ignored){}
-        });
-        log.debug("Knight/scene initialization completed; duration-ms="+((System.nanoTime()-selectionStarted)/1000000));
+        runtime.select(name,receivers,stageInReadyRoom);
     }
 
     /** Call outside the CharacterStore publication lock to preserve session/account lock order. */

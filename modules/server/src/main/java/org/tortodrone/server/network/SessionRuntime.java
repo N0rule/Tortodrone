@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.tortodrone.character.CharacterStore;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneClock;
@@ -133,6 +134,85 @@ final class SessionRuntime {
         persistence=WorldStatePoller.join(session,session.charactersStore(),session.currentProfile(),session.authRevision(),session.selectedKnight().name());
         session.syncMissionObjective();
         session.flushPendingTravel();
+    }}
+
+    void select(String name,Map<String,Short> receivers)throws IOException,CharacterStore.Refused {
+        select(name,receivers,false);
+    }
+
+    /** Incomplete Crash Site knights resume a private floor; completed knights stage locally. */
+    void select(String name,Map<String,Short> receivers,boolean stageInReadyRoom)throws IOException,CharacterStore.Refused {synchronized(session){
+        long selectionStarted=System.nanoTime();
+        if(session.isClosed()||session.socket().isClosed())throw new IOException("Session is closed");
+        if(session.selected())throw new IOException("A character is already selected; reconnect to change characters");
+        var scenes=session.sceneRegistry();
+        if(scenes.catalog().isEmpty())throw new IOException("Maps are unavailable; install default maps and restart the server");
+        var characters=session.charactersStore();
+        session.applySelectionFlags(session.gameMasterRole(),characters.inspectionHidden(session.authRevision()));
+        // Picker edits/deletes use this same account lock around their online check and save.
+        synchronized(characters){
+            var loaded=characters.worldProfile(name,session.authRevision());
+            for(var item:loaded.items())if(!item.starter()){
+                var entry=characters.catalog().require(item.config());
+                if(entry.slot()!=item.slot())throw new IOException("Saved item category differs from the deployed catalogue");
+            }
+            var choice=characters.roster().stream().filter(k->k.id()==loaded.knightId())
+                .findFirst().orElseThrow(()->new IOException("No such knight"));
+            int saved=characters.lastTownScene(choice.id(),session.authRevision());
+            int target=scenes.catalog().towns().stream().filter(map->map.id()==saved)
+                .mapToInt(org.tortodrone.core.world.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
+            if(loaded.progress().crashSiteIncomplete()){
+                if(scenes.tutorial()==null)throw new IOException("The opening adventure is unavailable; please try again later");
+                target=scenes.tutorial().source().id();stageInReadyRoom=false;
+            }else if(loaded.progress().openingStage()==1||loaded.progress().openingStage()==2){
+                target=loaded.progress().openingStage()==1?217:218;
+                if(!scenes.catalog().scene(target).town())throw new IOException("The opening camp is unavailable; please try again later");
+            }
+            synchronized(WorldSession.ACTIVE){
+                if(WorldSession.ACTIVE.containsKey(loaded.worldId()))throw new IOException("This knight is already online");
+                session.applyProfile(loaded);
+                session.setSelectedKnight(choice);
+                scene=scenes.destination(target,loaded.worldId());
+                WorldSession.ACTIVE.put(loaded.worldId(),session);
+            }
+        }
+        session.markSceneCreated();
+        if(characters.hasWorldStorage()){
+            var house=characters.services().auction(scenes.town());
+            boolean delivered=house.deliverCampaigns(session.currentProfile().worldId());
+            if(house.deliverWelcome(session.currentProfile().worldId(),session.selectedKnight().createdAt()))delivered=true;
+            if(delivered)session.applyProfile(characters.worldProfile(session.selectedKnight().name(),session.authRevision(),session.currentProfile()));
+        }
+        if(characters.hasWorldStorage()){characters.services().friends().session(characters.accountId(),session.selectedKnight().id(),session.authRevision());session.applyProfile(characters.worldProfile(session.selectedKnight().name(),session.authRevision(),session.currentProfile()));}
+        session.guilds.reload();
+        session.setFriendOnline(true);
+        readyRoom=stageInReadyRoom;
+        if(readyRoom)session.friendLocation(new WorldSession.FriendPresence("~",ReadyRoom.ZONE,0));
+        else session.attach();
+        session.setPartyMember(scenes.parties().join(session.connectionOid(),session.selectedKnight(),session.currentProfile(),session::offerParty));
+        if(session.currentProfile().progress().crashSiteIncomplete())scenes.parties().enterTutorial(session.partyMember());
+        session.publishPartyState();
+        if(characters.hasWorldStorage())session.setMemories(characters.knightMemories(session.selectedKnight().id(),session.authRevision()));
+        if(characters.hasWorldStorage())session.setObjectives(characters.knightObjectives(session.selectedKnight().id(),session.authRevision()));
+        if(characters.hasWorldStorage())session.setCompletedOpening(characters.services().openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),session.selectedKnight().id(),session.authRevision()));
+        session.output().send(()->session.codec().selected(session.connectionOid(),session.selectedKnight(),session.currentProfile(),session.guilds.guildInfo()));
+        session.output().send(()->session.codec().knightMemories(session.connectionOid(),session.memoriesValue()));
+        session.publishObjectives();
+        session.output().send(()->session.codec().completedMissions(session.connectionOid(),session.completedOpeningValues()));
+        session.output().send(()->session.codec().townState(session.connectionOid(),session.currentProfile()));
+        session.publishStyles();
+        session.output().send(()->session.codec().playerFlags(session.connectionOid(),session.gameMasterFlag(),session.inspectionHiddenValue(),session.currentProfile().progress().tutorialComplete()));
+        if(characters.hasWorldStorage())session.refreshFriends(null,characters.services().friends().snapshot(),WorldSession.friendPresence(characters.worldStorageFile()));
+        session.refreshParty();
+        session.receiverChanged(receivers);
+        session.sessionLog().selected(session.selectedKnight().id(),session.currentProfile().worldId(),session.selectedKnight().name());
+        session.sessionLog().info("Character selected; knight="+session.selectedKnight().name()+" (#"+session.currentProfile().worldId()+"); rosterId="+session.selectedKnight().id());
+        if(!readyRoom)session.monitorScene();
+        // Party events belong to the selected session, not its scene subscription.
+        // Ready Room is client-local and never calls entered(); delaying this worker
+        // until then strands invitations and can overflow the queue on world return.
+        session.startDelivery();
+        session.sessionLog().debug("Knight/scene initialization completed; duration-ms="+((System.nanoTime()-selectionStarted)/1000000));
     }}
 
     /** The native Ready Room entry: the scene becomes client-local and the saved town is
