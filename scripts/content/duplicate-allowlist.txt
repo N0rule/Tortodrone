@@ -1,0 +1,24 @@
+# Exact-duplicate content files accepted by checkContentDuplication (scripts/ContentAudit.java).
+#
+# Every path in a duplicate group must be listed; an unlisted duplicate fails the build.
+# Stale entries are reported as warnings. Remove entries as de-duplication lands instead of
+# adding new ones: this file records accepted debt, not policy.
+#
+# Scheduled for removal when map mechanics move to content/shared (plan Phase 1).
+maps/level/ancient_generator/mechanics.yml
+maps/level/ironclaw_assembly/mechanics.yml
+maps/level/ironclaw_workshop/mechanics.yml
+maps/level/mission_lobby/mechanics.yml
+maps/level/shadow_wildwoods_path/mechanics.yml
+maps/level/shadow_wildwoods_ruins/mechanics.yml
+maps/level/shadow_wildwoods_snarbolax/mechanics.yml
+maps/town/rescue_camp_state_2/mechanics.yml
+maps/level/crash_site/mechanics.yml
+maps/town/rescue_camp/mechanics.yml
+#
+# Intentional: one Rescue Camp character is authored once per camp state, and the camp
+# states are separate scenes without cross-map NPC includes.
+maps/town/rescue_camp/npcs/greta.yml
+maps/town/rescue_camp_state_2/npcs/greta.yml
+maps/town/rescue_camp/npcs/rhendon.yml
+maps/town/rescue_camp_state_2/npcs/rhendon.yml

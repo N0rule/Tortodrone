@@ -25,8 +25,11 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 ./gradlew testIntegration        # all packaged integration tests
 ./gradlew testAll                # expensive full suite; only with explicit owner authorization
 ./gradlew testProcessCleanup     # focused cleanup integration task
-./gradlew prepareContent         # offline source validation/copy
+./gradlew prepareContent         # offline source validation/copy; also checks exact duplicates
 ./gradlew prepareMaps
+./gradlew checkContentDuplication # fail on unlisted exact-duplicate content files
+./gradlew reportContentDuplication # advisory repeated-line and identical YAML subtree report
+./gradlew refreshContentManifest # maintainer: republish content digests; keep owned.* upgrade history
 ./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300" # explicit performance work only
 ```
 
