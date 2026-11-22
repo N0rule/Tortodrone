@@ -128,9 +128,14 @@ public final class MapYaml {
             if(fixed.containsKey("rotation")&&!edits.containsKey("facing"))content.setProperty("entry."+id+".rotation",text(fixed.get("rotation"),"native rotation"));
         }
         content.setProperty("entries",String.join(",",ids));
+        var sharedSections=new LinkedHashSet<String>();
         for(Object sharedSection:list(bindings.get("shared"),"shared definitions")) {
             String section=text(sharedSection,"shared section");
-            if(!Set.of("trap-cycles","statuses","combat").contains(section))throw new IOException("Unknown shared section: "+section);
+            if(!Set.of("trap-cycles","statuses","combat","mechanics").contains(section))throw new IOException("Unknown shared section: "+section);
+            if(!sharedSections.add(section))throw new IOException("Duplicate shared section: "+section);
+            // Shared mechanics merge after the engine tables so an opted-in map can
+            // refine a shared combat value, but before its own mechanics.yml.
+            if(section.equals("mechanics"))continue;
             var data=read(shared.resolve(section+".yml"));fields(data,section,section.equals("trap-cycles")?"cycles":"properties");
             var sharedValues=map(data.values().iterator().next(),section);
             Path statusDefaults=shared.getParent().resolve("_internal/statuses.json");
@@ -208,8 +213,15 @@ public final class MapYaml {
             }
             content.setProperty("items",String.join(",",itemOrder));
         }
+        var allowedMechanics=list(bindings.get("mechanicFields"),"mechanic fields");
+        if(sharedSections.contains("mechanics")) {
+            var data=read(shared.resolve("mechanics.yml"));fields(data,"mechanics","properties");
+            var values=map(data.get("properties"),"mechanics");
+            for(String field:values.keySet())if(!allowedMechanics.contains(field))throw new IOException(folder+": unknown shared mechanic field "+field);
+            properties(content,"",values);
+        }
         var mechanics=Files.exists(folder.resolve("mechanics.yml"))?read(folder.resolve("mechanics.yml")):Map.<String,Object>of("properties",Map.of());fields(mechanics,folder+" mechanics","properties");
-        var local=map(mechanics.get("properties"),"mechanics");var allowedMechanics=list(bindings.get("mechanicFields"),"mechanic fields");
+        var local=map(mechanics.get("properties"),"mechanics");
         for(String field:local.keySet())if(!allowedMechanics.contains(field))throw new IOException(folder+": unknown mechanic field "+field);
         properties(content,"",local);
         var npcBindings=map(bindings.get("npcs"),"native NPCs");var seen=new HashSet<String>();

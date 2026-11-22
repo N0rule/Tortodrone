@@ -37,6 +37,7 @@ content/
     trap-cycles.yml
     statuses.yml
     combat.yml               shared numeric balance and sparse gear defenses
+    mechanics.yml            opt-in map mechanic overrides shared by several maps
     news/news.yml            Uplink News packs and their images
   missions/                  imported stock mission, group and prestige definitions
   _internal/                 item bindings/arguments, Town defaults, fire graphs, provenance
@@ -617,7 +618,16 @@ Shufflebot type; those cubes are gym targets, not hostile encounters. `MapEnemyC
 pins both boundaries. The checked-in catalogue holds 253 stock descriptions, 222 spawnable and
 31 listed with explicit native-action refusal reasons.
 
-Optional `mechanics.yml` contains each map's own rules. Native `destination.*`
+Optional `mechanics.yml` contains each map's own rules. A map may also list
+`mechanics` in the `shared` sections of its `native/bindings.json`;
+`content/shared/mechanics.yml` then supplies mechanic overrides common to every
+opted-in map. Shared mechanics merge after `combat`, `statuses` and `trap-cycles`
+and before the map's own `mechanics.yml`, so a map can refine a shared value
+without copying it and its local value still wins. Every shared and local key must
+appear in that map's `mechanicFields`; unknown keys, duplicate shared sections or a
+missing shared file fail startup. Prefer adding a key to `shared/mechanics.yml` and
+opting each map in over copying a `mechanics.yml` into a new map; keep only a
+genuine map-specific delta locally. Native `destination.*`
 markers moved to immutable bindings: travel uses the single editable arrival in
 `portals.yml`. The retained markers are scene metadata, not a second travel control.
 `shared/combat.yml` owns global player/scaling/status parameters and gear stats.

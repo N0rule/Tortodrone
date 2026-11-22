@@ -411,6 +411,7 @@ content/
     combat.yml
     statuses.yml
     trap-cycles.yml
+    mechanics.yml
     presentation.yml
     news/
     missions/

@@ -183,12 +183,17 @@ The graphical harness can also inject reproducible transport lag for spike inves
 ## Editing, packaging and release hygiene
 
 - Keep changes bounded; update tests for behavior and one canonical document for user-facing changes. Do not add a new milestone diary.
+- New maps, missions, weapons and other content must not copy an existing file
+  verbatim. Opt a map into `content/shared/mechanics.yml` when several maps need the
+  same mechanic override, and keep only a genuine map-specific delta in its
+  `mechanics.yml`. `checkContentDuplication` fails unlisted copies; treat stale
+  allowlist entries as removal work, not as permission for new duplication.
 - Do not commit installed game assets, third-party material without appropriate rights, private captures, secrets, `data/`, `build/` or `.build/`.
 - Review `git status`, `git diff` and `git diff --check`; report **only tests actually run**, with failures and what remains unverified. Avoid repeated runs after passing checks without relevant changes.
 - Bump `VERSION` only for deliberate behavioral releases. Release workflow tags must match `v<VERSION>`; CI tests/builds do not substitute for native graphical verification. See [Operations](operations.md).
 - Third-party runtime/license metadata: `src/main/resources/THIRD-PARTY.md`, `src/main/resources/licenses/`, the `licenses/` release assembly and `gradle/verification-metadata.xml`. Inspect changes to pinned hashes carefully.
 
-Unified content regressions are `resources.ContentManagerTest` and `resources.MigrationPackLoaderTest`; fixtures are generated in temporary directories from the unified defaults, never maintained as a second checked-in catalog. The focused graphical `--dialogue-only` mode selects another verified localized Konway line through disposable YAML, enters Training, records both nodes and closes the native dialog. Arbitrary literal messages and responses are rejected after the stock graphical scenario showed the client appending the knight name instead of decoding literals.
+Unified content regressions are `resources.ContentManagerTest`, `resources.SharedMechanicsTest` and `resources.MigrationPackLoaderTest`; fixtures are generated in temporary directories from the unified defaults, never maintained as a second checked-in catalog. The focused graphical `--dialogue-only` mode selects another verified localized Konway line through disposable YAML, enters Training, records both nodes and closes the native dialog. Arbitrary literal messages and responses are rejected after the stock graphical scenario showed the client appending the knight name instead of decoding literals.
 
 Economy/content regressions: `DepotStoreTest`, `DepotDefaultsTest`,
 `DepotGateTest`, `DepotSupportTest`, `GearSupportTest`, `VitapodTest`, `AuctionParityTest`,
