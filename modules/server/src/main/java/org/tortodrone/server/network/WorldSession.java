@@ -125,6 +125,7 @@ final class WorldSession implements AutoCloseable {
     private final PartyHandler parties;
     private final LoadoutHandler loadouts;
     private final InspectionHandler inspection;
+    private final NewsHandler news;
     int partyOid()throws IOException{return parties.oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     void publishPartyState()throws IOException{parties.state();}
@@ -581,6 +582,7 @@ final class WorldSession implements AutoCloseable {
         parties=new PartyHandler(this);
         loadouts=new LoadoutHandler(this);
         inspection=new InspectionHandler(this);
+        news=new NewsHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
@@ -906,26 +908,7 @@ final class WorldSession implements AutoCloseable {
             move(args, service == SessionCodec.ZONE_SERVICE);
             return true;
         }
-        if (service == SessionCodec.UPLINK_SERVICE && request.method() == 7) {
-            if (args.size() != 2 || !(args.get(0) instanceof String)
-                    || !(args.get(1) instanceof SessionDecoder.Listener listener)
-                    || !listener.type().endsWith("$ResultMarshaller")) {
-                throw new SessionDecoder.Rejected("Invalid Uplink News request");
-            }
-            if (selected()) { var news=scenes.news(); output.send(() -> codec.listResult(oid, listener.requestId(), news.propertyList())); }
-            else output.send(() -> codec.invocationFailure(oid, listener.requestId(), "Select a knight first"));
-            return true;
-        }
-        if (service == SessionCodec.FEED_SERVICE && request.method() == 1) {
-            if (args.size() != 2 || !(args.get(0) instanceof Long)
-                    || !(args.get(1) instanceof SessionDecoder.Listener listener)
-                    || !listener.type().endsWith("$ResultMarshaller")) {
-                throw new SessionDecoder.Rejected("Invalid social feed request");
-            }
-            if (selected()) output.send(() -> codec.emptyListResult(oid, listener.requestId()));
-            else output.send(() -> codec.invocationFailure(oid, listener.requestId(), "Select a knight first"));
-            return true;
-        }
+        if(news.invocation(request))return true;
         if(loadouts.invocation(request))return true;
         if (service == SessionCodec.ITEM_SERVICE && request.method() == 9) {
             equip(args);
