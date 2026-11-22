@@ -142,7 +142,7 @@ public final class EmoteSessionTest {
     private static int mode(byte[] frame){return frame[frame.length-1]&0xff;}
     private static String text(byte[] frame){return new String(frame,StandardCharsets.ISO_8859_1);}
     private static Object chatMonitor()throws Exception {
-        var field=WorldSession.class.getDeclaredField("CHAT");field.setAccessible(true);return field.get(null);
+        var field=ChatHandler.class.getDeclaredField("CHAT");field.setAccessible(true);return field.get(null);
     }
     private static void awaitBlockedOnChat(Thread worker,Object chat)throws Exception {
         long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);

@@ -44,11 +44,6 @@ final class WorldSession implements AutoCloseable {
     private final ClientDiagnostics diagnostics;
     void hardware(List<Object> args)throws IOException { diagnostics.hardware(args); }
     static final Map<Integer, WorldSession> ACTIVE = new HashMap<>();
-    private static final SceneChat CHAT=new SceneChat();
-    private final SceneChat.RateLimit chatRate=new SceneChat.RateLimit();
-    private SceneChat.Membership chat;
-    private String awayMessage;
-    private final Map<Integer,SceneChat.Membership> channelChats=new HashMap<>();
     private List<SessionCodec.FriendView> publishedFriends=List.of();
     private volatile boolean friendOnline;
     private volatile FriendPresence friendLocation=new FriendPresence("~",0,0);
@@ -133,6 +128,7 @@ final class WorldSession implements AutoCloseable {
     private final ConversationHandler conversations;
     private final OpeningHandler opening;
     private final TownHandler town;
+    private final ChatHandler chats;
     int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null,membership.floorHeat());}
@@ -210,7 +206,7 @@ final class WorldSession implements AutoCloseable {
             PartyRegistry.Member member;String self;
             synchronized(this){if(closed||!selected())throw new IOException("Select a knight first");if(scene.tutorial()!=null)throw new IOException("Finish the tutorial before changing parties");if(operation&&!scenes.parties().owns(partyMember,request.oid()))throw new IOException("Party membership changed");characters.worldProfile(knight.name(),authRevision,profile);member=partyMember;self=knight.name();partyState();}
             if(response)scenes.parties().respond(member,(String)args.get(0),(Integer)args.get(1));
-            else if(request.method()==2){if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before inviting again");scenes.parties().invite(member,(String)args.get(0));}
+            else if(request.method()==2){if(!chats.rate().allow(System.nanoTime()))throw new IOException("Please slow down before inviting again");scenes.parties().invite(member,(String)args.get(0));}
             else scenes.parties().boot(member,request.method()==3?self:(String)args.get(0));
             synchronized(this){refreshParty();if(!response&&request.method()==3)forcePartyExit();output.send(()->codec.invocationConfirmed(oid,listener.requestId()));}
         }catch(CharacterStore.Refused|IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
@@ -524,7 +520,7 @@ final class WorldSession implements AutoCloseable {
     void requestFriend(String name,String message,String response)throws IOException,CharacterStore.Refused {
         synchronized(this){
             requireFriendCurrent();var friends=characters.friends();
-            if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another friend request");
+            if(!chats.rate().allow(System.nanoTime()))throw new IOException("Please slow down before sending another friend request");
             friends.request(characters.accountId(),knight.id(),authRevision,name,message,response);
         }
     }
@@ -629,6 +625,7 @@ final class WorldSession implements AutoCloseable {
         conversations=new ConversationHandler(this);
         opening=new OpeningHandler(this);
         town=new TownHandler(this);
+        chats=new ChatHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
@@ -668,7 +665,7 @@ final class WorldSession implements AutoCloseable {
     synchronized boolean inReadyRoom(){return readyRoom;}
     WorldProfile visibleProfileNow()throws IOException{return visibleProfile();}
     SessionLog sessionLog(){return log;}
-    synchronized void adminFeedback(String reason)throws IOException{feedback(scene.oid(),sceneGeneration,reason);}
+    synchronized void adminFeedback(String reason)throws IOException{chatFeedback(scene.oid(),sceneGeneration,reason);}
     ActorState selfActor(){return scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);}
     SceneSimulation.Membership membership(){return membership;}
     /** The saved half of one conversation terminal: the pre-write profile and what committed. */
@@ -692,7 +689,9 @@ final class WorldSession implements AutoCloseable {
             if(prepared.firstEver())output.send(()->codec.controllerAction(oid,"new_mission",own));partyState();
         }
     }
-    SceneChat.RateLimit chatRate(){return chatRate;}
+    SceneChat.RateLimit chatRate(){return chats.rate();}
+    int sceneGenerationValue(){return sceneGeneration;}
+    PartyRegistry.Member partyMember(){return partyMember;}
     boolean hasInteriors(){return scenes.catalog().hasNonTown();}
     synchronized boolean ownsScene(int oid) { return selected() && !readyRoom && scene.oid()==oid; }
     synchronized boolean ownsInteriorParty(int target){return selected()&&!readyRoom&&scenes.parties().owns(partyMember,target);}
@@ -1314,7 +1313,7 @@ final class WorldSession implements AutoCloseable {
         friendLocation=presence(scenes.parties().view(partyMember));
         departedSceneOid=0;
         int generation=sceneGeneration,place=scene.oid();
-        chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));CHAT.away(chat,awayMessage);
+        chats.enter(place,generation);
         if(!welcomed&&!welcomeMessage.isEmpty()) {
             welcomed=true;
             output.send(()->codec.systemNotice(place,welcomeMessage));
@@ -1378,158 +1377,28 @@ final class WorldSession implements AutoCloseable {
 
     synchronized void unsubscribe() { leaveChat();subscribed = entered = false; sceneGeneration++;if(membership!=null)membership.pause(); }
 
-    /** ProjectXSceneMarshaller.emote(String, Name, ConfirmListener), stock method three. */
-    void emote(SessionDecoder.Invocation request)throws IOException {
-        var args=request.arguments();
-        if(request.service()!=6||request.method()!=3||args.size()!=3
-                ||!(args.get(0) instanceof String)
-                ||!(args.get(1)==null||args.get(1) instanceof String)
-                ||!(args.get(2) instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals(org.tortodrone.core.WireTypes.CONFIRM_LISTENER))
-            throw new SessionDecoder.Rejected("Invalid emote request");
-        String failure=null,target=null;SceneChat.Membership sender=null;
-        var descriptor=PlayerEmotes.find((String)args.getFirst());
-        synchronized(this) {
-          if(closed||socket.isClosed()||!subscribed||!entered||!ownsScene(request.oid()))
-            failure="Enter a scene before using an emote";
-          else {
-            try{characters.worldProfile(knight.name(),authRevision);}
-            catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
-            if(descriptor==null)failure="This emote is not available";
-            else if(descriptor.targetable()&&args.get(1)!=null) {
-                String supplied=(String)args.get(1);
-                target=scene.simulation().snapshot().actors().stream().map(ActorState::name)
-                    .filter(n->n.equalsIgnoreCase(supplied)).findFirst().orElse(null);
-                if(target==null)failure="That knight is not in this scene";
-                else if(target.equalsIgnoreCase(knight.name()))failure="You can't do that to yourself";
-            }
-            if(failure==null) {
-                if(!chatRate.allow(System.nanoTime()))failure="Please slow down before using another emote";
-                else if(!membership.emote(descriptor,SceneClock.now(),monotonicTime()))failure="Finish your current action before using an emote";
-                else sender=chat;
-            }
-          }
-        }
-        // Route outside the session lock: peer delivery acquires its own session monitor.
-        if(failure==null)try{CHAT.emote(sender,descriptor,target);}
-        catch(IOException departed){failure="Scene changed before the emote could be delivered";}
-        if(failure==null)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-        else {String reason=failure;output.send(()->codec.invocationFailure(oid,listener.requestId(),reason));}
-    }
-
-    synchronized boolean ownsChannel(int channel){return selected()&&!readyRoom&&(channel==scenes.channelOid(scene.map().zone(),false)||channel==scenes.channelOid(scene.map().zone(),true));}
-    synchronized void subscribeChannel(short message,int channel)throws IOException {
-        if(closed||!ownsChannel(channel))throw new IOException("This chat channel belongs to another zone");
-        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-        if(!channelChats.containsKey(channel))channelChats.put(channel,scenes.channel(channel).join(channel,oid,knight.name(),chatRate,m->deliverChannel(channel,m)));
-        output.send(()->codec.chatChannel(message,channel,scenes.channelType(channel)));
-    }
-    synchronized void unsubscribeChannel(int channel){var member=channelChats.remove(channel);if(member!=null)member.close();}
-    private synchronized boolean deliverChannel(int channel,SceneChat.Message message)throws IOException {
-        if(closed||!subscribed||!entered||!ownsChannel(channel)||!channelChats.containsKey(channel))return false;
-        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){return false;}
-        output.send(()->codec.chat(channel,message));return true;
-    }
-    boolean channelSpeak(SessionDecoder.Invocation request)throws IOException {
-        if(scenes.channelType(request.oid())<0)return false;
-        var args=request.arguments();SceneChat.Membership member;
-        synchronized(this) {
-            if(closed||!subscribed||!entered||!ownsChannel(request.oid())||(member=channelChats.get(request.oid()))==null)throw new SessionDecoder.Rejected("Unauthorized zone chat");
-            if(request.service()!=SceneChat.SERVICE||request.method()!=1||args.size()!=2||!(args.get(0) instanceof String)||!(args.get(1) instanceof Byte))throw new SessionDecoder.Rejected("Invalid zone chat request");
-            try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-        }
-        try{if(!scenes.channel(request.oid()).speak(member,(String)args.get(0),(Byte)args.get(1)))unavailable("Please slow down before sending another message");}
-        catch(IOException refused){unavailable(refused.getMessage());}
-        return true;
-    }
-    void speak(SessionDecoder.Invocation request)throws IOException {
-        if(request.service()==SceneChat.PARTY_SERVICE&&scenes.parties().owns(partyMember,request.oid())){
-            if(request.method()!=1||request.arguments().size()!=2||!(request.arguments().get(0) instanceof String text)||!(request.arguments().get(1) instanceof Byte mode))throw new SessionDecoder.Rejected("Invalid party chat");
-            synchronized(this){if(closed||!selected())throw new IOException("Session closed");try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}}
-            if(chatRate.allow(System.nanoTime()))scenes.parties().speak(partyMember,text,mode);return;
-        }
-        SceneChat.Membership sender;
-        int place,generation;
-        synchronized(this) {
-            if(departingScene(request.oid()))return;
-            boolean party=ownsInteriorParty(request.oid())&&request.service()==SceneChat.PARTY_SERVICE;
-            if(closed||socket.isClosed()||!subscribed||!entered||!party&&!ownsScene(request.oid()))throw new SessionDecoder.Rejected("Unauthorized scene chat");
-            if((!party&&request.service()!=SceneChat.SERVICE)||request.method()!=1||request.arguments().size()!=2
-                    ||!(request.arguments().get(0) instanceof String)||!(request.arguments().get(1) instanceof Byte))
-                throw new SessionDecoder.Rejected("Invalid scene chat request");
-            try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
-            sender=chat;place=scene.oid();generation=sceneGeneration;
-        }
-        try {
-            if(!CHAT.speak(sender,(String)request.arguments().get(0),(Byte)request.arguments().get(1)))
-                feedback(place,generation,"Please slow down before sending another message.");
-        }catch(IOException refused){feedback(place,generation,refused.getMessage());}
-    }
-    private synchronized void feedback(int place,int generation,String reason)throws IOException {
-        if(!closed&&subscribed&&entered&&scene.oid()==place&&sceneGeneration==generation)output.send(()->codec.chatFeedback(scene.map().town()?place:partyOid(),reason));
-    }
+    void emote(SessionDecoder.Invocation request)throws IOException{chats.emote(request);}
+    synchronized boolean ownsChannel(int channel){return chats.ownsChannel(channel);}
+    void subscribeChannel(short message,int channel)throws IOException{chats.subscribeChannel(message,channel);}
+    void unsubscribeChannel(int channel){chats.unsubscribeChannel(channel);}
+    boolean channelSpeak(SessionDecoder.Invocation request)throws IOException{return chats.channelSpeak(request);}
+    void speak(SessionDecoder.Invocation request)throws IOException{chats.speak(request);}
+    void broadcast(SessionDecoder.Invocation request)throws IOException{chats.broadcast(request);}
+    void away(SessionDecoder.Invocation request)throws IOException{chats.away(request);}
+    void tell(SessionDecoder.Invocation request)throws IOException{chats.tell(request);}
     synchronized void unavailable(String reason)throws IOException {
-        if(!closed&&selected()&&subscribed&&entered)feedback(scene.oid(),sceneGeneration,reason);
+        if(!closed&&selected()&&subscribed&&entered)chatFeedback(scene.oid(),sceneGeneration,reason);
     }
-    /** Crowd ChatService method 2. ListenerMarshaller has failure only, no success response. */
-    void broadcast(SessionDecoder.Invocation request)throws IOException {
-        var args=request.arguments();
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.CHAT_SERVICE||request.method()!=2
-                ||args.size()!=2||!(args.get(0) instanceof String text)
-                ||!(args.get(1) instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ListenerMarshaller"))
-            throw new SessionDecoder.Rejected("Invalid broadcast request");
-        SceneChat.Membership sender;
-        try {
-            synchronized(this) {
-                if(closed||socket.isClosed()||!subscribed||!entered)throw new IOException("Enter a scene before broadcasting");
-                if(!roles.gameMaster())throw new IOException("Game Master permission required");
-                try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
-                sender=chat;
-            }
-            if(!CHAT.broadcast(sender,text))throw new IOException("Please slow down before sending another message.");
-        }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
-    }
-    synchronized void away(SessionDecoder.Invocation request)throws IOException {
-        var args=request.arguments();
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.CHAT_SERVICE||request.method()!=1||args.size()!=1||args.getFirst()!=null&&!(args.getFirst() instanceof String))throw new SessionDecoder.Rejected("Invalid away request");
-        if(closed||!selected())throw new IOException("Select a knight first");
-        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-        if(!chatRate.allow(System.nanoTime())){unavailable("Please slow down before changing your away message");return;}
-        awayMessage=args.getFirst()==null?null:SceneChat.validate((String)args.getFirst());
-        if(chat!=null)CHAT.away(chat,awayMessage);
-        output.send(()->codec.awayMessage(oid,awayMessage));
-    }
-    void tell(SessionDecoder.Invocation request)throws IOException {
-        var args=request.arguments();
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.CHAT_SERVICE||request.method()!=3
-                ||args.size()!=3||!(args.get(0) instanceof String target)||!(args.get(1) instanceof String text)
-                ||!(args.get(2) instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals("com.threerings.crowd.chat.data.ChatMarshaller$TellMarshaller"))
-            throw new SessionDecoder.Rejected("Invalid tell request");
-        SceneChat.Membership sender;
-        try {
-            synchronized(this) {
-                if(closed||socket.isClosed()||!subscribed||!entered)throw new IOException("Enter a scene before sending a tell");
-                try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
-                sender=chat;
-            }
-            String away=CHAT.tell(sender,target,text);
-            output.send(()->codec.tellSucceeded(oid,listener.requestId(),away));
-        }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
-    }
-    private synchronized boolean deliverChat(int place,int generation,SceneChat.Message message)throws IOException {
-        if(closed||socket.isClosed()||!subscribed||!entered||scene.oid()!=place||sceneGeneration!=generation)return false;
-        if(message.personal()) {
-            try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){return false;}
-        }
-        output.send(()->codec.chat(message.personal()?oid:scene.map().town()?place:partyOid(),message));return true;
+    /** The native {@code chatFeedback} for a scene that is still current. */
+    synchronized void chatFeedback(int place,int generation,String reason)throws IOException {
+        if(!closed&&subscribed&&entered&&scene.oid()==place&&sceneGeneration==generation)
+            output.send(()->codec.chatFeedback(scene.map().town()?place:partyOid(),reason));
     }
     private void leaveChat(){
         friendLocation=new FriendPresence("~",0,0);
         town.reset();
         trade.leave();
-        if(chat!=null){chat.close();chat=null;}
+        chats.leave();
         if(persistence!=null){persistence.close();persistence=null;}
     }
 
@@ -1889,7 +1758,7 @@ final class WorldSession implements AutoCloseable {
             arrival==null?checkpoint==null?scene.map().spawnRotation():checkpoint.rotation():arrival.rotation(),0,0,0,created,appearance,gameMaster);
     }
 
-    private static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
+    static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
     private void monitorScene() {
         log.scene(scene.map().id(),scene.oid(),scene.map().name());
         log.info("Scene entered; scene="+scene.map().name()+" (#"+scene.map().id()+"); instanceId="+scene.oid());
@@ -1900,7 +1769,7 @@ final class WorldSession implements AutoCloseable {
 
     @Override public synchronized void close() {
         friendOnline=false;
-        for(var member:channelChats.values())member.close();channelChats.clear();
+        chats.leave();
         leaveChat();
         closed = true;
         floorReport=null;
