@@ -64,6 +64,42 @@ and `account.stat.<account>.<ordinal>`, so the 0.42.0 schema baseline is unchang
 and a receipt commits in the same SQLite transaction as the event that produced it.
 Deleting an account removes both prefixes.
 
+## Predicate audit
+
+`Achievement$Type` declares 66 constants but only the inner classes listed above
+override `qualifies(PlayerObject)`. Every other constant inherits the base
+implementation, whose body is the literal `return false`, so no server-computed
+predicate can unlock it; the stock server must grant it directly or through the
+`ProjectXActionConfig$UnlockAchievement` action attached to content. A search of
+`rsrc`, `scenes` and `unpacked.dat` found no shipped use of that action, and no
+other grant evidence exists in the client archive, so these types stay locked
+rather than being guessed:
+
+- `REACHED_HAVEN`, `REACHED_TERMINAL_1`, `REACHED_SUBTOWN_1`,
+  `REACHED_SUBTOWN_2`, `REACHED_CORE_TERMINAL`
+- `DEFEATED_ROYAL_JELLY`, `DEFEATED_VANADUKE`, `DEFEATED_SNARBOLAX`,
+  `DEFEATED_ROARMULUS`
+- `CRAFTED_RARITY_1`–`CRAFTED_RARITY_5`, `LEVELLED_ITEM_1`
+- `MINERALS_DEPOSITED_1`–`MINERALS_DEPOSITED_5`
+- `REVIVE_SELF`, `REVIVE_FRIEND`, `REVIVE_FRIEND_MINIMUM`
+- `MECHA_KNIGHT_ACTIVATED`
+- `REVIVELESS_COMPLETE_TIER_1`–`REVIVELESS_COMPLETE_TIER_3`, `FULL_RUN`,
+  `REVIVELESS_FULL_RUN`
+- `FIRECRACKER_BOMB_OWNED`, `LOCKDOWN_SNOWBALL`, `UNUSED`
+
+`CASINO_WHAMMIE` and `CASINO_VIP` override only `isHidden()`; their `qualifies`
+inherits the same base `false`.
+
+## EARNED_TIER_2 / EARNED_TIER_3 blocker
+
+Their stock predicates are exactly `PlayerObject.dX(1)` and `dX(2)`, which test
+progress flags `0x1` and `0x2`. `progressFlags` is a public `PlayerObject` field
+that the client only reads (`dX`); it never writes it, so the value arrives from the
+stock server as a `PlayerObject` field update, and the trigger and threshold are not
+present in the client archive. No shipped content references `SetProgress`, so the
+server keeps both bits clear and both achievements locked instead of deriving a
+tier rule from rank, slots or mission completion.
+
 ## Still blocked
 
 Lifetime counters without a server event: casino spins, boss defeats, minerals
