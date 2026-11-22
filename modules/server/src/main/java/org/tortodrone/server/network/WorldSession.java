@@ -78,9 +78,6 @@ final class WorldSession implements AutoCloseable {
     private final SessionRefresh refreshState;
     /** Stock town commands may arrive from the loading screen or Ready Room; replay the
      *  native destination request once the scene has subscribed and accepted enteredPlace. */
-    private SceneHealth.State publishedHealth;
-    private SceneStatus.State publishedStatus;
-    private Boolean publishedArsenal;
     private PartyRegistry.Member partyMember;
     final SessionResponder responder;
     final GuildHandler guilds;
@@ -148,8 +145,6 @@ final class WorldSession implements AutoCloseable {
     /** Verified stock SteamMarshaller: 2[int] and 5[boolean] are unacknowledged client reports;
      * purchase, profile and friend-invite requests carry listeners and receive native failure. */
     boolean steamInvocation(SessionDecoder.Invocation request)throws IOException{return steam.invocation(request);}
-    private Map<Integer,Integer> occupantClients=Map.of();
-    private Map<Integer,Boolean> occupantRoles=Map.of();
     private Map<String,org.tortodrone.core.character.KnightObjective.State> objectives=Map.of();
     /** The active mission whose {@code o.<missionId>} objective is on the player's bar, or null. */
     private String missionObjective;
@@ -159,6 +154,7 @@ final class WorldSession implements AutoCloseable {
     private OpeningMission deliveredComlink;
     private long missionDialogCreated;
     final SessionCarriedItems carried;
+    final SessionSceneState sceneState;
     void publishQuickbar()throws IOException { carried.publish(); }
     /** The native {@code PlayerObject.objectives} set: knight-persistent entries plus the
      *  mission bar derived from the mission's own {@code o.<id>} text key. */
@@ -351,6 +347,7 @@ final class WorldSession implements AutoCloseable {
         responder=new SessionResponder(output,codec,oid);
         refreshState=new SessionRefresh(this);
         carried=new SessionCarriedItems(this);
+        sceneState=new SessionSceneState();
         guilds=new GuildHandler(this);
         trade=new TradeHandler(this);
         exchangeHandler=new ExchangeHandler(this);
@@ -475,14 +472,14 @@ final class WorldSession implements AutoCloseable {
     int lastStampValue(){return lastStamp;}
     SceneSnapshot lastSnapshotValue(){return runtime.lastSnapshot();}
     void recordPublished(int stamp,SceneSnapshot snapshot){lastStamp=reference=stamp;runtime.lastSnapshot(snapshot);}
-    Map<Integer,Integer> occupantClientsValue(){return occupantClients;}
-    void setOccupantClients(Map<Integer,Integer> value){occupantClients=value;}
-    Map<Integer,Boolean> occupantRolesValue(){return occupantRoles;}
-    void setOccupantRoles(Map<Integer,Boolean> value){occupantRoles=value;}
-    SceneHealth.State publishedHealthValue(){return publishedHealth;}
-    SceneStatus.State publishedStatusValue(){return publishedStatus;}
-    Boolean publishedArsenalValue(){return publishedArsenal;}
-    void setPublishedArsenal(Boolean value){publishedArsenal=value;}
+    Map<Integer,Integer> occupantClientsValue(){return sceneState.occupantClients();}
+    void setOccupantClients(Map<Integer,Integer> value){sceneState.occupantClients(value);}
+    Map<Integer,Boolean> occupantRolesValue(){return sceneState.occupantRoles();}
+    void setOccupantRoles(Map<Integer,Boolean> value){sceneState.occupantRoles(value);}
+    SceneHealth.State publishedHealthValue(){return sceneState.health();}
+    SceneStatus.State publishedStatusValue(){return sceneState.status();}
+    Boolean publishedArsenalValue(){return sceneState.arsenal();}
+    void setPublishedArsenal(Boolean value){sceneState.arsenal(value);}
     Set<String> memoriesValue(){return memories;}
     void setMemories(Set<String> value){memories=value;}
     Map<String,KnightObjective.State> objectivesValue(){return objectives;}
@@ -579,11 +576,11 @@ final class WorldSession implements AutoCloseable {
         var move=moves.takeDeferred(runtime.scene().oid());
         if(move!=null)completeMove(move.requestId(),move.zone());
     }
-    void publishedHealthStatus(SceneHealth.State health,SceneStatus.State status){publishedHealth=health;publishedStatus=status;}
+    void publishedHealthStatus(SceneHealth.State health,SceneStatus.State status){sceneState.publishedHealthStatus(health,status);}
     /** Publish the current equip policy on the ordered stream before an arsenal window opens. */
     void publishArsenalPolicy()throws IOException {
         boolean inZone=runtime.membership()!=null&&runtime.membership().arsenalZone();
-        output.send(()->codec.equipPolicy(oid,inZone));publishedArsenal=inZone;
+        output.send(()->codec.equipPolicy(oid,inZone));sceneState.arsenal(inZone);
     }
     FloorReport floorReport(){return floors.report();}
     boolean finishTutorialFloor(int stamp)throws IOException{return floors.finishTutorial(stamp);}

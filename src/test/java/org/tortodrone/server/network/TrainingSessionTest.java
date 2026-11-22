@@ -30,6 +30,7 @@ import org.tortodrone.resources.SceneCatalog;
 public final class TrainingSessionTest {
     public static void main(String[] args)throws Exception{
         Path home=Files.createTempDirectory("tortodrone-training-session-");
+        var previous=SceneRegistry.system();
         try{
             var db=new Database(home,true);int account=db.create("Alice",new Passwords.Protection(new byte[16],new byte[32]),false);
             var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));var characters=new CharacterStore(db,account,"Alice",items);
@@ -38,6 +39,7 @@ public final class TrainingSessionTest {
             db.currency("Alice",knight.name(),account,-1,Currency.ENERGY,100);
             var scenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));
             scenes.town(TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
+            SceneRegistry.install(scenes);
             var socket=new RecordingSocket();
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)){
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));
@@ -65,11 +67,9 @@ public final class TrainingSessionTest {
                     var freeze=place.map().content().statuses().get("Freeze");
                     health.condition(new StarterCatalog.Model("Freeze",Map.of("Chance",1f,"Power",100,"Duration",20000)),freeze.model("data").arguments().get("data"),stamp);
                 }
-                var sentHealth=WorldSession.class.getDeclaredField("publishedHealth");sentHealth.setAccessible(true);
-                var sentStatus=WorldSession.class.getDeclaredField("publishedStatus");sentStatus.setAccessible(true);
                 boolean published=false;long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(3);
                 while(System.nanoTime()<deadline){synchronized(world){
-                    var hp=(SceneHealth.State)sentHealth.get(world);var status=(SceneStatus.State)sentStatus.get(world);
+                    var hp=world.publishedHealthValue();var status=world.publishedStatusValue();
                     if(hp!=null&&hp.current()<hp.maximum()&&status!=null&&!status.conditions().isEmpty()){published=true;break;}}
                     Thread.sleep(20);
                 }
@@ -94,7 +94,7 @@ public final class TrainingSessionTest {
                 check(member.health().current()>0&&characters.worldProfile(knight.name(),1).energy()==after.energy()-50,"native buy-and-use request restores HP and charges 50 energy");
             }
             System.out.println("PASS: Training party chat/ownership, native Spark requests, duplicate/foreign/alive refusal and paid revive");
-        }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
+        }finally{SceneRegistry.install(previous);try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
     private static int sparks(WorldProfile p){return p.items().stream().filter(i->i.config().equals("Rarity/Spark of Life")).mapToInt(WorldProfile.Item::count).sum();}
     private static Object hit(){return new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Unblockable",List.of(new FireCatalog.FieldValue("amount","float",10000f),new FireCatalog.FieldValue("flags","int",1)));}
