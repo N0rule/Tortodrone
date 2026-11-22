@@ -26,13 +26,13 @@ final class PetCompanion {
         this.id = simulation.nextPetId++;
     }
     ActorState actor(){
-        var sprite=member.sprite;
+        var sprite=member.loadout.sprite;
         if(simulation.instance.map().town()||!member.entered||sprite==null)return null;
-        var state=new ScenePetState(member.appearance.id(),sprite,member.harness,follow,java.util.Arrays.stream(nextSkill).boxed().toList(),shield,shieldMaximum,shieldPower);
+        var state=new ScenePetState(member.appearance.id(),sprite,member.loadout.harness,follow,java.util.Arrays.stream(nextSkill).boxed().toList(),shield,shieldMaximum,shieldPower);
         return new ActorState(id,0,"",0,member.appearance.created(),skill==0||follow?member.movement.x():x,skill==0||follow?member.movement.y():y,skill==0?member.movement.rotation():rotation,0,0,skill,started,new org.tortodrone.core.character.StarterCatalog.Model("Sprite/Base",Map.of()),false,null,null,null,null,null,state);
     }
     void advance(int stamp){
-        var sprite=member.sprite;var harness=member.harness;
+        var sprite=member.loadout.sprite;var harness=member.loadout.harness;
         if(sprite==null||simulation.instance.map().town())return;
         if(skill!=0&&SceneClock.reached(stamp,clear)){skill=0;started=clear;}
         else if(skill!=0&&SceneClock.reached(stamp,rearm))follow=true;

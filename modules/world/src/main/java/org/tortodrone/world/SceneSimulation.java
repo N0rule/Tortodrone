@@ -132,23 +132,23 @@ public final class SceneSimulation {
         weapons=new SceneWeapons(instance.map().collision());weapons.staticCollision(instance.map().staticCollision());weapons.targets(entities);
         var gearTags=GearStats.damageTags(instance.map().content().stats());
         weapons.damageModifiers((owner,attack)->{var member=members.get(owner);
-            return member==null||member.combat==null||attack.activity()<KnightCombat.INCOMPLETE?GearStats.Damage.NONE:
-                GearStats.damage(instance.map().content().stats(),member.combatProfile,member.combat.state().weapon(),town,gearTags);});
+            return member==null||member.loadout.combat==null||attack.activity()<KnightCombat.INCOMPLETE?GearStats.Damage.NONE:
+                GearStats.damage(instance.map().content().stats(),member.loadout.combatProfile,member.loadout.combat.state().weapon(),town,gearTags);});
         entities.feedback(this::feedback);
         entities.playerActive(id->{var member=members.get(id);return member!=null&&member.entered&&member.health.alive()&&member.movement.activity()!=TownMovement.RESURRECT;});
         entities.pickupEligible((id,spec)->{var member=members.get(id);return member!=null&&member.canPickup(spec);});
         entities.playerTargetable(id->{var member=members.get(id);return member!=null&&member.health.status().modifiers().canBeTargeted();});
-        entities.playerImpulse((id,impulse)->{var member=members.get(id);if(member!=null&&member.entered&&member.health.alive()&&member.combat!=null)member.combat.impulse(impulse);});
+        entities.playerImpulse((id,impulse)->{var member=members.get(id);if(member!=null&&member.entered&&member.health.alive()&&member.loadout.combat!=null)member.loadout.combat.impulse(impulse);});
         entities.playerHits(hit->{var member=members.get(hit.actor());if(member!=null&&member.entered){
-            var result=member.health.hit(hit.damage(),hit.timestamp(),hit.multiplier(),member.combat);
+            var result=member.health.hit(hit.damage(),hit.timestamp(),hit.multiplier(),member.loadout.combat);
             // A held charge is never interruptable natively; post-hit invulnerability still applies.
-            if(result.react()&&member.health.alive()&&!(member.combat!=null&&member.combat.chargeHit(hit.timestamp()))){
+            if(result.react()&&member.health.alive()&&!(member.loadout.combat!=null&&member.loadout.combat.chargeHit(hit.timestamp()))){
                 weapons.cancelAttacks(hit.actor());
                 if(member.lift!=0){entities.dropLift(member.lift,member.actor(),hit.timestamp());member.lift=member.dropAt=0;}
                 member.movement.hurt(hit.timestamp());
             }
             // Invulnerable and fully absorbed hits leave the native summary empty: no push.
-            if(result.amount()>0&&hit.impulse()!=null&&member.health.alive()&&member.combat!=null)member.combat.impulse(hit.impulse());
+            if(result.amount()>0&&hit.impulse()!=null&&member.health.alive()&&member.loadout.combat!=null)member.loadout.combat.impulse(hit.impulse());
             member.updateLife(hit.timestamp());
             member.movement.status(member.health.status().modifiers());
             // The native knight post carries a literal zero source: no hit on a knight says who
@@ -234,7 +234,7 @@ public final class SceneSimulation {
                 case APPLY_STATUS->{if(action.config()!=null&&action.config().arguments().get("reference") instanceof org.tortodrone.core.character.StarterCatalog.Model ref){
                     Object data=action.config().arguments().get("data");float radius=((Number)action.config().arguments().getOrDefault("radius",0)).floatValue();
                     for(var target:members.values())if(target.entered&&(target==member||radius>0&&Math.hypot(target.movement.x()-member.movement.x(),target.movement.y()-member.movement.y())<=radius)){
-                        target.health.condition(ref,data,action.timestamp());if(data instanceof FireCatalog.DataValue value&&value.type().endsWith("$SpriteShield"))target.auraOwner=member.appearance.id();
+                        target.health.condition(ref,data,action.timestamp());if(data instanceof FireCatalog.DataValue value&&value.type().endsWith("$SpriteShield"))target.loadout.auraOwner=member.appearance.id();
                     }
                 }}
                 case START_SPRITE_SHIELD->{
@@ -271,7 +271,7 @@ public final class SceneSimulation {
         var member=members.get(knight);
         if(member==null||member.detached)return null;
         var actor=member.pet.actor();
-        return new Companion(member.sprite==null?0:member.sprite.id(),actor==null?null:actor.pet(),SceneClock.now());
+        return new Companion(member.loadout.sprite==null?0:member.loadout.sprite.id(),actor==null?null:actor.pet(),SceneClock.now());
     }
     public synchronized int playerCount(){return members.size();}
     public synchronized ActorState defaultEntrance(){return entities.defaultEntrance();}
@@ -357,22 +357,23 @@ public final class SceneSimulation {
             // All authoritative entities advance before capture. Future AI/combat/dynamic
             // collision stages run here once per instance, independent of observer count.
             for(var member:members.values())if(member.entered&&member.portalOpen()) {
-                if(member.auraOwner!=0&&member.health.status().conditions().stream().noneMatch(c->c.name().contains("Angelic Aura")))member.auraOwner=0;
+                if(member.loadout.auraOwner!=0&&member.health.status().conditions().stream().noneMatch(c->c.name().contains("Angelic Aura")))member.loadout.auraOwner=0;
                 member.health.advance(stamp,previous==null?0:stamp-previous.timestamp(),(member.movement.flags()&TownMovement.PUBLISHED_MOVING_FLAG)!=0);
                 member.updateLife(stamp);
                 member.movement.status(member.health.status().modifiers());
                 if(member.health.status().modifiers().shocked()&&member.lift!=0){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
-                if(member.pendingItem!=0){
-                    if(member.movement.activity()!=TownMovement.USE_ITEM){member.pendingItem=0;member.itemSpec=null;}
-                    else if(SceneClock.reached(stamp,member.itemLand)){
+                if(member.loadout.busy()){
+                    if(member.movement.activity()!=TownMovement.USE_ITEM){member.loadout.cancelPending();}
+                    else if(SceneClock.reached(stamp,member.loadout.itemLand())){
+                        var itemSpec=member.loadout.itemSpec();
                         boolean used;
-                        if(member.itemSpec.integer("heal",0)>0){
-                            used=member.health.heal(member.itemSpec.integer("heal",0));
-                            if(used)weapons.effect(member.itemSpec.model("use-effect"),member.actor(),member.itemLand);
-                        }else try{used=weapons.fire(FireCatalog.actionJson(member.itemSpec.text("use-action","")),member.actor(),member.itemLand);}
+                        if(itemSpec.integer("heal",0)>0){
+                            used=member.health.heal(itemSpec.integer("heal",0));
+                            if(used)weapons.effect(itemSpec.model("use-effect"),member.actor(),member.loadout.itemLand());
+                        }else try{used=weapons.fire(FireCatalog.actionJson(itemSpec.text("use-action","")),member.actor(),member.loadout.itemLand());}
                         catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared item action",invalid);}
-                        if(used)member.usedItems.add(member.pendingItem);
-                        member.pendingItem=0;member.itemSpec=null;
+                        if(used)member.loadout.markUsed(member.loadout.pendingItem());
+                        member.loadout.settlePending();
                     }
                 }
                 // Resolve the delayed action before natural animation completion on a late tick.
