@@ -70,7 +70,7 @@ public final class TutorialTravelSessionTest {
                 var haven=registry.destination(1,before.worldId());
                 var pawn=haven.simulation().snapshot().players().stream().filter(p->p.id()==before.worldId()).findFirst().orElseThrow();
                 check(world.ownsScene(haven.oid())&&pawn.x()==route.entrance().x()&&pawn.y()==route.entrance().y(),"forced move handshake attaches at Haven's authored spawn");
-                check(socket.count("m.welcome_to_haven_1a")==1&&field(world,"arrivalComlink")==null,"enteredPlace publication never re-delivers the spent arrival comlink");
+                check(socket.count("m.welcome_to_haven_1a")==1&&world.arrivalComlinkValue()==null,"enteredPlace publication never re-delivers the spent arrival comlink");
                 world.interiorPartyInvocation(report(party));
                 check(characters.worldProfile(knight.name(),1).equals(after),"late report does not settle twice");
             }

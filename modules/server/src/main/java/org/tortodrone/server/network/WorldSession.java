@@ -70,8 +70,6 @@ final class WorldSession implements AutoCloseable {
     final SessionAppearance appearance;
     private Knight knight;
     private WorldProfile profile;
-    private Set<String> memories=Set.of();
-    private Map<String,OpeningCompletion> completedOpening=Map.of();
     private int acknowledge, created, reference, lastStamp;
     private short ping;
     private boolean closed;
@@ -145,30 +143,12 @@ final class WorldSession implements AutoCloseable {
     /** Verified stock SteamMarshaller: 2[int] and 5[boolean] are unacknowledged client reports;
      * purchase, profile and friend-invite requests carry listeners and receive native failure. */
     boolean steamInvocation(SessionDecoder.Invocation request)throws IOException{return steam.invocation(request);}
-    private Map<String,org.tortodrone.core.character.KnightObjective.State> objectives=Map.of();
     /** The active mission whose {@code o.<missionId>} objective is on the player's bar, or null. */
-    private String missionObjective;
-    private OpeningMission arrivalComlink;
-    /** The one arrival comlink this session already delivered; native bodyEntered spends the
-     *  held comlink once, so re-entering the scene must not reopen it. */
-    private OpeningMission deliveredComlink;
-    private long missionDialogCreated;
     final SessionCarriedItems carried;
     final SessionSceneState sceneState;
+    final SessionStory story;
     void publishQuickbar()throws IOException { carried.publish(); }
-    /** The native {@code PlayerObject.objectives} set: knight-persistent entries plus the
-     *  mission bar derived from the mission's own {@code o.<id>} text key. */
-    private java.util.List<org.tortodrone.core.mission.ObjectiveEntry> wireObjectives(){
-        int next=0;var result=new ArrayList<org.tortodrone.core.mission.ObjectiveEntry>(objectives.size()+1);
-        for(var value:objectives.values()){result.add(new org.tortodrone.core.mission.ObjectiveEntry(value.index(),value.name(),value.text(),org.tortodrone.core.mission.ObjectiveEntry.KNIGHT));next=Math.max(next,value.index()+1);}
-        // The HUD resolves the key through the default (projectx) bundle, so the mission
-        // bullet names its own bundle explicitly, exactly like native mission strings.
-        if(missionObjective!=null)result.add(new org.tortodrone.core.mission.ObjectiveEntry(next,missionObjective,"%mission:o."+missionObjective,org.tortodrone.core.mission.ObjectiveEntry.PARTY));
-        return result;
-    }
-    void publishObjectives()throws IOException {
-        var wire=wireObjectives();output.send(()->codec.objectives(oid,wire));
-    }
+    void publishObjectives()throws IOException { story.publishObjectives(); }
     WorldProfile visibleProfile(){
         return visibleProfile(runtime.membership()==null?Set.of():runtime.membership().status().cursedItems());
     }
@@ -227,9 +207,9 @@ final class WorldSession implements AutoCloseable {
         if(!Set.of(4,5,6,10).contains(request.method()))return opening.invocation(request);
         return depot.invocation(request);
     }
-    void loadOpeningCompletions()throws IOException{completedOpening=characters.services().openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);}
-    Set<String> completedOpeningKeys(){return completedOpening.keySet();}
-    boolean completedOpeningEmpty(){return completedOpening.isEmpty();}
+    void loadOpeningCompletions()throws IOException{story.load();}
+    Set<String> completedOpeningKeys(){return story.completedKeys();}
+    boolean completedOpeningEmpty(){return story.completedEmpty();}
     /** Commit, acknowledge and force the mission move in that native order. */
     synchronized void beginForcedMissionTravel(SceneRegistry.Instance next,ScenePortals.Entrance start,short requestId)throws IOException {
         closeConversation();closeTownDialog();runtime.beginPortal(next,start);runtime.departedSceneOid(runtime.scene().oid());
@@ -237,19 +217,15 @@ final class WorldSession implements AutoCloseable {
         short receiver=refreshState.forcedReceiver();
         output.send(()->codec.invocationConfirmed(oid,requestId));output.send(()->codec.forceScene(oid,receiver,next));
     }
-    void clearArrivalComlink(){arrivalComlink=null;}
+    void clearArrivalComlink(){story.arrivalComlink(null);}
     void leaveChatForTown(){leaveChat();}
     void requestRenameDisconnect(){renameDisconnect=true;}
     void recipeLearnedEffect(){if(runtime.membership()!=null)runtime.membership().effect(new StarterCatalog.Model("Player/Learn Recipe",Map.of()));}
     /** Remove one consumable/session pickup from the visible inventory without a store write. */
     boolean trashTemporary(long id)throws IOException { return carried.trash(id); }
-    SceneConversation comlink(String missionId){
-        var opening=OpeningMission.byId(missionId);
-        if(opening!=null&&OpeningComlinks.get(opening)!=null)return OpeningComlinks.get(opening);
-        return scenes.comlinks().get(missionId);
-    }
+    SceneConversation comlink(String missionId){return story.comlink(missionId);}
     void reloadProfile()throws IOException{profile=loadProfile(profile);}
-    boolean openingEligible(String missionId){return scenes.missions().eligible(missionId,profile.progress(),completedOpening.keySet());}
+    boolean openingEligible(String missionId){return scenes.missions().eligible(missionId,profile.progress(),story.completedKeys());}
     boolean auctionInvocation(SessionDecoder.Invocation request)throws IOException{return auction.invocation(request);}
 
     boolean friendInvocation(SessionDecoder.Invocation request)throws IOException{return friends.invocation(request);}
@@ -298,8 +274,8 @@ final class WorldSession implements AutoCloseable {
         var a=request.arguments();
         if(!town.dialogOpen()&&!conversations.active()&&ownsScene(request.oid())&&request.service()==6&&request.method()==1
                 &&a.size()==1&&a.getFirst() instanceof Long created){
-            if(missionDialogCreated!=0&&created!=missionDialogCreated)return true;
-            missionDialogCreated=0;
+            if(story.missionDialogCreated()!=0&&created!=story.missionDialogCreated())return true;
+            story.missionDialogCreated(0);
             // A stale close from a client still holding a replaced dialog: acknowledge idempotently.
             output.send(()->codec.conversationDialog(oid,runtime.scene().oid(),null,null,null,0));return true;
         }
@@ -348,6 +324,7 @@ final class WorldSession implements AutoCloseable {
         refreshState=new SessionRefresh(this);
         carried=new SessionCarriedItems(this);
         sceneState=new SessionSceneState();
+        story=new SessionStory(this);
         guilds=new GuildHandler(this);
         trade=new TradeHandler(this);
         exchangeHandler=new ExchangeHandler(this);
@@ -395,17 +372,12 @@ final class WorldSession implements AutoCloseable {
     Short forcedReceiverValue(){return refreshState.forcedReceiver();}
     int subscribedPartyOid()throws IOException{return parties.subscribedOid();}
     boolean gameMasterFlag(){return gameMaster;}
-    boolean firstOpeningCompletion(){return completedOpening.isEmpty();}
+    boolean firstOpeningCompletion(){return story.completedEmpty();}
     void applySettlementStory(Set<String> freshMemories,Map<String,org.tortodrone.core.character.KnightObjective.State> freshObjectives)throws IOException {
-        if(!memories.equals(freshMemories)){var old=memories;memories=freshMemories;output.send(()->codec.knightMemoryChanges(oid,old,memories));}
-        if(!objectives.equals(freshObjectives)){objectives=freshObjectives;publishObjectives();}
+        story.applySettlementStory(freshMemories,freshObjectives);
     }
-    void recordOpeningCompletion(String mission,OpeningCompletion completion){
-        if(!completion.equals(completedOpening.get(mission))){
-            var completed=new LinkedHashMap<>(completedOpening);completed.put(mission,completion);completedOpening=Map.copyOf(completed);
-        }
-    }
-    long noteMissionDialog(){missionDialogCreated=conversations.touch();return missionDialogCreated;}
+    void recordOpeningCompletion(String mission,OpeningCompletion completion){story.recordCompletion(mission,completion);}
+    long noteMissionDialog(){return story.noteMissionDialog();}
     /** Install a forced destination before the client acknowledges its move. */
     void beginForcedTravel(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException {
         runtime.beginPortal(next,entrance);runtime.departedSceneOid(runtime.scene().oid());
@@ -419,8 +391,8 @@ final class WorldSession implements AutoCloseable {
     int sceneCreated(){return created;}
     void setSelectedKnight(Knight value){knight=value;}
     void setPartyMember(PartyRegistry.Member value){partyMember=value;}
-    void setCompletedOpening(Map<String,OpeningCompletion> value){completedOpening=value;}
-    java.util.Collection<OpeningCompletion> completedOpeningValues(){return completedOpening.values();}
+    void setCompletedOpening(Map<String,OpeningCompletion> value){story.completed(value);}
+    java.util.Collection<OpeningCompletion> completedOpeningValues(){return story.completedValues();}
     void setFriendOnline(boolean value){friendOnline=value;}
     void publishStyles()throws IOException{styles.publish();}
     void startDelivery(){
@@ -432,14 +404,14 @@ final class WorldSession implements AutoCloseable {
 
     void markSceneCreated(){created=SceneClock.now();}
     FloorHandler floorsHandler(){return floors;}
-    OpeningMission arrivalComlink(){return arrivalComlink;}
+    OpeningMission arrivalComlink(){return story.arrivalComlink();}
 
     void markSceneEntry(){lastStamp=SceneClock.now();}
     ChatHandler chatHandler(){return chats;}
     DestinationHandler destinationsHandler(){return destinations;}
     String welcomeMessage(){return welcomeMessage;}
-    OpeningMission deliveredComlink(){return deliveredComlink;}
-    void setArrivalComlink(OpeningMission value){arrivalComlink=value;}
+    OpeningMission deliveredComlink(){return story.deliveredComlink();}
+    void setArrivalComlink(OpeningMission value){story.arrivalComlink(value);}
     void friendLocation(FriendPresence value){friendLocation=value;}
     SessionResponder responder(){return responder;}
     SessionOutput output(){return output;}
@@ -480,14 +452,14 @@ final class WorldSession implements AutoCloseable {
     SceneStatus.State publishedStatusValue(){return sceneState.status();}
     Boolean publishedArsenalValue(){return sceneState.arsenal();}
     void setPublishedArsenal(Boolean value){sceneState.arsenal(value);}
-    Set<String> memoriesValue(){return memories;}
-    void setMemories(Set<String> value){memories=value;}
-    Map<String,KnightObjective.State> objectivesValue(){return objectives;}
-    void setObjectives(Map<String,KnightObjective.State> value){objectives=value;}
+    Set<String> memoriesValue(){return story.memories();}
+    void setMemories(Set<String> value){story.memories(value);}
+    Map<String,KnightObjective.State> objectivesValue(){return story.objectives();}
+    void setObjectives(Map<String,KnightObjective.State> value){story.objectives(value);}
     TownHandler townHandler(){return town;}
-    OpeningMission arrivalComlinkValue(){return arrivalComlink;}
-    void setDeliveredComlink(OpeningMission value){deliveredComlink=value;}
-    long missionDialogCreatedValue(){return missionDialogCreated;}
+    OpeningMission arrivalComlinkValue(){return story.arrivalComlink();}
+    void setDeliveredComlink(OpeningMission value){story.deliveredComlink(value);}
+    long missionDialogCreatedValue(){return story.missionDialogCreated();}
     long nextTemporaryItemId(){return carried.nextId();}
     Map<Long,WorldProfile.Item> temporaryItems(){return carried.items();}
     boolean quickbarContains(long id){return carried.quickbarContains(id);}
@@ -541,17 +513,17 @@ final class WorldSession implements AutoCloseable {
     /** The saved half of one conversation terminal: the pre-write profile and what committed. */
     record PreparedSettlement(WorldProfile before,org.tortodrone.storage.OpeningMissionStore.Settlement settled,boolean firstEver) { }
     PreparedSettlement prepareConversationSettlement(String terminalId)throws IOException {
-        profile=loadProfile(profile);var before=profile;boolean firstEver=completedOpening.isEmpty();
+        profile=loadProfile(profile);var before=profile;boolean firstEver=story.completedEmpty();
         var settled=characters.services().openingMissions(scenes.town(),scenes.missions()).complete(characters.accountId(),knight.id(),authRevision,profile,terminalId,null);
         return new PreparedSettlement(before,settled,firstEver);
     }
     void applyConversationSettlement(PreparedSettlement prepared,String terminalId,ActorState own,long dialog)throws IOException {
         var settled=prepared.settled();var before=prepared.before();profile=settled.profile();
-        if(!memories.equals(settled.memories())){var old=memories;memories=settled.memories();output.send(()->codec.knightMemoryChanges(oid,old,memories));}
-        if(!objectives.equals(settled.objectives())){objectives=settled.objectives();publishObjectives();}
-        if(!settled.completion().equals(completedOpening.get(terminalId))){var completed=new LinkedHashMap<>(completedOpening);completed.put(terminalId,settled.completion());completedOpening=Map.copyOf(completed);}
+        story.applyMemories(settled.memories());
+        story.applyObjectives(settled.objectives());
+        story.recordCompletion(terminalId,settled.completion());
         if(settled.first()){
-            runtime.membership().equipment(visibleProfile());missionDialogCreated=dialog;
+            runtime.membership().equipment(visibleProfile());story.missionDialogCreated(dialog);
             var entry=scenes.missions().mission(terminalId);
             boolean immediate=entry==null||!entry.requirement().type().equals("gate");
             output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),scenes.missions().grants(terminalId),scenes.missions().prestige(terminalId),immediate,dialog));
@@ -687,11 +659,7 @@ final class WorldSession implements AutoCloseable {
     synchronized void entered() throws IOException { runtime.enterPlace(); }
     /** The mission bar follows the owned run: the imported mission's {@code o.<id>} objective
      *  while it is active, and nothing outside a mission. */
-    void syncMissionObjective()throws IOException {
-        var run=runtime.scene().run();String next=null;
-        if(run!=null){var mission=scenes.missions().mission(run.missionId());if(mission!=null&&mission.requirement().hasObjective())next=run.missionId();}
-        if(!java.util.Objects.equals(next,missionObjective)){missionObjective=next;publishObjectives();}
-    }
+    void syncMissionObjective()throws IOException { story.syncMissionObjective(); }
 
     ActorState auctionSource(SceneRegistry.Instance destination)throws IOException{return auction.source(destination);}
     void openAuction()throws IOException{auction.open();}
