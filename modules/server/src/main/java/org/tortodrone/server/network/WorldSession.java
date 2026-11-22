@@ -90,12 +90,9 @@ final class WorldSession implements AutoCloseable {
     private PortalMove portalMove;
     /** Stock town commands may arrive from the loading screen or Ready Room; replay the
      *  native destination request once the scene has subscribed and accepted enteredPlace. */
-    private SessionDecoder.Invocation pendingTravel;
     private MissionRun lastGateStart;
     private Short lastGateStartRequest;
     private ScenePortals.Entrance arrival;
-    private boolean auctionAfterArrival;
-    private String alchemyTarget;
     private int departedSceneOid;
     private record DeferredMove(short requestId,boolean zone,int sceneOid) { }
     private DeferredMove deferredMove;
@@ -125,6 +122,7 @@ final class WorldSession implements AutoCloseable {
     private final EquipHandler equipment;
     private final SceneInputHandler sceneInput;
     private final FloorHandler floors;
+    private final DestinationHandler destinations;
     int partyOid()throws IOException{return parties.oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     void publishPartyState()throws IOException{parties.state();}
@@ -566,6 +564,7 @@ final class WorldSession implements AutoCloseable {
         equipment=new EquipHandler(this);
         sceneInput=new SceneInputHandler(this);
         floors=new FloorHandler(this);
+        destinations=new DestinationHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
@@ -609,6 +608,9 @@ final class WorldSession implements AutoCloseable {
     boolean sceneSubscribed(){return subscribed;}
     boolean inSubscribedScene(){return !closed&&selected()&&entered&&subscribed;}
     boolean sceneTravelPending(){return portalMove!=null;}
+    boolean deferredMovePending(){return deferredMove!=null;}
+    SessionDecoder.Invocation queuedTravel(){return destinations.queued();}
+    boolean auctionAfterArrivalPending(){return destinations.auctionAfterArrivalPending();}
     boolean canOpenBox(){return membership!=null&&membership.canOpenBox();}
     void openBox(java.util.List<StarterCatalog.Model> references){membership.openBox(references);}
     void confetti(String config){membership.confetti(config);}
@@ -813,13 +815,7 @@ final class WorldSession implements AutoCloseable {
     }
 
     /** Replay a town destination command that arrived before the scene was ready. */
-    private synchronized void flushPendingTravel()throws IOException {
-        if(pendingTravel==null||closed||!selected()||forcedReceiver==null||portalMove!=null||deferredMove!=null)return;
-        if(!readyRoom&&(!entered||!subscribed))return;
-        var request=pendingTravel;pendingTravel=null;
-        log.debug("Replaying queued town destination after scene entry");
-        invocation(request);
-    }
+    private synchronized void flushPendingTravel()throws IOException { destinations.flush(); }
 
     synchronized boolean invocation(SessionDecoder.Invocation request) throws IOException {
         if(closed||socket.isClosed())throw new IOException("Session is closed");
@@ -833,61 +829,7 @@ final class WorldSession implements AutoCloseable {
             if(readyRoom){returnRequested=true;short receiver=forcedReceiver;output.send(()->codec.forceScene(oid,receiver,scene));}
             return true;
         }
-        if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==7){
-            if(args.size()!=2||!(args.get(0) instanceof String destination)||!(args.get(1) instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ResultMarshaller"))throw new SessionDecoder.Rejected("Invalid town destination request");
-            try{
-                if(!selected())throw new IOException("Select a knight first");
-                if(forcedReceiver==null||portalMove!=null||(!readyRoom&&(!entered||!subscribed))){
-                    if(pendingTravel!=null&&pendingTravel!=request&&pendingTravel.arguments().getLast() instanceof SessionDecoder.Listener old) {
-                        short oldId=old.requestId();output.send(()->codec.invocationFailure(oid,oldId,"Travel request replaced"));
-                    }
-                    pendingTravel=request;
-                    log.debug("Queued town destination; destination="+destination+"; entered="+entered+"; subscribed="+subscribed
-                        +"; receiver="+forcedReceiver+"; portal="+(portalMove!=null)+"; readyRoom="+readyRoom);
-                    return true;
-                }
-                characters.worldProfile(knight.name(),authRevision,profile);
-                org.tortodrone.core.world.MapScene map=null;ScenePortals.Entrance entrance=null;AlchemyDestination alchemy=null;
-                if(destination.equals("move_alchemy_machine")){
-                    alchemy=selectAlchemy();if(alchemy!=null){entrance=alchemy.entrance();map=scene.map();}
-                }
-                if(destination.equals("haven"))map=scenes.catalog().entry();
-                if(map==null){
-                    int candidate=switch(destination){case "training"->294;case "lab"->30893;case "hoh"->318;default->-1;};
-                    if(candidate>0&&scenes.catalog().contains(candidate))map=scenes.catalog().scene(candidate);
-                    if(map==null)map=scenes.catalog().townByName("%town:m."+destination);
-                }
-                if(map==null&&destination.matches("[a-zA-Z0-9_-]{1,96}"))for(var candidate:scenes.catalog().towns()){
-                    String prefix="destination."+destination+".";var stats=candidate.content().stats();if(!stats.containsKey(prefix+"x"))continue;
-                    float x=stats.get(prefix+"x"),y=stats.get(prefix+"y");if(!candidate.collision().walkable(x,y))continue;
-                    if(candidate.portals().triggers().stream().anyMatch(t->t.intersects(x,y)))continue;
-                    map=candidate;entrance=new ScenePortals.Entrance(Math.round(stats.get(prefix+"id")),x,y,stats.getOrDefault(prefix+"rotation",0f));break;
-                }
-                if(map==null)throw new IOException("%chat:m.no_such_scene");
-                var next=destination(map.id());
-                if(entrance==null)entrance=new ScenePortals.Entrance(1,map.spawnX(),map.spawnY(),map.spawnRotation());
-                if(!next.simulation().placement(entrance.x(),entrance.y()))throw new IOException("Destination is blocked");
-                if(destination.equals("move_auction"))auctionSource(next);
-                if(readyRoom){
-                    auctionAfterArrival=destination.equals("move_auction");
-                    short receiver=forcedReceiver;
-                    enterScene(next,entrance);
-                    if(alchemy!=null)alchemyTarget=alchemy.key();
-                    output.send(()->codec.forceScene(oid,receiver,next));output.send(()->codec.townResult(oid,listener.requestId(),"",profile));
-                    return true;
-                }
-                if(next==scene){
-                    if(!membership.teleport(entrance.x(),entrance.y(),entrance.rotation()))throw new IOException("Destination is blocked or the knight is busy");
-                    if(alchemy!=null)alchemyTarget=alchemy.key();
-                    closeConversation();closeTownDialog();
-                    if(destination.equals("move_auction"))openAuction();
-                    output.send(()->codec.townResult(oid,listener.requestId(),"",profile));return true;
-                }
-                auctionAfterArrival=destination.equals("move_auction");
-                closeConversation();closeTownDialog();portalMove=new PortalMove(next,entrance);departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();short receiver=forcedReceiver;
-                output.send(()->codec.forceScene(oid,receiver,next));output.send(()->codec.townResult(oid,listener.requestId(),"",profile));
-            }catch(CharacterStore.Refused|IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
-        }
+        if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==7)return destinations.invocation(request);
         // KnightMarshaller 11 is the stock /haven travel (EN()); it carries no arguments or listener,
         // so failures are reported through the native chat-feedback path.
         if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==11){
@@ -1021,12 +963,12 @@ final class WorldSession implements AutoCloseable {
     /** Install the destination scene before the client acknowledges its move. The Ready Room
      *  uses the same path so a native `/training`, `/alc` or `/haven` command can leave it
      *  directly instead of first entering the saved town. */
-    private void enterScene(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException {
+    void enterScene(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException {
         closeConversation();closeTownDialog();
         if(!temporaryItems.isEmpty()){var before=visibleProfile();temporaryItems.clear();output.send(()->codec.itemChanges(oid,knight,before,profile));publishQuickbar();}
         leaveChat();
         subscribed=entered=false;sceneGeneration++;occupantClients=Map.of();occupantRoles=Map.of();lastSnapshot=null;
-        reference=acknowledge=0;alchemyTarget=null;departedSceneOid=scene.oid();if(membership!=null)membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
+        reference=acknowledge=0;destinations.clearAlchemyTarget();departedSceneOid=scene.oid();if(membership!=null)membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
         readyRoom=returnRequested=false;
         arrival=entrance;portalMove=null;
         created=SceneClock.now();attach();
@@ -1125,7 +1067,7 @@ final class WorldSession implements AutoCloseable {
         if(scene.run()!=null&&(!scenes.authorized(scene,profile.worldId(),partyMember)||!membership.authorizeElevator(scene.run().exitKey(),Set.of(profile.worldId()))))throw new IOException("Opening mission exit is unavailable");
         arrivalComlink=null;
         for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&scenes.missions().eligible(candidate.id(),profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
-        if(auctionAfterArrival){auctionAfterArrival=false;try{openAuction();}catch(IOException refused){unavailable(refused.getMessage());}}
+        if(destinations.takeAuctionAfterArrival()){try{openAuction();}catch(IOException refused){unavailable(refused.getMessage());}}
         persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
         syncMissionObjective();
         flushPendingTravel();
@@ -1138,33 +1080,6 @@ final class WorldSession implements AutoCloseable {
         if(!java.util.Objects.equals(next,missionObjective)){missionObjective=next;publishObjectives();}
     }
 
-    private record AlchemyDestination(String key,ScenePortals.Entrance entrance) { }
-    /** Archive TudeySceneManager.getPortalTransform picks a random tagged destination.
-     * Avoid the last successful station when another usable station is available. */
-    private AlchemyDestination selectAlchemy()throws IOException {
-        var machines=scene.map().content().entries().stream()
-            .filter(e->e.spec().text("town-kind","").equals("OpenCrafter")&&e.spec().config().name().equals("Shop/Haven/Alchemy"))
-            .toList();
-        if(machines.isEmpty())return null;
-        var candidates=new ArrayList<>(machines);
-        Collections.shuffle(candidates);
-        if(machines.size()>1&&alchemyTarget!=null){
-            var previous=candidates.stream().filter(e->e.key().equals(alchemyTarget)).findFirst().orElse(null);
-            if(previous!=null){candidates.remove(previous);candidates.add(previous);}
-        }
-        for(var machine:candidates){
-            // The actor's facing identifies its front. Validate the complete pawn placement,
-            // including live props, before relocating; never land inside the machine.
-            for(float distance:new float[]{1.7f,2f,2.5f,3f}){
-                float x=machine.x()+(float)Math.cos(machine.rotation())*distance;
-                float y=machine.y()+(float)Math.sin(machine.rotation())*distance;
-                if(scene.simulation().placement(x,y)){
-                    return new AlchemyDestination(machine.key(),new ScenePortals.Entrance(1,x,y,(float)(machine.rotation()+Math.PI)));
-                }
-            }
-        }
-        throw new IOException("Alchemy machines are blocked");
-    }
     ActorState auctionSource(SceneRegistry.Instance destination)throws IOException{return auction.source(destination);}
     void openAuction()throws IOException{auction.open();}
 

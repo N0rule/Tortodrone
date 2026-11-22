@@ -157,8 +157,7 @@ public final class SlashCommandsSessionTest {
                 gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_bechamel",result)));gm.drain();
                 check(pending.get(gm.world)==null&&gm.world.ownsScene(scenes.destination(bazaar.id(),1).oid()),"captured named command relocates within the existing scene");
                 gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_auction",result)));move(gm,scenes.catalog().entry());
-                var auctionPending=WorldSession.class.getDeclaredField("auctionAfterArrival");auctionPending.setAccessible(true);
-                check(!auctionPending.getBoolean(gm.world)&&pending.get(gm.world)==null,"auction opening completes after the native cross-scene callbacks");
+                check(!gm.world.auctionAfterArrivalPending()&&pending.get(gm.world)==null,"auction opening completes after the native cross-scene callbacks");
                 gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_auction",result)));gm.drain();
                 var atAuction=scenes.entry().simulation().snapshot().players().stream().filter(a->a.name().equals("Staff")).findFirst().orElseThrow();
                 check(atAuction.x()==1.5f&&atAuction.y()==12.5f&&pending.get(gm.world)==null,"/ah uses the authored destination and opens in-scene without a loading transition");

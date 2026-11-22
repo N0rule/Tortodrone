@@ -77,7 +77,7 @@ public final class TravelQueueTest {
                 "com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)7)));
     }
     private static Object pending(WorldSession world)throws Exception {
-        Field field=WorldSession.class.getDeclaredField("pendingTravel");field.setAccessible(true);return field.get(world);
+        return world.queuedTravel();
     }
     private static Object portalMove(WorldSession world)throws Exception {
         Field field=WorldSession.class.getDeclaredField("portalMove");field.setAccessible(true);return field.get(world);
