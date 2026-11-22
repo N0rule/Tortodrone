@@ -22,8 +22,12 @@ public final class SceneCollision {
         this(tiles,floorCells,List.of(),obstacles,present);
     }
     private SceneCollision(Map<Long,Integer> tiles,Set<Long> floorCells,List<Obstacle> floorShapes,List<Obstacle> obstacles,boolean present){
-        this.tiles = Map.copyOf(tiles);
-        this.floorCells=Set.copyOf(floorCells);
+        // Long.hashCode collapses every cell on the x==y diagonal to one bucket. ImmutableCollections
+        // resolves that bucket by linear probing, so a legitimate tile/floor query there cost tens
+        // of microseconds; a monster path search performs thousands of them and stalled the scene
+        // tick for seconds. HashMap/HashSet treeify the long probe chain instead of scanning it.
+        this.tiles = Collections.unmodifiableMap(new HashMap<>(tiles));
+        this.floorCells=Collections.unmodifiableSet(new HashSet<>(floorCells));
         this.floorShapes=List.copyOf(floorShapes);
         this.obstacles = List.copyOf(obstacles);
         this.grid = new Grid(this.obstacles);
