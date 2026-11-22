@@ -10,9 +10,68 @@ import org.tortodrone.core.world.SceneShape;
  *  the scene. */
 final class SceneCollisions {
     private final SceneEntities scene;
+    /** Uniform broadphase cell for entity collision/perception queries. */
+    private static final float SPATIAL_CELL=2;
+    private final SpatialIndex spatial=new SpatialIndex();
 
     SceneCollisions(SceneEntities scene) {
         this.scene = scene;
+    }
+
+    void add(SceneEntity entity){spatial.add(entity);}
+    void remove(SceneEntity entity){spatial.remove(entity);}
+    void moved(SceneEntity entity){spatial.move(entity);}
+    float reach(){return spatial.reach();}
+    List<SceneEntity> near(float minX,float minY,float maxX,float maxY){return spatial.near(minX,minY,maxX,maxY);}
+    /** Bounded broadphase lookup. A non-finite window or the linear fallback scans every entity. */
+    List<SceneEntity> candidates(float minX,float minY,float maxX,float maxY){
+        if(!scene.spatialQuery()||!Float.isFinite(minX)||!Float.isFinite(minY)||!Float.isFinite(maxX)||!Float.isFinite(maxY)
+                ||Math.abs(minX)>1e8||Math.abs(minY)>1e8||Math.abs(maxX)>1e8||Math.abs(maxY)>1e8)
+            return List.copyOf(scene.entityValues());
+        return spatial.near(minX,minY,maxX,maxY);
+    }
+    private static final class SpatialIndex {
+        private final Map<Long,List<SceneEntity>> cells=new HashMap<>();
+        /** Largest inserted extent; queries widen by it instead of rescanning the scene. */
+        private float reach;
+        private static long key(int x,int y){return ((long)x<<32)^(y&0xffffffffL);}
+        private static int cell(float value){return (int)Math.floor(value/SPATIAL_CELL);}
+        void add(SceneEntity entity){
+            remove(entity);
+            int minX=cell(entity.x-entity.spatialExtent),maxX=cell(entity.x+entity.spatialExtent);
+            int minY=cell(entity.y-entity.spatialExtent),maxY=cell(entity.y+entity.spatialExtent);
+            var occupied=new long[(maxX-minX+1)*(maxY-minY+1)];int index=0;
+            for(int x=minX;x<=maxX;x++)for(int y=minY;y<=maxY;y++){
+                long key=key(x,y);occupied[index++]=key;cells.computeIfAbsent(key,ignored->new ArrayList<>()).add(entity);
+            }
+            entity.spatialCells=occupied;
+            entity.spatialMinX=minX;entity.spatialMaxX=maxX;entity.spatialMinY=minY;entity.spatialMaxY=maxY;
+            reach=Math.max(reach,entity.spatialExtent);
+        }
+        /** Re-bucket only when the occupied cell block changes; ordinary movement stays put. */
+        void move(SceneEntity entity){
+            int minX=cell(entity.x-entity.spatialExtent),maxX=cell(entity.x+entity.spatialExtent);
+            int minY=cell(entity.y-entity.spatialExtent),maxY=cell(entity.y+entity.spatialExtent);
+            if(entity.spatialCells!=null&&minX==entity.spatialMinX&&maxX==entity.spatialMaxX
+                    &&minY==entity.spatialMinY&&maxY==entity.spatialMaxY)return;
+            add(entity);
+        }
+        float reach(){return reach;}
+        void remove(SceneEntity entity){
+            if(entity.spatialCells==null)return;
+            for(long key:entity.spatialCells){var bucket=cells.get(key);if(bucket==null)continue;bucket.remove(entity);if(bucket.isEmpty())cells.remove(key);}
+            entity.spatialCells=null;
+        }
+        List<SceneEntity> near(float minX,float minY,float maxX,float maxY){
+            var found=new TreeMap<Long,SceneEntity>();
+            int left=cell(minX),right=cell(maxX),bottom=cell(minY),top=cell(maxY);
+            for(int x=left;x<=right;x++)for(int y=bottom;y<=top;y++){
+                var bucket=cells.get(key(x,y));if(bucket==null)continue;
+                for(var entity:bucket)found.put(entity.order,entity);
+            }
+            return new ArrayList<>(found.values());
+        }
+        void clear(){cells.clear();reach=0;}
     }
 
     boolean walkable(float x,float y,int ignore){
