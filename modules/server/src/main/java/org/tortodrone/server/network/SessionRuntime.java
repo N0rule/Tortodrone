@@ -2,6 +2,7 @@ package org.tortodrone.server.network;
 
 import org.tortodrone.core.world.ScenePortals;
 import org.tortodrone.world.SceneRegistry;
+import org.tortodrone.world.SceneSnapshot;
 import org.tortodrone.world.SceneSimulation;
 
 /** Scene identity and travel state for one connection: the current instance, Ready Room
@@ -13,7 +14,10 @@ final class SessionRuntime {
 
     private SceneRegistry.Instance scene;
     private SceneSimulation.Membership membership;
-    private boolean readyRoom,returnRequested;
+    private SceneSnapshot lastSnapshot;
+    private WorldStatePoller.Registration persistence;
+    private boolean readyRoom,returnRequested,subscribed,entered,welcomed,inputThrottleSent;
+    private int sceneGeneration;
     private PortalMove portalMove;
     private ScenePortals.Entrance arrival;
     private int departedSceneOid;
@@ -23,6 +27,27 @@ final class SessionRuntime {
 
     SceneSimulation.Membership membership(){return membership;}
     void membership(SceneSimulation.Membership value){membership=value;}
+
+    boolean subscribed(){return subscribed;}
+    void subscribed(boolean value){subscribed=value;}
+
+    boolean entered(){return entered;}
+    void entered(boolean value){entered=value;}
+
+    int sceneGeneration(){return sceneGeneration;}
+    void bumpSceneGeneration(){sceneGeneration++;}
+
+    SceneSnapshot lastSnapshot(){return lastSnapshot;}
+    void lastSnapshot(SceneSnapshot value){lastSnapshot=value;}
+
+    WorldStatePoller.Registration persistence(){return persistence;}
+    void persistence(WorldStatePoller.Registration value){persistence=value;}
+
+    boolean welcomed(){return welcomed;}
+    void welcomed(boolean value){welcomed=value;}
+
+    boolean inputThrottleSent(){return inputThrottleSent;}
+    void inputThrottleSent(boolean value){inputThrottleSent=value;}
 
     boolean readyRoom(){return readyRoom;}
     void readyRoom(boolean value){readyRoom=value;}
