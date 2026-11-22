@@ -54,8 +54,8 @@ public final class SceneSimulation {
      * exclusive with payment; the health/effect change is published only after commit. */
     public synchronized <T> T revive(Membership payer,int targetWorld,RevivePayment<T> payment)throws java.io.IOException {
         var target=members.get(targetWorld);
-        if(payer==null||members.get(payer.appearance.id())!=payer||!payer.entered||payer.portal!=null
-                ||target==null||!target.entered||target.portal!=null||target.revivePending
+        if(payer==null||members.get(payer.appearance.id())!=payer||!payer.entered||!payer.portalOpen()
+                ||target==null||!target.entered||!target.portalOpen()||target.revivePending
                 ||target!=payer&&!payer.health.alive()||!target.health.canSparkRevive())throw new java.io.IOException("m.no_revive");
         target.revivePending=true;
         try{
@@ -84,7 +84,6 @@ public final class SceneSimulation {
         private final Consumer<SceneSnapshot> initialPublish;
         private Consumer<SceneSnapshot> publish;
         private boolean entered, detached, arrived;
-        private ScenePortals.Trigger portal;
         private int interactionTarget;
         private int lift,dropAt;
         private final SceneHealth health=new SceneHealth(instance.map().content());
@@ -135,7 +134,7 @@ public final class SceneSimulation {
         private final ArrayDeque<Long> usedItems=new ArrayDeque<>();
         public List<Long> takeUsedItems(){synchronized(SceneSimulation.this){check();var used=List.copyOf(usedItems);usedItems.clear();return used;}}
         public boolean useItem(long id,SceneContent.Spec spec){synchronized(SceneSimulation.this){
-            check();if(!entered||portal!=null||!health.alive()||pendingItem!=0||lift!=0||usedItems.contains(id))return false;
+            check();if(!entered||!portalOpen()||!health.alive()||pendingItem!=0||lift!=0||usedItems.contains(id))return false;
             if(spec.text("kind","").equals("vial")){
                 int stamp=SceneClock.now();if(!movement.useLift(stamp))return false;lift=entities.vial(actor(),spec,stamp);
                 if(lift==0){movement.resetInput(stamp);return false;}usedItems.add(id);health.curseItem(id,stamp);updateLife(stamp);return true;
@@ -157,7 +156,7 @@ public final class SceneSimulation {
          *  Payment is committed only after the effect can be applied, and an item entity is
          *  reclaimed when the transaction is refused. */
         public <T> ItemUse<T> useOwnedItem(long id,SceneContent.Spec spec,RevivePayment<T> payment)throws java.io.IOException {synchronized(SceneSimulation.this){
-            check();if(!entered||portal!=null||!health.alive()||pendingItem!=0||lift!=0||usedItems.contains(id))throw new java.io.IOException("e.not_use_busy");
+            check();if(!entered||!portalOpen()||!health.alive()||pendingItem!=0||lift!=0||usedItems.contains(id))throw new java.io.IOException("e.not_use_busy");
             String kind=spec.text("kind","");int stamp=SceneClock.now();
             switch(kind){
                 case "heal" -> {
@@ -195,11 +194,11 @@ public final class SceneSimulation {
         }}
         /** Server-only notification after a committed item/economy operation. */
         public void effect(org.tortodrone.core.character.StarterCatalog.Model effect){synchronized(SceneSimulation.this){
-            check();if(entered&&portal==null)weapons.effect(effect,actor(),SceneClock.now());
+            check();if(entered&&portalOpen())weapons.effect(effect,actor(),SceneClock.now());
         }}
         public SceneHealth.State health(){synchronized(SceneSimulation.this){check();return health.state();}}
-        public boolean arsenalZone(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&arsenalZones.stream().anyMatch(e->e.spec().contains(e.x(),e.y(),e.rotation(),movement.x(),movement.y(),ScenePortals.PAWN_RADIUS));}}
-        public boolean equipmentAllowed(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&health.alive()&&(!instance.map().kind().equals("level")||arsenalZone());}}
+        public boolean arsenalZone(){synchronized(SceneSimulation.this){check();return entered&&portalOpen()&&arsenalZones.stream().anyMatch(e->e.spec().contains(e.x(),e.y(),e.rotation(),movement.x(),movement.y(),ScenePortals.PAWN_RADIUS));}}
+        public boolean equipmentAllowed(){synchronized(SceneSimulation.this){check();return entered&&portalOpen()&&health.alive()&&(!instance.map().kind().equals("level")||arsenalZone());}}
         private List<org.tortodrone.core.character.WorldProfile.Item> carriedItems=List.of();
         public void inventory(org.tortodrone.core.character.WorldProfile profile){synchronized(SceneSimulation.this){
             check();carriedItems=profile.items();health.inventory(profile);entities.reconsiderPickups(appearance.id());
@@ -240,7 +239,7 @@ public final class SceneSimulation {
         public float floorHeat(){synchronized(SceneSimulation.this){check();return floorHeat;}}
         /** Consume a scene-owned claim and credit the floor atomically, before publication. */
         public boolean collectHeat(int entity){synchronized(SceneSimulation.this){
-            check();if(!entered||portal!=null||!health.alive())return false;
+            check();if(!entered||!portalOpen()||!health.alive())return false;
             int amount=entities.heatClaim(appearance.id(),entity);if(amount<=0)return false;
             var recipients=members.values().stream().filter(m->m.entered&&!m.detached).toList();
             if(recipients.stream().anyMatch(m->m.floorHeat>1_000_000-amount))return false;
@@ -291,7 +290,7 @@ public final class SceneSimulation {
         public void pause(){synchronized(SceneSimulation.this){if(detached)return;cancelElevator(SceneClock.now());elevatorEntry="";elevatorMembers=Set.of();entered=false;pendingConversation=null;pendingMemories.clear();pendingObjectives.clear();activeFloorAdvance=pendingFloorAdvance=null;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;pendingAnimated=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
         public void resetInput(){synchronized(SceneSimulation.this){check();pendingAnimated=null;weapons.cancelAttacks(appearance.id());movement.resetInput(SceneClock.now());}}
         public boolean teleport(float x,float y,float rotation){synchronized(SceneSimulation.this){
-            check();if(!entered||portal!=null||lift!=0||pendingItem!=0||!health.alive())return false;
+            check();if(!entered||!portalOpen()||lift!=0||pendingItem!=0||!health.alive())return false;
             if(!movement.teleport(x,y,rotation,SceneClock.now()))return false;
             interactionTarget=0;weapons.cancelAttacks(appearance.id());return true;
         }}
@@ -303,7 +302,7 @@ public final class SceneSimulation {
                 boolean loading=movement.activity()==TownMovement.LOADING;
                 movement.disabledCollision(entities.disabledCollisionSources());
                 weapons.disabledSources(entities.disabledCollisionSources());
-                boolean accepted=entered&&portal==null&&movement.accept(stamp,facing,heading,flags,actionChanged,sceneTime,now);
+                boolean accepted=entered&&portalOpen()&&movement.accept(stamp,facing,heading,flags,actionChanged,sceneTime,now);
                 // Native DungeoneerLogic.finishedLoading arms INITIAL_INVULNERABILITY when the
                 // client's first input ends the loading pose; town knights receive none.
                 if(accepted&&loading&&!instance.map().town())health.protectLoading(SceneClock.now());
@@ -328,12 +327,12 @@ public final class SceneSimulation {
                 combatProfile=profile;progress=profile.progress();combat=new KnightCombat(catalog,modifiers);combat.equipment(profile);health.equipment(profile,town);combat.attacks(attack->{health.breakCloak();if(attack.activity()>=KnightCombat.INCOMPLETE&&combat.state().weapon()!=null)health.curseItem(combat.state().weapon().id(),attack.started());if(health.alive())weapons.attack(appearance.id(),attack);});movement.combat(combat);}
         }
         public boolean sit(int sceneTime,long now) {
-            synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.sit(sceneTime,now);}
+            synchronized(SceneSimulation.this){check();return entered&&portalOpen()&&movement.sit(sceneTime,now);}
         }
         public boolean emote(PlayerEmotes.Descriptor emote,int sceneTime,long now) {
-            synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.emote(emote,sceneTime,now);}
+            synchronized(SceneSimulation.this){check();return entered&&portalOpen()&&movement.emote(emote,sceneTime,now);}
         }
-        public boolean canOpenBox(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&health.alive()&&lift==0&&pendingItem==0&&movement.canOpenBox();}}
+        public boolean canOpenBox(){synchronized(SceneSimulation.this){check();return entered&&portalOpen()&&health.alive()&&lift==0&&pendingItem==0&&movement.canOpenBox();}}
         /** Called only with committed rewards; no storage or network work under the scene lock. */
         public void openBox(List<org.tortodrone.core.character.StarterCatalog.Model> references){
             synchronized(SceneSimulation.this){check();if(!canOpenBox())return;
@@ -373,7 +372,8 @@ public final class SceneSimulation {
             synchronized(SceneSimulation.this){check();if(actor.id()!=appearance.id()||actor.clientOid()!=appearance.clientOid())throw new IllegalArgumentException("Actor ownership changed");appearance=actor;}
         }
         ActorState snapshotActor() {return actor();}
-        ScenePortals.Trigger portalTrigger(){return portal;}
+        ScenePortals.Trigger portalTrigger(){return portals.trigger(appearance.id());}
+        private boolean portalOpen(){return portals.open(appearance.id());}
         SceneHealth.State healthState(){return health.state();}
         ActorState petSnapshot(){return petActor();}
         private ActorState actor() {
@@ -434,7 +434,7 @@ public final class SceneSimulation {
         public FloorAdvanceRequest takeFloorAdvance(){synchronized(SceneSimulation.this){check();var request=pendingFloorAdvance;pendingFloorAdvance=null;return request;}}
         /** Revalidate the exact request after session-thread preflight; never trust a client token. */
         public boolean ownsFloorAdvance(FloorAdvanceRequest request){synchronized(SceneSimulation.this){
-            return !detached&&members.get(appearance.id())==this&&entered&&health.alive()&&portal==null&&request!=null&&activeFloorAdvance==request;
+            return !detached&&members.get(appearance.id())==this&&entered&&health.alive()&&portalOpen()&&request!=null&&activeFloorAdvance==request;
         }}
         public boolean cancelFloorAdvance(FloorAdvanceRequest request){synchronized(SceneSimulation.this){
             if(!ownsFloorAdvance(request))return false;cancelElevator(SceneClock.now());activeFloorAdvance=pendingFloorAdvance=null;return true;
@@ -443,13 +443,14 @@ public final class SceneSimulation {
         public boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source){synchronized(SceneSimulation.this){
             check();return entered&&entities.conversationResponse(definition,node,choice,source,appearance.id(),SceneClock.now());
         }}
-        public boolean conversationValid(SceneConversation definition,String node,int choice,ActorState source){synchronized(SceneSimulation.this){check();return entered&&health.alive()&&portal==null&&entities.conversationValid(definition,node,choice,source,appearance.id(),SceneClock.now());}}
-        public boolean conversationStart(SceneConversation definition,ActorState source){synchronized(SceneSimulation.this){check();return entered&&health.alive()&&portal==null&&entities.conversationStart(definition,source,appearance.id(),SceneClock.now());}}
+        public boolean conversationValid(SceneConversation definition,String node,int choice,ActorState source){synchronized(SceneSimulation.this){check();return entered&&health.alive()&&portalOpen()&&entities.conversationValid(definition,node,choice,source,appearance.id(),SceneClock.now());}}
+        public boolean conversationStart(SceneConversation definition,ActorState source){synchronized(SceneSimulation.this){check();return entered&&health.alive()&&portalOpen()&&entities.conversationStart(definition,source,appearance.id(),SceneClock.now());}}
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}
-        @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;cancelElevator(SceneClock.now());elevatorEntry="";elevatorMembers=Set.of();detached=true;pendingConversation=null;pendingMemories.clear();pendingObjectives.clear();activeFloorAdvance=pendingFloorAdvance=null;weapons.cancel(appearance.id());weapons.cancel(petId);entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
+        @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;cancelElevator(SceneClock.now());elevatorEntry="";elevatorMembers=Set.of();detached=true;pendingConversation=null;pendingMemories.clear();pendingObjectives.clear();activeFloorAdvance=pendingFloorAdvance=null;weapons.cancel(appearance.id());weapons.cancel(petId);entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());portals.clear(appearance.id());members.remove(appearance.id(),this);stopIfIdle();}}
     }
     private final SceneRegistry.Instance instance;
     private final Map<Integer,Membership> members=new LinkedHashMap<>();
+    private final PortalSystem portals=new PortalSystem();
     /** Battle-sprite actors use this fixed id base so their ids never collide with
      * client-visible pawn or entity oid ranges observed on the wire; server-chosen. */
     private static final int PET_ACTOR_ID_BASE = 1_700_000_000;
@@ -536,7 +537,7 @@ public final class SceneSimulation {
         });
         entities.floorAdvances((player,source,stamp)->{
             var member=members.get(player.id());
-            if(member==null||!member.entered||member.detached||!member.health.alive()||member.portal!=null||!instance.map().kind().equals("level"))return false;
+            if(member==null||!member.entered||member.detached||!member.health.alive()||!member.portalOpen()||!instance.map().kind().equals("level"))return false;
             if(member.activeFloorAdvance==null){
                 var request=new FloorAdvanceRequest(++member.floorSequence,source,stamp);
                 member.activeFloorAdvance=member.pendingFloorAdvance=request;
@@ -545,7 +546,7 @@ public final class SceneSimulation {
         });
         entities.elevators(new SceneEntities.ElevatorControl(){
             private boolean allowed(Membership member,SceneEntities.ElevatorTrip trip){
-                return member!=null&&!member.detached&&member.entered&&member.health.alive()&&member.portal==null
+                return member!=null&&!member.detached&&member.entered&&member.health.alive()&&member.portalOpen()
                     &&member.movement.activity()!=TownMovement.RESURRECT&&(member.elevatorSettled&&member.elevatorTrip==trip||member.elevatorEntry.equals(trip.source().entity().key())&&member.elevatorMembers.equals(new HashSet<>(trip.members())));
             }
             @Override public boolean begin(SceneEntities.ElevatorTrip trip,int stamp){
@@ -583,12 +584,12 @@ public final class SceneSimulation {
         });
         entities.memories((player,operation,source,stamp)->{
             var member=members.get(player.id());
-            if(member==null||!member.entered||member.detached||!member.health.alive()||member.portal!=null||member.pendingMemories.size()>=256)return false;
+            if(member==null||!member.entered||member.detached||!member.health.alive()||!member.portalOpen()||member.pendingMemories.size()>=256)return false;
             member.pendingMemories.addLast(new MemoryRequest(operation,source,stamp));return true;
         });
         entities.objectives((player,operation,source,stamp)->{
             var member=members.get(player.id());
-            if(member==null||!member.entered||member.detached||!member.health.alive()||member.portal!=null||member.pendingObjectives.size()>=256)return false;
+            if(member==null||!member.entered||member.detached||!member.health.alive()||!member.portalOpen()||member.pendingObjectives.size()>=256)return false;
             member.pendingObjectives.addLast(new ObjectiveRequest(operation,source,stamp));return true;
         });
         entities.effects(weapons::effect);
@@ -727,7 +728,7 @@ public final class SceneSimulation {
             if(previous!=null&&stamp-previous.timestamp()<=0)return;
             // All authoritative entities advance before capture. Future AI/combat/dynamic
             // collision stages run here once per instance, independent of observer count.
-            for(var member:members.values())if(member.entered&&member.portal==null) {
+            for(var member:members.values())if(member.entered&&member.portalOpen()) {
                 if(member.auraOwner!=0&&member.health.status().conditions().stream().noneMatch(c->c.name().contains("Angelic Aura")))member.auraOwner=0;
                 member.health.advance(stamp,previous==null?0:stamp-previous.timestamp(),(member.movement.flags()&TownMovement.PUBLISHED_MOVING_FLAG)!=0);
                 member.updateLife(stamp);
@@ -757,9 +758,9 @@ public final class SceneSimulation {
                     }
                 }
                 member.movement.advance(stamp,now);
-                if(!instance.map().town()&&member.portal==null)recordVisited(member.movement.x(),member.movement.y());
+                if(!instance.map().town()&&member.portalOpen())recordVisited(member.movement.x(),member.movement.y());
                 if(member.dropAt>0&&SceneClock.reached(stamp,member.dropAt)){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
-                member.portal=member.movement.portal();member.advancePet(stamp);
+                portals.update(member.appearance.id(),member.movement.portal());member.advancePet(stamp);
             }
             var players=members.values().stream().filter(m->m.entered).map(Membership::actor).toList();
             for(var member:members.values())if(member.entered)for(var pulse:member.health.takePulses())entities.statusPulse(member.appearance.id(),pulse,member.movement.x(),member.movement.y(),stamp);
