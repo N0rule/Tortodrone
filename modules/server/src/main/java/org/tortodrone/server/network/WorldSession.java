@@ -132,6 +132,7 @@ final class WorldSession implements AutoCloseable {
     private final DepotHandler depot;
     private final ConversationHandler conversations;
     private final OpeningHandler opening;
+    private final TownHandler town;
     int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null,membership.floorHeat());}
@@ -217,12 +218,6 @@ final class WorldSession implements AutoCloseable {
     }
     private Map<Integer,Integer> occupantClients=Map.of();
     private Map<Integer,Boolean> occupantRoles=Map.of();
-    private org.tortodrone.core.town.TownCatalog.Station townDialog;
-    private ActorState townSource;
-    private long townCreated;
-    private int townService=100;
-    private long townShopCycle,townTradeGeneration;
-    private float townX,townY;
     private Map<String,org.tortodrone.core.character.KnightObjective.State> objectives=Map.of();
     /** The active mission whose {@code o.<missionId>} objective is on the player's bar, or null. */
     private String missionObjective;
@@ -300,37 +295,10 @@ final class WorldSession implements AutoCloseable {
         }
     }
 
-    void closeTownDialog()throws IOException {
-        if(townDialog==null)return;townDialog=null;townSource=null;townService++;
-        output.send(()->codec.townDialog(oid,scene.oid(),null,null,townCreated,townService));
-    }
-    void openTownDialog(org.tortodrone.core.town.TownCatalog.Station station,ActorState source)throws IOException {
-        if(trade.active())throw new IOException("Finish the trade before using a town station");
-        if(station.kind().equals("OpenArsenal")||station.kind().equals("OpenAuction")){
-            if(station.kind().equals("OpenArsenal")){
-                // The window reads equipPolicy while opening; publish the policy on this
-                // same ordered output stream even if the scene publication was coalesced.
-                boolean inZone=membership!=null&&membership.arsenalZone();
-                output.send(()->codec.equipPolicy(oid,inZone));publishedArsenal=inZone;
-            }
-            String command=station.kind().equals("OpenAuction")?"auction":"show_arsenal_station";
-            closeConversation();closeTownDialog();output.send(()->codec.controllerAction(oid,command,source));return;
-        }
-        townTradeGeneration=trade.dialogGeneration();closeConversation();closeTownDialog();
-        var own=scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElseThrow(()->new IOException("Knight left scene"));townX=own.x();townY=own.y();
-        townDialog=station;townSource=source;townCreated=Math.max(System.currentTimeMillis(),townCreated+1);townService++;
-        try{
-            if(station.kind().equals("OpenShop")||station.kind().equals("OpenHarnessInstaller")){townShopCycle=scenes.town().shopCycle(station.shop());publishShop();}
-            output.send(()->codec.townDialog(oid,scene.oid(),station,source,townCreated,townService));
-        }catch(IOException failure){
-            try{closeTownDialog();}catch(IOException closing){failure.addSuppressed(closing);}throw failure;
-        }
-    }
-    private void publishShop()throws IOException {
-        var goods=scenes.town().goods(townDialog,townShopCycle,profile.worldId()).stream().map(g->{var def=characters.catalog().find(g.item());int price=g.price()>=0?g.price():def==null?0:scenes.town().price(g.item(),def.rarity(),true);return new org.tortodrone.core.town.TownCatalog.Good(g.item(),g.count(),price,g.energy(),g.limit(),g.token(),g.tokenCount());}).toList();
-        var available=characters.town(scenes.town()).availability(characters.accountId(),knight.id(),authRevision,townDialog,townShopCycle);
-        output.send(()->codec.townShop(oid,goods,available));
-    }
+    void closeTownDialog()throws IOException { town.close(); }
+    long townDialogCreated(){return town.created();}
+    boolean townDialogOpen(){return town.dialogOpen();}
+    void openTownDialog(org.tortodrone.core.town.TownCatalog.Station station,ActorState source)throws IOException { town.open(station,source); }
     void townChanged(org.tortodrone.storage.TownStore.Result result)throws IOException {
         townChanged(result,true);
     }
@@ -423,6 +391,18 @@ final class WorldSession implements AutoCloseable {
         }
     }
     void clearArrivalComlink(){arrivalComlink=null;}
+    void leaveChatForTown(){leaveChat();}
+    void requestRenameDisconnect(){renameDisconnect=true;}
+    void recipeLearnedEffect(){if(membership!=null)membership.effect(new StarterCatalog.Model("Player/Learn Recipe",Map.of()));}
+    /** Remove one consumable/session pickup from the visible inventory without a store write. */
+    boolean trashTemporary(long id)throws IOException {
+        if(!temporaryItems.containsKey(id))return false;
+        var item=temporaryItems.get(id);
+        if(item.permanent()||item.equippedSlot()!=null)throw new IOException("m.internal_error");
+        var before=visibleProfile();temporaryItems.remove(id);var after=visibleProfile();
+        output.send(()->codec.itemChanges(oid,knight,before,after));publishQuickbar();
+        return true;
+    }
     SceneConversation comlink(String missionId){
         var opening=OpeningMission.byId(missionId);
         if(opening!=null&&OpeningComlinks.get(opening)!=null)return OpeningComlinks.get(opening);
@@ -585,174 +565,16 @@ final class WorldSession implements AutoCloseable {
         if(styles.invocation(request))return true;
         if(boxes.invocation(request))return true;
         if(depotInvocation(request))return true;
-        var a=request.arguments();boolean global=request.oid()==SessionCodec.INVOCATION_OID;
         if(billingInvocation(request))return true;
-        // KnightMarshaller 2 is canRename (30-day window check); 8 is renameKnight [Name, Confirm].
-        if(global&&request.service()==SessionCodec.KNIGHT_SERVICE&&(request.method()==2||request.method()==8)){
-            boolean rename=request.method()==8;
-            if(a.size()!=(rename?2:1)||rename&&!(a.getFirst() instanceof String)||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid knight rename request");
-            try{
-                if(closed||!selected()||!entered||!subscribed||!scene.map().town())throw new IOException("Enter a town first");
-                if(trade.active())throw new IOException("Finish the trade first");
-                if(rename){
-                    var result=characters.town(scenes.town()).rename(characters.accountId(),knight.id(),authRevision,(String)a.getFirst());
-                    characters.refresh();knight=characters.roster().stream().filter(k->k.id()==knight.id()).findFirst().orElseThrow();
-                    closeConversation();closeTownDialog();leaveChat();townChanged(result);partyState();
-                    output.send(()->codec.knightName(oid,knight.name()));
-                    output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-                    // Official dV companion dY ends the session after a rename and returns to the
-                    // login window carrying the new name, so the server closes it here.
-                    renameDisconnect=true;
-                }else{
-                    characters.town(scenes.town()).canRename(characters.accountId(),knight.id(),authRevision);
-                    output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-                }
-            }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
-            return true;
-        }
-        // ItemMarshaller 1 is the stock Trash action [itemId, Confirm]; every persistent owned
-        // non-permanent item is deletable, whole. Scene-item Use (method 14) stays separate.
-        if(global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==1){
-            if(a.size()!=2||!(a.getFirst() instanceof Long id)||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid item deletion request");
-            try{
-                if(closed||!selected()||!entered||!subscribed)throw new IOException("Select a knight first");
-                characters.worldProfile(knight.name(),authRevision,profile);
-                if(trade.active())throw new IOException("Finish the trade first");
-                if(temporaryItems.containsKey(id)){
-                    var item=temporaryItems.get(id);
-                    if(item.permanent()||item.equippedSlot()!=null)throw new IOException("m.internal_error");
-                    var before=visibleProfile();temporaryItems.remove(id);var after=visibleProfile();
-                    output.send(()->codec.itemChanges(oid,knight,before,after));publishQuickbar();
-                }else townChanged(characters.town(scenes.town()).trash(characters.accountId(),knight.id(),authRevision,id));
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(CharacterStore.Refused|IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
-            return true;
-        }
-        if(townDialog!=null&&trade.dialogChanged(townTradeGeneration))closeTownDialog();
-        if(townDialog!=null&&ownsScene(request.oid())&&request.service()==6&&request.method()==1){
-            if(a.size()!=1||!(a.getFirst() instanceof Long created))throw new SessionDecoder.Rejected("Invalid Town dialog close");if(created!=townCreated)return true;closeTownDialog();return true;
-        }
-        if(townDialog==null&&!conversations.active()&&ownsScene(request.oid())&&request.service()==6&&request.method()==1&&a.size()==1&&a.getFirst() instanceof Long created){
+        var a=request.arguments();
+        if(!town.dialogOpen()&&!conversations.active()&&ownsScene(request.oid())&&request.service()==6&&request.method()==1
+                &&a.size()==1&&a.getFirst() instanceof Long created){
             if(missionDialogCreated!=0&&created!=missionDialogCreated)return true;
             missionDialogCreated=0;
             // A stale close from a client still holding a replaced dialog: acknowledge idempotently.
             output.send(()->codec.conversationDialog(oid,scene.oid(),null,null,null,0));return true;
         }
-        boolean open=ownsScene(request.oid())&&request.service()==11;
-        boolean operation=ownsScene(request.oid())&&request.service()>=100;
-        boolean sprite=global&&request.service()==SessionCodec.BATTLE_SPRITE_SERVICE;
-        boolean hatch=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==7;
-        boolean wrap=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==15;
-        boolean unwrap=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==13;
-        boolean forge=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==8;
-        // The stock inventory's Use action sends method 14 [item, data, confirm].
-        // Method 1 is deleteItem, and must never learn a recipe as a side effect.
-        boolean use=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==14&&a.size()==3&&a.get(1)==null;
-        boolean learn=use&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&scenes.town().item(i.config()).containsKey("recipe"));
-        boolean harness=use&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&scenes.town().item(i.config()).containsKey("harness"));
-        boolean extend=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==5;
-        boolean slotUpgrade=use&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&SlotUpgrades.find(i.config())!=null);
-        if(!open&&!operation&&!sprite&&!hatch&&!forge&&!learn&&!harness&&!wrap&&!unwrap&&!slotUpgrade&&!extend)return false;
-        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener))throw new SessionDecoder.Rejected("Missing Town listener");
-        boolean resultListener=hatch||forge||unwrap||operation&&(townDialog==null||!Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))||sprite&&request.method()==7;
-        if(!listener.type().equals(org.tortodrone.core.WireTypes.LISTENER_PREFIX+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid Town listener");
-        try{
-            if(forge){
-                // The stock Forge window sends this from any attached HUD with no scene
-                // precondition (its button is disabled only during PvP), and its unselected
-                // failure is the native internal error like every stock item reply.
-                if(closed||!selected())throw new IOException("m.internal_error");
-                if(readyRoom){
-                    // The client-local Ready Room stages the knight with no party, so only the
-                    // selected knight and the native forge rules are required; scenes keep
-                    // their station gates below.
-                    characters.worldProfile(knight.name(),authRevision,profile);
-                    if(a.size()!=4||!(a.get(0) instanceof Long item)||!(a.get(1) instanceof Integer crystals)||!(a.get(2) instanceof Integer level))throw new SessionDecoder.Rejected("Invalid forge request");
-                    if(trade.active())throw new IOException("Finish the trade first");
-                    var forged=characters.town(scenes.town()).forge(characters.accountId(),knight.id(),authRevision,item,crystals,level);
-                    townChanged(forged);output.send(()->codec.townResult(oid,listener.requestId(),forged.result(),forged.profile()));
-                    return true;
-                }
-            }
-            if(closed||!selected()||!entered||!subscribed)throw new IOException("Enter a scene first");
-            characters.worldProfile(knight.name(),authRevision,profile);
-            boolean staff=roles.gameMaster();
-            if(!scene.map().town()&&!scene.map().kind().equals("training")&&!staff)throw new IOException("This operation requires a town");
-            var store=characters.town(scenes.town());org.tortodrone.storage.TownStore.Result result;
-            var priorRecipes=profile.town().recipes();
-            if(extend){
-                if(a.size()!=3||!(a.get(0) instanceof Long active)||!(a.get(1) instanceof Long unused))throw new SessionDecoder.Rejected("Invalid upgrade extension request");
-                if(trade.active())throw new IOException("Finish the trade first");
-                result=store.extendUpgrade(characters.accountId(),knight.id(),authRevision,active,unused);
-                townChanged(result);output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
-            }else if(slotUpgrade){
-                if(trade.active())throw new IOException("Finish the trade first");
-                result=store.activateUpgrade(characters.accountId(),knight.id(),authRevision,(Long)a.getFirst());
-                townChanged(result);output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
-            }else if(open){
-                if(!scene.map().town()||a.size()!=1||request.method()<1||request.method()>4)throw new IOException("Invalid town service");
-                String kind=switch(request.method()){case 1->"OpenAccessorizer";case 2->"OpenCrafter";case 3->"OpenUnbinder";default->"OpenVariantMaker";};
-                openTownDialog(new org.tortodrone.core.town.TownCatalog.Station("",kind,"","NORMAL","~","~","","",List.of()),null);
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
-            }else if(operation){
-                if(townDialog==null||request.service()!=townService||trade.active())throw new IOException("Town dialog expired");
-                if(townDialog.kind().equals("OpenShop")){
-                    if(request.method()!=1||a.size()!=3||!(a.get(0) instanceof org.tortodrone.core.wire.Multiset buys)||!(a.get(1) instanceof org.tortodrone.core.wire.Multiset sells)||!buys.counts().keySet().stream().allMatch(k->k instanceof Integer)||!sells.counts().keySet().stream().allMatch(k->k instanceof Long))throw new SessionDecoder.Rejected("Invalid shop transaction");
-                    var purchases=new java.util.HashMap<Integer,Integer>();buys.counts().forEach((key,value)->purchases.put((Integer)key,value));var sales=new java.util.HashMap<Long,Integer>();sells.counts().forEach((key,value)->sales.put((Long)key,value));
-                    result=store.shop(characters.accountId(),knight.id(),authRevision,townDialog,townShopCycle,purchases,sales);
-                }else if(townDialog.kind().equals("OpenHarnessInstaller")){
-                    if(request.method()!=1||a.size()!=2||!(a.getFirst() instanceof List<?> indices)||indices.isEmpty()||indices.size()>100||!indices.stream().allMatch(v->v instanceof Integer))throw new SessionDecoder.Rejected("Invalid harness installation");
-                    var selected=new HashSet<Integer>();for(var index:indices)if(!selected.add((Integer)index))throw new IOException("Duplicate harness offer");
-                    result=store.installHarnesses(characters.accountId(),knight.id(),authRevision,townDialog,townShopCycle,selected);
-                }else if(townDialog.kind().equals("OpenUnbinder")){
-                    if(request.method()!=1||a.size()!=3||!(a.get(0) instanceof Long)||!(a.get(1) instanceof Long))throw new SessionDecoder.Rejected("Invalid unbind request");
-                    result=store.unbind(characters.accountId(),knight.id(),authRevision,(Long)a.get(0),(Long)a.get(1));
-                }else if(townDialog.kind().equals("OpenAccessorizer")){
-                    if(a.size()!=3||!(a.get(0) instanceof Long gear)||request.method()<1||request.method()>3||!(request.method()==2?a.get(1) instanceof org.tortodrone.core.wire.EnumValue e&&e.type().equals("com.threerings.projectx.item.data.ItemCodes$AccessoryLocation"):a.get(1) instanceof Long))throw new SessionDecoder.Rejected("Invalid accessory request");
-                    result=store.accessorize(characters.accountId(),knight.id(),authRevision,request.method(),gear,a.get(1),knight.costume());
-                }else if(townDialog.kind().equals("OpenVariantMaker")){
-                    boolean custom=request.method()==1;int offset=custom?0:1;
-                    if(request.method()<1||request.method()>2||a.size()!=(custom?4:5)||!custom&&!(a.get(0) instanceof Integer)||!(a.get(offset) instanceof Long)||!(a.get(offset+1) instanceof Long)||!(a.get(offset+2) instanceof Integer))throw new SessionDecoder.Rejected("Invalid variant request");
-                    result=store.variant(characters.accountId(),knight.id(),authRevision,custom?1:(Integer)a.get(0),(Long)a.get(offset),(Long)a.get(offset+1),(Integer)a.get(offset+2),custom);
-                }else if(townDialog.kind().equals("OpenCrafter")||townDialog.kind().equals("OpenCatalogCrafter")){
-                    if(a.size()!=4||!(a.get(1) instanceof long[] ids)||!(a.get(2) instanceof Boolean upgrade))throw new SessionDecoder.Rejected("Invalid craft request");
-                    String recipe;boolean catalog=request.method()==1;
-                    if(catalog){if(!(a.get(0) instanceof Integer index)||index<0||index>=townDialog.recipes().size())throw new IOException("Invalid recipe index");recipe=townDialog.recipes().get(index);}
-                    else{if(request.method()!=2||!(a.get(0) instanceof Long id))throw new SessionDecoder.Rejected("Invalid recipe request");recipe=profile.town().recipes().stream().filter(r->r.id()==id).map(org.tortodrone.core.town.TownState.LearnedRecipe::config).findFirst().orElseThrow(()->new IOException("Recipe not learned"));if(!townDialog.recipes().isEmpty()&&!townDialog.recipes().contains(recipe))throw new IOException("Recipe not served here");}
-                    result=store.craft(characters.accountId(),knight.id(),authRevision,recipe,ids,upgrade,catalog);
-                }else throw new IOException("This station's operation is unavailable");
-            }else if(wrap||unwrap){
-                if(trade.active())throw new IOException("Finish the trade first");
-                if(unwrap){if(a.size()!=2||!(a.getFirst() instanceof Long id))throw new SessionDecoder.Rejected("Invalid gift unwrap request");result=store.unwrap(characters.accountId(),knight.id(),authRevision,id);}
-                else{
-                    if(a.size()!=4||!(a.get(0) instanceof Long paper)||!(a.get(1) instanceof org.tortodrone.core.wire.Multiset contents)||!(a.get(2) instanceof String message)||!contents.counts().keySet().stream().allMatch(k->k instanceof Long))throw new SessionDecoder.Rejected("Invalid gift wrap request");
-                    var selected=new LinkedHashMap<Long,Integer>();contents.counts().forEach((key,count)->selected.put((Long)key,count));
-                    result=store.wrap(characters.accountId(),knight.id(),authRevision,paper,selected,message,knight.costume());
-                }
-            }else if(forge){
-                if(a.size()!=4||!(a.get(0) instanceof Long item)||!(a.get(1) instanceof Integer crystals)||!(a.get(2) instanceof Integer level))throw new SessionDecoder.Rejected("Invalid forge request");
-                if(trade.active())throw new IOException("Finish the trade first");
-                result=store.forge(characters.accountId(),knight.id(),authRevision,item,crystals,level);
-            }else if(hatch||learn||harness){if(a.size()!=(hatch?2:3)||!(a.get(0) instanceof Long id))throw new SessionDecoder.Rejected("Invalid Town item request");
-                if(trade.active())throw new IOException("Finish the trade first");
-                result=hatch?store.hatch(characters.accountId(),knight.id(),authRevision,id):harness?store.installHarness(characters.accountId(),knight.id(),authRevision,id):store.learn(characters.accountId(),knight.id(),authRevision,id);
-            }else{
-                int method=request.method();int[] counts={0,4,6,3,2,3,3,4,3,4};if(method<1||method>9||a.size()!=counts[method])throw new SessionDecoder.Rejected("Invalid sprite argument count");
-                boolean valid=switch(method){case 1->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer;case 2->a.subList(0,5).stream().allMatch(v->v instanceof Integer);case 3->a.get(0) instanceof Integer&&(a.get(1)==null||a.get(1) instanceof org.tortodrone.core.wire.EnumValue e&&e.type().equals(org.tortodrone.core.WireTypes.SPRITE_PERK));case 4->a.get(0) instanceof Integer;case 5->a.get(0) instanceof Integer&&a.get(1) instanceof Long;case 6->a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 7->a.get(0) instanceof Integer&&a.get(1) instanceof Long&&a.get(2) instanceof Boolean;case 8->a.get(0) instanceof Integer&&a.get(1) instanceof String;case 9->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof org.tortodrone.core.wire.EnumValue e&&e.type().equals(org.tortodrone.core.WireTypes.SPRITE_ULTIMATE);default->false;};
-                if(!valid)throw new SessionDecoder.Rejected("Invalid sprite arguments");result=store.sprite(characters.accountId(),knight.id(),authRevision,method,a,staff);
-            }
-            // Learning publishes its committed recipe through EntryAddedEvent below. Replacing
-            // recipes first makes the stock DSet reject that addition and suppress its observer.
-            if(learn)membership.effect(new StarterCatalog.Model("Player/Learn Recipe",Map.of()));
-            townChanged(result,!learn);if(operation&&townDialog!=null&&Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))publishShop();Object payload=result.result();
-            if(learn){
-                var fresh=result.profile().town().recipes().stream()
-                    .filter(r->priorRecipes.stream().noneMatch(p->p.id()==r.id())).toList();
-                for(var recipe:fresh){var entry=recipe;output.send(()->codec.recipeAdded(oid,entry));}
-            }if(hatch&&payload instanceof Integer id)payload=profile.town().sprites().stream().filter(s->s.id()==id).findFirst().orElseThrow();
-            final Object response=payload;if(resultListener)output.send(()->codec.townResult(oid,listener.requestId(),response,profile));else output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-        }catch(CharacterStore.Refused|IOException refused){if(refused instanceof SessionDecoder.Rejected rejected)throw rejected;output.send(()->forge?codec.forgeFailure(oid,listener.requestId(),refused.getMessage()):codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
-        return true;
+        return town.invocation(request);
     }
 
     synchronized boolean conversationInvocation(SessionDecoder.Invocation request)throws IOException {
@@ -806,6 +628,7 @@ final class WorldSession implements AutoCloseable {
         depot=new DepotHandler(this);
         conversations=new ConversationHandler(this);
         opening=new OpeningHandler(this);
+        town=new TownHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
@@ -1704,7 +1527,7 @@ final class WorldSession implements AutoCloseable {
     }
     private void leaveChat(){
         friendLocation=new FriendPresence("~",0,0);
-        townDialog=null;townSource=null;townService++;
+        town.reset();
         trade.leave();
         if(chat!=null){chat.close();chat=null;}
         if(persistence!=null){persistence.close();persistence=null;}
@@ -1832,8 +1655,7 @@ final class WorldSession implements AutoCloseable {
         var own=current.actor(profile.worldId());
         boolean arsenal=membership.arsenalZone();
         if(publishedArsenal==null||publishedArsenal!=arsenal){publishedArsenal=arsenal;output.send(()->codec.equipPolicy(oid,arsenal));}
-        if(townDialog!=null&&trade.dialogChanged(townTradeGeneration))closeTownDialog();
-        if(townDialog!=null&&(own==null||Math.hypot(own.x()-townX,own.y()-townY)>1))closeTownDialog();
+        town.expire(own);
         if(conversations.expired(own))closeConversation();
         var scripted=membership.takeConversation();
         if(scripted!=null&&scripted.definition()==null){closeConversation();scripted=null;}
@@ -1841,7 +1663,7 @@ final class WorldSession implements AutoCloseable {
             if(scripted.definition().initialAction()!=null&&!membership.conversationStart(scripted.definition(),scripted.source()))return;
             conversations.open(scripted.definition(),null,scripted.source());
         }
-        if(arrivalComlink!=null&&own!=null&&!conversations.active()&&townDialog==null&&missionDialogCreated==0){
+        if(arrivalComlink!=null&&own!=null&&!conversations.active()&&town.dialogOpen()==false&&missionDialogCreated==0){
             var pending=arrivalComlink;arrivalComlink=null;conversations.openComlink(pending.id());deliveredComlink=pending;
         }
         int target=membership.takeInteraction();

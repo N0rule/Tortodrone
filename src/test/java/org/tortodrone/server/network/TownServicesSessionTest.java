@@ -103,12 +103,12 @@ public final class TownServicesSessionTest {
                 // Depot replacement and late close must not erase a newer dialog.
                 var open=WorldSession.class.getDeclaredMethod("openTownDialog",TownCatalog.Station.class,ActorState.class);open.setAccessible(true);
                 var station=scenes.town().station("Shop/Haven/Exchange");open.invoke(world,station,null);
-                var created=WorldSession.class.getDeclaredField("townCreated");created.setAccessible(true);long first=created.getLong(world);
-                open.invoke(world,station,null);long second=created.getLong(world);check(second>first,"replacement dialog has a fresh ownership token");
+                long first=world.townDialogCreated();
+                open.invoke(world,station,null);long second=world.townDialogCreated();check(second>first,"replacement dialog has a fresh ownership token");
                 var place=WorldSession.class.getDeclaredField("scene");place.setAccessible(true);int oid=((SceneRegistry.Instance)place.get(world)).oid();
                 check(world.townInvocation(new SessionDecoder.Invocation(oid,6,1,List.of(first))),"stale dialog close is handled without dispatching an unrelated operation");
-                var dialog=WorldSession.class.getDeclaredField("townDialog");dialog.setAccessible(true);check(dialog.get(world)!=null,"stale close preserves the newer depot");
-                world.townInvocation(new SessionDecoder.Invocation(oid,6,1,List.of(second)));check(dialog.get(world)==null,"matching close releases the native modal dialog");
+                check(world.townDialogOpen(),"stale close preserves the newer depot");
+                world.townInvocation(new SessionDecoder.Invocation(oid,6,1,List.of(second)));check(!world.townDialogOpen(),"matching close releases the native modal dialog");
                 check(world.townInvocation(new SessionDecoder.Invocation(oid,6,1,List.of(second))),"repeated close is idempotently acknowledged");
             }
             System.out.println("PASS: native recipe/Energy effects, purchase refusal/rollback, rename dispatch and Depot dialog ownership/close lifecycle");
