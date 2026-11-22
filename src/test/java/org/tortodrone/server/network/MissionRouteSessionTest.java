@@ -52,6 +52,8 @@ public final class MissionRouteSessionTest {
                     "the party view exposes the mission gate and current floor");
                 check(session.sceneEntered()&&session.sceneSubscribed(),"the lobby accepts native readiness");
                 check(!scene(session).visited().isEmpty(),"the mission scene records explored room keys for the party");
+                long objectiveDeadline=System.nanoTime()+2_000_000_000L;
+                while(!socket.text().contains("%mission:o.shadow_beast")&&System.nanoTime()<objectiveDeadline)Thread.sleep(10);
                 check(socket.text().contains("%mission:o.shadow_beast"),"the mission bar publishes the mission's own o.<id> objective");
                 session.townInvocation(gateStart("shadow_beast",2,0));
                 check(sceneId(session)==351,"a repeated gate start keeps the current mission scene");
@@ -74,14 +76,11 @@ public final class MissionRouteSessionTest {
     }
     private static int sceneId(WorldSession world)throws Exception{return scene(world).map().id();}
     private static SceneRegistry.Instance portalDestination(WorldSession world)throws Exception{
-        synchronized(world){var field=WorldSession.class.getDeclaredField("portalMove");field.setAccessible(true);
-            Object move=field.get(world);if(move==null)return null;
-            return (SceneRegistry.Instance)move.getClass().getDeclaredMethod("destination").invoke(move);}
+        synchronized(world){var move=world.runtime().portalMove();return move==null?null:move.destination();}
     }
     private static MissionRun sceneRun(WorldSession world)throws Exception{return scene(world).run();}
     private static SceneRegistry.Instance scene(WorldSession world)throws Exception{
-        synchronized(world){var field=WorldSession.class.getDeclaredField("scene");field.setAccessible(true);
-            return (SceneRegistry.Instance)field.get(world);}
+        synchronized(world){return world.currentScene();}
     }
     private static final class RecordingSocket extends Socket {
         private final ByteArrayOutputStream bytes=new ByteArrayOutputStream();

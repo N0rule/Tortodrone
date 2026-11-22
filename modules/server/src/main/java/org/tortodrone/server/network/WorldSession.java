@@ -44,16 +44,12 @@ final class WorldSession implements AutoCloseable {
     private final ClientDiagnostics diagnostics;
     void hardware(List<Object> args)throws IOException { diagnostics.hardware(args); }
     static final Map<Integer, WorldSession> ACTIVE = new HashMap<>();
-    private List<SessionCodec.FriendView> publishedFriends=List.of();
     private volatile boolean friendOnline;
     private volatile FriendPresence friendLocation=new FriendPresence("~",0,0);
     record FriendPresence(String location,int zone,int instance) { }
     /** Per-knight-session join secret published through PlayerObject.ML(); never persisted. */
     private static final java.security.SecureRandom SECRETS=new java.security.SecureRandom();
     private final long externalSecret=mintSecret();
-    private volatile boolean lookingForGroup;
-    private volatile int lookingForGroupDifficulty=-1;
-    private volatile boolean lookingForGroupAnyLanguage;
     private static long mintSecret(){long value;do{value=SECRETS.nextLong();}while(value==0);return value;}
     final TradeHandler trade;
     private final Socket socket;
@@ -277,21 +273,9 @@ final class WorldSession implements AutoCloseable {
     boolean feedInvocation(SessionDecoder.Invocation request)throws IOException{return friends.feedInvocation(request);}
     boolean eventLogInvocation(SessionDecoder.Invocation request)throws IOException{return friends.eventLogInvocation(request);}
     /** Native method 4: publish the party-finder flag; matchmaking itself is not implemented. */
-    void setLookingForGroup(boolean enabled,org.tortodrone.core.wire.EnumValue difficulty)throws IOException {
-        synchronized(this){
-            if(closed||!selected())throw new IOException("Select a knight first");
-            try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-            if((profile.progress().progressFlags()&4)==0)throw new IOException("m.internal_error");
-            lookingForGroupDifficulty=enabled&&difficulty!=null?difficulty.ordinal():-1;
-            // The current marshaller no longer sends the old party_with_any preference.
-            lookingForGroupAnyLanguage=false;
-            lookingForGroup=enabled;
-            if(log.debugEnabled())log.debug("Party finder "+(enabled?"enabled":"disabled")+"; difficulty="+lookingForGroupDifficulty+"; anyLanguage="+lookingForGroupAnyLanguage);
-            output.send(()->codec.lookingForGroup(oid,enabled));
-        }
-    }
+    void setLookingForGroup(boolean enabled,org.tortodrone.core.wire.EnumValue difficulty)throws IOException { friends.setLookingForGroup(enabled,difficulty); }
     long externalSecret(){return externalSecret;}
-    boolean lookingForGroup(){return lookingForGroup;}
+    boolean lookingForGroup(){return friends.lookingForGroup();}
     boolean friendOnlineValue(){return friendOnline;}
     FriendPresence friendPresenceValue(){return friendLocation;}
     boolean hasWorldStorage(){return characters.hasWorldStorage();}
@@ -314,11 +298,7 @@ final class WorldSession implements AutoCloseable {
         return Map.copyOf(result);
     }
     synchronized void refreshFriends(WorldStatePoller.Registration registration,org.tortodrone.storage.FriendStore.Snapshot snapshot,Map<Integer,FriendPresence> online)throws IOException {
-        if(closed||!selected()||registration!=null&&runtime.persistence()!=registration)return;
-        if(snapshot.authentication().getOrDefault(profile.worldId(),-1L)!=authRevision)throw new IOException("Knight or account changed; reconnect");
-        if(snapshot.revisions().getOrDefault(profile.worldId(),-1L)<profile.revision())return;
-        var next=snapshot.lists().getOrDefault(profile.worldId(),List.of()).stream().map(p->new SessionCodec.FriendView(p.world(),p.name(),p.color(),online.containsKey(p.world())?online.get(p.world()).location():null,p.lastSession(),online.containsKey(p.world())?online.get(p.world()).zone():0,online.containsKey(p.world())?online.get(p.world()).instance():0)).toList();
-        if(!next.equals(publishedFriends)){var previous=publishedFriends;output.send(()->codec.friends(oid,previous,next));publishedFriends=next;}
+        friends.refresh(registration,snapshot,online);
     }
 
     /** Compatibility only: the stock Depot constructs its purchase panel using this service.
@@ -526,6 +506,8 @@ final class WorldSession implements AutoCloseable {
     Map<Long,WorldProfile.Item> temporaryItems(){return temporaryItems;}
     boolean quickbarContains(long id){for(long value:quickbar)if(value==id)return true;return false;}
     void addToQuickbar(long id){for(int slot=0;slot<quickbar.length;slot++)if(quickbar[slot]==0){quickbar[slot]=id;break;}}
+    /** Collection seam used by the scene test fixtures; the publisher owns the reward path. */
+    void collectPickups()throws IOException{publisher.collectPickups();}
     void forcePortal(ScenePortals.Trigger trigger)throws IOException{publisher.beginPortal(trigger);}
     void forcePublish(SessionPublications.Publication publication)throws IOException{publisher.publish(publication);}
     boolean tutorialFloorDue(int stamp)throws IOException{return floors.tutorial(stamp);}

@@ -40,8 +40,7 @@ public final class FriendSessionTest {
                 var presence=WorldSession.friendPresence(db.file());int bobWorld=bob.chars.worldProfile("Bobby",1).worldId();
                 check(presence.get(bobWorld).instance()>0&&presence.get(bobWorld).zone()==town.zone(),"Town presence includes joinable native instance and zone");
                 alice.world.friendInvocation(joinRpc("Bobby"));
-                var pending=WorldSession.class.getDeclaredField("portalMove");pending.setAccessible(true);
-                check(pending.get(alice.world)!=null,"friend join starts native forced travel; queued="+alice.socket.frames);
+                check(alice.world.sceneTravelPending(),"friend join starts native forced travel; queued="+alice.socket.frames);
                 check(alice.chars.services().friends().list(1,1,1).size()==1,"method 2 joins without unfriending");move(alice,town);
                 check(alice.world.ownsScene(scenes.destination(town.id(),bobWorld).oid()),"friend travel reaches the exact Town instance");
                 alice.world.friendInvocation(joinRpc("Bobby"));
@@ -55,7 +54,7 @@ public final class FriendSessionTest {
                 alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,4,List.of("Bobby,not-hex",false,confirm())));alice.socket.await("m.internal_error");
                 alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,4,List.of("Alice,"+String.format("%016x",alice.world.externalSecret()),false,confirm())));alice.socket.await("m.friend_self");
                 alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,4,List.of(secret,false,confirm())));
-                check(pending.get(alice.world)!=null,"secret join starts native forced travel");
+                check(alice.world.sceneTravelPending(),"secret join starts native forced travel");
                 move(alice,town);
                 check(alice.world.ownsScene(scenes.destination(town.id(),bobWorld).oid()),"secret join reaches the exact Town instance without a friendship edge");
                 // Native Join follows a friend into the shared Training party room and advertises it.
@@ -65,7 +64,7 @@ public final class FriendSessionTest {
                 var trainingPresence=WorldSession.friendPresence(db.file()).get(bobWorld);
                 check(trainingPresence.instance()>0,"shared Training room publishes the instance that enables native Join");
                 alice.world.friendInvocation(joinRpc("Bobby"));
-                check(pending.get(alice.world)!=null,"friend join starts native forced travel into Training");
+                check(alice.world.sceneTravelPending(),"friend join starts native forced travel into Training");
                 move(alice,training);
                 check(alice.world.ownsScene(trainingPresence.instance()),"friend join reaches the exact Training party instance");
                 check(WorldSession.friendPresence(db.file()).get(alice.chars.worldProfile("Alice",1).worldId()).instance()==trainingPresence.instance(),"both friends publish the same Training presence");
@@ -97,7 +96,7 @@ public final class FriendSessionTest {
                 mate.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("training",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));move(mate,room);
                 int mateWorld=mate.chars.worldProfile("Mate",1).worldId();
                 int mateScene=WorldSession.friendPresence(db.file()).get(mateWorld).instance();
-                check(mateScene==((SceneRegistry.Instance)field(lead.world,"scene")).oid(),"party members enter one Training simulation");
+                check(mateScene==lead.world.currentScene().oid(),"party members enter one Training simulation");
                 check(mateScene>0,"an open Training party publishes the joinable instance");
                 lead.world.interiorPartyInvocation(new SessionDecoder.Invocation(leadParty,SessionCodec.LEVEL_PARTY_SERVICE,6,List.of(true,confirm())));mate.socket.await("inviteOnly");
                 await(()->WorldSession.friendPresence(db.file()).get(mateWorld).instance()==0);
@@ -106,7 +105,7 @@ public final class FriendSessionTest {
                 lead.world.interiorPartyInvocation(new SessionDecoder.Invocation(leadParty,SessionCodec.LEVEL_PARTY_SERVICE,6,List.of(false,confirm())));
                 await(()->WorldSession.friendPresence(db.file()).get(mateWorld).instance()==mateScene);
                 spare.world.friendInvocation(joinRpc("Mate"));
-                check(field(spare.world,"portalMove")!=null,"friend join starts native forced travel into an open explicit party");
+                check(spare.world.sceneTravelPending(),"friend join starts native forced travel into an open explicit party");
                 move(spare,room);
                 check(spare.world.ownsScene(mateScene)&&scenes.parties().view(partyMember(spare.world)).oid()==leadParty,"friend join reaches the explicit party instance and seat");
                 lead.world.interiorPartyInvocation(new SessionDecoder.Invocation(leadParty,SessionCodec.LEVEL_PARTY_SERVICE,6,List.of(true,confirm())));

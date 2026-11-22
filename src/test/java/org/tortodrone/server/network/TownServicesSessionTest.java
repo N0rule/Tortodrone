@@ -61,8 +61,8 @@ public final class TownServicesSessionTest {
                 db.grantItems("Alice",knight.name(),-1,-1,items.require(recipe),1,-1,-1);
                 id=db.worldProfile(account,knight.id(),1).items().stream().filter(i->i.config().equals(recipe)).findFirst().orElseThrow().id();
                 var use=new SessionDecoder.Invocation(3,9,14,Arrays.asList(id,null,confirm));
-                var sceneField=WorldSession.class.getDeclaredField("scene");sceneField.setAccessible(true);
-                var simulation=((SceneRegistry.Instance)sceneField.get(world)).simulation();var baseline=simulation.snapshot();
+
+                var simulation=world.currentScene().simulation();var baseline=simulation.snapshot();
                 check(world.townInvocation(use),"stock inventory Use reaches the recipe handler");
                 var learnedEffects=simulation.snapshot().effectsSince(baseline);
                 check(learnedEffects.size()==1&&learnedEffects.getFirst().config().name().equals("Player/Learn Recipe")&&learnedEffects.getFirst().ownerOid()==0,
@@ -105,7 +105,7 @@ public final class TownServicesSessionTest {
                 var station=scenes.town().station("Shop/Haven/Exchange");open.invoke(world,station,null);
                 long first=world.townDialogCreated();
                 open.invoke(world,station,null);long second=world.townDialogCreated();check(second>first,"replacement dialog has a fresh ownership token");
-                var place=WorldSession.class.getDeclaredField("scene");place.setAccessible(true);int oid=((SceneRegistry.Instance)place.get(world)).oid();
+                int oid=world.currentScene().oid();
                 check(world.townInvocation(new SessionDecoder.Invocation(oid,6,1,List.of(first))),"stale dialog close is handled without dispatching an unrelated operation");
                 check(world.townDialogOpen(),"stale close preserves the newer depot");
                 world.townInvocation(new SessionDecoder.Invocation(oid,6,1,List.of(second)));check(!world.townDialogOpen(),"matching close releases the native modal dialog");

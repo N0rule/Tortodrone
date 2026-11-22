@@ -38,7 +38,7 @@ public final class DungeonConsumablesTest {
             };}};
             try(var output=new SessionOutput(socket);var session=new WorldSession(socket,characters,output,new SessionCodec(),1201,1,m->{},registry)){
                 synchronized(session){
-                    session.select(knight.name(),Map.of());var member=(SceneMembership)field(session,"membership");var simulation=registry.entry().simulation();
+                    session.select(knight.name(),Map.of());var member=session.membership();var simulation=registry.entry().simulation();
                     synchronized(simulation){
                         var entered=SceneMembership.class.getDeclaredField("entered");entered.setAccessible(true);entered.setBoolean(member,true);
                         var player=simulation.snapshot().players().getFirst();var entities=(SceneEntities)field(simulation,"entities");
@@ -90,7 +90,7 @@ public final class DungeonConsumablesTest {
                         long capsuleId=items.values().stream().filter(i->i.config().equals("Pickup/Capsule/Health Capsule")).findFirst().orElseThrow().id();
                         drain(output,frames);
                         var listener=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)19);
-                        for(String state:List.of("subscribed","entered")){var f=WorldSession.class.getDeclaredField(state);f.setAccessible(true);f.setBoolean(session,true);}
+                        session.runtime().subscribed(true);session.runtime().entered(true);
                         // This fixture never sends an input frame, so the pawn keeps its
                         // published LOADING pose (native Knight constructors freeze there
                         // until KnightLogic.tick sees the client's first input). The use

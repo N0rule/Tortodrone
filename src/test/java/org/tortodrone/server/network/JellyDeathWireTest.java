@@ -46,8 +46,8 @@ public final class JellyDeathWireTest {
             var route=registry.tutorial();
             try(var socket=new RecordingSocket();var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(content.items()),1601,1,m->{},registry)) {
                 world.select(knight.name(),RECEIVERS,true);move(world,route.source());world.subscribeInteriorParty((short)2);world.subscribe((short)3);world.entered();
-                var member=(SceneMembership)field(world,"membership");
-                var simulation=((SceneRegistry.Instance)field(world,"scene")).simulation();
+                var member=world.membership();
+                var simulation=world.currentScene().simulation();
                 check(member.teleport(-1.5f,-69f,0),"knight enters the wave sensor");
                 long waveEnd=System.nanoTime()+10_000_000_000L;boolean jellySeen=false;
                 while(System.nanoTime()<waveEnd&&!jellySeen) {
@@ -164,7 +164,7 @@ public final class JellyDeathWireTest {
         if(state!=Thread.State.BLOCKED&&state!=Thread.State.WAITING)return false;
         boolean inSession=false,inOutput=false;
         for(var frame:delivery.getStackTrace()){
-            if(frame.getClassName().endsWith("WorldSession")&&frame.getMethodName().equals("publish"))inSession=true;
+            if(frame.getClassName().endsWith("ScenePublisher")&&frame.getMethodName().equals("publish"))inSession=true;
             if(frame.getClassName().endsWith("SessionOutput")&&(frame.getMethodName().equals("encodeAndQueue")
                     ||frame.getMethodName().equals("send")||frame.getMethodName().equals("sendOptional")))inOutput=true;
         }

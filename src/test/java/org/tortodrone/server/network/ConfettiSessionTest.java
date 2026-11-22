@@ -47,7 +47,7 @@ public final class ConfettiSessionTest {
             var socket=new Socket(){public OutputStream getOutputStream(){return new OutputStream(){public void write(int b){throw new AssertionError();}public void write(byte[] frame){frames.add(frame);}};}};
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)){
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();
-                var field=WorldSession.class.getDeclaredField("membership");field.setAccessible(true);var member=(SceneMembership)field.get(world);
+                var member=world.membership();
                 short request=10;
                 for(var definition:definitions){
                     member.resetInput();var before=db.worldProfile(account,knight.id(),1);
@@ -79,7 +79,7 @@ public final class ConfettiSessionTest {
                 var source=entities.actor(prompt.actorId());
                 var open=WorldSession.class.getDeclaredMethod("openTownDialog",org.tortodrone.core.town.TownCatalog.Station.class,ActorState.class);open.setAccessible(true);
                 open.invoke(world,scenes.town().station("scene.1.placed.3733"),source);
-                var dialog=WorldSession.class.getDeclaredField("townDialog");dialog.setAccessible(true);check(dialog.get(world)==null,"auction opens through a controller action without installing a scene modal");
+                check(!world.townDialogOpen(),"auction opens through a controller action without installing a scene modal");
                 var search=new org.tortodrone.core.wire.AuctionSearch(true,null,null,0,true,false);
                 check(world.auctionInvocation(new SessionDecoder.Invocation(3,15,5,List.of(search,0,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",request++)))),"native featured auction search is reachable after opening");
                 byte[] marker={0};output.send(()->marker);for(;;){var frame=frames.poll(3,java.util.concurrent.TimeUnit.SECONDS);check(frame!=null,"session output drains");if(frame==marker)break;}

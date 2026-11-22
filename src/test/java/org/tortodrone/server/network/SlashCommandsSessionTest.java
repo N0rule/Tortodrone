@@ -82,8 +82,7 @@ public final class SlashCommandsSessionTest {
                 check(gm.world.ownsScene(scenes.entry().oid()),"GM /sgo leaves Ready Room for the saved map normally");
                 gm.world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(ReadyRoom.ZONE,ReadyRoom.SCENE,1,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)9))));gm.drain();
                 gm.world.adminPeople(admin(28,"398"));gm.drain();move(gm,scenes.catalog().scene(398));
-                var field=WorldSession.class.getDeclaredField("scene");field.setAccessible(true);
-                var place=(SceneRegistry.Instance)field.get(gm.world);
+                var place=gm.world.currentScene();
                 check(place.map().id()==398&&gm.world.ownsScene(place.oid()),"Ready Room /sgo 398 attaches the authorized original tutorial instance");
                 check(scenes.entry().simulation().playerCount()==count,"Ready Room departures leave no duplicate Haven pawn");
             }
@@ -97,8 +96,7 @@ public final class SlashCommandsSessionTest {
                 check(target.world.announcedPartyOid()==0,"returning to town clears the solo mission party so /training does not ask to abandon it");
                 target.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("training",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));move(target,training);
                 gm.world.adminPeople(admin(27,"Target"));move(gm,training);
-                var sceneField=WorldSession.class.getDeclaredField("scene");sceneField.setAccessible(true);
-                check(sceneField.get(gm.world)==sceneField.get(target.world),"GM travel uses ordinary public Training assignment");
+                check(gm.world.currentScene()==target.world.currentScene(),"GM travel uses ordinary public Training assignment");
                 gm.world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));move(gm,scenes.catalog().entry());
                 target.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("lab",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));move(target,scenes.catalog().scene(30893));
                 Thread.sleep(1100);
@@ -113,17 +111,16 @@ public final class SlashCommandsSessionTest {
                 check(gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("haven",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)11)))),"same-scene town destination request handled");
                 gm.drain();
                 check(gm.world.ownsScene(scenes.entry().oid()),"same-scene travel leaves the current scene intact");
-                var pending=WorldSession.class.getDeclaredField("portalMove");pending.setAccessible(true);
-                check(pending.get(gm.world)==null,"same-scene destination never starts a loading transition");
+                check(!gm.world.sceneTravelPending(),"same-scene destination never starts a loading transition");
                 Thread.sleep(1100);
                 int moveX=0,moveY=0;boolean found=false;
                 for(int x=-5;x<=5&&!found;x++)for(int y=-12;y<=-4;y++)if(scenes.entry().simulation().placement(x,y)){moveX=x;moveY=y;found=true;break;}
                 check(found,"fixture has a validated integer destination");
                 gm.world.adminPeople(new SessionDecoder.Invocation(3,SessionCodec.ADMIN_SERVICE,24,List.of(moveX,moveY,confirm())));gm.drain();
                 var own=scenes.entry().simulation().snapshot().players().stream().filter(a->a.name().equals("Staff")).findFirst().orElseThrow();
-                check(own.x()==moveX&&own.y()==moveY&&pending.get(gm.world)==null,"/move relocates the existing pawn with no forced scene; actual="+own.x()+","+own.y()+" expected="+moveX+","+moveY);
+                check(own.x()==moveX&&own.y()==moveY&&!gm.world.sceneTravelPending(),"/move relocates the existing pawn with no forced scene; actual="+own.x()+","+own.y()+" expected="+moveX+","+moveY);
                 gm.world.adminPeople(new SessionDecoder.Invocation(3,SessionCodec.ADMIN_SERVICE,24,List.of(Integer.MIN_VALUE,0,confirm())));gm.socket.awaitText("Destination is blocked");
-                check(gm.world.ownsScene(scenes.entry().oid())&&pending.get(gm.world)==null,"invalid coordinates leave the scene ready");
+                check(gm.world.ownsScene(scenes.entry().oid())&&!gm.world.sceneTravelPending(),"invalid coordinates leave the scene ready");
                 // KnightMarshaller 11 is the stock /haven travel, sent with no arguments or listener.
                 var secondTown=scenes.catalog().scenes().stream().filter(m->m.town()&&m.id()!=scenes.catalog().entry().id()).findFirst().orElseThrow();
                 gm.world.adminPeople(admin(28,Integer.toString(secondTown.id())));move(gm,secondTown);
@@ -132,22 +129,21 @@ public final class SlashCommandsSessionTest {
                 move(gm,scenes.catalog().entry());
                 check(gm.world.ownsScene(scenes.entry().oid()),"native /haven travel returns the knight to Haven");
                 var result=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)12);
-                var currentScene=WorldSession.class.getDeclaredField("scene");currentScene.setAccessible(true);
-                var currentMember=WorldSession.class.getDeclaredField("membership");currentMember.setAccessible(true);
+
                 for(int mapId:new int[]{1,2}){
                     if(mapId!=1){gm.world.adminPeople(admin(28,Integer.toString(mapId)));move(gm,scenes.catalog().scene(mapId));}
-                    var place=(SceneRegistry.Instance)currentScene.get(gm.world);
+                    var place=gm.world.currentScene();
                     var machines=place.map().content().entries().stream().filter(e->e.spec().config().name().equals("Shop/Haven/Alchemy")).toList();
                     check(machines.size()==2,"fixture has two general alchemy machines");
                     var first=machines.get(0);var second=machines.get(1);
                     float x=first.x()+(float)Math.cos(first.rotation())*3,y=first.y()+(float)Math.sin(first.rotation())*3;
-                    check(((SceneMembership)currentMember.get(gm.world)).teleport(x,y,0),"fixture approaches an authored alchemy machine");
+                    check(gm.world.membership().teleport(x,y,0),"fixture approaches an authored alchemy machine");
                     String previousMachine=null;
                     for(int use=0;use<5;use++){
                         gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_alchemy_machine",result)));gm.drain();
                         var atMachine=place.simulation().snapshot().players().stream().filter(a->a.name().equals("Staff")).findFirst().orElseThrow();
                         var selected=machines.stream().filter(e->Math.hypot(atMachine.x()-e.x(),atMachine.y()-e.y())<3).findFirst().orElseThrow();
-                        check(currentScene.get(gm.world)==place&&pending.get(gm.world)==null&&!selected.key().equals(previousMachine),
+                        check(gm.world.currentScene()==place&&!gm.world.sceneTravelPending()&&!selected.key().equals(previousMachine),
                             "/alchemy picks an authored machine without repeating the last successful destination or replacing the instance");
                         previousMachine=selected.key();
                     }
@@ -155,12 +151,12 @@ public final class SlashCommandsSessionTest {
                 var bazaar=scenes.catalog().scenes().stream().filter(m->m.content().stats().containsKey("destination.move_bechamel.x")).findFirst().orElseThrow();
                 gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_bechamel",result)));gm.drain();
                 gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_bechamel",result)));gm.drain();
-                check(pending.get(gm.world)==null&&gm.world.ownsScene(scenes.destination(bazaar.id(),1).oid()),"captured named command relocates within the existing scene");
+                check(!gm.world.sceneTravelPending()&&gm.world.ownsScene(scenes.destination(bazaar.id(),1).oid()),"captured named command relocates within the existing scene");
                 gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_auction",result)));move(gm,scenes.catalog().entry());
-                check(!gm.world.auctionAfterArrivalPending()&&pending.get(gm.world)==null,"auction opening completes after the native cross-scene callbacks");
+                check(!gm.world.auctionAfterArrivalPending()&&!gm.world.sceneTravelPending(),"auction opening completes after the native cross-scene callbacks");
                 gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_auction",result)));gm.drain();
                 var atAuction=scenes.entry().simulation().snapshot().players().stream().filter(a->a.name().equals("Staff")).findFirst().orElseThrow();
-                check(atAuction.x()==1.5f&&atAuction.y()==12.5f&&pending.get(gm.world)==null,"/ah uses the authored destination and opens in-scene without a loading transition");
+                check(atAuction.x()==1.5f&&atAuction.y()==12.5f&&!gm.world.sceneTravelPending(),"/ah uses the authored destination and opens in-scene without a loading transition");
             }
             System.out.println("PASS: scene-chat/friend-service routing, same-scene travel guards, native /haven, native away/back, loadouts, separate zone/trade channels, GM who/kick/go/summon, readiness, authorization, revocation and private-instance isolation");
         }finally{org.tortodrone.world.SceneRegistry.install(previous);org.tortodrone.support.ContentFixture.delete(home);}

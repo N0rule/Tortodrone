@@ -28,8 +28,7 @@ public final class PickupNotificationTest {
             try(var output=new SessionOutput(socket);var session=new WorldSession(socket,characters,output,new SessionCodec(),1201,1,m->{},registry)){
                 synchronized(session){
                     session.select(knight.name(),Map.of());
-                    var membershipField=WorldSession.class.getDeclaredField("membership");membershipField.setAccessible(true);
-                    var member=(SceneMembership)membershipField.get(session);var simulation=registry.entry().simulation();
+                    var member=session.membership();var simulation=registry.entry().simulation();
                     var entitiesField=SceneSimulation.class.getDeclaredField("entities");entitiesField.setAccessible(true);var entities=(SceneEntities)entitiesField.get(simulation);
                     int before=db.worldProfile(account,knight.id(),1).crowns();
                     synchronized(simulation){

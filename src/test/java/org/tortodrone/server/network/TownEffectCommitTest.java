@@ -42,7 +42,7 @@ public final class TownEffectCommitTest {
                             var offer=characters.services().depot(registry.town()).catalog().offers().stream().filter(o->o.enabled()&&o.good().energy()>0&&o.good().limit()==0&&items.find(o.good().item()).grantable()).findFirst().orElseThrow();
                             use=new SessionDecoder.Invocation(3,16,10,List.of(offer.id(),offer.good().energy(),listener));
                         }
-                        var scene=WorldSession.class.getDeclaredField("scene");scene.setAccessible(true);var simulation=((SceneRegistry.Instance)scene.get(world)).simulation();
+                        var simulation=world.currentScene().simulation();
                         synchronized(simulation){
                             var baseline=simulation.snapshot();output.close();
                             try{world.townInvocation(use);throw new AssertionError("Expected source notification failure");}catch(IOException expected){ }

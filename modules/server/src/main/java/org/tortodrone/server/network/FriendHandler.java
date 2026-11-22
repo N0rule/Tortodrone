@@ -2,6 +2,7 @@ package org.tortodrone.server.network;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.tortodrone.core.WireTypes;
 import org.tortodrone.protocol.SessionCodec;
@@ -19,6 +20,34 @@ final class FriendHandler {
         this.session = session;
         this.responder = session.responder();
     }
+
+    private List<SessionCodec.FriendView> publishedFriends=List.of();
+    private volatile boolean lookingForGroup;
+    private volatile int lookingForGroupDifficulty=-1;
+    private volatile boolean lookingForGroupAnyLanguage;
+
+    synchronized void refresh(WorldStatePoller.Registration registration,org.tortodrone.storage.FriendStore.Snapshot snapshot,Map<Integer,WorldSession.FriendPresence> online)throws IOException {
+        if(session.isClosed()||!session.selected()||registration!=null&&session.runtime().persistence()!=registration)return;
+        var profile=session.currentProfile();
+        if(snapshot.authentication().getOrDefault(profile.worldId(),-1L)!=session.authRevision())throw new IOException("Knight or account changed; reconnect");
+        if(snapshot.revisions().getOrDefault(profile.worldId(),-1L)<profile.revision())return;
+        var next=snapshot.lists().getOrDefault(profile.worldId(),List.of()).stream().map(p->new SessionCodec.FriendView(p.world(),p.name(),p.color(),online.containsKey(p.world())?online.get(p.world()).location():null,p.lastSession(),online.containsKey(p.world())?online.get(p.world()).zone():0,online.containsKey(p.world())?online.get(p.world()).instance():0)).toList();
+        if(!next.equals(publishedFriends)){var previous=publishedFriends;session.output().send(()->session.codec().friends(session.connectionOid(),previous,next));publishedFriends=next;}
+    }
+
+    /** Native method 4: publish the party-finder flag; matchmaking itself is not implemented. */
+    void setLookingForGroup(boolean enabled,org.tortodrone.core.wire.EnumValue difficulty)throws IOException { synchronized(session){
+        if(session.isClosed()||!session.selected())throw new IOException("Select a knight first");
+        try{session.charactersStore().worldProfile(session.selectedKnight().name(),session.authRevision(),session.currentProfile());}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+        if((session.currentProfile().progress().progressFlags()&4)==0)throw new IOException("m.internal_error");
+        lookingForGroupDifficulty=enabled&&difficulty!=null?difficulty.ordinal():-1;
+        // The current marshaller no longer sends the old party_with_any preference.
+        lookingForGroupAnyLanguage=false;
+        lookingForGroup=enabled;
+        if(session.sessionLog().debugEnabled())session.sessionLog().debug("Party finder "+(enabled?"enabled":"disabled")+"; difficulty="+lookingForGroupDifficulty+"; anyLanguage="+lookingForGroupAnyLanguage);
+        session.output().send(()->session.codec().lookingForGroup(session.connectionOid(),enabled));
+    }}
+    boolean lookingForGroup(){return lookingForGroup;}
 
     boolean invocation(SessionDecoder.Invocation request) throws IOException {
         int method = request.method();

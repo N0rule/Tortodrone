@@ -118,7 +118,7 @@ public final class OpeningComlinkSessionTest {
         var map=registry.catalog().scene(sceneId);world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));
         world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),1,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));world.subscribe((short)2);world.entered();
     }
-    private static int sceneOid(WorldSession world)throws Exception{synchronized(world){var field=WorldSession.class.getDeclaredField("scene");field.setAccessible(true);return ((SceneRegistry.Instance)field.get(world)).oid();}}
+    private static int sceneOid(WorldSession world)throws Exception{synchronized(world){return world.currentScene().oid();}}
     private static void enter(WorldSession world,SceneRegistry registry,OpeningMission mission)throws Exception {
         var map=registry.catalog().scene(OpeningComlinks.scene(mission));world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));
         world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),1,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));world.subscribe((short)2);world.entered();

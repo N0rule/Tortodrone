@@ -99,7 +99,7 @@ public class CooperativeTrainingTest {
                 check(a.place()==shared&&a.membership().health().current()>0,"leaving returns only that member and preserves the remaining simulation");
                 a.travel(1);a.operation(2,b.name);b.world.partyInvocation(new SessionDecoder.Invocation(3,12,5,List.of("PARTY_INV:"+party,1,listener())));b.world.subscribeInteriorParty((short)7);
                 a.travel(294);b.travel(294);var kickedRoom=a.place();a.operation(1,b.name);
-                await(()->{synchronized(b.world){return field(b.world,"portalMove")!=null;}});
+                await(()->{synchronized(b.world){return b.world.sceneTravelPending();}});
                 b.world.subscribeInteriorParty((short)8);b.travel(1);
                 check(a.place()==kickedRoom&&kickedRoom.simulation().playerCount()==1,"leader removal safely returns only the removed member");
                 a.travel(1);a.operation(2,b.name);b.world.partyInvocation(new SessionDecoder.Invocation(3,12,5,List.of("PARTY_INV:"+party,1,listener())));b.world.subscribeInteriorParty((short)9);
@@ -145,14 +145,14 @@ public class CooperativeTrainingTest {
         }
         PartyRegistry.Member member(){return (PartyRegistry.Member)field(world,"partyMember");}
         PartyView.View party(){try{return scenes.parties().view(member());}catch(IOException failure){throw new AssertionError(failure);}}
-        SceneRegistry.Instance place(){synchronized(world){return (SceneRegistry.Instance)field(world,"scene");}}
-        SceneMembership membership(){synchronized(world){return (SceneMembership)field(world,"membership");}}
+        SceneRegistry.Instance place(){return world.currentScene();}
+        SceneMembership membership(){return world.membership();}
         int publishedMembers(){var view=world.publishedParty();return view==null?0:view.members().size();}
         boolean peerHurt(int oid){var view=world.publishedParty();return view!=null&&view.members().stream().anyMatch(m->m.playerOid()==oid&&m.health().current()<m.health().maximum());}
         void operation(int method,String target)throws Exception{world.partyInvocation(new SessionDecoder.Invocation(party().oid(),20,method,target==null?List.of(listener()):List.of(target,listener())));}
         void travel(int template)throws Exception{
             synchronized(world){
-                if(field(world,"portalMove")==null){var trigger=place().map().portals().triggers().stream().filter(p->p.destination()==template).findFirst().orElseThrow();world.forcePortal(trigger);}
+                if(!world.sceneTravelPending()){var trigger=place().map().portals().triggers().stream().filter(p->p.destination()==template).findFirst().orElseThrow();world.forcePortal(trigger);}
                 world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(scenes.catalog().scene(template).zone(),template,0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)3))));
                 world.subscribeInteriorParty((short)11);world.subscribe((short)4);world.entered();
             }

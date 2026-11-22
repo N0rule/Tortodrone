@@ -20,7 +20,7 @@ final class ScenePublisher {
         this.session = session;
     }
 
-    private void collectPickups()throws IOException {
+    void collectPickups()throws IOException {
         var scene=session.currentScene();
         for(var pickup:session.membership().takePickups()){
             boolean success=false;

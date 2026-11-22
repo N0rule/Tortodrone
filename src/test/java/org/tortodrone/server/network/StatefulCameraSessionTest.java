@@ -40,7 +40,7 @@ public final class StatefulCameraSessionTest {
             try(var socket=new RecordingSocket();var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(content.items()),1603,1,m->{},registry)) {
                 world.select(knight.name(),RECEIVERS,true);move(world,route.source());
                 world.subscribeInteriorParty((short)2);world.subscribe((short)3);world.entered();
-                var simulation=((SceneRegistry.Instance)field(world,"scene")).simulation();
+                var simulation=world.currentScene().simulation();
                 // The three authored cameras spawn in state 1 (extent 0.01, inert model) with the
                 // native START flag cleared; stateEntered stays their creation tick.
                 var cameras=simulation.snapshot().actors().stream().filter(a->a.config().name().equals("Environment/Stateful Camera")).toList();

@@ -34,8 +34,8 @@ public final class TutorialBarrierSessionTest {
             var route=registry.tutorial();var worldId=characters.worldProfile(knight.name(),1).worldId();
             try(var socket=new RecordingSocket();var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(content.items()),1603,1,m->{},registry)) {
                 world.select(knight.name(),RECEIVERS,true);move(world,route.source());world.subscribeInteriorParty((short)2);world.subscribe((short)3);world.entered();
-                var member=(SceneMembership)field(world,"membership");
-                var simulation=((SceneRegistry.Instance)field(world,"scene")).simulation();
+                var member=world.membership();
+                var simulation=world.currentScene().simulation();
                 var wall=simulation.snapshot().actors().stream()
                     .filter(a->a.config().name().contains("Haven")&&inWall(a.x(),a.y())).toList();
                 check(wall.size()>=10,"authored breakable barrier present: "+wall.size()+" haven blocks");
