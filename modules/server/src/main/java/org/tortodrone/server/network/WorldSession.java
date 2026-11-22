@@ -129,6 +129,7 @@ final class WorldSession implements AutoCloseable {
     private final BoxHandler boxes;
     private final ItemUseHandler itemUse;
     private final AdminHandler adminTools;
+    private final DepotHandler depot;
     private int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null,membership.floorHeat());}
@@ -375,29 +376,10 @@ final class WorldSession implements AutoCloseable {
             if(method==1)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));else output.send(()->codec.townResult(oid,listener.requestId(),result.result(),profile));
         }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}return true;
     }
-    private final Map<Integer,org.tortodrone.storage.DepotStore.Quote> depotOffers=new HashMap<>();
     private boolean depotInvocation(SessionDecoder.Invocation request)throws IOException{
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.MISSION_SERVICE)return false;
         if(!Set.of(4,5,6,10).contains(request.method()))return openingMissionInvocation(request);
-        var a=request.arguments();int method=request.method();boolean purchase=method==10;
-        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.LISTENER_PREFIX+(purchase?"ConfirmMarshaller":"ResultMarshaller")))throw new SessionDecoder.Rejected("Invalid depot listener");
-        try{
-            if(closed||!selected()||!entered||!subscribed||!scene.map().town()&&!scene.map().kind().equals("training"))throw new IOException("Enter a town first");
-            if(purchase){
-                if(a.size()!=3||!(a.get(0) instanceof Integer id)||!(a.get(1) instanceof Integer price)||!depotOffers.containsKey(id))throw new IOException("e.good_unavailable");
-                if(trade.active())throw new IOException("Finish the trade first");
-                townChanged(characters.town(scenes.town()).depot(characters.accountId(),knight.id(),authRevision,id,price,depotOffers.get(id)));output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }else{
-                if(!((method==4||method==5)&&a.size()==1||method==6&&a.size()==2&&a.getFirst() instanceof List<?> names&&names.size()<=128&&names.stream().allMatch(v->v instanceof String)))throw new IOException("Unsupported Town depot operation");
-                var offers=new LinkedHashMap<Integer,org.tortodrone.core.town.TownCatalog.DepotGood>();var rules=scenes.town();
-                var snapshot=characters.depot(rules).catalog();
-                for(var offer:snapshot.offers()){var good=offer.good();var def=characters.catalog().find(good.item());if(!offer.enabled()||def==null||!def.grantable()||!org.tortodrone.core.town.DepotGate.unlocked(profile.progress(),def)||method==5&&!offer.featured()&&!offer.sale()&&offer.promotionId()==0||method==6&&!((List<?>)a.getFirst()).contains(good.item()))continue;
-                    int price=good.price()<0?rules.price(good.item(),def.rarity(),true):good.price();offers.put(offer.id(),org.tortodrone.core.town.TownCatalog.DepotGood.timed(new org.tortodrone.core.town.TownCatalog.Good(good.item(),good.count(),price,good.energy(),good.limit(),good.token(),good.tokenCount()),offer.featured(),offer.originalPrice(),offer.sale(),offer.promotionEnds(),System.currentTimeMillis()));
-                    depotOffers.put(offer.id(),new org.tortodrone.storage.DepotStore.Quote(snapshot.revision(),offer));
-                }
-                output.send(()->codec.townResult(oid,listener.requestId(),new org.tortodrone.core.town.TownCatalog.DepotOffers(offers),profile));
-            }
-        }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}return true;
+        return depot.invocation(request);
     }
     private boolean openingMissionInvocation(SessionDecoder.Invocation request)throws IOException {
         var args=request.arguments();int method=request.method();
@@ -973,6 +955,7 @@ final class WorldSession implements AutoCloseable {
         boxes=new BoxHandler(this);
         itemUse=new ItemUseHandler(this);
         adminTools=new AdminHandler(this);
+        depot=new DepotHandler(this);
     }
 
     synchronized boolean selected() { return knight != null; }

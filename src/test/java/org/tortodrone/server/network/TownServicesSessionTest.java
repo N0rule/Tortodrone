@@ -22,6 +22,7 @@ import org.tortodrone.resources.SceneCatalog;
 public final class TownServicesSessionTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-town-services-");
+        var previous=org.tortodrone.world.SceneRegistry.system();
         try{
             var db=new Database(home,true);int account=db.create("Alice",new Passwords.Protection(new byte[16],new byte[32]),false);
             var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
@@ -33,6 +34,7 @@ public final class TownServicesSessionTest {
             db.grantItems("Alice",knight.name(),-1,-1,items.require("Upgrade/Rename Knight"),1,-1,-1);
             var scenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));
             scenes.town(TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
+            org.tortodrone.world.SceneRegistry.install(scenes);
             var frames=new java.util.concurrent.LinkedBlockingQueue<byte[]>();
             var socket=new Socket(){public OutputStream getOutputStream(){return new OutputStream(){
                 public void write(int value){throw new AssertionError("Expected complete downstream frames");}
@@ -110,7 +112,7 @@ public final class TownServicesSessionTest {
                 check(world.townInvocation(new SessionDecoder.Invocation(oid,6,1,List.of(second))),"repeated close is idempotently acknowledged");
             }
             System.out.println("PASS: native recipe/Energy effects, purchase refusal/rollback, rename dispatch and Depot dialog ownership/close lifecycle");
-        }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
+        }finally{org.tortodrone.world.SceneRegistry.install(previous);try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
     private static void drain(SessionOutput output,java.util.concurrent.BlockingQueue<byte[]> frames)throws Exception {
         byte[] marker=new byte[]{0};output.send(()->marker);
