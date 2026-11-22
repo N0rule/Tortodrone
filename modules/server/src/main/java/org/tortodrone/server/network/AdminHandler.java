@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.Set;
 import org.tortodrone.character.CharacterStore;
 import org.tortodrone.core.character.ItemCatalog;
+import org.tortodrone.core.world.ScenePortals;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
+import org.tortodrone.world.SceneRegistry;
 
 /** Stock admin service for one connection: item, gear, progress and sprite tools, plus the
  *  cross-session player tools. Every call is re-authorized here and every travel readiness
@@ -22,6 +24,54 @@ final class AdminHandler {
         this.store = session.charactersStore();
     }
 
+    /** One live pawn the admin tools may inspect or move to. */
+    record AdminLocation(SceneRegistry.Instance scene,int world,String name,float x,float y,float rotation) { }
+
+    /** The caller's live pawn, re-checked under the session monitor. */
+    AdminLocation location()throws IOException { synchronized (session) {
+        if(session.isClosed()||session.socket().isClosed()||!session.selected()
+                ||!session.sceneSubscribed()||!session.sceneEntered()||session.sceneTravelPending())
+            throw new IOException("That knight is changing scenes");
+        try{store.worldProfile(session.selectedKnight().name(),session.authRevision());}
+        catch(CharacterStore.Refused refused){throw new IOException("That knight is no longer online",refused);}
+        var profile=session.currentProfile();
+        var actor=session.currentScene().simulation().snapshot().players().stream()
+            .filter(a->a.id()==profile.worldId()).findFirst()
+            .orElseThrow(()->new IOException("That knight is not in a ready scene"));
+        return new AdminLocation(session.currentScene(),profile.worldId(),session.selectedKnight().name(),
+            actor.x(),actor.y(),actor.rotation());
+    }}
+
+    /** Move this session to a captured location; never acquires another session monitor. */
+    void travel(AdminLocation location)throws IOException { synchronized (session) {
+        if(session.isClosed()||session.socket().isClosed()||!session.selected()
+                ||(!session.inReadyRoom()&&(!session.sceneSubscribed()||!session.sceneEntered()))
+                ||session.forcedReceiverValue()==null||session.sceneTravelPending()||session.deferredMovePending())
+            throw new IOException("Finish entering this scene first");
+        var knight=session.selectedKnight();
+        try{store.worldProfile(knight.name(),session.authRevision());}
+        catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+        if(session.tradeHandler().active())throw new IOException("Finish the trade first");
+        var next=location.scene();
+        if(!next.map().town()) {
+            var owned=session.destination(next.map().id());
+            if(owned!=next){
+                if(owned!=session.currentScene())session.sceneRegistry().release(owned,session.currentProfile().worldId());
+                throw new IOException("That private instance belongs to another knight or party");
+            }
+            if(!session.sceneRegistry().authorized(next,session.currentProfile().worldId(),session.partyMember()))
+                throw new IOException("Party membership changed");
+        }
+        if(!next.simulation().placement(location.x(),location.y()))throw new IOException("Destination is blocked");
+        if(next==session.currentScene()&&!session.inReadyRoom()){
+            if(!session.membership().teleport(location.x(),location.y(),location.rotation()))
+                throw new IOException("Destination is blocked or the knight is busy");
+            session.closeConversation();session.closeTownDialog();return;
+        }
+        session.closeConversation();session.closeTownDialog();
+        session.beginAdminTravel(next,location);
+    }}
+
     /** Cross-session tools deliberately acquire only one session monitor at a time. */
     boolean people(SessionDecoder.Invocation request)throws IOException {
         // Current build inserted a new tool at 48, moving the old bring-to-me request from 50 to 51.
@@ -35,8 +85,8 @@ final class AdminHandler {
             session.requireAdminReady(method==28||method==30);
             if(!session.chatRate().allow(System.nanoTime()))throw new IOException("Please slow down before sending another command");
             if(method==24) {
-                var own=session.adminLocation();
-                session.adminTravel(new WorldSession.AdminLocation(own.scene(),own.world(),own.name(),(Integer)args.get(0),(Integer)args.get(1),own.rotation()));
+                var own=location();
+                travel(new AdminLocation(own.scene(),own.world(),own.name(),(Integer)args.get(0),(Integer)args.get(1),own.rotation()));
             }else if(method==28||method==30) {
                 org.tortodrone.core.world.MapScene map=null;
                 String key=name.strip();
@@ -46,33 +96,33 @@ final class AdminHandler {
                     if(match){map=candidate;break;}
                 }
                 if(map==null)throw new IOException("No deployed scene or zone matches that name or ID");
-                WorldSession.AdminLocation location;
+                AdminLocation location;
                 synchronized(session){
                     session.requireAdminReady(true);
                     var next=session.destination(map.id());
                     if(next==session.currentScene()&&!session.inReadyRoom())throw new IOException("You are already in that scene");
-                    location=new WorldSession.AdminLocation(next,session.currentProfile().worldId(),session.selectedKnight().name(),map.spawnX(),map.spawnY(),map.spawnRotation());
+                    location=new AdminLocation(next,session.currentProfile().worldId(),session.selectedKnight().name(),map.spawnX(),map.spawnY(),map.spawnRotation());
                 }
-                session.adminTravel(location);
+                travel(location);
             }else {
-                var target=session.adminTarget(name);var location=target.adminLocation();
+                var target=session.adminTarget(name);var location=target.adminHandler().location();
                 if(method==13) {
                     session.adminFeedback(location.name()+"; knight="+location.world()+"; scene="+location.scene().map().name()+" ("+location.scene().map().id()+"); instance="+location.scene().oid());
                 }else if(method==21) {
                     if(target==session)throw new IOException("You cannot kick yourself");
                     // Recheck identity/readiness immediately before ending only this live connection.
-                    synchronized(target){target.adminLocation();target.close();}
+                    synchronized(target){target.adminHandler().location();target.close();}
                     target.output().disconnect();
                 }else if(method==27){
                     session.requireAdminReady();
                     if(location.scene()==session.currentScene())throw new IOException("That knight is already in this scene");
-                    session.adminTravel(location);
+                    travel(location);
                 }
                 else {
                     if(target==session)throw new IOException("You are already here");
-                    var own=session.adminLocation();session.requireAdminReady();
+                    var own=location();session.requireAdminReady();
                     if(location.scene()==own.scene())throw new IOException("That knight is already in this scene");
-                    target.adminTravel(own);
+                    target.adminHandler().travel(own);
                 }
             }
             responder.confirmed(listener.requestId());
@@ -140,7 +190,7 @@ final class AdminHandler {
             try{
                 session.requireAdminReady();
                 store.services().town(session.sceneRegistry().town()).requireGameMaster(store.accountId(),session.authRevision());
-                var location=session.adminLocation();
+                var location=location();
                 if(location.scene().map().town())throw new IOException("Monsters can only be spawned in a level scene");
                 int count=1;float radius=0;
                 for(var entry:reference.arguments().entrySet()){

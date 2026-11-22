@@ -371,12 +371,12 @@ final class WorldSession implements AutoCloseable {
         if(peer==null||peer==this||peer.scenes!=scenes||!peer.characters.worldStorageFile().equals(characters.worldStorageFile()))throw new IOException(friendUnjoinable(name));
         // Like archive joinPlayerInstance: capture the ready target, then transfer on the
         // caller. Never acquire both session monitors; recheck presence before departure.
-        var location=peer.adminLocation();var presence=peer.friendLocation;
+        var location=peer.adminHandler().location();var presence=peer.friendLocation;
         var peerMember=peer.partyMemberSnapshot();
         synchronized(this){
             requireFriendReady();if(friendNamed(name)!=target||!peer.friendOnline||peer.socket.isClosed()||presence!=peer.friendLocation
                     ||location.scene().oid()!=presence.instance())throw new IOException(friendUnjoinable(name));
-            if(location.scene().map().town()){if(scene!=location.scene())adminTravel(location);return;}
+            if(location.scene().map().town()){if(scene!=location.scene())adminTools.travel(location);return;}
             followIntoInterior(location,peerMember,true);
         }
     }
@@ -404,13 +404,13 @@ final class WorldSession implements AutoCloseable {
         // Neither shipped 2026 sender sets spectate; the archive refuses a spectator through
         // joinability anyway, so the flag is carried and has no separate destination here.
         if(spectate&&log.debugEnabled())log.debug("joinOrSpectate arrived with spectate=true; joining as usual");
-        var location=peer.adminLocation();var presence=peer.friendLocation;
+        var location=peer.adminHandler().location();var presence=peer.friendLocation;
         var peerMember=peer.partyMemberSnapshot();
         synchronized(this){
             requireFriendReady();
             if(peer!=ACTIVE.get(target)||!peer.friendOnline||peer.socket.isClosed()||presence!=peer.friendLocation
                     ||location.scene().oid()!=presence.instance())throw new IOException(friendUnjoinable(name));
-            if(location.scene().map().town()){if(scene!=location.scene())adminTravel(location);return;}
+            if(location.scene().map().town()){if(scene!=location.scene())adminTools.travel(location);return;}
             followIntoInterior(location,peerMember,friendsWithParty(peerMember));
         }
     }
@@ -422,12 +422,12 @@ final class WorldSession implements AutoCloseable {
             &&friends.stream().anyMatch(f->f.world()==p.worldId()));
     }
     /** Follows a friend into a shared Training party room, rolling the party seat back if travel fails. */
-    private void followIntoInterior(AdminLocation location,PartyRegistry.Member peerMember,boolean friend)throws IOException {
+    private void followIntoInterior(AdminHandler.AdminLocation location,PartyRegistry.Member peerMember,boolean friend)throws IOException {
         boolean joined=false;
         try{
             joined=scenes.parties().joinParty(partyMember,peerMember,friend);
             refreshParty(true);
-            if(scene!=location.scene())adminTravel(location);
+            if(scene!=location.scene())adminTools.travel(location);
         }catch(IOException|RuntimeException failed){
             if(joined)try{scenes.parties().abandon(partyMember);}catch(IOException ignored){}
             if(failed instanceof IOException io)throw io;
@@ -979,7 +979,6 @@ final class WorldSession implements AutoCloseable {
         for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&scenes.missions().eligible(candidate.id(),profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
     }
 
-    record AdminLocation(SceneRegistry.Instance scene,int world,String name,float x,float y,float rotation) { }
     synchronized void requireAdminReady()throws IOException { requireAdminReady(false); }
     synchronized void requireAdminReady(boolean roomTravel)throws IOException {
         if(closed||socket.isClosed()||!selected()||(!(roomTravel&&readyRoom)&&(!subscribed||!entered))||forcedReceiver==null||portalMove!=null||deferredMove!=null)throw new IOException("Finish entering this scene first");
@@ -991,32 +990,15 @@ final class WorldSession implements AutoCloseable {
         synchronized(ACTIVE){return ACTIVE.values().stream().filter(w->w.knight.name().equalsIgnoreCase(name)
             &&w.scenes==scenes&&w.characters.worldStorageFile().equals(characters.worldStorageFile())).findFirst().orElseThrow(()->new IOException("That knight is not online"));}
     }
-    synchronized AdminLocation adminLocation()throws IOException {
-        if(closed||socket.isClosed()||!selected()||!subscribed||!entered||portalMove!=null)throw new IOException("That knight is changing scenes");
-        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("That knight is no longer online",refused);}
-        var actor=scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElseThrow(()->new IOException("That knight is not in a ready scene"));
-        return new AdminLocation(scene,profile.worldId(),knight.name(),actor.x(),actor.y(),actor.rotation());
-    }
-    synchronized void adminTravel(AdminLocation location)throws IOException {
-        if(closed||socket.isClosed()||!selected()||(!readyRoom&&(!subscribed||!entered))||forcedReceiver==null||portalMove!=null||deferredMove!=null)throw new IOException("Finish entering this scene first");
-        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-        if(trade.active())throw new IOException("Finish the trade first");
-        var next=location.scene();
-        if(!next.map().town()) {
-            var owned=destination(next.map().id());
-            if(owned!=next){if(owned!=scene)scenes.release(owned,profile.worldId());throw new IOException("That private instance belongs to another knight or party");}
-            if(!scenes.authorized(next,profile.worldId(),partyMember))throw new IOException("Party membership changed");
-        }
-        if(!next.simulation().placement(location.x(),location.y()))throw new IOException("Destination is blocked");
-        if(next==scene&&!readyRoom){
-            if(!membership.teleport(location.x(),location.y(),location.rotation()))throw new IOException("Destination is blocked or the knight is busy");
-            closeConversation();closeTownDialog();return;
-        }
-        closeConversation();closeTownDialog();
+    /** The game-master travel tail; location validation lives in AdminHandler. */
+    synchronized void beginAdminTravel(SceneRegistry.Instance next,AdminHandler.AdminLocation location)throws IOException {
         portalMove=new PortalMove(next,new ScenePortals.Entrance(1,location.x(),location.y(),location.rotation()));
-        departedSceneOid=readyRoom?0:scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;if(membership!=null)membership.pause();short receiver=forcedReceiver;
+        departedSceneOid=readyRoom?0:scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;
+        if(membership!=null)membership.pause();short receiver=forcedReceiver;
         output.send(()->codec.forceScene(oid,receiver,next));
     }
+    AdminHandler adminHandler(){return adminTools;}
+
     /** Cross-session tools deliberately acquire only one session monitor at a time. */
     boolean adminPeople(SessionDecoder.Invocation request)throws IOException { return adminTools.people(request); }
 
