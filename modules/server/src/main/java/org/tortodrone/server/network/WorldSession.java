@@ -126,6 +126,7 @@ final class WorldSession implements AutoCloseable {
     private final LoadoutHandler loadouts;
     private final InspectionHandler inspection;
     private final NewsHandler news;
+    private final EquipHandler equipment;
     int partyOid()throws IOException{return parties.oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     void publishPartyState()throws IOException{parties.state();}
@@ -178,7 +179,7 @@ final class WorldSession implements AutoCloseable {
     private final Map<Long,WorldProfile.Item> temporaryItems=new LinkedHashMap<>();
     private long nextTemporaryItem=-1;
     private final long[] quickbar=new long[4];
-    private void publishQuickbar()throws IOException {
+    void publishQuickbar()throws IOException {
         if(membership!=null)membership.inventory(visibleProfile());
         for(int slot=0;slot<quickbar.length;slot++)if(!temporaryItems.containsKey(quickbar[slot]))quickbar[slot]=0;
         var slots=quickbar.clone();output.send(()->codec.quickbar(oid,slots));
@@ -583,6 +584,7 @@ final class WorldSession implements AutoCloseable {
         loadouts=new LoadoutHandler(this);
         inspection=new InspectionHandler(this);
         news=new NewsHandler(this);
+        equipment=new EquipHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
@@ -591,6 +593,10 @@ final class WorldSession implements AutoCloseable {
     boolean equipmentAllowed(){return membership!=null&&membership.equipmentAllowed();}
     String selectedKnightName(){return knight==null?null:knight.name();}
     boolean inspectionHiddenValue(){return inspectionHidden;}
+    int quickbarLength(){return quickbar.length;}
+    boolean carriesConsumable(long id){return temporaryItems.containsKey(id)&&temporaryItems.get(id).equippedSlot()==null;}
+    void clearQuickbarItem(long item){for(int index=0;index<quickbar.length;index++)if(quickbar[index]==item)quickbar[index]=0;}
+    void quickbarSlot(int slot,long item){quickbar[slot]=item;}
     InspectionHandler.Inspection inspectionNow(SceneRegistry.Instance place)throws IOException{return inspection.snapshot(place);}
     SessionResponder responder(){return responder;}
     SessionOutput output(){return output;}
@@ -910,22 +916,9 @@ final class WorldSession implements AutoCloseable {
         }
         if(news.invocation(request))return true;
         if(loadouts.invocation(request))return true;
-        if (service == SessionCodec.ITEM_SERVICE && request.method() == 9) {
-            equip(args);
-            return true;
-        }
+        if(equipment.invocation(request,args))return true;
         // ItemMarshaller 1 (Trash) is dispatched in townInvocation; scene item use is 14 only.
         if(itemUse.invocation(request,args))return true;
-        // Arsenal's equip action uses method 3, distinct from moveItem (method 9).
-        if (service == SessionCodec.ITEM_SERVICE && request.method() == 3) {
-            if (args.size() != 3 || !(args.get(0) instanceof Long)
-                    || !(args.get(1) instanceof Integer) || !(args.get(2) instanceof SessionDecoder.Listener)) {
-                throw new SessionDecoder.Rejected("Invalid equip item request");
-            }
-            equip(List.of(args.get(0), new org.tortodrone.core.wire.EnumValue(
-                org.tortodrone.core.WireTypes.ITEM_LOCATION, 1), args.get(1), args.get(2)));
-            return true;
-        }
         return false;
     }
 
@@ -1082,41 +1075,6 @@ final class WorldSession implements AutoCloseable {
 
     /** Stock admin service, resolved by the client from the bootstrap; every call is authorized here. */
     synchronized void admin(SessionDecoder.Invocation request) throws IOException { adminTools.dispatch(request); }
-
-    private void equip(List<Object> args) throws IOException {
-        if (args.size() != 4 || !(args.get(0) instanceof Long item)
-                || !(args.get(1) instanceof org.tortodrone.core.wire.EnumValue location)
-                || !location.type().equals(org.tortodrone.core.WireTypes.ITEM_LOCATION)
-                || !(args.get(2) instanceof Integer slot)
-                || !(args.get(3) instanceof SessionDecoder.Listener listener)
-                || !listener.type().endsWith("$ConfirmMarshaller")) {
-            throw new SessionDecoder.Rejected("Invalid equipment request");
-        }
-        try {
-            if (!selected()) throw new IOException("Select a knight first");
-            if(location.ordinal()==2){
-                if(slot<0||slot>=quickbar.length||item!=0&&(!temporaryItems.containsKey(item)||temporaryItems.get(item).equippedSlot()!=null))
-                    throw new IOException("That item or quickbar slot is not available");
-                for(int index=0;index<quickbar.length;index++)if(quickbar[index]==item)quickbar[index]=0;
-                quickbar[slot]=item;publishQuickbar();output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return;
-            }
-            if (location.ordinal() != 0 && location.ordinal() != 1) {
-                throw new IOException("Only inventory and equipment moves are available");
-            }
-            // The stock ItemManager gates equipping on the party alone (ensureCanEquip passes
-            // whenever the knight has no party), and the client-local Ready Room stages with no
-            // party, so gear may be changed while staging; live scenes keep their station rules.
-            if(!readyRoom&&(!subscribed||!entered||!membership.equipmentAllowed()))throw new IOException("Equipment is locked outside an Arsenal Station in this level");
-            var before=visibleProfile();
-            profile = characters.equip(knight.id(), authRevision, item, location.ordinal() == 0 ? null : slot);
-            updateAppearance();
-            var after=visibleProfile();output.send(() -> codec.itemChanges(oid, knight, before,after));
-            output.send(() -> codec.invocationConfirmed(oid, listener.requestId()));
-        } catch (IOException failure) {
-            String reason = failure.getMessage();
-            output.send(() -> codec.invocationFailure(oid, listener.requestId(), reason));
-        }
-    }
 
     synchronized void subscribe(short message) throws IOException {
         if (!selected()) throw new IOException("Select a knight before subscribing to a scene");
@@ -1579,7 +1537,7 @@ final class WorldSession implements AutoCloseable {
         appearance=new StarterCatalog.Model(scene.map().town()?"Character/PC/Default":"Character/PC/Level",
             Map.of("Model",model,"Height",model.arguments().get("Height")));
     }
-    private void updateAppearance(){rebuildAppearance();if(membership!=null){membership.equipment(visibleProfile());membership.appearance(actorAppearance());}}
+    void updateAppearance(){rebuildAppearance();if(membership!=null){membership.equipment(visibleProfile());membership.appearance(actorAppearance());}}
     private ActorState actorAppearance() {
         var checkpoint=arrival==null?scene.simulation().defaultEntrance():null;
         return new ActorState(profile.worldId(),oid,knight.name(),256|knight.color(),created,
