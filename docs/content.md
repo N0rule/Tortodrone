@@ -520,10 +520,14 @@ flags and the ordered wheels. A route is playable only when every wedge resolves
 a bundled canonical scene, each floor has exactly one gate-completing elevator and
 at least one floor is a non-lobby level; the server then advertises that gate and
 runs the floors in order, settling the mission once on the final floor. Unresolved
-floors keep scene 0 and stay hidden. Objective progress, prestige/expansion
-missions, the gate-conversation lobbies and the mission bar remain unimplemented.
-A deployment without `content/missions/` keeps an empty catalogue and logs a
-startup warning.
+floors keep scene 0 and stay hidden. The mission bar is served from the native
+`PlayerObject.objectives` entry whose text is the stock `o.<missionId>` key.
+Objective *progress*, prestige/expansion mission completion, the gate-conversation
+lobbies and a per-mission `objectives.yml` are not implemented: the shipped
+catalogue carries no per-mission objective table, and the stock client defines
+objectives through scene actions, so the schema stays closed until that progress
+evidence exists. A deployment without `content/missions/` keeps an empty catalogue
+and logs a startup warning.
 
 The checked-in import contains 273 missions (108 rank, 147 prestige, 3 expansion and
 15 hidden), one group, 27 properties and 53 gate routes (1 fully playable besides
@@ -1310,8 +1314,8 @@ before publishing the immutable content snapshot.
 
 ### Transactions, persistence and verification
 
-The opening service uses the existing schema-18 SQLite database with **no schema
-change or new inventory**. One `BEGIN IMMEDIATE` transaction rechecks account,
+The opening service uses the 0.42.0 schema-1 SQLite baseline with **no per-feature
+schema change or new inventory**. One `BEGIN IMMEDIATE` transaction rechecks account,
 knight, authentication revision and expected inventory revision, resolves the
 owned box and chosen key, selects and validates rewards, projects capacity after
 consumption and compatible stack merging, consumes one box/key, grants all

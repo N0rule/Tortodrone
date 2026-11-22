@@ -294,5 +294,7 @@ Run only when this baseline must be replaced, not per change:
 sha256sum build/tortodrone.jar
 ```
 
-The town/scene workload cannot be recorded until `LoadBenchmark` is repaired; do not
-report a scene tick/DB/queue measurement from it before then.
+The town/scene workload is recorded with
+`./gradlew benchmark --args="--seconds 20 --clients 16 --instances 2"`; its rows and
+the WebUI counter samples are in the sections above. `ConcurrencyMeasurementTest`
+records the scene-lane, storage and thread series separately.
