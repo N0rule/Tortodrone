@@ -57,6 +57,7 @@ public final class ServerSettingsTest {
             check(new org.tortodrone.core.config.WebSettings(true,"https://admin.example:443","reverse-proxy").publicUrl().equals("https://admin.example"),"standard HTTPS port uses browser origin normalization");
             check(new org.tortodrone.core.config.WebSettings(true,"http://127.0.0.1:80","http").publicUrl().equals("http://127.0.0.1"),"standard HTTP port uses browser origin normalization");
             Path generated=home.resolve("generated/server.yml");var bundled=ServerSettings.load(generated);
+            check(Files.readString(generated).equals(Files.readString(Path.of("config/server.yml"))),"packaged default is the deployment's config/server.yml");
             check(bundled.webui().enabled()&&bundled.webui().automaticHost()&&bundled.httpPort()==8080,"fresh bundled YAML enables HTTP administration");
             Files.writeString(yaml,"webui-public-url: 192.168.1.50\nwebui/content_url-port: 8091\n");
             check(ServerSettings.read(yaml).webui().publicUrl().equals("http://192.168.1.50:8091"),"bare HTTP host inherits scheme and shared port");

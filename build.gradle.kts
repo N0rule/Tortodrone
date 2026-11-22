@@ -57,6 +57,9 @@ val checkModuleGraph = tasks.register("checkModuleGraph") {
 
 tasks.processResources {
     from("VERSION") { rename { "version.txt" } }
+    // One editable server template: the deployment's config/server.yml is also the
+    // packaged default used to seed a missing configuration.
+    from("config/server.yml")
     from(listOf("LICENSE", "NOTICE")) { into("META-INF/tortodrone") }
     from("scripts/compat/WebUiAssetsExport.java") { into("tools") }
 }
