@@ -1160,14 +1160,9 @@ final class WorldSession implements AutoCloseable {
     void broadcast(SessionDecoder.Invocation request)throws IOException{chats.broadcast(request);}
     void away(SessionDecoder.Invocation request)throws IOException{chats.away(request);}
     void tell(SessionDecoder.Invocation request)throws IOException{chats.tell(request);}
-    synchronized void unavailable(String reason)throws IOException {
-        if(!closed&&selected()&&subscribed&&entered)chatFeedback(scene.oid(),sceneGeneration,reason);
-    }
+    synchronized void unavailable(String reason)throws IOException { chats.unavailable(reason); }
     /** The native {@code chatFeedback} for a scene that is still current. */
-    synchronized void chatFeedback(int place,int generation,String reason)throws IOException {
-        if(!closed&&subscribed&&entered&&scene.oid()==place&&sceneGeneration==generation)
-            output.send(()->codec.chatFeedback(scene.map().town()?place:partyOid(),reason));
-    }
+    synchronized void chatFeedback(int place,int generation,String reason)throws IOException { chats.feedback(place,generation,reason); }
     private void leaveChat(){
         friendLocation=new FriendPresence("~",0,0);
         town.reset();

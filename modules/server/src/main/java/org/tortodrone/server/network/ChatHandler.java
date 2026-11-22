@@ -217,6 +217,18 @@ final class ChatHandler {
         }catch(IOException refused){responder.failure(listener.requestId(),refused.getMessage());}
     }
 
+    /** Native chat feedback only for a scene that is still current. */
+    void feedback(int place,int generation,String reason)throws IOException { synchronized (session) {
+        if(!session.isClosed()&&session.sceneSubscribed()&&session.sceneEntered()
+                &&session.currentScene().oid()==place&&session.sceneGenerationValue()==generation)
+            responder.send(()->responder.codec().chatFeedback(session.currentScene().map().town()?place:session.partyOid(),reason));
+    }}
+
+    void unavailable(String reason)throws IOException { synchronized (session) {
+        if(!session.isClosed()&&session.selected()&&session.sceneSubscribed()&&session.sceneEntered())
+            feedback(session.currentScene().oid(),session.sceneGenerationValue(),reason);
+    }}
+
     private synchronized boolean deliver(int place,int generation,SceneChat.Message message)throws IOException {
         if(session.isClosed()||session.socket().isClosed()||!session.sceneSubscribed()||!session.sceneEntered()
                 ||session.currentScene().oid()!=place||session.sceneGenerationValue()!=generation)return false;
