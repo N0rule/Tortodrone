@@ -62,6 +62,7 @@ public final class Database {
     private final Path file;
     private final AccountRepository accounts;
     private final RosterRepository roster;
+    private final WorldRepository worlds;
     private boolean initialized;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
 
@@ -76,6 +77,7 @@ public final class Database {
         initialized = true;
         accounts = new AccountRepository(this);
         roster = new RosterRepository(this);
+        worlds = new WorldRepository(this);
         DepotStore.alignDefaults(this);
     }
     /**
@@ -312,7 +314,7 @@ public final class Database {
     public boolean current(int id, long revision) throws IOException { return accounts.current(id,revision); }
     /** Ordinary account preference rows in the existing integer metadata table; schema stays unchanged. */
     public boolean inspectionHidden(int accountId,long authRevision)throws IOException {
-        return read(c->{requirePreferenceOwner(c,accountId,authRevision);
+        return read(c->{WorldRepository.requirePreferenceOwner(c,accountId,authRevision);
             try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")) {
                 s.setString(1,"account."+accountId+".inspection-hidden");
                 try(var r=s.executeQuery()) {
@@ -323,25 +325,21 @@ public final class Database {
         });
     }
     public void inspectionHidden(int accountId,long authRevision,boolean hidden)throws IOException {
-        write(c->{requirePreferenceOwner(c,accountId,authRevision);
+        write(c->{WorldRepository.requirePreferenceOwner(c,accountId,authRevision);
             try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")) {
                 s.setString(1,"account."+accountId+".inspection-hidden");s.setInt(2,hidden?1:0);s.executeUpdate();
             }return null;
         });
     }
     private static void requirePreferenceOwner(Connection c,int accountId,long authRevision)throws SQLException,IOException {
-        if(authRevision<0)throw new IOException("Authenticated preference owner required");
-        try(var s=c.prepareStatement("SELECT 1 FROM accounts WHERE id=? AND auth_revision=?")) {
-            s.setInt(1,accountId);s.setLong(2,authRevision);
-            try(var r=s.executeQuery()){if(!r.next())throw new IOException("Account changed; reconnect");}
-        }
+        WorldRepository.requirePreferenceOwner(c,accountId,authRevision);
     }
 
     /** Last acknowledged permanent scene, keyed by the non-recycled world identity. */
     public int lastTownScene(int accountId,int knightId,long authRevision)throws IOException {
         return read(c->{
             c.setAutoCommit(false);
-            requirePreferenceOwner(c,accountId,authRevision);
+            WorldRepository.requirePreferenceOwner(c,accountId,authRevision);
             var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
             try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){
                 s.setString(1,"world."+profile.worldId()+".last-town-scene");
@@ -353,7 +351,7 @@ public final class Database {
     public void lastTownScene(int accountId,int knightId,long authRevision,int scene)throws IOException {
         if(scene<=0||scene==Integer.MAX_VALUE)throw new IOException("Invalid permanent scene");
         write(c->{
-            requirePreferenceOwner(c,accountId,authRevision);
+            WorldRepository.requirePreferenceOwner(c,accountId,authRevision);
             var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
             try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
                 s.setString(1,"world."+profile.worldId()+".last-town-scene");s.setInt(2,scene);s.executeUpdate();
@@ -369,79 +367,24 @@ public final class Database {
     /** Server-owned Crash Site settlement. Collected heat, receipt, safe return, the 2-1 arrival
      * rank and the stock "skipped rescue camp" orientation letter commit together, once. */
     public WorldProfile completeTutorial(int accountId,int knightId,long authRevision,int worldId,long revision)throws IOException {
-        return completeTutorial(accountId,knightId,authRevision,worldId,revision,0,null);
+        return worlds.completeTutorial(accountId,knightId,authRevision,worldId,revision);
     }
     public WorldProfile completeTutorial(int accountId,int knightId,long authRevision,int worldId,long revision,float heat,org.tortodrone.core.town.TownCatalog rules)throws IOException {
-        if(!Float.isFinite(heat)||heat<0||heat>1_000_000||heat>0&&rules==null)throw new IOException("Invalid tutorial heat settlement");
-        return write(c->{
-            requirePreferenceOwner(c,accountId,authRevision);
-            var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
-            if(profile.worldId()!=worldId)throw new IOException("Tutorial ownership changed");
-            String receipt="world."+worldId+".tutorial-completed";
-            try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){
-                s.setString(1,receipt);try(var r=s.executeQuery()){
-                    if(r.next()){
-                        if(r.getInt(1)!=1)throw new IOException("Invalid tutorial receipt");
-                        return profile; // A retry must not overwrite a later saved town.
-                    }
-                }
-            }
-            if(profile.revision()!=revision)throw new IOException("Knight changed before tutorial settlement");
-            if(heat>0)TownStore.applyHeat(c,profile,rules,heat);
-            if(profile.progress().crashSiteIncomplete()){
-                try(var s=c.prepareStatement("UPDATE metadata SET value=3 WHERE key=? AND value=0")){
-                    s.setString(1,"world."+worldId+".opening-stage");if(s.executeUpdate()!=1)throw new IOException("Opening checkpoint changed");
-                }
-                var progress=profile.progress();
-                if(progress.rank()<ARRIVAL_RANK||progress.rank()==ARRIVAL_RANK&&progress.subrank()<ARRIVAL_SUBRANK)
-                    try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
-                        s.setString(1,WorldProfiles.progressKey(worldId,"rank"));s.setInt(2,ARRIVAL_RANK*10+ARRIVAL_SUBRANK);s.executeUpdate();
-                    }
-                String knight;try(var s=c.prepareStatement("SELECT name FROM knights WHERE account_id=? AND id=?")){
-                    s.setInt(1,accountId);s.setInt(2,knightId);try(var r=s.executeQuery()){if(!r.next())throw new IOException("Tutorial knight missing");knight=r.getString(1);}
-                }
-                var bomb=new org.tortodrone.core.character.WorldProfile.Item(0,org.tortodrone.core.character.WorldProfile.Slot.BOMB,SKIPPED_CAMP_ATTACHMENT,null,0,null,false,true,false,1,false,0,0,List.of(),List.of(),false);
-                AuctionHouse.systemMail(c,worldId,ORIENTATION_SENDER,"s.skipped_rescue_camp",AuctionHouse.composeMessage("m.skipped_rescue_camp","~"+knight),List.of(bomb));
-            }
-            try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
-                s.setString(1,receipt);s.setInt(2,1);s.executeUpdate();
-                s.setString(1,"world."+worldId+".last-town-scene");s.setInt(2,org.tortodrone.core.mission.TutorialRoute.HAVEN);s.executeUpdate();
-            }
-            try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=? AND account_id=? AND knight_id=? AND state_revision=?")){
-                s.setInt(1,worldId);s.setInt(2,accountId);s.setInt(3,knightId);s.setLong(4,revision);
-                if(s.executeUpdate()!=1)throw new IOException("Tutorial settlement revision changed");
-            }
-            var settled=WorldProfiles.load(c,accountId,knightId,authRevision);
-            return AccountAchievements.reconcile(c,settled,null,settled.progress().tutorialComplete()?32:0,System.currentTimeMillis());
-        });
+        return worlds.completeTutorial(accountId,knightId,authRevision,worldId,revision,heat,rules);
     }
     public record MemoryState(WorldProfile profile,Set<String> memories){public MemoryState{memories=Set.copyOf(memories);}}
     public Set<String> knightMemories(int accountId,int knightId,long authRevision)throws IOException {
-        return read(c->{c.setAutoCommit(false);requirePreferenceOwner(c,accountId,authRevision);var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
-            var result=KnightMemories.load(c,profile.worldId());c.commit();return result;});
+        return worlds.knightMemories(accountId,knightId,authRevision);
     }
     public MemoryState knightMemories(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations)throws IOException {
-        var result=knightStory(accountId,knightId,authRevision,worldId,revision,operations,List.of());return new MemoryState(result.profile(),result.memories());
+        return worlds.knightMemories(accountId,knightId,authRevision,worldId,revision,operations);
     }
     public Map<String,org.tortodrone.core.character.KnightObjective.State> knightObjectives(int accountId,int knightId,long authRevision)throws IOException {
-        return read(c->{c.setAutoCommit(false);requirePreferenceOwner(c,accountId,authRevision);var profile=WorldProfiles.load(c,accountId,knightId,authRevision);var result=KnightObjectives.load(c,profile.worldId());c.commit();return result;});
+        return worlds.knightObjectives(accountId,knightId,authRevision);
     }
     public record StoryState(WorldProfile profile,Set<String> memories,Map<String,org.tortodrone.core.character.KnightObjective.State> objectives){public StoryState{memories=Set.copyOf(memories);objectives=Map.copyOf(objectives);}}
     public StoryState knightStory(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations,List<org.tortodrone.core.character.KnightObjective> objectives)throws IOException {
-        var changes=List.copyOf(operations);if(changes.size()>256)throw new IOException("Too many knight memory operations");
-        var objectiveChanges=List.copyOf(objectives);if(objectiveChanges.size()>256)throw new IOException("Too many objective operations");
-        return write(c->{
-            requirePreferenceOwner(c,accountId,authRevision);
-            var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
-            if(profile.worldId()!=worldId||profile.revision()!=revision)throw new IOException("Knight memory ownership or revision changed");
-            var before=KnightMemories.load(c,worldId);var after=KnightMemories.apply(c,worldId,before,changes);
-            var oldObjectives=KnightObjectives.load(c,worldId);var newObjectives=KnightObjectives.apply(c,worldId,oldObjectives,objectiveChanges);
-            if(!before.equals(after)||!oldObjectives.equals(newObjectives))try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=? AND account_id=? AND knight_id=? AND state_revision=?")){
-                s.setInt(1,worldId);s.setInt(2,accountId);s.setInt(3,knightId);s.setLong(4,revision);
-                if(s.executeUpdate()!=1)throw new IOException("Knight memory revision changed");
-            }
-            return new StoryState(WorldProfiles.load(c,accountId,knightId,authRevision),after,newObjectives);
-        });
+        return worlds.knightStory(accountId,knightId,authRevision,worldId,revision,operations,objectives);
     }
     public List<Summary> list() throws IOException { return accounts.list(); }
     public int create(String username, Passwords.Protection protection, boolean gameMaster) throws IOException {
@@ -464,40 +407,17 @@ public final class Database {
         roster.deleteKnight(username,name,expectedAccount,expectedWorld);
     }
     public WorldProfile worldProfile(int accountId,int knightId,long authRevision) throws IOException {
-        return worldProfile(accountId,knightId,authRevision,null);
+        return worlds.worldProfile(accountId,knightId,authRevision);
     }
     public WorldProfile worldProfile(int accountId,int knightId,long authRevision,WorldProfile cached) throws IOException {
-        return read(c -> {
-            c.setAutoCommit(false); // One read snapshot for identity and inventory, even during deletion.
-            var profile = WorldProfiles.load(c,accountId,knightId,authRevision,cached); c.commit(); return profile;
-        });
+        return worlds.worldProfile(accountId,knightId,authRevision,cached);
     }
     /** Lightweight consistent metadata for active world observers; inventories load only on change. */
-    public Map<Integer,WorldState> worldStates()throws IOException {
-        if(read(c->InventoryExpiry.due(c,System.currentTimeMillis())))write(c->null);
-        return read(c->{
-            var states=new HashMap<Integer,WorldState>();
-            try(var s=c.createStatement();var rows=s.executeQuery("SELECT w.account_id,w.knight_id,w.world_id,k.name,w.state_revision,a.auth_revision,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id")) {
-                while(rows.next()) {
-                    var state=new WorldState(rows.getInt(1),rows.getInt(2),rows.getInt(3),rows.getString(4),rows.getLong(5),rows.getLong(6),rows.getBoolean(7));
-                    states.put(state.worldId(),state);
-                }
-            }
-            return Map.copyOf(states);
-        });
-    }
+    public Map<Integer,WorldState> worldStates()throws IOException { return worlds.worldStates(); }
     /** Indexed revision probe; does not materialize inventory or town state. */
-    public WorldState knightState(String username,String knight)throws IOException {
-        if(read(c->InventoryExpiry.due(c,System.currentTimeMillis())))write(c->null);
-        return read(c->{try(var statement=c.prepareStatement("SELECT w.account_id,w.knight_id,w.world_id,k.name,w.state_revision,a.auth_revision,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id WHERE a.name_key=? AND k.name_key=?")){
-            statement.setString(1,username.toLowerCase(Locale.ROOT));statement.setString(2,knight.toLowerCase(Locale.ROOT));
-            try(var r=statement.executeQuery()){if(!r.next())throw new IOException("No such knight");return new WorldState(r.getInt(1),r.getInt(2),r.getInt(3),r.getString(4),r.getLong(5),r.getLong(6),r.getBoolean(7));}
-        }});
-    }
+    public WorldState knightState(String username,String knight)throws IOException { return worlds.knightState(username,knight); }
     /** Current world state without an authentication-revision check, for read-only publications. */
-    public WorldProfile profile(int accountId,int knightId) throws IOException {
-        return worldProfile(accountId,knightId,-1);
-    }
+    public WorldProfile profile(int accountId,int knightId) throws IOException { return worlds.profile(accountId,knightId); }
 
     private record Target(int account, int knight) { }
     private static Target target(Connection c, String username, String knightName) throws SQLException, IOException {

@@ -39,12 +39,16 @@ public final class OpeningProgressTest {
             check(after.progress().openingStage()==3&&after.progress().tutorialComplete()&&after.progress().progressFlags()==4&&store.lastTownScene(fresh.id(),1)==1,"tutorial settlement commits direct Haven arrival and town access together");
             check(after.items().equals(before.items())&&after.progress().rankPair().equals("2-1")&&after.progress().prestige()==0,"official 2-1 arrival rank without invented prestige or arsenal items");
             check(store.completeTutorial(fresh.id(),1,before).equals(after),"replayed settlement grants nothing twice");
-            check(store.worldProfile(old.name(),1).equals(original)&&store.lastTownScene(old.id(),1)==2,"new onboarding never resets an existing knight or saved location");
+            check(intro(store.worldProfile(old.name(),1)).equals(intro(original))&&store.lastTownScene(old.id(),1)==2,"new onboarding never resets an existing knight or saved location");
             var state=db.rosterState(1);
             refused(()->db.saveRoster(1,state.knights(),state.next(),1,state.revision(),old.id()));
-            check(store.worldProfile(old.name(),1).equals(original),"existing identity cannot be relabeled as a new opening knight");
+            check(intro(store.worldProfile(old.name(),1)).equals(intro(original)),"existing identity cannot be relabeled as a new opening knight");
         }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}}
         System.out.println("PASS: authenticated atomic first-run creation, rollback, grandfathering, durable Crash Site/Haven checkpoints, exact starters and duplicate settlement");
+    }
+    /** Achievements are account-scoped, so a fresh knight's settlement also unlocks account receipts. */
+    private static org.tortodrone.core.character.WorldProfile intro(org.tortodrone.core.character.WorldProfile profile){
+        return profile.withAchievements(org.tortodrone.core.character.AchievementState.EMPTY);
     }
     private static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
     private interface Operation{void run()throws Exception;}
