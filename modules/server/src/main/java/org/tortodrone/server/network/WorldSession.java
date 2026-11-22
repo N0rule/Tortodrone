@@ -123,6 +123,7 @@ final class WorldSession implements AutoCloseable {
     private final TownHandler town;
     private final ChatHandler chats;
     private final PartyHandler parties;
+    private final LoadoutHandler loadouts;
     int partyOid()throws IOException{return parties.oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     void publishPartyState()throws IOException{parties.state();}
@@ -577,10 +578,13 @@ final class WorldSession implements AutoCloseable {
         town=new TownHandler(this);
         chats=new ChatHandler(this);
         parties=new PartyHandler(this);
+        loadouts=new LoadoutHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
     synchronized boolean selected() { return knight != null; }
+    boolean selectedKnightSelected(){return selected();}
+    boolean equipmentAllowed(){return membership!=null&&membership.equipmentAllowed();}
     SessionResponder responder(){return responder;}
     SessionOutput output(){return output;}
     SessionCodec codec(){return codec;}
@@ -917,39 +921,9 @@ final class WorldSession implements AutoCloseable {
             else output.send(() -> codec.invocationFailure(oid, listener.requestId(), "Select a knight first"));
             return true;
         }
-        if(service==SessionCodec.ITEM_SERVICE&&(request.method()==4||request.method()==10)) {
-            if(args.size()!=2||!(args.getFirst() instanceof String name)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid loadout request");
-            try {
-                // Stock loadout pills are party-gated, not scene-gated, and the Ready Room
-                // stages with no party, so staging can apply and save its loadouts there.
-                if(!selected()||!readyRoom&&(!subscribed||!entered||portalMove!=null))throw new IOException("Enter a scene first");
-                if(trade.active())throw new IOException("Finish the trade first");
-                if(request.method()==4&&!readyRoom&&!membership.equipmentAllowed())throw new IOException("Equipment is locked outside an Arsenal Station in this level");
-                var result=characters.services().town(scenes.town()).loadout(characters.accountId(),knight.id(),authRevision,name,request.method()==10);
-                townChanged(result);output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
-            return true;
-        }
-        if(service==SessionCodec.ITEM_SERVICE&&request.method()==2){
-            if(request.oid()!=SessionCodec.INVOCATION_OID||args.size()!=2||!(args.getFirst() instanceof String name)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid loadout removal");
-            try{if(!selected()||!readyRoom&&(!entered||!subscribed||portalMove!=null))throw new IOException("Enter a scene first");
-                townChanged(characters.services().town(scenes.town()).removeLoadout(characters.accountId(),knight.id(),authRevision,name));
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
-        }
+        if(loadouts.invocation(request))return true;
         if (service == SessionCodec.ITEM_SERVICE && request.method() == 9) {
             equip(args);
-            return true;
-        }
-        if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==15){
-            if(request.oid()!=SessionCodec.INVOCATION_OID||args.size()!=3||!(args.get(0) instanceof String name)||!(args.get(1) instanceof Boolean enabled)
-                    ||!(args.get(2) instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid PvP loadout request");
-            try{
-                // The Ready Room has no party view, like every other stock loadout context.
-                if(!selected()||!readyRoom&&(!subscribed||!entered||portalMove!=null))throw new IOException("Enter a scene first");
-                townChanged(characters.services().town(scenes.town()).loadoutPvp(characters.accountId(),knight.id(),authRevision,name,enabled));
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
             return true;
         }
         // ItemMarshaller 1 (Trash) is dispatched in townInvocation; scene item use is 14 only.

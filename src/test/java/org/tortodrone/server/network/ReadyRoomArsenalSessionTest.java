@@ -19,9 +19,10 @@ import org.tortodrone.core.character.WorldProfile;
 /** Stock arsenal services (forge, equip, loadouts) stay reachable from the client-local Ready Room. */
 public final class ReadyRoomArsenalSessionTest {
     public static void main(String[] args)throws Exception {
+        var previous=SceneRegistry.system();
         Path root=Files.createTempDirectory("tortodrone-ready-room-arsenal-");
         try{
-            var content=ContentManager.load(Path.of("."));var scenes=org.tortodrone.world.SceneRegistry.create(content);var db=new Database(root,false);
+            var content=ContentManager.load(Path.of("."));var scenes=org.tortodrone.world.SceneRegistry.create(content);SceneRegistry.install(scenes);var db=new Database(root,false);
             try(var alice=ready(db,content,scenes,"Alice")){
                 var profile=alice.chars.worldProfile("Alice",1);
                 var sword=profile.items().stream().filter(i->i.config().equals("Weapon/Sword/Proto Sword")).findFirst().orElseThrow();
@@ -93,7 +94,7 @@ public final class ReadyRoomArsenalSessionTest {
                 }
             }
             System.out.println("PASS: Ready Room forge success and native failures, equip/unequip, loadouts, trash gate and unselected guard");
-        }finally{org.tortodrone.support.ContentFixture.delete(root);}
+        }finally{SceneRegistry.install(previous);WorldStatePoller.awaitStopped();org.tortodrone.support.ContentFixture.delete(root);}
     }
     private static void forge(Person person,long item,int crystals,int level,short request)throws IOException{
         check(person.world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.ITEM_SERVICE,8,List.of(item,crystals,level,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",request)))),"stock forge request reaches the Town item handler");
@@ -119,7 +120,7 @@ public final class ReadyRoomArsenalSessionTest {
             }else check(reason==null,"successful arsenal operation reports no reason");
             return;
         }
-        throw new AssertionError("Arsenal response timed out");
+        throw new AssertionError("Arsenal response timed out; request="+requestId);
     }
     private static final class Person implements AutoCloseable{
         final WorldSession world;final RecordingSocket socket;final SessionOutput output;final CharacterStore chars;
