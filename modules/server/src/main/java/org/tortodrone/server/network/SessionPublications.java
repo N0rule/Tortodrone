@@ -30,6 +30,9 @@ final class SessionPublications {
     private final ArrayDeque<PartyView.Event> partyEvents=new ArrayDeque<>();
     private boolean partyRefreshQueued,partyOverflow;
 
+    /** The single delivery worker for diagnostics and focused lifecycle tests. */
+    synchronized Thread worker(){return worker;}
+
     /** Start the delivery worker once per session; a later call keeps the existing worker. */
     void start(String name,SceneSink scenes,PartySink parties,FailureSink failure) {
         synchronized(monitor) {

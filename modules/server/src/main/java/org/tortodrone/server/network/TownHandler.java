@@ -47,6 +47,20 @@ final class TownHandler {
     void reset() { dialog=null;source=null;service++; }
 
     void open(TownCatalog.Station station,ActorState source)throws IOException {
+        if(session.tradeHandler().active())throw new IOException("Finish the trade before using a town station");
+        // Arsenal and auction stations are client-side windows, not modal dialogs; the
+        // stock controller opens them from a native command instead of TownDialogInfo.
+        if(station.kind().equals("OpenArsenal")||station.kind().equals("OpenAuction")){
+            if(station.kind().equals("OpenArsenal")){
+                // The window reads equipPolicy while opening; publish the policy on this
+                // same ordered output stream even if the scene publication was coalesced.
+                session.publishArsenalPolicy();
+            }
+            String command=station.kind().equals("OpenAuction")?"auction":"show_arsenal_station";
+            session.conversations().close();close();
+            responder.send(()->responder.codec().controllerAction(responder.oid(),command,source));
+            return;
+        }
         tradeGeneration=session.tradeHandler().dialogGeneration();
         session.conversations().close();close();
         var own=session.selfActor();if(own==null)throw new IOException("Knight left scene");

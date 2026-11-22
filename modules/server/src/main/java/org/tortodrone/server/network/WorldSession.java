@@ -103,17 +103,10 @@ final class WorldSession implements AutoCloseable {
     private int departedSceneOid;
     private record DeferredMove(short requestId,boolean zone,int sceneOid) { }
     private DeferredMove deferredMove;
-    private int subscribedPartyOid;
-    private int announcedPartyOid;
     private SceneHealth.State publishedHealth;
     private SceneStatus.State publishedStatus;
     private Boolean publishedArsenal;
     private PartyRegistry.Member partyMember;
-    private PartyView.View publishedParty;
-    /** The scene whose party attributes the subscribed party object currently reflects. */
-    private org.tortodrone.core.world.SceneInstanceView publishedPartyScene;
-    /** The explored-tile keys already sent to the subscribed party. */
-    private java.util.Set<Integer> publishedPartyVisited;
     final SessionResponder responder;
     final GuildHandler guilds;
     private final SteamHandler steam;
@@ -129,44 +122,19 @@ final class WorldSession implements AutoCloseable {
     private final OpeningHandler opening;
     private final TownHandler town;
     private final ChatHandler chats;
-    int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
+    private final PartyHandler parties;
+    int partyOid()throws IOException{return parties.oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
-    private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null,membership.floorHeat());}
-    private void offerParty(PartyView.Event event){publications.offerParty(event);}
-    private synchronized void deliverParty(PartyView.Event event)throws IOException {
-        if(closed||partyMember==null)return;
-        if(event instanceof PartyView.Invitation invite){output.send(()->codec.partyInvitation(oid,invite));return;}
-        if(event instanceof PartyView.Chat chat){if(scenes.parties().owns(partyMember,chat.partyOid()))output.send(()->codec.chat(chat.partyOid(),chat.message()));return;}
-        refreshParty();
-    }
-    private void refreshParty()throws IOException {refreshParty(false);}
-    private void refreshParty(boolean traveling)throws IOException {
-        var view=scenes.parties().view(partyMember);
-        if(entered)friendLocation=presence(view);
-        // A private solo bookkeeping party is not an active dungeon party in Haven.
-        // Publishing it there makes the stock command handler ask to abandon a mission.
-        int visibleParty=readyRoom?0:scene.map().town()&&view.members().size()==1&&scenes.parties().owner(partyMember,profile.worldId())==0?0:view.oid();
-        if(visibleParty!=announcedPartyOid){
-            boolean changed=announcedPartyOid!=0;announcedPartyOid=visibleParty;subscribedPartyOid=0;publishedParty=null;publishedPartyScene=null;publishedPartyVisited=null;
-            output.send(()->codec.partyOid(oid,visibleParty));
-            if(changed&&!traveling&&!readyRoom&&(!scene.map().town()||portalMove!=null))forcePartyExit();
-        }else if(subscribedPartyOid==view.oid()&&publishedParty!=null&&!publishedParty.equals(view)){
-            var before=publishedParty;output.send(()->codec.partyChanges(before,view));publishedParty=view;
-        }
-        if(subscribedPartyOid==view.oid()&&publishedPartyScene!=null&&!samePartyScene(publishedPartyScene,sceneNow())){
-            var before=publishedPartyScene;publishedPartyScene=sceneNow();publishedPartyVisited=sceneNow().visited();
-            output.send(()->codec.partySceneChanges(view.oid(),before,sceneNow()));
-        }
-        if(subscribedPartyOid==view.oid()&&publishedPartyVisited!=null){
-            var current=sceneNow().visited();
-            if(!current.equals(publishedPartyVisited)){
-                var previous=publishedPartyVisited;publishedPartyVisited=current;
-                var added=new java.util.ArrayList<Integer>();
-                for(int coord:current)if(!previous.contains(coord))added.add(coord);
-                if(!added.isEmpty())output.send(()->codec.partyVisited(view.oid(),added));
-            }
-        }
-    }
+    void publishPartyState()throws IOException{parties.state();}
+    int announcedPartyOid(){return parties.announcedOid();}
+    PartyView.View publishedParty(){return parties.published();}
+    Thread deliveryThread(){return publications.worker();}
+    private void partyState()throws IOException{parties.state();}
+    void offerParty(PartyView.Event event){parties.offer(event);}
+    void offerPartyEvent(PartyView.Event event){publications.offerParty(event);}
+    private void deliverParty(PartyView.Event event)throws IOException{parties.deliver(event);}
+    private void refreshParty()throws IOException{parties.refresh();}
+    private void refreshParty(boolean traveling)throws IOException{parties.refresh(traveling);}
     /** The native friend list's Join affordance is driven by this presence. */
     private FriendPresence presence(PartyView.View view)throws IOException {
         if(scene.map().town())return new FriendPresence(scene.map().name(),scene.map().zone(),scene.oid());
@@ -175,7 +143,8 @@ final class WorldSession implements AutoCloseable {
         boolean joinable=shared&&(view.automatic()||!view.inviteOnly()||view.allowFriends());
         return new FriendPresence(scene.map().name(),scene.map().zone(),joinable?scene.oid():0);
     }
-    private void forcePartyExit()throws IOException {
+    void partyPresence(PartyView.View view)throws IOException{friendLocation=presence(view);}
+    void forcePartyExit()throws IOException {
         if(readyRoom)return;
         if(scene.map().town()&&portalMove==null)return;
         if(portalMove!=null&&portalMove.destination().map().town())return;
@@ -193,25 +162,6 @@ final class WorldSession implements AutoCloseable {
     /** Verified stock SteamMarshaller: 2[int] and 5[boolean] are unacknowledged client reports;
      * purchase, profile and friend-invite requests carry listeners and receive native failure. */
     boolean steamInvocation(SessionDecoder.Invocation request)throws IOException{return steam.invocation(request);}
-    boolean partyInvocation(SessionDecoder.Invocation request)throws IOException {
-        var args=request.arguments();
-        boolean response=request.oid()==SessionCodec.INVOCATION_OID&&request.service()==SessionCodec.SOCIAL_SERVICE&&request.method()==5
-            &&!args.isEmpty()&&args.getFirst() instanceof String key&&key.startsWith("PARTY_INV:");
-        boolean operation=request.service()==20&&request.method()>=1&&request.method()<=3;
-        if(!response&&!operation)return false;
-        if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid party listener");
-        boolean valid=response?args.size()==3&&args.get(1) instanceof Integer:request.method()==3?args.size()==1:args.size()==2&&args.getFirst() instanceof String;
-        if(!valid)throw new SessionDecoder.Rejected("Invalid party arguments");
-        try{
-            PartyRegistry.Member member;String self;
-            synchronized(this){if(closed||!selected())throw new IOException("Select a knight first");if(scene.tutorial()!=null)throw new IOException("Finish the tutorial before changing parties");if(operation&&!scenes.parties().owns(partyMember,request.oid()))throw new IOException("Party membership changed");characters.worldProfile(knight.name(),authRevision,profile);member=partyMember;self=knight.name();partyState();}
-            if(response)scenes.parties().respond(member,(String)args.get(0),(Integer)args.get(1));
-            else if(request.method()==2){if(!chats.rate().allow(System.nanoTime()))throw new IOException("Please slow down before inviting again");scenes.parties().invite(member,(String)args.get(0));}
-            else scenes.parties().boot(member,request.method()==3?self:(String)args.get(0));
-            synchronized(this){refreshParty();if(!response&&request.method()==3)forcePartyExit();output.send(()->codec.invocationConfirmed(oid,listener.requestId()));}
-        }catch(CharacterStore.Refused|IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
-        return true;
-    }
     private Map<Integer,Integer> occupantClients=Map.of();
     private Map<Integer,Boolean> occupantRoles=Map.of();
     private Map<String,org.tortodrone.core.character.KnightObjective.State> objectives=Map.of();
@@ -626,6 +576,7 @@ final class WorldSession implements AutoCloseable {
         opening=new OpeningHandler(this);
         town=new TownHandler(this);
         chats=new ChatHandler(this);
+        parties=new PartyHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
@@ -649,7 +600,6 @@ final class WorldSession implements AutoCloseable {
     boolean useTemporaryItem(long id,org.tortodrone.core.world.SceneContent.Spec spec){return membership.useItem(id,spec);}
     org.tortodrone.core.world.SceneContent.Spec persistentItemSpec(String config){return scene==null?null:scene.map().content().items().get(config);}
     org.tortodrone.core.world.SceneContent.Spec temporaryItemSpec(long id){var item=temporaryItems.get(id);return item==null?null:persistentItemSpec(item.config());}
-    void publishPartyState()throws IOException{partyState();}
     WorldProfile loadOwnProfile()throws IOException,CharacterStore.Refused{return characters.worldProfile(knight.name(),authRevision,profile);}
     void refreshKnight(){knight=characters.roster().stream().filter(k->k.id()==knight.id()).findFirst().orElseThrow();}
     SceneRegistry sceneRegistry(){return scenes;}
@@ -694,75 +644,28 @@ final class WorldSession implements AutoCloseable {
     PartyRegistry.Member partyMember(){return partyMember;}
     boolean hasInteriors(){return scenes.catalog().hasNonTown();}
     synchronized boolean ownsScene(int oid) { return selected() && !readyRoom && scene.oid()==oid; }
-    synchronized boolean ownsInteriorParty(int target){return selected()&&!readyRoom&&scenes.parties().owns(partyMember,target);}
+    boolean partyInvocation(SessionDecoder.Invocation request)throws IOException{return parties.invocation(request);}
+    synchronized boolean ownsInteriorParty(int target){return parties.ownsInterior(target);}
     /** Cross-session friend follow only reads the peer's stable party seat under its own monitor. */
     synchronized PartyRegistry.Member partyMemberSnapshot(){return partyMember;}
-    synchronized void subscribeInteriorParty(short message)throws IOException {
-        if(readyRoom)throw new IOException("The Ready Room has no scene party");
-        profile=loadProfile(profile);
-        partyState();var view=scenes.parties().view(partyMember);
-        // A solo party is announced while the knight is already travelling, so the stock
-        // client subscribes before the destination scene is current. The party object
-        // belongs to the destination (its gate and mission class), never to the old town.
-        var partyScene=portalMove!=null?portalMove.destination():scene;
-        var health=membership.health();var status=membership.status();output.send(()->codec.party(message,view,partyScene,floorReport!=null&&floorReport.valid()));
-        subscribedPartyOid=view.oid();publishedParty=view;publishedPartyScene=partyScene;publishedPartyVisited=partyScene.visited();
-        if(floorReport!=null&&floorReport.valid())output.send(()->scene.run()==null?codec.finalFloorReport(view.oid()):codec.openingFloorReport(view.oid()));
-        publishedHealth=health;publishedStatus=status;
+    void subscribeInteriorParty(short message)throws IOException{parties.subscribeInterior(message);}
+    synchronized void unsubscribeInteriorParty(int party){parties.unsubscribeInterior(party);}
+    synchronized boolean interiorPartyInvocation(SessionDecoder.Invocation request)throws IOException{return parties.interiorInvocation(request);}
+    org.tortodrone.core.world.SceneInstanceView sceneNowForParty(){return portalMove!=null?portalMove.destination():scene;}
+    void completeDeferredPartyMove()throws IOException {
         if(deferredMove!=null&&deferredMove.sceneOid()==scene.oid()){
             var move=deferredMove;deferredMove=null;completeMove(move.requestId(),move.zone());
         }
     }
-    /** The scene the party object should describe: the destination while a journey is pending. */
-    private org.tortodrone.core.world.SceneInstanceView sceneNow(){return portalMove!=null?portalMove.destination():scene;}
-    private static boolean samePartyScene(org.tortodrone.core.world.SceneInstanceView a,org.tortodrone.core.world.SceneInstanceView b){
-        return a.map().zone()==b.map().zone()&&a.oid()==b.oid()&&a.map().town()==b.map().town()
-            &&a.hasMission()==b.hasMission()&&a.missionGateId()==b.missionGateId()&&a.missionFloor()==b.missionFloor()
-            &&java.util.Objects.equals(a.missionId(),b.missionId())
-            &&a.map().kind().equals(b.map().kind());
+    void publishedHealthStatus(SceneHealth.State health,SceneStatus.State status){publishedHealth=health;publishedStatus=status;}
+    /** Publish the current equip policy on the ordered stream before an arsenal window opens. */
+    void publishArsenalPolicy()throws IOException {
+        boolean inZone=membership!=null&&membership.arsenalZone();
+        output.send(()->codec.equipPolicy(oid,inZone));publishedArsenal=inZone;
     }
-    synchronized void unsubscribeInteriorParty(int party){if(subscribedPartyOid==party){subscribedPartyOid=0;publishedParty=null;publishedPartyScene=null;publishedPartyVisited=null;}}
-    synchronized boolean interiorPartyInvocation(SessionDecoder.Invocation request)throws IOException {
-        if(!ownsInteriorParty(request.oid()))return false;
-        if(request.service()==SceneChat.PARTY_SERVICE)return false;
-        var args=request.arguments();
-        if(request.service()==SessionCodec.LEVEL_PARTY_SERVICE&&request.method()==3){
-            if(args.size()!=1||!(args.getFirst() instanceof Boolean descend))throw new SessionDecoder.Rejected("Invalid floor report");
-            // Native reportComplete has no callback. A late or premature vote does nothing.
-            if(!closed&&subscribed&&entered&&portalMove==null&&floorReport!=null&&floorReport.report(descend,SceneClock.now())){
-                if(scene.tutorial()!=null)finishTutorialFloor(SceneClock.now());
-                else if(scene.run()!=null)finishOpeningFloor(SceneClock.now());
-            }
-            return true;
-        }
-        if(request.service()==20&&request.method()==4){
-            if(args.size()!=3||!(args.get(0) instanceof String target)||!(args.get(1) instanceof Integer cost)||!(args.get(2) instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid revive request");
-            try{
-                if(closed||!subscribed||!entered||scene.map().town())throw new IOException("m.no_revive");
-                if(trade.active())throw new IOException("Finish the trade first");
-                var result=scenes.parties().revive(partyMember,request.oid(),target,world->
-                    scene.simulation().revive(membership,world,()->characters.town(scenes.town()).revive(characters.accountId(),knight.id(),authRevision,cost)));
-                townChanged(result);
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(IOException refused){output.send(()->codec.reviveFailure(oid,listener.requestId(),refused.getMessage()));}
-            return true;
-        }
-        if(request.service()==SessionCodec.LEVEL_PARTY_SERVICE&&request.method()>=4&&request.method()<=6){
-            if(args.size()!=2||!(args.get(0) instanceof Boolean flag)||!(args.get(1) instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.CONFIRM_LISTENER))throw new SessionDecoder.Rejected("Invalid party settings request");
-            try{
-                if(closed||!subscribed||!entered||scene.tutorial()!=null)throw new IOException("m.internal_error");
-                switch(request.method()){
-                    case 4->scenes.parties().setAllowFriends(partyMember,flag);
-                    case 5->scenes.parties().setAllowGuild(partyMember,flag);
-                    default->scenes.parties().setInviteOnly(partyMember,flag);
-                }
-                refreshParty();
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
-            return true;
-        }
-        throw new SessionDecoder.Rejected("Unsupported interior party operation");
-    }
+    FloorReport floorReport(){return floorReport;}
+    boolean sceneTutorial(){return scene.tutorial()!=null;}
+    MissionRun sceneRun(){return scene.run();}
     synchronized boolean departingScene(int oid) {
         // Returning from the client-local Ready Room can reuse the reserved town OID.
         // Once that place is subscribed again its enteredPlace is current, not stale.
@@ -1162,7 +1065,7 @@ final class WorldSession implements AutoCloseable {
             refreshParty(true);
             // The stock dungeon HUD creates its quickbar once, while the scene
             // model is attached. Let its party subscription complete first.
-            if(scene.map().town()||subscribedPartyOid==party)completeMove(listener.requestId(),zone);
+            if(scene.map().town()||parties.subscribedOid()==party)completeMove(listener.requestId(),zone);
             else deferredMove=new DeferredMove(listener.requestId(),zone,scene.oid());
             log.debug("Scene transition initialized; duration-ms="+((System.nanoTime()-transitionStarted)/1000000));
         } catch(IOException error) {
@@ -1455,15 +1358,7 @@ final class WorldSession implements AutoCloseable {
             occupantClients=clients;
         }
         occupantRoles=current.roles();
-        if(subscribedPartyOid!=0&&publishedPartyVisited!=null){
-            var explored=scene.visited();
-            if(!explored.equals(publishedPartyVisited)){
-                var previous=publishedPartyVisited;publishedPartyVisited=explored;
-                var added=new ArrayList<Integer>();
-                for(int coord:explored)if(!previous.contains(coord))added.add(coord);
-                if(!added.isEmpty())output.send(()->codec.partyVisited(subscribedPartyOid,added));
-            }
-        }
+        parties.publishVisited(scene.visited());
         short elapsed=(short)Math.max(1,Math.min(Short.MAX_VALUE,stamp-lastStamp));
         var frame=encoded.frame();
         // The first frame for a connection registers the symbols; later ones reuse the shared body.
@@ -1553,7 +1448,7 @@ final class WorldSession implements AutoCloseable {
                 conversations.open(binding,null,source,initial);
             }
         }
-        if(scene.tutorial()!=null&&forcedReceiver!=null&&subscribedPartyOid==partyOid()){
+        if(scene.tutorial()!=null&&forcedReceiver!=null&&parties.subscribedOid()==partyOid()){
             if(floorReport!=null&&!floorReport.valid())floorReport=null;
             if(floorReport==null){
                 var request=membership.takeFloorAdvance();
@@ -1569,7 +1464,7 @@ final class WorldSession implements AutoCloseable {
             }
             if(finishTutorialFloor(stamp))return;
         }
-        if(scene.run()!=null&&forcedReceiver!=null&&subscribedPartyOid==partyOid()){
+        if(scene.run()!=null&&forcedReceiver!=null&&parties.subscribedOid()==partyOid()){
             if(processOpeningFloor(stamp))return;
         }
         var trigger=current.portal(profile.worldId());
@@ -1577,7 +1472,7 @@ final class WorldSession implements AutoCloseable {
     }
     /** Called only after the scene's original NextFloor and native reportComplete (or its
      * authored timeout). Storage commits before flags, forced movement or party publication. */
-    private boolean finishTutorialFloor(int stamp)throws IOException {
+    boolean finishTutorialFloor(int stamp)throws IOException {
         if(floorReport==null||!floorReport.ready(stamp)||forcedReceiver==null)return false;
         var route=scene.tutorial();
         if(route==null||!subscribed||!entered||portalMove!=null) return false;
@@ -1645,7 +1540,7 @@ final class WorldSession implements AutoCloseable {
         }
         return finishOpeningFloor(stamp);
     }
-    private boolean finishOpeningFloor(int stamp)throws IOException {
+    boolean finishOpeningFloor(int stamp)throws IOException {
         if(scene.run()==null||floorReport==null||!floorReport.votedOrTimedOut(stamp)||forcedReceiver==null||!subscribed||!entered||portalMove!=null)return false;
         var run=scene.run();var request=floorReport.request();
         if(!scenes.authorized(scene,profile.worldId(),partyMember))return false;

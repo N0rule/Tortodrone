@@ -164,6 +164,9 @@ final class SessionOutput implements AutoCloseable {
 
     long droppedOptional() { lock.lock(); try { return droppedOptional; } finally { lock.unlock(); } }
 
+    /** Test seam: holding this lock parks a producer exactly like a slow downstream consumer. */
+    java.util.concurrent.locks.ReentrantLock encodingLockForTest() { return encoding; }
+
     private void write() {
         try {
             while (true) {

@@ -21,8 +21,9 @@ import org.tortodrone.core.world.ReadyRoom;
 public final class SlashCommandsSessionTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-slash-commands-");
+        var previous=org.tortodrone.world.SceneRegistry.system();
         try {
-            var content=ContentManager.load(Path.of("."));var scenes=org.tortodrone.world.SceneRegistry.create(content);var db=new Database(home,true);
+            var content=ContentManager.load(Path.of("."));var scenes=org.tortodrone.world.SceneRegistry.create(content);org.tortodrone.world.SceneRegistry.install(scenes);var db=new Database(home,true);
             try(var gm=person(db,content.items(),scenes,"Master",true);var player=person(db,content.items(),scenes,"Player",false);var peer=person(db,content.items(),scenes,"Other",false)) {
                 // Scene chat shares service 12 with the friend list and is addressed at the scene
                 // object, not the global invocation object; it must not be rejected as a friend call.
@@ -91,10 +92,9 @@ public final class SlashCommandsSessionTest {
                 gm.world.adminPeople(admin(30,"haven"));move(gm,scenes.catalog().entry());
                 check(target.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("training",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)7)))),"native training travel dispatched");
                 var training=scenes.catalog().scene(294);move(target,training);
-                var announcedParty=WorldSession.class.getDeclaredField("announcedPartyOid");announcedParty.setAccessible(true);
-                check(announcedParty.getInt(target.world)!=0,"Training retains the party object required by its HUD");
+                check(target.world.announcedPartyOid()!=0,"Training retains the party object required by its HUD");
                 target.world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));move(target,scenes.catalog().entry());
-                check(announcedParty.getInt(target.world)==0,"returning to town clears the solo mission party so /training does not ask to abandon it");
+                check(target.world.announcedPartyOid()==0,"returning to town clears the solo mission party so /training does not ask to abandon it");
                 target.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("training",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));move(target,training);
                 gm.world.adminPeople(admin(27,"Target"));move(gm,training);
                 var sceneField=WorldSession.class.getDeclaredField("scene");sceneField.setAccessible(true);
@@ -164,7 +164,7 @@ public final class SlashCommandsSessionTest {
                 check(atAuction.x()==1.5f&&atAuction.y()==12.5f&&pending.get(gm.world)==null,"/ah uses the authored destination and opens in-scene without a loading transition");
             }
             System.out.println("PASS: scene-chat/friend-service routing, same-scene travel guards, native /haven, native away/back, loadouts, separate zone/trade channels, GM who/kick/go/summon, readiness, authorization, revocation and private-instance isolation");
-        }finally{org.tortodrone.support.ContentFixture.delete(home);}
+        }finally{org.tortodrone.world.SceneRegistry.install(previous);org.tortodrone.support.ContentFixture.delete(home);}
     }
     private static Person person(Database db,ItemCatalog items,SceneRegistry scenes,String name,boolean gm)throws Exception {
         return person(db,items,scenes,name,gm,false);

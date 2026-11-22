@@ -108,16 +108,17 @@ public final class JellyDeathWireTest {
                     +first[3]+" to destroyed "+first[1]+" across "+dying.size()+" wire frames");
 
                 // Act two - the same death while the delivery thread is stalled. Holding
-                // the session's output monitor parks the delivery thread mid-publication,
-                // so every later snapshot coalesces into one pending publication - the
-                // exact state a slow downstream reader produces. With only coalescing,
-                // a death inside the stall is delivered as a straight alive-to-removed
-                // jump and the client never sees the dying record.
-                var deliveryField=WorldSession.class.getDeclaredField("delivery");deliveryField.setAccessible(true);
-                var deliveryThread=(Thread)deliveryField.get(world);
+                // the output encoding lock parks the delivery thread mid-publication, so
+                // every later snapshot coalesces into one pending publication - the exact
+                // state a slow downstream reader produces. With only coalescing, a death
+                // inside the stall is delivered as a straight alive-to-removed jump and
+                // the client never sees the dying record.
+                var deliveryThread=world.deliveryThread();
                 var entitiesField=SceneSimulation.class.getDeclaredField("entities");entitiesField.setAccessible(true);
                 int kill;
-                synchronized(output){
+                var encoding=output.encodingLockForTest();
+                encoding.lock();
+                try {
                     // Park the delivery thread inside a publication. Ticks, captures,
                     // offers and the damage path all run without these monitors.
                     long parked=System.nanoTime()+20_000_000_000L;
@@ -146,7 +147,7 @@ public final class JellyDeathWireTest {
                     int frozenAt=socket.wireLength();
                     Thread.sleep(500);
                     check(socket.wireLength()==frozenAt,"the downstream stays frozen across the stalled death");
-                }
+                } finally { encoding.unlock(); }
                 Thread.sleep(3000); // let the drained publications deliver after the stall
                 var stalled=socket.dyingMonsterDeltas();
                 check(stalled.stream().anyMatch(d->d[3]==kill&&d[2]==2),
@@ -158,10 +159,16 @@ public final class JellyDeathWireTest {
     private static Object field(WorldSession world,String name)throws Exception {synchronized(world){var f=WorldSession.class.getDeclaredField(name);f.setAccessible(true);return f.get(world);}}
     /** True when the delivery virtual thread is parked inside a publication's downstream send. */
     private static boolean blockedInPublish(Thread delivery){
-        if(delivery==null||delivery.getState()!=Thread.State.BLOCKED)return false;
-        for(var frame:delivery.getStackTrace())
-            if(frame.getClassName().endsWith("WorldSession")&&frame.getMethodName().equals("publish"))return true;
-        return false;
+        if(delivery==null)return false;
+        var state=delivery.getState();
+        if(state!=Thread.State.BLOCKED&&state!=Thread.State.WAITING)return false;
+        boolean inSession=false,inOutput=false;
+        for(var frame:delivery.getStackTrace()){
+            if(frame.getClassName().endsWith("WorldSession")&&frame.getMethodName().equals("publish"))inSession=true;
+            if(frame.getClassName().endsWith("SessionOutput")&&(frame.getMethodName().equals("encodeAndQueue")
+                    ||frame.getMethodName().equals("send")||frame.getMethodName().equals("sendOptional")))inOutput=true;
+        }
+        return inSession&&inOutput;
     }
     private static void move(WorldSession world,org.tortodrone.core.world.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threeerings.whirled.zone.data.ZoneMoveMarshaller$ZoneMoveMarshaller",(short)1))));}
     private static FireCatalog.DataValue normal(float amount,boolean major){

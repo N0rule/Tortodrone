@@ -31,6 +31,7 @@ import org.tortodrone.resources.SceneCatalog;
 public class CooperativeTrainingTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-coop-");
+        var previous=SceneRegistry.system();
         try{
             var db=new Database(home,true);
             var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
@@ -38,11 +39,12 @@ public class CooperativeTrainingTest {
             scenes.town(org.tortodrone.core.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
             scenes.weapons(WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv")));
             scenes.fires(FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json")));
+            SceneRegistry.install(scenes);
             try(var a=new Player(db,items,scenes,"Alice",1001);var b=new Player(db,items,scenes,"Bob",1002);var c=new Player(db,items,scenes,"Carol",1003)){
                 int party=a.party().oid();b.socket.frames.clear();a.operation(2,b.name);b.socket.await("Notification$PartyInvite");
                 b.world.partyInvocation(new SessionDecoder.Invocation(3,12,5,List.of("PARTY_INV:"+party,1,listener())));
                 // Native clients subscribe when the newly visible partyOid is announced.
-                await(()->(int)field(a.world,"announcedPartyOid")==party&&(int)field(b.world,"announcedPartyOid")==party);
+                await(()->a.world.announcedPartyOid()==party&&b.world.announcedPartyOid()==party);
                 a.world.subscribeInteriorParty((short)5);b.world.subscribeInteriorParty((short)5);await(()->a.publishedMembers()==2);
                 check(a.party().oid()==b.party().oid(),"native accept joins the inviter's stable party");
                 a.travel(294);b.travel(294);c.travel(294);
@@ -128,7 +130,7 @@ public class CooperativeTrainingTest {
                 a.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("haven",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)13))));a.travel(1);
             }
             System.out.println("PASS: native invite/accept, co-op travel/movement/enemy state/health/chat, outsider isolation, independent exit, leader disconnect and cleanup");
-        }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
+        }finally{SceneRegistry.install(previous);try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
     private static SessionDecoder.Listener listener(){return new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)20);}
     private static Object field(Object object,String name){try{var f=object.getClass().getDeclaredField(name);f.setAccessible(true);return f.get(object);}catch(Exception failure){throw new AssertionError(failure);}}
@@ -145,8 +147,8 @@ public class CooperativeTrainingTest {
         PartyView.View party(){try{return scenes.parties().view(member());}catch(IOException failure){throw new AssertionError(failure);}}
         SceneRegistry.Instance place(){synchronized(world){return (SceneRegistry.Instance)field(world,"scene");}}
         SceneSimulation.Membership membership(){synchronized(world){return (SceneSimulation.Membership)field(world,"membership");}}
-        int publishedMembers(){synchronized(world){var view=(PartyView.View)field(world,"publishedParty");return view==null?0:view.members().size();}}
-        boolean peerHurt(int oid){synchronized(world){var view=(PartyView.View)field(world,"publishedParty");return view!=null&&view.members().stream().anyMatch(m->m.playerOid()==oid&&m.health().current()<m.health().maximum());}}
+        int publishedMembers(){var view=world.publishedParty();return view==null?0:view.members().size();}
+        boolean peerHurt(int oid){var view=world.publishedParty();return view!=null&&view.members().stream().anyMatch(m->m.playerOid()==oid&&m.health().current()<m.health().maximum());}
         void operation(int method,String target)throws Exception{world.partyInvocation(new SessionDecoder.Invocation(party().oid(),20,method,target==null?List.of(listener()):List.of(target,listener())));}
         void travel(int template)throws Exception{
             synchronized(world){

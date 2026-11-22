@@ -137,9 +137,7 @@ public final class ReadyRoomSessionTest {
         }
         check(!WorldSession.active(characters.accountId(),knight.id()),"party delivery cleanup releases Ready Room ownership");
     }
-    private static Thread delivery(WorldSession world)throws Exception {
-        synchronized(world){var field=WorldSession.class.getDeclaredField("delivery");field.setAccessible(true);return (Thread)field.get(world);}
-    }
+    private static Thread delivery(WorldSession world){return world.deliveryThread();}
     /** Exercise the actual connection loop/decoder and writer, not only WorldSession methods. */
     private static void socketDelivery(CharacterStore characters,Knight knight,CharacterStore peerCharacters,Knight peerKnight,SceneRegistry registry,int initial)throws Exception {
         var selected=new CountDownLatch(1);
