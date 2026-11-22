@@ -58,6 +58,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final SceneCollisions collisions=new SceneCollisions(this);
     private final WaveSystem waveSystem=new WaveSystem(this);
     private final PotSystem pots=new PotSystem(this);
+    private final InteractionSystem interactions=new InteractionSystem(this);
     public void elevators(ElevatorControl control){elevatorSystem.control(control);}
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
@@ -193,9 +194,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     float spatialReach(){return spatial.reach();}
     java.util.Collection<SceneEntity> entityValues(){return entities.values();}
     boolean activePlayer(int id){return playerActive.test(id);}
+    boolean pickupEligible(int id,SceneContent.Spec spec){return pickupEligible.test(id,spec);}
+    boolean healPlayer(int id,int amount){return playerHeal.test(id,amount);}
     /** Interactive props, doors and lifts are the only entities an interaction scan reads. */
-    private final Set<SceneEntity> interactionCandidates=new LinkedHashSet<>();
-    private static boolean interactionCandidate(SceneEntity entity){return entity.interactive||liftKind(entity.kind)||entity.kind.equals("Door");}
     private final ArrayDeque<SceneEntity> pendingActors=new ArrayDeque<>();
     private int sceneSpawnStamp,sceneSpawnCount;
     private record SpawnSource(SceneEntities scene,int id,int faction,String identity) { }
@@ -334,12 +335,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
     /** Insertion assigns the deterministic order the spatial query returns candidates in. */
     private void insert(SceneEntity entity){
         entity.order=++entityOrder;entities.put(entity.id,entity);spatial.add(entity);
-        if(interactionCandidate(entity))interactionCandidates.add(entity);
+        interactions.add(entity);
         if(entity.kind.equals("Monster"))monsterMetrics.spawned();
     }
     private void unlink(SceneEntity entity){
         if(entities.remove(entity.id)!=null&&entity.kind.equals("Monster"))monsterMetrics.despawned();
-        interactionCandidates.remove(entity);
+        interactions.remove(entity);
         spatial.remove(entity);
     }
     SceneEntity spawn(SceneContent.Entry binding,SceneContent.Spec spec,SceneEntity pad,int stamp){
@@ -495,61 +496,18 @@ public final class SceneEntities implements SceneWeapons.Targets {
             e.carrier=0;e.flags&=~6;if(e.vial!=null)e.destroyed=stamp;
         }
     }
-    public List<Pickup> takePickups(int player){
-        var result=new ArrayList<Pickup>();
-        for(var e:entities.values())if(e.claim==player&&!e.claimTaken){e.claimTaken=true;result.add(pickup(e));}
-        return List.copyOf(result);
-    }
-    public List<Pickup> pendingPickups(int player){
-        return entities.values().stream().filter(e->e.claim==player).map(SceneEntities::pickup).toList();
-    }
-    private static Pickup pickup(SceneEntity e){return new Pickup(e.id,e.spec.text("pickup-item",""),e.spec.flag("pickup-transient",false),e.spec.fields().containsKey("pickup-equip-slot")?e.spec.integer("pickup-equip-slot",0):null,e.spec.integer("pickup-heat",0));}
-    public int heatClaim(int player,int actor){var e=entities.get(actor);return e!=null&&e.destroyed==Integer.MAX_VALUE&&e.claim==player&&e.claimTaken?e.spec.integer("pickup-heat",0):0;}
-    public boolean activateHeat(int player,int actor){
-        var e=entities.get(actor);if(heatClaim(player,actor)<=0)return false;
-        var target=players.stream().filter(p->p.id()==player&&p.clientOid()>0).findFirst().orElse(null);if(target==null)return false;
-        e.pickupState=new ScenePickupState(target.clientOid(),lastStamp);
-        float speed=e.spec.number("vacuum-speed",0);
-        e.destroyed=lastStamp+(speed<=0?0:(int)(Math.hypot(target.x()-e.x,target.y()-e.y)*1000/speed));e.claim=0;e.claimTaken=false;return true;
-    }
-    public void reconsiderPickups(int player){for(var e:entities.values())e.refusedPickups.remove(player);}
-    public void completePickup(int player,int actor,boolean success){
-        var e=entities.get(actor);if(e==null||e.claim!=player)return;
-        // Claims are produced by advance: settle on that scene tick, including under
-        // a deterministic clock. Wall time can precede an explicitly advanced tick.
-        e.claim=0;e.claimTaken=false;if(success)e.destroyed=lastStamp;else e.refusedPickups.add(player);
-    }
-    public void cancelClaims(int player){for(var e:entities.values()){if(e.claim==player&&!e.claimTaken)e.claim=0;e.refusedPickups.remove(player);}}
-    public int interactionDuration(int id){var e=entities.get(id);return e==null?670:e.spec.integer("interaction-duration",Set.of("Talk","Shop").contains(interactionAction(e))?1667:670);}
-    private String interactionAction(SceneEntity e){
-        String station=e.spec.text("town-kind","");
-        String fallback=liftKind(e.kind)?"Lift":
-            content.conversations().containsKey(e.spec.text("dialogue",e.config.name()))?"Talk":
-            Set.of("OpenShop","OpenDepot","OpenAuction").contains(station)?"Shop":"Interact";
-        return e.spec.text("interaction-action",fallback);
-    }
-    public InteractionState interaction(float x,float y,float rotation){
-        return interaction(x,y,rotation,0,0);
-    }
+    public List<Pickup> takePickups(int player){return interactions.takePickups(player);}
+    public List<Pickup> pendingPickups(int player){return interactions.pendingPickups(player);}
+    public int heatClaim(int player,int actor){return interactions.heatClaim(player,actor);}
+    public boolean activateHeat(int player,int actor){return interactions.activateHeat(player,actor);}
+    public void reconsiderPickups(int player){interactions.reconsider(player);}
+    public void completePickup(int player,int actor,boolean success){interactions.complete(player,actor,success);}
+    public void cancelClaims(int player){interactions.cancel(player);}
+    public int interactionDuration(int id){return interactions.duration(id);}
+    public InteractionState interaction(float x,float y,float rotation){return interactions.interaction(x,y,rotation,0,0);}
     /** Carried keys can address only a compatible closed door in this scene. */
-    public InteractionState interaction(float x,float y,float rotation,int owner,int lift){
-        var carried=lift==0?null:entities.get(lift);
-        boolean key=carried!=null&&carried.destroyed==Integer.MAX_VALUE&&carried.carrier==owner&&liftKind(carried.kind)&&carried.spec.text("actionable-signal","").equals("gold_unlock");
-        SceneEntity nearest=null;float best=Float.POSITIVE_INFINITY;
-        float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
-        for(var e:interactionCandidates)if((key?e.kind.equals("Door")&&e.spec.text("door-lock","").equals("gold")&&(e.flags&2)==0:e.interactive||liftKind(e.kind)&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
-            float ox=e.spec.number("interaction-offset-x",.7f),oy=e.spec.number("interaction-offset-y",0);
-            float px=x+ox*c-oy*s,py=y+ox*s+oy*c;
-            float distance=(float)Math.hypot(px-e.x,py-e.y);
-            float radius=e.spec.number("interaction-radius",.4f)+e.spec.number("interaction-expansion",0);
-            if(e.spec.contains(e.x,e.y,e.rotation,px,py,radius)&&distance<best){nearest=e;best=distance;}
-        }
-        if(nearest==null)return null;
-        String description=nearest.spec.text("description","");
-        String action=key?"UnlockGold":interactionAction(nearest);
-        return new InteractionState(nearest.id,description.isEmpty()?null:new StarterCatalog.Model(description,Map.of()),action,
-            nearest.entrySource()?nearest.binding.key():null);
-    }
+    public InteractionState interaction(float x,float y,float rotation,int owner,int lift){return interactions.interaction(x,y,rotation,owner,lift);}
+
     public void advance(int stamp,List<ActorState> occupants){
         // Publish only the batch staged before this tick. Work queued by spawned
         // actors cannot recursively drain this batch; capacity also bounds later ticks.
@@ -645,7 +603,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             }
             // PickupLogic's minimum activation time lets the spawn visual complete
             // before a knight standing on the pad can collect its replacement.
-            if(e.kind.equals("Pickup")&&e.claim==0&&stamp-e.created>=1000)collect(e,elapsed,players);
+            if(e.kind.equals("Pickup")&&e.claim==0&&stamp-e.created>=1000)interactions.collect(e,elapsed,players);
             if(e.kind.equals("Monster")){
                 statusSystem.tick(e,stamp,elapsed);
                 if(e.program!=null)scriptedProgram(e,stamp,elapsed);
@@ -771,30 +729,6 @@ public final class SceneEntities implements SceneWeapons.Targets {
         String graph=e.vial==null?e.spec.text("land-action",""):e.vial.text("use-action","");
         if(!graph.isBlank())try{attack.accept(e.snapshot(),FireCatalog.actionJson(graph));}catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared lift action",invalid);}
         if(e.spec.flag("destroy-on-land",false))e.destroyed=stamp;
-    }
-    private void collect(SceneEntity e,float elapsed,List<ActorState> players){
-        boolean heal=e.spec.integer("pickup-heal",0)>0;
-        if(e.spec.text("pickup-item","").isEmpty()&&e.spec.integer("pickup-heat",0)==0&&!heal)return;
-        for(var player:players){
-            if(!playerActive.test(player.id())||!pickupEligible.test(player.id(),e.spec))continue;
-            float dx=player.x()-e.x,dy=player.y()-e.y,distance=(float)Math.hypot(dx,dy);
-            float reach=e.spec.number("radius",0)+ScenePortals.PAWN_RADIUS;
-            if(distance>reach+e.spec.number("vacuum-expansion",0)){e.refusedPickups.remove(player.id());continue;}
-            if(e.refusedPickups.contains(player.id()))continue;
-            if(e.spec.integer("pickup-heat",0)>0){e.claim=player.id();return;}
-            if(distance<=reach){
-                // Native hearts heal on contact and stay put while the knight is full.
-                if(heal){
-                    if(playerHeal.test(player.id(),e.spec.integer("pickup-heal",0)))e.destroyed=lastStamp;
-                    else e.refusedPickups.add(player.id());
-                }else e.claim=player.id();
-                return;
-            }
-            float step=Math.min(distance,e.spec.number("vacuum-speed",0)*elapsed);
-            float x=e.x+dx*step/distance,y=e.y+dy*step/distance;
-            if(terrain.walkableSegment(e.x,e.y,x,y)){e.x=x;e.y=y;spatial.move(e);}
-            return;
-        }
     }
     private void scriptedMovement(SceneEntity e,int stamp,float elapsed){movementSystem.scriptedMovement(e,stamp,elapsed);}
     /** Per attack slot, the damage circle radius its first fire action can reach. A
