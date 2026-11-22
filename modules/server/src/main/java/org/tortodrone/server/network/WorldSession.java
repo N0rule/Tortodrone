@@ -398,7 +398,7 @@ final class WorldSession implements AutoCloseable {
                 var mission=scenes.missions().mission(missionId);
                 if(mission==null||!mission.requirement().type().equals("conversation")&&!mission.requirement().type().equals("gate_conversation"))
                     throw new IOException("m.internal_error");
-                openComlink(missionId);arrivalComlink=null;
+                conversations.openComlink(missionId);arrivalComlink=null;
                 output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
             return true;
@@ -472,38 +472,13 @@ final class WorldSession implements AutoCloseable {
         if(gate==null||!scenes.missions().eligible(mission.id(),profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
         scenes.parties().soloGate(partyMember,partyOid(),()->Boolean.TRUE);return gate;
     }
-    private void openComlink(OpeningMission mission)throws IOException {openComlink(mission,false);}
-    /** Any imported conversation mission, opened where the knight currently is. */
-    private void openComlink(String missionId)throws IOException {
-        SceneConversation definition=comlink(missionId);
-        if(definition==null||closed||!selected()||!entered||!subscribed||membership==null)throw new IOException("m.internal_error");
-        profile=loadProfile(profile);if(!scenes.missions().eligible(missionId,profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
-        var snapshot=scene.simulation().snapshot();var own=snapshot.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
-        if(own==null||snapshot.portal(own.id())!=null||membership.health().current()<=0)throw new IOException("m.internal_error");
-        if(definition==conversations.current()&&missionId.equals(conversations.mission()))return;
-        conversations.open(definition,missionId,own);
-    }
-    private SceneConversation comlink(String missionId){
+    SceneConversation comlink(String missionId){
         var opening=OpeningMission.byId(missionId);
         if(opening!=null&&OpeningComlinks.get(opening)!=null)return OpeningComlinks.get(opening);
         return scenes.comlinks().get(missionId);
     }
-    /** The arrival variant opens during the zone-change flush, mirroring native
-     * MissionManager.comlinkArrived from ThetyaSceneManager.bodyEntered: the stock client has
-     * already left its scene controller (SceneDirector.forcedMove -> didLeaveScene, then
-     * LocationDirector.didMoveTo -> didLeavePlace) and has not fetched the destination place
-     * object, so the dialog is stored by the sceneDialog listener's absence and displayed only
-     * when the destination view becomes visible (EF -> Iy) instead of over its loading screen.
-     * Delivery therefore must not require enteredPlace, which the client sends while still
-     * loading. */
-    private void openComlink(OpeningMission mission,boolean arriving)throws IOException {
-        if(mission==null||OpeningComlinks.get(mission)==null||closed||!selected()||(!arriving&&(!entered||!subscribed))||membership==null||scene.map().id()!=OpeningComlinks.scene(mission))throw new IOException("m.internal_error");
-        profile=loadProfile(profile);if(!scenes.missions().eligible(mission.id(),profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
-        var snapshot=scene.simulation().snapshot();var own=snapshot.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
-        if(own==null||snapshot.portal(own.id())!=null||membership.health().current()<=0)throw new IOException("m.internal_error");
-        if(OpeningComlinks.owns(mission,conversations.current())&&mission.id().equals(conversations.mission()))return;
-        conversations.open(OpeningComlinks.get(mission),mission.id(),own);
-    }
+    void reloadProfile()throws IOException{profile=loadProfile(profile);}
+    boolean openingEligible(String missionId){return scenes.missions().eligible(missionId,profile.progress(),completedOpening.keySet());}
     boolean auctionInvocation(SessionDecoder.Invocation request)throws IOException{return auction.invocation(request);}
 
     boolean friendInvocation(SessionDecoder.Invocation request)throws IOException{return friends.invocation(request);}
@@ -1429,7 +1404,7 @@ final class WorldSession implements AutoCloseable {
         // A failed delivery falls back to the enteredPlace/publish path.
         if(arrivalComlink!=null){
             var pending=arrivalComlink;arrivalComlink=null;
-            try{openComlink(pending,true);deliveredComlink=pending;}catch(IOException unavailable){arrivalComlink=pending;}
+            try{conversations.openArrivalComlink(pending);deliveredComlink=pending;}catch(IOException unavailable){arrivalComlink=pending;}
         }
     }
 
@@ -1914,7 +1889,7 @@ final class WorldSession implements AutoCloseable {
             conversations.open(scripted.definition(),null,scripted.source());
         }
         if(arrivalComlink!=null&&own!=null&&!conversations.active()&&townDialog==null&&missionDialogCreated==0){
-            var pending=arrivalComlink;arrivalComlink=null;openComlink(pending);deliveredComlink=pending;
+            var pending=arrivalComlink;arrivalComlink=null;conversations.openComlink(pending.id());deliveredComlink=pending;
         }
         int target=membership.takeInteraction();
         if(target>0&&own!=null){

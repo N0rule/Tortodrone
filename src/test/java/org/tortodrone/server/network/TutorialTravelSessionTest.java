@@ -62,7 +62,7 @@ public final class TutorialTravelSessionTest {
                 // while one delivered after enteredPlace shows over its loading screen.
                 await(()->socket.contains("m.welcome_to_haven_1a"));
                 check(socket.indexOf("m.welcome_to_haven_1a")>socket.lastIndexOf("com.threerings.whirled.zone.data.ZoneSummary"),"the zone-change response delivers the arrival comlink behind moveSucceeded");
-                check(OpeningComlinks.get(OpeningMission.WELCOME_HAVEN).initial().equals(field(world,"conversationNode")),"the arrival comlink opens during the move, before the client can answer enteredPlace");
+                check(OpeningComlinks.get(OpeningMission.WELCOME_HAVEN).initial().equals(world.conversationNode()),"the arrival comlink opens during the move, before the client can answer enteredPlace");
                 world.subscribe((short)4);
                 await(()->socket.contains("com.threerings.projectx.town.data.TownSceneObject"));
                 check(socket.indexOf("com.threerings.projectx.town.data.TownSceneObject")>socket.indexOf("m.welcome_to_haven_1a"),"the deferred comlink precedes the destination place object");

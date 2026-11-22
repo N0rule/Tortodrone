@@ -73,6 +73,35 @@ final class ConversationHandler {
             conversation,node,source,created));
     }
 
+    /** Any imported conversation mission, opened where the knight currently is. */
+    void openComlink(String missionId)throws IOException {
+        var definition=session.comlink(missionId);
+        if(definition==null||session.isClosed()||!session.selected()||!session.sceneEntered()||!session.sceneSubscribed()
+                ||session.membership()==null)throw new IOException("m.internal_error");
+        session.reloadProfile();
+        if(!session.openingEligible(missionId))throw new IOException("m.internal_error");
+        var own=session.selfActor();
+        if(own==null||session.currentScene().simulation().snapshot().portal(own.id())!=null
+                ||session.membership().health().current()<=0)throw new IOException("m.internal_error");
+        if(definition==current()&&missionId.equals(mission))return;
+        open(definition,missionId,own);
+    }
+
+    /** Arrival comlink delivered behind the move response; the client is still loading, so
+     *  enteredPlace cannot be required (see the session's forceScene comment). */
+    void openArrivalComlink(OpeningMission target)throws IOException {
+        if(target==null||OpeningComlinks.get(target)==null||session.isClosed()||!session.selected()
+                ||session.membership()==null||session.currentScene().map().id()!=OpeningComlinks.scene(target))
+            throw new IOException("m.internal_error");
+        session.reloadProfile();
+        if(!session.openingEligible(target.id()))throw new IOException("m.internal_error");
+        var own=session.selfActor();
+        if(own==null||session.currentScene().simulation().snapshot().portal(own.id())!=null
+                ||session.membership().health().current()<=0)throw new IOException("m.internal_error");
+        if(OpeningComlinks.owns(target,current())&&target.id().equals(mission))return;
+        open(OpeningComlinks.get(target),target.id(),own);
+    }
+
     void close()throws IOException {
         if(conversation==null)return;
         conversation=null;source=null;node=null;mission=null;
