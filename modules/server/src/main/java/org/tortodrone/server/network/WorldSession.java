@@ -1160,15 +1160,8 @@ final class WorldSession implements AutoCloseable {
         }
         throw new IOException("Alchemy machines are blocked");
     }
-    private ActorState auctionSource(SceneRegistry.Instance destination)throws IOException {
-        var source=destination.simulation().station("OpenAuction");
-        if(source==null)throw new IOException("No Auction House in this scene");
-        return source;
-    }
-    private void openAuction()throws IOException {
-        var source=auctionSource(scene);
-        output.send(()->codec.controllerAction(oid,"auction",source));
-    }
+    ActorState auctionSource(SceneRegistry.Instance destination)throws IOException{return auction.source(destination);}
+    void openAuction()throws IOException{auction.open();}
 
     synchronized void unsubscribe() { leaveChat();subscribed = entered = false; sceneGeneration++;if(membership!=null)membership.pause(); }
 
@@ -1494,12 +1487,7 @@ final class WorldSession implements AutoCloseable {
             }
         }
     }
-    private void publishOutbids(WorldProfile before,WorldProfile after)throws IOException {
-        for(var notice:after.town().outbids())if(!before.town().outbids().contains(notice)) {
-            var item=characters.catalog().require(notice.item());
-            output.send(()->codec.auctionOutbid(scene.oid(),"%item:"+item.nameKey(),notice.crowns()));
-        }
-    }
+    private void publishOutbids(WorldProfile before,WorldProfile after)throws IOException{auction.publishOutbids(before,after);}
     private WorldProfile loadProfile(WorldProfile cached)throws IOException {
         try{return characters.worldProfile(knight.name(),authRevision,cached);}
         catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}

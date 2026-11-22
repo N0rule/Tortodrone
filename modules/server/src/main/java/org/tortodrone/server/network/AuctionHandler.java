@@ -3,8 +3,11 @@ package org.tortodrone.server.network;
 import java.io.IOException;
 import org.tortodrone.character.CharacterStore;
 import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.world.ActorState;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
+import org.tortodrone.world.SceneRegistry;
 
 /** Auction house and uplink mail operations for one connection. */
 final class AuctionHandler {
@@ -17,6 +20,26 @@ final class AuctionHandler {
         this.responder = session.responder();
         this.store = session.charactersStore();
     }
+
+    /** The scene's auction station, surfaced as the native controller source. */
+    ActorState source(SceneRegistry.Instance place)throws IOException {
+        var source=place.simulation().station("OpenAuction");
+        if(source==null)throw new IOException("No Auction House in this scene");
+        return source;
+    }
+
+    void open()throws IOException { synchronized (session) {
+        var source=source(session.currentScene());
+        responder.send(()->responder.codec().controllerAction(responder.oid(),"auction",source));
+    }}
+
+    /** Publish each newly durable outbid once the write has committed. */
+    void publishOutbids(WorldProfile before,WorldProfile after)throws IOException { synchronized (session) {
+        for(var notice:after.town().outbids())if(!before.town().outbids().contains(notice)){
+            var item=store.catalog().require(notice.item());
+            responder.send(()->responder.codec().auctionOutbid(session.currentScene().oid(),"%item:"+item.nameKey(),notice.crowns()));
+        }
+    }}
 
     boolean invocation(SessionDecoder.Invocation request) throws IOException {
         synchronized (session) {
