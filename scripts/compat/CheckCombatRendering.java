@@ -129,7 +129,11 @@ public final class CheckCombatRendering {
             run(seed, "seed", manual?120:45, scratch);
             if(manual)writeManualPrefs(scratch);
 
-            Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui","--skip-client-assets"), serverLog, scratch);
+            // Log GC stops beside the session: a multi-hundred-millisecond pause shows up as a
+            // scene tick tail and would otherwise be mistaken for simulation work.
+            Process server = start(List.of(executable("java"),
+                "-Xlog:gc*:file="+output.resolve("gc.log")+":time,uptime,level,tags",
+                "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui","--skip-client-assets"), serverLog, scratch);
             server.getOutputStream().close();
             String port = ready(server, serverLog, Duration.ofSeconds(120));
             Path publicKey = scratch.resolve("data/keys/public.txt");
@@ -234,7 +238,7 @@ public final class CheckCombatRendering {
         System.out.println("MANUAL: control scheme WASD_MOVE");
     }
     private static List<String> graphicsBase(Path game, Path app, Path sandbox) {
-        return new ArrayList<>(List.of(executable("java"), "--enable-native-access=ALL-UNNAMED",
+        var base = new ArrayList<>(List.of(executable("java"), "--enable-native-access=ALL-UNNAMED",
             "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED",
             "-Ddisable_sound=true", "-Dno_unpack_resources=true", "-Dresource_dir=" + game.resolve("rsrc/"),
             "-Duser.home=" + sandbox.resolve("home"),
@@ -243,6 +247,10 @@ public final class CheckCombatRendering {
             "-Djava.io.tmpdir=" + sandbox.resolve("tmp"), "-Dappdir=" + app,
             "-cp", sandbox + File.pathSeparator + game.resolve("code/projectx-pcode.jar") +
                 File.pathSeparator + game.resolve("code") + File.separator + "*" + File.pathSeparator + sandbox.resolve("tortodrone.jar")));
+        // Opt-in JFR profile for attributing a client freeze outside the probe's own work.
+        String jfr=System.getenv("TORTODRONE_GFX_JFR");
+        if(jfr!=null)base.add("-XX:StartFlightRecording=filename="+jfr+",settings=profile,dumponexit=true");
+        return base;
     }
 
     private static void requireMaps(Path maps) throws IOException {

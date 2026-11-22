@@ -255,13 +255,20 @@ public final class SceneCollision {
     /** Samples a translated shape at 0.1-unit intervals to prevent projectile tunnelling. */
     public boolean clearSegment(int mask,Object localShape,float fromX,float fromY,float toX,float toY,float rotation) { return clearSegment(mask,localShape,fromX,fromY,toX,toY,rotation,java.util.Set.of()); }
     public boolean clearSegment(int mask,Object localShape,float fromX,float fromY,float toX,float toY,float rotation,java.util.Set<Integer> disabled) {
+        return clearSegment(mask,localShape,fromX,fromY,toX,toY,rotation,disabled,.1f);
+    }
+    /** Path planning may sample coarser than actual movement. A sample step no wider
+     *  than the moving shape's footprint keeps consecutive samples overlapping, so an
+     *  obstacle cannot be skipped between them. */
+    public boolean clearSegment(int mask,Object localShape,float fromX,float fromY,float toX,float toY,float rotation,java.util.Set<Integer> disabled,float sampleStep) {
         if(mask==0 || isEmpty())return true;
         double distance=Math.hypot(toX-fromX,toY-fromY);
         if(!Double.isFinite(distance)||distance>10_000)return false;
+        if(!Float.isFinite(sampleStep)||sampleStep<=0||sampleStep>1)return false;
         List<Geom> local;
         try { local=fromData(localShape,0); }
         catch(RuntimeException invalid) { return false; }
-        int steps=Math.max(1,(int)Math.ceil(distance/.1));
+        int steps=Math.max(1,(int)Math.ceil(distance/sampleStep));
         for(int i=0;i<=steps;i++){
             float t=(float)i/steps;
             if(!clearAt(mask,local,fromX+(toX-fromX)*t,fromY+(toY-fromY)*t,rotation,disabled))return false;

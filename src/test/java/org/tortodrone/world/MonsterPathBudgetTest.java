@@ -7,8 +7,9 @@ import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneContent;
 
 /**
- * Phase 5: one scene admits at most four A* searches per tick, keeps a bounded waiting
- * queue and drops its oldest deferred request when a burst exceeds the queue depth.
+ * Phase 5: one scene admits at most four A* searches per tick inside a shared wall-clock
+ * slice, keeps a bounded waiting queue and drops its oldest deferred request when a burst
+ * exceeds the queue depth.
  */
 public final class MonsterPathBudgetTest {
     private MonsterPathBudgetTest() { }
@@ -27,6 +28,21 @@ public final class MonsterPathBudgetTest {
         check(budget.granted() == ScenePathBudget.PER_TICK, "the same stamp keeps its spent budget");
         budget.begin(150);
         check(budget.granted() == 0 && budget.queued() == 0, "a new tick resets the budget and burst queue");
+
+        // A blocked search costs milliseconds. Searches admitted on one tick share a
+        // wall-clock slice so a synchronized repath burst cannot spend the whole cadence.
+        long[] nanos = {0};
+        var sliced = new ScenePathBudget(() -> nanos[0]);
+        sliced.begin(100);
+        check(sliced.acquire(1), "the first search of a tick is always admitted");
+        nanos[0] = ScenePathBudget.SLICE_MILLIS * 1_000_000L - 1;
+        check(sliced.acquire(2), "a search inside the tick slice is admitted");
+        nanos[0] = ScenePathBudget.SLICE_MILLIS * 1_000_000L;
+        check(!sliced.acquire(3), "a search past the tick slice is deferred even below the count limit");
+        check(sliced.granted() == 2, "a deferred over-slice search does not consume a token");
+        check(sliced.waiting(3), "the over-slice request retries on a later tick");
+        sliced.begin(150);
+        check(sliced.acquire(4), "the next tick opens a fresh slice");
 
         for (int id = 0; id < ScenePathBudget.PER_TICK; id++) budget.acquire(id);
         for (int id = 100; id < 100 + ScenePathBudget.DEPTH + 5; id++) budget.acquire(id);
@@ -54,10 +70,11 @@ public final class MonsterPathBudgetTest {
 
         int stamp = 1000;
         world.advance(stamp, List.of(player));
-        check(world.pathSearches() == ScenePathBudget.PER_TICK, "a burst is clipped to four searches on the first tick");
-        check(world.pathQueued() == 4, "the four denied pursuers wait in the scene queue");
+        check(world.pathSearches() >= 1 && world.pathSearches() <= ScenePathBudget.PER_TICK,
+            "a burst is clipped to the tick's admission slice (" + world.pathSearches() + " searches)");
+        check(world.pathQueued() == 8 - world.pathSearches(), "the denied pursuers wait in the scene queue");
         var firstMetrics = world.metrics();
-        check(firstMetrics.pathSearches() == ScenePathBudget.PER_TICK && firstMetrics.pathQueued() == 4,
+        check(firstMetrics.pathSearches() == world.pathSearches() && firstMetrics.pathQueued() == world.pathQueued(),
             "scene metrics expose the same admitted and queued searches");
         var before = new HashMap<Integer, float[]>();
         for (var actor : world.actors())

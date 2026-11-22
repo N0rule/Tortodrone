@@ -118,8 +118,10 @@ public final class CombatRenderingCheck {
     private int exploreScene;
     private boolean exploreWorldRequested,exploreTravelRequested;
     private long exploreTravelAt,exploreStepAt;
-    private long exploreDriftAt;
+    private long exploreDriftAt,lastProbeTickAt;
     private final boolean exploreTrace=System.getenv("TORTODRONE_GFX_TRACE")!=null;
+    // Perf runs skip screenshot encoding; the rendered-pixel assertion is then unavailable.
+    private final boolean noCapture=System.getenv("TORTODRONE_GFX_NO_CAPTURE")!=null;
     private float exploreFromX,exploreFromY;
     private int exploreDirection;
     /** Imported mission acceptance: start shadow_beast through the native service and read its bar. */
@@ -674,6 +676,7 @@ public final class CombatRenderingCheck {
     private int tutorialWaypoint,tutorialNode,tutorialBoss;
     private List<org.tortodrone.world.ScenePathing.Point> tutorialPath=List.of();
     private long tutorialResponseAt,tutorialProgressAt,tutorialCombatAt,tutorialRepathAt,tutorialRouteRetryAt,tutorialEnemySince;
+    private float tutorialTolerance=.35f;
     private double tutorialBestDistance=Double.POSITIVE_INFINITY;
     private final Map<String,org.tortodrone.core.world.SceneContent.Spec> tutorialSpecs=new HashMap<>();
     private String tutorialDialog="";
@@ -837,6 +840,10 @@ public final class CombatRenderingCheck {
             }
             if(!tutorialExitStarted){
                 if(now-tutorialEndDialogAt<6_000_000_000L){flags(view,0);return;}
+                // The authored "player_enter_base" field at (12.5, 90.5) grabs the knight
+                // for the level-end sequence, so the corridor waypoint is reached at its
+                // edge rather than at its centre.
+                tutorialTolerance=.6f;
                 tutorialExitStarted=true;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;
                 tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;tutorialRepathAt=0;tutorialRouteRetryAt=0;
                 System.out.println("EXIT: authored Giant sequence settled; walking to the portal from "+own.tG());
@@ -849,7 +856,7 @@ public final class CombatRenderingCheck {
     private boolean tutorialWalk(View view,Actor own,float x,float y,long now)throws Exception {
         // Route planning provides input targets only. The stock controller and server
         // still decide movement, collision, attack eligibility and progression.
-        if(Math.hypot(own.tG().x-x,own.tG().y-y)<.35){flags(view,0);return true;}
+        if(Math.hypot(own.tG().x-x,own.tG().y-y)<tutorialTolerance){flags(view,0);return true;}
         if(tutorialPath.isEmpty()){
             if(now<tutorialRouteRetryAt){flags(view,0);return false;}
             if(tutorialSpecs.isEmpty())for(var e:tutorialMap.content().entries()){
@@ -857,21 +864,36 @@ public final class CombatRenderingCheck {
                 if(!e.spec().text("action","").isEmpty())tutorialSpawnSpecs(org.tortodrone.core.world.SceneActions.parse(e.spec().text("action","")));
             }
             int mask=Math.round(tutorialMap.content().stats().get("player.collision-mask"));
-            tutorialPath=org.tortodrone.world.ScenePathing.route(own.tG().x,own.tG().y,x,y,(sx,sy,tx,ty)->{
-                int count=Math.max(1,(int)Math.ceil(Math.hypot(tx-sx,ty-sy)/.1));
+            // Snapshot solid obstacles once per plan. The traversal lambda runs tens of
+            // thousands of times for a blocked destination, so resolving actor config text
+            // and scanning every authoritative actor per sample made the probe itself stall
+            // the client and hide the behaviour it is measuring.
+            float ownX=own.tG().x,ownY=own.tG().y;
+            var solids=new ArrayList<Object[]>();
+            for(var obstacle:authoritative.values())if(obstacle.vD()!=own.vD()){
+                var spec=tutorialSpecs.get(obstacle.MX().getName());
+                if(spec==null||(spec.integer("collision-flags",0)&mask)==0||spec.text("damage-action","").equals("destroy")
+                        ||Set.of("TimedBlock","StoneBlock").contains(spec.text("kind",""))
+                        ||spec.text("kind","").equals("Door")&&obstacle.bT(2))continue;
+                float sx=obstacle.tG().x,sy=obstacle.tG().y,sh=obstacle.tH();
+                // A scripted reposition can leave the knight overlapping a door or a
+                // helper's footprint. Ignore anything already covering the pawn so
+                // the escape route is plannable; the server still owns collision.
+                if(spec.contains(sx,sy,sh,ownX,ownY,ScenePortals.PAWN_RADIUS))continue;
+                solids.add(new Object[]{spec,sx,sy,sh});
+            }
+            tutorialPath=org.tortodrone.world.ScenePathing.route(ownX,ownY,x,y,(sx,sy,tx,ty)->{
+                // A half-unit step keeps consecutive samples closer than the pawn
+                // footprint, so planning cannot tunnel through a thin obstacle while it
+                // costs a fifth of the per-sample collision work.
+                int count=Math.max(1,(int)Math.ceil(Math.hypot(tx-sx,ty-sy)/.5));
                 for(int i=1;i<=count;i++){float px=sx+(tx-sx)*i/count,py=sy+(ty-sy)*i/count;
-                    if(!tutorialMap.staticCollision().floorSupported(px,py)||tutorialMap.staticCollision().penetration(mask,px,py,org.tortodrone.core.world.ScenePortals.PAWN_RADIUS).present())return false;
-                    for(var obstacle:authoritative.values())if(obstacle.vD()!=own.vD()){
-                        var spec=tutorialSpecs.get(obstacle.MX().getName());
-                        if(spec==null||(spec.integer("collision-flags",0)&mask)==0||spec.text("damage-action","").equals("destroy")||Set.of("TimedBlock","StoneBlock").contains(spec.text("kind",""))||spec.text("kind","").equals("Door")&&obstacle.bT(2))continue;
-                        // A scripted reposition can leave the knight overlapping a door or a
-                        // helper's footprint. Ignore anything already covering the pawn so
-                        // the escape route is plannable; the server still owns collision.
-                        if(spec.contains(obstacle.tG().x,obstacle.tG().y,obstacle.tH(),own.tG().x,own.tG().y,org.tortodrone.core.world.ScenePortals.PAWN_RADIUS))continue;
-                        if(spec.contains(obstacle.tG().x,obstacle.tG().y,obstacle.tH(),px,py,org.tortodrone.core.world.ScenePortals.PAWN_RADIUS))return false;
-                    }
+                    if(!tutorialMap.staticCollision().floorSupported(px,py)||tutorialMap.staticCollision().penetration(mask,px,py,ScenePortals.PAWN_RADIUS).present())return false;
+                    for(var solid:solids)
+                        if(((SceneContent.Spec)solid[0]).contains((Float)solid[1],(Float)solid[2],(Float)solid[3],px,py,ScenePortals.PAWN_RADIUS))return false;
                 }return true;
-            });tutorialNode=0;
+            });
+            tutorialNode=0;
             tutorialNoRoute=tutorialPath.isEmpty();
             if(tutorialPath.isEmpty()){flags(view,0);tutorialRouteRetryAt=now+500_000_000L;
                 // Measure an unreachable destination from this attempt, not from the last
@@ -1084,8 +1106,10 @@ public final class CombatRenderingCheck {
             }
         }else if(stage==2&&now-started>3_000_000_000L){
                 String shot="ready-room-return-"+readyRoomDestination;capture(shot);finishImages();
-                var image=ImageIO.read(output.resolve(shot+".png").toFile());
-                if(Arrays.stream(image.getRGB(0,0,image.getWidth(),image.getHeight(),null,0,image.getWidth())).distinct().limit(33).count()<33)throw new AssertionError("Haven framebuffer remained blank after the transition");
+                if(!noCapture){
+                    var image=ImageIO.read(output.resolve(shot+".png").toFile());
+                    if(Arrays.stream(image.getRGB(0,0,image.getWidth(),image.getHeight(),null,0,image.getWidth())).distinct().limit(33).count()<33)throw new AssertionError("Haven framebuffer remained blank after the transition");
+                }
                 if(campStoryReturn)checkCampObjective();if(campProgressionReturn)checkCampMission();
                 passed=done=true;System.out.println("PASS: stock graphical Ready Room returns to saved scene "+readyRoomDestination+" and renders its controlled pawn");app.shutdown();
         }
@@ -1094,6 +1118,10 @@ public final class CombatRenderingCheck {
         if(done)return;
         try{
             long now=System.nanoTime();
+            // Opt-in client stall trace: a run-queue gap means the stock client stopped servicing ticks.
+            if(exploreTrace&&lastProbeTickAt!=0&&now-lastProbeTickAt>300_000_000L)
+                System.out.printf(java.util.Locale.ROOT,"STALL: client run-queue gap %.2fs stage=%d actors=%d at=%s%n",(now-lastProbeTickAt)/1e9,stage,authoritative.size(),java.time.LocalTime.now().withNano(0));
+            lastProbeTickAt=now;
             if(!fullscreenApplied&&!peer&&!multiplayerOnly&&!equipmentGroups&&app.getWindow()!=0){
                 long monitor=GLFW.glfwGetPrimaryMonitor();var mode=GLFW.glfwGetVideoMode(monitor);
                 if(mode==null)throw new AssertionError("No video mode for the isolated test client's monitor");
@@ -2040,7 +2068,11 @@ public final class CombatRenderingCheck {
             sawHealEffect|=reference.contains("heart_acquire_01.ogg");sawSparkEffect|=reference.contains("Player/Spark Rez");
         }
         if(event.afb()==0)authoritative.clear();
-        if(event.afd()!=null)for(var actor:event.afd())authoritative.put(actor.vD(),(Actor)actor.copy(null));
+        if(event.afd()!=null)for(var actor:event.afd()){
+            if(exploreTrace&&actor.MX()!=null&&actor.MX().getName().matches(".*(Ironwood|Warning).*"))
+                System.out.printf(java.util.Locale.ROOT,"ACTOR-ADD %s at=%s%n",actor.MX().getName(),java.time.LocalTime.now().withNano(0));
+            authoritative.put(actor.vD(),(Actor)actor.copy(null));
+        }
         if(event.afe()!=null)for(var delta:event.afe()){Actor old=authoritative.get(delta.vD());if(old!=null)authoritative.put(delta.vD(),(Actor)delta.apply(old));}
         if(event.aff()!=null)for(int id:event.aff())authoritative.remove(id);
         if(healthOnly&&authoritative.get(app.CZ().pawnId) instanceof Dungeoneer own)sawHurt|=own.aeM()==274;
@@ -2243,6 +2275,7 @@ public final class CombatRenderingCheck {
         for(var child:model.getChildren())playing(child,names,depth+1);
     }
     private void capture(String name)throws Exception{
+        if(noCapture)return;
         int w=app.getWindowWidth(),h=app.getWindowHeight();var pixels=BufferUtils.createByteBuffer(w*h*3);
         int previousReadBuffer=GL11.glGetInteger(GL11.GL_READ_BUFFER);
         if(tutorialEntryOnly)GL11.glReadBuffer(GL11.GL_FRONT);

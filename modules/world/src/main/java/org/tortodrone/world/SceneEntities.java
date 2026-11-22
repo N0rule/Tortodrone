@@ -523,6 +523,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private boolean beginAttack(SceneEntity e,int slot,int stamp){return combatSystem.beginAttack(e,slot,stamp);}
     private boolean sight(SceneEntity e,float tx,float ty){return combatSystem.sight(e,tx,ty);}
     boolean entitySegment(SceneEntity mover,float x,float y,float tx,float ty){return movementSystem.entitySegmentFor(mover,x,y,tx,ty);}
+    /** Coarse traversal used only to plan a route; movement revalidates at 0.1. */
+    boolean planSegment(SceneEntity mover,float x,float y,float tx,float ty){return movementSystem.planSegmentFor(mover,x,y,tx,ty);}
     boolean moveEntity(SceneEntity mover,float x,float y){return movementSystem.moveEntity(mover,x,y);}
     void cycle(SceneEntity e,int stamp){logic.cycle(e,stamp);}
     void switches(SceneEntity e,int stamp,List<ActorState> players){logic.switches(e,stamp,players);}

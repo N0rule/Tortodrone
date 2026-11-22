@@ -49,11 +49,13 @@ final class MovementSystem {
         return moved;
     }
 
-    private boolean entitySegment(SceneEntity mover,float x,float y,float tx,float ty){
+    private boolean entitySegment(SceneEntity mover,float x,float y,float tx,float ty){return entitySegment(mover,x,y,tx,ty,.1f);}
+    /** Traversal sampling for path planning only; direct movement checks stay at 0.1. */
+    private boolean entitySegment(SceneEntity mover,float x,float y,float tx,float ty,float sampleStep){
         int mask=mover.spec.integer("collision-mask",scene.pawnCollisionMask());
         if(scene.staticCollision().isEmpty()||mover.shape==null){if(!scene.terrain().walkableSegment(x,y,tx,ty))return false;}
-        else if(!scene.staticCollision().floorSupported(tx,ty)||!scene.staticCollision().clearSegment(mask,mover.shape,x,y,tx,ty,mover.rotation,scene.disabledCollisionSources()))return false;
-        int steps=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/.1));
+        else if(!scene.staticCollision().floorSupported(tx,ty)||!scene.staticCollision().clearSegment(mask,mover.shape,x,y,tx,ty,mover.rotation,scene.disabledCollisionSources(),sampleStep))return false;
+        int steps=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/sampleStep));
         float pad=mover.shape==null?ScenePortals.PAWN_RADIUS:mover.spatialExtent+ScenePortals.PAWN_RADIUS;
         for(var obstacle:scene.candidatesNear(Math.min(x,tx)-pad,Math.min(y,ty)-pad,Math.max(x,tx)+pad,Math.max(y,ty)+pad))
             if(obstacle!=mover&&obstacle.destroyed==Integer.MAX_VALUE&&obstacle.carrier==0
@@ -82,7 +84,7 @@ final class MovementSystem {
         }
         if(e.path.isEmpty()&&SceneClock.reached(stamp,e.nextPath)){
             if(!scene.pathBudget().acquire(e.id))return false;
-            var path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
+            var path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny,.5f));
             double length=0;float px=e.x,py=e.y;for(var point:path){length+=Math.hypot(point.x()-px,point.y()-py);px=point.x();py=point.y();}
             if(length<=maxPath)e.path=path;
             else{
@@ -146,7 +148,7 @@ final class MovementSystem {
                 float distance=(float)Math.hypot(target.x()-e.x,target.y()-e.y);
                 if(distance<e.follow.minimum()||distance>e.follow.maximum()){
                     if(!scene.pathBudget().acquire(e.id))return;
-                    var path=ScenePathing.route(e.x,e.y,target.x(),target.y(),(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
+                    var path=ScenePathing.route(e.x,e.y,target.x(),target.y(),(x,y,nx,ny)->entitySegment(e,x,y,nx,ny,.5f));
                     double length=0;float px=e.x,py=e.y;for(var point:path){length+=Math.hypot(point.x()-px,point.y()-py);px=point.x();py=point.y();}
                     if(length<=8)e.path=path;
                 }
@@ -175,7 +177,7 @@ final class MovementSystem {
             if(e.path.isEmpty()&&SceneClock.before(stamp,e.nextPath))return;
             if(e.path.isEmpty()||!entitySegment(e,e.x,e.y,e.path.getFirst().x(),e.path.getFirst().y())){
                 if(!scene.pathBudget().acquire(e.id))return;
-                e.path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
+                e.path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny,.5f));
                 scene.monsterMetrics().searched(e.path.isEmpty());
                 e.pathX=tx;e.pathY=ty;e.nextPath=stamp+Math.max(50,Math.max(e.spec.integer("acquisition-interval",0),e.archetype.repathMillis()));
             }
@@ -199,5 +201,6 @@ final class MovementSystem {
     /** Scene-level chase/pursuit movement is combat-owned; it stays here so all
      * translation still shares one collision check. */
     boolean entitySegmentFor(SceneEntity e,float x,float y,float tx,float ty){return entitySegment(e,x,y,tx,ty);}
+    boolean planSegmentFor(SceneEntity e,float x,float y,float tx,float ty){return entitySegment(e,x,y,tx,ty,.5f);}
     boolean scriptMove(SceneEntity e,String goal,float maxPath,float turnRate,int stamp,float elapsed){return scriptMovePath(e,goal,maxPath,turnRate,stamp,elapsed);}
 }

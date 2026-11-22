@@ -208,8 +208,8 @@ final class CombatSystem {
                     ||!scene.entitySegment(e,e.x,e.y,e.path.getFirst().x(),e.path.getFirst().y())){
                 if(!scene.pathBudget().acquire(e.id))return;
                 e.path=target.entity()!=null&&e.targeting!=null?
-                    ScenePathing.region(e.x,e.y,(x,y)->Math.max(targetDistance(x,y,target)-attackRange,sight(e,x,y,target.x(),target.y())?0:.01f),(x,y,nx,ny)->scene.entitySegment(e,x,y,nx,ny)):
-                    ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->scene.entitySegment(e,x,y,nx,ny));e.pathX=tx;e.pathY=ty;
+                    ScenePathing.region(e.x,e.y,(x,y)->Math.max(targetDistance(x,y,target)-attackRange,sight(e,x,y,target.x(),target.y())?0:.01f),(x,y,nx,ny)->scene.planSegment(e,x,y,nx,ny)):
+                    ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->scene.planSegment(e,x,y,nx,ny));e.pathX=tx;e.pathY=ty;
                 scene.monsterMetrics().searched(e.path.isEmpty());
                 e.nextPath=stamp+Math.max(50,Math.max(e.spec.integer("acquisition-interval",0),e.archetype.repathMillis()));
             }
