@@ -95,8 +95,8 @@ public final class WorldSessionTest {
                     var place=org.tortodrone.world.SceneRegistry.system().entry();
                     var publication=Class.forName(SessionPublications.class.getName()+"$Publication");
                     var constructor=publication.getDeclaredConstructors()[0];constructor.setAccessible(true);
-                    var stalePublication=constructor.newInstance(place,generation.getInt(first)-2,place.simulation().snapshot());
-                    var publish=WorldSession.class.getDeclaredMethod("publish",publication);publish.setAccessible(true);publish.invoke(first,stalePublication);
+                    var stalePublication=(SessionPublications.Publication)constructor.newInstance(place,generation.getInt(first)-2,place.simulation().snapshot());
+                    first.forcePublish(stalePublication);
                     check(stamp.getInt(first)==before,"old subscription callback cannot advance a replacement baseline in the same instance");
                 }
                 first.refreshState(oldRegistration,null);

@@ -122,6 +122,7 @@ final class WorldSession implements AutoCloseable {
     private final MoveHandler moves;
     private final KnightCommandHandler knightCommands;
     private final ScenePublisher publisher;
+    private final WorldStateHandler worldState;
     int partyOid()throws IOException{return parties.oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     void publishPartyState()throws IOException{parties.state();}
@@ -416,6 +417,7 @@ final class WorldSession implements AutoCloseable {
         moves=new MoveHandler(this);
         knightCommands=new KnightCommandHandler(this);
         publisher=new ScenePublisher(this);
+        worldState=new WorldStateHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
@@ -503,9 +505,16 @@ final class WorldSession implements AutoCloseable {
     boolean quickbarContains(long id){for(long value:quickbar)if(value==id)return true;return false;}
     void addToQuickbar(long id){for(int slot=0;slot<quickbar.length;slot++)if(quickbar[slot]==0){quickbar[slot]=id;break;}}
     void forcePortal(ScenePortals.Trigger trigger)throws IOException{publisher.beginPortal(trigger);}
+    void forcePublish(SessionPublications.Publication publication)throws IOException{publisher.publish(publication);}
     boolean tutorialFloorDue(int stamp)throws IOException{return floors.tutorial(stamp);}
     boolean openingFloorDue(int stamp)throws IOException{return floors.opening(stamp);}
     void publishVisited(Set<Integer> visited)throws IOException{parties.publishVisited(visited);}
+    boolean stateRefreshActive(WorldStatePoller.Registration registration){return !closed&&entered&&persistence==registration;}
+    void setGameMaster(boolean value){gameMaster=value;}
+    void applyActorAppearance(){membership.appearance(actorAppearance());}
+    void publishOutbids(WorldProfile before,WorldProfile after)throws IOException{auction.publishOutbids(before,after);}
+    void refreshOutbids(WorldProfile before,WorldProfile after)throws IOException{auction.publishOutbids(before,after);}
+
 
     SessionDecoder.Invocation queuedTravel(){return destinations.queued();}
     boolean auctionAfterArrivalPending(){return destinations.auctionAfterArrivalPending();}
@@ -917,42 +926,15 @@ final class WorldSession implements AutoCloseable {
         }
         return message.toString();
     }
-    /** Batch metadata is validated against this exact subscription before publication.
-     * Changed inventory loads without holding the session or simulation lock. */
-    void refreshState(WorldStatePoller.Registration registration,org.tortodrone.character.WorldSummary state)throws IOException {
-        WorldProfile before;
-        synchronized(this) {
-            if(closed||!entered||persistence!=registration)return;
-            if(state==null||state.accountId()!=registration.accountId||state.knightId()!=registration.knightId
-                    ||state.authRevision()!=registration.authRevision||!state.name().equalsIgnoreCase(registration.name))
-                throw new IOException("Knight or account changed; reconnect");
-            before=profile;
-            trade.changed(state);
-        }
-        WorldProfile fresh=state.revision()>before.revision()?loadProfile(before):before;
-        synchronized(this) {
-            if(closed||!entered||persistence!=registration)return;
-            if(state.gameMaster()!=gameMaster){gameMaster=state.gameMaster();membership.appearance(actorAppearance());output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));}
-            // An equip may commit while the read is in flight: never roll back its publication.
-            if(fresh.revision()>profile.revision()) {
-                var visibleBefore=visibleProfile();var previous=profile;profile=fresh;
-                if(fresh.crowns()!=previous.crowns()||fresh.energy()!=previous.energy())output.send(()->codec.balances(oid,profile));
-                if(!fresh.progress().equals(previous.progress())){membership.equipment(visibleProfile());output.send(()->codec.knightProgress(oid,profile));}
-                if(!fresh.town().equals(previous.town())){membership.equipment(visibleProfile());output.send(()->codec.townState(oid,profile));publishOutbids(previous,profile);}
-                if(!fresh.town().loadouts().equals(previous.town().loadouts()))output.send(()->codec.loadoutChanges(oid,previous,profile));
-                if(!fresh.items().equals(previous.items())){updateAppearance();var visibleAfter=visibleProfile();output.send(()->codec.itemChanges(oid,knight,visibleBefore,visibleAfter));}
-            }
-        }
-    }
-    private void publishOutbids(WorldProfile before,WorldProfile after)throws IOException{auction.publishOutbids(before,after);}
-    private WorldProfile loadProfile(WorldProfile cached)throws IOException {
+    WorldProfile loadProfile(WorldProfile cached)throws IOException {
         try{return characters.worldProfile(knight.name(),authRevision,cached);}
         catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
     }
+    void refreshState(WorldStatePoller.Registration registration,org.tortodrone.character.WorldSummary state)throws IOException {
+        worldState.refresh(registration,state);
+    }
     synchronized void refreshFailed(WorldStatePoller.Registration registration,Exception failure) {
-        if(persistence!=registration||closed)return;
-        log.warn("World state refresh closed; "+deliveryFailure(failure));close();
-        try{socket.close();}catch(IOException ignored){}
+        worldState.failed(registration,failure);
     }
     /** A scene tick failed; return this knight to character selection rather than a frozen world. */
     private void sceneFailed() {
