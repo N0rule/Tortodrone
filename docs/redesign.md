@@ -351,6 +351,25 @@ class table, intern table and connection-local state. Before splitting:
 - `CharacterStore` is a storage facade returning `storage.*` types. Split the model
   from the store before claiming a `character`/`storage` boundary.
 
+#### Status after `0.42.0`
+
+The codec split, the session handler extraction and the scene system extraction are
+landed and tested. What remains is the tail of the god-class work:
+
+| Class | Current | Remaining work |
+| --- | --- | --- |
+| `WorldSession` | 723 lines | thin facade only: move the remaining friend/party presence state, chat and diagnostic routing, and the last forced-travel seams out of the protocol entry points |
+| `SceneEntities` | 596 lines | narrow the entity model: remaining status/dialog/effect sinks and spatial/visibility queries into `StatusSystem`, `InteractionSystem` and `SceneCollisions` |
+| `Database` | 508 lines | finish the repository split: account/session records and the remaining write paths onto `Database.read`/`Database.write` without changing the single writer |
+| `SceneSimulation` | 426 lines | constructor and callback wiring: replace the eleven callback fields with the explicit contract above |
+| `SceneMembership` | 374 lines | split inventory/equipment publication from per-knight scene state |
+| `CharacterStore` | 346 lines | split the returned models (`WorldProfile`, roster views) from the store facade |
+
+Each row is expected to be one or more focused changes: compile, run the affected
+`testUnit` programs, and commit one slice. Phase 9 stays evidence-gated and is not
+part of this table; it needs the per-epic stock evidence listed in
+`docs/baseline.md`.
+
 Reserved packages and their content folders are created in Phase 1, each with a
 `package-info.java` (and a `README.md` under the matching content folder) describing
 the contract and the evidence it still needs. Phase 9 fills them; it does not create
