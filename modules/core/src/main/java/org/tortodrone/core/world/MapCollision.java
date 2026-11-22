@@ -86,8 +86,13 @@ public final class MapCollision {
     /** True when a circle can stand at (x,y) without touching a walk-masked tile or shape. */
     public boolean clear(int mask, float x, float y, float radius) { return clear(mask, x, y, radius, Set.of()); }
     public boolean clear(int mask, float x, float y, float radius, Set<Integer> disabled) {
+        return clear(mask, x, y, radius, disabled, (extraX, extraY) -> false);
+    }
+    /** Extra floor support for authored moving platforms (native elevators) that bridge a floor shaft. */
+    public boolean clear(int mask, float x, float y, float radius, Set<Integer> disabled,
+            java.util.function.BiPredicate<Float, Float> extraFloor) {
         if (!valid(x, y) || !Float.isFinite(radius) || radius < 0) return false;
-        if (!floorSupported(x, y)) return false;
+        if (!floorSupported(x, y) && !extraFloor.test(x, y)) return false;
         if (tileHit(mask, x, y, radius)) return false;
         for (Shape shape : grid.query(x, y, radius)) {
             if (shape.source != 0 && disabled.contains(shape.source)) continue;
@@ -101,6 +106,11 @@ public final class MapCollision {
         return clearSegment(mask, fromX, fromY, toX, toY, radius, Set.of());
     }
     public boolean clearSegment(int mask, float fromX, float fromY, float toX, float toY, float radius, Set<Integer> disabled) {
+        return clearSegment(mask, fromX, fromY, toX, toY, radius, disabled, (extraX, extraY) -> false);
+    }
+    /** Extra floor support for authored moving platforms (native elevators) that bridge a floor shaft. */
+    public boolean clearSegment(int mask, float fromX, float fromY, float toX, float toY, float radius,
+            Set<Integer> disabled, java.util.function.BiPredicate<Float, Float> extraFloor) {
         if (!valid(fromX, fromY) || !valid(toX, toY) || !Float.isFinite(radius) || radius < 0) return false;
         float distance = (float) Math.hypot(toX - fromX, toY - fromY);
         if (!Float.isFinite(distance) || distance > 10_000) return false;
@@ -111,7 +121,7 @@ public final class MapCollision {
         var candidates = grid.query(minX, minY, maxX, maxY);
         for (int i = 0; i <= steps; i++) {
             float t = (float) i / steps, x = fromX + (toX - fromX) * t, y = fromY + (toY - fromY) * t;
-            if (!floorSupported(x, y) || tileHit(mask, x, y, radius)) return false;
+            if (!floorSupported(x, y) && !extraFloor.test(x, y) || tileHit(mask, x, y, radius)) return false;
             for (Shape shape : candidates) {
                 if (shape.source != 0 && disabled.contains(shape.source)) continue;
                 if ((shape.mask & mask) != 0 && circleIntersects(shape.geometry, x, y, radius)) return false;

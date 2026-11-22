@@ -569,6 +569,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     // Negative handlers describe placed entry interactions, not additional visible actors.
     public List<ActorState> actors(){return entities.values().stream().filter(e->!e.entrySource()).map(Entity::snapshot).toList();}
+    /** Authored native elevator platforms bridge their floor shaft. A pawn body of radius r can
+     *  reach a platform whose edge is up to 2r away, so movement treats that bridged footprint as
+     *  supported instead of rejecting the authored gap between the pit rim and the platform. */
+    public boolean elevatorFloor(float x,float y){
+        for(var e:entities.values())if(e.elevator!=null&&e.destroyed==Integer.MAX_VALUE
+            &&e.spec.contains(e.x,e.y,e.rotation,x,y,ScenePortals.PAWN_RADIUS*2))return true;
+        return false;
+    }
     public ActorState actor(int id){var e=entities.get(id);return e==null||e.destroyed!=Integer.MAX_VALUE?null:e.snapshot();}
     public SceneContent.Spec specification(int id){var e=entities.get(id);return e==null||e.destroyed!=Integer.MAX_VALUE?null:e.spec;}
     /** Test seam: the immutable parsed behaviour shared by every instance of this spec. */

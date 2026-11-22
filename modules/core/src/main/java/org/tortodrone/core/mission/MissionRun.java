@@ -104,9 +104,14 @@ public record MissionRun(String missionId,int gateId,List<Floor> floors,int floo
         return new MissionRun(missionId,gateId,floors,floor+1,worldId,partyOid,difficulty,destination,arrival);
     }
 
-    /** Native NextFloor on this floor's authored completing elevator. */
+    /** Native NextFloor on this floor's authored completing elevator. The elevator is a placed
+     *  {@code EntryState} entry with a numeric scene-entry identity even though it is a live,
+     *  published actor rather than a static interaction target, so a pending ride source is the
+     *  authored exit when its entry key matches. */
     public boolean exit(org.tortodrone.core.world.FloorAdvanceRequest request) {
-        return request!=null&&request.source().entity()!=null&&request.source().entity().entrySource()
-            &&request.source().entity().key().equals(exitKey());
+        if(request==null)return false;
+        var entity=request.source().entity();
+        return entity!=null&&(entity.entrySource()||entity.kind().equals("EntryState"))
+            &&entity.key().equals(exitKey());
     }
 }

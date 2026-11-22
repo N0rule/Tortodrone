@@ -183,13 +183,18 @@ public final class TownMovement {
     private java.util.function.BiFunction<Float,Float,SceneCollision.Penetration> dynamicPenetration=(x,y)->SceneCollision.Penetration.NONE;
     private SceneCollision staticCollision=SceneCollision.empty();
     private MapCollision exactCollision;
+    private java.util.function.BiPredicate<Float,Float> extraFloor=(x,y)->false;
     private java.util.Set<Integer> disabledCollision=java.util.Set.of();
     private int collisionMask=43;
     private static final Object PAWN_SHAPE=new FireCatalog.DataValue(org.tortodrone.core.WireTypes.SHAPE_CIRCLE,
         java.util.List.of(new FireCatalog.FieldValue("radius","float",ScenePortals.PAWN_RADIUS)));
     public void staticCollision(SceneCollision geometry,int mask){staticCollision=java.util.Objects.requireNonNull(geometry);collisionMask=mask;}
     /** Prefer the compiled exact collision; the sampled grid is only a legacy fallback. */
-    public void exactCollision(MapCollision geometry,int mask){exactCollision=java.util.Objects.requireNonNull(geometry);collisionMask=mask;}
+    public void exactCollision(MapCollision geometry,int mask){exactCollision(geometry,mask,(x,y)->false);}
+    /** Authored moving platforms (native elevators) bridge their floor shaft for movement only. */
+    public void exactCollision(MapCollision geometry,int mask,java.util.function.BiPredicate<Float,Float> floors){
+        exactCollision=java.util.Objects.requireNonNull(geometry);collisionMask=mask;extraFloor=java.util.Objects.requireNonNull(floors);
+    }
     /** Source entry ids whose native statics are currently open/destroyed (doors, blocks). */
     public void disabledCollision(java.util.Set<Integer> sources){disabledCollision=java.util.Set.copyOf(sources);}
     private boolean walkable(float toX,float toY){
@@ -246,7 +251,7 @@ public final class TownMovement {
     /** Relocate the existing pawn; retain the input watermark to discard pre-warp frames. */
     public boolean teleport(float toX,float toY,float facing,int stamp) {
         if(!Float.isFinite(toX)||!Float.isFinite(toY)||!Float.isFinite(facing)||portal!=null||dead()
-                ||(exactCollision!=null?!exactCollision.clear(collisionMask,toX,toY,ScenePortals.PAWN_RADIUS,disabledCollision):!terrain.walkable(toX,toY))
+                ||(exactCollision!=null?!exactCollision.clear(collisionMask,toX,toY,ScenePortals.PAWN_RADIUS,disabledCollision,extraFloor):!terrain.walkable(toX,toY))
                 ||exactCollision==null&&!staticCollision.isEmpty()&&(!staticCollision.floorSupported(toX,toY)
                     ||staticCollision.penetration(collisionMask,toX,toY,ScenePortals.PAWN_RADIUS).present())
                 ||!dynamicCollision.test(toX,toY)||dynamicPenetration.apply(toX,toY).present()
@@ -390,7 +395,7 @@ public final class TownMovement {
         for(int attempt=0;attempt<3;attempt++){
             var penetration=staticPenetration(nx,ny).deepest(dynamicPenetration.apply(nx,ny));
             if(!penetration.present()){
-                boolean floor=exactCollision!=null?exactCollision.clearSegment(collisionMask,x,y,nx,ny,ScenePortals.PAWN_RADIUS,disabledCollision)
+                boolean floor=exactCollision!=null?exactCollision.clearSegment(collisionMask,x,y,nx,ny,ScenePortals.PAWN_RADIUS,disabledCollision,extraFloor)
                     :staticCollision.isEmpty()?terrain.walkableSegment(x,y,nx,ny):staticCollision.floorSupported(nx,ny);
                 if(floor&&dynamicCollision.test(nx,ny)){x=nx;y=ny;return;}
                 break;

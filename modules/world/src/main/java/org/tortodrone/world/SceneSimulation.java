@@ -386,7 +386,7 @@ public final class SceneSimulation {
             movement.dynamicPenetration((x,y)->entities.penetration(x,y,actor.id()));
             int collisionMask=Math.round(instance.map().content().stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
             movement.staticCollision(instance.map().staticCollision(),collisionMask);
-            if(instance.map().exactCollision()!=null)movement.exactCollision(instance.map().exactCollision(),collisionMask);
+            if(instance.map().exactCollision()!=null)movement.exactCollision(instance.map().exactCollision(),collisionMask,(x,y)->entities.elevatorFloor(x,y));
             movement.interaction(stamp->{var prompt=entities.interaction(movement.x(),movement.y(),movement.rotation(),appearance.id(),lift);
                 if(prompt==null)return false;
                 if(prompt.action().equals("Lift")){
