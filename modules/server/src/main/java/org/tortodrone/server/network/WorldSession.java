@@ -124,7 +124,7 @@ final class WorldSession implements AutoCloseable {
     void offerPartyEvent(PartyView.Event event){publications.offerParty(event);}
     private void deliverParty(PartyView.Event event)throws IOException{parties.deliver(event);}
     private void refreshParty()throws IOException{parties.refresh();}
-    private void refreshParty(boolean traveling)throws IOException{parties.refresh(traveling);}
+    void refreshParty(boolean traveling)throws IOException{parties.refresh(traveling);}
     /** The native friend list's Join affordance is driven by this presence. */
     FriendPresence presence(PartyView.View view)throws IOException {
         if(runtime.scene().map().town())return new FriendPresence(runtime.scene().map().name(),runtime.scene().map().zone(),runtime.scene().oid());
@@ -183,7 +183,7 @@ final class WorldSession implements AutoCloseable {
     void publishObjectives()throws IOException {
         var wire=wireObjectives();output.send(()->codec.objectives(oid,wire));
     }
-    private WorldProfile visibleProfile(){
+    WorldProfile visibleProfile(){
         return visibleProfile(runtime.membership()==null?Set.of():runtime.membership().status().cursedItems());
     }
     WorldProfile visibleProfile(Set<Long> cursed){
@@ -445,6 +445,10 @@ final class WorldSession implements AutoCloseable {
         partyState();leaveChat();runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();runtime.membership().pause();
     }
     void resetReferences(){reference=acknowledge=0;}
+    void markSceneCreated(){created=SceneClock.now();}
+    FloorHandler floorsHandler(){return floors;}
+    OpeningMission arrivalComlink(){return arrivalComlink;}
+
     void markSceneEntry(){lastStamp=SceneClock.now();}
     ChatHandler chatHandler(){return chats;}
     DestinationHandler destinationsHandler(){return destinations;}
@@ -743,64 +747,14 @@ final class WorldSession implements AutoCloseable {
 
     /** The native Ready Room entry: the scene becomes client-local and the saved town is retained
      *  only as a durable return destination. */
-    synchronized void enterReadyRoom(short requestId)throws IOException {
-        if(profile.progress().crashSiteIncomplete())throw new IOException("Finish the tutorial through its exit first");
-        if(runtime.portalMove()!=null||runtime.returnRequested())throw new IOException("Finish the current journey first");
-        if(!runtime.readyRoom()){
-            var returnScene=runtime.scene();
-            if(!runtime.scene().map().town()){
-                int saved=characters.lastTownScene(knight.id(),authRevision);
-                int permanent=scenes.catalog().towns().stream().filter(map->map.id()==saved)
-                    .mapToInt(org.tortodrone.core.world.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
-                returnScene=scenes.destination(permanent,profile.worldId());
-            }
-            var before=visibleProfile();
-            closeConversation();closeTownDialog();leaveChat();runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();
-            runtime.departedSceneOid(runtime.scene().oid());runtime.membership().close();runtime.membership(null);
-            scenes.release(runtime.scene(),profile.worldId());
-            // Private instances are not durable return destinations.
-            runtime.scene(returnScene);
-            floors.clearReport();
-            temporaryItems.clear();runtime.lastSnapshot(null);reference=acknowledge=0;runtime.arrival(null);
-            runtime.readyRoom(true);refreshParty(true);
-            var after=visibleProfile();if(!before.equals(after))output.send(()->codec.itemChanges(oid,knight,before,after));
-        }
-        friendLocation=new FriendPresence("~",ReadyRoom.ZONE,0);
-        output.send(()->codec.readyRoomLocation(oid));
-        output.send(()->codec.readyRoomMove(oid,requestId));
-    }
+    synchronized void enterReadyRoom(short requestId)throws IOException { runtime.enterReadyRoom(requestId); }
 
-    void completeMove(short requestId,boolean zone)throws IOException {
-        output.send(() -> codec.sceneMove(oid,requestId,zone,runtime.scene(),scenes.catalog()));
-        output.send(() -> codec.sceneLocation(oid,runtime.scene(),scenes.channelOid(runtime.scene().map().zone(),false),scenes.channelOid(runtime.scene().map().zone(),true)));
-        // Deliver the pre-arranged arrival comlink behind the moveSucceeded response: the
-        // client processes it in the window where its scene controllers are gone (see the
-        // arrival openComlink), so the dialog waits for the destination view like native.
-        // A failed delivery falls back to the enteredPlace/publish path.
-        if(arrivalComlink!=null){
-            var pending=arrivalComlink;arrivalComlink=null;
-            try{conversations.openArrivalComlink(pending);deliveredComlink=pending;}catch(IOException unavailable){arrivalComlink=pending;}
-        }
-    }
+    void completeMove(short requestId,boolean zone)throws IOException { runtime.completeMove(requestId,zone); }
 
     /** Install the destination scene before the client acknowledges its move. The Ready Room
      *  uses the same path so a native `/training`, `/alc` or `/haven` command can leave it
      *  directly instead of first entering the saved town. */
-    void enterScene(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException {
-        closeConversation();closeTownDialog();
-        if(!temporaryItems.isEmpty()){var before=visibleProfile();temporaryItems.clear();output.send(()->codec.itemChanges(oid,knight,before,profile));publishQuickbar();}
-        leaveChat();
-        runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();occupantClients=Map.of();occupantRoles=Map.of();runtime.lastSnapshot(null);
-        reference=acknowledge=0;destinations.clearAlchemyTarget();runtime.departedSceneOid(runtime.scene().oid());if(runtime.membership()!=null)runtime.membership().close();if(runtime.scene()!=next)scenes.release(runtime.scene(),profile.worldId());runtime.scene(next);
-        runtime.readyRoom(false);runtime.returnRequested(false);
-        runtime.arrival(entrance);runtime.clearPortal();
-        created=SceneClock.now();attach();
-        monitorScene();
-        // Arriving comlinks are delivered behind the move response (see completeMove),
-        // before the client can answer enteredPlace from inside its loading screen.
-        arrivalComlink=null;
-        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(runtime.scene().map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&scenes.missions().eligible(candidate.id(),profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
-    }
+    void enterScene(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException { runtime.enterScene(next,entrance); }
 
     synchronized void requireAdminReady()throws IOException { requireAdminReady(false); }
     synchronized void requireAdminReady(boolean roomTravel)throws IOException {
@@ -897,7 +851,7 @@ final class WorldSession implements AutoCloseable {
         close();
         try{socket.close();}catch(IOException ignored){}
     }
-    private void attach() {
+    void attach() {
         floors.reset();
         if(!runtime.scene().map().kind().equals("training")&&partyMember!=null)try{scenes.parties().leaveTraining(partyMember);}catch(IOException invalid){throw new IllegalStateException(invalid);}
         publishedArsenal=null;
@@ -926,7 +880,7 @@ final class WorldSession implements AutoCloseable {
     }
 
     static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
-    private void monitorScene() {
+    void monitorScene() {
         log.scene(runtime.scene().map().id(),runtime.scene().oid(),runtime.scene().map().name());
         log.info("Scene entered; scene="+runtime.scene().map().name()+" (#"+runtime.scene().map().id()+"); instanceId="+runtime.scene().oid());
     }

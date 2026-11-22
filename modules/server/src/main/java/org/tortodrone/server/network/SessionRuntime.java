@@ -2,10 +2,12 @@ package org.tortodrone.server.network;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneClock;
+import org.tortodrone.core.world.ReadyRoom;
 import org.tortodrone.core.world.ScenePortals;
 import org.tortodrone.world.OpeningComlinks;
 import org.tortodrone.world.SceneRegistry;
@@ -132,6 +134,80 @@ final class SessionRuntime {
         session.syncMissionObjective();
         session.flushPendingTravel();
     }}
+
+    /** The native Ready Room entry: the scene becomes client-local and the saved town is
+     *  retained only as a durable return destination. */
+    void enterReadyRoom(short requestId)throws IOException { synchronized(session){
+        if(session.currentProfile().progress().crashSiteIncomplete())throw new IOException("Finish the tutorial through its exit first");
+        if(portalMove!=null||returnRequested)throw new IOException("Finish the current journey first");
+        if(!readyRoom){
+            var returnScene=scene;
+            if(!scene.map().town()){
+                int saved=session.charactersStore().lastTownScene(session.selectedKnight().id(),session.authRevision());
+                int permanent=session.sceneRegistry().catalog().towns().stream().filter(map->map.id()==saved)
+                    .mapToInt(org.tortodrone.core.world.MapScene::id).findFirst().orElse(session.sceneRegistry().catalog().entry().id());
+                returnScene=session.sceneRegistry().destination(permanent,session.currentProfile().worldId());
+            }
+            var before=session.visibleProfile();
+            session.closeConversation();session.closeTownDialog();session.leaveChat();subscribed=false;entered=false;sceneGeneration++;
+            departedSceneOid=scene.oid();membership.close();membership=null;
+            session.sceneRegistry().release(scene,session.currentProfile().worldId());
+            // Private instances are not durable return destinations.
+            scene=returnScene;
+            session.floorsHandler().clearReport();
+            session.temporaryItems().clear();lastSnapshot=null;session.resetReferences();arrival=null;
+            readyRoom=true;session.refreshParty(true);
+            var after=session.visibleProfile();
+            if(!before.equals(after))session.output().send(()->session.codec().itemChanges(session.connectionOid(),session.selectedKnight(),before,after));
+        }
+        session.friendLocation(new WorldSession.FriendPresence("~",ReadyRoom.ZONE,0));
+        session.output().send(()->session.codec().readyRoomLocation(session.connectionOid()));
+        session.output().send(()->session.codec().readyRoomMove(session.connectionOid(),requestId));
+    }}
+
+    void completeMove(short requestId,boolean zone)throws IOException {
+        session.output().send(()->session.codec().sceneMove(session.connectionOid(),requestId,zone,scene,session.sceneRegistry().catalog()));
+        session.output().send(()->session.codec().sceneLocation(session.connectionOid(),scene,
+            session.sceneRegistry().channelOid(scene.map().zone(),false),session.sceneRegistry().channelOid(scene.map().zone(),true)));
+        // Deliver the pre-arranged arrival comlink behind the moveSucceeded response: the
+        // client processes it in the window where its scene controllers are gone (see the
+        // arrival openComlink), so the dialog waits for the destination view like native.
+        // A failed delivery falls back to the enteredPlace/publish path.
+        if(session.arrivalComlink()!=null){
+            var pending=session.arrivalComlink();session.setArrivalComlink(null);
+            try{session.conversations().openArrivalComlink(pending);session.setDeliveredComlink(pending);}
+            catch(IOException unavailable){session.setArrivalComlink(pending);}
+        }
+    }
+
+    /** Install the destination scene before the client acknowledges its move. The Ready Room
+     *  uses the same path so a native {@code /training}, {@code /alc} or {@code /haven} command
+     *  can leave it directly instead of first entering the saved town. */
+    void enterScene(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException {
+        session.closeConversation();session.closeTownDialog();
+        if(!session.temporaryItems().isEmpty()){
+            var before=session.visibleProfile();session.temporaryItems().clear();
+            session.output().send(()->session.codec().itemChanges(session.connectionOid(),session.selectedKnight(),before,session.currentProfile()));
+            session.publishQuickbar();
+        }
+        session.leaveChat();
+        subscribed=false;entered=false;sceneGeneration++;session.setOccupantClients(Map.of());session.setOccupantRoles(Map.of());lastSnapshot=null;
+        session.resetReferences();session.destinationsHandler().clearAlchemyTarget();departedSceneOid=scene.oid();
+        if(membership!=null)membership.close();
+        if(scene!=next)session.sceneRegistry().release(scene,session.currentProfile().worldId());
+        scene=next;
+        readyRoom=false;returnRequested=false;
+        arrival=entrance;portalMove=null;
+        session.markSceneCreated();session.attach();
+        session.monitorScene();
+        // Arriving comlinks are delivered behind the move response (see completeMove),
+        // before the client can answer enteredPlace from inside its loading screen.
+        session.clearArrivalComlink();
+        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))
+            if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=session.deliveredComlink()
+                    &&session.sceneRegistry().missions().eligible(candidate.id(),session.currentProfile().progress(),session.completedOpeningKeys()))
+                session.setArrivalComlink(candidate);
+    }
 
     /** Detach the client subscription while keeping the installed instance and membership. */
     void unsubscribe(){ synchronized(session){
