@@ -90,14 +90,13 @@ public final class WorldSessionTest {
                 first.subscribe((short)2);
                 first.entered();
                 synchronized(first){
-                    var stamp=WorldSession.class.getDeclaredField("lastStamp");stamp.setAccessible(true);
-                    int before=stamp.getInt(first);Thread.sleep(80);
+                    int before=first.lastStampValue();Thread.sleep(80);
                     var place=org.tortodrone.world.SceneRegistry.system().entry();
                     var publication=Class.forName(SessionPublications.class.getName()+"$Publication");
                     var constructor=publication.getDeclaredConstructors()[0];constructor.setAccessible(true);
                     var stalePublication=(SessionPublications.Publication)constructor.newInstance(place,first.sceneGenerationValue()-2,place.simulation().snapshot());
                     first.forcePublish(stalePublication);
-                    check(stamp.getInt(first)==before,"old subscription callback cannot advance a replacement baseline in the same instance");
+                    check(first.lastStampValue()==before,"old subscription callback cannot advance a replacement baseline in the same instance");
                 }
                 first.refreshState(oldRegistration,null);
                 first.refreshFailed(oldRegistration,new IOException("late old subscription read"));

@@ -65,13 +65,10 @@ final class WorldSession implements AutoCloseable {
     private final String welcomeMessage;
     @FunctionalInterface interface RoleSource { boolean gameMaster()throws IOException; }
     private final RoleSource roles;
-    private boolean gameMaster,inspectionHidden;
     private final SessionPublications publications=new SessionPublications();
     final SessionAppearance appearance;
     private Knight knight;
     private WorldProfile profile;
-    private int acknowledge, created, reference, lastStamp;
-    private short ping;
     private boolean closed;
     private final SessionRefresh refreshState;
     /** Stock town commands may arrive from the loading screen or Ready Room; replay the
@@ -147,6 +144,7 @@ final class WorldSession implements AutoCloseable {
     final SessionCarriedItems carried;
     final SessionSceneState sceneState;
     final SessionStory story;
+    final SessionFlags flags;
     void publishQuickbar()throws IOException { carried.publish(); }
     void publishObjectives()throws IOException { story.publishObjectives(); }
     WorldProfile visibleProfile(){
@@ -325,6 +323,7 @@ final class WorldSession implements AutoCloseable {
         carried=new SessionCarriedItems(this);
         sceneState=new SessionSceneState();
         story=new SessionStory(this);
+        flags=new SessionFlags();
         guilds=new GuildHandler(this);
         trade=new TradeHandler(this);
         exchangeHandler=new ExchangeHandler(this);
@@ -360,18 +359,18 @@ final class WorldSession implements AutoCloseable {
     boolean selectedKnightSelected(){return selected();}
     boolean equipmentAllowed(){return runtime.membership()!=null&&runtime.membership().equipmentAllowed();}
     String selectedKnightName(){return knight==null?null:knight.name();}
-    boolean inspectionHiddenValue(){return inspectionHidden;}
+    boolean inspectionHiddenValue(){return flags.inspectionHidden();}
     int quickbarLength(){return carried.quickbarLength();}
     int departedSceneOid(){return runtime.departedSceneOid();}
-    void ping(short value){ping=value;}
-    void acknowledge(int value){acknowledge=value;}
+    void ping(short value){flags.ping(value);}
+    void acknowledge(int value){flags.acknowledge(value);}
     boolean carriesConsumable(long id){return carried.carriesConsumable(id);}
     void clearQuickbarItem(long item){carried.clearQuickbarItem(item);}
     void quickbarSlot(int slot,long item){carried.quickbarSlot(slot,item);}
     InspectionHandler.Inspection inspectionNow(SceneRegistry.Instance place)throws IOException{return inspection.snapshot(place);}
     Short forcedReceiverValue(){return refreshState.forcedReceiver();}
     int subscribedPartyOid()throws IOException{return parties.subscribedOid();}
-    boolean gameMasterFlag(){return gameMaster;}
+    boolean gameMasterFlag(){return flags.gameMaster();}
     boolean firstOpeningCompletion(){return story.completedEmpty();}
     void applySettlementStory(Set<String> freshMemories,Map<String,org.tortodrone.core.character.KnightObjective.State> freshObjectives)throws IOException {
         story.applySettlementStory(freshMemories,freshObjectives);
@@ -383,12 +382,12 @@ final class WorldSession implements AutoCloseable {
         runtime.beginPortal(next,entrance);runtime.departedSceneOid(runtime.scene().oid());
         partyState();leaveChat();runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();runtime.membership().pause();
     }
-    void resetReferences(){reference=acknowledge=0;}
-    void applySelectionFlags(boolean gm,boolean hidden){gameMaster=gm;inspectionHidden=hidden;}
+    void resetReferences(){flags.resetReferences();}
+    void applySelectionFlags(boolean gm,boolean hidden){flags.apply(gm,hidden);}
     SessionRuntime runtime(){return runtime;}
     void markClosed(){closed=true;}
     void stopPublications(){publications.stop();}
-    int sceneCreated(){return created;}
+    int sceneCreated(){return flags.created();}
     void setSelectedKnight(Knight value){knight=value;}
     void setPartyMember(PartyRegistry.Member value){partyMember=value;}
     void setCompletedOpening(Map<String,OpeningCompletion> value){story.completed(value);}
@@ -402,11 +401,11 @@ final class WorldSession implements AutoCloseable {
         });
     }
 
-    void markSceneCreated(){created=SceneClock.now();}
+    void markSceneCreated(){flags.markCreated();}
     FloorHandler floorsHandler(){return floors;}
     OpeningMission arrivalComlink(){return story.arrivalComlink();}
 
-    void markSceneEntry(){lastStamp=SceneClock.now();}
+    void markSceneEntry(){flags.markEntry();}
     ChatHandler chatHandler(){return chats;}
     DestinationHandler destinationsHandler(){return destinations;}
     String welcomeMessage(){return welcomeMessage;}
@@ -429,21 +428,21 @@ final class WorldSession implements AutoCloseable {
         output.send(()->codec.forceScene(oid,receiver,runtime.scene()));
     }
     void setInspectionHidden(boolean hidden)throws IOException {
-        characters.inspectionHidden(authRevision,hidden);inspectionHidden=hidden;
-        gameMaster=roles.gameMaster();if(runtime.membership()!=null)runtime.membership().appearance(appearance.actor());
-        output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
+        characters.inspectionHidden(authRevision,hidden);flags.inspectionHidden(hidden);
+        flags.gameMaster(roles.gameMaster());if(runtime.membership()!=null)runtime.membership().appearance(appearance.actor());
+        output.send(()->codec.playerFlags(oid,flags.gameMaster(),flags.inspectionHidden(),profile.progress().tutorialComplete()));
     }
     int pendingPortalMap(){var move=runtime.portalMove();return move==null?-1:move.destination().map().id();}
     SceneRegistry.Instance pendingPortalDestination(){var move=runtime.portalMove();return move==null?null:move.destination();}
     ScenePortals.Entrance pendingPortalEntrance(){var move=runtime.portalMove();return move==null?null:move.entrance();}
     void refreshPartyForTravel()throws IOException{refreshParty(true);}
     int connectionOid(){return oid;}
-    int acknowledgeValue(){return acknowledge;}
-    short pingValue(){return ping;}
-    int referenceValue(){return reference;}
-    int lastStampValue(){return lastStamp;}
+    int acknowledgeValue(){return flags.acknowledge();}
+    short pingValue(){return flags.ping();}
+    int referenceValue(){return flags.reference();}
+    int lastStampValue(){return flags.lastStamp();}
     SceneSnapshot lastSnapshotValue(){return runtime.lastSnapshot();}
-    void recordPublished(int stamp,SceneSnapshot snapshot){lastStamp=reference=stamp;runtime.lastSnapshot(snapshot);}
+    void recordPublished(int stamp,SceneSnapshot snapshot){flags.recordPublished(stamp);runtime.lastSnapshot(snapshot);}
     Map<Integer,Integer> occupantClientsValue(){return sceneState.occupantClients();}
     void setOccupantClients(Map<Integer,Integer> value){sceneState.occupantClients(value);}
     Map<Integer,Boolean> occupantRolesValue(){return sceneState.occupantRoles();}
@@ -473,7 +472,7 @@ final class WorldSession implements AutoCloseable {
     boolean openingFloorDue(int stamp)throws IOException{return floors.opening(stamp);}
     void publishVisited(Set<Integer> visited)throws IOException{parties.publishVisited(visited);}
     boolean stateRefreshActive(WorldStatePoller.Registration registration){return !closed&&runtime.entered()&&runtime.persistence()==registration;}
-    void setGameMaster(boolean value){gameMaster=value;}
+    void setGameMaster(boolean value){flags.gameMaster(value);}
     void applyActorAppearance(){runtime.membership().appearance(appearance.actor());}
     void publishOutbids(WorldProfile before,WorldProfile after)throws IOException{auction.publishOutbids(before,after);}
     void refreshOutbids(WorldProfile before,WorldProfile after)throws IOException{auction.publishOutbids(before,after);}
