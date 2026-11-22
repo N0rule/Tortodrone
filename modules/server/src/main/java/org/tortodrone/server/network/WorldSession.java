@@ -120,6 +120,7 @@ final class WorldSession implements AutoCloseable {
     private final FloorHandler floors;
     private final DestinationHandler destinations;
     private final MoveHandler moves;
+    private final KnightCommandHandler knightCommands;
     int partyOid()throws IOException{return parties.oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     void publishPartyState()throws IOException{parties.state();}
@@ -451,6 +452,7 @@ final class WorldSession implements AutoCloseable {
         floors=new FloorHandler(this);
         destinations=new DestinationHandler(this);
         moves=new MoveHandler(this);
+        knightCommands=new KnightCommandHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
@@ -496,6 +498,16 @@ final class WorldSession implements AutoCloseable {
     boolean sceneTravelPending(){return portalMove!=null;}
     boolean deferredMovePending(){return moves.deferredPending();}
     boolean returnRequested(){return returnRequested;}
+    /** The stock Ready Room return request; the client answers with its zone move. */
+    void requestReturnToLast()throws IOException {
+        returnRequested=true;short receiver=forcedReceiver;
+        output.send(()->codec.forceScene(oid,receiver,scene));
+    }
+    void setInspectionHidden(boolean hidden)throws IOException {
+        characters.inspectionHidden(authRevision,hidden);inspectionHidden=hidden;
+        gameMaster=roles.gameMaster();if(membership!=null)membership.appearance(actorAppearance());
+        output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
+    }
     int pendingPortalMap(){return portalMove==null?-1:portalMove.destination().map().id();}
     SceneRegistry.Instance pendingPortalDestination(){return portalMove==null?null:portalMove.destination();}
     ScenePortals.Entrance pendingPortalEntrance(){return portalMove==null?null:portalMove.entrance();}
@@ -711,42 +723,8 @@ final class WorldSession implements AutoCloseable {
         if(closed||socket.isClosed())throw new IOException("Session is closed");
         int service = request.service();
         var args = request.arguments();
-        if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==11){
-            if(!args.isEmpty())throw new SessionDecoder.Rejected("Invalid return-to-last request");
-            if(!selected()||forcedReceiver==null)throw new SessionDecoder.Rejected("Select a knight first");
-            try{characters.worldProfile(knight.name(),authRevision,profile);}
-            catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-            if(readyRoom){returnRequested=true;short receiver=forcedReceiver;output.send(()->codec.forceScene(oid,receiver,scene));}
-            return true;
-        }
+        if(knightCommands.invocation(request))return true;
         if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==7)return destinations.invocation(request);
-        // KnightMarshaller 11 is the stock /haven travel (EN()); it carries no arguments or listener,
-        // so failures are reported through the native chat-feedback path.
-        if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==11){
-            if(!args.isEmpty())throw new SessionDecoder.Rejected("Invalid haven request");
-            try{
-                if(!selected()||forcedReceiver==null||portalMove!=null)throw new IOException("Finish entering this scene first");characters.worldProfile(knight.name(),authRevision,profile);
-                var map=scenes.catalog().entry();var next=destination(map.id());
-                var entrance=new ScenePortals.Entrance(1,map.spawnX(),map.spawnY(),map.spawnRotation());
-                if(readyRoom){
-                    short receiver=forcedReceiver;
-                    enterScene(next,entrance);
-                    output.send(()->codec.forceScene(oid,receiver,next));
-                    return true;
-                }
-                if(!entered||!subscribed)throw new IOException("Finish entering this scene first");
-                if(next==scene)throw new IOException("You are already in that scene");
-                closeConversation();closeTownDialog();portalMove=new PortalMove(next,entrance);departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();short receiver=forcedReceiver;
-                output.send(()->codec.forceScene(oid,receiver,next));
-            }catch(CharacterStore.Refused|IOException refused){unavailable(refused.getMessage());}
-            return true;
-        }
-        if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==13) {
-            if(args.size()!=1||!(args.getFirst() instanceof Boolean hidden))throw new SessionDecoder.Rejected("Invalid inspect privacy request");
-            characters.inspectionHidden(authRevision,hidden);inspectionHidden=hidden;
-            gameMaster=roles.gameMaster();if(membership!=null)membership.appearance(actorAppearance());
-            output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));return true;
-        }
         if ((service == SessionCodec.SCENE_SERVICE || service == SessionCodec.ZONE_SERVICE) && request.method() == 1) {
             if(moves.invocation(args, service == SessionCodec.ZONE_SERVICE))return true;
         }
