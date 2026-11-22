@@ -158,14 +158,8 @@ final class WorldSession implements AutoCloseable {
      *  held comlink once, so re-entering the scene must not reopen it. */
     private OpeningMission deliveredComlink;
     private long missionDialogCreated;
-    private final Map<Long,WorldProfile.Item> temporaryItems=new LinkedHashMap<>();
-    private long nextTemporaryItem=-1;
-    private final long[] quickbar=new long[4];
-    void publishQuickbar()throws IOException {
-        if(runtime.membership()!=null)runtime.membership().inventory(visibleProfile());
-        for(int slot=0;slot<quickbar.length;slot++)if(!temporaryItems.containsKey(quickbar[slot]))quickbar[slot]=0;
-        var slots=quickbar.clone();output.send(()->codec.quickbar(oid,slots));
-    }
+    final SessionCarriedItems carried;
+    void publishQuickbar()throws IOException { carried.publish(); }
     /** The native {@code PlayerObject.objectives} set: knight-persistent entries plus the
      *  mission bar derived from the mission's own {@code o.<id>} text key. */
     private java.util.List<org.tortodrone.core.mission.ObjectiveEntry> wireObjectives(){
@@ -183,8 +177,8 @@ final class WorldSession implements AutoCloseable {
         return visibleProfile(runtime.membership()==null?Set.of():runtime.membership().status().cursedItems());
     }
     WorldProfile visibleProfile(Set<Long> cursed){
-        if(temporaryItems.isEmpty()&&cursed.isEmpty())return profile;
-        var items=new ArrayList<>(profile.items());items.addAll(temporaryItems.values());
+        if(carried.items().isEmpty()&&cursed.isEmpty())return profile;
+        var items=new ArrayList<>(profile.items());items.addAll(carried.items().values());
         items.replaceAll(item->item.curse(cursed.contains(item.id())));
         return new WorldProfile(profile.worldId(),profile.accountId(),profile.knightId(),profile.crowns(),profile.energy(),profile.revision(),items,profile.progress(),profile.town(),profile.achievements());
     }
@@ -252,14 +246,7 @@ final class WorldSession implements AutoCloseable {
     void requestRenameDisconnect(){renameDisconnect=true;}
     void recipeLearnedEffect(){if(runtime.membership()!=null)runtime.membership().effect(new StarterCatalog.Model("Player/Learn Recipe",Map.of()));}
     /** Remove one consumable/session pickup from the visible inventory without a store write. */
-    boolean trashTemporary(long id)throws IOException {
-        if(!temporaryItems.containsKey(id))return false;
-        var item=temporaryItems.get(id);
-        if(item.permanent()||item.equippedSlot()!=null)throw new IOException("m.internal_error");
-        var before=visibleProfile();temporaryItems.remove(id);var after=visibleProfile();
-        output.send(()->codec.itemChanges(oid,knight,before,after));publishQuickbar();
-        return true;
-    }
+    boolean trashTemporary(long id)throws IOException { return carried.trash(id); }
     SceneConversation comlink(String missionId){
         var opening=OpeningMission.byId(missionId);
         if(opening!=null&&OpeningComlinks.get(opening)!=null)return OpeningComlinks.get(opening);
@@ -363,6 +350,7 @@ final class WorldSession implements AutoCloseable {
         this.roles=roles;
         responder=new SessionResponder(output,codec,oid);
         refreshState=new SessionRefresh(this);
+        carried=new SessionCarriedItems(this);
         guilds=new GuildHandler(this);
         trade=new TradeHandler(this);
         exchangeHandler=new ExchangeHandler(this);
@@ -399,13 +387,13 @@ final class WorldSession implements AutoCloseable {
     boolean equipmentAllowed(){return runtime.membership()!=null&&runtime.membership().equipmentAllowed();}
     String selectedKnightName(){return knight==null?null:knight.name();}
     boolean inspectionHiddenValue(){return inspectionHidden;}
-    int quickbarLength(){return quickbar.length;}
+    int quickbarLength(){return carried.quickbarLength();}
     int departedSceneOid(){return runtime.departedSceneOid();}
     void ping(short value){ping=value;}
     void acknowledge(int value){acknowledge=value;}
-    boolean carriesConsumable(long id){return temporaryItems.containsKey(id)&&temporaryItems.get(id).equippedSlot()==null;}
-    void clearQuickbarItem(long item){for(int index=0;index<quickbar.length;index++)if(quickbar[index]==item)quickbar[index]=0;}
-    void quickbarSlot(int slot,long item){quickbar[slot]=item;}
+    boolean carriesConsumable(long id){return carried.carriesConsumable(id);}
+    void clearQuickbarItem(long item){carried.clearQuickbarItem(item);}
+    void quickbarSlot(int slot,long item){carried.quickbarSlot(slot,item);}
     InspectionHandler.Inspection inspectionNow(SceneRegistry.Instance place)throws IOException{return inspection.snapshot(place);}
     Short forcedReceiverValue(){return refreshState.forcedReceiver();}
     int subscribedPartyOid()throws IOException{return parties.subscribedOid();}
@@ -503,10 +491,11 @@ final class WorldSession implements AutoCloseable {
     OpeningMission arrivalComlinkValue(){return arrivalComlink;}
     void setDeliveredComlink(OpeningMission value){deliveredComlink=value;}
     long missionDialogCreatedValue(){return missionDialogCreated;}
-    long nextTemporaryItemId(){return nextTemporaryItem--;}
-    Map<Long,WorldProfile.Item> temporaryItems(){return temporaryItems;}
-    boolean quickbarContains(long id){for(long value:quickbar)if(value==id)return true;return false;}
-    void addToQuickbar(long id){for(int slot=0;slot<quickbar.length;slot++)if(quickbar[slot]==0){quickbar[slot]=id;break;}}
+    long nextTemporaryItemId(){return carried.nextId();}
+    Map<Long,WorldProfile.Item> temporaryItems(){return carried.items();}
+    boolean quickbarContains(long id){return carried.quickbarContains(id);}
+    void addToQuickbar(long id){carried.addToQuickbar(id);}
+    long[] quickbarSnapshot(){return carried.snapshot();}
     /** Collection seam used by the scene test fixtures; the publisher owns the reward path. */
     void collectPickups()throws IOException{publisher.collectPickups();}
     void forcePortal(ScenePortals.Trigger trigger)throws IOException{publisher.beginPortal(trigger);}
@@ -533,7 +522,7 @@ final class WorldSession implements AutoCloseable {
     }
     boolean useTemporaryItem(long id,org.tortodrone.core.world.SceneContent.Spec spec){return runtime.membership().useItem(id,spec);}
     org.tortodrone.core.world.SceneContent.Spec persistentItemSpec(String config){return runtime.scene()==null?null:runtime.scene().map().content().items().get(config);}
-    org.tortodrone.core.world.SceneContent.Spec temporaryItemSpec(long id){var item=temporaryItems.get(id);return item==null?null:persistentItemSpec(item.config());}
+    org.tortodrone.core.world.SceneContent.Spec temporaryItemSpec(long id){var item=carried.items().get(id);return item==null?null:persistentItemSpec(item.config());}
     WorldProfile loadOwnProfile()throws IOException,CharacterStore.Refused{return characters.worldProfile(knight.name(),authRevision,profile);}
     void refreshKnight(){knight=characters.roster().stream().filter(k->k.id()==knight.id()).findFirst().orElseThrow();}
     SceneRegistry sceneRegistry(){return scenes;}

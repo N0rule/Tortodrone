@@ -42,8 +42,8 @@ public final class DungeonConsumablesTest {
                     synchronized(simulation){
                         var entered=SceneMembership.class.getDeclaredField("entered");entered.setAccessible(true);entered.setBoolean(member,true);
                         var player=simulation.snapshot().players().getFirst();var entities=(SceneEntities)field(simulation,"entities");
-                        @SuppressWarnings("unchecked") var items=(Map<Long,WorldProfile.Item>)field(session,"temporaryItems");
-                        long[] slots=(long[])field(session,"quickbar");
+                        var items=session.temporaryItems();
+                        long[] slots=session.quickbarSnapshot();
                         for(int i=0;i<3;i++)pickup(session,entities,player,"Pickup/Vial/Fire Vial");
                         check(items.size()==1&&items.values().iterator().next().count()==3,"three uses in one carried stack");
                         int refused=pickup(session,entities,player,"Pickup/Vial/Fire Vial");
@@ -63,6 +63,7 @@ public final class DungeonConsumablesTest {
                         check(entities.pendingPickups(player.id()).size()==1,"same-tick contenders reserve only the one remaining stack use");collect(session);
                         check(items.get(fireId).count()==3,"reserved pickup fills exactly one stack use");
                         for(String name:List.of("Freeze","Shock","Poison"))pickup(session,entities,player,"Pickup/Vial/"+name+" Vial");
+                        slots=session.quickbarSnapshot();
                         check(items.size()==4&&Arrays.stream(slots).allMatch(id->id<0)&&Arrays.stream(slots).distinct().count()==4,"four carried types fill four distinct quickbar slots");
                         int fifth=pickup(session,entities,player,"Pickup/Vial/Sleep Vial");
                         check(items.size()==4&&entities.actor(fifth)!=null,"fifth type remains available to another knight");
@@ -74,8 +75,10 @@ public final class DungeonConsumablesTest {
                         check(entities.actor(fifth)==null,"successful peer claim removes it for both observers");
                         }
                         long id=slots[0];items.remove(id);publish.invoke(session);
+                        slots=session.quickbarSnapshot();
                         check(slots[0]==0,"consumed or discarded stack frees its quickbar slot");
-                        pickup(session,entities,player,"Pickup/Vial/Sleep Vial");check(items.size()==4&&slots[0]!=0,"new type reuses the freed slot");
+                        pickup(session,entities,player,"Pickup/Vial/Sleep Vial");slots=session.quickbarSnapshot();
+                        check(items.size()==4&&slots[0]!=0,"new type reuses the freed slot");
                         // At the four-type limit an existing non-full stack remains eligible.
                         long sleep=slots[0];var stack=items.get(sleep);
                         items.put(sleep,new WorldProfile.Item(sleep,stack.slot(),stack.config(),null,0,null,false,false,false,2,false));publish.invoke(session);

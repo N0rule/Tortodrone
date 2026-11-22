@@ -81,8 +81,7 @@ public final class TownServicesSessionTest {
                 var energyEffects=simulation.snapshot().effectsSince(energyBaseline);
                 check(energyEffects.size()==1&&energyEffects.getFirst().config().name().equals("Energy Spent")&&energyEffects.getFirst().ownerOid()==0,"committed Energy purchase effect reaches buyer and observers");
                 learned=db.worldProfile(account,knight.id(),1);
-                var temporaryField=WorldSession.class.getDeclaredField("temporaryItems");temporaryField.setAccessible(true);
-                @SuppressWarnings("unchecked") var temporary=(Map<Long,WorldProfile.Item>)temporaryField.get(world);
+                var temporary=world.temporaryItems();
                 temporary.put(-1L,new WorldProfile.Item(-1,WorldProfile.Slot.OTHER,"Gear/Dungeon/Vitapod/Health +01",null,0,0,false,false,false,1,false));
                 temporary.put(-2L,new WorldProfile.Item(-2,WorldProfile.Slot.OTHER,recipe,null,0,null,false,false,false,1,true));
                 temporary.put(-3L,new WorldProfile.Item(-3,WorldProfile.Slot.OTHER,recipe,null,0,null,false,false,false,3,false));
