@@ -55,12 +55,10 @@ public final class PetCombatTest {
                 var attack=FireCatalog.load(org.tortodrone.support.ContentFixture.path("town/pet-fires.json")).find("Sprite/Drakon/Firebolt|0|0|NORMAL",292);
                 int rearm=((Number)attack.attack().arguments().get("rearm")).intValue(),clear=((Number)attack.attack().arguments().get("clear")).intValue();
                 check(rearm<clear,"native Firebolt has a follow window before its animation clears");
-                var advance=SceneSimulation.Membership.class.getDeclaredMethod("advancePet",int.class);advance.setAccessible(true);
-                advance.invoke(member,running.activityStarted()+rearm-1);
-                var pet=SceneSimulation.Membership.class.getDeclaredMethod("petActor");pet.setAccessible(true);
-                check(!((ActorState)pet.invoke(member)).pet().follow(),"stationary skill holds the Sprite until its rearm time");
-                advance.invoke(member,running.activityStarted()+rearm);
-                var following=(ActorState)pet.invoke(member);
+                member.advancePet(running.activityStarted()+rearm-1);
+                check(!member.petSnapshot().pet().follow(),"stationary skill holds the Sprite until its rearm time");
+                member.advancePet(running.activityStarted()+rearm);
+                var following=member.petSnapshot();
                 check(following.activity()==1&&following.pet().follow(),"Sprite resumes following at native rearm while the skill animation continues");
             }
             stamp=SceneClock.now();member.input(stamp,0,0,256,stamp,stamp,System.nanoTime()/1_000_000);Thread.sleep(100);
