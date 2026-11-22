@@ -127,6 +127,7 @@ final class WorldSession implements AutoCloseable {
     private final InspectionHandler inspection;
     private final NewsHandler news;
     private final EquipHandler equipment;
+    private final SceneInputHandler sceneInput;
     int partyOid()throws IOException{return parties.oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     void publishPartyState()throws IOException{parties.state();}
@@ -566,6 +567,7 @@ final class WorldSession implements AutoCloseable {
         inspection=new InspectionHandler(this);
         news=new NewsHandler(this);
         equipment=new EquipHandler(this);
+        sceneInput=new SceneInputHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
@@ -575,6 +577,9 @@ final class WorldSession implements AutoCloseable {
     String selectedKnightName(){return knight==null?null:knight.name();}
     boolean inspectionHiddenValue(){return inspectionHidden;}
     int quickbarLength(){return quickbar.length;}
+    int departedSceneOid(){return departedSceneOid;}
+    void ping(short value){ping=value;}
+    void acknowledge(int value){acknowledge=value;}
     boolean carriesConsumable(long id){return temporaryItems.containsKey(id)&&temporaryItems.get(id).equippedSlot()==null;}
     void clearQuickbarItem(long item){for(int index=0;index<quickbar.length;index++)if(quickbar[index]==item)quickbar[index]=0;}
     void quickbarSlot(int slot,long item){quickbar[slot]=item;}
@@ -1171,24 +1176,7 @@ final class WorldSession implements AutoCloseable {
         if(persistence!=null){persistence.close();persistence=null;}
     }
 
-    synchronized void input(SessionDecoder.Input input) throws IOException {
-        // Old frames can already be in flight when the server forces a portal move.
-        // Ignore only the known departing scene until the destination becomes ready.
-        if(!closed&&!socket.isClosed()&&departedSceneOid!=0&&input.oid()==departedSceneOid)return;
-        if (closed || socket.isClosed() || !subscribed || !entered || input.oid() != scene.oid()) {
-            throw new SessionDecoder.Rejected("Unauthorized movement input");
-        }
-        // TCP delivers every queued snapshot in order, even while scene loading delays input.
-        // Client acknowledgements are for unreliable transport; they do not choose our baseline.
-        long now = monotonicTime();
-        int sceneTime = SceneClock.now();
-        if(!scenes.authorized(scene,profile.worldId(),partyMember))return; // Revoked memberships await their queued safe return.
-        ping = (short) Math.max(0, Math.min(Short.MAX_VALUE, (long) sceneTime - input.smoothedTime()));
-        for (var frame : input.frames()) {
-            if (membership.input(frame.timestamp(), frame.rotation(), frame.direction(),
-                    frame.flags(),frame.actionChanged(), sceneTime, now)) acknowledge = frame.timestamp();
-        }
-    }
+    synchronized void input(SessionDecoder.Input input)throws IOException { sceneInput.input(input); }
 
     /** Coalesce ordinary frames while retaining native data-dependent activity boundaries. */
     private void offer(SceneRegistry.Instance place,int generation,SceneSnapshot snapshot) {
