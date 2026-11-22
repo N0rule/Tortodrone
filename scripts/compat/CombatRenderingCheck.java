@@ -324,7 +324,7 @@ public final class CombatRenderingCheck {
             }
             char[] password=AccountStore.transform("lan-test-password".toCharArray());
             try{
-                var account=store.authenticate("LanPlayer",password);var town=account.characters().town(store.townRules());int knight=account.characters().roster().getFirst().id();
+                var account=store.authenticate("LanPlayer",password);var town=account.characters().services().town(store.townRules());int knight=account.characters().roster().getFirst().id();
                 for(String config:List.of("Drakon","Maskeraith","Seraphynx")){
                     var created=town.adminSprite(account.id(),knight,account.authRevision(),8,List.of(new org.tortodrone.core.wire.ConfigReference(config,Map.of()))).profile();
                     int id=created.town().sprites().stream().filter(s->s.config().equals(config)).findFirst().orElseThrow().id();

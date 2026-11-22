@@ -150,7 +150,7 @@ final class ScenePublisher {
         if(scripted!=null&&scripted.definition()==null){session.closeConversation();scripted=null;}
         if(scripted!=null&&own!=null){
             if(scripted.definition().initialAction()!=null&&!session.membership().conversationStart(scripted.definition(),scripted.source()))return;
-            session.conversations().open(scripted.definition(),null,scripted.source());
+            session.conversations().open(scripted.definition(),null,scripted.source(),own,scripted.definition().initial());
         }
         if(session.arrivalComlinkValue()!=null&&own!=null&&!session.conversations().active()&&session.townHandler().dialogOpen()==false&&session.missionDialogCreatedValue()==0){
             var pending=session.arrivalComlinkValue();session.clearArrivalComlink();session.conversations().openComlink(pending.id());session.setDeliveredComlink(pending);
@@ -170,7 +170,7 @@ final class ScenePublisher {
                 // Repeat node is the archive's documented interim HasCompletedMission branch;
                 // it cannot pay or set the mission completed merely by opening.
                 String initial=binding.actor().equals(WorldSession.RHENDON_CAMP)&&session.completedOpeningKeys().contains(OpeningMission.SECURING_CAMP.id())?"part 4a":binding.initial();
-                session.conversations().open(binding,null,source,initial);
+                session.conversations().open(binding,null,source,own,initial);
             }
         }
         if(session.tutorialFloorDue(stamp))return;

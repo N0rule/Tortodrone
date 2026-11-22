@@ -60,14 +60,20 @@ final class ConversationHandler {
     }
 
     /** Open a conversation where the knight stands; the caller has already resolved eligibility. */
-    void open(SceneConversation definition,String missionId,ActorState own)throws IOException {
-        open(definition,missionId,own,definition.initial());
+    void open(SceneConversation definition,String missionId,ActorState source)throws IOException {
+        open(definition,missionId,source,source,definition.initial());
     }
 
-    void open(SceneConversation definition,String missionId,ActorState own,String initialNode)throws IOException {
+    void open(SceneConversation definition,String missionId,ActorState source,String initialNode)throws IOException {
+        open(definition,missionId,source,source,initialNode);
+    }
+
+    /** Open a scripted or placed conversation. {@code source} is the authored speaker/trigger;
+     *  {@code own} is the knight whose current position anchors the native walk-away close. */
+    void open(SceneConversation definition,String missionId,ActorState source,ActorState own,String initialNode)throws IOException {
         session.closeTownDialog();
         close();
-        this.mission=missionId;this.conversation=definition;this.source=own;this.node=initialNode;
+        this.mission=missionId;this.conversation=definition;this.source=source;this.node=initialNode;
         touch();x=own.x();y=own.y();
         responder.send(()->responder.codec().conversationDialog(responder.oid(),session.currentScene().oid(),
             conversation,node,source,created));

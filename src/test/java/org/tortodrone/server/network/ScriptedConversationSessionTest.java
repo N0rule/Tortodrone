@@ -33,7 +33,11 @@ public final class ScriptedConversationSessionTest {
                 "last",new SceneConversation.Node("last","m.last",List.of(new SceneConversation.Response("r.finish","","","",new SceneActions.Sequence(List.of(new SceneActions.Signal("boss","activate"),new SceneActions.Delay(1000,new SceneActions.ClearDialog(false))),false))),null,null));
             var definition=new SceneConversation(id,"n.fixture","conversation","first",null,nodes);
             String start=Json.stringify(Map.of("kind","delay","millis",100,"action",Map.of("kind","conversation","id",id,"activator",true)));
-            var area=new SceneContent.Entry("500",original.spawnX(),original.spawnY(),0,new SceneContent.Spec(Map.ofEntries(Map.entry("config","Fixture/Area"),Map.entry("kind","SceneTrigger"),Map.entry("event","signal-start"),Map.entry("watch-tag","area:500"),Map.entry("signal","intersection"),Map.entry("scene-sensor","true"),Map.entry("sensor-mask","4"),Map.entry("width","2"),Map.entry("height","2"),Map.entry("action",start))));
+            // The script source (this entry) sits three units from the knight's spawn.
+            // The native walk-away close must anchor to the knight's own position at open,
+            // not to the scripted source; otherwise every scripted dialogue would close on
+            // the next publish while the knight stands still.
+            var area=new SceneContent.Entry("500",original.spawnX()+3,original.spawnY(),0,new SceneContent.Spec(Map.ofEntries(Map.entry("config","Fixture/Area"),Map.entry("kind","SceneTrigger"),Map.entry("event","signal-start"),Map.entry("watch-tag","area:500"),Map.entry("signal","intersection"),Map.entry("scene-sensor","true"),Map.entry("sensor-mask","4"),Map.entry("width","8"),Map.entry("height","8"),Map.entry("action",start))));
             var boss=new SceneContent.Entry("501",0,0,0,new SceneContent.Spec(Map.of("config","Fixture/Signal","kind","SceneTrigger","event","signal","watch-tag","boss","signal","activate","action","{\"kind\":\"signal\",\"tag\":\"door\",\"name\":\"toggle\"}")));
             var door=new SceneContent.Entry("door",original.spawnX()+5,original.spawnY(),0,new SceneContent.Spec(Map.of("config","Fixture/Door","native-type","com.threerings.projectx.dungeon.data.actor.Door","kind","Door","tags","door","width","1","height","1","collision-flags","1","door-speed","0")));
             var content=new SceneContent(List.of(area,boss,door),original.content().scales(),Map.of(id,definition),original.content().stats(),Map.of(),Map.of(),original.content().statuses());
@@ -48,6 +52,8 @@ public final class ScriptedConversationSessionTest {
                 refuse(()->first.conversationInvocation(response(oid,0,10)));
                 first.subscribe((short)1);first.entered();
                 await(()->"first".equals(node(first)));
+                Thread.sleep(200); // several publishes: the knight stands still three units from the script source
+                check("first".equals(node(first)),"scripted dialogue stays open while the knight stands still");
                 check(node(second)==null,"unentered peer receives no scripted dialogue");
                 check(!first.conversationInvocation(response(oid+1,0,9)),"wrong scene cannot submit conversation responses");
                 first.conversationInvocation(response(oid,99,9));check("first".equals(node(first)),"invalid choice preserves the active node");
