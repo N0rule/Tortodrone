@@ -75,7 +75,7 @@ final class WorldSession implements AutoCloseable {
     private int acknowledge, created, reference, lastStamp;
     private short ping;
     private boolean closed;
-    private Short forcedReceiver;
+    private final SessionRefresh refreshState;
     /** Stock town commands may arrive from the loading screen or Ready Room; replay the
      *  native destination request once the scene has subscribed and accepted enteredPlace. */
     private SceneHealth.State publishedHealth;
@@ -143,7 +143,7 @@ final class WorldSession implements AutoCloseable {
         var next=destination(safeTown);
         runtime.beginPortal(next,new ScenePortals.Entrance(1,next.map().spawnX(),next.map().spawnY(),next.map().spawnRotation()));
         moves.clearDeferred();runtime.departedSceneOid(runtime.scene().oid());leaveChat();runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();runtime.membership().pause();
-        if(forcedReceiver!=null){short receiver=forcedReceiver;output.send(()->codec.forceScene(oid,receiver,next));}
+        var receiver=refreshState.forcedReceiver();if(receiver!=null)output.send(()->codec.forceScene(oid,receiver,next));
     }
     /** Verified stock SteamMarshaller: 2[int] and 5[boolean] are unacknowledged client reports;
      * purchase, profile and friend-invite requests carry listeners and receive native failure. */
@@ -244,7 +244,7 @@ final class WorldSession implements AutoCloseable {
     synchronized void beginForcedMissionTravel(SceneRegistry.Instance next,ScenePortals.Entrance start,short requestId)throws IOException {
         closeConversation();closeTownDialog();runtime.beginPortal(next,start);runtime.departedSceneOid(runtime.scene().oid());
         partyState();leaveChat();runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();if(runtime.membership()!=null)runtime.membership().pause();
-        short receiver=forcedReceiver;
+        short receiver=refreshState.forcedReceiver();
         output.send(()->codec.invocationConfirmed(oid,requestId));output.send(()->codec.forceScene(oid,receiver,next));
     }
     void clearArrivalComlink(){arrivalComlink=null;}
@@ -362,6 +362,7 @@ final class WorldSession implements AutoCloseable {
         this.weapons=scenes.weapons();
         this.roles=roles;
         responder=new SessionResponder(output,codec,oid);
+        refreshState=new SessionRefresh(this);
         guilds=new GuildHandler(this);
         trade=new TradeHandler(this);
         exchangeHandler=new ExchangeHandler(this);
@@ -406,7 +407,7 @@ final class WorldSession implements AutoCloseable {
     void clearQuickbarItem(long item){for(int index=0;index<quickbar.length;index++)if(quickbar[index]==item)quickbar[index]=0;}
     void quickbarSlot(int slot,long item){quickbar[slot]=item;}
     InspectionHandler.Inspection inspectionNow(SceneRegistry.Instance place)throws IOException{return inspection.snapshot(place);}
-    Short forcedReceiverValue(){return forcedReceiver;}
+    Short forcedReceiverValue(){return refreshState.forcedReceiver();}
     int subscribedPartyOid()throws IOException{return parties.subscribedOid();}
     boolean gameMasterFlag(){return gameMaster;}
     boolean firstOpeningCompletion(){return completedOpening.isEmpty();}
@@ -467,7 +468,7 @@ final class WorldSession implements AutoCloseable {
     boolean returnRequested(){return runtime.returnRequested();}
     /** The stock Ready Room return request; the client answers with its zone move. */
     void requestReturnToLast()throws IOException {
-        runtime.returnRequested(true);short receiver=forcedReceiver;
+        runtime.returnRequested(true);short receiver=refreshState.forcedReceiver();
         output.send(()->codec.forceScene(oid,receiver,runtime.scene()));
     }
     void setInspectionHidden(boolean hidden)throws IOException {
@@ -631,26 +632,9 @@ final class WorldSession implements AutoCloseable {
     }
 
     /** Call outside the CharacterStore publication lock to preserve session/account lock order. */
-    synchronized void refresh() throws IOException {
-        if (selected()) {
-            var visible=visibleProfile();output.send(() -> codec.selected(oid, knight, visible, guilds.guildInfo()));
-            publishQuickbar();
-            output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
-            if (runtime.subscribed()) output.send(() -> codec.sceneLocation(oid,runtime.scene(),scenes.channelOid(runtime.scene().map().zone(),false),scenes.channelOid(runtime.scene().map().zone(),true)));
-        }
-    }
+    synchronized void refresh() throws IOException { refreshState.refresh(); }
 
-    synchronized void receiverChanged(Map<String, Short> receivers) throws IOException {
-        Short receiver = receivers.get(SceneRegistry.ZONE_RECEIVER);
-        if (receiver == null) forcedReceiver = null;
-        if (selected() && receiver != null && !receiver.equals(forcedReceiver)) {
-            var destination=runtime.portalMove()==null?runtime.scene():runtime.portalMove().destination();
-            if(runtime.readyRoom()&&!runtime.returnRequested())output.send(()->codec.forceDestination(oid,receiver,ReadyRoom.ZONE,ReadyRoom.SCENE));
-            else output.send(() -> codec.forceScene(oid, receiver,destination));
-            forcedReceiver = receiver;
-            flushPendingTravel();
-        }
-    }
+    synchronized void receiverChanged(Map<String, Short> receivers) throws IOException { refreshState.receiverChanged(receivers); }
 
     /** Replay a town destination command that arrived before the scene was ready. */
     synchronized void flushPendingTravel()throws IOException { destinations.flush(); }
@@ -687,7 +671,7 @@ final class WorldSession implements AutoCloseable {
 
     synchronized void requireAdminReady()throws IOException { requireAdminReady(false); }
     synchronized void requireAdminReady(boolean roomTravel)throws IOException {
-        if(closed||socket.isClosed()||!selected()||(!(roomTravel&&runtime.readyRoom())&&(!runtime.subscribed()||!runtime.entered()))||forcedReceiver==null||runtime.portalMove()!=null||deferredMovePending())throw new IOException("Finish entering this scene first");
+        if(closed||socket.isClosed()||!selected()||(!(roomTravel&&runtime.readyRoom())&&(!runtime.subscribed()||!runtime.entered()))||refreshState.forcedReceiver()==null||runtime.portalMove()!=null||deferredMovePending())throw new IOException("Finish entering this scene first");
         try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
         if(!roles.gameMaster())throw new IOException("Game Master permission required");
     }
@@ -700,7 +684,7 @@ final class WorldSession implements AutoCloseable {
     synchronized void beginAdminTravel(SceneRegistry.Instance next,AdminHandler.AdminLocation location)throws IOException {
         runtime.beginPortal(next,new ScenePortals.Entrance(1,location.x(),location.y(),location.rotation()));
         runtime.departedSceneOid(runtime.readyRoom()?0:runtime.scene().oid());leaveChat();runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();
-        if(runtime.membership()!=null)runtime.membership().pause();short receiver=forcedReceiver;
+        if(runtime.membership()!=null)runtime.membership().pause();short receiver=refreshState.forcedReceiver();
         output.send(()->codec.forceScene(oid,receiver,next));
     }
     AdminHandler adminHandler(){return adminTools;}
