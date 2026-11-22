@@ -55,12 +55,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
         default void cancel(ElevatorTrip trip,int stamp) { }
     }
     private final ElevatorSystem elevatorSystem=new ElevatorSystem(this);
+    private final SceneCollisions collisions=new SceneCollisions(this);
     public void elevators(ElevatorControl control){elevatorSystem.control(control);}
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
     }
     private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","EntryState","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift","Lift","TerritoryProp");
-    private static boolean liftKind(String kind){return kind.equals("DungeonLift")||kind.equals("Lift");}
+    static boolean liftKind(String kind){return kind.equals("DungeonLift")||kind.equals("Lift");}
     /** Damage wakes a monster even when it was hit outside every activation radius. */
     static final int DAMAGE_ENGAGE_MILLIS=5000;
     /** Reuse a clear line of sight briefly; damage or a moved target invalidates it. */
@@ -143,7 +144,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
      *  vendored {@code Lift} base and LiftBarrierProbe). Carriers are stopped by the pawn rule
      *  in {@link #penetration}, because the raw mask test alone never blocks them: the pawn mask
      *  lacks the bit and a carried lift's own collision drops to 0 in 2026. */
-    private static final int LIFT_COLLISION=8192;
+    static final int LIFT_COLLISION=8192;
     static final Object POINT=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Point",Map.of());
 
     /** Served {@code Dynamic/Lift Objects} pot arguments, condensed to what the land handler
@@ -1267,69 +1268,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
             cycle(target,stamp);
         }
     }
-    public boolean walkable(float x,float y,int ignore){
-        for(var e:entities.values()){
-            if(e.id==ignore||e.destroyed!=Integer.MAX_VALUE)continue;
-            if(e.carrier!=0)continue;
-            if(e.kind.equals("Door")&&(e.flags&6)==2)continue;
-            if((e.collisionFlags&pawnCollisionMask)!=0&&e.containsPawn(x,y))return false;
-        }return true;
-    }
-    /** Same mask and live actor exclusions as pawn collision, retaining the separating direction.
-     *  Closed Lift Barriers additionally block a pawn that is carrying a lift. The served evidence
-     *  never states that rule on the raw mask test (the pawn mask is 43, the barrier's lift bit
-     *  8192), yet the gym's Lift Barrier doors are the served
-     *  {@code DungeonActorSpriteConfig$SubjectiveDoor}: the client judges each door per viewer,
-     *  open exactly when the viewer's target actor cannot collide with it, and a knight carrying
-     *  a statue reads every closed Lift Barrier as closed ("when you pick up a statue, they go
-     *  purple, and you are not supposed to go through them, only if you put down the statue").
-     *  With the old raw-mask pass the server kept moving the pawn through a gate the client
-     *  closed, which was the reported gradual penetration; matching the client server-side ends
-     *  it. A lift at rest releases the pawn again, and an open barrier (open flag set) blocks
-     *  nobody. */
+    public boolean walkable(float x,float y,int ignore){return collisions.walkable(x,y,ignore);}
     /** Source ids whose static collision must be ignored because the entity is open or destroyed. */
-    public java.util.Set<Integer> disabledCollisionSources(){
-        var result=new java.util.HashSet<Integer>();
-        for(var e:entities.values()){
-            if(e.collisionFlags==0)continue;
-            boolean disabled=e.destroyed!=Integer.MAX_VALUE
-                ||e.kind.equals("Door")&&(e.flags&6)==2;
-            if(!disabled)continue;
-            try{result.add(Integer.parseInt(e.binding.key()));}catch(NumberFormatException ignored){}
-        }
-        return java.util.Set.copyOf(result);
-    }
-    public SceneCollision.Penetration penetration(float x,float y,int ignore){
-        boolean carrying=ignore!=0&&entities.values().stream().anyMatch(e->liftKind(e.kind)
-            &&e.carrier==ignore&&e.destroyed==Integer.MAX_VALUE);
-        var result=SceneCollision.Penetration.NONE;
-        for(var e:entities.values()){
-            if(e.id==ignore||e.destroyed!=Integer.MAX_VALUE||e.carrier!=0||e.kind.equals("Door")&&(e.flags&6)==2)continue;
-            if((e.collisionFlags&pawnCollisionMask)==0&&!(carrying&&e.kind.equals("Door")
-                    &&(e.collisionFlags&LIFT_COLLISION)!=0))continue;
-            if(!e.containsPawn(x,y))continue;
-            result=result.deepest(e.penetration(x,y));
-        }
-        return result;
-    }
-    @Override public boolean contact(float x,float y,int owner){
-        return contact(x,y,0,owner,null,-1);
-    }
-    @Override public boolean attachable(int id){var e=entities.get(id);return e!=null&&e.kind.equals("Monster")&&e.health>0&&e.destroyed==Integer.MAX_VALUE;}
-    @Override public int contactActor(float x,float y,float rotation,int owner,Object shape,int mask){
-        for(var e:entities.values())if(e.id!=owner&&e.carrier==0&&e.destroyed==Integer.MAX_VALUE
-            &&(e.collisionFlags&mask)!=0&&!(e.kind.equals("Door")&&(e.flags&2)!=0)
-            &&(shape==null||e.shape==null?e.spec.contains(e.x,e.y,e.rotation,x,y,0):SceneCollision.overlaps(shape,x,y,rotation,e.shape,e.x,e.y,e.rotation,0)))return e.id;
-        return 0;
-    }
-    @Override public boolean contact(float x,float y,float rotation,int owner,Object shape,int mask){
-        var source=entities.get(owner);
-        if(source!=null&&(source.kind.equals("Monster")||source.kind.equals("Trap"))&&(mask&4)!=0&&players.stream().anyMatch(p->shape==null?
-            Math.hypot(p.x()-x,p.y()-y)<=ScenePortals.PAWN_RADIUS:SceneShape.intersects(shape,
-                (p.x()-x)*(float)Math.cos(rotation)+(p.y()-y)*(float)Math.sin(rotation),
-                -(p.x()-x)*(float)Math.sin(rotation)+(p.y()-y)*(float)Math.cos(rotation),ScenePortals.PAWN_RADIUS)))return true;
-        return contactActor(x,y,rotation,owner,shape,mask)!=0;
-    }
+    public java.util.Set<Integer> disabledCollisionSources(){return collisions.disabledSources();}
+    public SceneCollision.Penetration penetration(float x,float y,int ignore){return collisions.penetration(x,y,ignore);}
+    @Override public boolean contact(float x,float y,int owner){return collisions.contact(x,y,owner);}
+    @Override public int contactActor(float x,float y,float rotation,int owner,Object shape,int mask){return collisions.contactActor(x,y,rotation,owner,shape,mask);}
+    @Override public boolean contact(float x,float y,float rotation,int owner,Object shape,int mask){return collisions.contact(x,y,rotation,owner,shape,mask);}
     @Override public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){
         damage(region,x,y,rotation,stamp,owner,null);
     }
