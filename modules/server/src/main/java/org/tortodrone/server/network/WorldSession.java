@@ -456,29 +456,10 @@ final class WorldSession implements AutoCloseable {
         if(closed||!selected()||!entered||!subscribed||portalMove!=null||deferredMove!=null)throw new IOException("Enter a scene first");
         try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
     }
-    /** Stock social edits (request/unfriend) need only a selected knight; joins still travel. */
-    private void requireFriendCurrent()throws IOException {
-        if(closed||!selected())throw new IOException("m.internal_error");
-        try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-    }
     private int friendNamed(String name)throws IOException {
         return characters.services().friends().list(characters.accountId(),knight.id(),authRevision).stream().filter(p->p.name().equalsIgnoreCase(name))
             .mapToInt(org.tortodrone.storage.FriendStore.Peer::world).findFirst().orElseThrow(()->new IOException("m.internal_error"));
     }
-    void removeFriend(String name)throws IOException,CharacterStore.Refused {
-        synchronized(this){
-            requireFriendCurrent();var friends=characters.services().friends();friends.remove(characters.accountId(),knight.id(),authRevision,name);
-            profile=characters.worldProfile(knight.name(),authRevision,profile);refreshFriends(null,friends.snapshot(),friendPresence(characters.worldStorageFile()));
-        }
-    }
-    void requestFriend(String name,String message,String response)throws IOException,CharacterStore.Refused {
-        synchronized(this){
-            requireFriendCurrent();var friends=characters.services().friends();
-            if(!chats.rate().allow(System.nanoTime()))throw new IOException("Please slow down before sending another friend request");
-            friends.request(characters.accountId(),knight.id(),authRevision,name,message,response);
-        }
-    }
-
     long externalSecret(){return externalSecret;}
     boolean lookingForGroup(){return lookingForGroup;}
     private record Identity(int worldId,String knight) { }

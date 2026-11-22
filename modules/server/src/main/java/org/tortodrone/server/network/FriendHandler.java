@@ -6,6 +6,7 @@ import java.util.Set;
 import org.tortodrone.core.WireTypes;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
+import org.tortodrone.character.CharacterStore;
 
 /** Social service requests (friends, party suggestions, joins, party finder and unfriend), the
  *  empty feed answer and event-log telemetry for one connection. Travel and friend-list
@@ -58,8 +59,8 @@ final class FriendHandler {
                 case 3 -> session.joinFriend((String) args.get(0));
                 case 4 -> session.joinBySecret((String) args.get(0), (Boolean) args.get(1));
                 case 6 -> session.setLookingForGroup((Boolean) args.get(0), (org.tortodrone.core.wire.EnumValue) args.get(1));
-                case 8 -> session.removeFriend((String) args.get(0));
-                default -> session.requestFriend((String) args.get(0), (String) args.get(1), (String) args.get(2));
+                case 8 -> removeFriend((String) args.get(0));
+                default -> requestFriend((String) args.get(0), (String) args.get(1), (String) args.get(2));
             }
             responder.confirmed(listener.requestId());
         } catch (org.tortodrone.character.CharacterStore.Refused | IOException refused) {
@@ -67,6 +68,25 @@ final class FriendHandler {
         }
         return true;
     }
+
+    /** Stock social edits (request/unfriend) need only a selected knight; joins still travel. */
+    private void requireCurrent()throws IOException {
+        if(session.isClosed()||!session.selected())throw new IOException("m.internal_error");
+        try{session.charactersStore().worldProfile(session.selectedKnight().name(),session.authRevision());}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+    }
+
+    void removeFriend(String name)throws IOException,CharacterStore.Refused { synchronized (session) {
+        requireCurrent();var friends=session.charactersStore().services().friends();
+        friends.remove(session.charactersStore().accountId(),session.selectedKnight().id(),session.authRevision(),name);
+        session.applyProfile(session.charactersStore().worldProfile(session.selectedKnight().name(),session.authRevision(),session.currentProfile()));
+        session.refreshFriends(null,friends.snapshot(),WorldSession.friendPresence(session.charactersStore().worldStorageFile()));
+    }}
+
+    void requestFriend(String name,String message,String response)throws IOException,CharacterStore.Refused { synchronized (session) {
+        requireCurrent();var friends=session.charactersStore().services().friends();
+        if(!session.chatRate().allow(System.nanoTime()))throw new IOException("Please slow down before sending another friend request");
+        friends.request(session.charactersStore().accountId(),session.selectedKnight().id(),session.authRevision(),name,message,response);
+    }}
 
     /** Current FeedMarshaller method one; no feed is stored yet, so a bounded empty list is honest. */
     boolean feedInvocation(SessionDecoder.Invocation request) throws IOException {
