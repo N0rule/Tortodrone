@@ -64,6 +64,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final SceneLogic logic=new SceneLogic(this);
     private final LiftSystem lifts=new LiftSystem(this);
     private final SceneSpawns spawns=new SceneSpawns(this);
+    private final SceneTick tick=new SceneTick(this);
     public void elevators(ElevatorControl control){elevatorSystem.control(control);}
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
@@ -134,7 +135,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public int spawnItemActor(ActorState player,SceneContent.Spec actor,int stamp){return spawns.itemActor(player,actor,stamp);}
     public int liftItem(ActorState player,SceneContent.Spec lift,int stamp){return spawns.liftItem(player,lift,stamp);}
     public void soloRewards(boolean value){spawns.soloRewards(value);}
-    private void generate(SceneEntity pad,int stamp){spawns.generate(pad,stamp);}
+    void generate(SceneEntity pad,int stamp){spawns.generate(pad,stamp);}
     public void discard(int id){var entity=entities.get(id);if(entity!=null)unlink(entity);}
     /** Native collision bit 1 << 13 ("lift" in the 2026 mask.properties registry): the served
      *  Lift Barriers state exactly this bit, and the 2026 lift base adds it to thrown and
@@ -416,14 +417,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
     /** Carried keys can address only a compatible closed door in this scene. */
     public InteractionState interaction(float x,float y,float rotation,int owner,int lift){return interactions.interaction(x,y,rotation,owner,lift);}
 
-    public void advance(int stamp,List<ActorState> occupants){
-        // Publish only the batch staged before this tick. Work queued by spawned
-        // actors cannot recursively drain this batch; capacity also bounds later ticks.
-        for(int count=pendingActors.size();count>0;count--){var entity=pendingActors.removeFirst();insert(entity);}
-        var players=occupants.stream().filter(p->p.activity()!=TownMovement.DYING&&p.activity()!=TownMovement.DEAD&&p.activity()!=TownMovement.RESURRECT).toList();
-        this.players=players;
-        combatSystem.beginTick((int)entities.values().stream().filter(e->e.kind.equals("Monster")&&e.destroyed==Integer.MAX_VALUE&&e.band==SceneMonsterBand.ENGAGED).count());
-        waveSystem.advance(stamp);
+    void drainPending(){for(int count=pendingActors.size();count>0;count--){var entity=pendingActors.removeFirst();insert(entity);}}
+    void tickPlayers(List<ActorState> players){this.players=players;}
+    void beginCombatTick(int engaged){combatSystem.beginTick(engaged);}
+    void advanceWaves(int stamp){waveSystem.advance(stamp);}
+    /** Bounds a station's interaction prompt to the same reach the native prompt uses. */
+    void tickStations(int stamp,List<ActorState> players){
         for(var station:arsenalProps.entrySet()){
             var zone=station.getKey();
             // Proximity retains an interacted station; it must not open a closed one.
@@ -434,106 +433,18 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(players.stream().noneMatch(p->zone.spec.contains(zone.x,zone.y,zone.rotation,p.x(),p.y(),reach)))
                 for(var prop:station.getValue())if(prop.state!=0)setSwitch(prop,0,stamp);
         }
-        while(!links.isEmpty()&&links.peekFirst().stamp()<=stamp){var link=links.removeFirst();damageSystem.clearLinks(link.entity(),stamp,link.ghost());}
-        float elapsed=lastStamp==0?0:Math.min(.25f,(stamp-lastStamp)/1000f);lastStamp=stamp;pathBudget.begin(stamp);
-        for(var e:List.copyOf(entities.values())){
-            if(e.destroyed!=Integer.MAX_VALUE){
-                if(e.trip!=null)cancelElevator(e.trip,stamp);
-                // Monster destroyed time already includes the native death animation.
-                // Retain one short publication grace, rather than counting it twice.
-                if(e.scriptDestroyed?stamp-e.destroyed>0:stamp-e.destroyed>=100){
-                    actions.cancelSource("actor:"+e.id);
-                    logic.shutdown(e,stamp);
-                    unlink(e);
-                    logic.deactivate(e);
-                    actions.removed(new HashSet<>(Arrays.asList(e.spec.text("tags","").split(","))),
-                        tag->entities.values().stream().anyMatch(other->Arrays.asList(other.spec.text("tags","").split(",")).contains(tag)),stamp,"actor:"+e.id);
-                    if(e.pad!=null)e.pad.nextGeneration=e.destroyed+e.pad.spec.integer("delay",0);
-                }
-                continue;
-            }
-            if(e.kind.equals("Pickup")&&!e.claimTaken&&e.spec.integer("lifespan",0)>0&&stamp-e.created>=e.spec.integer("lifespan",0)){
-                e.destroyed=stamp;e.claim=0;continue;
-            }
-            // Native PickupLogic flashes expiring pickups during their last five seconds.
-            if(e.kind.equals("Pickup")&&e.spec.integer("lifespan",0)>0&&stamp-e.created>e.spec.integer("lifespan",0)-5000)e.flags|=2;
-            if(e.kind.equals("Generator")&&e.nextGeneration>0){
-                e.flags=stamp+e.spec.integer("warning",0)>=e.nextGeneration?2:0;
-                if(SceneClock.reached(stamp,e.nextGeneration)){e.flags&=~2;generate(e,e.nextGeneration);}
-            }
-            if(e.kind.equals("Trap"))logic.cycle(e,stamp);
-            if(e.spec.fields().containsKey("hazard-lifetime")&&stamp-e.created>=e.spec.integer("hazard-lifetime",0)){
-                e.destroyed=e.created+e.spec.integer("hazard-lifetime",0);
-                continue;
-            }
-            if(e.hazardStatus!=null&&stamp-e.created<e.spec.integer("hazard-active-lifetime",e.spec.integer("hazard-lifetime",Integer.MAX_VALUE))&&stamp>=e.hazardNext){
-                // Native Extra Action torch: applies its status damage region to everything
-                // inside the patch on the Floor trap cadence (hazard-refractory, default 500).
-                e.hazardNext=stamp+e.spec.integer("hazard-refractory",500);
-                var shape=new FireCatalog.DataValue(org.tortodrone.core.WireTypes.SHAPE_CIRCLE,
-                    List.of(new FireCatalog.FieldValue("radius","float",e.spec.number("radius",0))));
-                var hitArgs=new LinkedHashMap<String,Object>(Map.of("damage",e.hazardStatus,
-                    "region",new FireCatalog.DataValue(org.tortodrone.core.WireTypes.REGION_DEFAULT,Map.of(
-                        "location",new FireCatalog.DataValue("com.threerings.tudey.config.TargetConfig$Source",List.of()),"expansion",0f))));
-                hitArgs.put("shape",shape);
-                damage(new StarterCatalog.Model("DamageRegionFromPoint",hitArgs),e.x,e.y,e.rotation,stamp,e.id,null);
-            }
-            if(e.detonateAt>0&&SceneClock.reached(stamp,e.detonateAt)){
-                e.destroyed=e.detonateAt;
-                String graph=e.spec.text("detonation-action","");if(!graph.isBlank())try{attack.accept(e.snapshot(),FireCatalog.actionJson(graph));}catch(java.io.IOException invalid){throw new IllegalStateException("Invalid block detonation",invalid);}
-                continue;
-            }
-            if(e.kind.equals("Door")&&(e.flags&4)!=0&&stamp-e.stateEntered>e.spec.integer("door-speed",0))e.flags&=~4;
-            if(e.kind.equals("Switch"))logic.switches(e,stamp,players);
-            if(e.elevator!=null)elevatorSystem.advance(e,stamp,players);
-            if(e.spec.flag("heal-pad",false)&&SceneClock.reached(stamp,e.nextHeal)){
-                e.nextHeal=stamp+Math.round(e.spec.number("heal-interval",0)*1000);
-                for(var player:players)if(e.spec.contains(e.x,e.y,e.rotation,player.x(),player.y(),ScenePortals.PAWN_RADIUS)
-                    &&playerHeal.test(player.id(),e.spec.integer("heal",0))){
-                    String graph=e.spec.text("heal-action","");if(!graph.isBlank())try{attack.accept(e.snapshot(),FireCatalog.actionJson(graph));}
-                    catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared heal action",invalid);}
-                }
-            }
-            if(e.kind.equals("Trap")&&e.state==2&&e.spec.fields().containsKey("sensor")){
-                Object sensor=e.spec.model("sensor").arguments().get("value");float c=(float)Math.cos(e.rotation),s=(float)Math.sin(e.rotation);
-                for(var player:players){float dx=player.x()-e.x,dy=player.y()-e.y;
-                    if(SceneClock.reached(stamp,e.hazardHits.getOrDefault(player.id(),0))&&SceneShape.intersects(sensor,dx*c+dy*s,-dx*s+dy*c,ScenePortals.PAWN_RADIUS)){
-                        try{attack.accept(e.snapshot(),FireCatalog.actionJson(e.spec.text("hazard-action","")));}
-                        catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared trap action",invalid);}
-                        e.hazardHits.put(player.id(),stamp+e.spec.integer("hazard-refractory",0));
-                    }
-                }
-                e.hazardHits.keySet().removeIf(id->players.stream().noneMatch(p->p.id()==id));
-            }
-            // PickupLogic's minimum activation time lets the spawn visual complete
-            // before a knight standing on the pad can collect its replacement.
-            if(e.kind.equals("Pickup")&&e.claim==0&&stamp-e.created>=1000)interactions.collect(e,elapsed,players);
-            if(e.kind.equals("Monster")){
-                statusSystem.tick(e,stamp,elapsed);
-                if(e.program!=null)scriptedProgram(e,stamp,elapsed);
-                else if(e.script!=null)scriptedMovement(e,stamp,elapsed);
-                else if(e.health==0)e.status.clear();else {
-                    if(e.status.state().modifiers().canMove())advanceImpulse(e,stamp);else e.impulse=null;
-                    // Idle wander and party follow are authored motion, not combat pursuit,
-                    // and keep their every-tick integration without players.
-                    if(e.wander!=null||e.follow!=null){e.band=SceneMonsterBand.ENGAGED;move(e,stamp,elapsed,players);}
-                    else think(e,stamp,elapsed,players);
-                }
-            }
-            if(liftKind(e.kind))lifts.lift(e,stamp,elapsed,players);
-            if(e.activity==1&&stamp-e.activityStarted>=e.spec.integer("react-time",0)||e.activity==3&&stamp-e.activityStarted>=e.spec.integer("activate-time",0))e.activity=0;
-        }
-        for(var e:List.copyOf(entities.values()))for(var pulse:e.status.takePulses())statusPulse(e.id,pulse,e.x,e.y,stamp);
-        for(var e:List.copyOf(entities.values()))for(var action:e.status.takeActions())attack.accept(e.snapshot(),action);
-        for(var sensor:content.entries())if(sensor.spec().flag("scene-sensor",false)){
-            int mask=sensor.spec().integer("sensor-mask",0),pawnFlags=Math.round(content.stats().getOrDefault("player.collision-flags",4f));
-            if((mask&pawnFlags)==0)continue;
-            for(var player:players)if(playerActive.test(player.id())&&sensor.spec().contains(sensor.x(),sensor.y(),sensor.rotation(),player.x(),player.y(),ScenePortals.PAWN_RADIUS))
-                actions.signal(sensor.spec().text("watch-tag",""),sensor.spec().text("signal",""),stamp,"actor:"+player.id());
-        }
-        actions.advance(stamp);
-        logic.retainSources(actions);
     }
+    void drainLinks(int stamp){while(!links.isEmpty()&&links.peekFirst().stamp()<=stamp){var link=links.removeFirst();damageSystem.clearLinks(link.entity(),stamp,link.ghost());}}
+    float advanceClock(int stamp){float elapsed=lastStamp==0?0:Math.min(.25f,(stamp-lastStamp)/1000f);lastStamp=stamp;pathBudget.begin(stamp);return elapsed;}
+    void shutdownEntity(SceneEntity e,int stamp){logic.shutdown(e,stamp);}
+    void deactivateEntity(SceneEntity e){logic.deactivate(e);}
+    void retainActionSources(){logic.retainSources(actions);}
+    void advanceElevator(SceneEntity e,int stamp,List<ActorState> players){elevatorSystem.advance(e,stamp,players);}
+    void collectPickup(SceneEntity e,float elapsed,List<ActorState> players){interactions.collect(e,elapsed,players);}
+    void tickStatus(SceneEntity e,int stamp,float elapsed){statusSystem.tick(e,stamp,elapsed);}
+    int engagedMonsters(){return (int)entities.values().stream().filter(e->e.kind.equals("Monster")&&e.destroyed==Integer.MAX_VALUE&&e.band==SceneMonsterBand.ENGAGED).count();}
+    /** One simulation tick of the shared entity model; the tick body lives in SceneTick. */
+    public void advance(int stamp,List<ActorState> occupants){tick.advance(stamp,occupants);}
     public int spawnMonsters(String reference,float x,float y,float rotation,int count,float radius,int stamp)throws java.io.IOException {
         return spawns.monsters(reference,x,y,rotation,count,radius,stamp);
     }
@@ -565,7 +476,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     /** Secondary burn/spasm damage retains its collision mask and excludes the affected source. */
     public void statusPulse(int source,SceneStatus.Pulse pulse,float x,float y,int stamp){statusSystem.pulse(source,pulse,x,y,stamp);}
     void liftTick(SceneEntity e,int stamp,float elapsed,List<ActorState> players){lifts.lift(e,stamp,elapsed,players);}
-    private void scriptedMovement(SceneEntity e,int stamp,float elapsed){movementSystem.scriptedMovement(e,stamp,elapsed);}
+    void scriptedMovement(SceneEntity e,int stamp,float elapsed){movementSystem.scriptedMovement(e,stamp,elapsed);}
     /** Per attack slot, the damage circle radius its first fire action can reach. A
      *  monster that stops at the native targeting range can be unable to land a melee
      *  region whose circle is smaller than that range (the Jelly Cube stops at
@@ -580,7 +491,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
      * carry the applied choice in the native bindings. */
     static final String ROUNDHOUSE_MEDIUM_CONFIG="Character/NPC/Monster/Slime/Jelly Cube (Intro)";
     static final float ROUNDHOUSE_MEDIUM_RADIUS=1.5f;
-    private void scriptedProgram(SceneEntity e,int stamp,float elapsed){
+    void scriptedProgram(SceneEntity e,int stamp,float elapsed){
         e.flags&=~2;if(e.scriptStep>=e.program.steps().size())return;
         var step=e.program.steps().get(e.scriptStep);boolean starting=e.scriptStarted==Integer.MIN_VALUE;
         if(starting){
@@ -604,8 +515,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     void follow(SceneEntity e,int stamp,float elapsed,List<ActorState> occupants){movementSystem.follow(e,stamp,elapsed,occupants);}
     boolean targetActive(ActorState actor){return combatSystem.targetActive(actor);}
     void returnHome(SceneEntity e,int stamp,float elapsed){movementSystem.returnHome(e,stamp,elapsed);}
-    private void think(SceneEntity e,int stamp,float elapsed,List<ActorState> occupants){combatSystem.think(e,stamp,elapsed,occupants);}
-    private void move(SceneEntity e,int stamp,float elapsed,List<ActorState> occupants){combatSystem.move(e,stamp,elapsed,occupants);}
+    void think(SceneEntity e,int stamp,float elapsed,List<ActorState> occupants){combatSystem.think(e,stamp,elapsed,occupants);}
+    void move(SceneEntity e,int stamp,float elapsed,List<ActorState> occupants){combatSystem.move(e,stamp,elapsed,occupants);}
     private boolean beginAttack(SceneEntity e,int slot,int stamp){return combatSystem.beginAttack(e,slot,stamp);}
     private boolean sight(SceneEntity e,float tx,float ty){return combatSystem.sight(e,tx,ty);}
     boolean entitySegment(SceneEntity mover,float x,float y,float tx,float ty){return movementSystem.entitySegmentFor(mover,x,y,tx,ty);}
