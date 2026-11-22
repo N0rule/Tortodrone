@@ -38,9 +38,9 @@ public final class TutorialTravelSessionTest {
                 var member=(SceneSimulation.Membership)field(world,"membership");
                 var exit=route.source().content().entries().stream().filter(e->e.key().equals(Integer.toString(TutorialRoute.EXIT))).findFirst().orElseThrow();
                 check(member.teleport(exit.x(),exit.y(),0),"server-only fixture placement at original exit");
-                await(()->field(world,"floorReport")!=null);
+                await(()->world.floorReport()!=null);
                 synchronized(world) {
-                    var pending=(FloorReport)field(world,"floorReport");
+                    var pending=world.floorReport();
                     check(route.exit(pending.request())&&pending.valid(),"report belongs to the actual authored exit and current membership");
                     String location="world."+before.worldId()+".last-town-scene";
                     db.write(c->{try(var s=c.createStatement()){s.execute("CREATE TRIGGER reject_haven BEFORE INSERT ON metadata WHEN NEW.key='"+location+"' BEGIN SELECT RAISE(ABORT,'injected Haven failure'); END");}return null;});

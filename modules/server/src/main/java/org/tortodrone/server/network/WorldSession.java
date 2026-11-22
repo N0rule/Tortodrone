@@ -91,10 +91,6 @@ final class WorldSession implements AutoCloseable {
     /** Stock town commands may arrive from the loading screen or Ready Room; replay the
      *  native destination request once the scene has subscribed and accepted enteredPlace. */
     private SessionDecoder.Invocation pendingTravel;
-    private FloorReport floorReport;
-    private org.tortodrone.core.world.FloorAdvanceRequest openingAdvance;
-    private boolean openingDropStarted,openingPayoutWarning;
-    private int openingPayoutRetry;
     private MissionRun lastGateStart;
     private Short lastGateStartRequest;
     private ScenePortals.Entrance arrival;
@@ -128,6 +124,7 @@ final class WorldSession implements AutoCloseable {
     private final NewsHandler news;
     private final EquipHandler equipment;
     private final SceneInputHandler sceneInput;
+    private final FloorHandler floors;
     int partyOid()throws IOException{return parties.oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     void publishPartyState()throws IOException{parties.state();}
@@ -513,7 +510,7 @@ final class WorldSession implements AutoCloseable {
         return conversations.invocation(request);
     }
     synchronized String conversationNode(){return conversations.node();}
-    private void closeConversation()throws IOException { conversations.close(); }
+    void closeConversation()throws IOException { conversations.close(); }
     ConversationHandler conversations(){return conversations;}
 
     WorldSession(Socket socket, CharacterStore characters, SessionOutput output,
@@ -568,6 +565,7 @@ final class WorldSession implements AutoCloseable {
         news=new NewsHandler(this);
         equipment=new EquipHandler(this);
         sceneInput=new SceneInputHandler(this);
+        floors=new FloorHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
@@ -584,6 +582,25 @@ final class WorldSession implements AutoCloseable {
     void clearQuickbarItem(long item){for(int index=0;index<quickbar.length;index++)if(quickbar[index]==item)quickbar[index]=0;}
     void quickbarSlot(int slot,long item){quickbar[slot]=item;}
     InspectionHandler.Inspection inspectionNow(SceneRegistry.Instance place)throws IOException{return inspection.snapshot(place);}
+    Short forcedReceiverValue(){return forcedReceiver;}
+    int subscribedPartyOid()throws IOException{return parties.subscribedOid();}
+    boolean gameMasterFlag(){return gameMaster;}
+    boolean firstOpeningCompletion(){return completedOpening.isEmpty();}
+    void applySettlementStory(Set<String> freshMemories,Map<String,org.tortodrone.core.character.KnightObjective.State> freshObjectives)throws IOException {
+        if(!memories.equals(freshMemories)){var old=memories;memories=freshMemories;output.send(()->codec.knightMemoryChanges(oid,old,memories));}
+        if(!objectives.equals(freshObjectives)){objectives=freshObjectives;publishObjectives();}
+    }
+    void recordOpeningCompletion(String mission,OpeningCompletion completion){
+        if(!completion.equals(completedOpening.get(mission))){
+            var completed=new LinkedHashMap<>(completedOpening);completed.put(mission,completion);completedOpening=Map.copyOf(completed);
+        }
+    }
+    long noteMissionDialog(){missionDialogCreated=conversations.touch();return missionDialogCreated;}
+    /** Install a forced destination before the client acknowledges its move. */
+    void beginForcedTravel(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException {
+        portalMove=new PortalMove(next,entrance);departedSceneOid=scene.oid();
+        partyState();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
+    }
     SessionResponder responder(){return responder;}
     SessionOutput output(){return output;}
     SessionCodec codec(){return codec;}
@@ -666,7 +683,9 @@ final class WorldSession implements AutoCloseable {
         boolean inZone=membership!=null&&membership.arsenalZone();
         output.send(()->codec.equipPolicy(oid,inZone));publishedArsenal=inZone;
     }
-    FloorReport floorReport(){return floorReport;}
+    FloorReport floorReport(){return floors.report();}
+    boolean finishTutorialFloor(int stamp)throws IOException{return floors.finishTutorial(stamp);}
+    boolean finishOpeningFloor(int stamp)throws IOException{return floors.finishOpening(stamp);}
     boolean sceneTutorial(){return scene.tutorial()!=null;}
     MissionRun sceneRun(){return scene.run();}
     synchronized boolean departingScene(int oid) {
@@ -950,7 +969,7 @@ final class WorldSession implements AutoCloseable {
                     scenes.release(scene,profile.worldId());
                     // Private instances are not durable return destinations.
                     scene=returnScene;
-                    floorReport=null;
+                    floors.clearReport();
                     temporaryItems.clear();lastSnapshot=null;reference=acknowledge=0;arrival=null;
                     readyRoom=true;refreshParty(true);
                     var after=visibleProfile();if(!before.equals(after))output.send(()->codec.itemChanges(oid,knight,before,after));
@@ -1297,118 +1316,10 @@ final class WorldSession implements AutoCloseable {
                 conversations.open(binding,null,source,initial);
             }
         }
-        if(scene.tutorial()!=null&&forcedReceiver!=null&&parties.subscribedOid()==partyOid()){
-            if(floorReport!=null&&!floorReport.valid())floorReport=null;
-            if(floorReport==null){
-                var request=membership.takeFloorAdvance();
-                if(request!=null){
-                    if(!scene.tutorial().exit(request)||!membership.ownsFloorAdvance(request))membership.cancelFloorAdvance(request);
-                    else {
-                        profile=loadProfile(profile);
-                        if(scenes.parties().view(partyMember).members().size()!=1)throw new IOException("Tutorial party changed");
-                        floorReport=new FloorReport(membership,request,request.timestamp());
-                        int party=partyOid();output.send(()->codec.finalFloorReport(party));
-                    }
-                }
-            }
-            if(finishTutorialFloor(stamp))return;
-        }
-        if(scene.run()!=null&&forcedReceiver!=null&&parties.subscribedOid()==partyOid()){
-            if(processOpeningFloor(stamp))return;
-        }
+        if(floors.tutorial(stamp))return;
+        if(floors.opening(stamp))return;
         var trigger=current.portal(profile.worldId());
         if(trigger!=null&&forcedReceiver!=null)beginPortal(trigger);
-    }
-    /** Called only after the scene's original NextFloor and native reportComplete (or its
-     * authored timeout). Storage commits before flags, forced movement or party publication. */
-    boolean finishTutorialFloor(int stamp)throws IOException {
-        if(floorReport==null||!floorReport.ready(stamp)||forcedReceiver==null)return false;
-        var route=scene.tutorial();
-        if(route==null||!subscribed||!entered||portalMove!=null) return false;
-        var next=destination(route.destination().id());
-        if(next.map()!=route.destination()||!floorReport.valid())return false;
-        profile=loadProfile(profile);
-        var before=profile;
-        profile=characters.completeTutorial(knight.id(),authRevision,profile,membership.health().current()>0?membership.floorHeat():0,scenes.town());
-        floorReport.finish();floorReport=null;
-        var settled=profile;
-        if(!before.items().equals(settled.items()))output.send(()->codec.itemChanges(oid,knight,before,settled));
-        // The settlement's 2-1 arrival rank and orientation letter are already durable.
-        if(!before.progress().equals(settled.progress()))output.send(()->codec.knightProgress(oid,settled));
-        if(!before.town().equals(settled.town()))output.send(()->codec.townState(oid,settled));
-        closeConversation();closeTownDialog();
-        portalMove=new PortalMove(next,route.entrance());departedSceneOid=scene.oid();
-        partyState();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
-        short receiver=forcedReceiver;
-        output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
-        output.send(()->codec.forceScene(oid,receiver,next));
-        return true;
-    }
-    /** The native 1050 ms NextFloor call pays before it opens the floor report. */
-    private boolean processOpeningFloor(int stamp)throws IOException {
-        var run=scene.run();
-        if(!scenes.authorized(scene,profile.worldId(),partyMember)){forcePartyExit();return true;}
-        if(floorReport!=null&&!floorReport.valid()){floorReport=null;openingDropStarted=false;}
-        if(openingAdvance!=null&&!membership.ownsFloorAdvance(openingAdvance))openingAdvance=null;
-        if(floorReport==null){
-            if(openingAdvance==null)openingAdvance=membership.takeFloorAdvance();
-            if(openingAdvance!=null){
-                var request=openingAdvance;
-                if(!run.exit(request)||!new SceneElevator(1,true).equals(membership.elevatorConfiguration(request))){membership.cancelFloorAdvance(request);openingAdvance=null;return false;}
-                if(openingPayoutRetry!=0&&stamp-openingPayoutRetry<0)return false;
-                if(run.lastFloor()){
-                    profile=loadProfile(profile);var before=profile;boolean firstEver=completedOpening.isEmpty();
-                    org.tortodrone.storage.OpeningMissionStore.Settlement settled;
-                    try{
-                        settled=scenes.parties().soloGate(partyMember,run.partyOid(),()->membership.settleSoloFloor(request,
-                            ()->characters.services().openingMissions(scenes.town(),scenes.missions()).complete(characters.accountId(),knight.id(),authRevision,before,run.missionId(),run.difficulty(),membership.floorHeat())));
-                    }catch(IOException failure){
-                        openingPayoutRetry=stamp+1000;
-                        if(!openingPayoutWarning){openingPayoutWarning=true;log.warn("Opening mission settlement failed; keeping the owned ride for retry");}
-                        return false;
-                    }
-                    profile=settled.profile();openingAdvance=null;openingPayoutRetry=0;openingPayoutWarning=false;
-                    if(!memories.equals(settled.memories())){var old=memories;memories=settled.memories();output.send(()->codec.knightMemoryChanges(oid,old,memories));}
-                    if(!objectives.equals(settled.objectives())){objectives=settled.objectives();publishObjectives();}
-                    var gateMission=run.missionId();
-                    if(!settled.completion().equals(completedOpening.get(gateMission))){var completed=new LinkedHashMap<>(completedOpening);completed.put(gateMission,settled.completion());completedOpening=Map.copyOf(completed);}
-                    if(settled.first()){
-                        closeConversation();closeTownDialog();membership.equipment(visibleProfile());missionDialogCreated=conversations.touch();
-                        output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),scenes.missions().grants(gateMission),scenes.missions().prestige(gateMission),false,missionDialogCreated));
-                        output.send(()->codec.itemChanges(oid,knight,before,profile));
-                        if(firstEver)output.send(()->codec.controllerAction(oid,"new_mission",null));partyState();
-                    }
-                }else{
-                    // Earlier floors only ride onward; the mission settles once on its last floor.
-                    scenes.parties().soloGate(partyMember,run.partyOid(),()->membership.settleSoloFloor(request,()->Boolean.TRUE));
-                    openingAdvance=null;
-                }
-                floorReport=new FloorReport(membership,request,stamp);openingDropStarted=false;
-                int party=partyOid();output.send(()->codec.openingFloorReport(party));
-            }else membership.authorizeElevator(run.exitKey(),Set.of(profile.worldId()));
-        }
-        return finishOpeningFloor(stamp);
-    }
-    boolean finishOpeningFloor(int stamp)throws IOException {
-        if(scene.run()==null||floorReport==null||!floorReport.votedOrTimedOut(stamp)||forcedReceiver==null||!subscribed||!entered||portalMove!=null)return false;
-        var run=scene.run();var request=floorReport.request();
-        if(!scenes.authorized(scene,profile.worldId(),partyMember))return false;
-        if(!openingDropStarted){if(!membership.dropElevator(request,floorReport.returning()))return false;openingDropStarted=true;}
-        if(!membership.elevatorReady(request))return false;
-        SceneRegistry.Instance next;ScenePortals.Entrance arrival;
-        if(run.lastFloor()){
-            next=destination(run.destination().id());
-            if(next.map()!=run.destination())return false;
-            arrival=run.arrival();
-        }else{
-            next=scenes.advanceRun(run,profile.worldId(),partyMember);
-            if(next.run()==null||next.map()!=next.run().source())return false;
-            arrival=next.run().entrance();
-        }
-        scenes.parties().soloGate(partyMember,run.partyOid(),()->membership.settleSoloElevator(request,()->Boolean.TRUE));
-        floorReport.finish();floorReport=null;
-        portalMove=new PortalMove(next,arrival);departedSceneOid=scene.oid();partyState();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
-        short receiver=forcedReceiver;output.send(()->codec.forceScene(oid,receiver,next));return true;
     }
     /** Simulation selects the destination; the normal stock move callback loads its scene. */
     private void beginPortal(ScenePortals.Trigger trigger)throws IOException {
@@ -1418,9 +1329,7 @@ final class WorldSession implements AutoCloseable {
         var destination=destination(trigger.destination());
         var entrance=destination.map().portals().entrances().get(trigger.entrance());
         if(entrance==null)throw new IOException("Portal destination is unavailable");
-        portalMove=new PortalMove(destination,entrance);departedSceneOid=scene.oid();
-        partyState();
-        leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
+        beginForcedTravel(destination,entrance);
         short receiver=forcedReceiver;
         output.send(()->codec.forceScene(oid,receiver,destination));
     }
@@ -1469,8 +1378,7 @@ final class WorldSession implements AutoCloseable {
         try{socket.close();}catch(IOException ignored){}
     }
     private void attach() {
-        floorReport=null;
-        openingAdvance=null;openingDropStarted=openingPayoutWarning=false;openingPayoutRetry=0;
+        floors.reset();
         if(!scene.map().kind().equals("training")&&partyMember!=null)try{scenes.parties().leaveTraining(partyMember);}catch(IOException invalid){throw new IllegalStateException(invalid);}
         publishedArsenal=null;
         membership=null; // The old scene membership is closed before rebuilding its replacement.
@@ -1511,7 +1419,7 @@ final class WorldSession implements AutoCloseable {
         chats.leave();
         leaveChat();
         closed = true;
-        floorReport=null;
+        floors.clearReport();
         subscribed = false;
         if(membership!=null)membership.close();
         if(partyMember!=null){partyMember.close();partyMember=null;}

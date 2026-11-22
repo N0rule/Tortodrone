@@ -94,7 +94,7 @@ public final class MissionFloorSessionTest {
                 +" walkable="+map.collision().walkable(x,y)+" triggers="+triggers);
         }
         try{
-            await(()->field(world,"floorReport")!=null,15_000);
+            await(()->world.floorReport()!=null,15_000);
         }catch(AssertionError timeout){
             var membership=member(world);
             var movement=(org.tortodrone.world.TownMovement)field(membership,"movement");
@@ -116,7 +116,7 @@ public final class MissionFloorSessionTest {
                 +" pawns="+actors.stream().map(a->a.id()+"@"+a.x()+","+a.y()).toList(),timeout);
         }
         synchronized(world){
-            @SuppressWarnings("unchecked") var report=(org.tortodrone.world.FloorReport)field(world,"floorReport");
+            var report=world.floorReport();
             check(report.valid()&&report.request().source().entity()!=null,"the live elevator report belongs to the authored exit");
             check(report.request().source().entity().key().equals(scene(world).run().exitKey()),"the report exit key matches the floor");
         }
