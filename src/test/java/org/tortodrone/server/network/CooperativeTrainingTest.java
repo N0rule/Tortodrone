@@ -152,7 +152,7 @@ public class CooperativeTrainingTest {
         void operation(int method,String target)throws Exception{world.partyInvocation(new SessionDecoder.Invocation(party().oid(),20,method,target==null?List.of(listener()):List.of(target,listener())));}
         void travel(int template)throws Exception{
             synchronized(world){
-                if(field(world,"portalMove")==null){var trigger=place().map().portals().triggers().stream().filter(p->p.destination()==template).findFirst().orElseThrow();var begin=WorldSession.class.getDeclaredMethod("beginPortal",ScenePortals.Trigger.class);begin.setAccessible(true);begin.invoke(world,trigger);}
+                if(field(world,"portalMove")==null){var trigger=place().map().portals().triggers().stream().filter(p->p.destination()==template).findFirst().orElseThrow();world.forcePortal(trigger);}
                 world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(scenes.catalog().scene(template).zone(),template,0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)3))));
                 world.subscribeInteriorParty((short)11);world.subscribe((short)4);world.entered();
             }

@@ -121,6 +121,7 @@ final class WorldSession implements AutoCloseable {
     private final DestinationHandler destinations;
     private final MoveHandler moves;
     private final KnightCommandHandler knightCommands;
+    private final ScenePublisher publisher;
     int partyOid()throws IOException{return parties.oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     void publishPartyState()throws IOException{parties.state();}
@@ -188,57 +189,18 @@ final class WorldSession implements AutoCloseable {
         if(missionObjective!=null)result.add(new org.tortodrone.core.mission.ObjectiveEntry(next,missionObjective,"%mission:o."+missionObjective,org.tortodrone.core.mission.ObjectiveEntry.PARTY));
         return result;
     }
-    private void publishObjectives()throws IOException {
+    void publishObjectives()throws IOException {
         var wire=wireObjectives();output.send(()->codec.objectives(oid,wire));
     }
     private WorldProfile visibleProfile(){
         return visibleProfile(membership==null?Set.of():membership.status().cursedItems());
     }
-    private WorldProfile visibleProfile(Set<Long> cursed){
+    WorldProfile visibleProfile(Set<Long> cursed){
         if(temporaryItems.isEmpty()&&cursed.isEmpty())return profile;
         var items=new ArrayList<>(profile.items());items.addAll(temporaryItems.values());
         items.replaceAll(item->item.curse(cursed.contains(item.id())));
         return new WorldProfile(profile.worldId(),profile.accountId(),profile.knightId(),profile.crowns(),profile.energy(),profile.revision(),items,profile.progress(),profile.town(),profile.achievements());
     }
-    private void collectPickups()throws IOException {
-        for(var pickup:membership.takePickups()){
-            boolean success=false;
-            try{
-                if(pickup.heat()>0){success=membership.collectHeat(pickup.entityId());continue;}
-                var before=visibleProfile();
-                if(pickup.temporary()){
-                    if(pickup.equippedSlot()!=null){
-                        var existing=before.items().stream().filter(item->pickup.equippedSlot().equals(item.equippedSlot())).findFirst().orElse(null);
-                        var stats=scene.map().content().stats();
-                        if(existing!=null&&stats.getOrDefault("gear."+existing.config()+".health-bonus",0f)>=stats.getOrDefault("gear."+pickup.item()+".health-bonus",0f))throw new IOException("A better vitapod is equipped");
-                        if(existing!=null&&existing.id()>0)throw new IOException("That equipment slot is occupied");
-                        if(existing!=null)temporaryItems.remove(existing.id());
-                        long id=nextTemporaryItem--;temporaryItems.put(id,new WorldProfile.Item(id,WorldProfile.Slot.OTHER,pickup.item(),null,0,pickup.equippedSlot(),false,false,false,1,false));
-                        updateAppearance();
-                    }else {
-                    var existing=temporaryItems.values().stream().filter(item->item.config().equals(pickup.item())).findFirst().orElse(null);
-                    // One carried stack per consumable, three uses per stack, four carried types.
-                    // Refusal leaves the shared pickup available to another knight.
-                    if(existing!=null&&existing.count()>=3||existing==null&&temporaryItems.values().stream().filter(item->item.equippedSlot()==null).count()>=quickbar.length)
-                        throw new IOException("Consumable capacity reached");
-                    long id=existing==null?nextTemporaryItem--:existing.id();
-                    int count=existing==null?1:existing.count()+1;
-                    temporaryItems.put(id,new WorldProfile.Item(id,WorldProfile.Slot.OTHER,pickup.item(),null,0,null,false,false,false,count,false));
-                    if(Arrays.stream(quickbar).noneMatch(value->value==id))for(int slot=0;slot<quickbar.length;slot++)if(quickbar[slot]==0){quickbar[slot]=id;break;}
-                    }
-                }else{
-                    var reward=characters.services().town(scenes.town()).pickup(characters.accountId(),knight.id(),authRevision,membership.pickupReceipt(pickup.entityId()),pickup.item());
-                    // A notification failure must not reopen a durably awarded actor.
-                    success=true;
-                    townChanged(reward,false);
-                    continue;
-                }
-                var after=visibleProfile();output.send(()->codec.itemChanges(oid,knight,before,after));publishQuickbar();success=true;
-            }catch(IOException failure){log.debug("Scene pickup refused: "+failure.getMessage());}
-            finally{membership.completePickup(pickup.entityId(),success);}
-        }
-    }
-
     void closeTownDialog()throws IOException { town.close(); }
     long townDialogCreated(){return town.created();}
     boolean townDialogOpen(){return town.dialogOpen();}
@@ -453,6 +415,7 @@ final class WorldSession implements AutoCloseable {
         destinations=new DestinationHandler(this);
         moves=new MoveHandler(this);
         knightCommands=new KnightCommandHandler(this);
+        publisher=new ScenePublisher(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
@@ -512,6 +475,38 @@ final class WorldSession implements AutoCloseable {
     SceneRegistry.Instance pendingPortalDestination(){return portalMove==null?null:portalMove.destination();}
     ScenePortals.Entrance pendingPortalEntrance(){return portalMove==null?null:portalMove.entrance();}
     void refreshPartyForTravel()throws IOException{refreshParty(true);}
+    int connectionOid(){return oid;}
+    int acknowledgeValue(){return acknowledge;}
+    short pingValue(){return ping;}
+    int referenceValue(){return reference;}
+    int lastStampValue(){return lastStamp;}
+    SceneSnapshot lastSnapshotValue(){return lastSnapshot;}
+    void recordPublished(int stamp,SceneSnapshot snapshot){lastStamp=reference=stamp;lastSnapshot=snapshot;}
+    Map<Integer,Integer> occupantClientsValue(){return occupantClients;}
+    void setOccupantClients(Map<Integer,Integer> value){occupantClients=value;}
+    Map<Integer,Boolean> occupantRolesValue(){return occupantRoles;}
+    void setOccupantRoles(Map<Integer,Boolean> value){occupantRoles=value;}
+    SceneHealth.State publishedHealthValue(){return publishedHealth;}
+    SceneStatus.State publishedStatusValue(){return publishedStatus;}
+    Boolean publishedArsenalValue(){return publishedArsenal;}
+    void setPublishedArsenal(Boolean value){publishedArsenal=value;}
+    Set<String> memoriesValue(){return memories;}
+    void setMemories(Set<String> value){memories=value;}
+    Map<String,KnightObjective.State> objectivesValue(){return objectives;}
+    void setObjectives(Map<String,KnightObjective.State> value){objectives=value;}
+    TownHandler townHandler(){return town;}
+    OpeningMission arrivalComlinkValue(){return arrivalComlink;}
+    void setDeliveredComlink(OpeningMission value){deliveredComlink=value;}
+    long missionDialogCreatedValue(){return missionDialogCreated;}
+    long nextTemporaryItemId(){return nextTemporaryItem--;}
+    Map<Long,WorldProfile.Item> temporaryItems(){return temporaryItems;}
+    boolean quickbarContains(long id){for(long value:quickbar)if(value==id)return true;return false;}
+    void addToQuickbar(long id){for(int slot=0;slot<quickbar.length;slot++)if(quickbar[slot]==0){quickbar[slot]=id;break;}}
+    void forcePortal(ScenePortals.Trigger trigger)throws IOException{publisher.beginPortal(trigger);}
+    boolean tutorialFloorDue(int stamp)throws IOException{return floors.tutorial(stamp);}
+    boolean openingFloorDue(int stamp)throws IOException{return floors.opening(stamp);}
+    void publishVisited(Set<Integer> visited)throws IOException{parties.publishVisited(visited);}
+
     SessionDecoder.Invocation queuedTravel(){return destinations.queued();}
     boolean auctionAfterArrivalPending(){return destinations.auctionAfterArrivalPending();}
     boolean canOpenBox(){return membership!=null&&membership.canOpenBox();}
@@ -687,7 +682,7 @@ final class WorldSession implements AutoCloseable {
         // Party events belong to the selected session, not its scene subscription.
         // Ready Room is client-local and never calls entered(); delaying this worker
         // until then strands invitations and can overflow the queue on world return.
-        publications.start("SceneDelivery-"+oid,this::publish,this::deliverParty,failure->{
+        publications.start("SceneDelivery-"+oid,publisher::publish,this::deliverParty,failure->{
             log.warn("Scene delivery closed; "+deliveryFailure(failure));close();
             try{socket.close();}catch(IOException ignored){}
         });
@@ -914,141 +909,13 @@ final class WorldSession implements AutoCloseable {
         publications.offer(sceneGeneration,place,generation,snapshot);
     }
     /** Keep the encoder/writer cause when a downstream stream has become unusable. */
-    private static String deliveryFailure(Throwable failure) {
+    static String deliveryFailure(Throwable failure) {
         var message=new StringBuilder();var seen=Collections.newSetFromMap(new IdentityHashMap<Throwable,Boolean>());
         for(int depth=0;failure!=null&&depth<8&&seen.add(failure);depth++,failure=failure.getCause()){
             if(depth>0)message.append(" caused by ");message.append(failure.getClass().getSimpleName());
             if(failure.getMessage()!=null){String detail=failure.getMessage().replaceAll("[\\r\\n\\t]"," ");message.append(": ").append(detail,0,Math.min(256,detail.length()));}
         }
         return message.toString();
-    }
-    private synchronized void publish(SessionPublications.Publication publication)throws IOException {
-        // Optional scene work is skipped before encoding when this reader is behind its byte
-        // budget; the next publication re-encodes from the last snapshot actually sent.
-        if(output.optionalOverBudget())return;
-        var current=publication.snapshot();int stamp=current.timestamp();
-        if(closed||!subscribed||!entered||scene!=publication.scene()||sceneGeneration!=publication.generation()||stamp-lastStamp<=0)return;
-        boolean interior=!scene.map().town();
-        var encoded=current.encoded(lastSnapshot,interior,
-            (frameDelta,frameEffects,frameCombat,frameInterior)->SessionCodec.sceneDeltaTemplate(codec.catalog(),
-                scene.oid(),stamp,frameDelta.added(),frameDelta.updated(),frameDelta.removed(),
-                frameDelta.baseline(),frameInterior,frameEffects,frameCombat));
-        var delta=encoded.delta();
-        // Subscription already announces occupants; the first reliable delta has no baseline.
-        var changedRoles=lastSnapshot==null?current.actors().stream().filter(a->occupantRoles.containsKey(a.id())&&occupantRoles.get(a.id())!=a.gameMaster()).toList():delta.changedRoles();
-        if(!changedRoles.isEmpty())output.send(()->codec.occupantRoles(scene.oid(),changedRoles));
-        var clients=current.clientOids();
-        if(!clients.equals(occupantClients)){
-            output.send(()->codec.occupantChanges(scene.oid(),occupantClients,current.players()));
-            occupantClients=clients;
-        }
-        occupantRoles=current.roles();
-        parties.publishVisited(scene.visited());
-        short elapsed=(short)Math.max(1,Math.min(Short.MAX_VALUE,stamp-lastStamp));
-        var frame=encoded.frame();
-        // The first frame for a connection registers the symbols; later ones reuse the shared body.
-        // This is an optional update: when the session is already over budget it is skipped before
-        // encoding, so no unseen symbol mapping can be introduced.
-        if(!output.sendOptional(()->{
-            var shared=codec.materialize(frame,oid,acknowledge,ping,reference,elapsed);
-            return shared!=null?shared:codec.sceneDelta(oid,scene.oid(),acknowledge,ping,reference,stamp,elapsed,
-                delta.added(),delta.updated(),delta.removed(),delta.baseline(),interior,encoded.effects(),encoded.combat());
-        }))return;
-        var currentOwn=current.player(oid);
-        var health=currentOwn==null?null:current.health(currentOwn.id());
-        var previousOwn=lastSnapshot==null?null:lastSnapshot.actor(profile.worldId());
-        Set<Long> previousCurse=previousOwn==null||previousOwn.sceneKnight()==null?Set.of():previousOwn.sceneKnight().status().cursedItems();
-        Set<Long> currentCurse=currentOwn==null||currentOwn.sceneKnight()==null?Set.of():currentOwn.sceneKnight().status().cursedItems();
-        if(!previousCurse.equals(currentCurse))output.send(()->codec.itemChanges(oid,knight,visibleProfile(previousCurse),visibleProfile(currentCurse)));
-        if(health!=null&&currentOwn.sceneKnight()!=null){
-            var status=currentOwn.sceneKnight().status();
-            if(!health.equals(publishedHealth)||!status.equals(publishedStatus)){
-                publishedHealth=health;publishedStatus=status;
-            }
-            partyState();
-        }
-        lastStamp=reference=stamp;lastSnapshot=current;
-        var story=membership.takeStory();
-        if(!story.memories().isEmpty()||!story.objectives().isEmpty()){
-            profile=loadProfile(profile);
-            var result=characters.knightStory(knight.id(),authRevision,profile,story.memories().stream().map(SceneSimulation.MemoryRequest::operation).toList(),story.objectives().stream().map(SceneSimulation.ObjectiveRequest::operation).toList());
-            profile=result.profile();
-            if(!memories.equals(result.memories())){var before=memories;memories=result.memories();output.send(()->codec.knightMemoryChanges(oid,before,memories));}
-            if(!objectives.equals(result.objectives())){objectives=result.objectives();publishObjectives();}
-        }
-        collectPickups();
-        var capsuleCounters=new TreeMap<String,Integer>();
-        for(long id:membership.takeUsedItems()){
-            var item=temporaryItems.get(id);if(item==null)continue;
-            var used=scene.map().content().items().get(item.config());
-            if(used!=null&&!used.text("stat","").isBlank())
-                capsuleCounters.merge(used.text("stat",""),Math.max(1,used.integer("stat-delta",1)),Integer::sum);
-            var before=visibleProfile();
-            if(item.count()==1)temporaryItems.remove(id);else temporaryItems.put(id,new WorldProfile.Item(id,item.slot(),item.config(),item.accessory(),item.heat(),item.equippedSlot(),item.bound(),item.bindOnEquip(),item.starter(),item.count()-1,item.permanent()));
-            var after=visibleProfile();output.send(()->codec.itemChanges(oid,knight,before,after));
-            publishQuickbar();
-        }
-        if(!capsuleCounters.isEmpty()){
-            var before=visibleProfile();
-            try{
-                var result=characters.services().town(scenes.town()).stats(characters.accountId(),knight.id(),authRevision,capsuleCounters);
-                profile=result.profile();
-                var changes=codec.achievementChanges(oid,before,visibleProfile());
-                if(changes!=null)output.send(()->changes);
-            }catch(IOException failure){
-                // The scene capsule has already been consumed; a refused receipt is recorded
-                // without turning a healthy scene stream into a disconnect.
-                log.warn("Lifetime capsule counter not recorded; "+deliveryFailure(failure));
-            }
-        }
-        var own=current.actor(profile.worldId());
-        boolean arsenal=membership.arsenalZone();
-        if(publishedArsenal==null||publishedArsenal!=arsenal){publishedArsenal=arsenal;output.send(()->codec.equipPolicy(oid,arsenal));}
-        town.expire(own);
-        if(conversations.expired(own))closeConversation();
-        var scripted=membership.takeConversation();
-        if(scripted!=null&&scripted.definition()==null){closeConversation();scripted=null;}
-        if(scripted!=null&&own!=null){
-            if(scripted.definition().initialAction()!=null&&!membership.conversationStart(scripted.definition(),scripted.source()))return;
-            conversations.open(scripted.definition(),null,scripted.source());
-        }
-        if(arrivalComlink!=null&&own!=null&&!conversations.active()&&town.dialogOpen()==false&&missionDialogCreated==0){
-            var pending=arrivalComlink;arrivalComlink=null;conversations.openComlink(pending.id());deliveredComlink=pending;
-        }
-        int target=membership.takeInteraction();
-        if(target>0&&own!=null){
-            var interaction=scene.simulation().interactionSource(target);
-            var source=interaction.actor();
-            var binding=source==null?null:scene.map().content().conversations().get(source.config().name());
-            var sourceSpec=interaction.specification();
-            var station=source==null?null:scenes.town().station(sourceSpec==null?source.config().name():sourceSpec.text("town-station",source.config().name()));
-            if(sourceSpec!=null)binding=scene.map().content().conversations().get(sourceSpec.text("dialogue",source.config().name()));
-            if(station!=null&&(!trade.active())&&own.interaction()!=null&&own.interaction().actorId()==target){openTownDialog(station,source);}
-            else if(binding!=null&&(!trade.active())&&own.interaction()!=null&&own.interaction().actorId()==target){
-                if(binding.actor().equals(RHENDON_CAMP)&&!completedOpening.containsKey(OpeningMission.SECURING_CAMP.id())&&!scenes.missions().eligible(OpeningMission.SECURING_CAMP.id(),profile.progress(),completedOpening.keySet()))return;
-                if(binding.initialAction()!=null&&!membership.conversationStart(binding,source))return;
-                // Repeat node is the archive's documented interim HasCompletedMission branch;
-                // it cannot pay or set the mission completed merely by opening.
-                String initial=binding.actor().equals(RHENDON_CAMP)&&completedOpening.containsKey(OpeningMission.SECURING_CAMP.id())?"part 4a":binding.initial();
-                conversations.open(binding,null,source,initial);
-            }
-        }
-        if(floors.tutorial(stamp))return;
-        if(floors.opening(stamp))return;
-        var trigger=current.portal(profile.worldId());
-        if(trigger!=null&&forcedReceiver!=null)beginPortal(trigger);
-    }
-    /** Simulation selects the destination; the normal stock move callback loads its scene. */
-    private void beginPortal(ScenePortals.Trigger trigger)throws IOException {
-        closeConversation();
-        try{characters.worldProfile(knight.name(),authRevision,profile);}
-        catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-        var destination=destination(trigger.destination());
-        var entrance=destination.map().portals().entrances().get(trigger.entrance());
-        if(entrance==null)throw new IOException("Portal destination is unavailable");
-        beginForcedTravel(destination,entrance);
-        short receiver=forcedReceiver;
-        output.send(()->codec.forceScene(oid,receiver,destination));
     }
     /** Batch metadata is validated against this exact subscription before publication.
      * Changed inventory loads without holding the session or simulation lock. */

@@ -43,8 +43,7 @@ public final class TrainingSessionTest {
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));
                 world.subscribe((short)1);world.entered();
                 var portal=scenes.entry().map().portals().triggers().stream().filter(p->p.destination()==294).findFirst().orElseThrow();
-                var begin=WorldSession.class.getDeclaredMethod("beginPortal",ScenePortals.Trigger.class);begin.setAccessible(true);
-                synchronized(world){begin.invoke(world,portal);}
+                synchronized(world){world.forcePortal(portal);}
                 world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(scenes.catalog().scene(294).zone(),294,0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)3))));
                 var partyField=WorldSession.class.getDeclaredField("partyMember");partyField.setAccessible(true);var partyMember=(PartyRegistry.Member)partyField.get(world);
                 var place=scenes.destination(294,characters.worldProfile(knight.name(),1).worldId(),partyMember);int party=scenes.parties().view(partyMember).oid();
