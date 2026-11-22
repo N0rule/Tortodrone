@@ -175,6 +175,8 @@ java --enable-native-access=ALL-UNNAMED -Dtortodrone.deployment=/tmp/tortodrone-
 
 This uses disposable accounts/preferences and performs twelve rapid native crafter open/close cycles, reporting each round trip and capturing the opened/closed window. The original client defaults to ten TCP messages/second; input and service calls share its FIFO. Previously the server sent the existing 100-message throttle update only when entering an interior. A fresh Town subscription now sends it before its scene snapshot, once per connection, so movement input does not accumulate ahead of NPC/crafting requests. `TownServicesSessionTest` guards initial publication and dialog ownership; `InteriorCompatibility` checks the throttle's native wire layout. Socket TCP_NODELAY also avoids delayed-ACK stalls for small responses.
 
+The graphical harness can also inject reproducible transport lag for spike investigations: `TORTODRONE_GFX_LAG=<stallMs>:<intervalMs>[:<startDelayMs>]` inserts a loopback stall proxy in front of the disposable server, and `TORTODRONE_GFX_TRACE=1` prints the `explore` scenario's rendered-versus-last-authoritative trace every 250 ms. Both are opt-in; an unset run keeps the direct link and the usual PASS/FAIL output. A localhost stall only models delayed delivery, not packet loss or the client's own frame hitches.
+
 ## Editing, packaging and release hygiene
 
 - Keep changes bounded; update tests for behavior and one canonical document for user-facing changes. Do not add a new milestone diary.

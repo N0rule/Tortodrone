@@ -1,9 +1,11 @@
 import java.io.*;
 import org.tortodrone.resources.*;
+import java.net.*;
 import java.nio.file.*;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 import org.tortodrone.core.Json;
 import org.tortodrone.core.Yaml;
@@ -135,6 +137,11 @@ public final class CheckCombatRendering {
             while (!Files.isRegularFile(publicKey) && System.nanoTime() < keyDeadline) Thread.sleep(50);
             if (!Files.isRegularFile(publicKey)) throw new IOException("Server did not create disposable public key:\n" + tail(serverLog));
 
+            // TORTODRONE_GFX_LAG=<stallMillis>:<intervalMillis>[:<startDelayMillis>] inserts a
+            // loopback stall proxy between the client and the disposable server so a scenario can
+            // observe stock behavior across real lag spikes. Unset keeps a direct localhost link.
+            String endpoint = lagProxy(port);
+
             Path peerOutput=outputDir.resolve("peer"),peerHome=scratch.resolve("peer-home"),peerTemp=scratch.resolve("peer-tmp");
             Files.createDirectories(peerOutput);Files.createDirectories(peerHome.resolve("prefs"));
             Files.createDirectories(peerHome.resolve("system-prefs"));Files.createDirectories(peerTemp);
@@ -143,7 +150,7 @@ public final class CheckCombatRendering {
                 arg.startsWith("-Djava.util.prefs.userRoot=")?"-Djava.util.prefs.userRoot="+peerHome.resolve("prefs"):
                 arg.startsWith("-Djava.util.prefs.systemRoot=")?"-Djava.util.prefs.systemRoot="+peerHome.resolve("system-prefs"):
                 arg.startsWith("-Djava.io.tmpdir=")?"-Djava.io.tmpdir="+peerTemp:arg);
-            peerCommand.addAll(List.of("CombatRenderingCheck","--peer",port,publicKey.toString(),peerOutput.toString()));
+            peerCommand.addAll(List.of("CombatRenderingCheck","--peer",endpoint,publicKey.toString(),peerOutput.toString()));
             if(multiplayerOnly)peerCommand.add(sharedWorldOnly?"--multiplayer-world-only":"--multiplayer-only");
             if(equipmentGroups)peerCommand.add("--equipment-groups");
             Path peerLog=output.resolve("peer-client.log");Process peer=tutorialEntryOnly||readyRoomOnly||itemsOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||exploreOnly||missionOnly||manual?null:start(peerCommand,peerLog,scratch);
@@ -153,7 +160,7 @@ public final class CheckCombatRendering {
                 throw new IOException("Graphical peer did not become ready:\n"+tail(peerLog));
 
             var graphical = new ArrayList<>(base);
-            graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
+            graphical.addAll(List.of("CombatRenderingCheck", endpoint, publicKey.toString(), outputDir.toString()));
             if(manual){
                 // The owner's Steam launch option is "sk-nopad %command%": the wrapper hides
                 // evdev devices GLFW would mistake for controllers and re-execs the client.
@@ -193,7 +200,7 @@ public final class CheckCombatRendering {
                 throw new IOException("Ready Room forge window passed without the stock forge request reaching the server:\n" + tail(serverLog));
             if(freshOpening||campStory){
                 var reconnect=new ArrayList<>(base);Path captures=outputDir.resolve("reconnect");Files.createDirectories(captures);
-                reconnect.addAll(List.of("CombatRenderingCheck",port,publicKey.toString(),captures.toString(),campProgression?"--camp-progression-return-only":campStory?"--camp-story-return-only":"--opening-return-only"));
+                reconnect.addAll(List.of("CombatRenderingCheck",endpoint,publicKey.toString(),captures.toString(),campProgression?"--camp-progression-return-only":campStory?"--camp-story-return-only":"--opening-return-only"));
                 Path reconnectLog=output.resolve("reconnect.log");Process resumed=start(reconnect,reconnectLog,scratch);
                 if(!resumed.waitFor(100,TimeUnit.SECONDS)||resumed.exitValue()!=0||!Files.readString(reconnectLog).lines().anyMatch(l->l.startsWith("PASS:")))throw new IOException("Opening reconnect failed: "+tail(reconnectLog));
             }
@@ -359,6 +366,73 @@ public final class CheckCombatRendering {
             Thread.sleep(50);
         }
         throw new IOException("Disposable server readiness timeout:\n" + tail(log));
+    }
+
+    /** Optional transport lag: unread socket data is held for the stall window in both directions,
+     *  which delays even the small input frames a message-level buffer would otherwise absorb. */
+    private static String lagProxy(String target) throws IOException {
+        String spec = System.getenv("TORTODRONE_GFX_LAG");
+        if (spec == null || spec.isBlank()) return target;
+        var parts = spec.split(":");
+        long stall;
+        long interval;
+        long delay;
+        try {
+            stall = Long.parseLong(parts[0].trim());
+            interval = Math.max(stall + 1, Long.parseLong(parts[1].trim()));
+            delay = parts.length > 2 ? Long.parseLong(parts[2].trim()) : 0;
+        } catch (RuntimeException invalid) {
+            throw new IllegalArgumentException("Invalid TORTODRONE_GFX_LAG (stall:interval[:delay]): " + spec, invalid);
+        }
+        if (stall <= 0 || stall >= 30_000 || delay < 0)
+            throw new IllegalArgumentException("Invalid TORTODRONE_GFX_LAG (stall:interval[:delay]): " + spec);
+        int upstream = Integer.parseInt(target);
+        var loopback = InetAddress.getByName("127.0.0.1");
+        var listener = new ServerSocket(0, 64, loopback);
+        var stalled = new AtomicBoolean();
+        Thread.ofPlatform().daemon(true).name("lag-proxy").start(() -> {
+            try {
+                while (!listener.isClosed()) {
+                    var client = listener.accept();
+                    var server = new Socket(loopback, upstream);
+                    client.setTcpNoDelay(true);
+                    server.setTcpNoDelay(true);
+                    pump(client, server, stalled);
+                    pump(server, client, stalled);
+                }
+            } catch (IOException closed) { }
+        });
+        Thread.ofPlatform().daemon(true).name("lag-proxy-clock").start(() -> {
+            try {
+                Thread.sleep(delay);
+                while (true) {
+                    stalled.set(true);
+                    Thread.sleep(stall);
+                    stalled.set(false);
+                    Thread.sleep(interval - stall);
+                }
+            } catch (InterruptedException stop) { Thread.currentThread().interrupt(); }
+        });
+        System.out.println("LAG: stall proxy 127.0.0.1:" + listener.getLocalPort() + " -> 127.0.0.1:" + target
+            + " (" + stall + " ms every " + interval + " ms after " + delay + " ms)");
+        return Integer.toString(listener.getLocalPort());
+    }
+
+    private static void pump(Socket from, Socket to, AtomicBoolean stalled) {
+        Thread.ofPlatform().daemon(true).start(() -> {
+            byte[] buffer = new byte[16_384];
+            try (var input = from.getInputStream(); var output = to.getOutputStream()) {
+                while (true) {
+                    while (stalled.get()) Thread.sleep(2);
+                    int read = input.read(buffer);
+                    if (read < 0) break;
+                    while (stalled.get()) Thread.sleep(2);
+                    output.write(buffer, 0, read);
+                    output.flush();
+                }
+            } catch (IOException | InterruptedException closed) { }
+            try { to.close(); } catch (IOException ignored) { }
+        });
     }
 
     private static String executable(String name) { return Path.of(System.getProperty("java.home"), "bin", name).toString(); }

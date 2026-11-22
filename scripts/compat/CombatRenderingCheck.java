@@ -118,6 +118,8 @@ public final class CombatRenderingCheck {
     private int exploreScene;
     private boolean exploreWorldRequested,exploreTravelRequested;
     private long exploreTravelAt,exploreStepAt;
+    private long exploreDriftAt;
+    private final boolean exploreTrace=System.getenv("TORTODRONE_GFX_TRACE")!=null;
     private float exploreFromX,exploreFromY;
     private int exploreDirection;
     /** Imported mission acceptance: start shadow_beast through the native service and read its bar. */
@@ -570,6 +572,15 @@ public final class CombatRenderingCheck {
             return;
         }
         if(stage!=1)return;
+        // Opt-in transport trace: rendered versus last authoritative record every 250 ms.
+        var traceOwn=exploreTrace?authoritative.get(app.CZ().pawnId):null;
+        if(traceOwn!=null&&view.PO()!=null&&now-exploreDriftAt>250_000_000L){
+            var traceRendered=view.PO().acU();
+            System.out.printf(java.util.Locale.ROOT,"DRIFT: d=%.3f rendered=(%.3f,%.3f) authority=(%.3f,%.3f) at=%d%n",
+                Math.hypot(traceRendered.tG().x-traceOwn.tG().x,traceRendered.tG().y-traceOwn.tG().y),
+                traceRendered.tG().x,traceRendered.tG().y,traceOwn.tG().x,traceOwn.tG().y,now/1_000_000L);
+            exploreDriftAt=now;
+        }
         if(exploreDirection<4){
             if(now-exploreStepAt>1_200_000_000L){
                 flags(view,0);capture("explore-"+exploreScene+"-step-"+exploreDirection);
