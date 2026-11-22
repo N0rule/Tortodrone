@@ -124,6 +124,7 @@ final class WorldSession implements AutoCloseable {
     private final ChatHandler chats;
     private final PartyHandler parties;
     private final LoadoutHandler loadouts;
+    private final InspectionHandler inspection;
     int partyOid()throws IOException{return parties.oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     void publishPartyState()throws IOException{parties.state();}
@@ -579,12 +580,16 @@ final class WorldSession implements AutoCloseable {
         chats=new ChatHandler(this);
         parties=new PartyHandler(this);
         loadouts=new LoadoutHandler(this);
+        inspection=new InspectionHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
     synchronized boolean selected() { return knight != null; }
     boolean selectedKnightSelected(){return selected();}
     boolean equipmentAllowed(){return membership!=null&&membership.equipmentAllowed();}
+    String selectedKnightName(){return knight==null?null:knight.name();}
+    boolean inspectionHiddenValue(){return inspectionHidden;}
+    InspectionHandler.Inspection inspectionNow(SceneRegistry.Instance place)throws IOException{return inspection.snapshot(place);}
     SessionResponder responder(){return responder;}
     SessionOutput output(){return output;}
     SessionCodec codec(){return codec;}
@@ -941,35 +946,7 @@ final class WorldSession implements AutoCloseable {
         return false;
     }
 
-    private record Inspection(Knight knight,WorldProfile profile,boolean hidden) { }
-    /** Capture one target at a time, with no sender monitor held while inspecting a peer. */
-    void inspect(SessionDecoder.Invocation request)throws IOException {
-        var args=request.arguments();
-        if(request.service()!=6||request.method()!=2||args.size()!=2||!(args.get(0) instanceof String target)
-                ||!(args.get(1) instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals(org.tortodrone.core.WireTypes.RESULT_LISTENER))
-            throw new SessionDecoder.Rejected("Invalid inspection request");
-        SceneRegistry.Instance place;
-        synchronized(this) {
-            if(closed||socket.isClosed()||!subscribed||!entered||!ownsScene(request.oid()))throw new SessionDecoder.Rejected("Unauthorized inspection");
-            try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-            place=scene;
-        }
-        WorldSession peer;
-        synchronized(ACTIVE) {peer=ACTIVE.values().stream().filter(w->w.knight.name().equalsIgnoreCase(target)
-            &&w.characters.worldStorageFile().equals(characters.worldStorageFile())).findFirst().orElse(null);}
-        Inspection inspection=peer==null?null:peer.inspection(place);
-        synchronized(this) {
-            if(closed||scene!=place||!subscribed||!entered)return;
-            if(inspection==null)output.send(()->codec.invocationFailure(oid,listener.requestId(),"That knight is not in this scene"));
-            else output.send(()->codec.inspected(oid,listener.requestId(),inspection.knight(),inspection.profile(),inspection.hidden()));
-        }
-    }
-    private synchronized Inspection inspection(SceneRegistry.Instance place)throws IOException {
-        if(closed||socket.isClosed()||!subscribed||!entered||scene!=place)return null;
-        try {var current=characters.worldProfile(knight.name(),authRevision);return new Inspection(knight,current,inspectionHidden);}
-        catch(CharacterStore.Refused refused){return null;}
-    }
+    void inspect(SessionDecoder.Invocation request)throws IOException { inspection.inspect(request); }
 
     private void move(List<Object> args, boolean zone) throws IOException {
         long transitionStarted=System.nanoTime();
