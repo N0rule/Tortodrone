@@ -65,12 +65,12 @@ public final class SceneNextFloorTest {
         delayed.advance(1150,List.of(player(22,1002,-3,1150)));
         check(calls[0]==0,"a delayed departed Activator cannot be replaced by an entered peer");
     }
-    private static org.tortodrone.core.world.FloorAdvanceRequest awaitRequest(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSnapshot> frames)throws Exception{
+    private static org.tortodrone.core.world.FloorAdvanceRequest awaitRequest(SceneMembership member,LinkedBlockingQueue<SceneSnapshot> frames)throws Exception{
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);
         while(System.nanoTime()<until){var request=member.takeFloorAdvance();if(request!=null)return request;frames.poll(100,TimeUnit.MILLISECONDS);}
         throw new AssertionError("Native floor request was not offered");
     }
-    private static void walk(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSnapshot> frames,int id,float x,float heading)throws Exception{
+    private static void walk(SceneMembership member,LinkedBlockingQueue<SceneSnapshot> frames,int id,float x,float heading)throws Exception{
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);
         frames.clear();
         while(System.nanoTime()<until){intent(member,heading,1);
@@ -78,5 +78,5 @@ public final class SceneNextFloorTest {
             if(actor!=null&&Math.abs(actor.x()-x)<.22){intent(member,heading,0);return;}
         }throw new AssertionError("Legal movement never reached the floor sensor");
     }
-    private static void intent(SceneSimulation.Membership member,float heading,int flags){int now=SceneClock.now();lastInput=Math.max(now,lastInput+1);check(member.input(lastInput,heading,heading,flags,now,System.nanoTime()/1_000_000L),"entered pawn accepts monotonic normal movement intent");}
+    private static void intent(SceneMembership member,float heading,int flags){int now=SceneClock.now();lastInput=Math.max(now,lastInput+1);check(member.input(lastInput,heading,heading,flags,now,System.nanoTime()/1_000_000L),"entered pawn accepts monotonic normal movement intent");}
 }

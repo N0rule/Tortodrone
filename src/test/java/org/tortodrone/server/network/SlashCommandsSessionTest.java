@@ -141,7 +141,7 @@ public final class SlashCommandsSessionTest {
                     check(machines.size()==2,"fixture has two general alchemy machines");
                     var first=machines.get(0);var second=machines.get(1);
                     float x=first.x()+(float)Math.cos(first.rotation())*3,y=first.y()+(float)Math.sin(first.rotation())*3;
-                    check(((SceneSimulation.Membership)currentMember.get(gm.world)).teleport(x,y,0),"fixture approaches an authored alchemy machine");
+                    check(((SceneMembership)currentMember.get(gm.world)).teleport(x,y,0),"fixture approaches an authored alchemy machine");
                     String previousMachine=null;
                     for(int use=0;use<5;use++){
                         gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_alchemy_machine",result)));gm.drain();

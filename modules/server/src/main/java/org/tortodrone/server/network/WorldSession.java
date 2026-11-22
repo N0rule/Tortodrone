@@ -539,7 +539,7 @@ final class WorldSession implements AutoCloseable {
     void openBox(java.util.List<StarterCatalog.Model> references){runtime.membership().openBox(references);}
     void confetti(String config){runtime.membership().confetti(config);}
     void animatedAction(String config){runtime.membership().animatedAction(config);}
-    SceneSimulation.Membership.ItemUse<org.tortodrone.storage.TownStore.Result> useOwnedItem(long id,
+    SceneMembership.ItemUse<org.tortodrone.storage.TownStore.Result> useOwnedItem(long id,
             org.tortodrone.core.world.SceneContent.Spec spec,SceneSimulation.RevivePayment<org.tortodrone.storage.TownStore.Result> payment)throws IOException{
         return runtime.membership().useOwnedItem(id,spec,payment);
     }
@@ -563,7 +563,7 @@ final class WorldSession implements AutoCloseable {
     SessionLog sessionLog(){return log;}
     synchronized void adminFeedback(String reason)throws IOException{chatFeedback(runtime.scene().oid(),runtime.sceneGeneration(),reason);}
     ActorState selfActor(){return runtime.scene().simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);}
-    SceneSimulation.Membership membership(){return runtime.membership();}
+    SceneMembership membership(){return runtime.membership();}
     /** The saved half of one conversation terminal: the pre-write profile and what committed. */
     record PreparedSettlement(WorldProfile before,org.tortodrone.storage.OpeningMissionStore.Settlement settled,boolean firstEver) { }
     PreparedSettlement prepareConversationSettlement(String terminalId)throws IOException {

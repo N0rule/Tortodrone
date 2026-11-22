@@ -74,7 +74,7 @@ public final class SharedGameplayTest {
         fields.put("config","Dynamic/Lift Objects/Oil Pot");fields.put("radius",".45");fields.put("collision-flags","514");
         var entry=new SceneContent.Entry("oil",5.5f,-12.5f,0,new SceneContent.Spec(fields));
         var world=world(map,entry);var other=world(map,entry);
-        var land=SceneEntities.class.getDeclaredMethod("potLand",Class.forName("org.tortodrone.world.SceneEntities$Entity"),int.class);land.setAccessible(true);
+        var land=SceneEntities.class.getDeclaredMethod("potLand",SceneEntity.class,int.class);land.setAccessible(true);
         var entities=SceneEntities.class.getDeclaredField("entities");entities.setAccessible(true);
         land.invoke(world,((Map<?,?>)entities.get(world)).values().iterator().next(),1000);
         var slicks=world.actors().stream().filter(a->a.config().name().equals("Bomb/Monster/Oil Slick")).toList();

@@ -195,7 +195,7 @@ public final class SceneItemUseTest {
     }
     private static final class Fixture implements AutoCloseable {
         final SceneSimulation simulation;
-        final SceneSimulation.Membership member;
+        final SceneMembership member;
         final SceneEntities entities;
         final BlockingQueue<SceneSnapshot> publications=new LinkedBlockingQueue<>();
         Fixture(org.tortodrone.core.world.MapScene map)throws Exception {
@@ -211,7 +211,7 @@ public final class SceneItemUseTest {
             // A loaded client ends the native loading pose with its first input frame.
             int loaded=SceneClock.now();check(member.input(loaded,0,0,0,loaded,loaded,System.nanoTime()/1_000_000L),"fixture client finishes loading");
             // This fixture tests damage/use interruption, outside the entry protection window.
-            var healthField=SceneSimulation.Membership.class.getDeclaredField("health");healthField.setAccessible(true);
+            var healthField=SceneMembership.class.getDeclaredField("health");healthField.setAccessible(true);
             var immunity=SceneHealth.class.getDeclaredField("invulnerableUntil");immunity.setAccessible(true);immunity.setInt(healthField.get(member),0);
             try{await(s->true);}catch(Exception|Error failure){close();throw failure;}
         }

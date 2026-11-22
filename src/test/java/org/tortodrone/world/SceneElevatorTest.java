@@ -108,17 +108,17 @@ public final class SceneElevatorTest {
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);
         do{var snapshot=simulation.snapshot();if(condition.test(snapshot))return snapshot;frames.poll(50,TimeUnit.MILLISECONDS);}while(System.nanoTime()<until);throw new AssertionError(message);
     }
-    private static org.tortodrone.core.world.FloorAdvanceRequest awaitRequest(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSnapshot> frames)throws Exception {
+    private static org.tortodrone.core.world.FloorAdvanceRequest awaitRequest(SceneMembership member,LinkedBlockingQueue<SceneSnapshot> frames)throws Exception {
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(3);do{var request=member.takeFloorAdvance();if(request!=null)return request;frames.poll(50,TimeUnit.MILLISECONDS);}while(System.nanoTime()<until);throw new AssertionError("Elevator offered no owned request");
     }
-    private static void walk(SceneSimulation.Membership member,SceneSimulation simulation,LinkedBlockingQueue<SceneSnapshot> frames,int id,float target,float heading)throws Exception {
+    private static void walk(SceneMembership member,SceneSimulation simulation,LinkedBlockingQueue<SceneSnapshot> frames,int id,float target,float heading)throws Exception {
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);do{
             intent(member,heading,1);var pawn=simulation.snapshot().players().stream().filter(a->a.id()==id).findFirst().orElseThrow();
             if(Math.abs(pawn.x()-target)<.2){intent(member,heading,0);return;}frames.poll(50,TimeUnit.MILLISECONDS);
         }while(System.nanoTime()<until);throw new AssertionError("Legal movement did not reach "+target);
     }
-    private static void walkUntilRide(SceneSimulation.Membership member,SceneSimulation simulation,LinkedBlockingQueue<SceneSnapshot> frames)throws Exception {
+    private static void walkUntilRide(SceneMembership member,SceneSimulation simulation,LinkedBlockingQueue<SceneSnapshot> frames)throws Exception {
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);do{intent(member,0,1);if(state(simulation.snapshot())==2)return;frames.poll(50,TimeUnit.MILLISECONDS);}while(System.nanoTime()<until);throw new AssertionError("Retry did not activate elevator");
     }
-    private static boolean intent(SceneSimulation.Membership member,float heading,int flags){int now=SceneClock.now();lastInput=Math.max(lastInput+1,now);return member.input(lastInput,heading,heading,flags,now,System.nanoTime()/1_000_000L);}
+    private static boolean intent(SceneMembership member,float heading,int flags){int now=SceneClock.now();lastInput=Math.max(lastInput+1,now);return member.input(lastInput,heading,heading,flags,now,System.nanoTime()/1_000_000L);}
 }

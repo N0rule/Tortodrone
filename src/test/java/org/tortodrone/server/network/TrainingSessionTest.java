@@ -55,7 +55,7 @@ public final class TrainingSessionTest {
                 try{world.speak(new SessionDecoder.Invocation(party+1,SceneChat.PARTY_SERVICE,1,chat.arguments()));throw new AssertionError("Foreign party chat accepted");}catch(IOException expected){}
                 var before=characters.worldProfile(knight.name(),1);world.interiorPartyInvocation(revive(party,knight.name(),-1));socket.await("m.no_revive");
                 check(characters.worldProfile(knight.name(),1).equals(before),"a living player cannot spend Sparks");
-                var memberField=WorldSession.class.getDeclaredField("membership");memberField.setAccessible(true);var member=(SceneSimulation.Membership)memberField.get(world);
+                var memberField=WorldSession.class.getDeclaredField("membership");memberField.setAccessible(true);var member=(SceneMembership)memberField.get(world);
                 var healthField=member.getClass().getDeclaredField("health");healthField.setAccessible(true);var health=(SceneHealth)healthField.get(member);
                 synchronized(place.simulation()){
                     // Exercise damage publication after the separately tested arrival window.

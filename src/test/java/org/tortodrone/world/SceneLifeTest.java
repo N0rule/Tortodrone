@@ -49,7 +49,7 @@ public final class SceneLifeTest {
                 var playing=simulation.snapshot().players().getFirst();
                 check(playing.activity()==0&&playing.activityStarted()==frame,"loading ends exactly at the first input frame");
                 check(((playing.flags()&SceneHealth.INVULNERABLE_FLAG)!=0)==!map.town(),"first input arms the native five-second initial invulnerability");
-                var memberHealth=SceneSimulation.Membership.class.getDeclaredField("health");memberHealth.setAccessible(true);
+                var memberHealth=SceneMembership.class.getDeclaredField("health");memberHealth.setAccessible(true);
                 var deadline=SceneHealth.class.getDeclaredField("invulnerableUntil");deadline.setAccessible(true);deadline.setInt(memberHealth.get(member),0);
                 member.pause();member.enter();
                 check((simulation.snapshot().players().getFirst().flags()&SceneHealth.INVULNERABLE_FLAG)==0,"resubscription cannot renew arrival protection");

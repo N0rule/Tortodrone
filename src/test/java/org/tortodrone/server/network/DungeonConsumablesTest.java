@@ -38,9 +38,9 @@ public final class DungeonConsumablesTest {
             };}};
             try(var output=new SessionOutput(socket);var session=new WorldSession(socket,characters,output,new SessionCodec(),1201,1,m->{},registry)){
                 synchronized(session){
-                    session.select(knight.name(),Map.of());var member=(SceneSimulation.Membership)field(session,"membership");var simulation=registry.entry().simulation();
+                    session.select(knight.name(),Map.of());var member=(SceneMembership)field(session,"membership");var simulation=registry.entry().simulation();
                     synchronized(simulation){
-                        var entered=SceneSimulation.Membership.class.getDeclaredField("entered");entered.setAccessible(true);entered.setBoolean(member,true);
+                        var entered=SceneMembership.class.getDeclaredField("entered");entered.setAccessible(true);entered.setBoolean(member,true);
                         var player=simulation.snapshot().players().getFirst();var entities=(SceneEntities)field(simulation,"entities");
                         @SuppressWarnings("unchecked") var items=(Map<Long,WorldProfile.Item>)field(session,"temporaryItems");
                         long[] slots=(long[])field(session,"quickbar");

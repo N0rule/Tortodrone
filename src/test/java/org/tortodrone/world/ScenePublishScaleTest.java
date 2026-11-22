@@ -40,7 +40,7 @@ public final class ScenePublishScaleTest {
     private static void sharedEncoding(org.tortodrone.core.world.MapScene map,String label)throws Exception {
         var instance=new SceneRegistry.Instance(790,1,map);
         var simulation=instance.simulation();
-        var members=new ArrayList<SceneSimulation.Membership>();
+        var members=new ArrayList<SceneMembership>();
         var players=players(map);
         for(var player:players)members.add(simulation.join(player,s->{ }));
         for(var member:members)member.enter();
@@ -149,7 +149,7 @@ public final class ScenePublishScaleTest {
     /** Many occupied level instances must not reserve one platform thread each. */
     private static void sceneThreads(org.tortodrone.core.world.MapScene map){
         int before=Thread.getAllStackTraces().size();
-        var members=new ArrayList<SceneSimulation.Membership>();
+        var members=new ArrayList<SceneMembership>();
         for(int i=0;i<100;i++){
             var instance=new SceneRegistry.Instance(2000+i,1,map);
             var member=instance.simulation().join(new ActorState(3000+i,3000+i,"Thread "+i,256,1,

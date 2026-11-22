@@ -34,7 +34,7 @@ public final class TutorialBarrierSessionTest {
             var route=registry.tutorial();var worldId=characters.worldProfile(knight.name(),1).worldId();
             try(var socket=new RecordingSocket();var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(content.items()),1603,1,m->{},registry)) {
                 world.select(knight.name(),RECEIVERS,true);move(world,route.source());world.subscribeInteriorParty((short)2);world.subscribe((short)3);world.entered();
-                var member=(SceneSimulation.Membership)field(world,"membership");
+                var member=(SceneMembership)field(world,"membership");
                 var simulation=((SceneRegistry.Instance)field(world,"scene")).simulation();
                 var wall=simulation.snapshot().actors().stream()
                     .filter(a->a.config().name().contains("Haven")&&inWall(a.x(),a.y())).toList();
@@ -73,7 +73,7 @@ public final class TutorialBarrierSessionTest {
     private static float facing(float x,float y){return (float)Math.atan2(-63.4f-y,-15.9f-x);}
     private static float facing(float x,float y,float tx,float ty){return (float)Math.atan2(ty-y,tx-x);}
     /** Hold movement intent toward the facing without attacking. */
-    private static void walk(SceneSimulation.Membership member,float facing,long millis)throws Exception {
+    private static void walk(SceneMembership member,float facing,long millis)throws Exception {
         long end=System.nanoTime()+millis*1_000_000L;
         long changed=0;boolean moving=false;
         while(System.nanoTime()<end) {
@@ -85,7 +85,7 @@ public final class TutorialBarrierSessionTest {
         }
     }
     /** Alternate stock movement and attack presses the way the client controller latches them. */
-    private static void attack(SceneSimulation.Membership member,float x,float y,float targetX,float targetY,long millis)throws Exception {
+    private static void attack(SceneMembership member,float x,float y,float targetX,float targetY,long millis)throws Exception {
         long end=System.nanoTime()+millis*1_000_000L;
         long changed=0;int flags=InputBits.MOVING;
         while(System.nanoTime()<end) {

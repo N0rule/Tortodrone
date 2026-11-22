@@ -29,12 +29,12 @@ public final class PickupNotificationTest {
                 synchronized(session){
                     session.select(knight.name(),Map.of());
                     var membershipField=WorldSession.class.getDeclaredField("membership");membershipField.setAccessible(true);
-                    var member=(SceneSimulation.Membership)membershipField.get(session);var simulation=registry.entry().simulation();
+                    var member=(SceneMembership)membershipField.get(session);var simulation=registry.entry().simulation();
                     var entitiesField=SceneSimulation.class.getDeclaredField("entities");entitiesField.setAccessible(true);var entities=(SceneEntities)entitiesField.get(simulation);
                     int before=db.worldProfile(account,knight.id(),1).crowns();
                     synchronized(simulation){
                         // Keep the WorldSession unsubscribed: only this explicit collection calls the reward path.
-                        var entered=SceneSimulation.Membership.class.getDeclaredField("entered");entered.setAccessible(true);entered.setBoolean(member,true);
+                        var entered=SceneMembership.class.getDeclaredField("entered");entered.setAccessible(true);entered.setBoolean(member,true);
                         var player=simulation.snapshot().players().getFirst();
                         var fields=Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Pickup","config","Item/Consumable/Crowns/Copper Crown","radius",".2","pickup-item","Instant/Crown/Copper Crown");
                         check(entities.spawnPickup(new StarterCatalog.Model("Pickup",Map.of("fields",Json.stringify(fields))),player.x(),player.y(),0,SceneClock.now()-1000),"native shared coin spawned past its activation delay");

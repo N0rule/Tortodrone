@@ -27,14 +27,14 @@ public final class SparkRevivalTest {
         try(var member=simulation.join(actor,s->{})){
             synchronized(simulation){
                 member.enter();
-                var healthField=SceneSimulation.Membership.class.getDeclaredField("health");healthField.setAccessible(true);var health=(SceneHealth)healthField.get(member);
+                var healthField=SceneMembership.class.getDeclaredField("health");healthField.setAccessible(true);var health=(SceneHealth)healthField.get(member);
                 var emergency=SceneHealth.class.getDeclaredField("emergencyRevive");emergency.setAccessible(true);emergency.setBoolean(health,false);
                 var immune=SceneHealth.class.getDeclaredField("invulnerableUntil");immune.setAccessible(true);immune.setInt(health,0);
                 health.hit(new FireCatalog.DataValue("Damage$Unblockable",Map.of("amount",1000f,"flags",1)),now);
-                var movement=SceneSimulation.Membership.class.getDeclaredField("movement");movement.setAccessible(true);((TownMovement)movement.get(member)).die(now);
+                var movement=SceneMembership.class.getDeclaredField("movement");movement.setAccessible(true);((TownMovement)movement.get(member)).die(now);
                 var entitiesField=SceneSimulation.class.getDeclaredField("entities");entitiesField.setAccessible(true);var entities=(SceneEntities)entitiesField.get(simulation);
                 var mapField=SceneEntities.class.getDeclaredField("entities");mapField.setAccessible(true);var targets=(Map<?,?>)mapField.get(entities);
-                var impulseField=Class.forName("org.tortodrone.world.SceneEntities$Entity").getDeclaredField("impulse");impulseField.setAccessible(true);
+                var impulseField=SceneEntity.class.getDeclaredField("impulse");impulseField.setAccessible(true);
                 var before=simulation.snapshot();
                 try{simulation.revive(member,42,()->{throw new IOException("rollback");});throw new AssertionError("payment failure accepted");}catch(IOException expected){}
                 check(!health.alive()&&simulation.snapshot().effectsSince(before).isEmpty(),"failed payment leaves the corpse and effects unchanged");

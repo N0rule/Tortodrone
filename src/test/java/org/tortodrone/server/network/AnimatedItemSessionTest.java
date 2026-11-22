@@ -43,7 +43,7 @@ public final class AnimatedItemSessionTest {
             var scenes=org.tortodrone.world.SceneRegistry.create(content);var socket=new Socket(){public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}};
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)) {
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();
-                var field=WorldSession.class.getDeclaredField("membership");field.setAccessible(true);var member=(SceneSimulation.Membership)field.get(world);
+                var field=WorldSession.class.getDeclaredField("membership");field.setAccessible(true);var member=(SceneMembership)field.get(world);
                 short request=20;
                 for(var definition:definitions){
                     member.resetInput();var current=db.worldProfile(account,1,1);

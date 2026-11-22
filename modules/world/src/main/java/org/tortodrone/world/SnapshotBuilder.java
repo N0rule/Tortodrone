@@ -15,7 +15,7 @@ import org.tortodrone.core.world.ScenePortals;
 final class SnapshotBuilder {
     private SnapshotBuilder() { }
 
-    static SceneSnapshot build(int stamp,Collection<SceneSimulation.Membership> members,
+    static SceneSnapshot build(int stamp,Collection<SceneMembership> members,
             SceneEntities entities,SceneWeapons weapons,Collection<SceneCombatEvent> combatEvents,
             SceneSnapshot baseline) {
         var portals=new HashMap<Integer,ScenePortals.Trigger>();

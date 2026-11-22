@@ -14,6 +14,7 @@ import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.Database;
+import org.tortodrone.world.SceneMembership;
 import org.tortodrone.world.SceneRegistry;
 import org.tortodrone.world.SceneSimulation;
 import static org.tortodrone.support.TestWire.check;
@@ -135,7 +136,7 @@ public final class MissionFloorSessionTest {
         return world.sceneRegistry().parties().view(member).oid();
     }
 
-    private static SceneSimulation.Membership member(WorldSession world)throws Exception {
+    private static SceneMembership member(WorldSession world)throws Exception {
         return world.membership();
     }
 

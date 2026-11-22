@@ -46,7 +46,7 @@ public final class TutorialRespawnTest {
         int stamp=SceneClock.now();
         var actor=new ActorState(219,1001,"Respawn",256,stamp,instance.map().spawnX(),instance.map().spawnY(),0,0,0,0,stamp,new StarterCatalog.Model("Character/PC/Level",Map.of()),false);
         try(var member=instance.simulation().join(actor,s->{})){
-            var field=SceneSimulation.Membership.class.getDeclaredField("health");field.setAccessible(true);
+            var field=SceneMembership.class.getDeclaredField("health");field.setAccessible(true);
             var flag=SceneHealth.class.getDeclaredField("tutorialRespawn");flag.setAccessible(true);
             return flag.getBoolean(field.get(member));
         }

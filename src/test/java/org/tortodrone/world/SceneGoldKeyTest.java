@@ -61,8 +61,8 @@ public final class SceneGoldKeyTest {
     private static ActorState door(SceneSimulation scene){return scene.snapshot().actors().stream().filter(a->a.entity()!=null&&a.entity().kind().equals("Door")).findFirst().orElseThrow();}
     private static ActorState actor(SceneEntities scene,String key){return scene.actors().stream().filter(a->a.entity().key().equals(key)).findFirst().orElseThrow();}
     private static ActorState pawn(SceneSimulation scene,int id){return scene.snapshot().players().stream().filter(a->a.id()==id).findFirst().orElseThrow();}
-    private static void input(SceneSimulation.Membership member,float facing,int flags){int stamp=SceneClock.now();member.input(stamp,facing,facing,flags,stamp,stamp,System.nanoTime()/1_000_000L);}
-    private static void walk(SceneSimulation.Membership member,SceneSimulation scene,int id,float x)throws Exception {
+    private static void input(SceneMembership member,float facing,int flags){int stamp=SceneClock.now();member.input(stamp,facing,facing,flags,stamp,stamp,System.nanoTime()/1_000_000L);}
+    private static void walk(SceneMembership member,SceneSimulation scene,int id,float x)throws Exception {
         long until=System.nanoTime()+5_000_000_000L;
         while(pawn(scene,id).x()<x){
             if(System.nanoTime()>until)throw new AssertionError("Gold doorway walk blocked: x="+pawn(scene,id).x()+", activity="+pawn(scene,id).activity()+", door flags="+door(scene).flags());

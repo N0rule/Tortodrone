@@ -9,6 +9,7 @@ import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.*;
 import org.tortodrone.storage.Database;
+import org.tortodrone.world.SceneMembership;
 import org.tortodrone.world.TownSquare;
 import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.character.Knight;
@@ -144,7 +145,7 @@ public final class WorldSessionTest {
         var publication=Class.forName(SessionPublications.class.getName()+"$Publication");var snapshot=publication.getDeclaredMethod("snapshot");snapshot.setAccessible(true);
         synchronized(session){synchronized(monitorField.get(mailbox)){
             var place=org.tortodrone.world.SceneRegistry.system().entry();int generation=generationField.getInt(session);
-            var member=(org.tortodrone.world.SceneSimulation.Membership)membershipField.get(session);
+            var member=(org.tortodrone.world.SceneMembership)membershipField.get(session);
             Thread.sleep(2);offer.invoke(session,place,generation,place.simulation().snapshot());
             member.openBox(List.of(new StarterCatalog.Model("Upgrade/Prize Box/Lucky Prize Box",Map.of()),new StarterCatalog.Model("Material/Brimstone",Map.of())));
             Thread.sleep(2);var boundary=place.simulation().snapshot();offer.invoke(session,place,generation,boundary);

@@ -11,6 +11,7 @@ import org.tortodrone.core.world.SceneClock;
 import org.tortodrone.core.world.ReadyRoom;
 import org.tortodrone.core.world.ScenePortals;
 import org.tortodrone.world.OpeningComlinks;
+import org.tortodrone.world.SceneMembership;
 import org.tortodrone.world.SceneRegistry;
 import org.tortodrone.world.SceneSimulation;
 import org.tortodrone.world.SceneSnapshot;
@@ -24,7 +25,7 @@ final class SessionRuntime {
 
     private final WorldSession session;
     private SceneRegistry.Instance scene;
-    private SceneSimulation.Membership membership;
+    private SceneMembership membership;
     private SceneSnapshot lastSnapshot;
     private WorldStatePoller.Registration persistence;
     private boolean readyRoom,returnRequested,subscribed,entered,welcomed,inputThrottleSent;
@@ -40,8 +41,8 @@ final class SessionRuntime {
     SceneRegistry.Instance scene(){return scene;}
     void scene(SceneRegistry.Instance value){scene=value;}
 
-    SceneSimulation.Membership membership(){return membership;}
-    void membership(SceneSimulation.Membership value){membership=value;}
+    SceneMembership membership(){return membership;}
+    void membership(SceneMembership value){membership=value;}
 
     boolean subscribed(){return subscribed;}
     void subscribed(boolean value){subscribed=value;}

@@ -32,7 +32,7 @@ public final class SpriteShieldTest {
         var profile=new WorldProfile(219,1,1,0,0,1,List.of(),KnightProgress.RECRUIT,new TownState(List.of(),List.of(sprite),7,List.of(),List.of()));
         try{
             member.combat(content.weapons(),profile);member.equipment(profile);peer.combat(content.weapons(),new WorldProfile(220,2,1,0,0,1,List.of()));member.enter();peer.enter();
-            var healthField=SceneSimulation.Membership.class.getDeclaredField("health");healthField.setAccessible(true);
+            var healthField=SceneMembership.class.getDeclaredField("health");healthField.setAccessible(true);
             var health=(SceneHealth)healthField.get(member);var otherHealth=(SceneHealth)healthField.get(peer);
             var immunity=SceneHealth.class.getDeclaredField("invulnerableUntil");immunity.setAccessible(true);immunity.setInt(health,0);immunity.setInt(otherHealth,0);
             stamp=SceneClock.now();check(member.input(stamp,0,0,384,stamp,stamp,System.nanoTime()/1_000_000),"native Aura input accepted");

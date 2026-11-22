@@ -146,7 +146,7 @@ public class CooperativeTrainingTest {
         PartyRegistry.Member member(){return (PartyRegistry.Member)field(world,"partyMember");}
         PartyView.View party(){try{return scenes.parties().view(member());}catch(IOException failure){throw new AssertionError(failure);}}
         SceneRegistry.Instance place(){synchronized(world){return (SceneRegistry.Instance)field(world,"scene");}}
-        SceneSimulation.Membership membership(){synchronized(world){return (SceneSimulation.Membership)field(world,"membership");}}
+        SceneMembership membership(){synchronized(world){return (SceneMembership)field(world,"membership");}}
         int publishedMembers(){var view=world.publishedParty();return view==null?0:view.members().size();}
         boolean peerHurt(int oid){var view=world.publishedParty();return view!=null&&view.members().stream().anyMatch(m->m.playerOid()==oid&&m.health().current()<m.health().maximum());}
         void operation(int method,String target)throws Exception{world.partyInvocation(new SessionDecoder.Invocation(party().oid(),20,method,target==null?List.of(listener()):List.of(target,listener())));}

@@ -114,7 +114,7 @@ public final class CrashSiteMonsterCombatTest {
         var simulation=new SceneRegistry.Instance(9398,0,map).simulation();int now=SceneClock.now();
         try(var member=simulation.join(new ActorState(219,1001,"Knight",0,now,1,0,(float)Math.PI,0,0,0,now,new StarterCatalog.Model("Character/PC/Level",Map.of()),false),s->{})){
             member.combat(WeaponCatalog.empty(),new org.tortodrone.core.character.WorldProfile(10,1,1,0,0,1,List.of()));member.enter();
-            var field=SceneSimulation.Membership.class.getDeclaredField("health");field.setAccessible(true);
+            var field=SceneMembership.class.getDeclaredField("health");field.setAccessible(true);
             var health=(SceneHealth)field.get(member);int maximum;
             // Entering a level arms the three-second arrival window; the Jelly's first swing
             // falls inside it, so the unprotected case clears it explicitly.

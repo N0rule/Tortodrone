@@ -39,7 +39,7 @@ public final class JellyMeleeSceneTest {
             var route=registry.tutorial();
             try(var socket=new RecordingSocket();var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(content.items()),1601,1,m->{},registry)) {
                 world.select(knight.name(),RECEIVERS,true);move(world,route.source());world.subscribeInteriorParty((short)2);world.subscribe((short)3);world.entered();
-                var member=(SceneSimulation.Membership)field(world,"membership");
+                var member=(SceneMembership)field(world,"membership");
                 var simulation=((SceneRegistry.Instance)field(world,"scene")).simulation();
                 // Wave 1a is armed by the player sensor at the arena entrance (spawner 492).
                 check(member.teleport(-1.5f,-69f,0),"knight enters the wave sensor");

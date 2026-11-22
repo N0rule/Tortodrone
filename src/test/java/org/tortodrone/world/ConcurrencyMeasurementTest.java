@@ -20,7 +20,7 @@ public final class ConcurrencyMeasurementTest {
         var catalog=ContentManager.load(Path.of(".")).scenes();
         var map=catalog.scene(1);
         var simulation=new SceneRegistry.Instance(9_100,0,map).simulation();
-        var members=new ArrayList<SceneSimulation.Membership>();
+        var members=new ArrayList<SceneMembership>();
         for(int i=0;i<8;i++) {
             var actor=new ActorState(100+i,200+i,"Measure "+i,256,1,map.spawnX(),map.spawnY(),0,0,0,
                 new StarterCatalog.Model("Fixture",Map.of()));
@@ -86,7 +86,7 @@ public final class ConcurrencyMeasurementTest {
         // same fixed cadence. Full client connection load is recorded by LoadBenchmark instead.
         var interiorMap=catalog.scene(380);
         var interior=new SceneRegistry.Instance(9_200,1,interiorMap).simulation();
-        var interiorMembers=new ArrayList<SceneSimulation.Membership>();
+        var interiorMembers=new ArrayList<SceneMembership>();
         for(int i=0;i<8;i++) {
             var actor=new ActorState(200+i,300+i,"Interior "+i,256,1,interiorMap.spawnX(),interiorMap.spawnY(),0,0,0,
                 new StarterCatalog.Model("Fixture",Map.of()));

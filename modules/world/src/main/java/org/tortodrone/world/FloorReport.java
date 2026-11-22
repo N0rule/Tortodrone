@@ -4,12 +4,12 @@ package org.tortodrone.world;
  * Time is the scene timestamp: no independent scheduler or client-selected destination. */
 public final class FloorReport {
     public static final int TIMEOUT=70_000,LEAVE_DELAY=2_400;
-    private final SceneSimulation.Membership member;
+    private final SceneMembership member;
     private final org.tortodrone.core.world.FloorAdvanceRequest request;
     private final int started;
     private Integer reported;
     private boolean descend,finished;
-    public FloorReport(SceneSimulation.Membership member,org.tortodrone.core.world.FloorAdvanceRequest request,int stamp){
+    public FloorReport(SceneMembership member,org.tortodrone.core.world.FloorAdvanceRequest request,int stamp){
         if(!member.ownsFloorAdvance(request))throw new IllegalArgumentException("Unowned floor request");
         this.member=member;this.request=request;started=stamp;
     }
