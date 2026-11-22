@@ -448,6 +448,8 @@ final class WorldSession implements AutoCloseable {
     void resetReferences(){reference=acknowledge=0;}
     void applySelectionFlags(boolean gm,boolean hidden){gameMaster=gm;inspectionHidden=hidden;}
     SessionRuntime runtime(){return runtime;}
+    void markClosed(){closed=true;}
+    void stopPublications(){publications.stop();}
     int sceneCreated(){return created;}
     void setSelectedKnight(Knight value){knight=value;}
     void setPartyMember(PartyRegistry.Member value){partyMember=value;}
@@ -789,46 +791,14 @@ final class WorldSession implements AutoCloseable {
     synchronized void refreshFailed(WorldStatePoller.Registration registration,Exception failure) {
         worldState.failed(registration,failure);
     }
-    /** A scene tick failed; return this knight to character selection rather than a frozen world. */
-    private void sceneFailed() {
-        if(closed)return;
-        log.warn("Scene tick failed; closing session for a safe return; scene="+(runtime.scene()==null?0:runtime.scene().oid()));
-        close();
-        try{socket.close();}catch(IOException ignored){}
-    }
-    void attach() {
-        floors.reset();
-        if(!runtime.scene().map().kind().equals("training")&&partyMember!=null)try{scenes.parties().leaveTraining(partyMember);}catch(IOException invalid){throw new IllegalStateException(invalid);}
-        publishedArsenal=null;
-        runtime.membership(null); // The old runtime.scene() runtime.membership() is closed before rebuilding its replacement.
-        appearance.rebuild();var place=runtime.scene();
-        runtime.membership(place.simulation().join(appearance.actor(),snapshot->{},this::sceneFailed));
-        runtime.membership().equipment(visibleProfile());
-        if(!place.map().town())runtime.membership().combat(weapons,scenes.equipment(),visibleProfile());
-        try{partyState();}catch(IOException invalid){throw new IllegalStateException(invalid);}
-    }
+    void attach() { runtime.attach(); }
     void updateAppearance(){appearance.update();}
 
     static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
-    void monitorScene() {
-        log.scene(runtime.scene().map().id(),runtime.scene().oid(),runtime.scene().map().name());
-        log.info("Scene entered; scene="+runtime.scene().map().name()+" (#"+runtime.scene().map().id()+"); instanceId="+runtime.scene().oid());
-    }
+    void monitorScene() { runtime.monitorScene(); }
     /** Set once a successful rename answered its confirm; honored by the connection loop. */
     private boolean renameDisconnect;
     synchronized boolean takeRenameDisconnect(){boolean requested=renameDisconnect;renameDisconnect=false;return requested;}
 
-    @Override public synchronized void close() {
-        friendOnline=false;
-        chats.leave();
-        leaveChat();
-        closed = true;
-        floors.clearReport();
-        runtime.subscribed(false);
-        if(runtime.membership()!=null)runtime.membership().close();
-        if(partyMember!=null){partyMember.close();partyMember=null;}
-        if(profile!=null){scenes.release(runtime.scene(),profile.worldId());if(runtime.portalMove()!=null)scenes.release(runtime.portalMove().destination(),profile.worldId());}
-        publications.stop();
-        if (profile != null) synchronized (ACTIVE) { ACTIVE.remove(profile.worldId(), this); }
-    }
+    @Override public synchronized void close() { runtime.closeSession(); }
 }

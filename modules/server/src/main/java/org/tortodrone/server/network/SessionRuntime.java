@@ -189,7 +189,7 @@ final class SessionRuntime {
         session.setFriendOnline(true);
         readyRoom=stageInReadyRoom;
         if(readyRoom)session.friendLocation(new WorldSession.FriendPresence("~",ReadyRoom.ZONE,0));
-        else session.attach();
+        else attach();
         session.setPartyMember(scenes.parties().join(session.connectionOid(),session.selectedKnight(),session.currentProfile(),session::offerParty));
         if(session.currentProfile().progress().crashSiteIncomplete())scenes.parties().enterTutorial(session.partyMember());
         session.publishPartyState();
@@ -208,7 +208,7 @@ final class SessionRuntime {
         session.receiverChanged(receivers);
         session.sessionLog().selected(session.selectedKnight().id(),session.currentProfile().worldId(),session.selectedKnight().name());
         session.sessionLog().info("Character selected; knight="+session.selectedKnight().name()+" (#"+session.currentProfile().worldId()+"); rosterId="+session.selectedKnight().id());
-        if(!readyRoom)session.monitorScene();
+        if(!readyRoom)monitorScene();
         // Party events belong to the selected session, not its scene subscription.
         // Ready Room is client-local and never calls entered(); delaying this worker
         // until then strands invitations and can overflow the queue on world return.
@@ -279,8 +279,8 @@ final class SessionRuntime {
         scene=next;
         readyRoom=false;returnRequested=false;
         arrival=entrance;portalMove=null;
-        session.markSceneCreated();session.attach();
-        session.monitorScene();
+        session.markSceneCreated();attach();
+        monitorScene();
         // Arriving comlinks are delivered behind the move response (see completeMove),
         // before the client can answer enteredPlace from inside its loading screen.
         session.clearArrivalComlink();
@@ -289,6 +289,55 @@ final class SessionRuntime {
                     &&session.sceneRegistry().missions().eligible(candidate.id(),session.currentProfile().progress(),session.completedOpeningKeys()))
                 session.setArrivalComlink(candidate);
     }
+
+    /** A scene tick failed; return this knight to character selection rather than a frozen world. */
+    void sceneFailed(){
+        if(session.isClosed())return;
+        session.sessionLog().warn("Scene tick failed; closing session for a safe return; scene="+(scene==null?0:scene.oid()));
+        closeSession();
+        try{session.socket().close();}catch(IOException ignored){}
+    }
+
+    /** Join the installed instance's simulation and publish the knight actor. */
+    void attach(){
+        var scenes=session.sceneRegistry();
+        session.floorsHandler().reset();
+        if(!scene.map().kind().equals("training")&&session.partyMember()!=null)
+            try{scenes.parties().leaveTraining(session.partyMember());}catch(IOException invalid){throw new IllegalStateException(invalid);}
+        session.setPublishedArsenal(null);
+        membership=null; // The replacement is built after the previous membership is released.
+        session.appearance.rebuild();
+        var place=scene;
+        membership=place.simulation().join(session.appearance.actor(),snapshot->{},this::sceneFailed);
+        membership.equipment(session.visibleProfile());
+        if(!place.map().town())membership.combat(scenes.weapons(),scenes.equipment(),session.visibleProfile());
+        try{session.publishPartyState();}catch(IOException invalid){throw new IllegalStateException(invalid);}
+    }
+
+    void monitorScene(){
+        session.sessionLog().scene(scene.map().id(),scene.oid(),scene.map().name());
+        session.sessionLog().info("Scene entered; scene="+scene.map().name()+" (#"+scene.map().id()+"); instanceId="+scene.oid());
+    }
+
+    /** Release every party, scene and delivery resource this connection owns. */
+    void closeSession(){ synchronized(session){
+        session.setFriendOnline(false);
+        session.chatHandler().leave();
+        session.leaveChat();
+        session.markClosed();
+        session.floorsHandler().clearReport();
+        subscribed=false;
+        if(membership!=null)membership.close();
+        var member=session.partyMember();
+        if(member!=null){member.close();session.setPartyMember(null);}
+        var profile=session.currentProfile();
+        if(profile!=null){
+            session.sceneRegistry().release(scene,profile.worldId());
+            if(portalMove!=null)session.sceneRegistry().release(portalMove.destination(),profile.worldId());
+        }
+        session.stopPublications();
+        if(profile!=null)synchronized(WorldSession.ACTIVE){WorldSession.ACTIVE.remove(profile.worldId(),session);}
+    }}
 
     /** Detach the client subscription while keeping the installed instance and membership. */
     void unsubscribe(){ synchronized(session){
