@@ -132,9 +132,10 @@ final class WorldProfiles {
             }}
         }
         try{
-            var profile=new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items,new org.tortodrone.core.character.KnightProgress(rank/10,rank%10,prestige,opening),TownStore.load(c,worldId));
+            var achievements=AccountAchievements.load(c,accountId);
+            var profile=new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items,new org.tortodrone.core.character.KnightProgress(rank/10,rank%10,prestige,opening),TownStore.load(c,worldId),achievements);
             var visible=items.stream().map(item->item.equippedSlot()!=null&&!org.tortodrone.core.character.SlotUpgrades.unlocked(profile,item.equippedSlot())?item.withEquippedSlot(null):item).toList();
-            return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,visible,profile.progress(),profile.town());
+            return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,visible,profile.progress(),profile.town(),profile.achievements());
         }
         catch(IllegalArgumentException invalid){throw new IOException("Invalid saved knight progress",invalid);}
     }

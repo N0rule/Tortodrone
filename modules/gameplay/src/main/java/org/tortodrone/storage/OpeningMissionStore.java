@@ -18,9 +18,9 @@ import org.tortodrone.core.mission.MissionCatalog;
  * handlers may call complete; there is no client completion RPC. Uses the existing schema. */
 public final class OpeningMissionStore {
     private final Database database;private final TownStore inventory;private final TownCatalog town;
-    private final MissionCatalog missions;
+    private final MissionCatalog missions;private final ItemCatalog items;
     public OpeningMissionStore(Database database,ItemCatalog items,TownCatalog town,MissionCatalog missions){
-        this.database=database;this.town=Objects.requireNonNull(town);
+        this.database=database;this.town=Objects.requireNonNull(town);this.items=Objects.requireNonNull(items);
         this.missions=missions==null?MissionCatalog.empty():missions;
         inventory=new TownStore(database,items,town);
     }
@@ -96,8 +96,15 @@ public final class OpeningMissionStore {
             try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=? AND account_id=? AND knight_id=? AND state_revision=?")){
                 s.setInt(1,profile.worldId());s.setInt(2,account);s.setInt(3,knight);s.setLong(4,profile.revision());if(s.executeUpdate()!=1)throw new IOException("Mission revision changed");
             }
-            return new Settlement(WorldProfiles.load(c,account,knight,auth),receipt,true,memories,objectives);
+            return firstSettlement(c,account,knight,auth,receipt,memories,objectives);
         });
+    }
+    /** First completion only: every native receipt it qualifies. */
+    private Settlement firstSettlement(Connection c,int account,int knight,long auth,OpeningCompletion receipt,
+            Set<String> memories,Map<String,KnightObjective.State> objectives) throws SQLException, IOException {
+        var after=WorldProfiles.load(c,account,knight,auth);
+        after=AccountAchievements.reconcile(c,after,items,after.progress().tutorialComplete()?32:0,System.currentTimeMillis());
+        return new Settlement(after,receipt,true,memories,objectives);
     }
     private static int difficultyBand(String difficulty){return difficulty==null?-1:List.of("EASY","MEDIUM","HARD").indexOf(difficulty);}
     /** Archive mission-service id 1: consume exactly the exchange ingredient list, then pay the
@@ -138,7 +145,7 @@ public final class OpeningMissionStore {
             try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=? AND account_id=? AND knight_id=? AND state_revision=?")){
                 s.setInt(1,profile.worldId());s.setInt(2,account);s.setInt(3,knight);s.setLong(4,profile.revision());if(s.executeUpdate()!=1)throw new IOException("Mission revision changed");
             }
-            return new Settlement(WorldProfiles.load(c,account,knight,auth),receipt,true,memories,objectives);
+            return firstSettlement(c,account,knight,auth,receipt,memories,objectives);
         });
     }
     /** MissionManager.verifyExchangeItems over the served rank exchanges: every handed item must

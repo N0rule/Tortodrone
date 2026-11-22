@@ -101,7 +101,7 @@ public final class KnightCodec extends WireWriter {
             org.tortodrone.core.guild.Guild guild) throws IOException {
         return frame(out -> {
             eventHeader(out,"CompoundEvent",oid);
-            type(out,WireTypes.ARRAY_LIST); out.writeInt(23+(guild==null?0:3));
+            type(out,WireTypes.ARRAY_LIST); out.writeInt(24+(guild==null?0:3));
             attribute(out,oid,"knight",o -> name(o,knight.name()));
             attribute(out,oid,"color",o -> value(o,256 | knight.color()));
             attribute(out,oid,"eye",o -> { type(o,WireTypes.EYE_TYPE);o.writeByte(knight.eye()); });
@@ -122,7 +122,8 @@ public final class KnightCodec extends WireWriter {
             rank(out,oid,profile);
             attribute(out,oid,"prestige",o->value(o,profile.progress().prestige()));
             attribute(out,oid,"progressFlags",o->value(o,profile.progress().progressFlags()));
-            attribute(out,oid,"stats",o->{type(o,"com.threerings.stats.data.StatSet");o.writeInt(0);});
+            attribute(out,oid,"achievements",o->achievements(o,profile.achievements()));
+            attribute(out,oid,"stats",o->statSet(o,statValues(profile)));
             attribute(out,oid,"pawnId",o -> value(o,profile.worldId()));
             attribute(out,oid,"knightId",o -> value(o,profile.worldId()));
             if(guild!=null){
@@ -195,6 +196,33 @@ public final class KnightCodec extends WireWriter {
         });
     }
 
+
+    public byte[] achievementChanges(int oid, WorldProfile before, WorldProfile after) throws IOException {
+        var old = before.achievements().unlocked();
+        var added = after.achievements().unlocked().entrySet().stream()
+            .filter(e -> !old.containsKey(e.getKey()))
+            .sorted(java.util.Map.Entry.comparingByKey())
+            .toList();
+        var oldStats = statValues(before);
+        var newStats = statValues(after);
+        boolean statsChanged = !oldStats.equals(newStats);
+        if (added.isEmpty() && !statsChanged) return null;
+        return frame(out -> {
+            eventHeader(out, "CompoundEvent", oid);
+            type(out, WireTypes.ARRAY_LIST);
+            out.writeInt(added.size() + (statsChanged ? 1 : 0));
+            for (var entry : added) {
+                type(out, "com.threerings.presents.dobj.EntryAddedEvent");
+                out.writeInt(oid); string(out, "achievements");
+                achievement(out, entry.getKey(), entry.getValue());
+            }
+            if (statsChanged) attribute(out, oid, "stats", o -> statSet(o, newStats));
+        });
+    }
+
+    private java.util.Map<Integer,Integer> statValues(WorldProfile profile){
+        return org.tortodrone.core.character.NativeStats.values(profile,itemCatalog,System.currentTimeMillis());
+    }
 
     public byte[] balances(int oid,WorldProfile profile) throws IOException {
         return frame(out -> { eventHeader(out,"CompoundEvent",oid);type(out,WireTypes.ARRAY_LIST);out.writeInt(2);

@@ -418,7 +418,8 @@ public final class Database {
                 s.setInt(1,worldId);s.setInt(2,accountId);s.setInt(3,knightId);s.setLong(4,revision);
                 if(s.executeUpdate()!=1)throw new IOException("Tutorial settlement revision changed");
             }
-            return WorldProfiles.load(c,accountId,knightId,authRevision);
+            var settled=WorldProfiles.load(c,accountId,knightId,authRevision);
+            return AccountAchievements.reconcile(c,settled,null,settled.progress().tutorialComplete()?32:0,System.currentTimeMillis());
         });
     }
     public record MemoryState(WorldProfile profile,Set<String> memories){public MemoryState{memories=Set.copyOf(memories);}}
@@ -508,6 +509,7 @@ public final class Database {
     public void delete(String username,int expectedId) throws IOException {
         write(c -> { int id = requireId(c,username);
             if (expectedId >= 0 && id != expectedId) throw new IOException("Account changed; refresh the account list");
+            AccountAchievements.delete(c,id);
             try (PreparedStatement s = c.prepareStatement("DELETE FROM accounts WHERE id=?")) { s.setInt(1,id); s.executeUpdate(); }
             WorldProfiles.cleanProgress(c);
             try(var s=c.prepareStatement("DELETE FROM metadata WHERE key=?")){s.setString(1,"account."+id+".inspection-hidden");s.executeUpdate();}

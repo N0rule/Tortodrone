@@ -186,7 +186,10 @@ public final class TownStore {
     }
     @FunctionalInterface private interface Mutation{Object run(Connection c,WorldProfile profile)throws SQLException,IOException;}
     private Result change(int account,int knight,long auth,Mutation mutation)throws IOException{
-        return database.write(c->{var profile=WorldProfiles.load(c,account,knight,auth);Object result=mutation.run(c,profile);InventoryExpiry.reconcile(c,profile.worldId(),System.currentTimeMillis());touch(c,profile.worldId());return new Result(WorldProfiles.load(c,account,knight,auth),result);});
+        return database.write(c->{var profile=WorldProfiles.load(c,account,knight,auth);Object result=mutation.run(c,profile);InventoryExpiry.reconcile(c,profile.worldId(),System.currentTimeMillis());touch(c,profile.worldId());
+            var updated=WorldProfiles.load(c,account,knight,auth);
+            updated=AccountAchievements.reconcile(c,updated,items,updated.progress().tutorialComplete()?32:0,System.currentTimeMillis());
+            return new Result(updated,result);});
     }
     static void touch(Connection c,int world)throws SQLException{try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,world);if(s.executeUpdate()!=1)throw new SQLException("Missing Town owner");}}
     static WorldProfile.Item owned(WorldProfile p,long id)throws IOException{return p.items().stream().filter(i->i.id()==id).findFirst().orElseThrow(()->new IOException("m.internal_error"));}
@@ -532,6 +535,7 @@ public final class TownStore {
                 }
             }
             if(learned!=null)try(var s=c.prepareStatement("UPDATE town_recipes SET crafted=crafted+1 WHERE id=? AND world_id=?")){s.setLong(1,learned.id());s.setInt(2,p.worldId());s.executeUpdate();}
+            AccountAchievements.increment(c,p.accountId(),org.tortodrone.core.character.NativeStats.ITEMS_CRAFTED,1);
             return result;
         });
     }

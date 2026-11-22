@@ -376,6 +376,7 @@ public final class SessionCodec extends WireWriter {
     public byte[] balances(int oid,WorldProfile profile) throws IOException { return knightCodec.balances(oid, profile); }
     public byte[] knightProgress(int oid,WorldProfile profile)throws IOException { return knightCodec.knightProgress(oid, profile); }
     public byte[] itemChanges(int oid,Knight knight,WorldProfile before,WorldProfile after)throws IOException { return knightCodec.itemChanges(oid, knight, before, after); }
+    public byte[] achievementChanges(int oid,WorldProfile before,WorldProfile after)throws IOException { return knightCodec.achievementChanges(oid, before, after); }
     public byte[] quickbar(int oid,long[] slots)throws IOException { return knightCodec.quickbar(oid, slots); }
     public byte[] tradeNotification(int playerOid,String sender,boolean add)throws IOException { return tradeCodec.tradeNotification(playerOid, sender, add); }
     public byte[] friends(int oid,List<FriendView> before,List<FriendView> after)throws IOException { return socialCodec.friends(oid, before, after); }

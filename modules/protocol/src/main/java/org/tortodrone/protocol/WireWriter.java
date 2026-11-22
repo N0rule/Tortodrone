@@ -149,6 +149,46 @@ public abstract class WireWriter {
         out.writeBoolean(true); out.writeInt(0);
     }
 
+    /** One stock {@code com.threerings.projectx.data.Achievement} DSet entry. */
+    protected void achievement(DataOutputStream out, int type, long unlocked) throws IOException {
+        type(out,"com.threerings.projectx.data.Achievement");
+        type(out,"com.threerings.projectx.data.Achievement$Type");
+        out.writeByte(type);
+        out.writeLong(unlocked);
+    }
+
+    /** The native account achievements set, ordered by its enum key. */
+    protected void achievements(DataOutputStream out, org.tortodrone.core.character.AchievementState state) throws IOException {
+        var unlocked = new java.util.TreeMap<>(state.unlocked());
+        type(out, WireTypes.DSET);
+        out.writeInt(unlocked.size());
+        for (var entry : unlocked.entrySet()) achievement(out, entry.getKey(), entry.getValue());
+    }
+
+    /** {@code StatSet} is a {@code DSet<IntStat>}; every stock prototype is an IntStat. */
+    protected void statSet(DataOutputStream out, java.util.Map<Integer,Integer> values) throws IOException {
+        // DSet keys are StatType names, so the on-wire order is the key's string order,
+        // not the enum ordinal order.
+        var ordered = new java.util.TreeMap<Integer,Integer>(
+            java.util.Comparator.comparing(org.tortodrone.core.character.NativeStats::name));
+        ordered.putAll(values);
+        type(out,"com.threerings.stats.data.StatSet");
+        out.writeInt(ordered.size());
+        for (var entry : ordered.entrySet()) {
+            int stat = entry.getKey();
+            if (stat < 0 || stat >= org.tortodrone.core.character.NativeStats.count())
+                throw new IOException("Unknown lifetime stat " + stat);
+            int value = entry.getValue();
+            if (value < 0) throw new IOException("Negative lifetime stat");
+            type(out,"com.threerings.stats.data.IntStat");
+            type(out,"com.threerings.projectx.data.StatType");
+            out.writeByte(stat);
+            out.writeBoolean(false); // _modified is client-local state
+            out.writeByte(0);        // _modCount
+            out.writeInt(value);
+        }
+    }
+
     /** A non-empty boxed integer set uses the stock field form: non-null flag, size, then
      *  each element behind the connection-local `java.lang.Integer` class code. */
     protected void integerSet(DataOutputStream out, java.util.Set<Integer> values) throws IOException {

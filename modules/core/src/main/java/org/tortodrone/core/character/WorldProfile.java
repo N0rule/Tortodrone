@@ -5,10 +5,13 @@ import org.tortodrone.core.town.TownState;
 
 /** Server-owned character state persisted across sessions. */
 public record WorldProfile(int worldId, int accountId, int knightId, int crowns, int energy,
-        long revision, List<Item> items,KnightProgress progress,org.tortodrone.core.town.TownState town) {
+        long revision, List<Item> items,KnightProgress progress,org.tortodrone.core.town.TownState town,
+        AchievementState achievements) {
+    public WorldProfile(int worldId,int accountId,int knightId,int crowns,int energy,long revision,List<Item> items,KnightProgress progress,org.tortodrone.core.town.TownState town){this(worldId,accountId,knightId,crowns,energy,revision,items,progress,town,AchievementState.EMPTY);}
     public WorldProfile(int worldId,int accountId,int knightId,int crowns,int energy,long revision,List<Item> items,KnightProgress progress){this(worldId,accountId,knightId,crowns,energy,revision,items,progress,org.tortodrone.core.town.TownState.EMPTY);}
     public WorldProfile(int worldId,int accountId,int knightId,int crowns,int energy,long revision,List<Item> items){this(worldId,accountId,knightId,crowns,energy,revision,items,KnightProgress.RECRUIT);}
-    public WorldProfile { items = List.copyOf(items);java.util.Objects.requireNonNull(progress);java.util.Objects.requireNonNull(town); }
+    public WorldProfile { items = List.copyOf(items);java.util.Objects.requireNonNull(progress);java.util.Objects.requireNonNull(town);java.util.Objects.requireNonNull(achievements); }
+    public WorldProfile withAchievements(AchievementState value){return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items,progress,town,value);}
     public enum Slot {
         HELM, ARMOR, SWORD, GUN, SHIELD, BOMB, HELM_COSTUME, ARMOR_COSTUME, SHIELD_COSTUME, TRINKET, DUNGEON, OTHER;
         public boolean weapon() { return this==SWORD || this==GUN || this==BOMB; }

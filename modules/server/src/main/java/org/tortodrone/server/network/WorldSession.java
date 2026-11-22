@@ -270,7 +270,7 @@ final class WorldSession implements AutoCloseable {
         if(temporaryItems.isEmpty()&&cursed.isEmpty())return profile;
         var items=new ArrayList<>(profile.items());items.addAll(temporaryItems.values());
         items.replaceAll(item->item.curse(cursed.contains(item.id())));
-        return new WorldProfile(profile.worldId(),profile.accountId(),profile.knightId(),profile.crowns(),profile.energy(),profile.revision(),items,profile.progress(),profile.town());
+        return new WorldProfile(profile.worldId(),profile.accountId(),profile.knightId(),profile.crowns(),profile.energy(),profile.revision(),items,profile.progress(),profile.town(),profile.achievements());
     }
     private void collectPickups()throws IOException {
         for(var pickup:membership.takePickups()){
@@ -351,6 +351,8 @@ final class WorldSession implements AutoCloseable {
         // not suppress its shared scene effect for remaining observers.
         if(before.energy()>after.energy()&&membership!=null)membership.effect(new StarterCatalog.Model("Energy Spent",Map.of()));
         output.send(()->codec.itemChanges(oid,knight,before,after));output.send(()->codec.balances(oid,after));
+        var achievementChanges=codec.achievementChanges(oid,before,after);
+        if(achievementChanges!=null)output.send(()->achievementChanges);
         if(publishTown)output.send(()->codec.townState(oid,after));
         publishOutbids(before,after);
         if(!before.town().loadouts().equals(after.town().loadouts())||before.town().equippedSprite()!=after.town().equippedSprite()
