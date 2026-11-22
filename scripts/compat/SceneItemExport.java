@@ -32,16 +32,48 @@ public final class SceneItemExport {
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
         resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
-        var actions=new TreeMap<String,Object>();
+        var actions=new TreeMap<String,Object>();var stats=new TreeMap<String,Object>();
         for(var config:itemGroup(manager).kR()){
             var original=config.w(manager);
             if(!(original instanceof DungeonItemConfig.Capsule)||config.getConfigId()==0||original.name==null||original.name.isBlank()
                     ||config.getName().contains("/Parts/")||config.getName().contains("/Test/")||config.getName().contains("/Slime/")||config.getName().endsWith("/Base")||config.getName().endsWith(" Base"))continue;
-            var action=gameplay(readAction(manager,((ItemConfig.ActionItem)original).action));
-            if(org.tortodrone.world.SceneWeapons.usable(action))actions.put(config.getName(),FireCatalog.actionJson(action));
+            var nativeAction=((ItemConfig.ActionItem)original).action;
+            var action=gameplay(readAction(manager,nativeAction));
+            if(org.tortodrone.world.SceneWeapons.usable(action)){
+                actions.put(config.getName(),FireCatalog.actionJson(action));
+                var counter=counter(nativeAction);
+                if(counter!=null)stats.put(config.getName(),counter);
+            }
         }
-        java.nio.file.Files.writeString(out,org.tortodrone.core.Json.stringify(Map.of("format",1,"actions",actions)),java.nio.file.StandardOpenOption.CREATE_NEW);
-        System.out.println("Exported "+actions.size()+" executable capsule actions to "+out);
+        java.nio.file.Files.writeString(out,org.tortodrone.core.Json.stringify(Map.of("format",1,"actions",actions,"stats",stats)),java.nio.file.StandardOpenOption.CREATE_NEW);
+        System.out.println("Exported "+actions.size()+" executable capsule actions ("+stats.size()+" lifetime counters) to "+out);
+    }
+    /** One native lifetime counter from the same graph: the activator's {@code StatType}. */
+    private static Map<String,Object> counter(ActionConfig action)throws Exception{
+        var found=new ArrayList<Object[]>();
+        counters(action,found,0,java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>()));
+        if(found.isEmpty())return null;
+        if(found.size()!=1)throw new IOException("Capsule carries more than one native stat counter");
+        var stat=(com.threerings.projectx.data.StatType)found.getFirst()[0];
+        return Map.of("stat",stat.name(),"delta",found.getFirst()[1]);
+    }
+    private static void counters(ActionConfig action,List<Object[]> out,int depth,java.util.Set<ActionConfig> seen)throws Exception{
+        if(action==null||depth>32||!seen.add(action))return;
+        if(action instanceof com.threerings.projectx.config.ProjectXActionConfig.IncrementStat increment){
+            if(!(increment.target instanceof TargetConfig.Activator))throw new IOException("Capsule stat counter does not target the activator");
+            out.add(new Object[]{increment.type,increment.delta});return;
+        }
+        for(Class<?> type=action.getClass();type!=null&&type!=Object.class;type=type.getSuperclass())for(var field:type.getDeclaredFields()){
+            if(Modifier.isStatic(field.getModifiers()))continue;
+            Class<?> fieldType=field.getType();
+            if(!ActionConfig.class.isAssignableFrom(fieldType)&&!fieldType.isArray()&&!Iterable.class.isAssignableFrom(fieldType))continue;
+            field.setAccessible(true);Object value=field.get(action);if(value==null)continue;
+            if(ActionConfig.class.isAssignableFrom(fieldType))counters((ActionConfig)value,out,depth+1,seen);
+            else if(fieldType.isArray()&&ActionConfig.class.isAssignableFrom(fieldType.getComponentType()))
+                for(Object child:(Object[])value)counters((ActionConfig)child,out,depth+1,seen);
+            else if(Iterable.class.isAssignableFrom(fieldType))
+                for(Object child:(Iterable<?>)value)counters((ActionConfig)child,out,depth+1,seen);
+        }
     }
     /** Mission/statistic counters are outside this gameplay graph; never omit gameplay actions. */
     private static FireCatalog.Action gameplay(FireCatalog.Action action){

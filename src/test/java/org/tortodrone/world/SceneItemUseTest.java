@@ -25,6 +25,17 @@ public final class SceneItemUseTest {
         var map=catalog.scene(294);
         var haven=catalog.scene(1);
         var capsule=map.content().items().get("Pickup/Capsule/Health Capsule");
+        check(capsule.text("stat","").equals("HEALTH_CAPSULES_USED")&&capsule.integer("stat-delta",0)==1,
+            "the native health capsule carries its exact lifetime counter");
+        for(String config:List.of("Pickup/Capsule/Super Health Capsule","Pickup/Capsule/Ultra Health Capsule"))
+            check(map.content().items().get(config).text("stat","").equals("HEALTH_CAPSULES_USED"),
+                "stronger health capsules share the native health counter: "+config);
+        check(map.content().items().get("Pickup/Capsule/Remedy Capsule").text("stat","").equals("REMEDY_CAPSULES_USED"),
+            "the native remedy capsule carries its own lifetime counter");
+        check(map.content().items().get("Pickup/Capsule/Buffs/Attack Booster").text("stat","").isBlank(),
+            "gameplay-only capsules carry no invented lifetime counter");
+        check(haven.content().items().values().stream().noneMatch(item->!item.text("stat","").isBlank()),
+            "towns receive no capsule lifetime counters");
         try(var fixture=new Fixture(map)) {
             var before=fixture.simulation.snapshot();int started;
             synchronized(fixture.simulation){

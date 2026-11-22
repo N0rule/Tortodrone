@@ -33,8 +33,29 @@ type returns the stock constant `false` and is never granted.
 | 21–38 | owned weapon/armor counts | inventory counts per category at `>= 3/5/10` |
 | 39 | `RARITY_SET_1` | a five-star item in the five categories the client checks: handguns, bombs, helms, armors and shields (swords are excluded) |
 | 46 | `SLOTS_FILLED_1` | equipment slots `2,3,4,6,7,8,9,10,11,15` (shield, three costumes, four weapon slots, two trinkets); helm/armor are not checked |
-| 50, 51 | capsule use counts | `HEALTH/REMEDY_CAPSULES_USED >= 10` (no capsule use is recorded yet) |
+| 50, 51 | capsule use counts | `HEALTH/REMEDY_CAPSULES_USED >= 10`; native capsule graphs credit the counter when the capsule is consumed |
 | 60, 62, 63 | casino spins | `CASINO_SPINS >= 100/10000/1000000` (no casino is implemented) |
+
+## Capsule counters
+
+The installed client attaches `ProjectXActionConfig$IncrementStat` to the same
+capsule graph that heals or clears status. Its `type` is the client `StatType`,
+its `delta` is 1 and its target is `TargetConfig.Activator`, so the using knight's
+account receives the increment:
+
+| Capsule config | Counter |
+| --- | --- |
+| `Pickup/Capsule/Health Capsule`, `.../Super Health Capsule`, `.../Ultra Health Capsule` | `HEALTH_CAPSULES_USED` |
+| `Pickup/Capsule/Remedy Capsule` | `REMEDY_CAPSULES_USED` |
+
+`SceneItemExport` records those counters under `stats` beside the executable
+`actions` graph in `content/_internal/item-actions.json`; the gameplay graph still
+drops them, and `MapYaml` carries `item.<n>.stat`/`stat-delta` on the prepared item
+spec. `WorldSession` credits the counters through one `TownStore.stats` transaction
+after the scene consumed the capsule, then publishes `achievementChanges`. A refused
+receipt is logged and does not change the already-applied scene effect. Counties
+without a client predicate (for example `LUCK_POTIONS_USED`) are stored but never
+invent an achievement.
 
 ## Persistence
 
@@ -45,7 +66,6 @@ Deleting an account removes both prefixes.
 
 ## Still blocked
 
-Lifetime counters without a server event: capsule use, casino spins, boss defeats,
-minerals deposited, item levelling, revives, full runs and `SLOTS_FILLED_1`
-(exact `ItemCodes` arrays not extracted). The objective/progress achievements
-remain part of the mission-objective work.
+Lifetime counters without a server event: casino spins, boss defeats, minerals
+deposited, item levelling, revives and full runs. The objective/progress
+achievements remain part of the mission-objective work.

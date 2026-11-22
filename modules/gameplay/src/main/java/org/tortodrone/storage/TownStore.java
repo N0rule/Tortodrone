@@ -170,6 +170,28 @@ public final class TownStore {
             consume(c,p,item,1);return held.config();
         });
     }
+    /**
+     * Credit the account-scoped lifetime counters that native scene actions attach to a
+     * consumed capsule. The scene effect has already run; the receipt is one transaction
+     * and reconciles achievements before the caller publishes the updated profile.
+     */
+    public Result stats(int account,int knight,long auth,Map<String,Integer> counters)throws IOException{
+        if(counters==null||counters.isEmpty())throw new IOException("m.internal_error");
+        var ordinals=new TreeMap<Integer,Integer>();
+        for(var entry:counters.entrySet()){
+            int ordinal;
+            try{ordinal=org.tortodrone.core.character.NativeStats.ordinal(entry.getKey());}
+            catch(IllegalArgumentException invalid){throw new IOException("Unknown lifetime stat "+entry.getKey(),invalid);}
+            int delta=entry.getValue()==null?0:entry.getValue();
+            if(delta<1||delta>1_000_000)throw new IOException("Invalid lifetime stat increment");
+            ordinals.merge(ordinal,delta,Integer::sum);
+            if(ordinals.get(ordinal)>1_000_000)throw new IOException("Invalid lifetime stat increment");
+        }
+        return change(account,knight,auth,(c,p)->{
+            for(var entry:ordinals.entrySet())AccountAchievements.increment(c,p.accountId(),entry.getKey(),entry.getValue());
+            return null;
+        });
+    }
     /** Native PartyMarshaller.revive: -1 spends one owned Spark; a positive approval buys its use. */
     public Result revive(int account,int knight,long auth,int approvedCost)throws IOException{
         if(approvedCost < -1)throw new IOException("m.costupdate");

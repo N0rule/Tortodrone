@@ -2269,11 +2269,29 @@ final class WorldSession implements AutoCloseable {
             if(!objectives.equals(result.objectives())){objectives=result.objectives();publishObjectives();}
         }
         collectPickups();
+        var capsuleCounters=new TreeMap<String,Integer>();
         for(long id:membership.takeUsedItems()){
-            var item=temporaryItems.get(id);if(item==null)continue;var before=visibleProfile();
+            var item=temporaryItems.get(id);if(item==null)continue;
+            var used=scene.map().content().items().get(item.config());
+            if(used!=null&&!used.text("stat","").isBlank())
+                capsuleCounters.merge(used.text("stat",""),Math.max(1,used.integer("stat-delta",1)),Integer::sum);
+            var before=visibleProfile();
             if(item.count()==1)temporaryItems.remove(id);else temporaryItems.put(id,new WorldProfile.Item(id,item.slot(),item.config(),item.accessory(),item.heat(),item.equippedSlot(),item.bound(),item.bindOnEquip(),item.starter(),item.count()-1,item.permanent()));
             var after=visibleProfile();output.send(()->codec.itemChanges(oid,knight,before,after));
             publishQuickbar();
+        }
+        if(!capsuleCounters.isEmpty()){
+            var before=visibleProfile();
+            try{
+                var result=characters.town(scenes.town()).stats(characters.accountId(),knight.id(),authRevision,capsuleCounters);
+                profile=result.profile();
+                var changes=codec.achievementChanges(oid,before,visibleProfile());
+                if(changes!=null)output.send(()->changes);
+            }catch(IOException failure){
+                // The scene capsule has already been consumed; a refused receipt is recorded
+                // without turning a healthy scene stream into a disconnect.
+                log.warn("Lifetime capsule counter not recorded; "+deliveryFailure(failure));
+            }
         }
         var own=current.actor(profile.worldId());
         boolean arsenal=membership.arsenalZone();

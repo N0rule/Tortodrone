@@ -152,14 +152,29 @@ public final class MapYaml {
         }
         Path itemActions=shared.getParent().resolve("_internal/item-actions.json");
         if(Files.exists(itemActions)){
-            var actionRoot=ItemYaml.json(itemActions);fields(actionRoot,itemActions.toString(),"format","actions");
+            var actionRoot=ItemYaml.json(itemActions);fields(actionRoot,itemActions.toString(),"format","actions","stats");
             if(integer(actionRoot.get("format"),"item action format")!=1)throw new IOException("Unknown item action format");
             var actions=map(actionRoot.get("actions"),"item actions");
+            var counters=map(actionRoot.getOrDefault("stats",Map.of()),"item stat counters");
             for(String index:content.getProperty("items","").split(",")){
-                Object action=actions.get(content.getProperty("item."+index+".config"));
+                String config=content.getProperty("item."+index+".config");if(config==null)continue;
+                Object action=actions.get(config);
                 if(action!=null){String graph=text(action,"item action");
                     if(!org.tortodrone.core.world.ItemUseRules.usable(FireCatalog.actionJson(graph)))throw new IOException("Unsupported executable capsule graph");
                     content.setProperty("item."+index+".use-action",graph);
+                }
+                // The native IncrementStat action targets the activator. It is a lifetime
+                // counter, not scene simulation, so it is carried beside the executable graph.
+                Object counter=counters.get(config);
+                if(counter!=null){
+                    var values=map(counter,"item stat counter "+config);fields(values,"item stat counter "+config,"stat","delta");
+                    String stat=text(values.get("stat"),"item stat counter stat");
+                    try{org.tortodrone.core.character.NativeStats.ordinal(stat);}
+                    catch(IllegalArgumentException invalid){throw new IOException(itemActions+": unknown lifetime stat "+stat,invalid);}
+                    int delta=integer(values.get("delta"),"item stat counter delta");
+                    if(delta<1||delta>1_000_000)throw new IOException(itemActions+": invalid lifetime stat delta");
+                    if(!content.getProperty("item."+index+".kind","").equals("capsule"))throw new IOException(itemActions+": lifetime stat counter on a non-capsule item: "+config);
+                    content.setProperty("item."+index+".stat",stat);content.setProperty("item."+index+".stat-delta",Integer.toString(delta));
                 }
             }
         }

@@ -29,6 +29,7 @@ public final class SparseContentTest {
                 // exact replacement before comparing the rest with the historical scene.
                 var actionRoot=Yaml.map(Json.parseCatalog(Files.readString(Path.of("content/_internal/item-actions.json"))),"capsule actions");
                 var actions=Yaml.map(actionRoot.get("actions"),"capsule graphs");
+                var counters=Yaml.map(actionRoot.getOrDefault("stats",Map.of()),"capsule counters");
                 var binding=Yaml.map(Json.parseCatalog(Files.readString(map.getValue().resolve("native/bindings.json"))),"bindings");
                 var mechanics=Yaml.map(binding.get("mechanics"),"native mechanics");
                 for(String index:historical.getProperty("items","").split(",")){
@@ -36,6 +37,12 @@ public final class SparseContentTest {
                     if(actions.containsKey(config)){
                         check(historical.getProperty(key).equals(actions.get(config)),"native capsule graph replacement: "+config);
                         historical.setProperty(key,(String)mechanics.get(key));
+                    }
+                    // Native lifetime counters ride beside the executable graph; the
+                    // 0078b50 baseline predates them and has no stat fields.
+                    if(counters.containsKey(config)){
+                        check(historical.getProperty("item."+index+".stat")!=null,"native capsule lifetime counter import: "+config);
+                        historical.remove("item."+index+".stat");historical.remove("item."+index+".stat-delta");
                     }
                 }
                 // Owned instant, spawn-actor and lift definitions are another deliberate
