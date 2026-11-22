@@ -9,9 +9,8 @@ import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.character.CharacterStore;
 
 /** Social service requests (friends, party suggestions, joins, party finder and unfriend), the
- *  empty feed answer and event-log telemetry for one connection. Travel and friend-list
- *  mutation stay in {@link WorldSession}; this handler validates the native shapes and writes
- *  only through the responder. */
+ *  empty feed answer and event-log telemetry for one connection. Join travel is here; the
+ *  session only lends narrow state accessors and its forced-travel tail. */
 final class FriendHandler {
     private final WorldSession session;
     private final SessionResponder responder;
@@ -56,8 +55,8 @@ final class FriendHandler {
                 return true;
             }
             switch (method) {
-                case 3 -> session.joinFriend((String) args.get(0));
-                case 4 -> session.joinBySecret((String) args.get(0), (Boolean) args.get(1));
+                case 3 -> joinFriend((String) args.get(0));
+                case 4 -> joinBySecret((String) args.get(0), (Boolean) args.get(1));
                 case 6 -> session.setLookingForGroup((Boolean) args.get(0), (org.tortodrone.core.wire.EnumValue) args.get(1));
                 case 8 -> removeFriend((String) args.get(0));
                 default -> requestFriend((String) args.get(0), (String) args.get(1), (String) args.get(2));
@@ -67,6 +66,100 @@ final class FriendHandler {
             responder.failure(listener.requestId(), refused.getMessage());
         }
         return true;
+    }
+
+    private static String friendUnjoinable(String name){return "%social:m.friend_unjoinable|~"+name;}
+    /** Native method 3 in the current build: relationship-authorized travel, rechecked after the peer is captured. */
+    private void joinFriend(String name)throws IOException {
+        int target;
+        synchronized(session){requireFriendReady();target=friendNamed(name);}
+        var peer=WorldSession.activeSession(target);
+        if(peer==null||peer==session||!session.sameWorld(peer))throw new IOException(friendUnjoinable(name));
+        // Like archive joinPlayerInstance: capture the ready target, then transfer on the
+        // caller. Never acquire both session monitors; recheck presence before departure.
+        var location=peer.adminHandler().location();var presence=peer.friendPresenceValue();
+        var peerMember=peer.partyMemberSnapshot();
+        synchronized(session){
+            requireFriendReady();
+            if(friendNamed(name)!=target||!peer.friendOnlineValue()||peer.socket().isClosed()
+                    ||presence!=peer.friendPresenceValue()||location.scene().oid()!=presence.instance())
+                throw new IOException(friendUnjoinable(name));
+            if(location.scene().map().town()){
+                if(session.currentScene()!=location.scene())session.adminHandler().travel(location);
+                return;
+            }
+            followIntoInterior(location,peerMember,true);
+        }
+    }
+    /** Native method 3: the per-session join secret authorizes travel without a friendship. */
+    private void joinBySecret(String secret,boolean spectate)throws IOException {
+        synchronized(session){requireFriendReady();}
+        int comma=secret.lastIndexOf(',');
+        if(comma<1||secret.length()-comma-1!=16)throw new IOException("%social:m.internal_error");
+        long claimed;
+        try{claimed=Long.parseUnsignedLong(secret.substring(comma+1),16);}catch(NumberFormatException invalid){throw new IOException("%social:m.internal_error");}
+        String name=secret.substring(0,comma);
+        if(name.equalsIgnoreCase(session.selectedKnight().name()))throw new IOException("%social:m.friend_self");
+        var candidates=WorldSession.activeSessions().stream()
+            .filter(s->s.friendOnlineValue()&&!s.socket().isClosed()&&s.hasWorldStorage()&&session.sameWorld(s))
+            .toList();
+        WorldSession peer=null;int target=0;
+        for(var candidate:candidates){
+            int world=candidate.identityWorld(name);
+            if(world!=0){peer=candidate;target=world;break;}
+        }
+        // A forged secret must not learn whether the knight it names is joinable.
+        if(peer==null||peer.externalSecret()!=claimed)throw new IOException(friendUnjoinable(name));
+        // Neither shipped 2026 sender sets spectate; the archive refuses a spectator through
+        // joinability anyway, so the flag is carried and has no separate destination here.
+        if(spectate&&session.sessionLog().debugEnabled())session.sessionLog().debug("joinOrSpectate arrived with spectate=true; joining as usual");
+        var location=peer.adminHandler().location();var presence=peer.friendPresenceValue();
+        var peerMember=peer.partyMemberSnapshot();
+        synchronized(session){
+            requireFriendReady();
+            if(peer!=WorldSession.activeSession(target)||!peer.friendOnlineValue()||peer.socket().isClosed()
+                    ||presence!=peer.friendPresenceValue()||location.scene().oid()!=presence.instance())
+                throw new IOException(friendUnjoinable(name));
+            if(location.scene().map().town()){
+                if(session.currentScene()!=location.scene())session.adminHandler().travel(location);
+                return;
+            }
+            followIntoInterior(location,peerMember,friendsWithParty(peerMember));
+        }
+    }
+    /** A secret proves consent to travel, not friendship; private parties still admit friends of a member. */
+    private boolean friendsWithParty(org.tortodrone.world.PartyRegistry.Member member)throws IOException {
+        var view=session.sceneRegistry().parties().view(member);
+        var friends=session.charactersStore().services().friends().list(
+            session.charactersStore().accountId(),session.selectedKnight().id(),session.authRevision());
+        return view.members().stream().anyMatch(p->p.worldId()!=session.currentProfile().worldId()
+            &&friends.stream().anyMatch(f->f.world()==p.worldId()));
+    }
+    /** Follows a friend into a shared Training party room, rolling the party seat back if travel fails. */
+    private void followIntoInterior(AdminHandler.AdminLocation location,org.tortodrone.world.PartyRegistry.Member peerMember,boolean friend)throws IOException {
+        boolean joined=false;
+        try{
+            joined=session.sceneRegistry().parties().joinParty(session.partyMember(),peerMember,friend);
+            session.refreshPartyForTravel();
+            if(session.currentScene()!=location.scene())session.adminHandler().travel(location);
+        }catch(IOException|RuntimeException failed){
+            if(joined)try{session.sceneRegistry().parties().abandon(session.partyMember());}catch(IOException ignored){}
+            if(failed instanceof IOException io)throw io;
+            throw new IOException("m.internal_error",failed);
+        }
+    }
+    private void requireFriendReady()throws IOException {
+        if(session.isClosed()||!session.selected()||!session.sceneEntered()||!session.sceneSubscribed()
+                ||session.sceneTravelPending()||session.deferredMovePending())throw new IOException("Enter a scene first");
+        try{session.charactersStore().worldProfile(session.selectedKnight().name(),session.authRevision(),session.currentProfile());}
+        catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+    }
+    private int friendNamed(String name)throws IOException {
+        return session.charactersStore().services().friends().list(
+                session.charactersStore().accountId(),session.selectedKnight().id(),session.authRevision()).stream()
+            .filter(p->p.name().equalsIgnoreCase(name))
+            .mapToInt(org.tortodrone.storage.FriendStore.Peer::world).findFirst()
+            .orElseThrow(()->new IOException("m.internal_error"));
     }
 
     /** Stock social edits (request/unfriend) need only a selected knight; joins still travel. */

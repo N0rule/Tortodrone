@@ -360,79 +360,6 @@ final class WorldSession implements AutoCloseable {
     boolean friendInvocation(SessionDecoder.Invocation request)throws IOException{return friends.invocation(request);}
     boolean feedInvocation(SessionDecoder.Invocation request)throws IOException{return friends.feedInvocation(request);}
     boolean eventLogInvocation(SessionDecoder.Invocation request)throws IOException{return friends.eventLogInvocation(request);}
-    private static String friendUnjoinable(String name){return "%social:m.friend_unjoinable|~"+name;}
-    /** Native method 3 in the current build: relationship-authorized travel, rechecked after the peer is captured. */
-    void joinFriend(String name)throws IOException {
-        int target;
-        synchronized(this){requireFriendReady();target=friendNamed(name);}
-        WorldSession peer;
-        synchronized(ACTIVE){peer=ACTIVE.get(target);}
-        if(peer==null||peer==this||peer.scenes!=scenes||!peer.characters.worldStorageFile().equals(characters.worldStorageFile()))throw new IOException(friendUnjoinable(name));
-        // Like archive joinPlayerInstance: capture the ready target, then transfer on the
-        // caller. Never acquire both session monitors; recheck presence before departure.
-        var location=peer.adminHandler().location();var presence=peer.friendLocation;
-        var peerMember=peer.partyMemberSnapshot();
-        synchronized(this){
-            requireFriendReady();if(friendNamed(name)!=target||!peer.friendOnline||peer.socket.isClosed()||presence!=peer.friendLocation
-                    ||location.scene().oid()!=presence.instance())throw new IOException(friendUnjoinable(name));
-            if(location.scene().map().town()){if(scene!=location.scene())adminTools.travel(location);return;}
-            followIntoInterior(location,peerMember,true);
-        }
-    }
-    /** Native method 3: the per-session join secret authorizes travel without a friendship. */
-    void joinBySecret(String secret,boolean spectate)throws IOException {
-        synchronized(this){requireFriendReady();}
-        int comma=secret.lastIndexOf(',');
-        if(comma<1||secret.length()-comma-1!=16)throw new IOException("%social:m.internal_error");
-        long claimed;
-        try{claimed=Long.parseUnsignedLong(secret.substring(comma+1),16);}catch(NumberFormatException invalid){throw new IOException("%social:m.internal_error");}
-        String name=secret.substring(0,comma);
-        if(name.equalsIgnoreCase(knight.name()))throw new IOException("%social:m.friend_self");
-        List<WorldSession> candidates;
-        synchronized(ACTIVE){
-            candidates=ACTIVE.values().stream().filter(s->s.friendOnline&&!s.socket.isClosed()&&s.scenes==scenes
-                &&s.characters.hasWorldStorage()&&s.characters.worldStorageFile().equals(characters.worldStorageFile())).toList();
-        }
-        WorldSession peer=null;int target=0;
-        for(var candidate:candidates){
-            var identity=candidate.identity();
-            if(identity!=null&&identity.knight().equalsIgnoreCase(name)){peer=candidate;target=identity.worldId();break;}
-        }
-        // A forged secret must not learn whether the knight it names is joinable.
-        if(peer==null||peer.externalSecret!=claimed)throw new IOException(friendUnjoinable(name));
-        // Neither shipped 2026 sender sets spectate; the archive refuses a spectator through
-        // joinability anyway, so the flag is carried and has no separate destination here.
-        if(spectate&&log.debugEnabled())log.debug("joinOrSpectate arrived with spectate=true; joining as usual");
-        var location=peer.adminHandler().location();var presence=peer.friendLocation;
-        var peerMember=peer.partyMemberSnapshot();
-        synchronized(this){
-            requireFriendReady();
-            if(peer!=ACTIVE.get(target)||!peer.friendOnline||peer.socket.isClosed()||presence!=peer.friendLocation
-                    ||location.scene().oid()!=presence.instance())throw new IOException(friendUnjoinable(name));
-            if(location.scene().map().town()){if(scene!=location.scene())adminTools.travel(location);return;}
-            followIntoInterior(location,peerMember,friendsWithParty(peerMember));
-        }
-    }
-    /** A secret proves consent to travel, not friendship; private parties still admit friends of a member. */
-    private boolean friendsWithParty(PartyRegistry.Member member)throws IOException {
-        var view=scenes.parties().view(member);
-        var friends=characters.services().friends().list(characters.accountId(),knight.id(),authRevision);
-        return view.members().stream().anyMatch(p->p.worldId()!=profile.worldId()
-            &&friends.stream().anyMatch(f->f.world()==p.worldId()));
-    }
-    /** Follows a friend into a shared Training party room, rolling the party seat back if travel fails. */
-    private void followIntoInterior(AdminHandler.AdminLocation location,PartyRegistry.Member peerMember,boolean friend)throws IOException {
-        boolean joined=false;
-        try{
-            joined=scenes.parties().joinParty(partyMember,peerMember,friend);
-            refreshParty(true);
-            if(scene!=location.scene())adminTools.travel(location);
-        }catch(IOException|RuntimeException failed){
-            if(joined)try{scenes.parties().abandon(partyMember);}catch(IOException ignored){}
-            if(failed instanceof IOException io)throw io;
-            throw new IOException("m.internal_error",failed);
-        }
-    }
     /** Native method 4: publish the party-finder flag; matchmaking itself is not implemented. */
     void setLookingForGroup(boolean enabled,org.tortodrone.core.wire.EnumValue difficulty)throws IOException {
         synchronized(this){
@@ -447,19 +374,16 @@ final class WorldSession implements AutoCloseable {
             output.send(()->codec.lookingForGroup(oid,enabled));
         }
     }
-    private void requireFriendReady()throws IOException {
-        if(closed||!selected()||!entered||!subscribed||portalMove!=null||deferredMovePending())throw new IOException("Enter a scene first");
-        try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-    }
-    private int friendNamed(String name)throws IOException {
-        return characters.services().friends().list(characters.accountId(),knight.id(),authRevision).stream().filter(p->p.name().equalsIgnoreCase(name))
-            .mapToInt(org.tortodrone.storage.FriendStore.Peer::world).findFirst().orElseThrow(()->new IOException("m.internal_error"));
-    }
     long externalSecret(){return externalSecret;}
     boolean lookingForGroup(){return lookingForGroup;}
-    private record Identity(int worldId,String knight) { }
+    boolean friendOnlineValue(){return friendOnline;}
+    FriendPresence friendPresenceValue(){return friendLocation;}
+    boolean hasWorldStorage(){return characters.hasWorldStorage();}
+    boolean sameWorld(WorldSession peer){return peer!=null&&peer.scenes==scenes&&peer.characters.worldStorageFile().equals(characters.worldStorageFile());}
     /** Snapshot taken under the session monitor, never under ACTIVE (close locks in that order). */
-    private synchronized Identity identity(){return knight==null||profile==null?null:new Identity(profile.worldId(),knight.name());}
+    int identityWorld(String name){synchronized(this){return knight!=null&&profile!=null&&knight.name().equalsIgnoreCase(name)?profile.worldId():0;}}
+    static WorldSession activeSession(int world){synchronized(ACTIVE){return ACTIVE.get(world);}}
+    static List<WorldSession> activeSessions(){synchronized(ACTIVE){return List.copyOf(ACTIVE.values());}}
     /** Only volatile presence is read under ACTIVE; no peer session monitor is acquired. */
     static Map<Integer,FriendPresence> friendPresence(java.nio.file.Path storage) {
         var result=new HashMap<Integer,FriendPresence>();
