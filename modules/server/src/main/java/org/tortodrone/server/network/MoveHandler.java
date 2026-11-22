@@ -87,9 +87,11 @@ final class MoveHandler {
             session.refreshPartyForTravel();
             // The stock dungeon HUD creates its quickbar once, while the scene model is attached.
             // Let its party subscription complete first.
-            if(place.map().town()||session.subscribedPartyOid()==party)
+            // enterScene has installed the destination; a town destination completes immediately.
+            if(session.currentScene().map().town()||session.subscribedPartyOid()==party)
                 session.completeMove(listener.requestId(),zone);
-            else deferred=new DeferredMove(listener.requestId(),zone,place.oid());
+            // The deferred completion is matched against the scene installed by enterScene.
+            else deferred=new DeferredMove(listener.requestId(),zone,session.currentScene().oid());
             session.sessionLog().debug("Scene transition initialized; duration-ms="+((System.nanoTime()-transitionStarted)/1000000));
         }catch(IOException error){
             responder.send(()->responder.codec().invocationFailure(responder.oid(),listener.requestId(),error.getMessage()));
