@@ -128,8 +128,9 @@ final class WorldSession implements AutoCloseable {
     private final StyleHandler styles;
     private final BoxHandler boxes;
     private final ItemUseHandler itemUse;
+    private final AdminHandler adminTools;
     private int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
-    private SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
+    SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null,membership.floorHeat());}
     private void offerParty(PartyView.Event event){publications.offerParty(event);}
     private synchronized void deliverParty(PartyView.Event event)throws IOException {
@@ -971,6 +972,7 @@ final class WorldSession implements AutoCloseable {
         styles=new StyleHandler(this);
         boxes=new BoxHandler(this);
         itemUse=new ItemUseHandler(this);
+        adminTools=new AdminHandler(this);
     }
 
     synchronized boolean selected() { return knight != null; }
@@ -1005,6 +1007,11 @@ final class WorldSession implements AutoCloseable {
     void applyProfile(WorldProfile value){profile=value;}
     long authRevision(){return authRevision;}
     boolean isClosed(){return closed;}
+    synchronized SceneRegistry.Instance currentScene(){return scene;}
+    synchronized boolean inReadyRoom(){return readyRoom;}
+    WorldProfile visibleProfileNow()throws IOException{return visibleProfile();}
+    SessionLog sessionLog(){return log;}
+    synchronized void adminFeedback(String reason)throws IOException{feedback(scene.oid(),sceneGeneration,reason);}
     SceneChat.RateLimit chatRate(){return chatRate;}
     boolean hasInteriors(){return scenes.catalog().hasNonTown();}
     synchronized boolean ownsScene(int oid) { return selected() && !readyRoom && scene.oid()==oid; }
@@ -1516,25 +1523,25 @@ final class WorldSession implements AutoCloseable {
         for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&scenes.missions().eligible(candidate.id(),profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
     }
 
-    private record AdminLocation(SceneRegistry.Instance scene,int world,String name,float x,float y,float rotation) { }
-    private synchronized void requireAdminReady()throws IOException { requireAdminReady(false); }
-    private synchronized void requireAdminReady(boolean roomTravel)throws IOException {
+    record AdminLocation(SceneRegistry.Instance scene,int world,String name,float x,float y,float rotation) { }
+    synchronized void requireAdminReady()throws IOException { requireAdminReady(false); }
+    synchronized void requireAdminReady(boolean roomTravel)throws IOException {
         if(closed||socket.isClosed()||!selected()||(!(roomTravel&&readyRoom)&&(!subscribed||!entered))||forcedReceiver==null||portalMove!=null||deferredMove!=null)throw new IOException("Finish entering this scene first");
         try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
         if(!roles.gameMaster())throw new IOException("Game Master permission required");
     }
-    private WorldSession adminTarget(String name)throws IOException {
+    WorldSession adminTarget(String name)throws IOException {
         if(name.length()<3||name.length()>16||!name.matches("[A-Za-z]+(?:-[A-Za-z]+)*"))throw new IOException("Enter a valid knight name");
         synchronized(ACTIVE){return ACTIVE.values().stream().filter(w->w.knight.name().equalsIgnoreCase(name)
             &&w.scenes==scenes&&w.characters.worldStorageFile().equals(characters.worldStorageFile())).findFirst().orElseThrow(()->new IOException("That knight is not online"));}
     }
-    private synchronized AdminLocation adminLocation()throws IOException {
+    synchronized AdminLocation adminLocation()throws IOException {
         if(closed||socket.isClosed()||!selected()||!subscribed||!entered||portalMove!=null)throw new IOException("That knight is changing scenes");
         try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("That knight is no longer online",refused);}
         var actor=scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElseThrow(()->new IOException("That knight is not in a ready scene"));
         return new AdminLocation(scene,profile.worldId(),knight.name(),actor.x(),actor.y(),actor.rotation());
     }
-    private synchronized void adminTravel(AdminLocation location)throws IOException {
+    synchronized void adminTravel(AdminLocation location)throws IOException {
         if(closed||socket.isClosed()||!selected()||(!readyRoom&&(!subscribed||!entered))||forcedReceiver==null||portalMove!=null||deferredMove!=null)throw new IOException("Finish entering this scene first");
         try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
         if(trade.active())throw new IOException("Finish the trade first");
@@ -1555,177 +1562,10 @@ final class WorldSession implements AutoCloseable {
         output.send(()->codec.forceScene(oid,receiver,next));
     }
     /** Cross-session tools deliberately acquire only one session monitor at a time. */
-    boolean adminPeople(SessionDecoder.Invocation request)throws IOException {
-        // Current build inserted a new tool at 48, moving the old bring-to-me request from 50 to 51.
-        int method=request.method();if(!Set.of(13,21,24,27,28,30,51).contains(method))return false;
-        var args=request.arguments();
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.ADMIN_SERVICE||args.size()!=(method==24?3:2)
-                ||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.CONFIRM_LISTENER)
-                ||(method==24?!(args.get(0) instanceof Integer)||!(args.get(1) instanceof Integer):!(args.getFirst() instanceof String)))throw new SessionDecoder.Rejected("Invalid player admin request");
-        String name=method==24?null:(String)args.getFirst();
-        try {
-            requireAdminReady(method==28||method==30);
-            if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another command");
-            if(method==24) {
-                var own=adminLocation();adminTravel(new AdminLocation(own.scene(),own.world(),own.name(),(Integer)args.get(0),(Integer)args.get(1),own.rotation()));
-            }else if(method==28||method==30) {
-                org.tortodrone.core.world.MapScene map=null;
-                String key=name.strip();
-                for(var candidate:scenes.catalog().scenes()) {
-                    boolean match=method==30?candidate.town()&&(candidate.zoneName().equalsIgnoreCase(key)||candidate.zoneName().equalsIgnoreCase("%town:m."+key)||candidate.zoneName().equalsIgnoreCase("%zone:m."+key)||Integer.toString(candidate.zone()).equals(key)):
-                        candidate.name().equalsIgnoreCase(key)||Integer.toString(candidate.id()).equals(key)||candidate.name().equalsIgnoreCase("%town:m."+key);
-                    if(match){map=candidate;break;}
-                }
-                if(map==null)throw new IOException("No deployed scene or zone matches that name or ID");
-                AdminLocation location;
-                synchronized(this){requireAdminReady(true);var next=destination(map.id());if(next==scene&&!readyRoom)throw new IOException("You are already in that scene");location=new AdminLocation(next,profile.worldId(),knight.name(),map.spawnX(),map.spawnY(),map.spawnRotation());}
-                adminTravel(location);
-            }else {
-                var target=adminTarget(name);var location=target.adminLocation();
-                if(method==13) {
-                    synchronized(this){requireAdminReady();feedback(scene.oid(),sceneGeneration,location.name()+"; knight="+location.world()+"; scene="+location.scene().map().name()+" ("+location.scene().map().id()+"); instance="+location.scene().oid());}
-                }else if(method==21) {
-                    if(target==this)throw new IOException("You cannot kick yourself");
-                    // Recheck identity/readiness immediately before ending only this live connection.
-                    synchronized(target){target.adminLocation();target.close();}
-                    target.output.disconnect();
-                }else if(method==27){requireAdminReady();if(location.scene()==scene)throw new IOException("That knight is already in this scene");adminTravel(location);}
-                else {if(target==this)throw new IOException("You are already here");var own=adminLocation();requireAdminReady();if(location.scene()==own.scene())throw new IOException("That knight is already in this scene");target.adminTravel(own);}
-            }
-            output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-        }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
-        return true;
-    }
+    boolean adminPeople(SessionDecoder.Invocation request)throws IOException { return adminTools.people(request); }
 
     /** Stock admin service, resolved by the client from the bootstrap; every call is authorized here. */
-    synchronized void admin(SessionDecoder.Invocation request) throws IOException {
-        if(request.service()!=SessionCodec.ADMIN_SERVICE||request.oid()!=SessionCodec.INVOCATION_OID)return;
-        var args=request.arguments();
-        SessionDecoder.Listener listener=args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener last)?null:last;
-        String failure=null;
-        int method=request.method();
-        if(method!=1&&method!=5&&method!=17&&method!=44&&method!=7&&method!=8&&method!=41&&method!=42&&method!=23&&method!=45&&method!=46&&method!=47&&method!=49) {
-            // Unknown tools must not leave the stock dashboard waiting for a callback.
-            String reason=roles.gameMaster()?"Placeholder: this admin tool is not implemented yet":"Game Master permission required";
-            if(listener!=null){short id=listener.requestId();output.send(()->codec.invocationFailure(oid,id,reason));}
-            else unavailable(reason);
-            return;
-        }
-        if(listener==null||!listener.type().equals(org.tortodrone.core.WireTypes.LISTENER_PREFIX+(method==23?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid admin listener");
-        if(method==1||method==5) {
-            if(args.size()!=(method==1?3:2)||!(args.getFirst() instanceof Integer slot)||method==1&&!(args.get(1) instanceof String))throw new SessionDecoder.Rejected("Invalid accessory admin request");
-            try {
-                requireAdminReady();
-                if(trade.active())throw new IOException("Finish the trade first");
-                var result=characters.town(scenes.town()).adminAccessory(characters.accountId(),knight.id(),authRevision,slot,method==1?(String)args.get(1):null,knight.costume());
-                townChanged(result);output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
-            return;
-        }
-        if(method==17||method==44) {
-            if(args.size()!=(method==17?2:3)||!(args.getFirst() instanceof Integer)||method==44&&!(args.get(1) instanceof Integer))throw new SessionDecoder.Rejected("Invalid progress admin request");
-            try {
-                if(closed||!selected())throw new IOException("Select a knight first");
-                if(!roles.gameMaster())throw new IOException("Game Master permission required");
-                if(trade.active())throw new IOException("Finish the trade first");
-                var result=characters.town(scenes.town()).adminProgress(characters.accountId(),knight.id(),authRevision,method,args);
-                townChanged(result);if(method==44)output.send(()->codec.knightProgress(oid,profile));
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
-            return;
-        }
-        if(method==41||method==42||method==23){
-            if(args.size()!=3||!(args.getFirst() instanceof Integer)||!(method==41?args.get(1) instanceof Float:args.get(1) instanceof Integer))throw new SessionDecoder.Rejected("Invalid gear admin request");
-            try{
-                if(closed||!selected())throw new IOException("Select a knight first");if(!roles.gameMaster())throw new IOException("Game Master permission required");
-                if(trade.active())throw new IOException("Finish the trade first");
-                var result=characters.town(scenes.town()).adminGear(characters.accountId(),knight.id(),authRevision,method,args);townChanged(result);
-                if(method==23)output.send(()->codec.townResult(oid,listener.requestId(),result.result(),profile));else output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return;
-        }
-        if(method==49){
-            // Stock ActorSpawner and /spawn both call ProjectXAdminMarshaller.b(ConfigReference,
-            // callback), id 49 in the installed build. The argument is a config reference only.
-            if(args.size()!=2||!(args.getFirst() instanceof org.tortodrone.core.wire.ConfigReference reference))throw new SessionDecoder.Rejected("Invalid monster spawn request");
-            try{
-                requireAdminReady();
-                characters.town(scenes.town()).requireGameMaster(characters.accountId(),authRevision);
-                var location=adminLocation();
-                if(location.scene().map().town())throw new IOException("Monsters can only be spawned in a level scene");
-                int count=1;float radius=0;
-                for(var entry:reference.arguments().entrySet()){
-                    if(!Set.of("count","radius").contains(entry.getKey()))
-                        throw new IOException("Monster spawn accepts only count and radius");
-                    if(entry.getKey().equals("count"))count=adminInteger(entry.getValue(),"count");
-                    else radius=adminNumber(entry.getValue(),"radius");
-                }
-                location.scene().simulation().spawnMonsters(reference.name(),location.x(),location.y(),location.rotation(),count,radius);
-                log.info("Spawned monster; knightId="+profile.worldId()+"; type="+reference.name()+"; count="+count);
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
-            return;
-        }
-        failure=method==7?createItem(args):adminSprite(method,args);
-        if(failure==null)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-        else {String reason=failure;output.send(()->codec.invocationFailure(oid,listener.requestId(),reason));}
-    }
-
-    private static int adminInteger(Object value,String name)throws IOException{
-        if(!(value instanceof Number number))throw new IOException(name+" must be an integer");
-        double parsed=number.doubleValue();
-        if(!Double.isFinite(parsed)||parsed!=Math.rint(parsed)||parsed<Integer.MIN_VALUE||parsed>Integer.MAX_VALUE)
-            throw new IOException(name+" must be an integer");
-        return (int)parsed;
-    }
-    private static float adminNumber(Object value,String name)throws IOException{
-        if(!(value instanceof Number number))throw new IOException(name+" must be a number");
-        float parsed=number.floatValue();
-        if(!Float.isFinite(parsed))throw new IOException(name+" must be a number");
-        return parsed;
-    }
-
-    private String adminSprite(int method,List<Object> args)throws IOException{
-        boolean valid=switch(method){
-            case 8->args.size()==2&&args.getFirst() instanceof org.tortodrone.core.wire.ConfigReference;
-            case 45->args.size()==2&&args.getFirst() instanceof Integer;
-            case 46->args.size()==4&&args.subList(0,3).stream().allMatch(v->v instanceof Integer);
-            case 47->args.size()==3&&args.subList(0,2).stream().allMatch(v->v instanceof Integer);
-            default->false;
-        };
-        if(!valid)return "Invalid sprite admin request";
-        try{
-            if(closed||!selected())return "Select a knight first";
-            if(!roles.gameMaster())return "Game Master permission required";
-            var result=characters.town(scenes.town()).adminSprite(characters.accountId(),knight.id(),authRevision,method,args);
-            townChanged(result);
-            log.info("Updated battle sprite; knightId="+profile.worldId()+"; adminMethod="+method);
-            return null;
-        }catch(IOException refused){return refused.getMessage();}
-    }
-
-    /** ProjectXAdminMarshaller.createItem(config, quantity, locked, expireDays), stock method seven. */
-    private String createItem(List<Object> args)throws IOException {
-        if(args.size()!=5||!(args.get(0) instanceof org.tortodrone.core.wire.ConfigReference reference)
-                ||reference.name()==null||!(args.get(1) instanceof Integer quantity)
-                ||!(args.get(2) instanceof Boolean locked)||!(args.get(3) instanceof Integer expireDays))
-            return "Invalid item creation request";
-        try {
-            if(!selected())return "Select a knight first";
-            // The stored grant re-checks this account's privileges in the same transaction.
-            if(!roles.gameMaster())return "Game Master permission required";
-            if(quantity<1||quantity>ItemCatalog.GRANT_LIMIT)
-                return "Quantity must be between 1 and "+ItemCatalog.GRANT_LIMIT;
-            if(expireDays<0||expireDays>3650)return "Expiry must be between 0 and 3650 days";
-            var entry=characters.catalog().require(reference.name());
-            try{characters.worldProfile(knight.name(),authRevision);}
-            catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-            var before=visibleProfile();
-            profile=characters.createItem(knight.name(),entry.config(),quantity,authRevision,locked,expireDays);
-            var after=visibleProfile();output.send(()->codec.itemChanges(oid,knight,before,after));
-            log.info("Created "+quantity+" x "+entry.displayName()+"; knightId="+profile.worldId()+"; config="+entry.config());
-            return null;
-        }catch(IOException refused){return refused.getMessage();}
-    }
+    synchronized void admin(SessionDecoder.Invocation request) throws IOException { adminTools.dispatch(request); }
 
     private void equip(List<Object> args) throws IOException {
         if (args.size() != 4 || !(args.get(0) instanceof Long item)
