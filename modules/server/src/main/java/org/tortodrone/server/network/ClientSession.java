@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.wire.SteamFriend;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.core.world.SceneChat;
@@ -245,10 +246,13 @@ final class ClientSession {
                     || !(args.get(2) instanceof String) || !(args.get(3) instanceof String)
                     || !optionalString(args.get(4)) || !optionalString(args.get(5)) || !(args.get(6) instanceof String)
                     || !(args.get(7) instanceof Integer) || !enumeration(args.get(8), "KnightHeight")
-                    || !enumeration(args.get(9), "EyeType") || args.get(10) != null
-                    || !(args.get(11) instanceof List<?> friends) || !friends.isEmpty() || args.get(12) != null) {
+                    || !enumeration(args.get(9), "EyeType") || !optionalString(args.get(10))
+                    || !(args.get(11) instanceof List<?> friends) || !friends.stream().allMatch(SteamFriend.class::isInstance)
+                    || !optionalString(args.get(12))) {
                 failure = "Invalid character save request";
             } else {
+                // Steam persona, friend hints and SteamID are advisory client reports. Accounts
+                // stay username/password and creation must not depend on the player's Steam list.
                 try {
                     Knight choices = new Knight(0, (String) args.get(1), (String) args.get(2), (String) args.get(3),
                         (String) args.get(4), (String) args.get(5), (String) args.get(6), (Integer) args.get(7),

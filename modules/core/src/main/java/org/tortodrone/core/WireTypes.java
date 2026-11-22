@@ -15,6 +15,7 @@ public final class WireTypes {
     public static final String DOBJ_PREFIX = "com.threerings.presents.dobj.";
     // presents streaming machinery
     public static final String ARRAY_LIST = "com.threerings.util.StreamableArrayList";
+    public static final String STREAMABLE_TUPLE = "com.threerings.util.StreamableTuple";
     public static final String NAME = "com.threerings.util.Name";
     public static final String NAME_ARRAY = "[Lcom.threerings.util.Name;";
     public static final String LISTENER_PREFIX = "com.threerings.presents.data.InvocationMarshaller$";

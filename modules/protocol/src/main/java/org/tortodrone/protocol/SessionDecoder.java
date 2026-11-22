@@ -5,6 +5,7 @@ import org.tortodrone.core.wire.ConfigReference;
 import org.tortodrone.core.wire.EnumValue;
 import org.tortodrone.core.wire.Multiset;
 import org.tortodrone.core.wire.SentMail;
+import org.tortodrone.core.wire.SteamFriend;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -167,6 +168,14 @@ public final class SessionDecoder {
             case "com.threerings.projectx.auction.data.Search$Sort" -> enumeration(in,type,6);
             case "com.threerings.projectx.auction.data.Search" -> auctionSearch(in,depth);
             case "com.threerings.projectx.uplink.data.SentMail" -> sentMail(in,depth);
+            // The native create-knight call streams the player's Steam friend hints as
+            // List<Tuple<Long,String>>. A StreamableTuple field carries its own class record.
+            case WireTypes.STREAMABLE_TUPLE -> {
+                Object id=value(in,depth+1),name=value(in,depth+1);
+                check(id==null||id instanceof Long,"Invalid Steam friend id");
+                check(name==null||name instanceof String,"Invalid Steam friend name");
+                yield new SteamFriend((Long)id,(String)name);
+            }
             case WireTypes.CONFIG_REFERENCE -> configReference(in,depth);
             case "com.threerings.config.ArgumentMap" -> argumentEntries(in,depth);
             case WireTypes.DSET, WireTypes.ARRAY_LIST, "java.util.List", "java.util.Set", "java.util.ArrayList", "java.util.HashSet", "java.util.LinkedHashSet" -> values(in, depth);
@@ -245,14 +254,16 @@ public final class SessionDecoder {
         check(value!=null,"Known string intern mapping");return value;
     }
     private void limit(int depth) throws IOException {
-        check(depth <= 8 && ++nodes <= 512, "Session nesting or element limit exceeded");
+        // 250 native Steam friend hints expand to three values each inside the create call.
+        check(depth <= 8 && ++nodes <= 1024, "Session nesting or element limit exceeded");
     }
     private static EnumValue enumeration(DataInputStream in, String type, int count) throws IOException {
         int ordinal = in.readUnsignedByte(); check(ordinal < count, "Invalid enum ordinal");
         return new EnumValue(type, ordinal);
     }
     private static int count(DataInputStream in) throws IOException {
-        int size = in.readInt(); check(size >= 0 && size <= 128, "Invalid collection length"); return size;
+        // The native create-knight call allows up to 250 Steam friend hints.
+        int size = in.readInt(); check(size >= 0 && size <= 256, "Invalid collection length"); return size;
     }
     private static String string(DataInputStream in) throws IOException {
         return present(in) ? in.readUTF() : null;

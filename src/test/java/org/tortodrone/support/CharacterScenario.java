@@ -3,6 +3,7 @@ package org.tortodrone.support;
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
+import org.tortodrone.core.WireTypes;
 import org.tortodrone.core.character.Knight;
 
 /** Creation, saved roster, and failure callback checks reusable across server restarts. */
@@ -11,7 +12,7 @@ public final class CharacterScenario {
         TestWire.Writer writer = new TestWire.Writer(TestWire.NET + "SecureRequest", TestWire.NET + "PublicKeyCredentials",
             "[Ljava.lang.String;", TestWire.NET + "AESAuthRequest");
         if (create) {
-            creation(peer, writer, "Saved-Knight", null, (short) 41);
+            creation(peer, writer, "Saved-Knight", null, (short) 41, true);
             DataInputStream update = event(peer, wire, oid, "AttributeChangedEvent");
             TestWire.check(TestWire.string(update).equals("availableKnights"), "roster update field");
             roster(wire.object(update)); TestWire.end(update);
@@ -130,6 +131,11 @@ public final class CharacterScenario {
     }
 
     private static void creation(Socket peer, TestWire.Writer writer, String name, String oldName, short callback) throws IOException {
+        creation(peer, writer, name, oldName, callback, false);
+    }
+
+    private static void creation(Socket peer, TestWire.Writer writer, String name, String oldName, short callback,
+            boolean steam) throws IOException {
         writer.send(peer.getOutputStream(), out -> {
             invocation(writer, out, 5, 14);
             if (oldName == null) out.writeShort(0); else { writer.type(out, "com.threerings.util.Name"); string(out, oldName); }
@@ -139,7 +145,16 @@ public final class CharacterScenario {
             writer.type(out, "java.lang.Integer"); out.writeInt(1);
             writer.type(out, "com.threerings.projectx.data.ProjectXCodes$KnightHeight"); out.writeByte(2);
             writer.type(out, "com.threerings.projectx.data.ProjectXCodes$EyeType"); out.writeByte(0);
-            out.writeShort(0); writer.type(out, "java.util.List"); out.writeInt(0); out.writeShort(0);
+            if (steam) { writer.type(out, "java.lang.String"); out.writeUTF("SteamPersona"); } else out.writeShort(0);
+            writer.type(out, "java.util.List"); out.writeInt(steam ? 1 : 0);
+            if (steam) {
+                // The native Steam-enabled creator streams its friend hints as
+                // List<Tuple<Long,String>>; each tuple field carries its own class record.
+                writer.type(out, WireTypes.STREAMABLE_TUPLE);
+                writer.type(out, "java.lang.Long"); out.writeLong(76561198000000000L);
+                writer.type(out, "java.lang.String"); out.writeUTF("SteamFriend");
+            }
+            if (steam) { writer.type(out, "java.lang.String"); out.writeUTF("76561198000000000"); } else out.writeShort(0);
             writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(callback);
         });
     }
