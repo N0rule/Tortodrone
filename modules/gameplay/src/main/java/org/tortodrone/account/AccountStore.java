@@ -63,7 +63,12 @@ public final class AccountStore implements AutoCloseable {
             return database.administrativeEquipment(username,knight,account,world,revision,itemId,slot,grant,catalog,town);
         }
     }
-    public Database.WorldState knightState(String username,String knight)throws IOException {validateUsername(username);if(database==null)throw new IOException("Knight inspection requires SQLite storage");return database.knightState(username,knight);}
+    /** Domain view of one stored knight row; the storage record stays inside the facade. */
+    public org.tortodrone.character.WorldSummary knightState(String username,String knight)throws IOException {
+        validateUsername(username);if(database==null)throw new IOException("Knight inspection requires SQLite storage");
+        var state=database.knightState(username,knight);
+        return new org.tortodrone.character.WorldSummary(state.accountId(),state.knightId(),state.worldId(),state.name(),state.revision(),state.authRevision(),state.gameMaster());
+    }
     /** Process-wide storage counters for the admin status view; observation only. */
     public Database.StorageMetrics storageMetrics()throws IOException {if(database==null)throw new IOException("Storage metrics require SQLite storage");return database.storageMetrics();}
     public boolean gameAttached(int account){return sessions.containsKey(account);}
