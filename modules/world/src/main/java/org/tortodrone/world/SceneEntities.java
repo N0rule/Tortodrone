@@ -126,23 +126,23 @@ public final class SceneEntities implements SceneWeapons.Targets {
     List<SceneEntity> candidatesNear(float minX,float minY,float maxX,float maxY){return collisions.candidates(minX,minY,maxX,maxY);}
     void moved(SceneEntity entity){collisions.moved(entity);}
     boolean hasEntity(int id){return entities.containsKey(id);}
-    boolean targetablePlayer(int id){return playerActive.test(id)&&playerTargetable.test(id);}
+    boolean targetablePlayer(int id){return callbacks.targetablePlayer(id);}
     int lastStamp(){return lastStamp;}
     boolean spatialQuery(){return spatialQuery;}
     List<SceneEntity> spatialNear(float minX,float minY,float maxX,float maxY){return collisions.near(minX,minY,maxX,maxY);}
     SceneActions actions(){return actions;}
-    void fireAttack(ActorState actor,FireCatalog.Action action){attack.accept(actor,action);}
+    void fireAttack(ActorState actor,FireCatalog.Action action){callbacks.fireAttack(actor,action);}
     void hurtForCombat(SceneEntity entity,float amount,int stamp,boolean react,boolean major){damageSystem.hurt(entity,amount,stamp,react,major);}
-    void damagePlayer(PlayerHit hit){playerDamage.accept(hit);}
-    boolean startConversationSink(SceneConversation conversation,ActorState source,int stamp,int target){return conversationSink.start(conversation,source,stamp,target);}
-    boolean requestFloorAdvance(ActorState player,ActorState source,int stamp){return floorAdvanceSink.request(player,source,stamp);}
-    boolean applyMemory(ActorState player,KnightMemory operation,ActorState source,int stamp){return memorySink.apply(player,operation,source,stamp);}
-    void fireEffectSink(StarterCatalog.Model config,ActorState source,int stamp){effectSink.fire(config,source,stamp);}
-    boolean applyPawnStatusSink(int actor,SceneActions.PawnStatus operation,int stamp){return pawnStatus.apply(actor,operation,stamp);}
-    void impulsePlayer(int actor,KnightCombat.Impulse impulse){playerImpulse.accept(actor,impulse);}
-    void combatEvent(SceneCombatEvent event){feedback.accept(event);}
+    void damagePlayer(PlayerHit hit){callbacks.damagePlayer(hit);}
+    boolean startConversationSink(SceneConversation conversation,ActorState source,int stamp,int target){return callbacks.startConversation(conversation,source,stamp,target);}
+    boolean requestFloorAdvance(ActorState player,ActorState source,int stamp){return callbacks.requestFloorAdvance(player,source,stamp);}
+    boolean applyMemory(ActorState player,KnightMemory operation,ActorState source,int stamp){return callbacks.applyMemory(player,operation,source,stamp);}
+    void fireEffectSink(StarterCatalog.Model config,ActorState source,int stamp){callbacks.fireEffect(config,source,stamp);}
+    boolean applyPawnStatusSink(int actor,SceneActions.PawnStatus operation,int stamp){return callbacks.applyPawnStatus(actor,operation,stamp);}
+    void impulsePlayer(int actor,KnightCombat.Impulse impulse){callbacks.impulsePlayer(actor,impulse);}
+    void combatEvent(SceneCombatEvent event){callbacks.combatEvent(event);}
     void fireDeathAction(SceneEntity entity,String graph){
-        try{attack.accept(entity.snapshot(),FireCatalog.actionJson(graph));}
+        try{callbacks.fireAttack(entity.snapshot(),FireCatalog.actionJson(graph));}
         catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid prepared monster death action",invalid);}
     }
     boolean lightsOil(Object damage){return pots.lightsOil(damage);}
@@ -151,9 +151,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     void linkLater(SceneEntity target,int stamp,boolean ghost){links.addLast(new Link(target,stamp,ghost));}
     float spatialReach(){return collisions.reach();}
     java.util.Collection<SceneEntity> entityValues(){return entities.values();}
-    boolean activePlayer(int id){return playerActive.test(id);}
-    boolean pickupEligible(int id,SceneContent.Spec spec){return pickupEligible.test(id,spec);}
-    boolean healPlayer(int id,int amount){return playerHeal.test(id,amount);}
+    boolean activePlayer(int id){return callbacks.activePlayer(id);}
+    boolean pickupEligible(int id,SceneContent.Spec spec){return callbacks.pickupEligible(id,spec);}
+    boolean healPlayer(int id,int amount){return callbacks.healPlayer(id,amount);}
     /** Interactive props, doors and lifts are the only entities an interaction scan reads. */
     private final ArrayDeque<SceneEntity> pendingActors=new ArrayDeque<>();
     private record SpawnSource(SceneEntities scene,int id,int faction,String identity) { }
@@ -174,45 +174,23 @@ public final class SceneEntities implements SceneWeapons.Targets {
         public PlayerHit(int actor,Object damage,int timestamp,int source,float multiplier){this(actor,damage,timestamp,source,multiplier,null);}
         public PlayerHit(int actor,Object damage,int timestamp,int source){this(actor,damage,timestamp,source,1);}
     }
-    private java.util.function.Consumer<PlayerHit> playerDamage=hit->{};
-    public void playerDamage(java.util.function.BiConsumer<Integer,Object> damage){Objects.requireNonNull(damage);playerDamage=hit->damage.accept(hit.actor(),hit.damage());}
-    public void playerHits(java.util.function.Consumer<PlayerHit> damage){playerDamage=Objects.requireNonNull(damage);}
-    private java.util.function.Consumer<SceneCombatEvent> feedback=event->{};
-    public void feedback(java.util.function.Consumer<SceneCombatEvent> value){feedback=Objects.requireNonNull(value);}
-    private java.util.function.BiPredicate<Integer,Integer> playerHeal=(actor,amount)->false;
-    public void playerHeal(java.util.function.BiPredicate<Integer,Integer> heal){playerHeal=Objects.requireNonNull(heal);}
-    private java.util.function.IntPredicate playerActive=id->true;
-    public void playerActive(java.util.function.IntPredicate predicate){playerActive=Objects.requireNonNull(predicate);}
-    private java.util.function.BiPredicate<Integer,SceneContent.Spec> pickupEligible=(id,spec)->true;
-    public void pickupEligible(java.util.function.BiPredicate<Integer,SceneContent.Spec> predicate){pickupEligible=Objects.requireNonNull(predicate);}
-    private java.util.function.IntPredicate playerTargetable=id->true;
-    public void playerTargetable(java.util.function.IntPredicate predicate){playerTargetable=Objects.requireNonNull(predicate);}
-    private java.util.function.BiConsumer<Integer,KnightCombat.Impulse> playerImpulse=(id,impulse)->{};
-    public void playerImpulse(java.util.function.BiConsumer<Integer,KnightCombat.Impulse> callback){playerImpulse=Objects.requireNonNull(callback);}
-    private java.util.function.BiConsumer<ActorState,FireCatalog.Action> attack=(actor,action)->{};
-    public void attacks(java.util.function.BiConsumer<ActorState,FireCatalog.Action> fire){attack=Objects.requireNonNull(fire);}
-    @FunctionalInterface public interface PawnStatusSink { boolean apply(int actor,SceneActions.PawnStatus operation,int stamp); }
-    private PawnStatusSink pawnStatus=(actor,operation,stamp)->false;
-    public void pawnStatuses(PawnStatusSink sink){pawnStatus=Objects.requireNonNull(sink);}
-    @FunctionalInterface public interface ConversationSink { boolean start(SceneConversation conversation,ActorState source,int stamp,int target); }
-    private ConversationSink conversationSink=(conversation,source,stamp,target)->false;
-    public void conversations(ConversationSink sink){conversationSink=Objects.requireNonNull(sink);}
-    @FunctionalInterface public interface DialogClearSink {boolean clear(int target,int stamp);}
-    private DialogClearSink dialogClearSink=(target,stamp)->false;
-    public void dialogClears(DialogClearSink sink){dialogClearSink=Objects.requireNonNull(sink);}
-    @FunctionalInterface public interface EffectSink { void fire(org.tortodrone.core.character.StarterCatalog.Model config,ActorState source,int stamp); }
-    private EffectSink effectSink=(config,source,stamp)->{};
-    public void effects(EffectSink sink){effectSink=Objects.requireNonNull(sink);}
-    /** Simulation-only request sink. Never perform storage or network work in this callback. */
-    @FunctionalInterface public interface FloorAdvanceSink { boolean request(ActorState player,ActorState source,int stamp); }
-    private FloorAdvanceSink floorAdvanceSink=(player,source,stamp)->false;
-    public void floorAdvances(FloorAdvanceSink sink){floorAdvanceSink=Objects.requireNonNull(sink);}
-    @FunctionalInterface public interface MemorySink {boolean apply(ActorState player,org.tortodrone.core.character.KnightMemory operation,ActorState source,int stamp);}
-    private MemorySink memorySink=(player,operation,source,stamp)->false;
-    public void memories(MemorySink sink){memorySink=Objects.requireNonNull(sink);}
-    @FunctionalInterface public interface ObjectiveSink {boolean apply(ActorState player,org.tortodrone.core.character.KnightObjective operation,ActorState source,int stamp);}
-    private ObjectiveSink objectiveSink=(player,operation,source,stamp)->false;
-    public void objectives(ObjectiveSink sink){objectiveSink=Objects.requireNonNull(sink);}
+    private final SceneCallbacks callbacks=new SceneCallbacks();
+    public void playerDamage(java.util.function.BiConsumer<Integer,Object> damage){callbacks.playerDamage(damage);}
+    public void playerHits(java.util.function.Consumer<PlayerHit> damage){callbacks.playerHits(damage);}
+    public void feedback(java.util.function.Consumer<SceneCombatEvent> value){callbacks.feedback(value);}
+    public void playerHeal(java.util.function.BiPredicate<Integer,Integer> heal){callbacks.playerHeal(heal);}
+    public void playerActive(java.util.function.IntPredicate predicate){callbacks.playerActive(predicate);}
+    public void pickupEligible(java.util.function.BiPredicate<Integer,SceneContent.Spec> predicate){callbacks.pickupEligible(predicate);}
+    public void playerTargetable(java.util.function.IntPredicate predicate){callbacks.playerTargetable(predicate);}
+    public void playerImpulse(java.util.function.BiConsumer<Integer,KnightCombat.Impulse> callback){callbacks.playerImpulse(callback);}
+    public void attacks(java.util.function.BiConsumer<ActorState,FireCatalog.Action> fire){callbacks.attacks(fire);}
+    public void pawnStatuses(SceneCallbacks.PawnStatusSink sink){callbacks.pawnStatuses(sink);}
+    public void conversations(SceneCallbacks.ConversationSink sink){callbacks.conversations(sink);}
+    public void dialogClears(SceneCallbacks.DialogClearSink sink){callbacks.dialogClears(sink);}
+    public void effects(SceneCallbacks.EffectSink sink){callbacks.effects(sink);}
+    public void floorAdvances(SceneCallbacks.FloorAdvanceSink sink){callbacks.floorAdvances(sink);}
+    public void memories(SceneCallbacks.MemorySink sink){callbacks.memories(sink);}
+    public void objectives(SceneCallbacks.ObjectiveSink sink){callbacks.objectives(sink);}
     private List<ActorState> players=List.of();
     public SceneEntities(SceneContent content,CollisionMap terrain){
         this(content,terrain,SceneCollision.empty());
@@ -262,14 +240,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
         actions.dialogClears((only,time,source,activator)->{
             if(logic.scriptSource(source,time)==null)return false;
             int target=0;
-            if(only){var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&playerActive.test(p.id())).findFirst().orElse(null);if(player==null)return true;target=player.id();}
-            return dialogClearSink.clear(target,time);
+            if(only){var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&callbacks.activePlayer(p.id())).findFirst().orElse(null);if(player==null)return true;target=player.id();}
+            return callbacks.clearDialog(target,time);
         });
         actions.gameplayEffects(logic::gameplayEffect);
         actions.impulses((operation,time,source)->{var origin=logic.scriptSource(source,time);if(origin==null)return false;impulse(operation.config(),origin.x(),origin.y(),origin.rotation(),time,0);return true;});
         actions.objectives((operation,time,source,activator)->{
-            var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&playerActive.test(p.id())).findFirst().orElse(null);var origin=logic.scriptSource(source,time);
-            return player!=null&&origin!=null&&objectiveSink.apply(player,operation,origin,time);
+            var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&callbacks.activePlayer(p.id())).findFirst().orElse(null);var origin=logic.scriptSource(source,time);
+            return player!=null&&origin!=null&&callbacks.applyObjective(player,operation,origin,time);
         });
         boolean startup=false;
         for(var entry:content.entries())if(entry.spec().flag("scene-startup",false)){startup=true;actions.signal(entry.spec().text("watch-tag",""),"startup",stamp,"entry:"+entry.key());}
