@@ -438,8 +438,8 @@ content/
     achievements/        README only
   _internal/
     default-source.properties
-    fires.json
-    pet-fires.json
+    fires.json.gz
+    pet-fires.json.gz
     item-bindings.json
     item-actions.json
     item-use.json

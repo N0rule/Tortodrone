@@ -417,12 +417,19 @@ noncontiguous/duplicate steps report the file → item → stage → field.
 | `defendingSpeed` | Defending movement multiplier is 1 + equipped gear sum; omitted shield values inherit its defendingSpeedAdjustment; selected weapon modifier is excluded | fraction | shield adjustment for shields; 0 otherwise | -1000.0…1000.0 | modifiers per weapon class |
 
 Damage, damage types, status effects, projectile graphs and detonation behavior
-remain internal in `_internal/fires.json`. `FireCatalog` retains typed compound,
-depth-scaled and delayed actions; `SceneWeapons` schedules those graphs, while
+remain internal in the gzip-compressed `_internal/fires.json.gz` (pet graphs in
+`_internal/pet-fires.json.gz`). `FireCatalog` reads both plain `.json` exports and
+compressed deployment files, and retains typed compound, depth-scaled and delayed
+actions; `SceneWeapons` schedules those graphs, while
 `SceneDamage` resolves their types/scales/statuses. A universal `damage` value
 cannot safely describe those graphs. No decorative damage control or multiplier
 is accepted. Editing timing changes the existing action/effect schedule; it does
 not claim to replace every native animation or implement missing game logic.
+Regenerate a plain `fires.json` with `scripts/StockTools.java fires`, review it,
+then run `java -cp build/tortodrone.jar scripts/StockTools.java fire-compact
+plain.json content/_internal/fires.json.gz`; the same command compacts
+`pet-fires.json`. The loader accepts both forms, but only compressed graphs are
+committed.
 
 The Fiery and Static Diskguns deliberately deviate on the server. Their stock
 Fire 3 / Shock 3 damage, charge timing and item controls are unchanged, but the

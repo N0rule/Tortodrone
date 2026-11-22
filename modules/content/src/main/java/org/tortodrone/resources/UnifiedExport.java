@@ -27,9 +27,10 @@ final class UnifiedExport {
         if(catalogue!=null){copy(catalogue,content.resolve("monsters"));report.add("Copied the generated monster catalogue from "+catalogue);}
         // Keep machine fire/action graphs intact; YAML never pretends to replace engine behavior.
         for(String key:List.of("fires","pet-fires")) {
+            Path targetFile=internal.resolve(key+".json.gz");
             var resource=registry.resources().get(key);
-            if(resource!=null)Files.copy(resource.path(),internal.resolve(key+".json"));
-            else if(key.equals("pet-fires")){FireCatalog.write(internal.resolve(key+".json"),List.of(),Map.of());}
+            if(resource!=null)gzip(resource.path(),targetFile);
+            else if(key.equals("pet-fires")){FireCatalog.writeCompressed(targetFile,List.of(),Map.of());}
         }
         exportItems(registry,content);
         var town=registry.resources().containsKey("town")?map(Json.parse(Files.readString(registry.resources().get("town").path())),"town"):new LinkedHashMap<String,Object>();
@@ -199,6 +200,13 @@ final class UnifiedExport {
     @SuppressWarnings("unchecked")private static Map<String,Object> mapUnchecked(Object v){return (Map<String,Object>)v;}
     private static Properties readProperties(Path file)throws IOException {ContentFiles.regular(file);int limit=file.getFileName().toString().equals("content.properties")?org.tortodrone.core.world.SceneContent.MAX_BYTES:4_000_000;if(Files.size(file)>limit)throw new IOException("Scene content exceeds size limit");var p=new Properties();try(var in=Files.newInputStream(file)){p.load(in);}return p;}
     public static void store(Path file,Properties values)throws IOException {Files.createDirectories(file.getParent());var out=new ByteArrayOutputStream();values.store(out,null);var lines=out.toString(java.nio.charset.StandardCharsets.ISO_8859_1).lines().filter(line->!line.startsWith("#")).sorted().toList();Files.writeString(file,String.join("\n",lines)+"\n",java.nio.charset.StandardCharsets.ISO_8859_1,StandardOpenOption.CREATE_NEW);}
+    private static void gzip(Path source,Path target)throws IOException {
+        ContentFiles.regular(source);
+        try(var input=Files.newInputStream(source);
+            var output=new java.util.zip.GZIPOutputStream(Files.newOutputStream(target,java.nio.file.StandardOpenOption.CREATE_NEW))) {
+            input.transferTo(output);
+        }
+    }
     private static void copy(Path source,Path target)throws IOException {
         ContentFiles.safe(source);
         try(var paths=Files.walk(source)){for(Path path:paths.sorted().toList()){Path out=target.resolve(source.relativize(path));

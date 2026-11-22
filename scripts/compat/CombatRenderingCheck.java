@@ -2160,7 +2160,7 @@ public final class CombatRenderingCheck {
     }
     private Actor viewPawn(){return authoritative.get(app.CZ().pawnId);}
     private void loadNeedleHeadings()throws Exception{
-        for(var attack:FireCatalog.load(Path.of("content/_internal/fires.json")).entries())if(attack.weaponConfig().equals(NEEDLE)){
+        for(var attack:FireCatalog.load(Path.of("content/_internal/fires.json.gz")).entries())if(attack.weaponConfig().equals(NEEDLE)){
             var headings=new ArrayList<Heading>();for(var fire:attack.fireRefs())collectNeedleHeadings(fire.action(),headings);
             needleHeadings.put(attack.activity(),List.copyOf(headings));
         }

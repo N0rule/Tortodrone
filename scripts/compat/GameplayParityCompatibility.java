@@ -26,7 +26,7 @@ public final class GameplayParityCompatibility {
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
         resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
-        var fires=FireCatalog.load(Path.of("content/_internal/fires.json"));
+        var fires=FireCatalog.load(Path.of("content/_internal/fires.json.gz"));
         var weapon=(ItemConfig.Weapon)manager.a(ItemConfig.class,new ConfigReference<ItemConfig>("Weapon/Sword/The Ban Stick")).w(manager);
         var charged=(DamageConfig.Normal)weapon.chargedAttack.ld().get("Damage");
         check(charged.amount==9999&&charged.flags==3,"actual Ban Stick item binds player-inclusive heavy damage");
@@ -35,7 +35,7 @@ public final class GameplayParityCompatibility {
         for(int activity:new int[]{292,293,294})for(var fire:fires.find("Weapon/Sword/The Ban Stick",activity).fireRefs())
             check(SceneDamage.number(fire.action().config().arguments().get("damage"),"flags",0)==2,"normal swings retain monster-only damage");
 
-        var petFires=FireCatalog.load(Path.of("content/_internal/pet-fires.json"));int skills=0;
+        var petFires=FireCatalog.load(Path.of("content/_internal/pet-fires.json.gz"));int skills=0;
         for(String suffix:List.of("",", Ultimate A",", Ultimate B"))for(int power=0;power<4;power++){
             String name="Sprite/Maskeraith/Caustic Quills"+suffix;
             var ref=new ConfigReference<AttackConfig>(name);ref.ld().put("Power1","0");ref.ld().put("Power2",Integer.toString(power));

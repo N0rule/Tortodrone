@@ -27,7 +27,7 @@
         "combat": "content/shared/combat.yml#properties.gear.celestial_orbitgun_old",
         "progression": "content/town/progression.yml#config=celestial_orbitgun_old",
         "presentation": "content/shared/presentation.yml#items.Weapon/Handgun/Celestial Orbitgun (OLD)",
-        "fires": "content/_internal/fires.json#weapon=Weapon/Handgun/Celestial Orbitgun (OLD)"
+        "fires": "content/_internal/fires.json.gz#weapon=Weapon/Handgun/Celestial Orbitgun (OLD)"
       }
     },
     {
@@ -53,7 +53,7 @@
         "combat": "content/shared/combat.yml#properties.gear.fiery_diskgun",
         "progression": "content/town/progression.yml#config=fiery_diskgun",
         "presentation": "content/shared/presentation.yml#items.Weapon/Handgun/Fiery Diskgun",
-        "fires": "content/_internal/fires.json#weapon=Weapon/Handgun/Fiery Diskgun"
+        "fires": "content/_internal/fires.json.gz#weapon=Weapon/Handgun/Fiery Diskgun"
       }
     },
     {
@@ -79,7 +79,7 @@
         "combat": "content/shared/combat.yml#properties.gear.overcharged_mixmaster_old",
         "progression": "content/town/progression.yml#config=overcharged_mixmaster_old",
         "presentation": "content/shared/presentation.yml#items.Weapon/Handgun/Overcharged Mixmaster (OLD)",
-        "fires": "content/_internal/fires.json#weapon=Weapon/Handgun/Overcharged Mixmaster (OLD)"
+        "fires": "content/_internal/fires.json.gz#weapon=Weapon/Handgun/Overcharged Mixmaster (OLD)"
       }
     },
     {
@@ -105,7 +105,7 @@
         "combat": "content/shared/combat.yml#properties.gear.static_diskgun",
         "progression": "content/town/progression.yml#config=static_diskgun",
         "presentation": "content/shared/presentation.yml#items.Weapon/Handgun/Static Diskgun",
-        "fires": "content/_internal/fires.json#weapon=Weapon/Handgun/Static Diskgun"
+        "fires": "content/_internal/fires.json.gz#weapon=Weapon/Handgun/Static Diskgun"
       }
     },
     {
@@ -130,7 +130,7 @@
         "combat": "content/shared/combat.yml#properties.gear.amputator_calibur",
         "progression": "content/town/progression.yml#config=amputator_calibur",
         "presentation": "content/shared/presentation.yml#items.Weapon/Sword/Amputator (Calibur)",
-        "fires": "content/_internal/fires.json#weapon=Weapon/Sword/Amputator (Calibur)"
+        "fires": "content/_internal/fires.json.gz#weapon=Weapon/Sword/Amputator (Calibur)"
       }
     }
   ],

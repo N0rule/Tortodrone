@@ -51,8 +51,8 @@ public final class ContentManager {
             int dodge=0;Path combat=root.resolve("config/combat.yml");
             if(Files.exists(combat)){var c=Yaml.read(combat);Yaml.fields(c,combat.toString(),"dodgeCooldownMs");dodge=Yaml.integer(c.get("dodgeCooldownMs"),"dodgeCooldownMs");}
             var definitions=ItemYaml.read(content.resolve("items"),dodge);
-            var fires=FireCatalog.load(content.resolve("_internal/fires.json"));
-            var pet=FireCatalog.load(content.resolve("_internal/pet-fires.json"));
+            var fires=FireCatalog.load(content.resolve("_internal/fires.json.gz"));
+            var pet=FireCatalog.load(content.resolve("_internal/pet-fires.json.gz"));
             var boxes=org.tortodrone.resources.BoxCatalog.load(content,definitions.items());
             var news=NewsYaml.load(content.resolve("shared/news"));
             var townData=TownYaml.data(content.resolve("town"),definitions.items());TownYaml.references(townData,definitions.items());

@@ -6,8 +6,15 @@ import java.util.concurrent.TimeUnit;
 /** Read-only installed-client exporters/checks, with disposable home/preferences and Java 25 compilation. */
 public final class StockTools {
     public static void main(String[] args) throws Exception {
-        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|item-use|scene|monster-roster|monster-catalog|haven|town|town-check|recipes|craft-check game-directory [arguments]");
+        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|fire-compact|equipment|item-use|scene|monster-roster|monster-catalog|haven|town|town-check|recipes|craft-check game-directory [arguments]");
         Path project = Path.of("").toAbsolutePath();
+        if(args[0].equals("fire-compact")) {
+            if(args.length!=3)throw new IllegalArgumentException("fire-compact expects plain-json compressed-json.gz; no game install needed");
+            var catalog=org.tortodrone.core.world.FireCatalog.load(Path.of(args[1]));
+            org.tortodrone.core.world.FireCatalog.writeCompressed(Path.of(args[2]),catalog.entries(),catalog.unsupportedTypes());
+            System.out.println("PASS: compacted "+catalog.entries().size()+" fire entries into "+args[2]);
+            return;
+        }
         Path game = args[1].equals("-")
             ? org.tortodrone.server.SteamClientLocator.find(org.tortodrone.server.SteamClientLocator.roots(
                 Path.of(System.getProperty("user.home")), System.getProperty("os.name"), System.getenv()))
@@ -177,7 +184,7 @@ public final class StockTools {
             }
             case "fire-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("fire-check expects game-directory");fixture="FireCompatibility";
-                fixtureArgs.clear();fixtureArgs.add(project.resolve("content/_internal/fires.json").toString());
+                fixtureArgs.clear();fixtureArgs.add(project.resolve("content/_internal/fires.json.gz").toString());
             }
             case "weapons" -> {
                 if(args.length!=3)throw new IllegalArgumentException("weapons expects game-directory fresh-output-directory");
