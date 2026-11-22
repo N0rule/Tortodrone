@@ -63,6 +63,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final DamageSystem damageSystem=new DamageSystem(this);
     private final SceneLogic logic=new SceneLogic(this);
     private final LiftSystem lifts=new LiftSystem(this);
+    private final SceneSpawns spawns=new SceneSpawns(this);
     public void elevators(ElevatorControl control){elevatorSystem.control(control);}
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
@@ -130,20 +131,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
         org.tortodrone.core.world.ItemUseRules.validate(spec);
     }
     /** Spawn the static prop authored by a native actor-item use. */
-    public int spawnItemActor(ActorState player,SceneContent.Spec actor,int stamp){
-        if(entities.size()+pendingActors.size()>=4096)return 0;
-        var spec=new SceneContent.Spec(new TreeMap<>(actor.fields()));
-        var binding=new SceneContent.Entry("item:"+nextId,player.x(),player.y(),player.rotation(),spec);
-        var entity=spawn(binding,spec,null,stamp);entity.faction=0;return entity.id;
-    }
-    /** Create and carry the lift authored by a native lift-item use. */
-    public int liftItem(ActorState player,SceneContent.Spec lift,int stamp){
-        if(entities.size()+pendingActors.size()>=4096)return 0;
-        var binding=new SceneContent.Entry("item:"+nextId,player.x(),player.y(),player.rotation(),lift);
-        var entity=spawn(binding,lift,null,stamp);
-        if(!carry(entity.id,player,stamp)){unlink(entity);return 0;}return entity.id;
-    }
-    /** Reclaim an item entity whose payment transaction was refused. */
+    public int spawnItemActor(ActorState player,SceneContent.Spec actor,int stamp){return spawns.itemActor(player,actor,stamp);}
+    public int liftItem(ActorState player,SceneContent.Spec lift,int stamp){return spawns.liftItem(player,lift,stamp);}
+    public void soloRewards(boolean value){spawns.soloRewards(value);}
+    private void generate(SceneEntity pad,int stamp){spawns.generate(pad,stamp);}
     public void discard(int id){var entity=entities.get(id);if(entity!=null)unlink(entity);}
     /** Native collision bit 1 << 13 ("lift" in the 2026 mask.properties registry): the served
      *  Lift Barriers state exactly this bit, and the 2026 lift base adds it to thrown and
@@ -212,7 +203,6 @@ public final class SceneEntities implements SceneWeapons.Targets {
     boolean healPlayer(int id,int amount){return playerHeal.test(id,amount);}
     /** Interactive props, doors and lifts are the only entities an interaction scan reads. */
     private final ArrayDeque<SceneEntity> pendingActors=new ArrayDeque<>();
-    private int sceneSpawnStamp,sceneSpawnCount;
     private record SpawnSource(SceneEntities scene,int id,int faction,String identity) { }
     private final Map<SceneEntity,List<SceneEntity>> arsenalProps=new LinkedHashMap<>();
     private int nextId=1_000_000_000,lastStamp;
@@ -298,7 +288,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
             }else spawn(binding,binding.spec(),null,stamp);
         }
-        actions=new SceneActions(rules,logic::signalSink,random,logic::destroyTagged,this::spawnScripted,logic::applyPawnStatuses,logic::startConversation,logic::sourceEffect,logic::nextFloor,logic::setMemory);
+        actions=new SceneActions(rules,logic::signalSink,random,logic::destroyTagged,spawns::scripted,logic::applyPawnStatuses,logic::startConversation,logic::sourceEffect,logic::nextFloor,logic::setMemory);
         actions.nearestSignals(logic::nearestSignal);
         actions.targets(logic::variableTargets);
         actions.sourceSignals(logic::sourceSignal);
@@ -337,12 +327,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
             arsenalProps.put(zone,entities.values().stream().filter(e->e!=zone&&e.kind.equals("Switch")&&e.binding.key().equals(zone.binding.key())).toList());
     }
     /** Insertion assigns the deterministic order the spatial query returns candidates in. */
-    private void insert(SceneEntity entity){
+    void insert(SceneEntity entity){
         entity.order=++entityOrder;entities.put(entity.id,entity);spatial.add(entity);
         interactions.add(entity);
         if(entity.kind.equals("Monster"))monsterMetrics.spawned();
     }
-    private void unlink(SceneEntity entity){
+    void unlink(SceneEntity entity){
         if(entities.remove(entity.id)!=null&&entity.kind.equals("Monster"))monsterMetrics.despawned();
         interactions.remove(entity);
         spatial.remove(entity);
@@ -357,56 +347,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         return entity;
     }
-    private boolean soloRewards;
-    /** Set for instances that never admit a second member (the private tutorial). */
-    public void soloRewards(boolean value){soloRewards=value;}
-    @Override public boolean spawnPickup(StarterCatalog.Model specification,float x,float y,float rotation,int stamp){
-        if(specification==null||!(specification.arguments().get("fields") instanceof String json)||entities.size()+pendingActors.size()>=4096)return false;
-        try{
-            if(!(org.tortodrone.core.Json.parse(json) instanceof Map<?,?> raw))return false;
-            var fields=new HashMap<String,String>();for(var entry:raw.entrySet()){
-                if(!(entry.getKey() instanceof String key)||!(entry.getValue() instanceof String value))return false;
-                fields.put(key,value);
-            }
-            var spec=new SceneContent.Spec(fields);
-            if(!spec.text("native-type","").equals("com.threerings.projectx.dungeon.data.actor.Pickup"))return false;
-            boolean item=!spec.text("pickup-item","").isBlank(),heat=spec.integer("pickup-heat",0)>0;
-            int heal=spec.integer("pickup-heal",0);
-            if((item?1:0)+(heat?1:0)+(heal>0?1:0)!=1||heal<0||heal>1_000_000)return false;
-            // Native party pickups pay every member. Heat claims already credit the whole
-            // instance; an item/crown claim has one claimant, which is exact only when the
-            // instance can never hold a second member.
-            if(item&&spec.flag("pickup-party",false)&&!soloRewards)return false;
-            spawn(new SceneContent.Entry("loot:"+nextId,x,y,rotation,spec),spec,null,stamp);return true;
-        }catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid prepared loot actor",invalid);}
-    }
-    /** A lifecycle graph may request a prepared entity, never an arbitrary native class.
-     * Stage the actor: death callbacks may run while the damage target set is being iterated. */
-    @Override public Object sceneActorSource(int source){
-        var parent=entities.get(source);return parent==null||!parent.kind.equals("Monster")?null:new SpawnSource(this,source,parent.faction,"actor:"+source);
-    }
-    @Override public boolean spawnSceneActor(String template,float x,float y,float rotation,int stamp,Object source){
-        var spec=content.actorTemplates().get(template);
-        if(spec==null||!(source instanceof SpawnSource parent)||parent.scene()!=this||!entities.containsKey(parent.id())||!Float.isFinite(x)||!Float.isFinite(y)||!Float.isFinite(rotation)
-            ||entities.size()+pendingActors.size()>=4096||nextId==Integer.MAX_VALUE)return false;
-        if(sceneSpawnStamp!=stamp){sceneSpawnStamp=stamp;sceneSpawnCount=0;}
-        if(sceneSpawnCount>=128)return false;
-        var binding=new SceneContent.Entry("spawn:"+nextId,x,y,rotation,spec);
-        var entity=new SceneEntity(nextId,stamp,binding,spec,null,content);entity.faction=parent.faction();entity.scriptSource=parent.identity();
-        if(spec.integer("activate-time",0)>0)entity.activity=3;
-        pendingActors.addLast(entity);nextId++;sceneSpawnCount++;return true;
-    }
-    private void generate(SceneEntity pad,int stamp){
-        var damage=pad.spec.model("generated-damage");
-        boolean blocked=false;
-        if(damage!=null&&damage.arguments().get("value") instanceof FireCatalog.DataValue){
-            for(var player:players)if(pad.spec.contains(pad.x,pad.y,pad.rotation,player.x(),player.y(),ScenePortals.PAWN_RADIUS)){
-                playerDamage.accept(new PlayerHit(player.id(),damage.arguments().get("value"),stamp,0));blocked=true;
-            }
-        }
-        if(blocked){pad.nextGeneration=stamp+pad.spec.integer("delay",0);return;}
-        spawn(pad.binding,pad.spec.child(),pad,stamp);pad.count++;pad.nextGeneration=0;pad.flags&=~2;
-    }
+    @Override public boolean spawnPickup(StarterCatalog.Model specification,float x,float y,float rotation,int stamp){return spawns.pickup(specification,x,y,rotation,stamp);}
+    @Override public Object sceneActorSource(int source){return spawns.sceneActorSource(source);}
+    @Override public boolean spawnSceneActor(String template,float x,float y,float rotation,int stamp,Object source){return spawns.sceneActor(template,x,y,rotation,stamp,source);}
     // Negative handlers describe placed entry interactions, not additional visible actors.
     public List<ActorState> actors(){return entities.values().stream().filter(e->!e.entrySource()).map(SceneEntity::snapshot).toList();}
     /** Authored native elevator platforms bridge their floor shaft. A pawn body of radius r can
@@ -591,50 +534,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         actions.advance(stamp);
         logic.retainSources(actions);
     }
-    /**
-     * Spawn catalogue-backed monsters for an authorized administrator. The complete request is
-     * validated before insertion, so an unknown/unsupported type, blocked position or room/cap
-     * refusal never leaves a partial group behind. This is the same creation path as scene
-     * placement and waves.
-     */
     public int spawnMonsters(String reference,float x,float y,float rotation,int count,float radius,int stamp)throws java.io.IOException {
-        if(count<1||count>MAX_ALIVE_MONSTERS)
-            throw new java.io.IOException("Count must be between 1 and "+MAX_ALIVE_MONSTERS);
-        if(!Float.isFinite(radius)||radius<0||radius>MAX_ADMIN_SPAWN_RADIUS)
-            throw new java.io.IOException("Radius must be between 0 and "+MAX_ADMIN_SPAWN_RADIUS);
-        if(!Float.isFinite(x)||!Float.isFinite(y)||!Float.isFinite(rotation))
-            throw new java.io.IOException("Invalid monster spawn position");
-        MonsterType type=monsters.resolveSpawnable(reference);
-        int alive=liveMonsters();
-        if(alive+count>MAX_ALIVE_MONSTERS)
-            throw new java.io.IOException("The scene already has "+alive+" live monsters; the limit is "+MAX_ALIVE_MONSTERS);
-        if((long)entities.size()+pendingActors.size()+count>=4096||(long)nextId+count>Integer.MAX_VALUE)
-            throw new java.io.IOException("The scene has no room for new actors");
-        var fields=monsters.fields(type);
-        var points=new ArrayList<ScenePathing.Point>(count);
-        for(int index=0;index<count;index++){
-            float angle=(float)(Math.PI*2*index/count);
-            float px=x+(count==1?0:radius*(float)Math.cos(angle));
-            float py=y+(count==1?0:radius*(float)Math.sin(angle));
-            if(!terrain.walkable(px,py))
-                throw new java.io.IOException("Spawn position is outside walkable terrain");
-            if(!staticCollision.isEmpty()&&(!staticCollision.floorSupported(px,py)
-                    ||staticCollision.penetration(pawnCollisionMask,px,py,ScenePortals.PAWN_RADIUS).present()))
-                throw new java.io.IOException("Spawn position is blocked");
-            points.add(new ScenePathing.Point(px,py));
-        }
-        var created=new ArrayList<SceneEntity>(count);
-        try{
-            for(var point:points){
-                var binding=new SceneContent.Entry("admin:"+nextId,point.x(),point.y(),rotation,new SceneContent.Spec(fields));
-                var entity=spawn(binding,binding.spec(),null,stamp);entity.monsterType=type.id();
-                created.add(entity);
-            }
-        }catch(RuntimeException failed){
-            for(var entity:created)despawn(entity);
-            throw failed;
-        }
-        return created.size();
+        return spawns.monsters(reference,x,y,rotation,count,radius,stamp);
     }
     /** Current scene generation. A wave created for an older generation is dropped, never replayed. */
     public long generation(){return generation;}
@@ -723,33 +624,15 @@ public final class SceneEntities implements SceneWeapons.Targets {
     ActorState entrySource(SceneContent.Entry binding,int stamp){return logic.entrySource(binding,stamp);}
     boolean variable(String name,SceneActions.LogicTarget target,int stamp,String source,String activator){return logic.variable(name,target,stamp,source,activator);}
     int effectSourceCount(){return logic.effectSourceCount();}
+    int nextEntityId(){return nextId;}
+    void nextEntityId(int value){nextId=value;}
+    int entityCount(){return entities.size();}
+    int pendingCount(){return pendingActors.size();}
+    void stagePending(SceneEntity entity){pendingActors.addLast(entity);}
     boolean conversationValid(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){return logic.conversationValid(definition,node,choice,source,responder,stamp);}
     boolean conversationStart(SceneConversation definition,ActorState source,int responder,int stamp){return logic.conversationStart(definition,source,responder,stamp);}
     boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){return logic.conversationResponse(definition,node,choice,source,responder,stamp);}
-    private boolean spawnScripted(SceneActions.Spawn actor,int stamp,String source,String activator){
-        List<ActorState> origins;
-        if(actor.activatorLocation()){
-            var origin=players.stream().filter(player->activator.equals("actor:"+player.id())).findFirst().orElse(null);
-            if(origin==null)origin=scriptSource(activator,stamp);
-            if(origin==null)return false;origins=List.of(origin);
-        }else if(actor.locationTag().isEmpty()){
-            if(source.startsWith("entry:")){
-                String key=source.substring(6);var entry=content.entries().stream().filter(e->e.key().equals(key)).findFirst().orElse(null);
-                if(entry==null)return false;origins=List.of(entrySource(entry,stamp));
-            }else{var origin=scriptSource(source,stamp);if(origin==null)return false;origins=List.of(origin);}
-        }else origins=taggedSources(actor.locationTag(),stamp);
-        if(origins.isEmpty()||origins.size()>256||entities.size()+pendingActors.size()+origins.size()>4096)return false;
-        var spec=new SceneContent.Spec(actor.fields());
-        var staged=new ArrayList<SceneEntity>();int next=nextId;
-        for(var origin:origins){
-            var binding=new SceneContent.Entry("spawn:"+next,origin.x(),origin.y(),origin.rotation(),spec);
-            var entity=new SceneEntity(next++,stamp,binding,spec,null,content);entity.scriptSource=source;
-            if(actor.activate()&&spec.integer("activate-time",0)>0)entity.activity=3;
-            staged.add(entity);
-        }
-        // Validate the whole selection before publication; a failed batch changes no actor IDs.
-        for(var entity:staged)insert(entity);nextId=next;return true;
-    }
+    boolean scriptedSpawn(SceneActions.Spawn actor,int stamp,String source,String activator){return spawns.scripted(actor,stamp,source,activator);}
     public boolean walkable(float x,float y,int ignore){return collisions.walkable(x,y,ignore);}
     /** Source ids whose static collision must be ignored because the entity is open or destroyed. */
     public java.util.Set<Integer> disabledCollisionSources(){return collisions.disabledSources();}
