@@ -127,7 +127,7 @@ public final class OpeningComlinkSessionTest {
     private static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
     private static SessionDecoder.Invocation start(String id,int request){return new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.MISSION_SERVICE,3,List.of(id,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)request)));}
     private static SessionDecoder.Invocation response(int oid,int choice,int request){return new SessionDecoder.Invocation(oid,SceneConversation.SERVICE,1,List.of(choice,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)request)));}
-    private static String node(WorldSession world)throws Exception{synchronized(world){var field=WorldSession.class.getDeclaredField("conversationNode");field.setAccessible(true);return (String)field.get(world);}}
+    private static String node(WorldSession world){return world.conversationNode();}
     private static void refuse(Operation op)throws Exception{try{op.run();throw new AssertionError("Unauthorized selection accepted");}catch(IOException|CharacterStore.Refused expected){}}
     private interface Operation{void run()throws Exception;}
     private interface Check{boolean ok()throws Exception;}
