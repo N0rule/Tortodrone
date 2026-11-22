@@ -686,7 +686,7 @@ final class WorldSession implements AutoCloseable {
             log.warn("Scene delivery closed; "+deliveryFailure(failure));close();
             try{socket.close();}catch(IOException ignored){}
         });
-        log.debug("Knight/runtime.scene() initialization completed; duration-ms="+((System.nanoTime()-selectionStarted)/1000000));
+        log.debug("Knight/scene initialization completed; duration-ms="+((System.nanoTime()-selectionStarted)/1000000));
     }
 
     /** Call outside the CharacterStore publication lock to preserve session/account lock order. */
@@ -796,7 +796,7 @@ final class WorldSession implements AutoCloseable {
 
     synchronized void requireAdminReady()throws IOException { requireAdminReady(false); }
     synchronized void requireAdminReady(boolean roomTravel)throws IOException {
-        if(closed||socket.isClosed()||!selected()||(!(roomTravel&&runtime.readyRoom())&&(!runtime.subscribed()||!runtime.entered()))||forcedReceiver==null||runtime.portalMove()!=null||deferredMovePending())throw new IOException("Finish entering this runtime.scene() first");
+        if(closed||socket.isClosed()||!selected()||(!(roomTravel&&runtime.readyRoom())&&(!runtime.subscribed()||!runtime.entered()))||forcedReceiver==null||runtime.portalMove()!=null||deferredMovePending())throw new IOException("Finish entering this scene first");
         try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
         if(!roles.gameMaster())throw new IOException("Game Master permission required");
     }
@@ -821,7 +821,7 @@ final class WorldSession implements AutoCloseable {
     synchronized void admin(SessionDecoder.Invocation request) throws IOException { adminTools.dispatch(request); }
 
     synchronized void subscribe(short message) throws IOException {
-        if (!selected()) throw new IOException("Select a knight before subscribing to a runtime.scene()");
+        if (!selected()) throw new IOException("Select a knight before subscribing to a scene");
         if(runtime.readyRoom())throw new IOException("The Ready Room has no server place object");
         if(closed)throw new IOException("Session closed");
         if(runtime.portalMove()!=null)throw new IOException("Scene is departing through a portal");
@@ -930,7 +930,7 @@ final class WorldSession implements AutoCloseable {
     /** A scene tick failed; return this knight to character selection rather than a frozen world. */
     private void sceneFailed() {
         if(closed)return;
-        log.warn("Scene tick failed; closing session for a safe return; runtime.scene()="+(runtime.scene()==null?0:runtime.scene().oid()));
+        log.warn("Scene tick failed; closing session for a safe return; scene="+(runtime.scene()==null?0:runtime.scene().oid()));
         close();
         try{socket.close();}catch(IOException ignored){}
     }
@@ -965,7 +965,7 @@ final class WorldSession implements AutoCloseable {
     static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
     private void monitorScene() {
         log.scene(runtime.scene().map().id(),runtime.scene().oid(),runtime.scene().map().name());
-        log.info("Scene runtime.entered(); runtime.scene()="+runtime.scene().map().name()+" (#"+runtime.scene().map().id()+"); instanceId="+runtime.scene().oid());
+        log.info("Scene entered; scene="+runtime.scene().map().name()+" (#"+runtime.scene().map().id()+"); instanceId="+runtime.scene().oid());
     }
     /** Set once a successful rename answered its confirm; honored by the connection loop. */
     private boolean renameDisconnect;
