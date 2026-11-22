@@ -19,6 +19,34 @@ final class SessionOutput implements AutoCloseable {
     static final int MAX_PENDING_BYTES = 4 * 1024 * 1024;
     static final long MAX_OVER_BUDGET_NANOS = 5_000_000_000L;
     private static final byte[] END = new byte[0];
+
+    /** Process-wide observation of the bounded output path; no policy reads these counters. */
+    static final class Metrics {
+        private static final java.util.concurrent.atomic.LongAdder frames = new java.util.concurrent.atomic.LongAdder();
+        private static final java.util.concurrent.atomic.LongAdder bytes = new java.util.concurrent.atomic.LongAdder();
+        private static final java.util.concurrent.atomic.AtomicLong largestFrame = new java.util.concurrent.atomic.AtomicLong();
+        private static final java.util.concurrent.atomic.LongAdder droppedOptional = new java.util.concurrent.atomic.LongAdder();
+        private static final java.util.concurrent.atomic.LongAdder reliableOverflows = new java.util.concurrent.atomic.LongAdder();
+        private static final java.util.concurrent.atomic.LongAdder budgetDisconnects = new java.util.concurrent.atomic.LongAdder();
+        private static final java.util.concurrent.atomic.AtomicLong peakPendingFrames = new java.util.concurrent.atomic.AtomicLong();
+        private static final java.util.concurrent.atomic.AtomicLong peakPendingBytes = new java.util.concurrent.atomic.AtomicLong();
+        private Metrics() { }
+        public record Snapshot(long frames,long bytes,long largestFrame,long droppedOptional,
+                long reliableOverflows,long budgetDisconnects,long peakPendingFrames,long peakPendingBytes) { }
+        static void queued(int length,int pendingFrames,long pendingBytes) {
+            frames.increment();bytes.add(length);
+            largestFrame.accumulateAndGet(length,Math::max);
+            peakPendingFrames.accumulateAndGet(pendingFrames,Math::max);
+            peakPendingBytes.accumulateAndGet(pendingBytes,Math::max);
+        }
+        static void optionalDropped() { droppedOptional.increment(); }
+        static void reliableOverflow() { reliableOverflows.increment(); }
+        static void budgetDisconnect() { budgetDisconnects.increment(); }
+        public static Snapshot snapshot() {
+            return new Snapshot(frames.sum(),bytes.sum(),largestFrame.get(),droppedOptional.sum(),
+                reliableOverflows.sum(),budgetDisconnects.sum(),peakPendingFrames.get(),peakPendingBytes.get());
+        }
+    }
     private final Socket socket;
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition notEmpty = lock.newCondition();
@@ -65,7 +93,7 @@ final class SessionOutput implements AutoCloseable {
             lock.lock();
             try {
                 if (closed || failure != null || socket.isClosed()) throw new IOException("Downstream connection closed", failure);
-                if (overBudget()) { droppedOptional++; noteOverBudget(); return false; }
+                if (overBudget()) { droppedOptional++; Metrics.optionalDropped(); noteOverBudget(); return false; }
                 clearOverBudget();
             } finally { lock.unlock(); }
             return encodeAndQueue(encoder,true);
@@ -78,7 +106,7 @@ final class SessionOutput implements AutoCloseable {
         try {
             if (closed || failure != null) return true;
             boolean over = overBudget();
-            if (over) { droppedOptional++; noteOverBudget(); } else clearOverBudget();
+            if (over) { droppedOptional++; Metrics.optionalDropped(); noteOverBudget(); } else clearOverBudget();
             return over;
         } finally { lock.unlock(); }
     }
@@ -113,17 +141,18 @@ final class SessionOutput implements AutoCloseable {
         lock.lock();
         try {
             if (closed || failure != null || socket.isClosed()) throw new IOException("Downstream connection closed", failure);
-            if (optional && overBudget()) { droppedOptional++; noteOverBudget(); return false; }
+            if (optional && overBudget()) { droppedOptional++; Metrics.optionalDropped(); noteOverBudget(); return false; }
             if (!optional && (pending.size() >= maxPending || pendingBytes + frame.length > maxPendingBytes)) {
                 fail(new IOException("Downstream queue full"));
                 throw new IOException("Downstream queue full", failure);
             }
             if (pendingBytes + frame.length > maxPendingBytes) {
-                if (optional) { droppedOptional++; noteOverBudget(); return false; }
+                if (optional) { droppedOptional++; Metrics.optionalDropped(); noteOverBudget(); return false; }
                 fail(new IOException("Downstream byte budget exceeded"));
                 throw new IOException("Downstream byte budget exceeded", failure);
             }
             pending.addLast(frame); pendingBytes += frame.length; notEmpty.signal();
+            Metrics.queued(frame.length,pending.size(),pendingBytes);
             return true;
         } finally { lock.unlock(); }
     }
@@ -187,8 +216,14 @@ final class SessionOutput implements AutoCloseable {
     }
 
     private void fail(Throwable error) {
+        boolean first;
         lock.lock();
-        try { if (failure == null) failure = error; } finally { lock.unlock(); }
+        try { first=failure == null; if (first) failure = error; } finally { lock.unlock(); }
+        if (first) {
+            String message=String.valueOf(error.getMessage());
+            if (message.contains("queue full")) Metrics.reliableOverflow();
+            else if (message.contains("byte budget exceeded")) Metrics.budgetDisconnect();
+        }
         closeSocket();
         lock.lock();
         try { notEmpty.signalAll(); notFull.signalAll(); } finally { lock.unlock(); }

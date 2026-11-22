@@ -35,13 +35,27 @@ public final class Database {
     public record RosterState(List<Knight> knights,int next,long revision) { }
     public record WorldState(int accountId,int knightId,int worldId,String name,long revision,long authRevision,boolean gameMaster) { }
     public record Diagnostics(long operations,long slowOperations,long failures,long rollbacks,long maximumMillis) { }
+    /** Storage series required by the Phase 4 contract; counters never change write behaviour. */
+    public record StorageMetrics(long busyErrors,long expiryRuns,long expiryNanos,long checkpoints,long checkpointNanos,long walBytes,
+            long durationP50Micros,long durationP99Micros) { }
     private static final java.util.concurrent.atomic.AtomicLong operations=new java.util.concurrent.atomic.AtomicLong(),slow=new java.util.concurrent.atomic.AtomicLong(),failures=new java.util.concurrent.atomic.AtomicLong(),rollbacks=new java.util.concurrent.atomic.AtomicLong(),maximum=new java.util.concurrent.atomic.AtomicLong();
+    private static final java.util.concurrent.atomic.AtomicLong busyErrors=new java.util.concurrent.atomic.AtomicLong(),expiryRuns=new java.util.concurrent.atomic.AtomicLong(),expiryNanos=new java.util.concurrent.atomic.AtomicLong(),checkpoints=new java.util.concurrent.atomic.AtomicLong(),checkpointNanos=new java.util.concurrent.atomic.AtomicLong();
+    private static final long[] durationSamples=new long[256];
+    private static int durationCount,durationNext;
     public static Diagnostics diagnostics(){return new Diagnostics(operations.get(),slow.get(),failures.get(),rollbacks.get(),maximum.get());}
+    public StorageMetrics storageMetrics(){return new StorageMetrics(busyErrors.get(),expiryRuns.get(),expiryNanos.get(),checkpoints.get(),checkpointNanos.get(),walBytes(),
+        durationPercentile(.50),durationPercentile(.99));}
+    private static synchronized long durationPercentile(double quantile) {
+        if(durationCount==0)return 0;
+        long[] copy=java.util.Arrays.copyOf(durationSamples,durationCount);java.util.Arrays.sort(copy);
+        return copy[Math.min(copy.length-1,(int)Math.ceil(copy.length*quantile)-1)];
+    }
     @FunctionalInterface public interface Observer {void completed(String operation,long millis,boolean failed);}
     private volatile Observer observer=(operation,millis,failed)->{};
     public void observe(Observer observer){this.observer=Objects.requireNonNull(observer);}
     private void measured(String kind,long start,boolean failed){
-        long elapsed=(System.nanoTime()-start)/1000000;operations.incrementAndGet();maximum.accumulateAndGet(elapsed,Math::max);
+        long nanos=System.nanoTime()-start;long elapsed=nanos/1000000;operations.incrementAndGet();maximum.accumulateAndGet(elapsed,Math::max);
+        synchronized(Database.class){durationSamples[durationNext]=(int)Math.min(Integer.MAX_VALUE,nanos/1000);durationNext=(durationNext+1)%durationSamples.length;if(durationCount<durationSamples.length)durationCount++;}
         if(elapsed>=100)slow.incrementAndGet();if(failed)failures.incrementAndGet();
         try{observer.completed(kind,elapsed,failed);}catch(RuntimeException ignored){ }
     }
@@ -126,10 +140,13 @@ public final class Database {
     /** Fold the WAL back into the main file after every writer has stopped. */
     public void checkpoint() { checkpoint(true); }
     private void checkpoint(boolean truncate) {
+        long start=System.nanoTime();
         try (Connection connection = connect(); var statement = connection.createStatement()) {
             statement.execute("PRAGMA wal_checkpoint(" + (truncate ? "TRUNCATE" : "PASSIVE") + ")");
         } catch (SQLException ignored) {
             // Shutdown must not fail because the file was already closed or removed.
+        } finally {
+            checkpoints.incrementAndGet();checkpointNanos.addAndGet(System.nanoTime()-start);
         }
     }
     /** Current WAL size; used by the maintenance alarm and shutdown report. */
@@ -225,7 +242,11 @@ public final class Database {
         try(Connection connection=connect();Statement statement=connection.createStatement()) {
             statement.execute("BEGIN IMMEDIATE");
             try {
-                if(initialized)InventoryExpiry.prune(connection,System.currentTimeMillis());
+                if(initialized) {
+                    long expiryStart=System.nanoTime();
+                    try { InventoryExpiry.prune(connection,System.currentTimeMillis()); }
+                    finally { expiryRuns.incrementAndGet();expiryNanos.addAndGet(System.nanoTime()-expiryStart); }
+                }
                 T value=work.run(connection);statement.execute("COMMIT");failed=false;return value;
             } catch(SQLException|IOException|RuntimeException error) {
                 rollbacks.incrementAndGet();
@@ -899,6 +920,7 @@ public final class Database {
         WorldProfiles.cleanProgress(c);
     }
     private static IOException failure(SQLException e) {
+        if(e.getMessage()!=null&&(e.getErrorCode()==5||e.getErrorCode()==6||e.getMessage().contains("SQLITE_BUSY")||e.getMessage().contains("database is locked")))busyErrors.incrementAndGet();
         if(e.getMessage()!=null&&e.getMessage().contains("UNIQUE constraint failed: knights.name_key"))return new KnightNameInUse(e);
         if (e.getMessage() != null && e.getMessage().contains("accounts.name_key")) return new IOException("Account already exists",e);
         return new IOException("Database operation failed; existing data was not replaced",e);

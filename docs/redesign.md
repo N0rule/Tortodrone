@@ -199,8 +199,8 @@ outside all of them except the named commit paths.
 2. A defined load, recorded with the measurement host (CPU model, cores, RAM, JDK
    build): 16 clients at the shipped default, one 8-player interior, one town
    instance, plus the workload mix (idle, full interior, revive, owned-item use,
-   elevator settlement), at `-Xmx512m` and `-Xmx1g`. Instrumentation is Phase 4 work;
-   the numbers do not exist yet.
+   elevator settlement), at `-Xmx512m` and `-Xmx1g`. Instrumentation and the recorded
+   values live in the Phase 4 measurements section of `docs/baseline.md`.
 3. Tick gap and input latency while a revive/settlement transaction runs against a
    contended database.
 4. Database wait, `SQLITE_BUSY` count, transaction duration, WAL bytes, checkpoint

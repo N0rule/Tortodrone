@@ -40,7 +40,12 @@ public final class AdminService implements AutoCloseable {
     }
     public Object read(String route,Input p)throws IOException {
         return switch(route) {
-            case "status"->{var s=control.snapshot();yield Map.of("version",s.version(),"state",s.state(),"endpoint",s.endpoint(),"uptimeSeconds",s.uptimeSeconds(),"metrics",s.metrics(),"database",Database.diagnostics(),"accounts",accounts.list().size(),"sessions",s.sessions(),"scenes",s.scenes(),"failure",s.failure());}
+            case "status"->{var s=control.snapshot();var status=new LinkedHashMap<String,Object>();
+                status.put("version",s.version());status.put("state",s.state());status.put("endpoint",s.endpoint());
+                status.put("uptimeSeconds",s.uptimeSeconds());status.put("metrics",s.metrics());
+                status.put("database",Database.diagnostics());status.put("storage",accounts.storageMetrics());
+                status.put("accounts",accounts.list().size());status.put("sessions",s.sessions());
+                status.put("scenes",s.scenes());status.put("failure",s.failure());yield status;}
             case "accounts"->accounts.list();
             case "knights"->accounts.knights(p.text("username"));
             case "knight"->accounts.worldProfile(p.text("username"),p.text("knight"));

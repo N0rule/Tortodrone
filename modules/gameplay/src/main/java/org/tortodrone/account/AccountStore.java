@@ -64,6 +64,8 @@ public final class AccountStore implements AutoCloseable {
         }
     }
     public Database.WorldState knightState(String username,String knight)throws IOException {validateUsername(username);if(database==null)throw new IOException("Knight inspection requires SQLite storage");return database.knightState(username,knight);}
+    /** Process-wide storage counters for the admin status view; observation only. */
+    public Database.StorageMetrics storageMetrics()throws IOException {if(database==null)throw new IOException("Storage metrics require SQLite storage");return database.storageMetrics();}
     public boolean gameAttached(int account){return sessions.containsKey(account);}
     public WorldProfile progress(String username,String knight,Integer rank,Integer subrank,Integer prestige,int expectedAccount,int expectedWorld)throws IOException{
         return progress(username,knight,rank,subrank,prestige,expectedAccount,expectedWorld,null);

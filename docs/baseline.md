@@ -73,18 +73,20 @@ These are per-tick work samples from the 256-sample window, not cadence lateness
 scheduler re-arms after the task returns, so a late tick is not visible here. The p99
 spread between the two runs is real and uncontrolled.
 
-Not baselined, owned by Phase 4: lock wait, tick cadence/lateness p50/p99/max under the
-defined load, publication/delivery time, GC/allocation, overrun policy.
+Recorded, owned by Phase 4: lock wait, tick cadence/lateness p50/p99/max under the
+defined load, publication/delivery time, GC/allocation and the overrun policy — see
+the Phase 4 measurements below.
 
 ## Queue and session baseline
 
 Existing tool: `./gradlew benchmark --args="--seconds 20 --clients 16 --session-only"`
-(16 is the shipped `max-clients` default; the tool hardcodes `-Xmx512m`).
+(16 is the shipped `max-clients` default; `--xmx` selects the server heap and defaults
+to `512m`).
 CSV header and row:
 
 ```text
-clients,workload,seconds,ready,completed,failed,login_p95_ms,ping_p50_ms,ping_p95_ms,ping_p99_ms,ping_samples,deltas_per_client_s,input_frames,downstream_mib,server_cpu_cores,server_peak_rss_mib,server_peak_threads,instances
-16,session,20,16,16,0,2308.01,0.86,1.24,2.07,320,0.00,0,0.01,0.08,1083.73,67,1
+clients,workload,seconds,ready,completed,failed,login_p95_ms,ping_p50_ms,ping_p95_ms,ping_p99_ms,ping_samples,deltas_per_client_s,input_frames,downstream_mib,server_cpu_cores,server_peak_rss_mib,server_peak_threads,instances,xmx
+16,session,20,16,16,0,2308.01,0.86,1.24,2.07,320,0.00,0,0.01,0.08,1083.73,67,1,512m
 ```
 
 All 16 clients authenticated and logged off cleanly with no failures. Login p95 is
@@ -94,26 +96,29 @@ writes beyond session setup.
 
 Source-verified bounds:
 
-- `SessionOutput` holds at most **64 frames** per session in an `ArrayBlockingQueue`;
-  a frame may be up to 1 MiB downstream. A full queue fails the session with
-  "Downstream queue full" rather than blocking the scene.
+- `SessionOutput` holds at most **64 frames** and **4 MiB** per session in a bounded
+  `ArrayDeque`; a reliable frame that would exceed either limit fails the session with
+  "Downstream queue full" rather than blocking the scene. Optional update frames are
+  skipped before encoding once the queue is over budget, and a client that stays over
+  budget for 5 s is disconnected.
 - Delivery uses one `SceneDelivery-<oid>` virtual thread and three in-memory
   collections (`pending`, `activityPublications`, `partyEvents`). The two deques are
   unbounded; overflow is signalled by `partyOverflow`/`publicationOverflow` flags.
-- There is no queue-depth-in-frames, queue-depth-in-bytes, overflow, throttle,
-  disconnect or largest-frame counter.
+- `SessionOutput.Metrics` records process-wide frames, bytes, largest frame, optional
+  drops, reliable overflows, budget disconnects, and peak pending frames/bytes. The
+  counters are observation only and never change policy.
 
 Town/scene workload with the repaired tool:
 
 ```text
 ./gradlew benchmark --args="--seconds 20 --clients 16 --instances 2"
-16,town,20,16,16,0,2475.81,0.35,0.76,3.09,320,19.66,3136,2.48,0.37,1004.00,84,2
+16,town,20,16,16,0,2475.81,0.35,0.76,3.09,320,19.66,3136,2.48,0.37,1004.00,84,2,512m
 ```
 
 All 16 clients selected a knight, left the Ready Room, entered a live town instance
 (two instances, eight players each) and produced 3,136 input frames and 2.48 MiB
 downstream in 20 s with no failures. A second 20 s run produced
-`16,town,20,16,16,0,2706.17,0.44,1.08,4.11,320,19.65,3120,2.48,0.36,1103.04,83,2`;
+`16,town,20,16,16,0,2706.17,0.44,1.08,4.11,320,19.65,3120,2.48,0.36,1103.04,83,2,512m`;
 login p95 and the CPU/RSS columns vary run to run.
 
 The old flow was stale, not the server: it subscribed to template id
@@ -128,8 +133,8 @@ and take the live OID from the `moveSucceeded` callback
 sends `enteredPlace` and waits for the initial delta. The OID is never derived from a
 template id.
 
-Not baselined, owned by Phase 4: per-session frame/byte depth, overflow/throttle/
-disconnect counts, largest frame, retained snapshots, heap per slow reader.
+Absolutely baselined by `SessionOutputBudgetTest` (slow-reader queue depth, largest
+frame, optional drops and disconnect) and the Phase 4 measurements below.
 
 ## Database baseline
 
@@ -143,8 +148,10 @@ Source-verified settings and write path:
 - `synchronous`, `wal_autocheckpoint`, `journal_size_limit` and `cache_size` are not
   set and therefore inherit SQLite/JDBC defaults.
 - `Database.diagnostics()` reports operations, operations ≥100 ms, failures,
-  rollbacks and maximum duration from static counters. It is exposed only through the
-  WebUI `status` response; no CLI task prints it.
+  rollbacks and maximum duration from static counters. `Database.storageMetrics()`
+  adds `SQLITE_BUSY` errors, expiry-sweep runs and time, checkpoints and time, WAL
+  bytes, and transaction-duration p50/p99. Both are exposed through the WebUI
+  `status` response; no CLI task prints them.
 - The game path and the WebUI/admin path each construct their own `Database` on the
   same file (two instances, `Server.run` and the enclosing `AdminService` account
   store).
@@ -166,8 +173,8 @@ deployment's `server-16.log`, complete `/admin/api/setup`, then poll
 `/admin/api/status`. The counters reset on process exit, so a sample must be taken
 while the run's disposable server is alive.
 
-No `SQLITE_BUSY`, WAL-size, checkpoint or sweep-cost series was captured; the
-diagnostics expose the aggregate only. Phase 4 owns those measurements.
+`SQLITE_BUSY`, WAL-size, checkpoint and sweep-cost series are recorded from
+`storageMetrics()` in the Phase 4 measurements below.
 
 ## Thread inventory (verified against source)
 
@@ -255,32 +262,121 @@ or decompiled file is committed. A layout without evidence is a Phase 2 blocker.
 
 ## Phase 4 concurrency measurements
 
-Recorded from `ConcurrencyMeasurementTest` on 2026-11-21. Host: Linux/amd64, 8
-logical CPUs, Temurin OpenJDK 25.0.5, default test heap (~2.9 GiB maximum). The
-synthetic load is eight entered players in Haven for two seconds plus a temporary
-SQLite store; it is not the full 16-client, dual-heap load described in
-`docs/redesign.md`, so treat the numbers as a working baseline rather than the
-final gate measurement.
+Recorded on 2026-11-22. Host: Linux/amd64, 8 logical CPUs, Temurin OpenJDK
+25.0.5+8-LTS. `ConcurrencyMeasurementTest` was run standalone at `-Xmx512m` and
+`-Xmx1g` (2 s window, eight entered players, Haven instance 1 and interior scene
+380, plus a temporary SQLite store with a concurrent owner-checked write
+transaction). `LoadBenchmark` ran the real TCP workload at both heaps.
+
+### Scene tick and publication (eight players, 2 s window)
+
+| Measurement (µs unless noted) | Haven, 512m | Haven, 1g | Interior 380, 512m | Interior 380, 1g |
+| --- | --- | --- | --- | --- |
+| Scene ticks | 38 | 38 | 38 | 38 |
+| Lock wait p50 / p99 | 0.3 / 0.4 | 0.2 / 0.5 | 0.2 / 0.4 | 0.3 / 0.4 |
+| Tick work p50 / p99 / max | 762.6 / 17,275.1 / 17,275.1 | 909.5 / 14,914.8 / 14,914.8 | 1,474.6 / 4,747.4 / 4,747.4 | 1,503.0 / 4,746.1 / 4,746.1 |
+| Publication p50 / p99 | 395.4 / 8,145.2 | 477.5 / 6,211.5 | 518.8 / 920.1 | 522.6 / 869.5 |
+| Delivery p50 / p99 / max | 2.3 / 9.8 / 9.8 | 2.9 / 6.1 / 6.1 | 2.1 / 7.3 / 7.3 | 2.3 / 7.7 / 7.7 |
+| Cadence lateness p50 / p99 / max (ms) | 0.0 / 0.0 / 0.0 | 0.0 / 0.0 / 0.0 | — | — |
+| Scheduler overruns | 0 | 0 | 0 | 0 |
+
+The p99 equals the observed maximum because the 256-sample window holds only 38
+ticks; the outlier is the first tick, which includes class loading and JIT. The
+interior run keeps publication below 1 ms while tick work is roughly twice the
+Haven value, which is what the fixed movement/status/combat/portal/capture order
+predicts for a smaller, non-town map.
+
+### Storage writer under scene load
+
+| Measurement | 512m | 1g |
+| --- | --- | --- |
+| 200 serial writes / 200 reads, average | 833.8 / 801.4 µs | 915.7 / 847.9 µs |
+| Transaction duration p50 / p99 | 694 / 844 µs | 697 / 1,109 µs |
+| Operations / ≥100 ms / failures / rollbacks / max | 606 / 1 / 0 / 0 / 141 ms | 606 / 1 / 0 / 0 / 132 ms |
+| `SQLITE_BUSY` errors | 0 | 0 |
+| Expiry sweeps / average cost | 401 / 54.3 µs | 401 / 54.2 µs |
+| WAL bytes before checkpoint / checkpoint time | 0 / 1.3 ms | 0 / 1.3 ms |
+
+The single ≥100 ms operation is the first write, which creates the schema; every
+later transaction stays near 1 ms while the scene lane keeps its cadence with zero
+overruns. The concurrent run used the owner-checked preference write
+(`inspectionHidden`), a real `BEGIN IMMEDIATE` transaction, rather than an empty one.
+
+### Per-session output with a slow reader
+
+`SessionOutputBudgetTest` blocks the writer socket and queues 100 optional 4 KiB
+frames:
 
 | Measurement | Value |
 | --- | --- |
-| Scene ticks in 2 s | 38 |
-| Last lock wait / tick work / max tick work | 0.2 µs / 550.7 µs / 22,781 µs |
-| Scheduler cadence lateness p50 / p99 / max | 0.0 / 0.0 / 0.0 ms |
-| Scheduler overruns | 0 |
-| SQLite 200 writes / 200 reads, average | 938.0 µs / 231.1 µs |
-| SQLite operations / slow / failures / rollbacks / max | 402 / 1 / 0 / 0 / 115 ms |
-| WAL bytes before checkpoint | 0 |
-| Checkpoint | 1.5 ms |
-| Resting platform threads / peak | 15 / 20 |
-| Snapshot allocation per call | 16,958 B |
-| GC collections / time | 24 / 622 ms |
-| Scheduler shutdown drain | 0.4 ms |
+| Frames retained | 65 (the 64-frame budget plus one already handed to the writer) |
+| Pending bytes at peak | 262,144 B |
+| Largest queued frame | 4,096 B |
+| Optional frames dropped before encoding | 35 |
+| Heap delta for the retained set | 0 B after collection of the fixture |
 
-The first write includes schema initialization, which explains the 115 ms maximum;
-later writes stay sub-millisecond. The per-session output budget, overflow and
-disconnect policy is covered by `SessionOutputBudgetTest`, and the scheduler serial
-lane, cap, failure isolation and shutdown by `SceneSchedulerTest`.
+Reliable overflow fails the session, a sustained over-budget reader is disconnected
+after 5 s, and both are counted in `SessionOutput.Metrics`.
+
+### 16-client TCP load (town movement, two instances, 20 s)
+
+```text
+clients,workload,seconds,ready,completed,failed,login_p95_ms,ping_p50_ms,ping_p95_ms,ping_p99_ms,ping_samples,deltas_per_client_s,input_frames,downstream_mib,server_cpu_cores,server_peak_rss_mib,server_peak_threads,instances,xmx
+16,town,20,16,16,0,2664.74,0.44,0.83,2.21,320,19.70,3136,2.49,0.30,867.02,94,2,512m
+16,town,20,16,16,0,2035.91,0.34,0.74,3.87,320,19.63,3104,2.48,0.30,1546.31,99,2,1g
+16,town,20,16,16,0,2903.97,0.34,2.99,5.72,320,19.68,3152,2.48,0.39,1441.68,98,2,1g
+```
+
+All 16 clients authenticated, entered the live scene and logged off without failures
+at both heaps. Login p95 remains dominated by the 600,000-iteration password check.
+The `-Xmx1g` rows trade a larger RSS for headroom; deltas, inputs and ping stay in
+the same range, so the shipped 512 MiB default is not the limiting factor at this
+client count.
+
+### Thread, GC and shutdown accounting
+
+| Measurement | 512m | 1g |
+| --- | --- | --- |
+| Resting platform threads / peak | 15 / 20 | 15 / 20 |
+| Virtual-thread carrier parallelism | 8 | 8 |
+| Snapshot allocation per call | 16,912 B | 16,912 B |
+| GC collections / time | 93 / 1,121 ms | 48 / 846 ms |
+| Scheduler shutdown drain | 0.5 ms | 0.4 ms |
+
+JDBC runs on the dedicated writer/reader platform threads, and the contended run
+above shows the scene lane unchanged with `SQLITE_BUSY` 0, so storage contention does
+not starve ticks. JMX does not enumerate virtual threads; sessions are one virtual
+thread each (`SessionOutput` writer aside) and the 16-client run reports the live
+session count through `ready`/`completed`.
+
+### Budgets
+
+These thresholds are the acceptance budgets for this host; the measured column is
+the range across the runs above. Only the per-session queue limits and the 5 s
+slow-reader disconnect are enforced in code; the rest are release gates checked by
+the measurement programs.
+
+| Area | Budget | Measured |
+| --- | --- | --- |
+| Scene tick work p99 | ≤ 25 ms | 4.7–17.3 ms |
+| Snapshot publication p99 | ≤ 10 ms | 0.9–8.1 ms |
+| Snapshot delivery p99 | ≤ 10 ms | ≤ 9.8 µs |
+| Cadence lateness p99 / overruns | ≤ 50 ms / 0 | 0 ms / 0 |
+| Storage transaction p99 / `SQLITE_BUSY` | ≤ 100 ms / 0 | 0.8–1.1 ms / 0 |
+| Expiry sweep average | ≤ 1 ms | 54 µs |
+| WAL checkpoint / residual WAL | ≤ 100 ms / 0 B | 1.3 ms / 0 B |
+| Per-session queue | 64 frames / 4 MiB | enforced |
+| Slow-reader disconnect | 5 s | enforced |
+| Shutdown drain | ≤ 2 s | ≤ 0.5 ms |
+| 16-client login p95 / failures | ≤ 5 s / 0 | 2.0–2.9 s / 0 |
+| 16-client CPU / RSS at 1g | ≤ 1 core / ≤ 1.6 GiB | 0.30–0.39 cores / 1.4–1.5 GiB |
+
+Not scripted end to end: the revive, owned-item and elevator-settlement actions are
+exercised functionally by the session regressions (`MissionFloorSessionTest` settles
+exactly once per run; item and revive paths have their own focused tests) but the
+16-client tool currently drives town movement only. The eight-player interior load is
+measured in-process, and per-input round-trip latency is represented by cadence
+lateness plus the contended transaction series, not by a per-packet stopwatch.
 
 ## Refresh procedure
 

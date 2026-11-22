@@ -29,6 +29,7 @@ public final class LoadBenchmark {
     private static final String DELTA="com.threerings.tudey.dobj.SceneDeltaEvent";
     private static final Set<Socket> SOCKETS=ConcurrentHashMap.newKeySet();
     private static volatile Process server;
+    private static volatile String heap="512m";
     private static final class Metrics {
         final Queue<Double> login=new ConcurrentLinkedQueue<>(),ping=new ConcurrentLinkedQueue<>();
         final Queue<String> failures=new ConcurrentLinkedQueue<>();
@@ -43,8 +44,10 @@ public final class LoadBenchmark {
             case "--clients" -> sizes=Arrays.stream(args[++i].split(",")).mapToInt(Integer::parseInt).toArray();
             case "--session-only" -> town=false;
             case "--instances" -> instances=Integer.parseInt(args[++i]);
-            default -> throw new IllegalArgumentException("Usage: gradlew benchmark --args='[--seconds 20] [--clients 50,100,200,300] [--session-only] [--instances 1]'");
+            case "--xmx" -> heap=args[++i];
+            default -> throw new IllegalArgumentException("Usage: gradlew benchmark --args='[--seconds 20] [--clients 50,100,200,300] [--session-only] [--instances 1] [--xmx 512m]'");
         }
+        if(!heap.matches("[1-9][0-9]*[mMgG]"))throw new IllegalArgumentException("xmx must look like 512m or 1g");
         if(instances<1||instances>16)throw new IllegalArgumentException("instances: 1–16");
         if(seconds<1||seconds>300||sizes.length==0||Arrays.stream(sizes).anyMatch(n->n<1||n>1000))throw new IllegalArgumentException("seconds: 1–300; clients: 1–1000");
         Path home=Files.createTempDirectory("tortodrone-load-");
@@ -67,7 +70,7 @@ public final class LoadBenchmark {
                 }
             }
             Path report=home.resolve("results.csv");
-            Files.writeString(report,"clients,workload,seconds,ready,completed,failed,login_p95_ms,ping_p50_ms,ping_p95_ms,ping_p99_ms,ping_samples,deltas_per_client_s,input_frames,downstream_mib,server_cpu_cores,server_peak_rss_mib,server_peak_threads,instances\n");
+            Files.writeString(report,"clients,workload,seconds,ready,completed,failed,login_p95_ms,ping_p50_ms,ping_p95_ms,ping_p99_ms,ping_samples,deltas_per_client_s,input_frames,downstream_mib,server_cpu_cores,server_peak_rss_mib,server_peak_threads,instances,xmx\n");
             boolean passed=true;for(int count:sizes)passed&=run(home,count,seconds,town,instances,report);
             System.out.println("Results: "+report);
             if(!passed)throw new IOException("Benchmark recorded failures; see reports above");
@@ -80,7 +83,7 @@ public final class LoadBenchmark {
     private static boolean run(Path home,int count,int seconds,boolean town,int instances,Path report)throws Exception {
         Files.writeString(home.resolve("data/server.properties"),"server-ip=127.0.0.1\nserver-port=0\nlog-mode=normal\nmax-clients="+count+"\n");
         Path log=home.resolve("server-"+count+".log");
-        server=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"-Xmx512m","-Xss256k","-jar",home.resolve("tortodrone.jar").toString(),"--nogui","--skip-client-assets")
+        server=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"-Xmx"+heap,"-Xss256k","-jar",home.resolve("tortodrone.jar").toString(),"--nogui","--skip-client-assets")
             .redirectErrorStream(true).redirectOutput(log.toFile()).start();
         int port=0;long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(180);
         while(System.nanoTime()<deadline) {
@@ -104,8 +107,8 @@ public final class LoadBenchmark {
             }
             double cores=Math.max(0,cpuNanos()-cpu)/(double)TimeUnit.SECONDS.toNanos(seconds);
             for(var task:tasks)try{task.get(15,TimeUnit.SECONDS);}catch(Exception failure){metrics.failures.add(failure.getClass().getSimpleName());task.cancel(true);}
-            String row=String.format(Locale.ROOT,"%d,%s,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%d,%.2f,%d,%.2f,%.2f,%.2f,%d,%d%n",
-                count,town?"town":"session",seconds,metrics.ready.get(),metrics.completed.get(),metrics.failures.size(),percentile(metrics.login,.95),percentile(metrics.ping,.5),percentile(metrics.ping,.95),percentile(metrics.ping,.99),metrics.ping.size(),metrics.deltas.sum()/(double)(count*seconds),metrics.inputs.sum(),metrics.bytes.sum()/1048576d,cores,rss/1024d,threads,instances);
+            String row=String.format(Locale.ROOT,"%d,%s,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%d,%.2f,%d,%.2f,%.2f,%.2f,%d,%d,%s%n",
+                count,town?"town":"session",seconds,metrics.ready.get(),metrics.completed.get(),metrics.failures.size(),percentile(metrics.login,.95),percentile(metrics.ping,.5),percentile(metrics.ping,.95),percentile(metrics.ping,.99),metrics.ping.size(),metrics.deltas.sum()/(double)(count*seconds),metrics.inputs.sum(),metrics.bytes.sum()/1048576d,cores,rss/1024d,threads,instances,heap);
             Files.writeString(report,row,StandardOpenOption.APPEND);System.out.print(row);
             if(!metrics.failures.isEmpty()) {
                 Files.write(home.resolve("failures-"+count+".txt"),metrics.failures);

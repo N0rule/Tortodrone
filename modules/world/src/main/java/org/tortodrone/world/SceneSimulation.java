@@ -802,14 +802,43 @@ public final class SceneSimulation {
         previous=null;
     }
     /** Per-tick observations sampled without holding the scene monitor. */
-    private long tickLockWaitNanos,tickWorkNanos,tickMaxWorkNanos;
-    public record TickMetrics(long ticks,long lockWaitNanos,long workNanos,long maxWorkNanos){ }
-    public synchronized TickMetrics tickMetrics(){return new TickMetrics(tickCount,tickLockWaitNanos,tickWorkNanos,tickMaxWorkNanos);}
+    private long tickLockWaitNanos,tickWorkNanos,tickMaxWorkNanos,tickMaxLockWaitNanos,tickMaxPublicationNanos;
+    private static final int MEASUREMENT_WINDOW=256;
+    private final long[] lockWaitSamples=new long[MEASUREMENT_WINDOW],workSamples=new long[MEASUREMENT_WINDOW],
+        publicationSamples=new long[MEASUREMENT_WINDOW],deliverySamples=new long[MEASUREMENT_WINDOW];
+    private int sampleCount,sampleNext;
+    private long maxDeliveryNanos;
+    public record TickMetrics(long ticks,long lockWaitNanos,long workNanos,long maxWorkNanos,
+            long lockWaitP50Nanos,long lockWaitP99Nanos,long workP50Nanos,long workP99Nanos,
+            long publicationP50Nanos,long publicationP99Nanos,long deliveryP50Nanos,long deliveryP99Nanos,
+            long maxLockWaitNanos,long maxPublicationNanos,long maxDeliveryNanos){ }
+    public synchronized TickMetrics tickMetrics(){
+        return new TickMetrics(tickCount,tickLockWaitNanos,tickWorkNanos,tickMaxWorkNanos,
+            percentile(lockWaitSamples,.50),percentile(lockWaitSamples,.99),
+            percentile(workSamples,.50),percentile(workSamples,.99),
+            percentile(publicationSamples,.50),percentile(publicationSamples,.99),
+            percentile(deliverySamples,.50),percentile(deliverySamples,.99),
+            tickMaxLockWaitNanos,tickMaxPublicationNanos,maxDeliveryNanos);
+    }
+    private void sample(long lockWait,long work,long publication,long delivery) {
+        lockWaitSamples[sampleNext]=lockWait;workSamples[sampleNext]=work;
+        publicationSamples[sampleNext]=publication;deliverySamples[sampleNext]=delivery;
+        sampleNext=(sampleNext+1)%MEASUREMENT_WINDOW;
+        if(sampleCount<MEASUREMENT_WINDOW)sampleCount++;
+        if(delivery>maxDeliveryNanos)maxDeliveryNanos=delivery;
+    }
+    private long percentile(long[] samples,double quantile) {
+        if(sampleCount==0)return 0;
+        long[] copy=java.util.Arrays.copyOf(samples,sampleCount);java.util.Arrays.sort(copy);
+        return copy[Math.min(copy.length-1,(int)Math.ceil(copy.length*quantile)-1)];
+    }
     private void tick() {
         long entered=System.nanoTime();
         Snapshot publication;List<Consumer<Snapshot>> recipients;
+        long publicationNanos=0,lockWaitSample=0;
         synchronized(this) {
             long lockWait=System.nanoTime()-entered;
+            lockWaitSample=lockWait;
             long tickStarted=System.nanoTime();
             if(!scheduled)return;
             int stamp=SceneClock.now();long now=System.nanoTime()/1_000_000L;
@@ -855,10 +884,14 @@ public final class SceneSimulation {
             for(var member:members.values())if(member.entered)for(var action:member.health.takeActions())weapons.fire(action,member.actor(),stamp);
             entities.advance(stamp,players);var sources=new ArrayList<>(players);for(var member:members.values()){var pet=member.petActor();if(pet!=null)sources.add(pet);}weapons.advance(stamp,sources);
             combatEvents.removeIf(event->stamp-event.timestamp()>5000);
+            long publicationStarted=System.nanoTime();
             publication=capture(stamp,previous);previous=publication;tickCount++;
+            publicationNanos=System.nanoTime()-publicationStarted;
             tickWorkNanos=System.nanoTime()-tickStarted;
             tickLockWaitNanos=lockWait;
             if(tickWorkNanos>tickMaxWorkNanos)tickMaxWorkNanos=tickWorkNanos;
+            if(lockWait>tickMaxLockWaitNanos)tickMaxLockWaitNanos=lockWait;
+            if(publicationNanos>tickMaxPublicationNanos)tickMaxPublicationNanos=publicationNanos;
             entities.tickDuration(tickWorkNanos);
             if(stamp-lastMetricLog>=30_000){
                 lastMetricLog=stamp;
@@ -874,6 +907,9 @@ public final class SceneSimulation {
             recipients=members.values().stream().filter(m->m.entered).map(m->m.publish).toList();
         }
         // No simulation lock is held across callbacks, including detach/travel races.
+        long deliveryStarted=System.nanoTime();
         for(var recipient:recipients)recipient.accept(publication);
+        long deliveryNanos=System.nanoTime()-deliveryStarted;
+        synchronized(this){sample(lockWaitSample,tickWorkNanos,publicationNanos,deliveryNanos);}
     }
 }
