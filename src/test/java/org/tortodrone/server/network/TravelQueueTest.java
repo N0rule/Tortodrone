@@ -1,7 +1,6 @@
 package org.tortodrone.server.network;
 
 import java.io.*;
-import java.lang.reflect.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -46,8 +45,8 @@ public final class TravelQueueTest {
                 world.subscribe((short)1);
                 world.entered();
                 check(pending(world)==null,"enteredPlace replays and clears the queued request");
-                var move=portalMove(world);
-                check(move!=null&&destination(move).map().id()==294,
+                var move=world.pendingPortalDestination();
+                check(move!=null&&move.map().id()==294,
                     "queued /training starts the Training Hall transition");
 
                 // A later command is handled by the same path, not left in the queue.
@@ -59,11 +58,11 @@ public final class TravelQueueTest {
             try(var output=new SessionOutput(readySocket);var world=new WorldSession(readySocket,characters,output,
                     new SessionCodec(items),1002,1,m->{},scenes)) {
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0),true);
-                check(readyRoom(world),"the session is staged in the client-local Ready Room");
+                check(world.inReadyRoom(),"the session is staged in the client-local Ready Room");
                 world.invocation(destination("training"));
                 check(pending(world)==null,"Ready Room /training is not deferred to Haven");
-                check(!readyRoom(world)&&sceneMap(world)==294,"Ready Room /training installs the Training Hall directly");
-                check(portalMove(world)==null,"Ready Room travel attaches the destination without a portal wait");
+                check(!world.inReadyRoom()&&world.currentScene().map().id()==294,"Ready Room /training installs the Training Hall directly");
+                check(!world.sceneTravelPending(),"Ready Room travel attaches the destination without a portal wait");
             }
             System.out.println("PASS: early destination is queued after entry and travels directly from the Ready Room");
         } finally {
@@ -78,19 +77,6 @@ public final class TravelQueueTest {
     }
     private static Object pending(WorldSession world)throws Exception {
         return world.queuedTravel();
-    }
-    private static Object portalMove(WorldSession world)throws Exception {
-        Field field=WorldSession.class.getDeclaredField("portalMove");field.setAccessible(true);return field.get(world);
-    }
-    private static boolean readyRoom(WorldSession world)throws Exception {
-        Field field=WorldSession.class.getDeclaredField("readyRoom");field.setAccessible(true);return field.getBoolean(world);
-    }
-    private static int sceneMap(WorldSession world)throws Exception {
-        Field field=WorldSession.class.getDeclaredField("scene");field.setAccessible(true);
-        return ((SceneRegistry.Instance)field.get(world)).map().id();
-    }
-    private static SceneRegistry.Instance destination(Object move)throws Exception {
-        return (SceneRegistry.Instance)move.getClass().getMethod("destination").invoke(move);
     }
     private static final class RecordingSocket extends Socket {
         final BlockingQueue<String> frames=new LinkedBlockingQueue<>();

@@ -45,11 +45,11 @@ public final class TutorialTravelSessionTest {
                     String location="world."+before.worldId()+".last-town-scene";
                     db.write(c->{try(var s=c.createStatement()){s.execute("CREATE TRIGGER reject_haven BEFORE INSERT ON metadata WHEN NEW.key='"+location+"' BEGIN SELECT RAISE(ABORT,'injected Haven failure'); END");}return null;});
                     try {world.interiorPartyInvocation(report(party));throw new AssertionError("Failed settlement accepted");}catch(IOException expected){}
-                    check(characters.worldProfile(knight.name(),1).equals(before)&&characters.lastTownScene(knight.id(),1)==0&&field(world,"portalMove")==null&&pending.valid(),"failed Haven write rolls back progress and publishes no travel; report remains retryable");
+                    check(characters.worldProfile(knight.name(),1).equals(before)&&characters.lastTownScene(knight.id(),1)==0&&!world.sceneTravelPending()&&pending.valid(),"failed Haven write rolls back progress and publishes no travel; report remains retryable");
                     db.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER reject_haven");}return null;});
                     var finish=WorldSession.class.getDeclaredMethod("finishTutorialFloor",int.class);finish.setAccessible(true);
                     check((boolean)finish.invoke(world,SceneClock.now()),"same ready report retries through production settlement and handoff");
-                    check(field(world,"portalMove")!=null&&!pending.valid(),"successful commit retires the report before publishing movement");
+                    check(world.sceneTravelPending()&&!pending.valid(),"successful commit retires the report before publishing movement");
                     check(!socket.contains("m.welcome_to_haven_1a"),"the tutorial handoff itself sends no arrival comlink dialog");
                 }
                 var after=characters.worldProfile(knight.name(),1);
@@ -84,9 +84,9 @@ public final class TutorialTravelSessionTest {
             System.out.println("PASS: real Crash Site exit sensor -> floor report -> atomic Haven handoff, injected rollback/retry, authored spawn, replay protection and Ready Room reconnect (combat skipped by fixture placement)");
         } finally {SceneRegistry.install(previous);ContentFixture.delete(home);}
     }
-    private static Object field(WorldSession world,String name)throws Exception {synchronized(world){var f=WorldSession.class.getDeclaredField(name);f.setAccessible(true);return f.get(world);}}
     private static SessionDecoder.Invocation report(int party){return new SessionDecoder.Invocation(party,SessionCodec.LEVEL_PARTY_SERVICE,3,List.of(true));}
     private static void move(WorldSession world,org.tortodrone.core.world.MapScene map)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)1))));}
+    private static Object field(WorldSession world,String name)throws Exception {synchronized(world){var f=WorldSession.class.getDeclaredField(name);f.setAccessible(true);return f.get(world);}}
     private interface Check{boolean ok()throws Exception;}
     private static void await(Check check)throws Exception {long end=System.nanoTime()+4_000_000_000L;while(System.nanoTime()<end){if(check.ok())return;Thread.sleep(10);}throw new AssertionError("Exit sensor did not open a floor report");}
     private static final class RecordingSocket extends Socket {

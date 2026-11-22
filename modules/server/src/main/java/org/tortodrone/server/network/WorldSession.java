@@ -61,6 +61,7 @@ final class WorldSession implements AutoCloseable {
     private final SessionOutput output;
     private final SessionCodec codec;
     private final int oid;
+    private final SessionRuntime runtime;
     private final long authRevision;
     private final SessionLog log;
     private final SceneRegistry scenes;
@@ -71,7 +72,6 @@ final class WorldSession implements AutoCloseable {
     private final RoleSource roles;
     private boolean gameMaster,inspectionHidden;
     private SceneRegistry.Instance scene;
-    private boolean readyRoom, returnRequested;
     private SceneSimulation.Membership membership;
     private SceneSnapshot lastSnapshot;
     private final SessionPublications publications=new SessionPublications();
@@ -86,12 +86,8 @@ final class WorldSession implements AutoCloseable {
     private WorldStatePoller.Registration persistence;
     private boolean subscribed, entered, closed, inputThrottleSent;
     private Short forcedReceiver;
-    private record PortalMove(SceneRegistry.Instance destination,ScenePortals.Entrance entrance) { }
-    private PortalMove portalMove;
     /** Stock town commands may arrive from the loading screen or Ready Room; replay the
      *  native destination request once the scene has subscribed and accepted enteredPlace. */
-    private ScenePortals.Entrance arrival;
-    private int departedSceneOid;
     private SceneHealth.State publishedHealth;
     private SceneStatus.State publishedStatus;
     private Boolean publishedArsenal;
@@ -145,18 +141,18 @@ final class WorldSession implements AutoCloseable {
     }
     void partyPresence(PartyView.View view)throws IOException{friendLocation=presence(view);}
     void forcePartyExit()throws IOException {
-        if(readyRoom)return;
-        if(scene.map().town()&&portalMove==null)return;
-        if(portalMove!=null&&portalMove.destination().map().town())return;
-        if(portalMove!=null&&portalMove.destination()!=scene)scenes.release(portalMove.destination(),profile.worldId());
-        var run=scene.run()!=null?scene.run():portalMove==null?null:portalMove.destination().run();
+        if(runtime.readyRoom())return;
+        if(scene.map().town()&&runtime.portalMove()==null)return;
+        if(runtime.portalMove()!=null&&runtime.portalMove().destination().map().town())return;
+        if(runtime.portalMove()!=null&&runtime.portalMove().destination()!=scene)scenes.release(runtime.portalMove().destination(),profile.worldId());
+        var run=scene.run()!=null?scene.run():runtime.portalMove()==null?null:runtime.portalMove().destination().run();
         if(run!=null)profile=loadProfile(profile);
         int safeTown=run==null?scenes.catalog().entry().id()
             :profile.progress().openingStage()>=2||!org.tortodrone.core.character.OpeningMission.ANCIENT_GENERATOR.id().equals(run.missionId())
                 ?run.destination().id():217;
         var next=destination(safeTown);
-        portalMove=new PortalMove(next,new ScenePortals.Entrance(1,next.map().spawnX(),next.map().spawnY(),next.map().spawnRotation()));
-        moves.clearDeferred();departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
+        runtime.beginPortal(next,new ScenePortals.Entrance(1,next.map().spawnX(),next.map().spawnY(),next.map().spawnRotation()));
+        moves.clearDeferred();runtime.departedSceneOid(scene.oid());leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
         if(forcedReceiver!=null){short receiver=forcedReceiver;output.send(()->codec.forceScene(oid,receiver,next));}
     }
     /** Verified stock SteamMarshaller: 2[int] and 5[boolean] are unacknowledged client reports;
@@ -256,7 +252,7 @@ final class WorldSession implements AutoCloseable {
     boolean completedOpeningEmpty(){return completedOpening.isEmpty();}
     /** Commit, acknowledge and force the mission move in that native order. */
     synchronized void beginForcedMissionTravel(SceneRegistry.Instance next,ScenePortals.Entrance start,short requestId)throws IOException {
-        closeConversation();closeTownDialog();portalMove=new PortalMove(next,start);departedSceneOid=scene.oid();
+        closeConversation();closeTownDialog();runtime.beginPortal(next,start);runtime.departedSceneOid(scene.oid());
         partyState();leaveChat();subscribed=entered=false;sceneGeneration++;if(membership!=null)membership.pause();
         short receiver=forcedReceiver;
         output.send(()->codec.invocationConfirmed(oid,requestId));output.send(()->codec.forceScene(oid,receiver,next));
@@ -382,6 +378,7 @@ final class WorldSession implements AutoCloseable {
         this.output = output;
         this.codec = codec;
         this.oid = oid;
+        this.runtime = new SessionRuntime();
         authRevision = revision;
         this.log = log;
         this.welcomeMessage = welcomeMessage == null ? "" : welcomeMessage;
@@ -427,7 +424,7 @@ final class WorldSession implements AutoCloseable {
     String selectedKnightName(){return knight==null?null:knight.name();}
     boolean inspectionHiddenValue(){return inspectionHidden;}
     int quickbarLength(){return quickbar.length;}
-    int departedSceneOid(){return departedSceneOid;}
+    int departedSceneOid(){return runtime.departedSceneOid();}
     void ping(short value){ping=value;}
     void acknowledge(int value){acknowledge=value;}
     boolean carriesConsumable(long id){return temporaryItems.containsKey(id)&&temporaryItems.get(id).equippedSlot()==null;}
@@ -450,7 +447,7 @@ final class WorldSession implements AutoCloseable {
     long noteMissionDialog(){missionDialogCreated=conversations.touch();return missionDialogCreated;}
     /** Install a forced destination before the client acknowledges its move. */
     void beginForcedTravel(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException {
-        portalMove=new PortalMove(next,entrance);departedSceneOid=scene.oid();
+        runtime.beginPortal(next,entrance);runtime.departedSceneOid(scene.oid());
         partyState();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
     }
     SessionResponder responder(){return responder;}
@@ -460,12 +457,12 @@ final class WorldSession implements AutoCloseable {
     boolean sceneEntered(){return entered;}
     boolean sceneSubscribed(){return subscribed;}
     boolean inSubscribedScene(){return !closed&&selected()&&entered&&subscribed;}
-    boolean sceneTravelPending(){return portalMove!=null;}
+    boolean sceneTravelPending(){return runtime.portalMove()!=null;}
     boolean deferredMovePending(){return moves.deferredPending();}
-    boolean returnRequested(){return returnRequested;}
+    boolean returnRequested(){return runtime.returnRequested();}
     /** The stock Ready Room return request; the client answers with its zone move. */
     void requestReturnToLast()throws IOException {
-        returnRequested=true;short receiver=forcedReceiver;
+        runtime.returnRequested(true);short receiver=forcedReceiver;
         output.send(()->codec.forceScene(oid,receiver,scene));
     }
     void setInspectionHidden(boolean hidden)throws IOException {
@@ -473,9 +470,9 @@ final class WorldSession implements AutoCloseable {
         gameMaster=roles.gameMaster();if(membership!=null)membership.appearance(actorAppearance());
         output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
     }
-    int pendingPortalMap(){return portalMove==null?-1:portalMove.destination().map().id();}
-    SceneRegistry.Instance pendingPortalDestination(){return portalMove==null?null:portalMove.destination();}
-    ScenePortals.Entrance pendingPortalEntrance(){return portalMove==null?null:portalMove.entrance();}
+    int pendingPortalMap(){var move=runtime.portalMove();return move==null?-1:move.destination().map().id();}
+    SceneRegistry.Instance pendingPortalDestination(){var move=runtime.portalMove();return move==null?null:move.destination();}
+    ScenePortals.Entrance pendingPortalEntrance(){var move=runtime.portalMove();return move==null?null:move.entrance();}
     void refreshPartyForTravel()throws IOException{refreshParty(true);}
     int connectionOid(){return oid;}
     int acknowledgeValue(){return acknowledge;}
@@ -541,7 +538,7 @@ final class WorldSession implements AutoCloseable {
     long authRevision(){return authRevision;}
     boolean isClosed(){return closed;}
     synchronized SceneRegistry.Instance currentScene(){return scene;}
-    synchronized boolean inReadyRoom(){return readyRoom;}
+    synchronized boolean inReadyRoom(){return runtime.readyRoom();}
     WorldProfile visibleProfileNow()throws IOException{return visibleProfile();}
     SessionLog sessionLog(){return log;}
     synchronized void adminFeedback(String reason)throws IOException{chatFeedback(scene.oid(),sceneGeneration,reason);}
@@ -572,7 +569,7 @@ final class WorldSession implements AutoCloseable {
     int sceneGenerationValue(){return sceneGeneration;}
     PartyRegistry.Member partyMember(){return partyMember;}
     boolean hasInteriors(){return scenes.catalog().hasNonTown();}
-    synchronized boolean ownsScene(int oid) { return selected() && !readyRoom && scene.oid()==oid; }
+    synchronized boolean ownsScene(int oid) { return selected() && !runtime.readyRoom() && scene.oid()==oid; }
     boolean partyInvocation(SessionDecoder.Invocation request)throws IOException{return parties.invocation(request);}
     synchronized boolean ownsInteriorParty(int target){return parties.ownsInterior(target);}
     /** Cross-session friend follow only reads the peer's stable party seat under its own monitor. */
@@ -580,7 +577,7 @@ final class WorldSession implements AutoCloseable {
     void subscribeInteriorParty(short message)throws IOException{parties.subscribeInterior(message);}
     synchronized void unsubscribeInteriorParty(int party){parties.unsubscribeInterior(party);}
     synchronized boolean interiorPartyInvocation(SessionDecoder.Invocation request)throws IOException{return parties.interiorInvocation(request);}
-    org.tortodrone.core.world.SceneInstanceView sceneNowForParty(){return portalMove!=null?portalMove.destination():scene;}
+    org.tortodrone.core.world.SceneInstanceView sceneNowForParty(){return runtime.portalMove()!=null?runtime.portalMove().destination():scene;}
     void completeDeferredPartyMove()throws IOException {
         var move=moves.takeDeferred(scene.oid());
         if(move!=null)completeMove(move.requestId(),move.zone());
@@ -599,8 +596,8 @@ final class WorldSession implements AutoCloseable {
     synchronized boolean departingScene(int oid) {
         // Returning from the client-local Ready Room can reuse the reserved town OID.
         // Once that place is subscribed again its enteredPlace is current, not stale.
-        return !closed&&departedSceneOid!=0&&departedSceneOid==oid
-            &&(readyRoom||portalMove!=null||!subscribed||scene.oid()!=oid);
+        return !closed&&runtime.departedSceneOid()!=0&&runtime.departedSceneOid()==oid
+            &&(runtime.readyRoom()||runtime.portalMove()!=null||!subscribed||scene.oid()!=oid);
     }
     boolean ownsTrade(int objectId){return trade.owns(objectId);}
     void subscribeTrade(int objectId,short message)throws IOException{trade.subscribe(objectId,message);}
@@ -666,8 +663,8 @@ final class WorldSession implements AutoCloseable {
         if(characters.hasWorldStorage()){characters.services().friends().session(characters.accountId(),knight.id(),authRevision);profile=characters.worldProfile(knight.name(),authRevision,profile);}
         guilds.reload();
         friendOnline=true;
-        readyRoom=stageInReadyRoom;
-        if(readyRoom)friendLocation=new FriendPresence("~",ReadyRoom.ZONE,0);
+        runtime.readyRoom(stageInReadyRoom);
+        if(runtime.readyRoom())friendLocation=new FriendPresence("~",ReadyRoom.ZONE,0);
         else attach();
         partyMember=scenes.parties().join(oid,knight,profile,this::offerParty);
         if(profile.progress().crashSiteIncomplete())scenes.parties().enterTutorial(partyMember);
@@ -687,7 +684,7 @@ final class WorldSession implements AutoCloseable {
         receiverChanged(receivers);
         log.selected(knight.id(),profile.worldId(),knight.name());
         log.info("Character selected; knight=" + knight.name() + " (#" + profile.worldId() + "); rosterId="+knight.id());
-        if(!readyRoom)monitorScene();
+        if(!runtime.readyRoom())monitorScene();
         // Party events belong to the selected session, not its scene subscription.
         // Ready Room is client-local and never calls entered(); delaying this worker
         // until then strands invitations and can overflow the queue on world return.
@@ -712,8 +709,8 @@ final class WorldSession implements AutoCloseable {
         Short receiver = receivers.get(SceneRegistry.ZONE_RECEIVER);
         if (receiver == null) forcedReceiver = null;
         if (selected() && receiver != null && !receiver.equals(forcedReceiver)) {
-            var destination=portalMove==null?scene:portalMove.destination();
-            if(readyRoom&&!returnRequested)output.send(()->codec.forceDestination(oid,receiver,ReadyRoom.ZONE,ReadyRoom.SCENE));
+            var destination=runtime.portalMove()==null?scene:runtime.portalMove().destination();
+            if(runtime.readyRoom()&&!runtime.returnRequested())output.send(()->codec.forceDestination(oid,receiver,ReadyRoom.ZONE,ReadyRoom.SCENE));
             else output.send(() -> codec.forceScene(oid, receiver,destination));
             forcedReceiver = receiver;
             flushPendingTravel();
@@ -746,8 +743,8 @@ final class WorldSession implements AutoCloseable {
      *  only as a durable return destination. */
     synchronized void enterReadyRoom(short requestId)throws IOException {
         if(profile.progress().crashSiteIncomplete())throw new IOException("Finish the tutorial through its exit first");
-        if(portalMove!=null||returnRequested)throw new IOException("Finish the current journey first");
-        if(!readyRoom){
+        if(runtime.portalMove()!=null||runtime.returnRequested())throw new IOException("Finish the current journey first");
+        if(!runtime.readyRoom()){
             var returnScene=scene;
             if(!scene.map().town()){
                 int saved=characters.lastTownScene(knight.id(),authRevision);
@@ -757,13 +754,13 @@ final class WorldSession implements AutoCloseable {
             }
             var before=visibleProfile();
             closeConversation();closeTownDialog();leaveChat();subscribed=entered=false;sceneGeneration++;
-            departedSceneOid=scene.oid();membership.close();membership=null;
+            runtime.departedSceneOid(scene.oid());membership.close();membership=null;
             scenes.release(scene,profile.worldId());
             // Private instances are not durable return destinations.
             scene=returnScene;
             floors.clearReport();
-            temporaryItems.clear();lastSnapshot=null;reference=acknowledge=0;arrival=null;
-            readyRoom=true;refreshParty(true);
+            temporaryItems.clear();lastSnapshot=null;reference=acknowledge=0;runtime.arrival(null);
+            runtime.readyRoom(true);refreshParty(true);
             var after=visibleProfile();if(!before.equals(after))output.send(()->codec.itemChanges(oid,knight,before,after));
         }
         friendLocation=new FriendPresence("~",ReadyRoom.ZONE,0);
@@ -792,9 +789,9 @@ final class WorldSession implements AutoCloseable {
         if(!temporaryItems.isEmpty()){var before=visibleProfile();temporaryItems.clear();output.send(()->codec.itemChanges(oid,knight,before,profile));publishQuickbar();}
         leaveChat();
         subscribed=entered=false;sceneGeneration++;occupantClients=Map.of();occupantRoles=Map.of();lastSnapshot=null;
-        reference=acknowledge=0;destinations.clearAlchemyTarget();departedSceneOid=scene.oid();if(membership!=null)membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
-        readyRoom=returnRequested=false;
-        arrival=entrance;portalMove=null;
+        reference=acknowledge=0;destinations.clearAlchemyTarget();runtime.departedSceneOid(scene.oid());if(membership!=null)membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
+        runtime.readyRoom(false);runtime.returnRequested(false);
+        runtime.arrival(entrance);runtime.clearPortal();
         created=SceneClock.now();attach();
         monitorScene();
         // Arriving comlinks are delivered behind the move response (see completeMove),
@@ -805,7 +802,7 @@ final class WorldSession implements AutoCloseable {
 
     synchronized void requireAdminReady()throws IOException { requireAdminReady(false); }
     synchronized void requireAdminReady(boolean roomTravel)throws IOException {
-        if(closed||socket.isClosed()||!selected()||(!(roomTravel&&readyRoom)&&(!subscribed||!entered))||forcedReceiver==null||portalMove!=null||deferredMovePending())throw new IOException("Finish entering this scene first");
+        if(closed||socket.isClosed()||!selected()||(!(roomTravel&&runtime.readyRoom())&&(!subscribed||!entered))||forcedReceiver==null||runtime.portalMove()!=null||deferredMovePending())throw new IOException("Finish entering this scene first");
         try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
         if(!roles.gameMaster())throw new IOException("Game Master permission required");
     }
@@ -816,8 +813,8 @@ final class WorldSession implements AutoCloseable {
     }
     /** The game-master travel tail; location validation lives in AdminHandler. */
     synchronized void beginAdminTravel(SceneRegistry.Instance next,AdminHandler.AdminLocation location)throws IOException {
-        portalMove=new PortalMove(next,new ScenePortals.Entrance(1,location.x(),location.y(),location.rotation()));
-        departedSceneOid=readyRoom?0:scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;
+        runtime.beginPortal(next,new ScenePortals.Entrance(1,location.x(),location.y(),location.rotation()));
+        runtime.departedSceneOid(runtime.readyRoom()?0:scene.oid());leaveChat();subscribed=entered=false;sceneGeneration++;
         if(membership!=null)membership.pause();short receiver=forcedReceiver;
         output.send(()->codec.forceScene(oid,receiver,next));
     }
@@ -831,9 +828,9 @@ final class WorldSession implements AutoCloseable {
 
     synchronized void subscribe(short message) throws IOException {
         if (!selected()) throw new IOException("Select a knight before subscribing to a scene");
-        if(readyRoom)throw new IOException("The Ready Room has no server place object");
+        if(runtime.readyRoom())throw new IOException("The Ready Room has no server place object");
         if(closed)throw new IOException("Session closed");
-        if(portalMove!=null)throw new IOException("Scene is departing through a portal");
+        if(runtime.portalMove()!=null)throw new IOException("Scene is departing through a portal");
         var snapshot=scene.simulation().snapshot();
         if(snapshot.players().stream().filter(actor->actor.clientOid()==oid&&actor.id()==profile.worldId()).count()!=1)
             throw new IOException("Scene has no unique owned pawn");
@@ -850,7 +847,7 @@ final class WorldSession implements AutoCloseable {
 
     /** The stock controller sends enteredPlace after attaching its scene-delta listener. */
     synchronized void entered() throws IOException {
-        if(portalMove!=null)return; // A source readiness RPC may already be queued before forceScene.
+        if(runtime.portalMove()!=null)return; // A source readiness RPC may already be queued before forceScene.
         if (!subscribed || closed) throw new IOException("Subscribe to town before entering it");
         if (entered) return;
         if(scene.map().town()){
@@ -859,7 +856,7 @@ final class WorldSession implements AutoCloseable {
         }
         entered = true;
         friendLocation=presence(scenes.parties().view(partyMember));
-        departedSceneOid=0;
+        runtime.departedSceneOid(0);
         int generation=sceneGeneration,place=scene.oid();
         chats.enter(place,generation);
         if(!welcomed&&!welcomeMessage.isEmpty()) {
@@ -965,10 +962,10 @@ final class WorldSession implements AutoCloseable {
     }
     void updateAppearance(){rebuildAppearance();if(membership!=null){membership.equipment(visibleProfile());membership.appearance(actorAppearance());}}
     private ActorState actorAppearance() {
-        var checkpoint=arrival==null?scene.simulation().defaultEntrance():null;
+        var checkpoint=runtime.arrival()==null?scene.simulation().defaultEntrance():null;
         return new ActorState(profile.worldId(),oid,knight.name(),256|knight.color(),created,
-            arrival==null?checkpoint==null?scene.map().spawnX():checkpoint.x():arrival.x(),arrival==null?checkpoint==null?scene.map().spawnY():checkpoint.y():arrival.y(),
-            arrival==null?checkpoint==null?scene.map().spawnRotation():checkpoint.rotation():arrival.rotation(),0,0,0,created,appearance,gameMaster);
+            runtime.arrival()==null?checkpoint==null?scene.map().spawnX():checkpoint.x():runtime.arrival().x(),runtime.arrival()==null?checkpoint==null?scene.map().spawnY():checkpoint.y():runtime.arrival().y(),
+            runtime.arrival()==null?checkpoint==null?scene.map().spawnRotation():checkpoint.rotation():runtime.arrival().rotation(),0,0,0,created,appearance,gameMaster);
     }
 
     static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
@@ -989,7 +986,7 @@ final class WorldSession implements AutoCloseable {
         subscribed = false;
         if(membership!=null)membership.close();
         if(partyMember!=null){partyMember.close();partyMember=null;}
-        if(profile!=null){scenes.release(scene,profile.worldId());if(portalMove!=null)scenes.release(portalMove.destination(),profile.worldId());}
+        if(profile!=null){scenes.release(scene,profile.worldId());if(runtime.portalMove()!=null)scenes.release(runtime.portalMove().destination(),profile.worldId());}
         publications.stop();
         if (profile != null) synchronized (ACTIVE) { ACTIVE.remove(profile.worldId(), this); }
     }
