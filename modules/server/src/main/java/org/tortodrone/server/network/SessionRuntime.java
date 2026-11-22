@@ -2,6 +2,7 @@ package org.tortodrone.server.network;
 
 import org.tortodrone.core.world.ScenePortals;
 import org.tortodrone.world.SceneRegistry;
+import org.tortodrone.world.SceneSimulation;
 
 /** Scene identity and travel state for one connection: the current instance, Ready Room
  *  staging, the one in-flight portal journey, the arrival entrance and the departure
@@ -11,6 +12,7 @@ final class SessionRuntime {
     record PortalMove(SceneRegistry.Instance destination,ScenePortals.Entrance entrance) { }
 
     private SceneRegistry.Instance scene;
+    private SceneSimulation.Membership membership;
     private boolean readyRoom,returnRequested;
     private PortalMove portalMove;
     private ScenePortals.Entrance arrival;
@@ -18,6 +20,9 @@ final class SessionRuntime {
 
     SceneRegistry.Instance scene(){return scene;}
     void scene(SceneRegistry.Instance value){scene=value;}
+
+    SceneSimulation.Membership membership(){return membership;}
+    void membership(SceneSimulation.Membership value){membership=value;}
 
     boolean readyRoom(){return readyRoom;}
     void readyRoom(boolean value){readyRoom=value;}

@@ -35,7 +35,7 @@ public final class TutorialTravelSessionTest {
                 int party=registry.parties().view(world.partyMemberSnapshot()).oid();
                 world.interiorPartyInvocation(report(party));
                 check(characters.worldProfile(knight.name(),1).equals(before),"premature report cannot skip Crash Site");
-                var member=(SceneSimulation.Membership)field(world,"membership");
+                var member=world.membership();
                 var exit=route.source().content().entries().stream().filter(e->e.key().equals(Integer.toString(TutorialRoute.EXIT))).findFirst().orElseThrow();
                 check(member.teleport(exit.x(),exit.y(),0),"server-only fixture placement at original exit");
                 await(()->world.floorReport()!=null);

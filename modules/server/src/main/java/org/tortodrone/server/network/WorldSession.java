@@ -71,8 +71,6 @@ final class WorldSession implements AutoCloseable {
     @FunctionalInterface interface RoleSource { boolean gameMaster()throws IOException; }
     private final RoleSource roles;
     private boolean gameMaster,inspectionHidden;
-    private SceneRegistry.Instance scene;
-    private SceneSimulation.Membership membership;
     private SceneSnapshot lastSnapshot;
     private final SessionPublications publications=new SessionPublications();
     private StarterCatalog.Model appearance;
@@ -133,26 +131,26 @@ final class WorldSession implements AutoCloseable {
     private void refreshParty(boolean traveling)throws IOException{parties.refresh(traveling);}
     /** The native friend list's Join affordance is driven by this presence. */
     private FriendPresence presence(PartyView.View view)throws IOException {
-        if(scene.map().town())return new FriendPresence(scene.map().name(),scene.map().zone(),scene.oid());
+        if(runtime.scene().map().town())return new FriendPresence(runtime.scene().map().name(),runtime.scene().map().zone(),runtime.scene().oid());
         // Only Training rooms are party-shared; Laboratory and Hall of Heroes stay per-world.
-        boolean shared=scene.map().kind().equals("training")&&scenes.parties().owner(partyMember,profile.worldId())!=0;
+        boolean shared=runtime.scene().map().kind().equals("training")&&scenes.parties().owner(partyMember,profile.worldId())!=0;
         boolean joinable=shared&&(view.automatic()||!view.inviteOnly()||view.allowFriends());
-        return new FriendPresence(scene.map().name(),scene.map().zone(),joinable?scene.oid():0);
+        return new FriendPresence(runtime.scene().map().name(),runtime.scene().map().zone(),joinable?runtime.scene().oid():0);
     }
     void partyPresence(PartyView.View view)throws IOException{friendLocation=presence(view);}
     void forcePartyExit()throws IOException {
         if(runtime.readyRoom())return;
-        if(scene.map().town()&&runtime.portalMove()==null)return;
+        if(runtime.scene().map().town()&&runtime.portalMove()==null)return;
         if(runtime.portalMove()!=null&&runtime.portalMove().destination().map().town())return;
-        if(runtime.portalMove()!=null&&runtime.portalMove().destination()!=scene)scenes.release(runtime.portalMove().destination(),profile.worldId());
-        var run=scene.run()!=null?scene.run():runtime.portalMove()==null?null:runtime.portalMove().destination().run();
+        if(runtime.portalMove()!=null&&runtime.portalMove().destination()!=runtime.scene())scenes.release(runtime.portalMove().destination(),profile.worldId());
+        var run=runtime.scene().run()!=null?runtime.scene().run():runtime.portalMove()==null?null:runtime.portalMove().destination().run();
         if(run!=null)profile=loadProfile(profile);
         int safeTown=run==null?scenes.catalog().entry().id()
             :profile.progress().openingStage()>=2||!org.tortodrone.core.character.OpeningMission.ANCIENT_GENERATOR.id().equals(run.missionId())
                 ?run.destination().id():217;
         var next=destination(safeTown);
         runtime.beginPortal(next,new ScenePortals.Entrance(1,next.map().spawnX(),next.map().spawnY(),next.map().spawnRotation()));
-        moves.clearDeferred();runtime.departedSceneOid(scene.oid());leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
+        moves.clearDeferred();runtime.departedSceneOid(runtime.scene().oid());leaveChat();subscribed=entered=false;sceneGeneration++;runtime.membership().pause();
         if(forcedReceiver!=null){short receiver=forcedReceiver;output.send(()->codec.forceScene(oid,receiver,next));}
     }
     /** Verified stock SteamMarshaller: 2[int] and 5[boolean] are unacknowledged client reports;
@@ -172,7 +170,7 @@ final class WorldSession implements AutoCloseable {
     private long nextTemporaryItem=-1;
     private final long[] quickbar=new long[4];
     void publishQuickbar()throws IOException {
-        if(membership!=null)membership.inventory(visibleProfile());
+        if(runtime.membership()!=null)runtime.membership().inventory(visibleProfile());
         for(int slot=0;slot<quickbar.length;slot++)if(!temporaryItems.containsKey(quickbar[slot]))quickbar[slot]=0;
         var slots=quickbar.clone();output.send(()->codec.quickbar(oid,slots));
     }
@@ -190,7 +188,7 @@ final class WorldSession implements AutoCloseable {
         var wire=wireObjectives();output.send(()->codec.objectives(oid,wire));
     }
     private WorldProfile visibleProfile(){
-        return visibleProfile(membership==null?Set.of():membership.status().cursedItems());
+        return visibleProfile(runtime.membership()==null?Set.of():runtime.membership().status().cursedItems());
     }
     WorldProfile visibleProfile(Set<Long> cursed){
         if(temporaryItems.isEmpty()&&cursed.isEmpty())return profile;
@@ -209,7 +207,7 @@ final class WorldSession implements AutoCloseable {
         var before=visibleProfile();profile=result.profile();updateAppearance();var after=visibleProfile();
         // The durable operation already committed. A failed buyer connection must
         // not suppress its shared scene effect for remaining observers.
-        if(before.energy()>after.energy()&&membership!=null)membership.effect(new StarterCatalog.Model("Energy Spent",Map.of()));
+        if(before.energy()>after.energy()&&runtime.membership()!=null)runtime.membership().effect(new StarterCatalog.Model("Energy Spent",Map.of()));
         output.send(()->codec.itemChanges(oid,knight,before,after));output.send(()->codec.balances(oid,after));
         var achievementChanges=codec.achievementChanges(oid,before,after);
         if(achievementChanges!=null)output.send(()->achievementChanges);
@@ -235,7 +233,7 @@ final class WorldSession implements AutoCloseable {
         boolean valid=switch(method){case 1->a.size()==2&&a.getFirst() instanceof Integer;case 2->a.size()==1;case 3->a.size()==5&&a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Boolean&&a.get(3) instanceof Boolean;default->false;};
         if(!valid)throw new SessionDecoder.Rejected("Invalid Energy Exchange request");
         try{
-            if(closed||!selected()||!entered||!subscribed||!exchangeHandler.subscribed()||!scene.map().town()&&!scene.map().kind().equals("training"))throw new IOException("Open the Energy Exchange in town first");
+            if(closed||!selected()||!entered||!subscribed||!exchangeHandler.subscribed()||!runtime.scene().map().town()&&!runtime.scene().map().kind().equals("training"))throw new IOException("Open the Energy Exchange in town first");
             if(trade.active())throw new IOException("Finish the trade first");
             var exchange=characters.services().exchange();var result=switch(method){case 1->exchange.cancel(characters.accountId(),knight.id(),authRevision,(Integer)a.getFirst());case 2->exchange.offers(characters.accountId(),knight.id(),authRevision);default->exchange.trade(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),(Integer)a.get(1),(Boolean)a.get(2),(Boolean)a.get(3));};
             townChanged(result);refreshExchange(exchange.book());
@@ -252,15 +250,15 @@ final class WorldSession implements AutoCloseable {
     boolean completedOpeningEmpty(){return completedOpening.isEmpty();}
     /** Commit, acknowledge and force the mission move in that native order. */
     synchronized void beginForcedMissionTravel(SceneRegistry.Instance next,ScenePortals.Entrance start,short requestId)throws IOException {
-        closeConversation();closeTownDialog();runtime.beginPortal(next,start);runtime.departedSceneOid(scene.oid());
-        partyState();leaveChat();subscribed=entered=false;sceneGeneration++;if(membership!=null)membership.pause();
+        closeConversation();closeTownDialog();runtime.beginPortal(next,start);runtime.departedSceneOid(runtime.scene().oid());
+        partyState();leaveChat();subscribed=entered=false;sceneGeneration++;if(runtime.membership()!=null)runtime.membership().pause();
         short receiver=forcedReceiver;
         output.send(()->codec.invocationConfirmed(oid,requestId));output.send(()->codec.forceScene(oid,receiver,next));
     }
     void clearArrivalComlink(){arrivalComlink=null;}
     void leaveChatForTown(){leaveChat();}
     void requestRenameDisconnect(){renameDisconnect=true;}
-    void recipeLearnedEffect(){if(membership!=null)membership.effect(new StarterCatalog.Model("Player/Learn Recipe",Map.of()));}
+    void recipeLearnedEffect(){if(runtime.membership()!=null)runtime.membership().effect(new StarterCatalog.Model("Player/Learn Recipe",Map.of()));}
     /** Remove one consumable/session pickup from the visible inventory without a store write. */
     boolean trashTemporary(long id)throws IOException {
         if(!temporaryItems.containsKey(id))return false;
@@ -344,7 +342,7 @@ final class WorldSession implements AutoCloseable {
             if(missionDialogCreated!=0&&created!=missionDialogCreated)return true;
             missionDialogCreated=0;
             // A stale close from a client still holding a replaced dialog: acknowledge idempotently.
-            output.send(()->codec.conversationDialog(oid,scene.oid(),null,null,null,0));return true;
+            output.send(()->codec.conversationDialog(oid,runtime.scene().oid(),null,null,null,0));return true;
         }
         return town.invocation(request);
     }
@@ -420,7 +418,7 @@ final class WorldSession implements AutoCloseable {
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
     synchronized boolean selected() { return knight != null; }
     boolean selectedKnightSelected(){return selected();}
-    boolean equipmentAllowed(){return membership!=null&&membership.equipmentAllowed();}
+    boolean equipmentAllowed(){return runtime.membership()!=null&&runtime.membership().equipmentAllowed();}
     String selectedKnightName(){return knight==null?null:knight.name();}
     boolean inspectionHiddenValue(){return inspectionHidden;}
     int quickbarLength(){return quickbar.length;}
@@ -447,8 +445,8 @@ final class WorldSession implements AutoCloseable {
     long noteMissionDialog(){missionDialogCreated=conversations.touch();return missionDialogCreated;}
     /** Install a forced destination before the client acknowledges its move. */
     void beginForcedTravel(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException {
-        runtime.beginPortal(next,entrance);runtime.departedSceneOid(scene.oid());
-        partyState();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
+        runtime.beginPortal(next,entrance);runtime.departedSceneOid(runtime.scene().oid());
+        partyState();leaveChat();subscribed=entered=false;sceneGeneration++;runtime.membership().pause();
     }
     SessionResponder responder(){return responder;}
     SessionOutput output(){return output;}
@@ -463,11 +461,11 @@ final class WorldSession implements AutoCloseable {
     /** The stock Ready Room return request; the client answers with its zone move. */
     void requestReturnToLast()throws IOException {
         runtime.returnRequested(true);short receiver=forcedReceiver;
-        output.send(()->codec.forceScene(oid,receiver,scene));
+        output.send(()->codec.forceScene(oid,receiver,runtime.scene()));
     }
     void setInspectionHidden(boolean hidden)throws IOException {
         characters.inspectionHidden(authRevision,hidden);inspectionHidden=hidden;
-        gameMaster=roles.gameMaster();if(membership!=null)membership.appearance(actorAppearance());
+        gameMaster=roles.gameMaster();if(runtime.membership()!=null)runtime.membership().appearance(actorAppearance());
         output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
     }
     int pendingPortalMap(){var move=runtime.portalMove();return move==null?-1:move.destination().map().id();}
@@ -508,23 +506,23 @@ final class WorldSession implements AutoCloseable {
     void publishVisited(Set<Integer> visited)throws IOException{parties.publishVisited(visited);}
     boolean stateRefreshActive(WorldStatePoller.Registration registration){return !closed&&entered&&persistence==registration;}
     void setGameMaster(boolean value){gameMaster=value;}
-    void applyActorAppearance(){membership.appearance(actorAppearance());}
+    void applyActorAppearance(){runtime.membership().appearance(actorAppearance());}
     void publishOutbids(WorldProfile before,WorldProfile after)throws IOException{auction.publishOutbids(before,after);}
     void refreshOutbids(WorldProfile before,WorldProfile after)throws IOException{auction.publishOutbids(before,after);}
 
 
     SessionDecoder.Invocation queuedTravel(){return destinations.queued();}
     boolean auctionAfterArrivalPending(){return destinations.auctionAfterArrivalPending();}
-    boolean canOpenBox(){return membership!=null&&membership.canOpenBox();}
-    void openBox(java.util.List<StarterCatalog.Model> references){membership.openBox(references);}
-    void confetti(String config){membership.confetti(config);}
-    void animatedAction(String config){membership.animatedAction(config);}
+    boolean canOpenBox(){return runtime.membership()!=null&&runtime.membership().canOpenBox();}
+    void openBox(java.util.List<StarterCatalog.Model> references){runtime.membership().openBox(references);}
+    void confetti(String config){runtime.membership().confetti(config);}
+    void animatedAction(String config){runtime.membership().animatedAction(config);}
     SceneSimulation.Membership.ItemUse<org.tortodrone.storage.TownStore.Result> useOwnedItem(long id,
             org.tortodrone.core.world.SceneContent.Spec spec,SceneSimulation.RevivePayment<org.tortodrone.storage.TownStore.Result> payment)throws IOException{
-        return membership.useOwnedItem(id,spec,payment);
+        return runtime.membership().useOwnedItem(id,spec,payment);
     }
-    boolean useTemporaryItem(long id,org.tortodrone.core.world.SceneContent.Spec spec){return membership.useItem(id,spec);}
-    org.tortodrone.core.world.SceneContent.Spec persistentItemSpec(String config){return scene==null?null:scene.map().content().items().get(config);}
+    boolean useTemporaryItem(long id,org.tortodrone.core.world.SceneContent.Spec spec){return runtime.membership().useItem(id,spec);}
+    org.tortodrone.core.world.SceneContent.Spec persistentItemSpec(String config){return runtime.scene()==null?null:runtime.scene().map().content().items().get(config);}
     org.tortodrone.core.world.SceneContent.Spec temporaryItemSpec(long id){var item=temporaryItems.get(id);return item==null?null:persistentItemSpec(item.config());}
     WorldProfile loadOwnProfile()throws IOException,CharacterStore.Refused{return characters.worldProfile(knight.name(),authRevision,profile);}
     void refreshKnight(){knight=characters.roster().stream().filter(k->k.id()==knight.id()).findFirst().orElseThrow();}
@@ -537,13 +535,13 @@ final class WorldSession implements AutoCloseable {
     void applyProfile(WorldProfile value){profile=value;}
     long authRevision(){return authRevision;}
     boolean isClosed(){return closed;}
-    synchronized SceneRegistry.Instance currentScene(){return scene;}
+    synchronized SceneRegistry.Instance currentScene(){return runtime.scene();}
     synchronized boolean inReadyRoom(){return runtime.readyRoom();}
     WorldProfile visibleProfileNow()throws IOException{return visibleProfile();}
     SessionLog sessionLog(){return log;}
-    synchronized void adminFeedback(String reason)throws IOException{chatFeedback(scene.oid(),sceneGeneration,reason);}
-    ActorState selfActor(){return scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);}
-    SceneSimulation.Membership membership(){return membership;}
+    synchronized void adminFeedback(String reason)throws IOException{chatFeedback(runtime.scene().oid(),sceneGeneration,reason);}
+    ActorState selfActor(){return runtime.scene().simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);}
+    SceneSimulation.Membership membership(){return runtime.membership();}
     /** The saved half of one conversation terminal: the pre-write profile and what committed. */
     record PreparedSettlement(WorldProfile before,org.tortodrone.storage.OpeningMissionStore.Settlement settled,boolean firstEver) { }
     PreparedSettlement prepareConversationSettlement(String terminalId)throws IOException {
@@ -557,7 +555,7 @@ final class WorldSession implements AutoCloseable {
         if(!objectives.equals(settled.objectives())){objectives=settled.objectives();publishObjectives();}
         if(!settled.completion().equals(completedOpening.get(terminalId))){var completed=new LinkedHashMap<>(completedOpening);completed.put(terminalId,settled.completion());completedOpening=Map.copyOf(completed);}
         if(settled.first()){
-            membership.equipment(visibleProfile());missionDialogCreated=dialog;
+            runtime.membership().equipment(visibleProfile());missionDialogCreated=dialog;
             var entry=scenes.missions().mission(terminalId);
             boolean immediate=entry==null||!entry.requirement().type().equals("gate");
             output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),scenes.missions().grants(terminalId),scenes.missions().prestige(terminalId),immediate,dialog));
@@ -569,7 +567,7 @@ final class WorldSession implements AutoCloseable {
     int sceneGenerationValue(){return sceneGeneration;}
     PartyRegistry.Member partyMember(){return partyMember;}
     boolean hasInteriors(){return scenes.catalog().hasNonTown();}
-    synchronized boolean ownsScene(int oid) { return selected() && !runtime.readyRoom() && scene.oid()==oid; }
+    synchronized boolean ownsScene(int oid) { return selected() && !runtime.readyRoom() && runtime.scene().oid()==oid; }
     boolean partyInvocation(SessionDecoder.Invocation request)throws IOException{return parties.invocation(request);}
     synchronized boolean ownsInteriorParty(int target){return parties.ownsInterior(target);}
     /** Cross-session friend follow only reads the peer's stable party seat under its own monitor. */
@@ -577,27 +575,27 @@ final class WorldSession implements AutoCloseable {
     void subscribeInteriorParty(short message)throws IOException{parties.subscribeInterior(message);}
     synchronized void unsubscribeInteriorParty(int party){parties.unsubscribeInterior(party);}
     synchronized boolean interiorPartyInvocation(SessionDecoder.Invocation request)throws IOException{return parties.interiorInvocation(request);}
-    org.tortodrone.core.world.SceneInstanceView sceneNowForParty(){return runtime.portalMove()!=null?runtime.portalMove().destination():scene;}
+    org.tortodrone.core.world.SceneInstanceView sceneNowForParty(){return runtime.portalMove()!=null?runtime.portalMove().destination():runtime.scene();}
     void completeDeferredPartyMove()throws IOException {
-        var move=moves.takeDeferred(scene.oid());
+        var move=moves.takeDeferred(runtime.scene().oid());
         if(move!=null)completeMove(move.requestId(),move.zone());
     }
     void publishedHealthStatus(SceneHealth.State health,SceneStatus.State status){publishedHealth=health;publishedStatus=status;}
     /** Publish the current equip policy on the ordered stream before an arsenal window opens. */
     void publishArsenalPolicy()throws IOException {
-        boolean inZone=membership!=null&&membership.arsenalZone();
+        boolean inZone=runtime.membership()!=null&&runtime.membership().arsenalZone();
         output.send(()->codec.equipPolicy(oid,inZone));publishedArsenal=inZone;
     }
     FloorReport floorReport(){return floors.report();}
     boolean finishTutorialFloor(int stamp)throws IOException{return floors.finishTutorial(stamp);}
     boolean finishOpeningFloor(int stamp)throws IOException{return floors.finishOpening(stamp);}
-    boolean sceneTutorial(){return scene.tutorial()!=null;}
-    MissionRun sceneRun(){return scene.run();}
+    boolean sceneTutorial(){return runtime.scene().tutorial()!=null;}
+    MissionRun sceneRun(){return runtime.scene().run();}
     synchronized boolean departingScene(int oid) {
         // Returning from the client-local Ready Room can reuse the reserved town OID.
         // Once that place is subscribed again its enteredPlace is current, not stale.
         return !closed&&runtime.departedSceneOid()!=0&&runtime.departedSceneOid()==oid
-            &&(runtime.readyRoom()||runtime.portalMove()!=null||!subscribed||scene.oid()!=oid);
+            &&(runtime.readyRoom()||runtime.portalMove()!=null||!subscribed||runtime.scene().oid()!=oid);
     }
     boolean ownsTrade(int objectId){return trade.owns(objectId);}
     void subscribeTrade(int objectId,short message)throws IOException{trade.subscribe(objectId,message);}
@@ -649,7 +647,7 @@ final class WorldSession implements AutoCloseable {
                 if (ACTIVE.containsKey(loaded.worldId())) throw new IOException("This knight is already online");
                 profile = loaded;
                 knight = choice;
-                scene = scenes.destination(destination,loaded.worldId());
+                runtime.scene(scenes.destination(destination,loaded.worldId()));
                 ACTIVE.put(loaded.worldId(), this);
             }
         }
@@ -692,7 +690,7 @@ final class WorldSession implements AutoCloseable {
             log.warn("Scene delivery closed; "+deliveryFailure(failure));close();
             try{socket.close();}catch(IOException ignored){}
         });
-        log.debug("Knight/scene initialization completed; duration-ms="+((System.nanoTime()-selectionStarted)/1000000));
+        log.debug("Knight/runtime.scene() initialization completed; duration-ms="+((System.nanoTime()-selectionStarted)/1000000));
     }
 
     /** Call outside the CharacterStore publication lock to preserve session/account lock order. */
@@ -701,7 +699,7 @@ final class WorldSession implements AutoCloseable {
             var visible=visibleProfile();output.send(() -> codec.selected(oid, knight, visible, guilds.guildInfo()));
             publishQuickbar();
             output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
-            if (subscribed) output.send(() -> codec.sceneLocation(oid,scene,scenes.channelOid(scene.map().zone(),false),scenes.channelOid(scene.map().zone(),true)));
+            if (subscribed) output.send(() -> codec.sceneLocation(oid,runtime.scene(),scenes.channelOid(runtime.scene().map().zone(),false),scenes.channelOid(runtime.scene().map().zone(),true)));
         }
     }
 
@@ -709,7 +707,7 @@ final class WorldSession implements AutoCloseable {
         Short receiver = receivers.get(SceneRegistry.ZONE_RECEIVER);
         if (receiver == null) forcedReceiver = null;
         if (selected() && receiver != null && !receiver.equals(forcedReceiver)) {
-            var destination=runtime.portalMove()==null?scene:runtime.portalMove().destination();
+            var destination=runtime.portalMove()==null?runtime.scene():runtime.portalMove().destination();
             if(runtime.readyRoom()&&!runtime.returnRequested())output.send(()->codec.forceDestination(oid,receiver,ReadyRoom.ZONE,ReadyRoom.SCENE));
             else output.send(() -> codec.forceScene(oid, receiver,destination));
             forcedReceiver = receiver;
@@ -745,8 +743,8 @@ final class WorldSession implements AutoCloseable {
         if(profile.progress().crashSiteIncomplete())throw new IOException("Finish the tutorial through its exit first");
         if(runtime.portalMove()!=null||runtime.returnRequested())throw new IOException("Finish the current journey first");
         if(!runtime.readyRoom()){
-            var returnScene=scene;
-            if(!scene.map().town()){
+            var returnScene=runtime.scene();
+            if(!runtime.scene().map().town()){
                 int saved=characters.lastTownScene(knight.id(),authRevision);
                 int permanent=scenes.catalog().towns().stream().filter(map->map.id()==saved)
                     .mapToInt(org.tortodrone.core.world.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
@@ -754,10 +752,10 @@ final class WorldSession implements AutoCloseable {
             }
             var before=visibleProfile();
             closeConversation();closeTownDialog();leaveChat();subscribed=entered=false;sceneGeneration++;
-            runtime.departedSceneOid(scene.oid());membership.close();membership=null;
-            scenes.release(scene,profile.worldId());
+            runtime.departedSceneOid(runtime.scene().oid());runtime.membership().close();runtime.membership(null);
+            scenes.release(runtime.scene(),profile.worldId());
             // Private instances are not durable return destinations.
-            scene=returnScene;
+            runtime.scene(returnScene);
             floors.clearReport();
             temporaryItems.clear();lastSnapshot=null;reference=acknowledge=0;runtime.arrival(null);
             runtime.readyRoom(true);refreshParty(true);
@@ -769,8 +767,8 @@ final class WorldSession implements AutoCloseable {
     }
 
     void completeMove(short requestId,boolean zone)throws IOException {
-        output.send(() -> codec.sceneMove(oid,requestId,zone,scene,scenes.catalog()));
-        output.send(() -> codec.sceneLocation(oid,scene,scenes.channelOid(scene.map().zone(),false),scenes.channelOid(scene.map().zone(),true)));
+        output.send(() -> codec.sceneMove(oid,requestId,zone,runtime.scene(),scenes.catalog()));
+        output.send(() -> codec.sceneLocation(oid,runtime.scene(),scenes.channelOid(runtime.scene().map().zone(),false),scenes.channelOid(runtime.scene().map().zone(),true)));
         // Deliver the pre-arranged arrival comlink behind the moveSucceeded response: the
         // client processes it in the window where its scene controllers are gone (see the
         // arrival openComlink), so the dialog waits for the destination view like native.
@@ -789,7 +787,7 @@ final class WorldSession implements AutoCloseable {
         if(!temporaryItems.isEmpty()){var before=visibleProfile();temporaryItems.clear();output.send(()->codec.itemChanges(oid,knight,before,profile));publishQuickbar();}
         leaveChat();
         subscribed=entered=false;sceneGeneration++;occupantClients=Map.of();occupantRoles=Map.of();lastSnapshot=null;
-        reference=acknowledge=0;destinations.clearAlchemyTarget();runtime.departedSceneOid(scene.oid());if(membership!=null)membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
+        reference=acknowledge=0;destinations.clearAlchemyTarget();runtime.departedSceneOid(runtime.scene().oid());if(runtime.membership()!=null)runtime.membership().close();if(runtime.scene()!=next)scenes.release(runtime.scene(),profile.worldId());runtime.scene(next);
         runtime.readyRoom(false);runtime.returnRequested(false);
         runtime.arrival(entrance);runtime.clearPortal();
         created=SceneClock.now();attach();
@@ -797,12 +795,12 @@ final class WorldSession implements AutoCloseable {
         // Arriving comlinks are delivered behind the move response (see completeMove),
         // before the client can answer enteredPlace from inside its loading screen.
         arrivalComlink=null;
-        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&scenes.missions().eligible(candidate.id(),profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
+        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(runtime.scene().map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&scenes.missions().eligible(candidate.id(),profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
     }
 
     synchronized void requireAdminReady()throws IOException { requireAdminReady(false); }
     synchronized void requireAdminReady(boolean roomTravel)throws IOException {
-        if(closed||socket.isClosed()||!selected()||(!(roomTravel&&runtime.readyRoom())&&(!subscribed||!entered))||forcedReceiver==null||runtime.portalMove()!=null||deferredMovePending())throw new IOException("Finish entering this scene first");
+        if(closed||socket.isClosed()||!selected()||(!(roomTravel&&runtime.readyRoom())&&(!subscribed||!entered))||forcedReceiver==null||runtime.portalMove()!=null||deferredMovePending())throw new IOException("Finish entering this runtime.scene() first");
         try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
         if(!roles.gameMaster())throw new IOException("Game Master permission required");
     }
@@ -814,8 +812,8 @@ final class WorldSession implements AutoCloseable {
     /** The game-master travel tail; location validation lives in AdminHandler. */
     synchronized void beginAdminTravel(SceneRegistry.Instance next,AdminHandler.AdminLocation location)throws IOException {
         runtime.beginPortal(next,new ScenePortals.Entrance(1,location.x(),location.y(),location.rotation()));
-        runtime.departedSceneOid(runtime.readyRoom()?0:scene.oid());leaveChat();subscribed=entered=false;sceneGeneration++;
-        if(membership!=null)membership.pause();short receiver=forcedReceiver;
+        runtime.departedSceneOid(runtime.readyRoom()?0:runtime.scene().oid());leaveChat();subscribed=entered=false;sceneGeneration++;
+        if(runtime.membership()!=null)runtime.membership().pause();short receiver=forcedReceiver;
         output.send(()->codec.forceScene(oid,receiver,next));
     }
     AdminHandler adminHandler(){return adminTools;}
@@ -827,22 +825,22 @@ final class WorldSession implements AutoCloseable {
     synchronized void admin(SessionDecoder.Invocation request) throws IOException { adminTools.dispatch(request); }
 
     synchronized void subscribe(short message) throws IOException {
-        if (!selected()) throw new IOException("Select a knight before subscribing to a scene");
+        if (!selected()) throw new IOException("Select a knight before subscribing to a runtime.scene()");
         if(runtime.readyRoom())throw new IOException("The Ready Room has no server place object");
         if(closed)throw new IOException("Session closed");
         if(runtime.portalMove()!=null)throw new IOException("Scene is departing through a portal");
-        var snapshot=scene.simulation().snapshot();
+        var snapshot=runtime.scene().simulation().snapshot();
         if(snapshot.players().stream().filter(actor->actor.clientOid()==oid&&actor.id()==profile.worldId()).count()!=1)
             throw new IOException("Scene has no unique owned pawn");
         if(!inputThrottleSent){
             // Town movement and service calls share the native TCP throttle queue.
             output.send(codec::inputThrottle);inputThrottleSent=true;
         }
-        output.send(()->codec.scene(message,scene,snapshot.players()));
+        output.send(()->codec.scene(message,runtime.scene(),snapshot.players()));
         leaveChat();lastSnapshot=null;reference=acknowledge=0;
         occupantClients=snapshot.players().stream().collect(java.util.stream.Collectors.toMap(ActorState::id,ActorState::clientOid));
         occupantRoles=snapshot.roles();subscribed=true;entered=false;sceneGeneration++;
-        membership.pause();
+        runtime.membership().pause();
     }
 
     /** The stock controller sends enteredPlace after attaching its scene-delta listener. */
@@ -850,14 +848,14 @@ final class WorldSession implements AutoCloseable {
         if(runtime.portalMove()!=null)return; // A source readiness RPC may already be queued before forceScene.
         if (!subscribed || closed) throw new IOException("Subscribe to town before entering it");
         if (entered) return;
-        if(scene.map().town()){
-            characters.lastTownScene(knight.id(),authRevision,scene.map().id());
+        if(runtime.scene().map().town()){
+            characters.lastTownScene(knight.id(),authRevision,runtime.scene().map().id());
             if(profile.progress().openingStage()>=0)output.send(()->codec.homeTown(oid,profile));
         }
         entered = true;
         friendLocation=presence(scenes.parties().view(partyMember));
         runtime.departedSceneOid(0);
-        int generation=sceneGeneration,place=scene.oid();
+        int generation=sceneGeneration,place=runtime.scene().oid();
         chats.enter(place,generation);
         if(!welcomed&&!welcomeMessage.isEmpty()) {
             welcomed=true;
@@ -865,11 +863,11 @@ final class WorldSession implements AutoCloseable {
         }
         trade.join(place);
         lastStamp = SceneClock.now();
-        var placeInstance=scene;
-        membership.enter(snapshot->offer(placeInstance,generation,snapshot));
-        if(scene.run()!=null&&(!scenes.authorized(scene,profile.worldId(),partyMember)||!membership.authorizeElevator(scene.run().exitKey(),Set.of(profile.worldId()))))throw new IOException("Opening mission exit is unavailable");
+        var placeInstance=runtime.scene();
+        runtime.membership().enter(snapshot->offer(placeInstance,generation,snapshot));
+        if(runtime.scene().run()!=null&&(!scenes.authorized(runtime.scene(),profile.worldId(),partyMember)||!runtime.membership().authorizeElevator(runtime.scene().run().exitKey(),Set.of(profile.worldId()))))throw new IOException("Opening mission exit is unavailable");
         arrivalComlink=null;
-        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&scenes.missions().eligible(candidate.id(),profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
+        for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(runtime.scene().map().id()==OpeningComlinks.scene(candidate)&&candidate!=deliveredComlink&&scenes.missions().eligible(candidate.id(),profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
         if(destinations.takeAuctionAfterArrival()){try{openAuction();}catch(IOException refused){unavailable(refused.getMessage());}}
         persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
         syncMissionObjective();
@@ -878,7 +876,7 @@ final class WorldSession implements AutoCloseable {
     /** The mission bar follows the owned run: the imported mission's {@code o.<id>} objective
      *  while it is active, and nothing outside a mission. */
     private void syncMissionObjective()throws IOException {
-        var run=scene.run();String next=null;
+        var run=runtime.scene().run();String next=null;
         if(run!=null){var mission=scenes.missions().mission(run.missionId());if(mission!=null&&mission.requirement().hasObjective())next=run.missionId();}
         if(!java.util.Objects.equals(next,missionObjective)){missionObjective=next;publishObjectives();}
     }
@@ -886,7 +884,7 @@ final class WorldSession implements AutoCloseable {
     ActorState auctionSource(SceneRegistry.Instance destination)throws IOException{return auction.source(destination);}
     void openAuction()throws IOException{auction.open();}
 
-    synchronized void unsubscribe() { leaveChat();subscribed = entered = false; sceneGeneration++;if(membership!=null)membership.pause(); }
+    synchronized void unsubscribe() { leaveChat();subscribed = entered = false; sceneGeneration++;if(runtime.membership()!=null)runtime.membership().pause(); }
 
     void emote(SessionDecoder.Invocation request)throws IOException{chats.emote(request);}
     synchronized boolean ownsChannel(int channel){return chats.ownsChannel(channel);}
@@ -936,42 +934,42 @@ final class WorldSession implements AutoCloseable {
     /** A scene tick failed; return this knight to character selection rather than a frozen world. */
     private void sceneFailed() {
         if(closed)return;
-        log.warn("Scene tick failed; closing session for a safe return; scene="+(scene==null?0:scene.oid()));
+        log.warn("Scene tick failed; closing session for a safe return; runtime.scene()="+(runtime.scene()==null?0:runtime.scene().oid()));
         close();
         try{socket.close();}catch(IOException ignored){}
     }
     private void attach() {
         floors.reset();
-        if(!scene.map().kind().equals("training")&&partyMember!=null)try{scenes.parties().leaveTraining(partyMember);}catch(IOException invalid){throw new IllegalStateException(invalid);}
+        if(!runtime.scene().map().kind().equals("training")&&partyMember!=null)try{scenes.parties().leaveTraining(partyMember);}catch(IOException invalid){throw new IllegalStateException(invalid);}
         publishedArsenal=null;
-        membership=null; // The old scene membership is closed before rebuilding its replacement.
-        rebuildAppearance();var place=scene;
-        membership=place.simulation().join(actorAppearance(),snapshot->{},this::sceneFailed);
-        membership.equipment(visibleProfile());
-        if(!place.map().town())membership.combat(weapons,scenes.equipment(),visibleProfile());
+        runtime.membership(null); // The old runtime.scene() runtime.membership() is closed before rebuilding its replacement.
+        rebuildAppearance();var place=runtime.scene();
+        runtime.membership(place.simulation().join(actorAppearance(),snapshot->{},this::sceneFailed));
+        runtime.membership().equipment(visibleProfile());
+        if(!place.map().town())runtime.membership().combat(weapons,scenes.equipment(),visibleProfile());
         try{partyState();}catch(IOException invalid){throw new IllegalStateException(invalid);}
     }
     private void rebuildAppearance() {
-        var model=scene.map().town()?StarterCatalog.town(knight,visibleProfile(),characters.catalog()):StarterCatalog.interior(knight,visibleProfile(),characters.catalog());
+        var model=runtime.scene().map().town()?StarterCatalog.town(knight,visibleProfile(),characters.catalog()):StarterCatalog.interior(knight,visibleProfile(),characters.catalog());
         var modelArgs=new TreeMap<String,Object>(model.arguments());var visible=visibleProfile();long[] slots=visible.equipment();
         for(var item:visible.items())if(item.equippedSlot()!=null){int slot=item.equippedSlot();if(slot==0&&slots[3]!=0||slot==1&&slots[4]!=0)continue;
             for(String accessory:item.additionalAccessories()){var nativeModel=scenes.town().accessoryModel(accessory);String parameter=scenes.town().accessoryParameter(accessory);if(nativeModel!=null&&parameter!=null)modelArgs.put(parameter,nativeModel);}}
         model=new StarterCatalog.Model(model.name(),modelArgs);
-        appearance=new StarterCatalog.Model(scene.map().town()?"Character/PC/Default":"Character/PC/Level",
+        appearance=new StarterCatalog.Model(runtime.scene().map().town()?"Character/PC/Default":"Character/PC/Level",
             Map.of("Model",model,"Height",model.arguments().get("Height")));
     }
-    void updateAppearance(){rebuildAppearance();if(membership!=null){membership.equipment(visibleProfile());membership.appearance(actorAppearance());}}
+    void updateAppearance(){rebuildAppearance();if(runtime.membership()!=null){runtime.membership().equipment(visibleProfile());runtime.membership().appearance(actorAppearance());}}
     private ActorState actorAppearance() {
-        var checkpoint=runtime.arrival()==null?scene.simulation().defaultEntrance():null;
+        var checkpoint=runtime.arrival()==null?runtime.scene().simulation().defaultEntrance():null;
         return new ActorState(profile.worldId(),oid,knight.name(),256|knight.color(),created,
-            runtime.arrival()==null?checkpoint==null?scene.map().spawnX():checkpoint.x():runtime.arrival().x(),runtime.arrival()==null?checkpoint==null?scene.map().spawnY():checkpoint.y():runtime.arrival().y(),
-            runtime.arrival()==null?checkpoint==null?scene.map().spawnRotation():checkpoint.rotation():runtime.arrival().rotation(),0,0,0,created,appearance,gameMaster);
+            runtime.arrival()==null?checkpoint==null?runtime.scene().map().spawnX():checkpoint.x():runtime.arrival().x(),runtime.arrival()==null?checkpoint==null?runtime.scene().map().spawnY():checkpoint.y():runtime.arrival().y(),
+            runtime.arrival()==null?checkpoint==null?runtime.scene().map().spawnRotation():checkpoint.rotation():runtime.arrival().rotation(),0,0,0,created,appearance,gameMaster);
     }
 
     static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
     private void monitorScene() {
-        log.scene(scene.map().id(),scene.oid(),scene.map().name());
-        log.info("Scene entered; scene="+scene.map().name()+" (#"+scene.map().id()+"); instanceId="+scene.oid());
+        log.scene(runtime.scene().map().id(),runtime.scene().oid(),runtime.scene().map().name());
+        log.info("Scene entered; runtime.scene()="+runtime.scene().map().name()+" (#"+runtime.scene().map().id()+"); instanceId="+runtime.scene().oid());
     }
     /** Set once a successful rename answered its confirm; honored by the connection loop. */
     private boolean renameDisconnect;
@@ -984,9 +982,9 @@ final class WorldSession implements AutoCloseable {
         closed = true;
         floors.clearReport();
         subscribed = false;
-        if(membership!=null)membership.close();
+        if(runtime.membership()!=null)runtime.membership().close();
         if(partyMember!=null){partyMember.close();partyMember=null;}
-        if(profile!=null){scenes.release(scene,profile.worldId());if(runtime.portalMove()!=null)scenes.release(runtime.portalMove().destination(),profile.worldId());}
+        if(profile!=null){scenes.release(runtime.scene(),profile.worldId());if(runtime.portalMove()!=null)scenes.release(runtime.portalMove().destination(),profile.worldId());}
         publications.stop();
         if (profile != null) synchronized (ACTIVE) { ACTIVE.remove(profile.worldId(), this); }
     }

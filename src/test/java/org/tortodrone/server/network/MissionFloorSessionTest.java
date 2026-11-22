@@ -121,7 +121,7 @@ public final class MissionFloorSessionTest {
             check(report.request().source().entity().key().equals(scene(world).run().exitKey()),"the report exit key matches the floor");
         }
         world.interiorPartyInvocation(report(party,true));
-        await(()->field(world,"portalMove")!=null,20_000);
+        await(world::sceneTravelPending,20_000);
     }
 
     private static void enterNext(WorldSession world,SceneRegistry registry)throws Exception {
@@ -136,7 +136,7 @@ public final class MissionFloorSessionTest {
     }
 
     private static SceneSimulation.Membership member(WorldSession world)throws Exception {
-        return (SceneSimulation.Membership)field(world,"membership");
+        return world.membership();
     }
 
     private static void enter(WorldSession world,SceneRegistry registry,MapScene map)throws Exception {
@@ -156,13 +156,10 @@ public final class MissionFloorSessionTest {
     private static int portalMapId(WorldSession world)throws Exception{return portalDestination(world).map().id();}
     private static int portalInstance(WorldSession world)throws Exception{return portalDestination(world).oid();}
     private static SceneRegistry.Instance portalDestination(WorldSession world)throws Exception{
-        synchronized(world){var field=WorldSession.class.getDeclaredField("portalMove");field.setAccessible(true);
-            Object move=field.get(world);if(move==null)return null;
-            return (SceneRegistry.Instance)move.getClass().getDeclaredMethod("destination").invoke(move);}
+        synchronized(world){return world.pendingPortalDestination();}
     }
     private static SceneRegistry.Instance scene(WorldSession world)throws Exception{
-        synchronized(world){var field=WorldSession.class.getDeclaredField("scene");field.setAccessible(true);
-            return (SceneRegistry.Instance)field.get(world);}
+        synchronized(world){return world.currentScene();}
     }
     private static Object field(Object target,String name)throws Exception{
         synchronized(target){var field=target.getClass().getDeclaredField(name);field.setAccessible(true);return field.get(target);}
