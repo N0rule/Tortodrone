@@ -79,13 +79,7 @@ final class WorldSession implements AutoCloseable {
     private boolean readyRoom, returnRequested;
     private SceneSimulation.Membership membership;
     private SceneSimulation.Snapshot lastSnapshot;
-    private final Object publications=new Object();
-    private record Publication(SceneRegistry.Instance scene,int generation,SceneSimulation.Snapshot snapshot) { }
-    private Publication pending,lastOffered;
-    private final ArrayDeque<Publication> activityPublications=new ArrayDeque<>();
-    private boolean publicationOverflow;
-    private boolean deliveryStopped;
-    private Thread delivery;
+    private final SessionPublications publications=new SessionPublications();
     private StarterCatalog.Model appearance;
     private Knight knight;
     private WorldProfile profile;
@@ -131,15 +125,10 @@ final class WorldSession implements AutoCloseable {
     private final BillingHandler billing;
     private final FriendHandler friends;
     private final AuctionHandler auction;
-    private final ArrayDeque<PartyView.Event> partyEvents=new ArrayDeque<>();
-    private boolean partyRefreshQueued,partyOverflow;
     private int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
     private SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null,membership.floorHeat());}
-    private void offerParty(PartyView.Event event){synchronized(publications){
-        if(deliveryStopped)return;if(event instanceof PartyView.Refresh){if(partyRefreshQueued)return;partyRefreshQueued=true;}
-        if(partyEvents.size()>=64)partyOverflow=true;else partyEvents.addLast(event);publications.notifyAll();
-    }}
+    private void offerParty(PartyView.Event event){publications.offerParty(event);}
     private synchronized void deliverParty(PartyView.Event event)throws IOException {
         if(closed||partyMember==null)return;
         if(event instanceof PartyView.Invitation invite){output.send(()->codec.partyInvitation(oid,invite));return;}
@@ -1251,7 +1240,10 @@ final class WorldSession implements AutoCloseable {
         // Party events belong to the selected session, not its scene subscription.
         // Ready Room is client-local and never calls entered(); delaying this worker
         // until then strands invitations and can overflow the queue on world return.
-        delivery=Thread.ofVirtual().name("SceneDelivery-"+oid).start(this::deliverPublications);
+        publications.start("SceneDelivery-"+oid,this::publish,this::deliverParty,failure->{
+            log.warn("Scene delivery closed; "+deliveryFailure(failure));close();
+            try{socket.close();}catch(IOException ignored){}
+        });
         log.debug("Knight/scene initialization completed; duration-ms="+((System.nanoTime()-selectionStarted)/1000000));
     }
 
@@ -2162,40 +2154,7 @@ final class WorldSession implements AutoCloseable {
 
     /** Coalesce ordinary frames while retaining native data-dependent activity boundaries. */
     private void offer(SceneRegistry.Instance place,int generation,SceneSimulation.Snapshot snapshot) {
-        synchronized(publications){
-            if(deliveryStopped||generation!=sceneGeneration)return;
-            if(lastOffered!=null&&lastOffered.generation()!=generation){lastOffered=pending=null;activityPublications.clear();}
-            if(lastOffered!=null&&snapshot.timestamp()-lastOffered.snapshot().timestamp()<=0)return;
-            var next=new Publication(place,generation,snapshot);
-            if(lastOffered!=null&&snapshot.startsDataActivity(lastOffered.snapshot())){
-                // Native interpolation requires the first data-bearing record, even if
-                // the delivery thread is busy while later movement records arrive.
-                if(activityPublications.size()>=16)publicationOverflow=true;else activityPublications.addLast(next);
-                pending=null;
-            }else pending=next;
-            lastOffered=next;publications.notifyAll();
-        }
-    }
-    private void deliverPublications() {
-        try {
-            while(true) {
-                Publication publication;List<PartyView.Event> events;
-                synchronized(publications) {
-                    while(pending==null&&activityPublications.isEmpty()&&partyEvents.isEmpty()&&!partyOverflow&&!publicationOverflow&&!deliveryStopped)publications.wait();
-                    if(deliveryStopped)return;
-                    if(partyOverflow||publicationOverflow)throw new IOException("Scene/party publication queue full");
-                    events=List.copyOf(partyEvents);partyEvents.clear();partyRefreshQueued=false;
-                    publication=activityPublications.pollFirst();
-                    if(publication==null){publication=pending;pending=null;}
-                }
-                for(var event:events)deliverParty(event);
-                if(publication!=null)publish(publication);
-            }
-        }catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
-        catch(IOException|RuntimeException failure) {
-            log.warn("Scene delivery closed; "+deliveryFailure(failure));close();
-            try{socket.close();}catch(IOException ignored){}
-        }
+        publications.offer(sceneGeneration,place,generation,snapshot);
     }
     /** Keep the encoder/writer cause when a downstream stream has become unusable. */
     private static String deliveryFailure(Throwable failure) {
@@ -2206,7 +2165,7 @@ final class WorldSession implements AutoCloseable {
         }
         return message.toString();
     }
-    private synchronized void publish(Publication publication)throws IOException {
+    private synchronized void publish(SessionPublications.Publication publication)throws IOException {
         // Optional scene work is skipped before encoding when this reader is behind its byte
         // budget; the next publication re-encodes from the last snapshot actually sent.
         if(output.optionalOverBudget())return;
@@ -2554,7 +2513,7 @@ final class WorldSession implements AutoCloseable {
         if(membership!=null)membership.close();
         if(partyMember!=null){partyMember.close();partyMember=null;}
         if(profile!=null){scenes.release(scene,profile.worldId());if(portalMove!=null)scenes.release(portalMove.destination(),profile.worldId());}
-        synchronized(publications){deliveryStopped=true;pending=lastOffered=null;activityPublications.clear();publications.notifyAll();}
+        publications.stop();
         if (profile != null) synchronized (ACTIVE) { ACTIVE.remove(profile.worldId(), this); }
     }
 }

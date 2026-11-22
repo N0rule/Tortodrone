@@ -93,7 +93,7 @@ public final class WorldSessionTest {
                     var stamp=WorldSession.class.getDeclaredField("lastStamp");stamp.setAccessible(true);
                     int before=stamp.getInt(first);Thread.sleep(80);
                     var place=org.tortodrone.world.SceneRegistry.system().entry();
-                    var publication=Class.forName(WorldSession.class.getName()+"$Publication");
+                    var publication=Class.forName(SessionPublications.class.getName()+"$Publication");
                     var constructor=publication.getDeclaredConstructors()[0];constructor.setAccessible(true);
                     var stalePublication=constructor.newInstance(place,generation.getInt(first)-2,place.simulation().snapshot());
                     var publish=WorldSession.class.getDeclaredMethod("publish",publication);publish.setAccessible(true);publish.invoke(first,stalePublication);
@@ -134,20 +134,22 @@ public final class WorldSessionTest {
         } finally {org.tortodrone.world.SceneRegistry.install(restore);try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
     }
     private static void publicationBoundaries(WorldSession session)throws Exception {
-        var lockField=WorldSession.class.getDeclaredField("publications");lockField.setAccessible(true);
+        var mailboxField=WorldSession.class.getDeclaredField("publications");mailboxField.setAccessible(true);
         var membershipField=WorldSession.class.getDeclaredField("membership");membershipField.setAccessible(true);
         var generationField=WorldSession.class.getDeclaredField("sceneGeneration");generationField.setAccessible(true);
-        var queueField=WorldSession.class.getDeclaredField("activityPublications");queueField.setAccessible(true);
+        var mailbox=mailboxField.get(session);
+        var monitorField=SessionPublications.class.getDeclaredField("monitor");monitorField.setAccessible(true);
+        var queueField=SessionPublications.class.getDeclaredField("activityPublications");queueField.setAccessible(true);
         var offer=WorldSession.class.getDeclaredMethod("offer",org.tortodrone.world.SceneRegistry.Instance.class,int.class,org.tortodrone.world.SceneSimulation.Snapshot.class);offer.setAccessible(true);
-        var publication=Class.forName(WorldSession.class.getName()+"$Publication");var snapshot=publication.getDeclaredMethod("snapshot");snapshot.setAccessible(true);
-        synchronized(session){synchronized(lockField.get(session)){
+        var publication=Class.forName(SessionPublications.class.getName()+"$Publication");var snapshot=publication.getDeclaredMethod("snapshot");snapshot.setAccessible(true);
+        synchronized(session){synchronized(monitorField.get(mailbox)){
             var place=org.tortodrone.world.SceneRegistry.system().entry();int generation=generationField.getInt(session);
             var member=(org.tortodrone.world.SceneSimulation.Membership)membershipField.get(session);
             Thread.sleep(2);offer.invoke(session,place,generation,place.simulation().snapshot());
             member.openBox(List.of(new StarterCatalog.Model("Upgrade/Prize Box/Lucky Prize Box",Map.of()),new StarterCatalog.Model("Material/Brimstone",Map.of())));
             Thread.sleep(2);var boundary=place.simulation().snapshot();offer.invoke(session,place,generation,boundary);
             Thread.sleep(2);offer.invoke(session,place,generation,place.simulation().snapshot());
-            boolean retained=false;for(Object queued:(java.util.Deque<?>)queueField.get(session))if(snapshot.invoke(queued)==boundary)retained=true;
+            boolean retained=false;for(Object queued:(java.util.Deque<?>)queueField.get(mailbox))if(snapshot.invoke(queued)==boundary)retained=true;
             check(retained,"slow delivery preserves the first data-bearing activity record while coalescing later movement");
             member.resetInput();
         }}

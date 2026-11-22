@@ -19,6 +19,7 @@ import org.tortodrone.resources.SceneCatalog;
 public final class PortalSessionTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-portal-session-");
+        var previous=SceneRegistry.system();
         try {
             Path maps=home.resolve("maps");
             try(var paths=Files.walk(org.tortodrone.support.ContentFixture.path("maps"))){for(var path:paths.toList()){
@@ -30,6 +31,7 @@ public final class PortalSessionTest {
             properties.setProperty("spawn-x","-38.25");properties.setProperty("spawn-y","0.4");
             try(var out=Files.newOutputStream(descriptor)){properties.store(out,"Disposable trigger spawn");}
             var registry=new SceneRegistry(SceneCatalog.load(maps));
+            SceneRegistry.install(registry);
             var db=new Database(home.resolve("data"),true);
             var protection=new Passwords.Protection(new byte[16],new byte[32]);
             int id=db.create("Alice",protection,false);var characters=new CharacterStore(db,id,"Alice");
@@ -68,7 +70,7 @@ public final class PortalSessionTest {
             }
             check(!WorldSession.active(id,knight.id())&&destinationEmpty(registry),"disconnect releases both scene and controller");
             System.out.println("PASS: server portal ownership, pending freeze, destination/cache-version validation, tagged arrival, stale-input grace, readiness and immediate revocation");
-        }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
+        }finally{SceneRegistry.install(previous);try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
     private static boolean destinationEmpty(SceneRegistry registry)throws IOException {
         return registry.entry().simulation().playerCount()==0&&registry.instance(2,0).simulation().playerCount()==0;

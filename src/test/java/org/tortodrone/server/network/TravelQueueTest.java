@@ -23,6 +23,7 @@ import org.tortodrone.resources.SceneCatalog;
 public final class TravelQueueTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-travel-queue-");
+        var previous=SceneRegistry.system();
         try {
             var db=new Database(home,true);
             int account=db.create("Alice",new Passwords.Protection(new byte[16],new byte[32]),false);
@@ -32,6 +33,7 @@ public final class TravelQueueTest {
                 "Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             var scenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));
             scenes.town(TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
+            SceneRegistry.install(scenes);
             var socket=new RecordingSocket();
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,
                     new SessionCodec(items),1001,1,m->{},scenes)) {
@@ -65,6 +67,7 @@ public final class TravelQueueTest {
             }
             System.out.println("PASS: early destination is queued after entry and travels directly from the Ready Room");
         } finally {
+            SceneRegistry.install(previous);
             try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}
         }
     }
