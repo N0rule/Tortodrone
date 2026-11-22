@@ -155,7 +155,7 @@ public final class SceneLifeTest {
             5.5f,-12.5f,0,1,map.collision(),map.layout(),ScenePortals.EMPTY,content);
         var simulation=new SceneRegistry.Instance(799,1,fixture).simulation();
         var other=new SceneRegistry.Instance(800,2,fixture).simulation();
-        var queue=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
+        var queue=new LinkedBlockingQueue<SceneSnapshot>();
         int start=SceneClock.now();var model=new StarterCatalog.Model("Character/PC/Default",Map.of());
         var actor=new ActorState(219,1001,"Fixture",256,start,5.5f,-12.5f,0,0,0,0,start,model,false);
         try(var player=simulation.join(actor,queue::add);var isolated=other.join(actor,s->{})){
@@ -174,7 +174,7 @@ public final class SceneLifeTest {
             check(knocked.actors().stream().anyMatch(a->a.entity()!=null&&a.entity().key().equals("monster")&&a.x()>6.4f),"automatic revival dispatches knockback through the live scene lifecycle");
         }
     }
-    private static SceneSimulation.Snapshot await(BlockingQueue<SceneSimulation.Snapshot> queue,java.util.function.Predicate<SceneSimulation.Snapshot> ready)throws Exception {
+    private static SceneSnapshot await(BlockingQueue<SceneSnapshot> queue,java.util.function.Predicate<SceneSnapshot> ready)throws Exception {
         long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(7);
         while(System.nanoTime()<deadline){var snapshot=queue.poll(100,TimeUnit.MILLISECONDS);if(snapshot!=null&&ready.test(snapshot))return snapshot;}
         throw new AssertionError("Scene lifecycle publication missing");

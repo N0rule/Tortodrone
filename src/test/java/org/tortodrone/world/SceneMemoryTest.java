@@ -35,7 +35,7 @@ public final class SceneMemoryTest {
         var dead=new ActorState(21,1001,"Fixture",0,1000,0,0,0,0,0,TownMovement.DEAD,1000,new StarterCatalog.Model("Character/PC/Default",Map.of()));
         var noDead=new SceneEntities(content,terrain);noDead.memories((player,operation,source,stamp)->{throw new AssertionError("Dead pawn set memory");});noDead.advance(1000,List.of(dead));
         var map=new org.tortodrone.core.world.MapScene(900001,50332041,"Fixture","Fixture","fixture","level",1,0,0,0,1,terrain,new byte[0],ScenePortals.EMPTY,content);
-        var scene=new SceneRegistry.Instance(7001,0,map).simulation();var frames=new LinkedBlockingQueue<SceneSimulation.Snapshot>();int now=SceneClock.now();
+        var scene=new SceneRegistry.Instance(7001,0,map).simulation();var frames=new LinkedBlockingQueue<SceneSnapshot>();int now=SceneClock.now();
         var owner=scene.join(player(21,1001,0,now),frames::offer);var peer=scene.join(player(22,1002,5,now),snapshot->{});
         try {
             check(owner.takeMemories().isEmpty(),"selection without entry cannot mutate memories");owner.enter();peer.enter();

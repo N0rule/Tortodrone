@@ -73,7 +73,7 @@ final class WorldSession implements AutoCloseable {
     private SceneRegistry.Instance scene;
     private boolean readyRoom, returnRequested;
     private SceneSimulation.Membership membership;
-    private SceneSimulation.Snapshot lastSnapshot;
+    private SceneSnapshot lastSnapshot;
     private final SessionPublications publications=new SessionPublications();
     private StarterCatalog.Model appearance;
     private Knight knight;
@@ -1325,7 +1325,7 @@ final class WorldSession implements AutoCloseable {
     }
 
     /** Coalesce ordinary frames while retaining native data-dependent activity boundaries. */
-    private void offer(SceneRegistry.Instance place,int generation,SceneSimulation.Snapshot snapshot) {
+    private void offer(SceneRegistry.Instance place,int generation,SceneSnapshot snapshot) {
         publications.offer(sceneGeneration,place,generation,snapshot);
     }
     /** Keep the encoder/writer cause when a downstream stream has become unusable. */

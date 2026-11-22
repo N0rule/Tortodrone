@@ -35,7 +35,7 @@ public final class ScriptedPawnStatusTest {
         var content=new SceneContent(List.of(new SceneContent.Entry("plate",0,0,0,new SceneContent.Spec(plate)),new SceneContent.Entry("script",0,0,0,new SceneContent.Spec(trigger))),Map.of(),Map.of(),Map.of("player.base-health",100f),Map.of(),Map.of(),Map.of());
         var map=new org.tortodrone.core.world.MapScene(900001,33554432,"Fixture","Fixture","fixture","training",1,0,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var firstScene=new SceneRegistry.Instance(7001,0,map).simulation();var otherScene=new SceneRegistry.Instance(7002,0,map).simulation();
-        var frames=new LinkedBlockingQueue<SceneSimulation.Snapshot>();int now=SceneClock.now();
+        var frames=new LinkedBlockingQueue<SceneSnapshot>();int now=SceneClock.now();
         var one=firstScene.join(player(21,1001,0,now),frames::add);var two=firstScene.join(player(22,1002,.5f,now),snapshot->{});
         var inactive=firstScene.join(player(23,1003,0,now),snapshot->{});var isolated=otherScene.join(player(24,1004,5,now),snapshot->{});
         try{
@@ -57,7 +57,7 @@ public final class ScriptedPawnStatusTest {
         System.out.println("PASS: authored scene Stop/clear, application receipts, movement lock/release, native status publication, ownership/readiness and instance isolation");
     }
     private static ActorState player(int id,int oid,float x,int stamp){return new ActorState(id,oid,"Fixture",0,stamp,x,0,0,0,0,0,stamp,new StarterCatalog.Model("Character/PC/Default",Map.of()),false);}
-    private static SceneSimulation.Snapshot await(LinkedBlockingQueue<SceneSimulation.Snapshot> frames,java.util.function.Predicate<SceneSimulation.Snapshot> condition)throws Exception {
+    private static SceneSnapshot await(LinkedBlockingQueue<SceneSnapshot> frames,java.util.function.Predicate<SceneSnapshot> condition)throws Exception {
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);
         while(System.nanoTime()<until){var frame=frames.poll(250,TimeUnit.MILLISECONDS);if(frame!=null&&condition.test(frame))return frame;}
         throw new AssertionError("Timed out waiting for scripted scene state");

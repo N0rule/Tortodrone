@@ -5,7 +5,7 @@ import java.util.ArrayDeque;
 import java.util.List;
 import org.tortodrone.core.party.PartyView;
 import org.tortodrone.world.SceneRegistry;
-import org.tortodrone.world.SceneSimulation;
+import org.tortodrone.world.SceneSnapshot;
 
 /** The session's bounded scene/party publication mailbox and its single delivery worker.
  *
@@ -20,7 +20,7 @@ final class SessionPublications {
     @FunctionalInterface interface PartySink { void deliver(PartyView.Event event) throws IOException; }
     @FunctionalInterface interface FailureSink { void failed(Throwable failure); }
 
-    record Publication(SceneRegistry.Instance scene,int generation,SceneSimulation.Snapshot snapshot) { }
+    record Publication(SceneRegistry.Instance scene,int generation,SceneSnapshot snapshot) { }
 
     private final Object monitor=new Object();
     private Publication pending,lastOffered;
@@ -43,7 +43,7 @@ final class SessionPublications {
 
     /** Coalesce ordinary frames while retaining native data-dependent activity boundaries. */
     void offer(int currentGeneration,SceneRegistry.Instance place,int generation,
-            SceneSimulation.Snapshot snapshot) {
+            SceneSnapshot snapshot) {
         synchronized(monitor) {
             if(deliveryStopped||generation!=currentGeneration)return;
             if(lastOffered!=null&&lastOffered.generation()!=generation){lastOffered=pending=null;activityPublications.clear();}

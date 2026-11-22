@@ -197,7 +197,7 @@ public final class SceneItemUseTest {
         final SceneSimulation simulation;
         final SceneSimulation.Membership member;
         final SceneEntities entities;
-        final BlockingQueue<SceneSimulation.Snapshot> publications=new LinkedBlockingQueue<>();
+        final BlockingQueue<SceneSnapshot> publications=new LinkedBlockingQueue<>();
         Fixture(org.tortodrone.core.world.MapScene map)throws Exception {
             var content=new SceneContent(List.of(),map.content().scales(),Map.of(),Map.of("player.base-health",200f),map.content().items(),Map.of(),map.content().statuses());
             var isolated=new org.tortodrone.core.world.MapScene(map.id(),map.zone(),map.zoneName(),map.name(),map.image(),"training",map.version(),
@@ -218,7 +218,7 @@ public final class SceneItemUseTest {
         void hit(Object damage) {
             entities.damage(new StarterCatalog.Model("DamageRegion",Map.of("damage",damage)),5.5f,-12.5f,0,SceneClock.now(),0);
         }
-        void await(Predicate<SceneSimulation.Snapshot> ready)throws Exception {
+        void await(Predicate<SceneSnapshot> ready)throws Exception {
             long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);
             while(System.nanoTime()<deadline) {
                 var snapshot=publications.poll(100,TimeUnit.MILLISECONDS);

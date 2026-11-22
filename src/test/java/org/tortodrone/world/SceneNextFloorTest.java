@@ -22,7 +22,7 @@ public final class SceneNextFloorTest {
         absentActivator(content,area);
         var map=new org.tortodrone.core.world.MapScene(900001,50332041,"Fixture","Fixture","fixture","level",1,-1,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var scene=new SceneRegistry.Instance(7001,0,map).simulation();var other=new SceneRegistry.Instance(7002,0,map).simulation();
-        int now=SceneClock.now();var frames=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
+        int now=SceneClock.now();var frames=new LinkedBlockingQueue<SceneSnapshot>();
         var one=scene.join(player(21,1001,-1,now),frames::offer);var peer=scene.join(player(22,1002,-3,now),snapshot->{});
         var inactive=scene.join(player(23,1003,1,now),snapshot->{});var isolated=other.join(player(24,1004,-3,now),snapshot->{});
         try{
@@ -65,12 +65,12 @@ public final class SceneNextFloorTest {
         delayed.advance(1150,List.of(player(22,1002,-3,1150)));
         check(calls[0]==0,"a delayed departed Activator cannot be replaced by an entered peer");
     }
-    private static org.tortodrone.core.world.FloorAdvanceRequest awaitRequest(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSimulation.Snapshot> frames)throws Exception{
+    private static org.tortodrone.core.world.FloorAdvanceRequest awaitRequest(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSnapshot> frames)throws Exception{
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);
         while(System.nanoTime()<until){var request=member.takeFloorAdvance();if(request!=null)return request;frames.poll(100,TimeUnit.MILLISECONDS);}
         throw new AssertionError("Native floor request was not offered");
     }
-    private static void walk(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSimulation.Snapshot> frames,int id,float x,float heading)throws Exception{
+    private static void walk(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSnapshot> frames,int id,float x,float heading)throws Exception{
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);
         frames.clear();
         while(System.nanoTime()<until){intent(member,heading,1);

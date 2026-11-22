@@ -140,7 +140,7 @@ public final class WorldSessionTest {
         var mailbox=mailboxField.get(session);
         var monitorField=SessionPublications.class.getDeclaredField("monitor");monitorField.setAccessible(true);
         var queueField=SessionPublications.class.getDeclaredField("activityPublications");queueField.setAccessible(true);
-        var offer=WorldSession.class.getDeclaredMethod("offer",org.tortodrone.world.SceneRegistry.Instance.class,int.class,org.tortodrone.world.SceneSimulation.Snapshot.class);offer.setAccessible(true);
+        var offer=WorldSession.class.getDeclaredMethod("offer",org.tortodrone.world.SceneRegistry.Instance.class,int.class,org.tortodrone.world.SceneSnapshot.class);offer.setAccessible(true);
         var publication=Class.forName(SessionPublications.class.getName()+"$Publication");var snapshot=publication.getDeclaredMethod("snapshot");snapshot.setAccessible(true);
         synchronized(session){synchronized(monitorField.get(mailbox)){
             var place=org.tortodrone.world.SceneRegistry.system().entry();int generation=generationField.getInt(session);

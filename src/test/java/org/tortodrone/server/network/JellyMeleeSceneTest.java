@@ -48,7 +48,7 @@ public final class JellyMeleeSceneTest {
                     Thread.sleep(250);
                     var failure=simulation.failure();
                     if(failure!=null){failure.printStackTrace();throw new AssertionError("Scene simulation crashed before jelly contact: "+failure);}
-                    SceneSimulation.Snapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
+                    SceneSnapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
                     for(var actor:snapshot.actors())
                         if(actor.entity()!=null&&"Monster".equals(actor.entity().kind())&&actor.entity().destroyed()==Integer.MAX_VALUE)jellySeen=true;
                 }
@@ -63,14 +63,14 @@ public final class JellyMeleeSceneTest {
                 // lunge lands through the whole session pipeline.
                 float lowest=Float.MAX_VALUE;
                 var combat=new ArrayList<SceneCombatEvent>();
-                SceneSimulation.Snapshot previousSnapshot=null;
+                SceneSnapshot previousSnapshot=null;
                 final int[] pawnId={0};
                 long afkEnd=System.nanoTime()+150_000_000_000L;
                 while(System.nanoTime()<afkEnd) {
                     Thread.sleep(100);
                     var failure=simulation.failure();
                     if(failure!=null){failure.printStackTrace();throw new AssertionError("Scene simulation crashed during the AFK phase: "+failure);}
-                    SceneSimulation.Snapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
+                    SceneSnapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
                     combat.addAll(snapshot.combatEventsSince(previousSnapshot));previousSnapshot=snapshot;
                     var player=snapshot.players().stream().filter(p->p.entity()==null&&p.pet()==null).findFirst().orElse(null);
                     if(player!=null) {
@@ -92,7 +92,7 @@ public final class JellyMeleeSceneTest {
                     Thread.sleep(20);
                     var failure=simulation.failure();
                     if(failure!=null){failure.printStackTrace();throw new AssertionError("Scene simulation crashed during the jelly fight: "+failure);}
-                    SceneSimulation.Snapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
+                    SceneSnapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
                     combat.addAll(snapshot.combatEventsSince(previousSnapshot));previousSnapshot=snapshot;
                     if(System.nanoTime()-lastFrame>100_000_000L) {
                         lastFrame=System.nanoTime();

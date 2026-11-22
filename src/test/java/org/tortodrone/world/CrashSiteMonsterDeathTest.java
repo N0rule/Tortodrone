@@ -76,7 +76,7 @@ public final class CrashSiteMonsterDeathTest {
         try(var member=simulation.join(new ActorState(219,1001,"Knight",0,now,1,0,0,0,0,0,now,new StarterCatalog.Model("Character/PC/Level",Map.of()),false),s->{})){
             member.combat(WeaponCatalog.empty(),new org.tortodrone.core.character.WorldProfile(10,1,1,0,0,1,List.of()));
             member.enter();
-            int monster;SceneSimulation.Snapshot before,terminal;
+            int monster;SceneSnapshot before,terminal;
             synchronized(simulation){
                 before=simulation.snapshot();
                 var field=SceneSimulation.class.getDeclaredField("entities");field.setAccessible(true);
@@ -99,7 +99,7 @@ public final class CrashSiteMonsterDeathTest {
                 Thread.sleep(40);
                 var failure=simulation.failure();
                 if(failure!=null){failure.printStackTrace();throw new AssertionError("Scene simulation crashed during the death transcript: "+failure);}
-                SceneSimulation.Snapshot current;
+                SceneSnapshot current;
                 synchronized(simulation){current=simulation.snapshot();}
                 var present=current.actors().stream().filter(a->a.id()==monster).findFirst().orElse(null);
                 if(present!=null){

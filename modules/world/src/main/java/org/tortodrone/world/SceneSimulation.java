@@ -69,124 +69,6 @@ public final class SceneSimulation {
     private org.tortodrone.core.town.TownCatalog town=org.tortodrone.core.town.TownCatalog.empty();
     private final String pickupEpoch=UUID.randomUUID().toString();
     public synchronized void town(org.tortodrone.core.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
-    public record Delta(List<ActorState> added, List<ActorState> updated, int[] removed,
-            List<ActorState> changedRoles, Map<Integer,ActorState> baseline) {
-        public Delta { removed=removed.clone(); }
-        @Override public int[] removed(){return removed.length==0?removed:removed.clone();}
-    }
-    /** A snapshot's delta inputs together with their shared encoding. */
-    public record EncodedDelta(Delta delta,List<SceneEffect> effects,List<SceneCombatEvent> combat,SceneFrame frame) { }
-    /** Encode the shared body once; every recipient materializes it with its own symbol codes. */
-    @FunctionalInterface public interface DeltaEncoder {
-        SceneFrame encode(Delta delta,List<SceneEffect> effects,List<SceneCombatEvent> combat,boolean interior)throws java.io.IOException;
-    }
-    private record Encoded(EncodedDelta delta,Snapshot baseline,boolean interior) { }
-    public static final class Snapshot {
-        private final int timestamp;
-        private final Object identity=new Object(), predecessor;
-        private final List<ActorState> actors;
-        private final List<ActorState> players;
-        private final List<SceneEffect> effects;
-        private final List<SceneCombatEvent> combatEvents;
-        private final Map<Integer,ActorState> byId;
-        private final Map<Integer,ActorState> byClientOid;
-        private final Map<Integer,Integer> clientOids;
-        private final Set<Integer> occupants;
-        private final Map<Integer,Boolean> roles;
-        private final Map<Integer,ScenePortals.Trigger> portals;
-        private final Map<Integer,SceneHealth.State> health;
-        private final long effectsLastSequence,combatLastSequence;
-        private final Delta common, initial;
-        /** The last shared encoding, keyed by the recipient baseline and scene kind. */
-        private volatile Encoded encoded;
-        private Snapshot(int stamp, List<ActorState> actors, List<SceneEffect> effects,List<SceneCombatEvent> combatEvents, Map<Integer,ScenePortals.Trigger> portals, Map<Integer,SceneHealth.State> health,Snapshot previous) {
-            timestamp=stamp;this.actors=List.copyOf(actors);this.effects=List.copyOf(effects);
-            players=this.actors.stream().filter(ActorState::player).toList();
-            this.portals=Map.copyOf(portals);
-            this.health=Map.copyOf(health);
-            this.combatEvents=List.copyOf(combatEvents);
-            var index=new LinkedHashMap<Integer,ActorState>();var permissions=new HashMap<Integer,Boolean>();
-            var clients=new HashMap<Integer,ActorState>();var clientIds=new HashMap<Integer,Integer>();
-            for(var actor:this.actors){index.put(actor.id(),actor);if(actor.player()){
-                permissions.put(actor.id(),actor.gameMaster());
-                clients.putIfAbsent(actor.clientOid(),actor);
-                clientIds.put(actor.id(),actor.clientOid());
-            }}
-            byId=Collections.unmodifiableMap(index);byClientOid=Map.copyOf(clients);clientOids=Map.copyOf(clientIds);
-            occupants=Set.copyOf(permissions.keySet());roles=Map.copyOf(permissions);
-            effectsLastSequence=this.effects.stream().mapToLong(SceneEffect::sequence).max().orElse(0);
-            combatLastSequence=this.combatEvents.stream().mapToLong(SceneCombatEvent::sequence).max().orElse(0);
-            predecessor=previous==null?null:previous.identity;
-            initial=new Delta(this.actors,List.of(),new int[0],List.of(),Map.of());
-            common=previous==null?initial:calculate(previous);
-        }
-        public int timestamp(){return timestamp;}
-        public List<ActorState> actors(){return actors;}
-        public List<ActorState> players(){return players;}
-        /** Direct lookups keep per-recipient publication O(1) instead of scanning every player. */
-        public ActorState actor(int id){return byId.get(id);}
-        public ActorState player(int clientOid){return byClientOid.get(clientOid);}
-        public Map<Integer,Integer> clientOids(){return clientOids;}
-        public SceneHealth.State health(int actor){return health.get(actor);}
-        public List<SceneEffect> effectsSince(Snapshot previous){long last=previous==null?Long.MAX_VALUE:previous.effectsLastSequence;return effects.stream().filter(e->e.sequence()>last).toList();}
-        public List<SceneCombatEvent> combatEventsSince(Snapshot previous){long last=previous==null?Long.MAX_VALUE:previous.combatLastSequence;return combatEvents.stream().filter(e->e.sequence()>last).toList();}
-        /** Encode the delta once per baseline. Clients that received different baselines (coalesced
-         * activity frames) still get an exact delta; the cache only avoids duplicate work. */
-        public EncodedDelta encoded(Snapshot baseline,boolean interior,DeltaEncoder encoder)throws java.io.IOException{
-            var cached=encoded;
-            if(cached!=null&&cached.baseline==baseline&&cached.interior==interior)return cached.delta;
-            var delta=delta(baseline);
-            var effects=effectsSince(baseline);
-            var combat=combatEventsSince(baseline);
-            var result=new EncodedDelta(delta,effects,combat,encoder.encode(delta,effects,combat,interior));
-            encoded=new Encoded(result,baseline,interior);
-            return result;
-        }
-        public Set<Integer> occupants(){return occupants;}
-        public Map<Integer,Boolean> roles(){return roles;}
-        public ScenePortals.Trigger portal(int actorId){return portals.get(actorId);}
-        /** Preserve these records when a recipient coalesces ordinary movement snapshots. */
-        public boolean startsDataActivity(Snapshot previous){
-            if(previous==null)return false;
-            for(var actor:players){
-                var data=actor.sceneKnight()==null?null:actor.sceneKnight().activityData();
-                var old=previous.byId.get(actor.id());
-                if(data!=null&&old!=null&&(actor.activity()!=old.activity()||actor.activityStarted()!=old.activityStarted()
-                        ||!Objects.equals(data,old.sceneKnight()==null?null:old.sceneKnight().activityData())))return true;
-            }
-            // A dying monster's first record is data-bearing the same way: the stock
-            // client's delayed-time ActorHistory needs the activity-2 transition and
-            // the destroyed stamp to run the death animation and fire the config's
-            // destructionTransient before the removal record arrives. Native deltas
-            // every tick, so coalescing must not eat the dying window.
-            for(var actor:actors){
-                if(actor.player())continue;
-                var entity=actor.entity();
-                var old=previous.byId.get(actor.id());
-                if(entity==null||old==null||old.entity()==null)continue;
-                if(actor.activity()==2&&old.activity()!=2)return true;
-                if(entity.destroyed()!=Integer.MAX_VALUE&&old.entity().destroyed()==Integer.MAX_VALUE)return true;
-            }
-            return false;
-        }
-        public Delta delta(Snapshot previous) {
-            if(previous==null)return initial;
-            return previous.identity==predecessor?common:calculate(previous);
-        }
-        private Delta calculate(Snapshot previous) {
-            var added=new ArrayList<ActorState>();var updated=new ArrayList<ActorState>();
-            var changed=new ArrayList<ActorState>();
-            for(var actor:actors) {
-                var old=previous.byId.get(actor.id());
-                if(old==null||actor.player()&&(old.clientOid()!=actor.clientOid()||old.created()!=actor.created()))added.add(actor);else {
-                    // Stock prediction mutates activity on its reference: transmit every actor.
-                    if(actor.player()||!actor.equals(old))updated.add(actor);if(actor.player()&&(!old.name().equals(actor.name())||old.gameMaster()!=actor.gameMaster()||!Objects.equals(old.sceneKnight()==null?null:old.sceneKnight().progress(),actor.sceneKnight()==null?null:actor.sceneKnight().progress())))changed.add(actor);
-                }
-            }
-            int[] removed=previous.byId.keySet().stream().filter(id->!byId.containsKey(id)).mapToInt(Integer::intValue).toArray();
-            return new Delta(List.copyOf(added),List.copyOf(updated),removed,List.copyOf(changed),previous.byId);
-        }
-    }
     /** A null definition is the native ClearDialog operation, delivered on the session thread. */
     public record ConversationRequest(SceneConversation definition,ActorState source,int timestamp) { }
     public record MemoryRequest(org.tortodrone.core.character.KnightMemory operation,ActorState source,int timestamp) { }
@@ -199,8 +81,8 @@ public final class SceneSimulation {
         private final TownMovement movement;
         private KnightCombat combat;
         private org.tortodrone.core.character.WorldProfile combatProfile;
-        private final Consumer<Snapshot> initialPublish;
-        private Consumer<Snapshot> publish;
+        private final Consumer<SceneSnapshot> initialPublish;
+        private Consumer<SceneSnapshot> publish;
         private boolean entered, detached, arrived;
         private ScenePortals.Trigger portal;
         private int interactionTarget;
@@ -371,7 +253,7 @@ public final class SceneSimulation {
         private volatile Runnable sceneFailure;
         /** Owner callback invoked after a tick failure, outside the simulation lock. */
         public void onSceneFailure(Runnable callback){sceneFailure=callback;}
-        private Membership(ActorState actor,Consumer<Snapshot> publish) {
+        private Membership(ActorState actor,Consumer<SceneSnapshot> publish) {
             appearance=actor;this.initialPublish=this.publish=publish;
             health.spriteShield((damage,stamp,multiplier)->{
                 var shield=auraOwner==0?this:members.get(auraOwner);
@@ -402,7 +284,7 @@ public final class SceneSimulation {
                 movement.thrown(drop,stamp);if(drop)dropAt=stamp+DROP_FLIGHT_MILLIS;else{entities.throwLift(lift,actor(),stamp);lift=0;}return true;});
         }
         public void enter(){enter(initialPublish);}
-        public void enter(Consumer<Snapshot> publication){synchronized(SceneSimulation.this){check();
+        public void enter(Consumer<SceneSnapshot> publication){synchronized(SceneSimulation.this){check();
             publish=Objects.requireNonNull(publication);
             if(!arrived){arrived=true;if(!instance.map().town())health.protectEntry(SceneClock.now());}
             entered=true;if(!instance.map().town())recordVisited(movement.x(),movement.y());start();}}
@@ -490,6 +372,10 @@ public final class SceneSimulation {
         public void appearance(ActorState actor) {
             synchronized(SceneSimulation.this){check();if(actor.id()!=appearance.id()||actor.clientOid()!=appearance.clientOid())throw new IllegalArgumentException("Actor ownership changed");appearance=actor;}
         }
+        ActorState snapshotActor() {return actor();}
+        ScenePortals.Trigger portalTrigger(){return portal;}
+        SceneHealth.State healthState(){return health.state();}
+        ActorState petSnapshot(){return petActor();}
         private ActorState actor() {
             var a=appearance;
             return new ActorState(a.id(),a.clientOid(),a.name(),a.color(),a.created(),movement.x(),movement.y(),
@@ -593,7 +479,7 @@ public final class SceneSimulation {
     private volatile boolean scheduled;
     private volatile Consumer<SceneSimulation> failureListener;
     private Throwable tickFailure;
-    private Snapshot previous;
+    private SceneSnapshot previous;
     private long tickCount;
     private int lastMetricLog;
     private final List<SceneContent.Entry> arsenalZones;
@@ -740,16 +626,16 @@ public final class SceneSimulation {
     public record InteractionSource(ActorState actor,SceneContent.Spec specification) { }
     public synchronized InteractionSource interactionSource(int id){return new InteractionSource(entities.actor(id),entities.specification(id));}
     public synchronized ActorState station(String kind){return entities.station(kind);}
-    public synchronized Membership join(ActorState actor,Consumer<Snapshot> publish) {
+    public synchronized Membership join(ActorState actor,Consumer<SceneSnapshot> publish) {
         return join(actor,publish,null);
     }
-    public synchronized Membership join(ActorState actor,Consumer<Snapshot> publish,Runnable sceneFailure) {
+    public synchronized Membership join(ActorState actor,Consumer<SceneSnapshot> publish,Runnable sceneFailure) {
         if(members.containsKey(actor.id()))throw new IllegalStateException("Actor is already in this scene");
         if(members.values().stream().anyMatch(m->m.appearance.clientOid()==actor.clientOid()))throw new IllegalStateException("Connection already owns a scene actor");
         var membership=new Membership(actor,Objects.requireNonNull(publish));membership.onSceneFailure(sceneFailure);members.put(actor.id(),membership);return membership;
     }
     /** Selection/subscription sees the same scene-owned entities without advancing movement. */
-    public synchronized Snapshot snapshot(){return capture(SceneClock.now(),null);}
+    public synchronized SceneSnapshot snapshot(){return capture(SceneClock.now(),null);}
     /** Read one existing membership without ticking the scene or creating an instance. */
     public record Companion(int selectedSprite,ScenePetState deployed,int observedAt) { }
     public synchronized Companion companion(int knight) {
@@ -765,12 +651,8 @@ public final class SceneSimulation {
     public synchronized MonsterMetrics.Snapshot metrics(){return entities.metrics();}
     /** Scheduled executors otherwise hide exceptions in their cancelled future. */
     public synchronized Throwable failure(){return tickFailure;}
-    private Snapshot capture(int stamp,Snapshot baseline) {
-        var portals=new HashMap<Integer,ScenePortals.Trigger>();
-        for(var member:members.values())if(member.portal!=null)portals.put(member.appearance.id(),member.portal);
-        var actors=new ArrayList<ActorState>();members.values().forEach(m->actors.add(m.actor()));for(var member:members.values()){var pet=member.petActor();if(pet!=null)actors.add(pet);}actors.addAll(entities.actors());actors.addAll(weapons.actors());
-        var health=new HashMap<Integer,SceneHealth.State>();members.forEach((id,member)->health.put(id,member.health.state()));
-        return new Snapshot(stamp,actors,weapons.effects(),List.copyOf(combatEvents),portals,health,baseline);
+    private SceneSnapshot capture(int stamp,SceneSnapshot baseline) {
+        return SnapshotBuilder.build(stamp,members.values(),entities,weapons,combatEvents,baseline);
     }
     /** Install the owner callback for tick failures; the registry recycles the instance. */
     public void onFailure(Consumer<SceneSimulation> listener){failureListener=listener;}
@@ -834,7 +716,7 @@ public final class SceneSimulation {
     }
     private void tick() {
         long entered=System.nanoTime();
-        Snapshot publication;List<Consumer<Snapshot>> recipients;
+        SceneSnapshot publication;List<Consumer<SceneSnapshot>> recipients;
         long publicationNanos=0,lockWaitSample=0;
         synchronized(this) {
             long lockWait=System.nanoTime()-entered;

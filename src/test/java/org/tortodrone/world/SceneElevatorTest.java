@@ -23,7 +23,7 @@ public final class SceneElevatorTest {
         var terrain=SceneWeaponsTest.openTerrain();
         var map=new org.tortodrone.core.world.MapScene(901,3<<24,"Fixture","Fixture","fixture","level",1,-3,0,0,1,terrain,new byte[]{1},ScenePortals.EMPTY,content);
         var simulation=new SceneRegistry.Instance(701,0,map).simulation();var isolated=new SceneRegistry.Instance(702,0,map).simulation();
-        var frames=new LinkedBlockingQueue<SceneSimulation.Snapshot>();int now=SceneClock.now();
+        var frames=new LinkedBlockingQueue<SceneSnapshot>();int now=SceneClock.now();
         var first=simulation.join(player(21,-3,now),frames::offer);var second=simulation.join(player(22,-3,now),s->{});var foreign=isolated.join(player(23,-3,now),s->{});
         try{
             first.enter();second.enter();
@@ -102,22 +102,22 @@ public final class SceneElevatorTest {
         mover.die(Integer.MIN_VALUE+700);check(!mover.transit(true,Integer.MIN_VALUE+701)&&mover.dead(),"dead pawn cannot acquire transit control");
         var interrupted=new TownMovement(SceneWeaponsTest.openTerrain(),0,0);interrupted.resetInput(1000);interrupted.transit(true,1100);interrupted.hurt(1200);interrupted.transit(false,1250);check(interrupted.activity()==TownMovement.HURT,"ride cancellation preserves an unrelated activity entered meanwhile");
     }
-    private static int state(SceneSimulation.Snapshot snapshot){return snapshot.actors().stream().filter(a->a.entity()!=null&&a.entity().kind().equals("EntryState")).findFirst().orElseThrow().entity().state();}
+    private static int state(SceneSnapshot snapshot){return snapshot.actors().stream().filter(a->a.entity()!=null&&a.entity().kind().equals("EntryState")).findFirst().orElseThrow().entity().state();}
     private static ActorState player(int id,float x,int now){return new ActorState(id,1000+id,"Fixture",0,now,x,0,0,0,0,new StarterCatalog.Model("Character/PC/Level",Map.of()));}
-    private static SceneSimulation.Snapshot await(SceneSimulation simulation,LinkedBlockingQueue<SceneSimulation.Snapshot> frames,Predicate<SceneSimulation.Snapshot> condition,String message)throws Exception {
+    private static SceneSnapshot await(SceneSimulation simulation,LinkedBlockingQueue<SceneSnapshot> frames,Predicate<SceneSnapshot> condition,String message)throws Exception {
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);
         do{var snapshot=simulation.snapshot();if(condition.test(snapshot))return snapshot;frames.poll(50,TimeUnit.MILLISECONDS);}while(System.nanoTime()<until);throw new AssertionError(message);
     }
-    private static org.tortodrone.core.world.FloorAdvanceRequest awaitRequest(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSimulation.Snapshot> frames)throws Exception {
+    private static org.tortodrone.core.world.FloorAdvanceRequest awaitRequest(SceneSimulation.Membership member,LinkedBlockingQueue<SceneSnapshot> frames)throws Exception {
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(3);do{var request=member.takeFloorAdvance();if(request!=null)return request;frames.poll(50,TimeUnit.MILLISECONDS);}while(System.nanoTime()<until);throw new AssertionError("Elevator offered no owned request");
     }
-    private static void walk(SceneSimulation.Membership member,SceneSimulation simulation,LinkedBlockingQueue<SceneSimulation.Snapshot> frames,int id,float target,float heading)throws Exception {
+    private static void walk(SceneSimulation.Membership member,SceneSimulation simulation,LinkedBlockingQueue<SceneSnapshot> frames,int id,float target,float heading)throws Exception {
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);do{
             intent(member,heading,1);var pawn=simulation.snapshot().players().stream().filter(a->a.id()==id).findFirst().orElseThrow();
             if(Math.abs(pawn.x()-target)<.2){intent(member,heading,0);return;}frames.poll(50,TimeUnit.MILLISECONDS);
         }while(System.nanoTime()<until);throw new AssertionError("Legal movement did not reach "+target);
     }
-    private static void walkUntilRide(SceneSimulation.Membership member,SceneSimulation simulation,LinkedBlockingQueue<SceneSimulation.Snapshot> frames)throws Exception {
+    private static void walkUntilRide(SceneSimulation.Membership member,SceneSimulation simulation,LinkedBlockingQueue<SceneSnapshot> frames)throws Exception {
         long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);do{intent(member,0,1);if(state(simulation.snapshot())==2)return;frames.poll(50,TimeUnit.MILLISECONDS);}while(System.nanoTime()<until);throw new AssertionError("Retry did not activate elevator");
     }
     private static boolean intent(SceneSimulation.Membership member,float heading,int flags){int now=SceneClock.now();lastInput=Math.max(lastInput+1,now);return member.input(lastInput,heading,heading,flags,now,System.nanoTime()/1_000_000L);}

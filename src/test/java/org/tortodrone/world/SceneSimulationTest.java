@@ -16,9 +16,9 @@ public final class SceneSimulationTest {
         var map=SceneRegistry.system().entry().map();
         var a=new SceneRegistry.Instance(700,0,map).simulation();
         var b=new SceneRegistry.Instance(701,1,map).simulation();
-        var first=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
-        var second=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
-        var other=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
+        var first=new LinkedBlockingQueue<SceneSnapshot>();
+        var second=new LinkedBlockingQueue<SceneSnapshot>();
+        var other=new LinkedBlockingQueue<SceneSnapshot>();
         var model=new StarterCatalog.Model("Character/PC/Default",Map.of());
         int start=SceneClock.now();
         var one=a.join(actor(1,start,map,model),first::add);
@@ -46,7 +46,7 @@ public final class SceneSimulationTest {
             var opening=a.snapshot();
             check(opening.players().getFirst().activity()==265&&opening.players().getFirst().sceneKnight().activityData().equals(references)
                 &&opening.players().get(1).activity()==TownMovement.LOADING&&b.snapshot().players().getFirst().activity()==TownMovement.LOADING,"committed reveal belongs only to the actor in its scene instance");
-            SceneSimulation.Snapshot firstOpening;
+            SceneSnapshot firstOpening;
             do{firstOpening=next(first);}while(firstOpening.players().getFirst().activity()!=265);
             check(firstOpening.players().getFirst().activityStarted()==firstOpening.timestamp(),"data-dependent activity starts at its first observer snapshot boundary");
             // Pause clears movement; resuming after an idle interval cannot integrate it.
@@ -85,7 +85,7 @@ public final class SceneSimulationTest {
         var content=new SceneContent(entries,original.content().scales());
         var map=new org.tortodrone.core.world.MapScene(294,1,"Fixture","Fixture","","training",1,19.5f,-.45f,(float)Math.PI/2,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var simulation=new SceneRegistry.Instance(703,0,map).simulation();
-        var first=new LinkedBlockingQueue<SceneSimulation.Snapshot>();var second=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
+        var first=new LinkedBlockingQueue<SceneSnapshot>();var second=new LinkedBlockingQueue<SceneSnapshot>();
         int stamp=SceneClock.now();
         try(var one=simulation.join(new ActorState(41,1041,"One",0,stamp,19.5f,-.45f,(float)Math.PI/2,0,0,model),first::add);
                 var two=simulation.join(new ActorState(42,1042,"Two",0,stamp,19.6f,-.45f,(float)Math.PI/2,0,0,model),second::add)){
@@ -93,7 +93,7 @@ public final class SceneSimulationTest {
             check(stationState(next(first))==0&&stationState(next(second))==0,"nearby clients initially see the same closed Arsenal");
             stamp=SceneClock.now();check(one.input(stamp,(float)Math.PI/2,0,4,stamp,stamp,System.nanoTime()/1_000_000L),"station interaction intent accepted");
             var opened=awaitStation(first,1);
-            SceneSimulation.Snapshot peer=next(second);
+            SceneSnapshot peer=next(second);
             for(int n=0;n<60&&peer.timestamp()<opened.timestamp();n++)peer=next(second);
             check(opened==peer,"opening uses one shared publication for both clients");
             try(var late=simulation.join(new ActorState(43,1043,"Late",0,stamp,0,0,0,0,0,model),s->{})){
@@ -105,16 +105,16 @@ public final class SceneSimulationTest {
             check(stationState(closed)==0,"disconnect of the last nearby occupant closes the shared station");
         }
     }
-    private static int stationState(SceneSimulation.Snapshot snapshot){
+    private static int stationState(SceneSnapshot snapshot){
         return snapshot.actors().stream().filter(a->a.entity()!=null&&a.entity().kind().equals("Switch")&&a.entity().key().equals("1955")).findFirst().orElseThrow().entity().state();
     }
-    private static SceneSimulation.Snapshot awaitStation(BlockingQueue<SceneSimulation.Snapshot> queue,int state)throws Exception {
+    private static SceneSnapshot awaitStation(BlockingQueue<SceneSnapshot> queue,int state)throws Exception {
         for(int n=0;n<60;n++){var snapshot=next(queue);if(stationState(snapshot)==state)return snapshot;}
         throw new AssertionError("Station did not reach state "+state);
     }
     private static void portals(org.tortodrone.core.world.MapScene map,StarterCatalog.Model model)throws Exception {
         var simulation=new SceneRegistry.Instance(702,0,map).simulation();
-        var publications=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
+        var publications=new LinkedBlockingQueue<SceneSnapshot>();
         int start=SceneClock.now();
         var arrival=new ActorState(4,1004,"Traveller",257,start,-38.25f,.4f,1.5f,0,0,0,start,model,false);
         try(var traveller=simulation.join(arrival,publications::add);
@@ -135,10 +135,10 @@ public final class SceneSimulationTest {
     private static ActorState actor(int id,int start,org.tortodrone.core.world.MapScene map,StarterCatalog.Model model) {
         return new ActorState(id,1000+id,"Test-"+id,257,start,map.spawnX(),map.spawnY(),0,0,0,0,start,model,false);
     }
-    private static SceneSimulation.Snapshot next(BlockingQueue<SceneSimulation.Snapshot> queue)throws Exception {
+    private static SceneSnapshot next(BlockingQueue<SceneSnapshot> queue)throws Exception {
         var value=queue.poll(3,TimeUnit.SECONDS);if(value==null)throw new AssertionError("Missing scene tick");return value;
     }
-    private static SceneSimulation.Snapshot awaitMissing(BlockingQueue<SceneSimulation.Snapshot> queue,int id)throws Exception {
+    private static SceneSnapshot awaitMissing(BlockingQueue<SceneSnapshot> queue,int id)throws Exception {
         for(int i=0;i<20;i++){var value=next(queue);if(!value.occupants().contains(id))return value;}throw new AssertionError("Actor did not leave");
     }
 }

@@ -54,7 +54,7 @@ public final class JellyDeathWireTest {
                     Thread.sleep(250);
                     var failure=simulation.failure();
                     if(failure!=null){failure.printStackTrace();throw new AssertionError("Scene simulation crashed before jelly contact: "+failure);}
-                    SceneSimulation.Snapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
+                    SceneSnapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
                     for(var actor:snapshot.actors())
                         if(actor.entity()!=null&&"Monster".equals(actor.entity().kind())&&actor.entity().destroyed()==Integer.MAX_VALUE)jellySeen=true;
                 }
@@ -72,7 +72,7 @@ public final class JellyDeathWireTest {
                     Thread.sleep(20);
                     var failure=simulation.failure();
                     if(failure!=null){failure.printStackTrace();throw new AssertionError("Scene simulation crashed during the jelly fight: "+failure);}
-                    SceneSimulation.Snapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
+                    SceneSnapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
                     if(System.nanoTime()-lastFrame>100_000_000L) {
                         lastFrame=System.nanoTime();
                         var pawn=snapshot.players().stream().filter(p->p.entity()==null&&p.pet()==null).findFirst().orElse(null);

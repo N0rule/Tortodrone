@@ -25,7 +25,7 @@ public final class ScriptedSceneEffectTest {
         var content=new SceneContent(List.of(sensor),Map.of());
         var map=new org.tortodrone.core.world.MapScene(900001,33554432,"Fixture","Fixture","fixture","training",1,0,0,0,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
         var scene=new SceneRegistry.Instance(7001,0,map).simulation();var isolated=new SceneRegistry.Instance(7002,0,map).simulation();
-        var baseline=scene.snapshot();var frames=new LinkedBlockingQueue<SceneSimulation.Snapshot>();int stamp=SceneClock.now();
+        var baseline=scene.snapshot();var frames=new LinkedBlockingQueue<SceneSnapshot>();int stamp=SceneClock.now();
         var player=new ActorState(21,1001,"Fixture",0,stamp,0,0,0,0,0,new StarterCatalog.Model("Character/PC/Default",Map.of()));
         try(var member=scene.join(player,frames::add)){
             member.enter();SceneEffect published=null;long until=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);

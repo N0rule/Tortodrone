@@ -122,7 +122,7 @@ public final class ScenePublishScaleTest {
         extra.close();
     }
 
-    private static SceneSimulation.EncodedDelta encoded(SceneSimulation.Snapshot current,SceneSimulation.Snapshot baseline,
+    private static SceneSnapshot.EncodedDelta encoded(SceneSnapshot current,SceneSnapshot baseline,
             org.tortodrone.core.world.MapScene map,SceneRegistry.Instance instance)throws Exception {
         return current.encoded(baseline,!map.town(),(delta,effects,combat,interior)->
             SessionCodec.sceneDeltaTemplate(ItemCatalogHolder.CATALOG,instance.oid(),current.timestamp(),
