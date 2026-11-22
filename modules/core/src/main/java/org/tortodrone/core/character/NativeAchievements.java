@@ -39,6 +39,12 @@ public final class NativeAchievements {
     private static final int MASK_PROGRESS = 1;
     private static final int STAT = 2;
     private static final int RARITY_SET = 3;
+    private static final int EQUIPMENT = 4;
+
+    /** The exact equipment indices required by {@code SLOTS_FILLED_1}: Four weapon
+     *  slots (6–9), both trinkets (10–11), shield (2) and the three costume slots
+     *  (3, 4, 15). Helm and armor (0, 1) are deliberately not part of the predicate. */
+    private static final int[] SLOTS_FILLED_INDICES = {2, 3, 4, 6, 7, 8, 9, 10, 11, 15};
 
     private record Rule(int kind, int argument, int threshold) { }
 
@@ -69,6 +75,7 @@ public final class NativeAchievements {
         Map.entry(37, new Rule(STAT, NativeStats.SHIELDS_OWNED, 5)),
         Map.entry(38, new Rule(STAT, NativeStats.SHIELDS_OWNED, 10)),
         Map.entry(39, new Rule(RARITY_SET, 0, 1)),
+        Map.entry(46, new Rule(EQUIPMENT, 0, 1)),
         Map.entry(50, new Rule(STAT, NativeStats.HEALTH_CAPSULES_USED, 10)),
         Map.entry(51, new Rule(STAT, NativeStats.REMEDY_CAPSULES_USED, 10)),
         Map.entry(60, new Rule(STAT, NativeStats.CASINO_SPINS, 100)),
@@ -91,7 +98,8 @@ public final class NativeAchievements {
     }
 
     /** Exact {@code Achievement.Type.qualifies(PlayerObject)} result for every supported rule. */
-    public static Set<Integer> qualifying(Map<Integer, Integer> stats, int flags, int progressFlags) {
+    public static Set<Integer> qualifying(Map<Integer, Integer> stats, int flags, int progressFlags,
+            long[] equipment) {
         var result = new LinkedHashSet<Integer>();
         for (var entry : RULES.entrySet()) {
             var rule = entry.getValue();
@@ -100,9 +108,21 @@ public final class NativeAchievements {
                 case MASK_PROGRESS -> (progressFlags & rule.argument()) != 0;
                 case STAT -> stats.getOrDefault(rule.argument(), 0) >= rule.threshold();
                 case RARITY_SET -> {
+                    // The stock RARITY_SET_1 predicate checks helms, armors, shields,
+                    // handguns and bombs; it deliberately excludes five-star swords.
                     boolean all = true;
-                    for (int stat = NativeStats.FIVE_STAR_SWORDS_OWNED; stat <= NativeStats.FIVE_STAR_SHIELDS_OWNED; stat++)
+                    for (int stat : new int[]{NativeStats.FIVE_STAR_HANDGUNS_OWNED,
+                            NativeStats.FIVE_STAR_BOMBS_OWNED, NativeStats.FIVE_STAR_HELMS_OWNED,
+                            NativeStats.FIVE_STAR_ARMORS_OWNED, NativeStats.FIVE_STAR_SHIELDS_OWNED})
                         all &= stats.getOrDefault(stat, 0) >= rule.threshold();
+                    yield all;
+                }
+                case EQUIPMENT -> {
+                    // ItemCodes.bxm={6,7,8,9}, bxn={10,11}, then {2,3,4,15}: every
+                    // listed slot id must hold an item; helm and armor are excluded.
+                    boolean all = equipment != null;
+                    if (all) for (int slot : SLOTS_FILLED_INDICES)
+                        all &= slot < equipment.length && equipment[slot] > 0;
                     yield all;
                 }
                 default -> false;

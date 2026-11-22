@@ -75,7 +75,8 @@ final class AccountAchievements {
     static WorldProfile reconcile(Connection c, WorldProfile profile, ItemCatalog items, int flags, long now)
             throws SQLException, IOException {
         var stats = NativeStats.values(profile, items, now);
-        var desired = NativeAchievements.qualifying(stats, flags, profile.progress().progressFlags());
+        var desired = NativeAchievements.qualifying(stats, flags, profile.progress().progressFlags(),
+                profile.equipment());
         var additions = new TreeMap<Integer, Long>();
         for (int type : desired)
             if (!profile.achievements().unlocked().containsKey(type)) additions.put(type, now);
