@@ -60,6 +60,7 @@ public final class Database {
         try{observer.completed(kind,elapsed,failed);}catch(RuntimeException ignored){ }
     }
     private final Path file;
+    private final AccountRepository accounts;
     private boolean initialized;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
 
@@ -72,6 +73,7 @@ public final class Database {
         else if (deploymentLocked) initialize();
         else initializeUnderLock(directory);
         initialized = true;
+        accounts = new AccountRepository(this);
         DepotStore.alignDefaults(this);
     }
     /**
@@ -307,16 +309,8 @@ public final class Database {
             try(var r=s.executeQuery()){return r.next();}
         }});
     }
-    public Identity identity(String username) throws IOException {
-        return read(c -> { try (PreparedStatement s = c.prepareStatement("SELECT * FROM accounts WHERE name_key=?")) {
-            s.setString(1, username.toLowerCase(Locale.ROOT)); try (ResultSet r = s.executeQuery()) { return r.next() ? identity(r) : null; }
-        } });
-    }
-    public boolean current(int id, long revision) throws IOException {
-        return read(c -> { try (PreparedStatement s = c.prepareStatement("SELECT auth_revision FROM accounts WHERE id=?")) {
-            s.setInt(1,id); try (ResultSet r = s.executeQuery()) { return r.next() && r.getLong(1) == revision; }
-        } });
-    }
+    public Identity identity(String username) throws IOException { return accounts.identity(username); }
+    public boolean current(int id, long revision) throws IOException { return accounts.current(id,revision); }
     /** Ordinary account preference rows in the existing integer metadata table; schema stays unchanged. */
     public boolean inspectionHidden(int accountId,long authRevision)throws IOException {
         return read(c->{requirePreferenceOwner(c,accountId,authRevision);
@@ -450,87 +444,20 @@ public final class Database {
             return new StoryState(WorldProfiles.load(c,accountId,knightId,authRevision),after,newObjectives);
         });
     }
-    private static Identity identity(ResultSet r) throws SQLException {
-        return new Identity(r.getInt("id"), r.getString("username"), r.getBoolean("game_master"), r.getLong("auth_revision"), r.getBytes("salt"), r.getBytes("verifier"));
-    }
-    public List<Summary> list() throws IOException {
-        return read(c -> { List<Summary> result = new ArrayList<>();
-            try (Statement s = c.createStatement(); ResultSet r = s.executeQuery("SELECT a.id,a.username,a.game_master,a.created_at,count(k.id) AS knights FROM accounts a LEFT JOIN knights k ON k.account_id=a.id GROUP BY a.id ORDER BY a.id")) {
-                while (r.next()) result.add(new Summary(r.getInt("id"),r.getString("username"),r.getBoolean("game_master"),r.getInt("knights"),r.getLong("created_at")));
-            } return List.copyOf(result);
-        });
-    }
+    public List<Summary> list() throws IOException { return accounts.list(); }
     public int create(String username, Passwords.Protection protection, boolean gameMaster) throws IOException {
-        return write(c -> {
-            try (Statement s = c.createStatement(); ResultSet r = s.executeQuery("SELECT count(*) FROM accounts")) {
-                r.next(); if (r.getInt(1) >= 1000) throw new IOException("Account limit reached");
-            }
-            int id;
-            try (Statement s = c.createStatement(); ResultSet r = s.executeQuery("SELECT value FROM metadata WHERE key='next-account-id'")) { r.next(); id = r.getInt(1); }
-            if (id >= Integer.MAX_VALUE) throw new IOException("Account ID space exhausted");
-            insertAccount(c,id,username,protection.salt(),protection.verifier(),gameMaster,1);
-            try (Statement s = c.createStatement()) { s.executeUpdate("UPDATE metadata SET value=value+1 WHERE key='next-account-id'"); }
-            event(c,id,"created"); return id;
-        });
-    }
-    private static void insertAccount(Connection c, int id, String username, byte[] salt, byte[] verifier, boolean gameMaster, int next) throws SQLException {
-        try (PreparedStatement s = c.prepareStatement("INSERT INTO accounts(id,username,name_key,salt,verifier,game_master,created_at,next_knight_id) VALUES(?,?,?,?,?,?,?,?)")) {
-            s.setInt(1,id); s.setString(2,username); s.setString(3,username.toLowerCase(Locale.ROOT)); s.setBytes(4,salt); s.setBytes(5,verifier); s.setBoolean(6,gameMaster); s.setLong(7,System.currentTimeMillis()); s.setInt(8,next); s.executeUpdate();
-        }
+        return accounts.create(username,protection,gameMaster);
     }
     public void password(String username, Passwords.Protection protection,int expectedId) throws IOException {
-        write(c -> {
-            int id = requireId(c,username);
-            if (expectedId >= 0 && id != expectedId) throw new IOException("Account changed; refresh the account list");
-            try (PreparedStatement s = c.prepareStatement("UPDATE accounts SET salt=?,verifier=?,auth_revision=auth_revision+1,revision=revision+1 WHERE id=?")) {
-                s.setBytes(1,protection.salt()); s.setBytes(2,protection.verifier()); s.setInt(3,id); s.executeUpdate();
-            } event(c,id,"password changed"); return null;
-        });
+        accounts.password(username,protection,expectedId);
     }
     public void gameMaster(String username, boolean gameMaster,int expectedId) throws IOException {
-        write(c -> { int id = requireId(c,username);
-            if (expectedId >= 0 && id != expectedId) throw new IOException("Account changed; refresh the account list");
-            try (PreparedStatement s = c.prepareStatement("UPDATE accounts SET game_master=?,revision=revision+1 WHERE id=?")) { s.setBoolean(1,gameMaster); s.setInt(2,id); s.executeUpdate(); }
-            event(c,id,gameMaster ? "game master granted" : "game master removed"); return null;
-        });
+        accounts.gameMaster(username,gameMaster,expectedId);
     }
     /** Toggle atomically with other local tools; no stale read/modify/write window. */
-    public boolean toggleGameMaster(String username) throws IOException {
-        return write(c -> {
-            int id=requireId(c,username);
-            boolean enabled;
-            try(var s=c.prepareStatement("UPDATE accounts SET game_master=1-game_master,revision=revision+1 WHERE id=? RETURNING game_master")) {
-                s.setInt(1,id);try(var r=s.executeQuery()){r.next();enabled=r.getBoolean(1);}
-            }
-            event(c,id,enabled ? "game master granted" : "game master removed");
-            return enabled;
-        });
-    }
-    public void delete(String username,int expectedId) throws IOException {
-        write(c -> { int id = requireId(c,username);
-            if (expectedId >= 0 && id != expectedId) throw new IOException("Account changed; refresh the account list");
-            AccountAchievements.delete(c,id);
-            try (PreparedStatement s = c.prepareStatement("DELETE FROM accounts WHERE id=?")) { s.setInt(1,id); s.executeUpdate(); }
-            WorldProfiles.cleanProgress(c);
-            try(var s=c.prepareStatement("DELETE FROM metadata WHERE key=?")){s.setString(1,"account."+id+".inspection-hidden");s.executeUpdate();}
-            event(c,id,"deleted"); return null;
-        });
-    }
-    private static int requireId(Connection c, String username) throws IOException, SQLException {
-        try (PreparedStatement s = c.prepareStatement("SELECT id FROM accounts WHERE name_key=?")) {
-            s.setString(1,username.toLowerCase(Locale.ROOT)); try (ResultSet r = s.executeQuery()) { if (!r.next()) throw new IOException("No such account"); return r.getInt(1); }
-        }
-    }
-    private static void event(Connection c,int id,String action) throws SQLException {
-        try (PreparedStatement s = c.prepareStatement("INSERT INTO account_events(account_id,action,created_at) VALUES(?,?,?)")) {
-            s.setInt(1,id); s.setString(2,action); s.setLong(3,System.currentTimeMillis()); s.executeUpdate();
-        }
-    }
-    public int nextKnight(int id) throws IOException {
-        return read(c -> { try (PreparedStatement s = c.prepareStatement("SELECT next_knight_id FROM accounts WHERE id=?")) {
-            s.setInt(1,id); try (ResultSet r = s.executeQuery()) { if (!r.next()) throw new IOException("Account no longer exists"); return r.getInt(1); }
-        } });
-    }
+    public boolean toggleGameMaster(String username) throws IOException { return accounts.toggleGameMaster(username); }
+    public void delete(String username,int expectedId) throws IOException { accounts.delete(username,expectedId); }
+    public int nextKnight(int id) throws IOException { return accounts.nextKnight(id); }
     public List<Knight> roster(int id) throws IOException {
         return read(c -> { List<Knight> result = new ArrayList<>();
             try (PreparedStatement s = c.prepareStatement("SELECT * FROM knights WHERE account_id=? ORDER BY id")) {
@@ -555,7 +482,7 @@ public final class Database {
     }
     public void deleteKnight(String username,String name,int expectedAccount,int expectedWorld)throws IOException {
         write(c->{
-            int account=requireId(c,username);
+            int account=AccountRepository.requireId(c,username);
             if(account!=expectedAccount)throw new IOException("Account changed; refresh the account list");
             int knight,world;
             try(var s=c.prepareStatement("SELECT k.id,w.world_id FROM knights k JOIN world_characters w ON w.account_id=k.account_id AND w.knight_id=k.id WHERE k.account_id=? AND k.name_key=?")) {
@@ -567,7 +494,7 @@ public final class Database {
             try(var s=c.prepareStatement("DELETE FROM knights WHERE account_id=? AND id=?")){s.setInt(1,account);s.setInt(2,knight);s.executeUpdate();}
             WorldProfiles.cleanProgress(c);
             try(var s=c.prepareStatement("UPDATE accounts SET auth_revision=auth_revision+1,revision=revision+1 WHERE id=?")){s.setInt(1,account);s.executeUpdate();}
-            event(c,account,"knight deleted; world="+world);return null;
+            AccountRepository.event(c,account,"knight deleted; world="+world);return null;
         });
     }
     private static Knight knight(ResultSet r) throws SQLException {
@@ -649,7 +576,7 @@ public final class Database {
                 s.setString(1,WorldProfiles.progressKey(profile.worldId(),"prestige"));s.setInt(2,next.prestige());s.executeUpdate();
             }
             try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
-            event(c,profile.accountId(),"knight progress; world="+profile.worldId()+"; rank="+next.rankPair()+"; prestige="+next.prestige()+(granted?"; testing starter sprite="+starterSprite:""));
+            AccountRepository.event(c,profile.accountId(),"knight progress; world="+profile.worldId()+"; rank="+next.rankPair()+"; prestige="+next.prestige()+(granted?"; testing starter sprite="+starterSprite:""));
             return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
         });
     }
@@ -684,7 +611,7 @@ public final class Database {
             try(var s=c.prepareStatement("INSERT INTO currency_events(world_id,currency,delta,balance,created_at) VALUES(?,?,?,?,?)")) {
                 s.setInt(1,profile.worldId());s.setString(2,column);s.setLong(3,delta);s.setLong(4,balance);s.setLong(5,System.currentTimeMillis());s.executeUpdate();
             }
-            event(c,profile.accountId(),"currency "+(absolute?"set":"grant")+"; world="+profile.worldId()+"; "+column+"="+balance+"; delta="+delta);
+            AccountRepository.event(c,profile.accountId(),"currency "+(absolute?"set":"grant")+"; world="+profile.worldId()+"; "+column+"="+balance+"; delta="+delta);
             return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
         });
     }
@@ -709,7 +636,7 @@ public final class Database {
             try(var s=c.prepareStatement("INSERT INTO item_events(world_id,actor_account,config,quantity,first_item_id,created_at) VALUES(?,NULL,?,?,?,?)")){
                 s.setInt(1,profile.worldId());s.setString(2,item.config());s.setInt(3,quantity-item.count());s.setLong(4,itemId);s.setLong(5,System.currentTimeMillis());s.executeUpdate();
             }
-            event(c,profile.accountId(),"inventory quantity; world="+profile.worldId()+"; item="+itemId+"; count="+quantity);
+            AccountRepository.event(c,profile.accountId(),"inventory quantity; world="+profile.worldId()+"; item="+itemId+"; count="+quantity);
             return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
         });
     }
@@ -772,7 +699,7 @@ public final class Database {
                 profile=WorldProfiles.load(c,account,profile.knightId(),-1);
             }
             equip(c,profile,owned,slot);
-            event(c,account,"equipment; world="+world+"; item="+owned+"; slot="+slot);
+            AccountRepository.event(c,account,"equipment; world="+world+"; item="+owned+"; slot="+slot);
             return WorldProfiles.load(c,account,profile.knightId(),-1);
         });
     }
@@ -805,7 +732,7 @@ public final class Database {
                     s.setString(1,knightName.toLowerCase(Locale.ROOT));
                     try (var r=s.executeQuery()) { if(!r.next())throw new IOException("No such knight");account=r.getInt(1); }
                 }
-            } else account=requireId(c,username);
+            } else account=AccountRepository.requireId(c,username);
             if(expectedAccount>=0&&account!=expectedAccount)throw new IOException("Account changed; refresh");
             try(var s=c.prepareStatement("SELECT id FROM knights WHERE account_id=? AND name_key=?")) {
                 s.setInt(1,account);s.setString(2,knightName.toLowerCase(Locale.ROOT));
@@ -849,7 +776,7 @@ public final class Database {
             var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("Item is not owned by this knight"));
             modifiers.validate(catalog.require(item.config()),rules);
             try(var s=c.prepareStatement("UPDATE inventory_items SET level=?,heat_progress=?,variants=? WHERE world_id=? AND item_id=?")){s.setInt(1,modifiers.level());s.setFloat(2,modifiers.heat());s.setString(3,org.tortodrone.core.Json.stringify(modifiers.variants()));s.setInt(4,profile.worldId());s.setLong(5,itemId);if(s.executeUpdate()!=1)throw new IOException("Item changed");}
-            TownStore.touch(c,profile.worldId());event(c,profile.accountId(),"item modifiers; world="+profile.worldId()+"; item="+itemId);
+            TownStore.touch(c,profile.worldId());AccountRepository.event(c,profile.accountId(),"item modifiers; world="+profile.worldId()+"; item="+itemId);
             return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
         });
     }
@@ -862,7 +789,7 @@ public final class Database {
             String costume;
             try(var s=c.prepareStatement("SELECT costume FROM knights WHERE account_id=? AND id=?")){s.setInt(1,profile.accountId());s.setInt(2,profile.knightId());try(var r=s.executeQuery()){if(!r.next())throw new IOException("Knight changed");costume=r.getString(1);}}
             TownStore.editAccessory(c,profile,item,accessory,costume,rules);
-            TownStore.touch(c,profile.worldId());event(c,profile.accountId(),"item accessory; world="+profile.worldId()+"; item="+itemId);
+            TownStore.touch(c,profile.worldId());AccountRepository.event(c,profile.accountId(),"item accessory; world="+profile.worldId()+"; item="+itemId);
             return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
         });
     }
