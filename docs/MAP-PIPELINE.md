@@ -117,8 +117,8 @@ All seventeen bundled maps now carry generated exact collision:
 `mission_lobby` is the stock mission ready room (scene 351, `%dungeon:m.mission_lobby`).
 `levels.sql` row 114 names it as the `mission_lobby` scene, so its zone is
 `ZoneUtil.qualifyZoneId(2, 114)`. It has no hostile placements and no portal of its
-own; mission parties are not implemented yet, so it is reachable only through
-`/sgo 351`.
+own; a playable route enters it through the authored party scene handshake described
+in [Missions](../content.md#missions), and `/sgo 351` remains available for inspection.
 
 The level maps are imported only when a mission route needs them. `ancient_generator`
 is the pinned opening floor. `ironclaw_assembly`/`ironclaw_workshop` and the three

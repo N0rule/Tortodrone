@@ -50,16 +50,19 @@ The checkout and portable deployment use the same content/configuration layout.
 `build/plugins` beside the single `tortodrone.jar`. Ordinary builds are offline once
 Gradle dependencies are cached and never require a game installation or capture.
 
-Ten maps ship in total. The seven non-opening maps are `haven` (1), `bazaar` (2), `arcade` (3),
-`garrison` (445), `advanced_training` (294), `laboratory` (30893), and `hall_of_heroes` (318); the
-opening pair is Crash Site 398 and Rescue Camp 217; the Mission Lobby (351) is retained as a
-mission-area preview.
+Seventeen maps ship in total. The shared non-mission maps are `haven` (1), `bazaar` (2),
+`arcade` (3), `garrison` (445), `advanced_training` (294), `laboratory` (30893),
+`hall_of_heroes` (318) and `ancient_generator` (337); the opening pair is Crash Site
+398 with Rescue Camp 217 and its state 2 (218); `ironclaw_assembly` (320) and
+`ironclaw_workshop` (324) are the Ironclaw floors. The mission area supplies the
+Mission Lobby (351) and the three Shadow Wildwoods floors (380, 382, 384); see
+[Missions](#missions) for which routes are playable.
 There are 9,355 indexed original item definitions, 386 weapon controls and 123
 shields. Indexed content does not establish gameplay support. The implementation
 still has the limits described in [Architecture](architecture.md) and the
-[stock support index](item-support.csv); mission definitions are catalogued below, but
-dungeon mission runs, objective progress, reward granting, random vendor stock and many
-original actions remain incomplete.
+[stock support index](item-support.csv); mission definitions are catalogued below and one
+verified gate route runs, but general dungeon mission runs, objective progress, reward
+granting, random vendor stock and many original actions remain incomplete.
 
 ## Configuration and validation
 
@@ -499,6 +502,11 @@ one release. It is generated from the client's exported `mission.xml`,
 `mission_group.xml` and `mission_property.xml`; every id, rank pair, reward reference,
 restriction and prestige range is retained. Startup checks cross-file references and
 rejects unknown fields, unknown files and mixed v1/v2 trees.
+
+`content/systems/` reserves six post-0.42.0 gameplay systems: `achievements`, `arcade`,
+`events`, `guildhall`, `lairs` and `pvp`. Each folder is README-only until the stock
+packets, scenes and ownership rules for that system are verified; the matching
+reserved Java packages live under `modules/world` and `modules/gameplay`.
 
 The catalogue exposes definition data, the rank-board helpers (descending priority
 with a stable id tie break, completed-card removal and `needMission` prerequisite

@@ -20,9 +20,10 @@ import org.tortodrone.resources.SceneCatalog;
 public final class TownEffectCommitTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-town-effect-");
+        var previous=SceneRegistry.system();
         try {
             var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
-            var registry=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));registry.town(TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
+            var registry=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));registry.town(TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));SceneRegistry.install(registry);
             for(boolean learn:List.of(true,false)){
                 var db=new Database(home.resolve(learn?"recipe":"energy"),true);int account=db.create("Learner",new Passwords.Protection(new byte[16],new byte[32]),false);
                 var characters=new CharacterStore(db,account,"Learner",items);var knight=characters.create(new Knight(0,"Learner-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0));
@@ -54,6 +55,6 @@ public final class TownEffectCommitTest {
                 }
             }
             System.out.println("PASS: committed recipe/Energy effects survive failed source notification without rollback or replay");
-        }finally{org.tortodrone.support.ContentFixture.delete(home);}
+        }finally{SceneRegistry.install(previous);org.tortodrone.support.ContentFixture.delete(home);}
     }
 }

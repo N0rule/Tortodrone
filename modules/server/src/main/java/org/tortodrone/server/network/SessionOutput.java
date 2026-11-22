@@ -49,6 +49,8 @@ final class SessionOutput implements AutoCloseable {
     }
     private final Socket socket;
     private final ReentrantLock lock = new ReentrantLock();
+    /** Serializes frame encoding with queue insertion so connection-global codec mappings never race. */
+    private final ReentrantLock encoding = new ReentrantLock();
     private final Condition notEmpty = lock.newCondition();
     private final Condition notFull = lock.newCondition();
     private final ArrayDeque<byte[]> pending = new ArrayDeque<>();
@@ -121,40 +123,43 @@ final class SessionOutput implements AutoCloseable {
     private void clearOverBudget() { overBudgetSince = 0; }
 
     private boolean encodeAndQueue(Encoder encoder,boolean optional) throws IOException {
-        lock.lock();
+        encoding.lock();
         try {
-            if (overBudgetSince != 0 && System.nanoTime() - overBudgetSince >= maxOverBudgetNanos)
-                fail(new IOException("Downstream byte budget exceeded"));
-            if (closed || failure != null || socket.isClosed())
-                throw new IOException("Downstream connection closed", failure);
-        } finally { lock.unlock(); }
-        byte[] frame;
-        try {
-            frame = encoder.frame();
-            if (frame.length > org.tortodrone.protocol.SessionCodec.MAX_DOWNSTREAM_FRAME) throw new IOException("Downstream frame exceeds size limit");
-        } catch (IOException | RuntimeException error) {
-            // An unsent frame may have introduced codec mappings. Never reuse that stream.
-            fail(error);
-            if (error instanceof IOException io) throw io;
-            throw new IOException("Downstream encoding failed", error);
-        }
-        lock.lock();
-        try {
-            if (closed || failure != null || socket.isClosed()) throw new IOException("Downstream connection closed", failure);
-            if (optional && overBudget()) { droppedOptional++; Metrics.optionalDropped(); noteOverBudget(); return false; }
-            if (!optional && (pending.size() >= maxPending || pendingBytes + frame.length > maxPendingBytes)) {
-                fail(new IOException("Downstream queue full"));
-                throw new IOException("Downstream queue full", failure);
+            lock.lock();
+            try {
+                if (overBudgetSince != 0 && System.nanoTime() - overBudgetSince >= maxOverBudgetNanos)
+                    fail(new IOException("Downstream byte budget exceeded"));
+                if (closed || failure != null || socket.isClosed())
+                    throw new IOException("Downstream connection closed", failure);
+            } finally { lock.unlock(); }
+            byte[] frame;
+            try {
+                frame = encoder.frame();
+                if (frame.length > org.tortodrone.protocol.SessionCodec.MAX_DOWNSTREAM_FRAME) throw new IOException("Downstream frame exceeds size limit");
+            } catch (IOException | RuntimeException error) {
+                // An unsent frame may have introduced codec mappings. Never reuse that stream.
+                fail(error);
+                if (error instanceof IOException io) throw io;
+                throw new IOException("Downstream encoding failed", error);
             }
-            if (pendingBytes + frame.length > maxPendingBytes) {
-                if (optional) { droppedOptional++; Metrics.optionalDropped(); noteOverBudget(); return false; }
-                fail(new IOException("Downstream byte budget exceeded"));
-                throw new IOException("Downstream byte budget exceeded", failure);
-            }
-            pending.addLast(frame); pendingBytes += frame.length; notEmpty.signal();
-            Metrics.queued(frame.length,pending.size(),pendingBytes);
-            return true;
-        } finally { lock.unlock(); }
+            lock.lock();
+            try {
+                if (closed || failure != null || socket.isClosed()) throw new IOException("Downstream connection closed", failure);
+                if (optional && overBudget()) { droppedOptional++; Metrics.optionalDropped(); noteOverBudget(); return false; }
+                if (!optional && (pending.size() >= maxPending || pendingBytes + frame.length > maxPendingBytes)) {
+                    fail(new IOException("Downstream queue full"));
+                    throw new IOException("Downstream queue full", failure);
+                }
+                if (pendingBytes + frame.length > maxPendingBytes) {
+                    if (optional) { droppedOptional++; Metrics.optionalDropped(); noteOverBudget(); return false; }
+                    fail(new IOException("Downstream byte budget exceeded"));
+                    throw new IOException("Downstream byte budget exceeded", failure);
+                }
+                pending.addLast(frame); pendingBytes += frame.length; notEmpty.signal();
+                Metrics.queued(frame.length,pending.size(),pendingBytes);
+                return true;
+            } finally { lock.unlock(); }
+        } finally { encoding.unlock(); }
     }
 
     long droppedOptional() { lock.lock(); try { return droppedOptional; } finally { lock.unlock(); } }

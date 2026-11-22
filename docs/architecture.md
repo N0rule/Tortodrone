@@ -16,7 +16,7 @@ Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights 
 | Atomic unified YAML resolution | `resources/{ContentManager,ContentRegistry}` |
 | Browser administration | `web/{AdminHandler,AdminService,WebIdentityStore}` |
 
-The executable JAR and packaged WebUI are independent of a running stock game installation. Source imports/compatibility fixtures can read installed client classes read-only in isolated test environments.
+The executable JAR and packaged WebUI are independent of a running stock game installation. Source imports/compatibility fixtures can read installed client classes read-only in isolated test environments. The console and admin `status` view reports indexed map/item counts and live scene instances without opening unvisited map templates.
 
 ## Module graph
 
@@ -151,7 +151,7 @@ remain readable but require re-export for resolved damage values and shield acti
 
 ## Implemented versus missing gameplay
 
-The server currently supports Haven towns and supported interiors, persistent inventories, owned consumable/instant/spawn-actor/lift item use, authored equipment and combat controls, shared Training parties and friend travel, town services (shops, crafting/forge, Depot, auction, exchange), player mail, trading, inspection/privacy, scene chat/emotes, guild formation/roster/invites/ranks/record/energy well and local account/GM management. Guild hall scenes, expansions, themes and the guild shop are not served. **It is not a complete vanilla server.** Training Hall has a bounded implementation of prepared actors, interactive props, traps, pickups, damage, status and conversation; its public/party instances do not imply general dungeon or matchmaking support. Do not infer general NPC service logic, arbitrary monster behavior or dungeon loot tables, complete crafting coverage, missions, arbitrary dungeons, party matchmaking or guilds from those mechanics or client data.
+The server currently supports Haven towns and supported interiors, persistent inventories, owned consumable/instant/spawn-actor/lift item use, authored equipment and combat controls, shared Training parties and friend travel, town services (shops, crafting/forge, Depot, auction, exchange), player mail, trading, inspection/privacy, scene chat/emotes, the stock mission catalogue with the native mission bar and gate map, the verified Shadow Beast gate route with floor settlement, guild formation/roster/invites/ranks/record/energy well and local account/GM management. Guild hall scenes, expansions, themes and the guild shop are not served. **It is not a complete vanilla server.** Training Hall has a bounded implementation of prepared actors, interactive props, traps, pickups, damage, status and conversation; its public/party instances do not imply general dungeon or matchmaking support. Do not infer general NPC service logic, arbitrary monster behavior or dungeon loot tables, complete crafting coverage, general mission objective progress, arbitrary dungeons, party matchmaking or guilds from those mechanics or client data.
 
 The versioned content registry keeps supported scene/catalog definitions outside the executable and persistent **state** (accounts, saved progression, ownership) in storage, while Java remains authoritative for mechanics, transactions, security and wire protocol. Content selection, validation, dependency declarations and complete-resource overrides are implemented; arbitrary missions/dungeons and hot reload are not.
 
