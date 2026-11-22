@@ -1,6 +1,17 @@
 # Reward bodies shared by several box definitions. A box group uses one with
 # `{shared: <name>}`; the reference expands to this exact group body.
 groups:
+  a12_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_peridot_1}, {group: choices_confetti_slime_18}]}
+  anniversary_prize_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{item: confetti, quantity: 2, binding: catalog}, {group: choices_confetti_1}, {group: choices_confetti_2}, {group: choices_confetti_3},
+        {group: choices_grand_topper_blue_4}]}
   barrel_belly:
     chance: 100%
     rolls: 1
@@ -1852,6 +1863,28 @@ groups:
     - {weight: 280, rewards: [{item: mecha_wings_divine, quantity: 1, binding: unbound}]}
     - {weight: 280, rewards: [{item: mecha_wings_volcanic, quantity: 1, binding: unbound}]}
     - {weight: 140, rewards: [{item: mecha_wings_prismatic, quantity: 1, binding: unbound}]}
+  mirrored_modifiers:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{item: cheeky, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: closed, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: dot, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: eks, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: jolly, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: lash, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: pill, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: plus, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: rage, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: sad, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: shifty, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: sleepy, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: spiral, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: squint, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: sultry, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: wat, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: tallest, quantity: 1, binding: unbound}]}
+    - {weight: 1, rewards: [{item: shortest, quantity: 1, binding: unbound}]}
   mohawk:
     chance: 100%
     rolls: 1
