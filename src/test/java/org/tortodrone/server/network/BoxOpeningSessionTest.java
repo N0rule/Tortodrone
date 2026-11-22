@@ -22,6 +22,7 @@ import org.tortodrone.core.character.StarterCatalog;
 public final class BoxOpeningSessionTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-box-session-");
+        var previous=org.tortodrone.world.SceneRegistry.system();
         try {
             var snapshot=ContentManager.load(Path.of("."));var items=snapshot.items();BoxFixture.write(home.resolve("content"));
             var db=new Database(home.resolve("data"),true);int account=db.create("Alice",new Passwords.Protection(new byte[16],new byte[32]),false);
@@ -29,7 +30,7 @@ public final class BoxOpeningSessionTest {
             var knight=characters.create(new Knight(0,"Box-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             db.grantItems("Alice",knight.name(),-1,-1,items.require("lucky_prize_box"),2,-1,-1);
             db.grantItems("Alice",knight.name(),-1,-1,items.require("silver_key"),2,-1,-1);
-            var scenes=org.tortodrone.world.SceneRegistry.create(snapshot);scenes.boxes(BoxCatalog.load(home.resolve("content"),items));
+            var scenes=org.tortodrone.world.SceneRegistry.create(snapshot);scenes.boxes(BoxCatalog.load(home.resolve("content"),items));org.tortodrone.world.SceneRegistry.install(scenes);
             var frames=new java.util.concurrent.LinkedBlockingQueue<byte[]>();
             var socket=new Socket(){public OutputStream getOutputStream(){return new OutputStream(){public void write(int v){throw new AssertionError();}public void write(byte[] frame){frames.add(frame);}};}};
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)) {
@@ -56,7 +57,7 @@ public final class BoxOpeningSessionTest {
                 world.close();world.townInvocation(new SessionDecoder.Invocation(3,9,12,List.of(ids.getFirst(),-1,result)));check(db.worldProfile(account,1,1).equals(twice),"closed session cannot open");
             }
             System.out.println("PASS: native opening dispatch, keyless key preservation, listener replay/mismatch, consecutive opens, malformed callback and closed session rejection");
-        }finally{org.tortodrone.support.ContentFixture.delete(home);}
+        }finally{org.tortodrone.world.SceneRegistry.install(previous);org.tortodrone.support.ContentFixture.delete(home);}
     }
     private static int count(WorldProfile p,String config){return p.items().stream().filter(i->i.config().equals(config)).mapToInt(WorldProfile.Item::count).sum();}
     private static void drain(SessionOutput output,java.util.concurrent.BlockingQueue<byte[]> frames)throws Exception {

@@ -21,6 +21,7 @@ import org.tortodrone.core.world.ActorState;
 public final class ConfettiSessionTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-confetti-");
+        var previous=org.tortodrone.world.SceneRegistry.system();
         try{
             var content=ContentManager.load(Path.of("."));var items=content.items();
             var definitions=items.entries().stream().filter(i->Confetti.supports(i.config())).toList();
@@ -41,7 +42,7 @@ public final class ConfettiSessionTest {
             refused(()->store.confetti(account,knight.id(),1,initial.revision(),id));
             check(db.worldProfile(account,knight.id(),1).equals(initial),"late failure rolls back stack consumption and revision");
             db.write(c->{c.createStatement().execute("DROP TRIGGER reject_confetti");return null;});
-            var scenes=org.tortodrone.world.SceneRegistry.create(content);
+            var scenes=org.tortodrone.world.SceneRegistry.create(content);org.tortodrone.world.SceneRegistry.install(scenes);
             var frames=new java.util.concurrent.LinkedBlockingQueue<byte[]>();
             var socket=new Socket(){public OutputStream getOutputStream(){return new OutputStream(){public void write(int b){throw new AssertionError();}public void write(byte[] frame){frames.add(frame);}};}};
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)){
@@ -84,7 +85,7 @@ public final class ConfettiSessionTest {
                 byte[] marker={0};output.send(()->marker);for(;;){var frame=frames.poll(3,java.util.concurrent.TimeUnit.SECONDS);check(frame!=null,"session output drains");if(frame==marker)break;}
             }
             System.out.println("PASS: all 14 confetti variants, owned single consumption, auth/revision/rollback, replay/busy/missing/listener rejection, native durations and reachable Auction House entry/search");
-        }finally{org.tortodrone.support.ContentFixture.delete(home);}
+        }finally{org.tortodrone.world.SceneRegistry.install(previous);org.tortodrone.support.ContentFixture.delete(home);}
     }
     private static SessionDecoder.Invocation use(long id,short request){return new SessionDecoder.Invocation(3,9,14,Arrays.asList(id,null,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",request)));}
     @FunctionalInterface private interface Work {void run()throws Exception;}

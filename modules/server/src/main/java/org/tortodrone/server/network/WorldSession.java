@@ -126,6 +126,7 @@ final class WorldSession implements AutoCloseable {
     private final FriendHandler friends;
     private final AuctionHandler auction;
     private final StyleHandler styles;
+    private final BoxHandler boxes;
     private int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
     private SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null,membership.floorHeat());}
@@ -680,63 +681,12 @@ final class WorldSession implements AutoCloseable {
      * 8=[long,boolean,Confirm]. Older archives incorrectly place method 8 at 7. */
     boolean billingInvocation(SessionDecoder.Invocation request)throws IOException{return billing.invocation(request);}
 
-    private record BoxRequest(int world,short request) { }
     private record ConfettiReply(long item,String failure) { }
-    private final LinkedHashMap<BoxRequest,ConfettiReply> confettiReplies=new LinkedHashMap<>();
-    private record BoxReply(long box,int option,Object rewards,String failure) { }
-    // Stock listener IDs wrap. Keep only recent requests on this connection, never persist a client ID.
-    private final java.util.LinkedHashMap<BoxRequest,BoxReply> boxReplies=new java.util.LinkedHashMap<>();
-    private boolean boxInvocation(SessionDecoder.Invocation request)throws IOException {
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.ITEM_SERVICE||!Set.of(6,11,12).contains(request.method()))return false;
-        var args=request.arguments();
-        boolean normal=request.method()==12;
-        if(args.size()!=(normal?3:2)||!(args.get(0) instanceof Long id)||normal&&!(args.get(1) instanceof Integer)
-                ||!(args.getLast() instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals(org.tortodrone.core.WireTypes.RESULT_LISTENER))
-            throw new SessionDecoder.Rejected("Invalid box opening request");
-        int option=normal?(Integer)args.get(1):-request.method();
-        BoxRequest token=null;
-        try {
-            if(closed||!selected()||!entered||!subscribed)throw new IOException("m.internal_error");
-            var current=characters.worldProfile(knight.name(),authRevision,profile);
-            if(trade.active())throw new IOException("Finish the trade first");
-            if(request.method()==6){var table=characters.boxes(scenes.boxes()).spawnTable(characters.accountId(),knight.id(),authRevision,id);output.send(()->codec.townResult(oid,listener.requestId(),table,current));return true;}
-            token=new BoxRequest(current.worldId(),listener.requestId());var prior=boxReplies.get(token);
-            if(prior!=null) {
-                if(prior.box()!=id||prior.option()!=option||prior.failure()!=null)throw new IOException(prior.failure()==null?"m.internal_error":prior.failure());
-                Object rewards=prior.rewards();output.send(()->codec.townResult(oid,listener.requestId(),rewards,profile));return true;
-            }
-            if(!membership.canOpenBox())throw new IOException("Finish your current action before opening a box");
-            var boxes=characters.boxes(scenes.boxes());
-            var result=normal?boxes.open(characters.accountId(),knight.id(),authRevision,current.revision(),id,option):boxes.spawnAll(characters.accountId(),knight.id(),authRevision,current.revision(),id);
-            // Retain the receipt before publication: a queued-output failure must never cause a second write.
-            rememberBox(token,new BoxReply(id,option,normal?result.result():null,null));
-            if(!normal){townChanged(result,false);output.send(()->codec.townResult(oid,listener.requestId(),null,result.profile()));return true;}
-            var references=new ArrayList<StarterCatalog.Model>();
-            references.add(new StarterCatalog.Model(current.items().stream().filter(i->i.id()==id).findFirst().orElseThrow().config(),Map.of()));
-            var rewards=((org.tortodrone.core.wire.Multiset)result.result()).counts();
-            result.profile().items().stream().filter(i->rewards.containsKey(i.id())).map(WorldProfile.Item::config).distinct()
-                .forEach(config->references.add(new StarterCatalog.Model(config,Map.of())));
-            membership.openBox(List.copyOf(references));
-            // Capture: suppress ordinary acquisition popups while consuming/granting, then
-            // clear the delay before the native reward-window callback. Publish only after commit.
-            output.send(()->codec.itemAcquireDelay(oid,7500));
-            townChanged(result,false);
-            output.send(()->codec.itemAcquireDelay(oid,0));
-            output.send(()->codec.townResult(oid,listener.requestId(),result.result(),result.profile()));
-        }catch(CharacterStore.Refused|IOException failure) {
-            if(token!=null&&!boxReplies.containsKey(token))rememberBox(token,new BoxReply(id,option,null,failure.getMessage()));
-            output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));
-        }
-        return true;
-    }
-    private void rememberBox(BoxRequest request,BoxReply result) {
-        boxReplies.put(request,result);if(boxReplies.size()>256)boxReplies.remove(boxReplies.keySet().iterator().next());
-    }
+    private final RequestReceipts<ConfettiReply> confettiReplies=new RequestReceipts<>();
 
     synchronized boolean townInvocation(SessionDecoder.Invocation request)throws IOException {
         if(styles.invocation(request))return true;
-        if(boxInvocation(request))return true;
+        if(boxes.invocation(request))return true;
         if(depotInvocation(request))return true;
         var a=request.arguments();boolean global=request.oid()==SessionCodec.INVOCATION_OID;
         if(billingInvocation(request))return true;
@@ -1021,6 +971,7 @@ final class WorldSession implements AutoCloseable {
         auction=new AuctionHandler(this);
         friends=new FriendHandler(this);
         styles=new StyleHandler(this);
+        boxes=new BoxHandler(this);
     }
 
     synchronized boolean selected() { return knight != null; }
@@ -1033,6 +984,7 @@ final class WorldSession implements AutoCloseable {
     boolean inSubscribedScene(){return !closed&&selected()&&entered&&subscribed;}
     boolean sceneTravelPending(){return portalMove!=null;}
     boolean canOpenBox(){return membership!=null&&membership.canOpenBox();}
+    void openBox(java.util.List<StarterCatalog.Model> references){membership.openBox(references);}
     void publishPartyState()throws IOException{partyState();}
     WorldProfile loadOwnProfile()throws IOException,CharacterStore.Refused{return characters.worldProfile(knight.name(),authRevision,profile);}
     void refreshKnight(){knight=characters.roster().stream().filter(k->k.id()==knight.id()).findFirst().orElseThrow();}
@@ -1407,7 +1359,7 @@ final class WorldSession implements AutoCloseable {
         if(request.oid()==SessionCodec.INVOCATION_OID&&service==SessionCodec.ITEM_SERVICE&&request.method()==14){
             if(args.size()!=3||!(args.getFirst() instanceof Long id)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.CONFIRM_LISTENER)||args.get(1)!=null)throw new SessionDecoder.Rejected("Invalid item use request");
             if(!selected()||!subscribed||!entered||portalMove!=null){output.send(()->codec.invocationFailure(oid,listener.requestId(),"Enter a scene first"));return true;}
-            var token=new BoxRequest(profile.worldId(),listener.requestId());var receipt=confettiReplies.get(token);
+            int confettiWorld=profile.worldId();short confettiRequest=listener.requestId();var receipt=confettiReplies.get(confettiWorld,confettiRequest);
             if(receipt!=null){
                 try{characters.worldProfile(knight.name(),authRevision,profile);}
                 catch(CharacterStore.Refused failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));return true;}
@@ -1423,16 +1375,15 @@ final class WorldSession implements AutoCloseable {
                     var store=characters.town(scenes.town());
                     var result=Confetti.supports(held.config())?store.confetti(characters.accountId(),knight.id(),authRevision,current.revision(),id)
                         :store.animatedItem(characters.accountId(),knight.id(),authRevision,current.revision(),id);
-                    confettiReplies.put(token,new ConfettiReply(id,null));
+                    confettiReplies.put(confettiWorld,confettiRequest,new ConfettiReply(id,null));
                     String config=(String)result.result();
                     if(Confetti.supports(config))membership.confetti(config);else membership.animatedAction(config);
                     townChanged(result,false);
                     output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
                 }catch(CharacterStore.Refused|IOException failure){
-                    confettiReplies.putIfAbsent(token,new ConfettiReply(id,failure.getMessage()));
+                    confettiReplies.putIfAbsent(confettiWorld,confettiRequest,new ConfettiReply(id,failure.getMessage()));
                     output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));
                 }
-                if(confettiReplies.size()>256)confettiReplies.remove(confettiReplies.keySet().iterator().next());
                 return true;
             }
             var persistent=held==null?null:scene.map().content().items().get(held.config());
@@ -1443,14 +1394,13 @@ final class WorldSession implements AutoCloseable {
                     var store=characters.town(scenes.town());
                     var outcome=membership.useOwnedItem(id,persistent,
                         ()->store.useItem(characters.accountId(),knight.id(),authRevision,current.revision(),id));
-                    confettiReplies.put(token,new ConfettiReply(id,null));
+                    confettiReplies.put(confettiWorld,confettiRequest,new ConfettiReply(id,null));
                     if(outcome.consumed())townChanged(outcome.payment(),false);
                     output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
                 }catch(CharacterStore.Refused|IOException failure){
-                    confettiReplies.putIfAbsent(token,new ConfettiReply(id,failure.getMessage()));
+                    confettiReplies.putIfAbsent(confettiWorld,confettiRequest,new ConfettiReply(id,failure.getMessage()));
                     output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));
                 }
-                if(confettiReplies.size()>256)confettiReplies.remove(confettiReplies.keySet().iterator().next());
                 return true;
             }
             var item=temporaryItems.get(id);var spec=item==null||!selected()?null:scene.map().content().items().get(item.config());
