@@ -187,6 +187,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final Map<Integer,SceneEntity> entities=new LinkedHashMap<>();
     private final MovementSystem movementSystem=new MovementSystem(this);
     private final CombatSystem combatSystem=new CombatSystem(this);
+    private final StatusSystem statusSystem=new StatusSystem(this);
     SceneEntity entity(int id){return entities.get(id);}
     org.tortodrone.core.world.CollisionMap terrain(){return terrain;}
     SceneCollision staticCollision(){return staticCollision;}
@@ -212,6 +213,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     SceneActions actions(){return actions;}
     void fireAttack(ActorState actor,FireCatalog.Action action){attack.accept(actor,action);}
     void hurtForCombat(SceneEntity entity,float amount,int stamp,boolean react,boolean major){hurt(entity,amount,stamp,react,major);}
+    void damagePlayer(PlayerHit hit){playerDamage.accept(hit);}
+    float spatialReach(){return spatial.reach();}
     java.util.Collection<SceneEntity> entityValues(){return entities.values();}
     boolean activePlayer(int id){return playerActive.test(id);}
     /** Interactive props, doors and lifts are the only entities an interaction scan reads. */
@@ -675,7 +678,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             // before a knight standing on the pad can collect its replacement.
             if(e.kind.equals("Pickup")&&e.claim==0&&stamp-e.created>=1000)collect(e,elapsed,players);
             if(e.kind.equals("Monster")){
-                e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->{if(e.health>0)hurt(e,(float)amount,stamp,false,false);},amount->{if(e.health>0)e.health=Math.min(e.maximumHealth,e.health+(float)amount*e.status.state().modifiers().heal());});
+                statusSystem.tick(e,stamp,elapsed);
                 if(e.program!=null)scriptedProgram(e,stamp,elapsed);
                 else if(e.script!=null)scriptedMovement(e,stamp,elapsed);
                 else if(e.health==0)e.status.clear();else {
@@ -822,18 +825,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var removedVariables=logicVariables.remove("actor:"+entity.id);if(removedVariables!=null)variableCount-=removedVariables.size();
     }
     /** Secondary burn/spasm damage retains its collision mask and excludes the affected source. */
-    public void statusPulse(int source,SceneStatus.Pulse pulse,float x,float y,int stamp){
-        if((pulse.mask()&1)!=0)for(var p:players)if(p.id()!=source&&playerActive.test(p.id())&&Math.hypot(p.x()-x,p.y()-y)<=pulse.radius()+2*ScenePortals.PAWN_RADIUS)
-            playerDamage.accept(new PlayerHit(p.id(),pulse.damage(),stamp,source,1));
-        if((pulse.mask()&128)!=0){
-            float pad=pulse.radius()+ScenePortals.PAWN_RADIUS+spatial.reach();
-            for(var target:candidates(x-pad,y-pad,x+pad,y+pad))
-                if(target.id!=source&&target.kind.equals("Monster")&&target.health>0&&Math.hypot(target.x-x,target.y-y)<=pulse.radius()+target.spec.number("radius",0)+ScenePortals.PAWN_RADIUS){
-                    Object accepted=SceneDamage.prune(pulse.damage(),target.spec.integer("damage-mask",0));float amount=SceneDamage.amount(accepted,content,target.spec);
-                    amount+=target.status.damaged(amount,stamp);target.status.apply(accepted,stamp);if(amount>0)hurt(target,amount,stamp,SceneDamage.reacts(accepted),SceneDamage.major(accepted));
-                }
-        }
-    }
+    public void statusPulse(int source,SceneStatus.Pulse pulse,float x,float y,int stamp){statusSystem.pulse(source,pulse,x,y,stamp);}
     private void lift(SceneEntity e,int stamp,float elapsed,List<ActorState> players){
         if(e.carrier!=0){for(var player:players)if(player.id()==e.carrier){e.x=player.x();e.y=player.y();e.rotation=player.rotation();spatial.move(e);return;}return;}
         if((e.flags&2)==0)return;
