@@ -131,7 +131,8 @@ final class WorldSession implements AutoCloseable {
     private final AdminHandler adminTools;
     private final DepotHandler depot;
     private final ConversationHandler conversations;
-    private int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
+    private final OpeningHandler opening;
+    int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
     SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
     private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null,membership.floorHeat());}
     private void offerParty(PartyView.Event event){publications.offerParty(event);}
@@ -372,89 +373,10 @@ final class WorldSession implements AutoCloseable {
     }
     private boolean depotInvocation(SessionDecoder.Invocation request)throws IOException{
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.MISSION_SERVICE)return false;
-        if(!Set.of(4,5,6,10).contains(request.method()))return openingMissionInvocation(request);
+        if(!Set.of(4,5,6,10).contains(request.method()))return opening.invocation(request);
         return depot.invocation(request);
     }
-    private boolean openingMissionInvocation(SessionDecoder.Invocation request)throws IOException {
-        var args=request.arguments();int method=request.method();
-        if(method==8){
-            if(args.size()!=1||!(args.getFirst() instanceof List<?> values)||values.size()>128||values.stream().anyMatch(v->!(v instanceof org.tortodrone.core.wire.ConfigReference)))throw new SessionDecoder.Rejected("Invalid mission crafting intent");
-            return true; // Native no-listener operation; no unsupported item mutation.
-        }
-        boolean result=method==7;
-        if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.LISTENER_PREFIX+(result?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid mission listener");
-        boolean valid=switch(method){
-            case 1->args.size()==3&&args.getFirst() instanceof String&&args.get(1) instanceof long[];
-            case 2->args.size()==6&&args.getFirst() instanceof String&&args.get(1) instanceof org.tortodrone.core.wire.EnumValue band&&band.type().equals(org.tortodrone.core.WireTypes.DIFFICULTY)&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean&&args.get(4) instanceof Boolean;
-            // Current build dropped the third boolean from the preview request.
-            case 7->args.size()==5&&args.getFirst() instanceof String&&args.get(1) instanceof org.tortodrone.core.wire.EnumValue band&&band.type().equals(org.tortodrone.core.WireTypes.DIFFICULTY)&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean;
-            case 3,9->args.size()==2&&args.getFirst() instanceof String;
-            default->false;
-        };
-        if(!valid)throw new SessionDecoder.Rejected("Invalid mission arguments");
-        if(method==3){
-            try{
-                var missionId=(String)args.getFirst();
-                var mission=scenes.missions().mission(missionId);
-                if(mission==null||!mission.requirement().type().equals("conversation")&&!mission.requirement().type().equals("gate_conversation"))
-                    throw new IOException("m.internal_error");
-                conversations.openComlink(missionId);arrivalComlink=null;
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
-            return true;
-        }
-        if(method==1){
-            try{
-                if(closed||!selected())throw new IOException("m.internal_error");
-                var missionId=(String)args.getFirst();var itemIds=(long[])args.get(1);
-                if(trade.active())throw new IOException("Finish the trade first");
-                profile=loadProfile(profile);var before=profile;boolean firstEver=completedOpening.isEmpty();
-                var settled=characters.openingMissions(scenes.town(),scenes.missions()).exchange(characters.accountId(),knight.id(),authRevision,profile,missionId,itemIds);
-                profile=settled.profile();
-                if(!settled.completion().equals(completedOpening.get(missionId))){var completed=new LinkedHashMap<>(completedOpening);completed.put(missionId,settled.completion());completedOpening=Map.copyOf(completed);}
-                if(settled.first()){
-                    membership.equipment(visibleProfile());missionDialogCreated=conversations.touch();
-                    output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),scenes.missions().grants(missionId),scenes.missions().prestige(missionId),true,missionDialogCreated));
-                    output.send(()->codec.itemChanges(oid,knight,before,profile));
-                    if(firstEver)output.send(()->codec.controllerAction(oid,"new_mission",null));partyState();
-                }
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
-            return true;
-        }
-        if(method==2||method==7){
-            try{
-                String missionId=(String)args.getFirst();int band=((org.tortodrone.core.wire.EnumValue)args.get(1)).ordinal();
-                if(band<0||band>2||!Boolean.TRUE.equals(args.get(2))||method==2&&(!Boolean.FALSE.equals(args.get(3))||!Boolean.FALSE.equals(args.get(4))))throw new IOException("m.internal_error");
-                String difficulty=List.of("EASY","MEDIUM","HARD").get(band);
-                var active=portalMove!=null&&portalMove.destination().run()!=null?portalMove.destination():scene;
-                if(method==2&&!closed&&lastGateStartRequest!=null&&listener.requestId()==lastGateStartRequest&&active.run()==lastGateStart
-                    &&lastGateStart.missionId().equals(missionId)&&lastGateStart.difficulty().equals(difficulty)&&scenes.authorized(active,profile.worldId(),partyMember)){
-                    profile=loadProfile(profile);
-                    output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
-                }
-                var opening=OpeningMission.byId(missionId);MissionRun run;ScenePortals.Entrance start;
-                if(opening!=null&&scenes.openingGate(opening)!=null){
-                    var gate=preflightOpeningGate(opening);
-                    run=MissionRun.opening(gate,profile.worldId(),partyOid(),difficulty);start=gate.entrance();
-                }else{
-                    run=preflightMissionRoute(missionId,difficulty);start=run.entrance();
-                }
-                if(method==7){output.send(()->codec.townResult(oid,listener.requestId(),Boolean.TRUE,profile));return true;}
-                var next=scenes.startRun(run,profile.worldId(),partyMember);
-                lastGateStart=run;lastGateStartRequest=listener.requestId();
-                closeConversation();closeTownDialog();portalMove=new PortalMove(next,start);departedSceneOid=scene.oid();
-                partyState();leaveChat();subscribed=entered=false;sceneGeneration++;if(membership!=null)membership.pause();
-                short receiver=forcedReceiver;
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));output.send(()->codec.forceScene(oid,receiver,next));
-            }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
-            return true;
-        }
-        // A served object/service must fail unsupported cards through the native listener.
-        // Gate start is enabled only when its actual floor gameplay/route is implemented.
-        output.send(()->codec.invocationFailure(oid,listener.requestId(),"m.internal_error"));return true;
-    }
-    private MissionRun preflightMissionRoute(String missionId,String difficulty)throws IOException {
+    MissionRun preflightMissionRoute(String missionId,String difficulty)throws IOException {
         if(closed||!selected()||forcedReceiver==null||portalMove!=null||deferredMove!=null||scene.map().kind().equals("level")
             ||!readyRoom&&(!entered||!subscribed||membership==null||membership.health().current()<=0))throw new IOException("m.internal_error");
         if(trade.active())throw new IOException("Finish the trade first");
@@ -463,7 +385,7 @@ final class WorldSession implements AutoCloseable {
         if(route==null||!scenes.missions().eligible(missionId,profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
         scenes.parties().soloGate(partyMember,partyOid(),()->Boolean.TRUE);return route;
     }
-    private OpeningGate preflightOpeningGate(OpeningMission mission)throws IOException {
+    OpeningGate preflightOpeningGate(OpeningMission mission)throws IOException {
         if(closed||!selected()||forcedReceiver==null||portalMove!=null||deferredMove!=null||scene.map().id()!=217||!scene.map().town()
             ||!readyRoom&&(!entered||!subscribed||membership==null||membership.health().current()<=0))throw new IOException("m.internal_error");
         if(trade.active())throw new IOException("Finish the trade first");
@@ -472,6 +394,35 @@ final class WorldSession implements AutoCloseable {
         if(gate==null||!scenes.missions().eligible(mission.id(),profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
         scenes.parties().soloGate(partyMember,partyOid(),()->Boolean.TRUE);return gate;
     }
+    /** A retried start for the same listener and live run is answered without a second lease. */
+    boolean sameGateStart(String missionId,String difficulty,short requestId){
+        var active=portalMove!=null&&portalMove.destination().run()!=null?portalMove.destination():scene;
+        return !closed&&lastGateStartRequest!=null&&requestId==lastGateStartRequest&&active.run()==lastGateStart
+            &&lastGateStart.missionId().equals(missionId)&&lastGateStart.difficulty().equals(difficulty)
+            &&scenes.authorized(active,profile.worldId(),partyMember);
+    }
+    /** Commit, acknowledge and force the move in that native order. */
+    void beginMissionRun(MissionRun run,ScenePortals.Entrance start,short requestId)throws IOException {
+        var next=scenes.startRun(run,profile.worldId(),partyMember);
+        lastGateStart=run;lastGateStartRequest=requestId;
+        closeConversation();closeTownDialog();portalMove=new PortalMove(next,start);departedSceneOid=scene.oid();
+        partyState();leaveChat();subscribed=entered=false;sceneGeneration++;if(membership!=null)membership.pause();
+        short receiver=forcedReceiver;
+        output.send(()->codec.invocationConfirmed(oid,requestId));output.send(()->codec.forceScene(oid,receiver,next));
+    }
+    void settleMissionExchange(String missionId,long[] itemIds)throws IOException {
+        profile=loadProfile(profile);var before=profile;boolean firstEver=completedOpening.isEmpty();
+        var settled=characters.openingMissions(scenes.town(),scenes.missions()).exchange(characters.accountId(),knight.id(),authRevision,profile,missionId,itemIds);
+        profile=settled.profile();
+        if(!settled.completion().equals(completedOpening.get(missionId))){var completed=new LinkedHashMap<>(completedOpening);completed.put(missionId,settled.completion());completedOpening=Map.copyOf(completed);}
+        if(settled.first()){
+            membership.equipment(visibleProfile());missionDialogCreated=conversations.touch();
+            output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),scenes.missions().grants(missionId),scenes.missions().prestige(missionId),true,missionDialogCreated));
+            output.send(()->codec.itemChanges(oid,knight,before,profile));
+            if(firstEver)output.send(()->codec.controllerAction(oid,"new_mission",null));partyState();
+        }
+    }
+    void clearArrivalComlink(){arrivalComlink=null;}
     SceneConversation comlink(String missionId){
         var opening=OpeningMission.byId(missionId);
         if(opening!=null&&OpeningComlinks.get(opening)!=null)return OpeningComlinks.get(opening);
@@ -809,6 +760,7 @@ final class WorldSession implements AutoCloseable {
     }
     synchronized String conversationNode(){return conversations.node();}
     private void closeConversation()throws IOException { conversations.close(); }
+    ConversationHandler conversations(){return conversations;}
 
     WorldSession(Socket socket, CharacterStore characters, SessionOutput output,
             SessionCodec codec, int oid, long revision, SessionLog log) throws IOException {
@@ -853,6 +805,7 @@ final class WorldSession implements AutoCloseable {
         adminTools=new AdminHandler(this);
         depot=new DepotHandler(this);
         conversations=new ConversationHandler(this);
+        opening=new OpeningHandler(this);
     }
 
     static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
