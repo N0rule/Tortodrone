@@ -43,7 +43,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     /** Identity-owned ride; never a client token or an arbitrary destination. */
     public static final class ElevatorTrip {
         private final ActorState source;private final List<Integer> members;private final SceneElevator configuration;private final int started;
-        private ElevatorTrip(ActorState source,List<Integer> members,SceneElevator configuration,int started){this.source=source;this.members=List.copyOf(members);this.configuration=configuration;this.started=started;}
+        ElevatorTrip(ActorState source,List<Integer> members,SceneElevator configuration,int started){this.source=source;this.members=List.copyOf(members);this.configuration=configuration;this.started=started;}
         public ActorState source(){return source;}public List<Integer> members(){return members;}public SceneElevator configuration(){return configuration;}public int started(){return started;}
     }
     /** Pure scene-lock callbacks: authorize/freeze, revalidate, offer owned work, release.
@@ -54,8 +54,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         default boolean advance(ElevatorTrip trip,int stamp){return false;}
         default void cancel(ElevatorTrip trip,int stamp) { }
     }
-    private ElevatorControl elevatorControl=new ElevatorControl(){};
-    public void elevators(ElevatorControl control){elevatorControl=Objects.requireNonNull(control);}
+    private final ElevatorSystem elevatorSystem=new ElevatorSystem(this);
+    public void elevators(ElevatorControl control){elevatorSystem.control(control);}
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
     }
@@ -185,6 +185,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final SceneCollision staticCollision;
     private final int pawnCollisionMask;
     private final Map<Integer,SceneEntity> entities=new LinkedHashMap<>();
+    SceneEntity entity(int id){return entities.get(id);}
+    java.util.Collection<SceneEntity> entityValues(){return entities.values();}
+    boolean activePlayer(int id){return playerActive.test(id);}
     /** Interactive props, doors and lifts are the only entities an interaction scan reads. */
     private final Set<SceneEntity> interactionCandidates=new LinkedHashSet<>();
     private static boolean interactionCandidate(SceneEntity entity){return entity.interactive||liftKind(entity.kind)||entity.kind.equals("Door");}
@@ -407,11 +410,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     /** Authored native elevator platforms bridge their floor shaft. A pawn body of radius r can
      *  reach a platform whose edge is up to 2r away, so movement treats that bridged footprint as
      *  supported instead of rejecting the authored gap between the pit rim and the platform. */
-    public boolean elevatorFloor(float x,float y){
-        for(var e:entities.values())if(e.elevator!=null&&e.destroyed==Integer.MAX_VALUE
-            &&e.spec.contains(e.x,e.y,e.rotation,x,y,ScenePortals.PAWN_RADIUS*2))return true;
-        return false;
-    }
+    public boolean elevatorFloor(float x,float y){return elevatorSystem.floor(x,y);}
     public ActorState actor(int id){var e=entities.get(id);return e==null||e.destroyed!=Integer.MAX_VALUE?null:e.snapshot();}
     public SceneContent.Spec specification(int id){var e=entities.get(id);return e==null||e.destroyed!=Integer.MAX_VALUE?null:e.spec;}
     /** Test seam: the immutable parsed behaviour shared by every instance of this spec. */
@@ -627,7 +626,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             }
             if(e.kind.equals("Door")&&(e.flags&4)!=0&&stamp-e.stateEntered>e.spec.integer("door-speed",0))e.flags&=~4;
             if(e.kind.equals("Switch"))switches(e,stamp,players);
-            if(e.elevator!=null)elevator(e,stamp,players);
+            if(e.elevator!=null)elevatorSystem.advance(e,stamp,players);
             if(e.spec.flag("heal-pad",false)&&SceneClock.reached(stamp,e.nextHeal)){
                 e.nextHeal=stamp+Math.round(e.spec.number("heal-interval",0)*1000);
                 for(var player:players)if(e.spec.contains(e.x,e.y,e.rotation,player.x(),player.y(),ScenePortals.PAWN_RADIUS)
@@ -1418,40 +1417,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
             }
         }
     }
-    private static void elevatorState(SceneEntity e,int state,int stamp){if(e.state!=state){e.state=state;e.stateEntered=stamp;}}
-    private void elevator(SceneEntity e,int stamp,List<ActorState> occupants){
-        if(e.trip!=null){
-            if(!elevatorControl.valid(e.trip)){cancelElevator(e.trip,stamp);return;}
-            if(!e.elevatorOffered&&stamp-e.trip.started()>=SceneElevator.ACTIVATE_MILLIS){
-                if(!elevatorControl.advance(e.trip,stamp)){cancelElevator(e.trip,stamp);return;}
-                e.elevatorOffered=true;
-            }
-            return;
-        }
-        var living=occupants.stream().filter(p->playerActive.test(p.id())).toList();
-        var on= living.stream().filter(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS)).map(ActorState::id).toList();
-        int state=on.isEmpty()?0:on.size()<living.size()?1:0;
-        if(!on.isEmpty()&&on.size()==living.size()){
-            var trip=new ElevatorTrip(e.snapshot(),on,e.elevator,stamp);
-            if(elevatorControl.begin(trip,stamp)){e.trip=trip;e.elevatorOffered=false;state=2;}
-        }
-        elevatorState(e,state,stamp);
-    }
-    public boolean elevatorEntry(String key){return entities.values().stream().anyMatch(e->e.elevator!=null&&e.binding.key().equals(key)&&e.destroyed==Integer.MAX_VALUE);}
-    public boolean cancelElevator(ElevatorTrip trip,int stamp){
-        var e=trip==null?null:entities.get(trip.source().id());if(e==null||e.trip!=trip)return false;
-        e.trip=null;e.elevatorOffered=false;elevatorState(e,0,stamp);elevatorControl.cancel(trip,stamp);return true;
-    }
+    public boolean elevatorEntry(String key){return elevatorSystem.entry(key);}
+    public boolean cancelElevator(ElevatorTrip trip,int stamp){return elevatorSystem.cancel(trip,stamp);}
     /** The session calls this only after its floor report/preflight succeeds. */
-    public boolean dropElevator(ElevatorTrip trip,boolean returning,int stamp){
-        var e=trip==null?null:entities.get(trip.source().id());
-        if(e==null||e.trip!=trip||!e.elevatorOffered||e.state!=2||!elevatorControl.valid(trip))return false;
-        e.elevatorDrop=stamp;elevatorState(e,returning?4:3,stamp);return true;
-    }
-    public boolean elevatorReady(ElevatorTrip trip,int stamp){
-        var e=trip==null?null:entities.get(trip.source().id());
-        return e!=null&&e.trip==trip&&(e.state==3||e.state==4)&&stamp-e.elevatorDrop>=SceneElevator.DROP_MILLIS&&elevatorControl.valid(trip);
-    }
+    public boolean dropElevator(ElevatorTrip trip,boolean returning,int stamp){return elevatorSystem.drop(trip,returning,stamp);}
+    public boolean elevatorReady(ElevatorTrip trip,int stamp){return elevatorSystem.ready(trip,stamp);}
     private void setSwitch(SceneEntity e,int state,int stamp){
         e.state=state;e.stateEntered=stamp;
         e.flags=state==0?e.flags|2:e.flags&~2; // Native Switch.setState: START set exactly in state 0.
