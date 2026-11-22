@@ -17,7 +17,15 @@ public final class MonitoringTest {
         check(initial.getFirst().accountId()==null,"published snapshots immutable");
         registry.connected(2,new InetSocketAddress("127.0.0.1",1235));registry.disconnected(1);events.authenticated(7,"Alice");
         check(registry.find(1)==null&&registry.find(2).accountId()==null,"late callbacks cannot resurrect disconnected session");
+        var content=org.tortodrone.resources.ContentManager.load(Path.of(""));
+        var scenes=org.tortodrone.world.SceneRegistry.create(content);
+        var loaded=scenes.catalog().loadedCount();
         var control=new ServerControl("fixture",Path.of("/tmp"));
+        control.resources(scenes,content.items().entries().size());
+        var observed=control.snapshot();
+        check(observed.maps()==content.scenes().sceneCount()&&observed.items()==content.items().entries().size(),
+            "status reports indexed maps and items without opening every template");
+        check(scenes.catalog().loadedCount()==loaded,"status keeps unvisited map bodies lazy");
         check(control.awaitStart(false)&&control.snapshot().state()==ServerControl.State.STARTING,"initial lifecycle starts once");
         control.stop();control.stopped();check(!control.awaitStart(false),"terminal completion exits");
         check(control.snapshot().uptimeSeconds()>=0,"monotonic run duration remains available after stopping");
