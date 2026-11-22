@@ -44,6 +44,6 @@ public final class SceneGameplayEffectTest {
         scene.advance(1200,players);check(scene.actors().size()==1&&effects.size()==1,"held intersection does not repeat gameplay or visuals");
         System.out.println("PASS: gameplay effect -> frozen source -> exact delayed point impulse and actor spawn, native publication identity, finite/bounded parameters, context cleanup and scene isolation (synthetic geometry)");
     }
-    private static int contexts(SceneEntities scene)throws Exception{var f=SceneEntities.class.getDeclaredField("effectSources");f.setAccessible(true);return ((Map<?,?>)f.get(scene)).size();}
+    private static int contexts(SceneEntities scene){return scene.effectSourceCount();}
     private static ActorState player(int id,float x){return new ActorState(id,1001,"Fixture",0,1000,x,0,0,0,0,new StarterCatalog.Model("Player",Map.of()));}
 }

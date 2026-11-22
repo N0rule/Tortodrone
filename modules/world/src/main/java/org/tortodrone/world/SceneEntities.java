@@ -61,6 +61,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final InteractionSystem interactions=new InteractionSystem(this);
     private final HeartDrops hearts=new HeartDrops(this);
     private final DamageSystem damageSystem=new DamageSystem(this);
+    private final SceneLogic logic=new SceneLogic(this);
     public void elevators(ElevatorControl control){elevatorSystem.control(control);}
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
@@ -154,13 +155,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
 
     private final SceneContent content;private final CollisionMap terrain;
     private final SceneActions actions;
-    private final Map<String,List<SceneContent.Entry>> anchors=new LinkedHashMap<>();
-    private final Map<String,ActorState> effectSources=new LinkedHashMap<>();
-    private final Map<String,Map<String,Boolean>> logicVariables=new LinkedHashMap<>();
-    private int variableCount;
     private ActorState entranceOverride;
     public ActorState defaultEntrance(){return entranceOverride;}
-    private long nextEffectSource;
     private final SceneCollision staticCollision;
     private final int pawnCollisionMask;
     private final Map<Integer,SceneEntity> entities=new LinkedHashMap<>();
@@ -193,6 +189,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
     void fireAttack(ActorState actor,FireCatalog.Action action){attack.accept(actor,action);}
     void hurtForCombat(SceneEntity entity,float amount,int stamp,boolean react,boolean major){damageSystem.hurt(entity,amount,stamp,react,major);}
     void damagePlayer(PlayerHit hit){playerDamage.accept(hit);}
+    boolean startConversationSink(SceneConversation conversation,ActorState source,int stamp,int target){return conversationSink.start(conversation,source,stamp,target);}
+    boolean requestFloorAdvance(ActorState player,ActorState source,int stamp){return floorAdvanceSink.request(player,source,stamp);}
+    boolean applyMemory(ActorState player,KnightMemory operation,ActorState source,int stamp){return memorySink.apply(player,operation,source,stamp);}
+    void fireEffectSink(StarterCatalog.Model config,ActorState source,int stamp){effectSink.fire(config,source,stamp);}
+    boolean applyPawnStatusSink(int actor,SceneActions.PawnStatus operation,int stamp){return pawnStatus.apply(actor,operation,stamp);}
     void impulsePlayer(int actor,KnightCombat.Impulse impulse){playerImpulse.accept(actor,impulse);}
     void combatEvent(SceneCombatEvent event){feedback.accept(event);}
     void fireDeathAction(SceneEntity entity,String graph){
@@ -288,31 +289,21 @@ public final class SceneEntities implements SceneWeapons.Targets {
     SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision,java.util.random.RandomGenerator random,boolean spatialQuery,int stamp,MonsterCatalog monsters){
         this.random=Objects.requireNonNull(random);this.spatialQuery=spatialQuery;this.monsters=Objects.requireNonNull(monsters);
         this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);pawnCollisionMask=Math.round(content.stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
-        var rules=new ArrayList<SceneActions.Rule>();var anchorKeys=new HashSet<String>();
+        var rules=new ArrayList<SceneActions.Rule>();
         for(var binding:content.entries()){
             if(binding.spec().text("kind","").equals("SceneAnchor")){
-                if(!binding.key().matches("[0-9]+")||Integer.parseInt(binding.key())<1||!anchorKeys.add(binding.key())||!Float.isFinite(binding.x())||!Float.isFinite(binding.y())||!Float.isFinite(binding.rotation()))throw new IllegalArgumentException("Invalid scene anchor identity/transform");
-                var tags=binding.spec().text("source-tags","").split(",");if(tags.length>256)throw new IllegalArgumentException("Too many scene anchor tags");
-                for(String tag:tags)if(!tag.isBlank()){
-                    if(tag.length()>256||tag.chars().anyMatch(Character::isISOControl))throw new IllegalArgumentException("Invalid scene anchor tag");
-                    anchors.computeIfAbsent(tag,key->new ArrayList<>()).add(binding);
-                }
+                logic.anchor(binding);
             }else if(binding.spec().text("kind","").equals("SceneTrigger")){
                 try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
             }else spawn(binding,binding.spec(),null,stamp);
         }
-        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},random,this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect,this::nextFloor,this::setMemory);
-        actions.nearestSignals(this::nearestSignal);
-        actions.targets(this::variableTargets);
-        actions.sourceSignals((name,time,source)->{
-            var receiver=scriptSource(source,time);if(receiver==null)return false;
-            actions.signalSource(source,name,time,source);
-            if(source.startsWith("actor:")){var target=entities.get(receiver.id());if(target!=null)entitySignal(target,name,time);}
-            return true;
-        });
+        actions=new SceneActions(rules,logic::signalSink,random,logic::destroyTagged,this::spawnScripted,logic::applyPawnStatuses,logic::startConversation,logic::sourceEffect,logic::nextFloor,logic::setMemory);
+        actions.nearestSignals(logic::nearestSignal);
+        actions.targets(logic::variableTargets);
+        actions.sourceSignals(logic::sourceSignal);
         actions.entrances((target,time,source,activator)->{
-            var resolved=variableTargets(target,time,source,activator);if(resolved.isEmpty())return false;
-            var point=scriptSource(resolved.getFirst(),time);if(point==null)return false;
+            var resolved=logic.variableTargets(target,time,source,activator);if(resolved.isEmpty())return false;
+            var point=logic.scriptSource(resolved.getFirst(),time);if(point==null)return false;
             // Never accept a checkpoint outside the authoritative floor/collision.
             if(!terrain.walkable(point.x(),point.y())||!walkable(point.x(),point.y(),point.id())||staticCollision.penetration(pawnCollisionMask,point.x(),point.y(),ScenePortals.PAWN_RADIUS,disabledCollisionSources()).present())return false;
             entranceOverride=point;return true;
@@ -324,17 +315,17 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(target.destroyed==Integer.MAX_VALUE){target.destroyed=time;target.scriptDestroyed=true;target.status.clear();target.path=List.of();target.impulse=null;}
             return true;
         });
-        actions.variables(this::setVariable,this::variable);
+        actions.variables(logic::setVariable,logic::variable);
         actions.dialogClears((only,time,source,activator)->{
-            if(scriptSource(source,time)==null)return false;
+            if(logic.scriptSource(source,time)==null)return false;
             int target=0;
             if(only){var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&playerActive.test(p.id())).findFirst().orElse(null);if(player==null)return true;target=player.id();}
             return dialogClearSink.clear(target,time);
         });
-        actions.gameplayEffects(this::gameplayEffect);
-        actions.impulses((operation,time,source)->{var origin=scriptSource(source,time);if(origin==null)return false;impulse(operation.config(),origin.x(),origin.y(),origin.rotation(),time,0);return true;});
+        actions.gameplayEffects(logic::gameplayEffect);
+        actions.impulses((operation,time,source)->{var origin=logic.scriptSource(source,time);if(origin==null)return false;impulse(operation.config(),origin.x(),origin.y(),origin.rotation(),time,0);return true;});
         actions.objectives((operation,time,source,activator)->{
-            var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&playerActive.test(p.id())).findFirst().orElse(null);var origin=scriptSource(source,time);
+            var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&playerActive.test(p.id())).findFirst().orElse(null);var origin=logic.scriptSource(source,time);
             return player!=null&&origin!=null&&objectiveSink.apply(player,operation,origin,time);
         });
         boolean startup=false;
@@ -547,13 +538,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 // Retain one short publication grace, rather than counting it twice.
                 if(e.scriptDestroyed?stamp-e.destroyed>0:stamp-e.destroyed>=100){
                     actions.cancelSource("actor:"+e.id);
-                    if(e.shutdown!=null){
-                        if(effectSources.size()>=4096||nextEffectSource==Long.MAX_VALUE)throw new IllegalStateException("Too many scene shutdown contexts");
-                        String identity="effect:"+(++nextEffectSource);effectSources.put(identity,e.snapshot());
-                        if(!actions.perform(e.shutdown,stamp,identity,"actor:"+e.id))effectSources.remove(identity);
-                    }
+                    logic.shutdown(e,stamp);
                     unlink(e);
-                    var removedVariables=logicVariables.remove("actor:"+e.id);if(removedVariables!=null)variableCount-=removedVariables.size();
+                    logic.deactivate(e);
                     actions.removed(new HashSet<>(Arrays.asList(e.spec.text("tags","").split(","))),
                         tag->entities.values().stream().anyMatch(other->Arrays.asList(other.spec.text("tags","").split(",")).contains(tag)),stamp,"actor:"+e.id);
                     if(e.pad!=null)e.pad.nextGeneration=e.destroyed+e.pad.spec.integer("delay",0);
@@ -569,7 +556,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 e.flags=stamp+e.spec.integer("warning",0)>=e.nextGeneration?2:0;
                 if(SceneClock.reached(stamp,e.nextGeneration)){e.flags&=~2;generate(e,e.nextGeneration);}
             }
-            if(e.kind.equals("Trap"))cycle(e,stamp);
+            if(e.kind.equals("Trap"))logic.cycle(e,stamp);
             if(e.spec.fields().containsKey("hazard-lifetime")&&stamp-e.created>=e.spec.integer("hazard-lifetime",0)){
                 e.destroyed=e.created+e.spec.integer("hazard-lifetime",0);
                 continue;
@@ -592,7 +579,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 continue;
             }
             if(e.kind.equals("Door")&&(e.flags&4)!=0&&stamp-e.stateEntered>e.spec.integer("door-speed",0))e.flags&=~4;
-            if(e.kind.equals("Switch"))switches(e,stamp,players);
+            if(e.kind.equals("Switch"))logic.switches(e,stamp,players);
             if(e.elevator!=null)elevatorSystem.advance(e,stamp,players);
             if(e.spec.flag("heal-pad",false)&&SceneClock.reached(stamp,e.nextHeal)){
                 e.nextHeal=stamp+Math.round(e.spec.number("heal-interval",0)*1000);
@@ -640,7 +627,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 actions.signal(sensor.spec().text("watch-tag",""),sensor.spec().text("signal",""),stamp,"actor:"+player.id());
         }
         actions.advance(stamp);
-        if(!effectSources.isEmpty())effectSources.keySet().retainAll(actions.workSources());
+        logic.retainSources(actions);
     }
     /**
      * Spawn catalogue-backed monsters for an authorized administrator. The complete request is
@@ -702,7 +689,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         entity.targetModeUpdate=false;entity.flags=0;entity.claim=0;entity.claimTaken=false;
         entity.carrier=0;entity.owner=0;entity.ownerOid=0;
         unlink(entity);
-        var removedVariables=logicVariables.remove("actor:"+entity.id);if(removedVariables!=null)variableCount-=removedVariables.size();
+        logic.deactivate(entity);
     }
 
     /** Move to a later scene generation, removing every wave and wave actor that cannot belong to it. */
@@ -787,173 +774,23 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private boolean sight(SceneEntity e,float tx,float ty){return combatSystem.sight(e,tx,ty);}
     boolean entitySegment(SceneEntity mover,float x,float y,float tx,float ty){return movementSystem.entitySegmentFor(mover,x,y,tx,ty);}
     boolean moveEntity(SceneEntity mover,float x,float y){return movementSystem.moveEntity(mover,x,y);}
-    private void cycle(SceneEntity e,int stamp){
-        var cycle=content.cycles().getOrDefault(e.cycle,e.spec);
-        float down=cycle.number("down",e.spec.number("down-time",0)),warn=cycle.number("warn",e.spec.number("warn-time",0)),up=cycle.number("up",e.spec.number("up-time",0));
-        int period=Math.round((down+warn+up)*1000);
-        int offset=period<=0?0:Math.floorMod(stamp-Math.round(cycle.number("offset",0)*1000),period);
-        int state=e.cycle.equals("UP")?2:e.cycle.equals("DOWN")?0:offset<down*1000?0:offset<(down+warn)*1000?1:2;
-        if(e.state!=state){e.state=state;e.stateEntered=stamp;}
-        e.flags=state==2?e.flags|2:e.flags&~2;
-    }
-    private void switches(SceneEntity e,int stamp,List<ActorState> players){
-        String mode=e.spec.text("switch-mode","");
-        if(e.platform!=null){
-            var living=players.stream().filter(p->playerActive.test(p.id())).toList();
-            int count=(int)living.stream().filter(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS)).count();
-            if(count!=e.count){
-                e.count=count;
-                if(count>0&&count==living.size()){
-                    if(e.partyIntersection==null)e.partyIntersection=actions.prepare(e.platform.intersection());
-                    actions.perform(e.partyIntersection,stamp,"actor:"+e.id,"actor:"+e.id);
-                }
-            }
-        }else if(mode.equals("pressure")){
-            boolean pressed=players.stream().anyMatch(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS))
-                ||entities.values().stream().anyMatch(other->liftKind(other.kind)&&Arrays.asList(other.spec.text("tags","").split(",")).contains(e.spec.text("pressure-tag",""))&&other.carrier==0&&other.destroyed==Integer.MAX_VALUE
-                    &&e.spec.contains(e.x,e.y,e.rotation,other.x,other.y,other.spec.number("radius",0)));
-            int state=pressed?2:0;
-            if(state!=e.state)setSwitch(e,state,stamp);
-        }else if(mode.equals("button-once")){
-            if(e.state==0&&players.stream().anyMatch(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS)))setSwitch(e,1,stamp);
-        }else if(mode.equals("button")||mode.equals("damage-timed")){
-            if(e.state!=0&&SceneClock.reached(stamp,e.nextSwitch))setSwitch(e,0,stamp);
-            if(mode.equals("button")&&e.state==0&&SceneClock.reached(stamp,e.nextSwitch)&&players.stream().anyMatch(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS))){
-                setSwitch(e,1,stamp);e.nextSwitch=stamp+e.spec.integer("switch-delay",0);
-            }
-        }
-    }
+    void cycle(SceneEntity e,int stamp){logic.cycle(e,stamp);}
+    void switches(SceneEntity e,int stamp,List<ActorState> players){logic.switches(e,stamp,players);}
+    void entitySignal(SceneEntity target,String name,int stamp){logic.entitySignal(target,name,stamp);}
     public boolean elevatorEntry(String key){return elevatorSystem.entry(key);}
     public boolean cancelElevator(ElevatorTrip trip,int stamp){return elevatorSystem.cancel(trip,stamp);}
     /** The session calls this only after its floor report/preflight succeeds. */
     public boolean dropElevator(ElevatorTrip trip,boolean returning,int stamp){return elevatorSystem.drop(trip,returning,stamp);}
     public boolean elevatorReady(ElevatorTrip trip,int stamp){return elevatorSystem.ready(trip,stamp);}
-    void setSwitch(SceneEntity e,int state,int stamp){
-        e.state=state;e.stateEntered=stamp;
-        e.flags=state==0?e.flags|2:e.flags&~2; // Native Switch.setState: START set exactly in state 0.
-        if(e.platform!=null&&state==1)actions.perform(e.platform.pressed(),stamp,"actor:"+e.id,"actor:"+e.id);
-        String effect=e.spec.text("state."+state+".effect","");if(!effect.isBlank())fireEffect(e,new StarterCatalog.Model(effect,Map.of()),stamp);
-        var condition=e.spec.model("state."+state+".status");
-        if(condition!=null){
-            String tag=e.spec.text("state."+state+".status-tag","");float radius=e.spec.number("state."+state+".status-radius",0);
-            var damage=new FireCatalog.DataValue(org.tortodrone.core.WireTypes.DAMAGE_STATUS,Map.of("statusCondition",condition));
-            for(var target:entities.values())if(target.kind.equals("Monster")&&target.destroyed==Integer.MAX_VALUE&&(tag.isBlank()||Arrays.asList(target.spec.text("tags","").split(",")).contains(tag))&&Math.hypot(target.x-e.x,target.y-e.y)<=radius+target.spec.number("radius",0))target.status.apply(damage,stamp);
-        }
-        signal(e.spec.text("state."+state+".tag",""),e.spec.text("state."+state+".signal",""),stamp,"actor:"+e.id);
-    }
-    private void fireEffect(SceneEntity e,StarterCatalog.Model effect,int stamp){
-        attack.accept(e.snapshot(),new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,effect,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),""));
-    }
-    private ActorState scriptSource(String source,int stamp){
-        if(source.startsWith("effect:"))return effectSources.get(source);
-        if(source.startsWith("actor:"))try{return actor(Integer.parseInt(source.substring(6)));}catch(NumberFormatException invalid){return null;}
-        if(!source.startsWith("entry:"))return null;
-        String key=source.substring(6);var binding=content.entries().stream().filter(entry->entry.key().equals(key)).findFirst().orElse(null);
-        if(binding==null||!key.matches("[0-9]+"))return null;
-        var state=new SceneEntityState("Actor",Integer.MAX_VALUE,0,0,-1,0,stamp,0,0,key,null,SceneStatus.State.NORMAL,0,0,true);
-        // A native entry identity for presentation only; never inserted as an actor or occupant.
-        return new ActorState(0,0,"",0,stamp,binding.x(),binding.y(),binding.rotation(),0,0,0,stamp,binding.spec().config(),false,null,null,state);
-    }
-    private boolean startConversation(SceneActions.Conversation operation,int stamp,String source,String activator){
-        var definition=content.conversations().get(operation.id());var origin=scriptSource(source,stamp);
-        if(definition==null||origin==null)return false;
-        int target=0;
-        if(operation.activatorOnly()){
-            var player=players.stream().filter(p->("actor:"+p.id()).equals(activator)).findFirst().orElse(null);
-            if(player==null)return true;target=player.id();
-        }
-        return conversationSink.start(definition,origin,stamp,target);
-    }
-    private boolean nextFloor(int stamp,String source,String activator){
-        var player=players.stream().filter(p->activator.equals("actor:"+p.id())).findFirst().orElse(null);
-        if(player==null)return true; // Native PartyBase succeeds with no resolved knight/party.
-        var origin=scriptSource(source,stamp);if(origin==null)return false;
-        return floorAdvanceSink.request(player,origin,stamp);
-    }
-    private boolean setMemory(org.tortodrone.core.character.KnightMemory operation,int stamp,String source,String activator){
-        var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&playerActive.test(p.id())).findFirst().orElse(null);
-        var origin=scriptSource(source,stamp);
-        return player!=null&&origin!=null&&memorySink.apply(player,operation,origin,stamp);
-    }
-    private boolean sourceEffect(SceneActions.SourceEffect operation,int stamp,String source){
-        if(operation.locationTag().isEmpty()){
-            var origin=scriptSource(source,stamp);if(origin==null)return false;
-            effectSink.fire(operation.config(),origin,stamp);
-        }else{
-            var origins=taggedSources(operation.locationTag(),stamp);if(origins.size()>256)return false;
-            for(var origin:origins)effectSink.fire(operation.config(),origin,stamp);
-        }
-        return true; // Native FireEffect succeeds even when its Tagged selection is empty.
-    }
-    private boolean gameplayEffect(SceneActions.GameplayEffect operation,int stamp,String source){
-        List<ActorState> origins;
-        if(operation.locationTag().isEmpty()){var origin=scriptSource(source,stamp);if(origin==null)return false;origins=List.of(origin);}
-        else origins=taggedSources(operation.locationTag(),stamp);
-        if(origins.size()>256||effectSources.size()+origins.size()>4096||nextEffectSource>Long.MAX_VALUE-origins.size())return false;
-        for(var origin:origins){
-            String identity="effect:"+(++nextEffectSource);effectSources.put(identity,origin);
-            if(!actions.perform(operation.action(),stamp,identity,logicIdentity(origin))){effectSources.remove(identity);return false;}
-            effectSink.fire(operation.config(),origin,stamp);
-        }return true;
-    }
-    List<ActorState> taggedSources(String tag,int stamp){
-        var result=new ArrayList<ActorState>();
-        for(var binding:anchors.getOrDefault(tag,List.of()))result.add(entrySource(binding,stamp));
-        // Native Tagged maps retain a destroyed actor until its actual removal.
-        for(var entity:entities.values())if(Arrays.asList(entity.spec.text("tags","").split(",")).contains(tag))result.add(entity.snapshot());
-        return result;
-    }
-    private List<String> variableTargets(SceneActions.LogicTarget target,int stamp,String source,String activator){
-        return switch(target.mode()){
-            case "source"->scriptSource(source,stamp)==null?List.of():List.of(source);
-            case "activator"->scriptSource(activator,stamp)!=null||players.stream().anyMatch(p->activator.equals("actor:"+p.id()))?List.of(activator):List.of();
-            case "tagged"->taggedSources(target.tag(),stamp).stream().map(SceneEntities::logicIdentity).distinct().toList();
-            default->throw new IllegalArgumentException("Invalid variable target");
-        };
-    }
-    private boolean setVariable(SceneActions.SetVariable operation,int stamp,String source,String activator){
-        if(scriptSource(source,stamp)==null)return false;
-        var targets=variableTargets(operation.target(),stamp,source,activator);
-        int additions=0;
-        for(String target:targets){var values=logicVariables.get(target);if(values==null||!values.containsKey(operation.name())){if(values!=null&&values.size()>=256)return false;additions++;}}
-        if(variableCount+additions>4096)return false;
-        for(String target:targets)logicVariables.computeIfAbsent(target,key->new LinkedHashMap<>()).put(operation.name(),operation.value());
-        variableCount+=additions;return true;
-    }
-    private boolean variable(String name,SceneActions.LogicTarget target,int stamp,String source,String activator){
-        for(String identity:variableTargets(target,stamp,source,activator)){
-            var values=logicVariables.get(identity);if(values!=null&&values.containsKey(name))return values.get(name);
-        }return false;
-    }
-    private ActorState entrySource(SceneContent.Entry binding,int stamp){
-        var state=new SceneEntityState("Actor",Integer.MAX_VALUE,0,0,-1,0,stamp,0,0,binding.key(),null,SceneStatus.State.NORMAL,0,0,true);
-        return new ActorState(0,0,"",0,stamp,binding.x(),binding.y(),binding.rotation(),0,0,0,stamp,binding.spec().config(),false,null,null,state);
-    }
-    private String conversationSource(SceneConversation definition,ActorState source,int responder,int stamp){
-        if(content.conversations().get(definition.actor())!=definition||source==null)return null;
-        if(players.stream().noneMatch(p->p.id()==responder)||!playerActive.test(responder))return null;
-        String identity;
-        if(source.entity()!=null&&source.entity().entrySource())identity="entry:"+source.entity().key();else identity="actor:"+source.id();
-        return scriptSource(identity,stamp)==null?null:identity;
-    }
-    boolean conversationValid(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){
-        var current=definition.nodes().get(node);return current!=null&&choice>=0&&choice<current.responses().size()&&conversationSource(definition,source,responder,stamp)!=null;
-    }
-    boolean conversationStart(SceneConversation definition,ActorState source,int responder,int stamp){
-        String identity=conversationSource(definition,source,responder,stamp);if(identity==null)return false;
-        if(definition.initialAction()==null)return true;
-        return actions.perform(definition.initialAction(),stamp,identity,"actor:"+responder);
-    }
-    boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){
-        if(!conversationValid(definition,node,choice,source,responder,stamp))return false;
-        var current=definition.nodes().get(node);String identity=source.entity()!=null&&source.entity().entrySource()?"entry:"+source.entity().key():"actor:"+source.id();
-        var action=current.responses().get(choice).action();return action==null||actions.perform(action,stamp,identity,"actor:"+responder);
-    }
-    private boolean pawnStatuses(SceneActions.PawnStatus operation,int stamp,String source){
-        boolean applied=false;
-        for(var player:players)applied=pawnStatus.apply(player.id(),operation,stamp)||applied;
-        return operation.clear()||applied; // Native ClearStatus succeeds even with no targets.
-    }
+    void setSwitch(SceneEntity e,int state,int stamp){logic.setSwitch(e,state,stamp);}
+    ActorState scriptSource(String source,int stamp){return logic.scriptSource(source,stamp);}
+    List<ActorState> taggedSources(String tag,int stamp){return logic.taggedSources(tag,stamp);}
+    ActorState entrySource(SceneContent.Entry binding,int stamp){return logic.entrySource(binding,stamp);}
+    boolean variable(String name,SceneActions.LogicTarget target,int stamp,String source,String activator){return logic.variable(name,target,stamp,source,activator);}
+    int effectSourceCount(){return logic.effectSourceCount();}
+    boolean conversationValid(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){return logic.conversationValid(definition,node,choice,source,responder,stamp);}
+    boolean conversationStart(SceneConversation definition,ActorState source,int responder,int stamp){return logic.conversationStart(definition,source,responder,stamp);}
+    boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){return logic.conversationResponse(definition,node,choice,source,responder,stamp);}
     private boolean spawnScripted(SceneActions.Spawn actor,int stamp,String source,String activator){
         List<ActorState> origins;
         if(actor.activatorLocation()){
@@ -977,71 +814,6 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         // Validate the whole selection before publication; a failed batch changes no actor IDs.
         for(var entity:staged)insert(entity);nextId=next;return true;
-    }
-    private boolean destroyTagged(String tag,int stamp,String source){
-        boolean found=false;
-        for(var e:entities.values())if(Arrays.asList(e.spec.text("tags","").split(",")).contains(tag)){
-            found=true;
-            if(e.destroyed!=Integer.MAX_VALUE)continue;
-            // Destruction is not damage: no hit, death animation, loot or combat reward.
-            e.destroyed=stamp;e.scriptDestroyed=true;e.status.clear();e.path=List.of();e.impulse=null;
-        }
-        return found;
-    }
-    private void signal(String tag,String name,int stamp,String source){
-        if(tag.isEmpty()||name.isEmpty())return;
-        actions.signal(tag,name,stamp,source);
-        for(var target:entities.values())if(Arrays.asList(target.spec.text("tags","").split(",")).contains(tag))entitySignal(target,name,stamp);
-    }
-    private static String logicIdentity(ActorState actor){return actor.entity()!=null&&actor.entity().entrySource()?"entry:"+actor.entity().key():"actor:"+actor.id();}
-    private boolean nearestSignal(SceneActions.NearestSignal operation,int stamp,String source){
-        var origin=scriptSource(source,stamp);if(origin==null)return false;
-        var targets=new LinkedHashMap<String,ActorState>();
-        for(var target:taggedSources(operation.tag(),stamp)){
-            String identity=logicIdentity(target);if(!operation.excludeSource()||!identity.equals(source))targets.putIfAbsent(identity,target);
-        }
-        if(targets.size()>2048)return false;
-        // Clyde DistanceSubset sorts float distances from Source. Excluding removes
-        // source identity, not its position. Equal distances retain server content
-        // order; original tie ordering has no capture witness.
-        var selected=targets.values().stream().sorted(Comparator.comparingDouble(a->{float dx=a.x()-origin.x(),dy=a.y()-origin.y();return (float)Math.sqrt(dx*dx+dy*dy);})).limit(operation.count()).toList();
-        for(var target:selected){
-            actions.signalTo(operation.tag(),operation.name(),stamp,source,logicIdentity(target));
-            if(!target.entity().entrySource()){var entity=entities.get(target.id());if(entity!=null)entitySignal(entity,operation.name(),stamp);}
-        }
-        return true; // Native Signal succeeds for an empty resolved target set.
-    }
-    private void entitySignal(SceneEntity target,String name,int stamp){
-        if(target.kind.equals("Door")&&name.equals("increment")){
-            if(target.doorIncrements==0||--target.doorIncrements!=0)return;
-            name="open";
-        }
-        if(target.script!=null&&name.equals(target.spec.text("script.activate-signal","")))target.scriptActivated=true;
-        if(target.program!=null&&name.equals(target.spec.text("script.activate-signal","")))setVariable(new SceneActions.SetVariable("activate",true,new SceneActions.LogicTarget("source","")),stamp,"actor:"+target.id,"actor:"+target.id);
-        if(target.platform!=null&&name.equals("next")&&target.state==0)setSwitch(target,1,stamp);
-        if(target.kind.equals("Switch")&&target.platform==null&&target.spec.integer("switch-states",0)>0){
-            // Native DumbSwitchLogic.signal: "next"/"prev" step with wrap, numeric names
-            // target a state, other names are swallowed; only prepared dumb switches carry
-            // their native state count, so authored smart-switch modes stay untouched.
-            Integer next=null;
-            if(name.equals("next"))next=target.state+1;
-            else if(name.equals("prev"))next=target.state-1;
-            else try{next=Integer.parseInt(name);}catch(NumberFormatException ignored){}
-            if(next!=null){
-                int states=target.spec.integer("switch-states",0);
-                if(next<0)next=states-1;else if(next>=states)next=0;
-                if(next!=target.state)setSwitch(target,next,stamp);
-            }
-        }
-        if(target.kind.equals("Door")&&Set.of("open","close","toggle").contains(name)){
-            boolean open=name.equals("open")||name.equals("toggle")&&(target.flags&2)==0;target.flags=(open?2:0)|4;target.stateEntered=stamp;
-            for(var mover:entities.values())if(mover.kind.equals("Monster")){mover.path=List.of();mover.nextPath=0;}
-        }else if(target.kind.equals("Trap")){
-            if(name.equals("RESET")){target.cycle=target.spec.text("cycle","");int split=target.cycle.lastIndexOf('|');if(split>=0)target.cycle=target.cycle.substring(split+1);}
-            else if(name.equals("TOGGLE")){var cycle=content.cycles().get(target.cycle);if(cycle!=null)target.cycle=cycle.text("inverse",target.cycle);}
-            else if(content.cycles().containsKey(name))target.cycle=name;
-            cycle(target,stamp);
-        }
     }
     public boolean walkable(float x,float y,int ignore){return collisions.walkable(x,y,ignore);}
     /** Source ids whose static collision must be ignored because the entity is open or destroyed. */
