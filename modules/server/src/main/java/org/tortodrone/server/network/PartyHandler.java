@@ -224,7 +224,7 @@ final class PartyHandler {
                     if(session.tradeHandler().active())throw new IOException("Finish the trade first");
                     var result=session.sceneRegistry().parties().revive(member,request.oid(),target,world->
                         session.currentScene().simulation().revive(session.membership(),world,()->
-                            session.charactersStore().town(session.sceneRegistry().town()).revive(
+                            session.charactersStore().services().town(session.sceneRegistry().town()).revive(
                                 session.charactersStore().accountId(),session.selectedKnight().id(),session.authRevision(),cost)));
                     session.townChanged(result);
                     responder.confirmed(listener.requestId());

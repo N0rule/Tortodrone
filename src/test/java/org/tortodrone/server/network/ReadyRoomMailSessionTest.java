@@ -41,10 +41,10 @@ public final class ReadyRoomMailSessionTest {
                 alice.world.auctionInvocation(new SessionDecoder.Invocation(3,SessionCodec.UPLINK_SERVICE,2,List.of(foreign,confirm())));
                 alice.socket.await("Unknown owned mail");
                 // Native method 8 from the Ready Room after the friend request is accepted.
-                bob.chars.auction(content.town()).mail(bobProfile.accountId(),bobProfile.knightId(),1,2,List.of(foreign));
-                check(alice.chars.friends().list(1,1,1).size()==1&&bob.chars.friends().list(2,1,1).size()==1,"request and acceptance create mutual friendship");
+                bob.chars.services().auction(content.town()).mail(bobProfile.accountId(),bobProfile.knightId(),1,2,List.of(foreign));
+                check(alice.chars.services().friends().list(1,1,1).size()==1&&bob.chars.services().friends().list(2,1,1).size()==1,"request and acceptance create mutual friendship");
                 alice.world.friendInvocation(new SessionDecoder.Invocation(3,SessionCodec.SOCIAL_SERVICE,8,List.of("Bobby",confirm())));
-                check(alice.chars.friends().list(1,1,1).isEmpty()&&bob.chars.friends().list(2,1,1).isEmpty(),"native method 8 removes both edges from the Ready Room");
+                check(alice.chars.services().friends().list(1,1,1).isEmpty()&&bob.chars.services().friends().list(2,1,1).isEmpty(),"native method 8 removes both edges from the Ready Room");
                 check(!alice.socket.written.contains("Enter a scene first"),"mail and social edits from the Ready Room never hit the scene gate");
                 // The auction station stays bound to its town scene; the stock gate text remains.
                 alice.world.auctionInvocation(new SessionDecoder.Invocation(3,SessionCodec.AUCTION_SERVICE,3,List.of(result())));

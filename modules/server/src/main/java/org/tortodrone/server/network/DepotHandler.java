@@ -45,7 +45,7 @@ final class DepotHandler {
                     throw new IOException("e.good_unavailable");
                 if(session.tradeHandler().active())throw new IOException("Finish the trade first");
                 var knight=session.selectedKnight();
-                session.townChanged(store.town(session.sceneRegistry().town())
+                session.townChanged(store.services().town(session.sceneRegistry().town())
                     .depot(store.accountId(),knight.id(),session.authRevision(),id,price,offers.get(id)));
                 responder.confirmed(listener.requestId());
             }else{
@@ -54,7 +54,7 @@ final class DepotHandler {
                     throw new IOException("Unsupported Town depot operation");
                 var listed=new LinkedHashMap<Integer,TownCatalog.DepotGood>();
                 var rules=session.sceneRegistry().town();
-                var snapshot=store.depot(rules).catalog();
+                var snapshot=store.services().depot(rules).catalog();
                 for(var offer:snapshot.offers()){
                     var good=offer.good();var def=store.catalog().find(good.item());
                     if(!offer.enabled()||def==null||!def.grantable()||!DepotGate.unlocked(session.currentProfile().progress(),def)

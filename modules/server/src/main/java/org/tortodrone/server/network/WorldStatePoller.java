@@ -65,12 +65,12 @@ final class WorldStatePoller {
                 var states=members.getFirst().characters.worldStates();
                 for(var member:members)try{member.session.refreshState(member,states.get(member.worldId));}
                     catch(IOException|RuntimeException failure){member.session.refreshFailed(member,failure);}
-                var friends=members.getFirst().characters.friends().snapshot();
+                var friends=members.getFirst().characters.services().friends().snapshot();
                 var online=WorldSession.friendPresence(members.getFirst().characters.worldStorageFile());
                 for(var member:members)try{member.session.refreshFriends(member,friends,online);}
                     catch(IOException|RuntimeException failure){member.session.refreshFailed(member,failure);}
                 if(members.stream().anyMatch(m->m.session.wantsExchange())){
-                    var book=members.getFirst().characters.exchange().book();
+                    var book=members.getFirst().characters.services().exchange().book();
                     for(var member:members)try{member.session.refreshExchange(book);}catch(IOException|RuntimeException failure){member.session.refreshFailed(member,failure);}
                 }
             }catch(IOException|RuntimeException failure){for(var member:members)member.session.refreshFailed(member,failure);}

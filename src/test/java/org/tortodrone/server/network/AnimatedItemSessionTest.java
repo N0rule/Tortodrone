@@ -29,7 +29,7 @@ public final class AnimatedItemSessionTest {
             var knight=characters.create(new Knight(0,"Firework-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             for(var definition:definitions)db.grantItems("Alice",knight.name(),-1,-1,definition,2,-1,-1);
             var before=db.worldProfile(account,1,1);var held=before.items().stream().filter(i->AnimatedItems.supports(i.config())).findFirst().orElseThrow();
-            var store=characters.town(content.town());
+            var store=characters.services().town(content.town());
             refused(()->store.animatedItem(account,1,999,before.revision(),held.id()));
             refused(()->store.animatedItem(account,1,1,before.revision()-1,held.id()));
             refused(()->store.animatedItem(account,1,1,before.revision(),Long.MAX_VALUE));

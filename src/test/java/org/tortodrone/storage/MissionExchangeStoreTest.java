@@ -26,7 +26,7 @@ public final class MissionExchangeStoreTest {
                 s.setString(1,"knight.progress."+world+".rank");s.setString(2,"22");s.executeUpdate();
                 s.setString(1,"world."+world+".mission.alchemy_beginners");s.setString(2,"1:");s.executeUpdate();
             }return null;});
-            var store=owner.openingMissions(content.town(),content.missions());
+            var store=owner.services().openingMissions(content.town(),content.missions());
             var inventory=new TownStore(db,content.items(),content.town());
             var seeded=owner.worldProfile(knight.name(),1);
             long hot=db.write(c->inventory.create(c,seeded,"Weapon/Sword/Hot Edge",1,false,0,0,List.of()));

@@ -28,11 +28,11 @@ public final class FriendSessionTest {
                 check(alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,2,List.of(1,List.of(),result()))),"current party-suggestion request is answered");
                 check(alice.world.eventLogInvocation(new SessionDecoder.Invocation(3,SessionCodec.EVENT_LOG_SERVICE,2,List.of())),"current event-log handle is accepted");
                 alice.world.friendInvocation(joinRpc("Bobby"));alice.socket.await("m.internal_error");
-                check(alice.chars.friends().list(1,1,1).isEmpty(),"join cannot create or remove a friendship");
+                check(alice.chars.services().friends().list(1,1,1).isEmpty(),"join cannot create or remove a friendship");
                 alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,1,List.of("Bobby","Hello","Friend request",confirm())));
                 var mail=bob.chars.worldProfile("Bobby",1).town().mail().getFirst();
-                bob.chars.auction(content.town()).mail(2,1,1,2,List.of(mail.id()));
-                check(alice.chars.friends().list(1,1,1).size()==1,"native request and acceptance create mutual friendship");
+                bob.chars.services().auction(content.town()).mail(2,1,1,2,List.of(mail.id()));
+                check(alice.chars.services().friends().list(1,1,1).size()==1,"native request and acceptance create mutual friendship");
                 var town=scenes.catalog().scenes().stream().filter(m->m.town()&&m.id()!=scenes.catalog().entry().id()).findFirst().orElseThrow();
                 bob.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of(destination(town),new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));
                 alice.world.friendInvocation(joinRpc("Bobby"));alice.socket.await("changing scenes");
@@ -42,7 +42,7 @@ public final class FriendSessionTest {
                 alice.world.friendInvocation(joinRpc("Bobby"));
                 var pending=WorldSession.class.getDeclaredField("portalMove");pending.setAccessible(true);
                 check(pending.get(alice.world)!=null,"friend join starts native forced travel; queued="+alice.socket.frames);
-                check(alice.chars.friends().list(1,1,1).size()==1,"method 2 joins without unfriending");move(alice,town);
+                check(alice.chars.services().friends().list(1,1,1).size()==1,"method 2 joins without unfriending");move(alice,town);
                 check(alice.world.ownsScene(scenes.destination(town.id(),bobWorld).oid()),"friend travel reaches the exact Town instance");
                 alice.world.friendInvocation(joinRpc("Bobby"));
                 check(alice.world.ownsScene(scenes.destination(town.id(),bobWorld).oid()),"same-scene join keeps the scene active");
@@ -81,7 +81,7 @@ public final class FriendSessionTest {
                 check(WorldSession.friendPresence(db.file()).get(bobWorld).instance()==0,"private interior is published as unjoinable");
                 bob.world.close();alice.world.friendInvocation(joinRpc("Bobby"));alice.socket.await("friend_unjoinable");
                 alice.world.friendInvocation(rpc(8,"Bobby"));
-                check(alice.chars.friends().list(1,1,1).isEmpty()&&bob.chars.friends().list(2,1,1).isEmpty(),"native method 8 removes both friendship edges");
+                check(alice.chars.services().friends().list(1,1,1).isEmpty()&&bob.chars.services().friends().list(2,1,1).isEmpty(),"native method 8 removes both friendship edges");
                 db.password("Other",new Passwords.Protection(new byte[16],new byte[32]),3);
                 other.world.friendInvocation(rpc(8,"Alice"));other.socket.await("reconnect");
             }
@@ -124,7 +124,7 @@ public final class FriendSessionTest {
     private static void befriend(Person requester,Person target,String targetName,org.tortodrone.core.town.TownCatalog town)throws Exception{
         requester.world.friendInvocation(new SessionDecoder.Invocation(3,12,1,List.of(targetName,"Hello","Friend request",confirm())));
         var profile=target.chars.worldProfile(targetName,1);var mail=profile.town().mail().getFirst();
-        target.chars.auction(town).mail(profile.accountId(),profile.knightId(),1,2,List.of(mail.id()));
+        target.chars.services().auction(town).mail(profile.accountId(),profile.knightId(),1,2,List.of(mail.id()));
     }
     private static SessionDecoder.Invocation rpc(int method,String name){return new SessionDecoder.Invocation(3,12,method,List.of(name,confirm()));}
     private static SessionDecoder.Invocation joinRpc(String name){return rpc(3,name);}

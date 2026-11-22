@@ -30,7 +30,7 @@ public final class StyleSessionTest {
             for(String config:List.of("Upgrade/Eye/Almond","Upgrade/Eye/Happy","Upgrade/Height/Tall","Upgrade/Color/Amber"))
                 db.grantItems("Alice",knight.name(),-1,-1,items.require(config),2,-1,-1);
             db.currency("Alice",knight.name(),account,-1,org.tortodrone.core.character.Currency.CROWNS,3000);
-            var store=characters.styles();var initial=db.worldProfile(account,1,1);long almond=id(initial,"Upgrade/Eye/Almond");
+            var store=characters.services().styles();var initial=db.worldProfile(account,1,1);long almond=id(initial,"Upgrade/Eye/Almond");
             refused(()->store.change(account,1,-1,initial.revision(),almond,null));
             refused(()->store.change(account,1,99,initial.revision(),almond,null));
             refused(()->store.change(account,1,1,initial.revision()-1,almond,null));

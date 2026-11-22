@@ -34,7 +34,7 @@ final class ExchangeHandler {
             } catch (CharacterStore.Refused refused) {
                 throw new IOException("Knight changed; reconnect", refused);
             }
-            var book = store.exchange().book();
+            var book = store.services().exchange().book();
             subscribed = true;
             revision = book.revision();
             responder.send(() -> responder.codec().exchange(message, book));

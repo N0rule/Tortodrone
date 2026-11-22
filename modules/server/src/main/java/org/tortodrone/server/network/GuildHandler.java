@@ -31,8 +31,8 @@ final class GuildHandler {
     private org.tortodrone.core.guild.View load()throws IOException {
         var profile=session.currentProfile();
         if(!store.hasWorldStorage()||profile==null)return null;
-        var guild=store.guilds().guildOf(profile.worldId());
-        return guild==null?null:store.guilds().view(guild.id());
+        var guild=store.services().guilds().guildOf(profile.worldId());
+        return guild==null?null:store.services().guilds().view(guild.id());
     }
     boolean ownsGuild(int object)throws IOException { synchronized (session) {
             return view!=null&&object==org.tortodrone.protocol.SessionCodec.guildOid(view.guild().id());
@@ -101,7 +101,7 @@ final class GuildHandler {
                 throw new SessionDecoder.Rejected("Invalid guild listener");
             try {
                 if(session.isClosed()||!session.selected())throw new IOException("Select a knight first");
-                var guilds=store.guilds();
+                var guilds=store.services().guilds();
                 boolean changed=false;Object response=null;
                 switch(method){
                     case 1->{requireArgs(a,3,Integer.class,org.tortodrone.core.wire.EnumValue.class,Integer.class);

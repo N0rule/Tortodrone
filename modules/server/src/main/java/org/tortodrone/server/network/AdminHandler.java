@@ -101,7 +101,7 @@ final class AdminHandler {
                 session.requireAdminReady();
                 if(session.tradeHandler().active())throw new IOException("Finish the trade first");
                 var knight=session.selectedKnight();
-                var result=store.town(session.sceneRegistry().town()).adminAccessory(store.accountId(),knight.id(),session.authRevision(),slot,method==1?(String)args.get(1):null,knight.costume());
+                var result=store.services().town(session.sceneRegistry().town()).adminAccessory(store.accountId(),knight.id(),session.authRevision(),slot,method==1?(String)args.get(1):null,knight.costume());
                 session.townChanged(result);responder.confirmed(listener.requestId());
             }catch(IOException refused){responder.failure(listener.requestId(),refused.getMessage());}
             return;
@@ -113,7 +113,7 @@ final class AdminHandler {
                 if(!session.gameMasterRole())throw new IOException("Game Master permission required");
                 if(session.tradeHandler().active())throw new IOException("Finish the trade first");
                 var knight=session.selectedKnight();
-                var result=store.town(session.sceneRegistry().town()).adminProgress(store.accountId(),knight.id(),session.authRevision(),method,args);
+                var result=store.services().town(session.sceneRegistry().town()).adminProgress(store.accountId(),knight.id(),session.authRevision(),method,args);
                 session.townChanged(result);
                 if(method==44)responder.send(()->responder.codec().knightProgress(responder.oid(),session.currentProfile()));
                 responder.confirmed(listener.requestId());
@@ -127,7 +127,7 @@ final class AdminHandler {
                 if(!session.gameMasterRole())throw new IOException("Game Master permission required");
                 if(session.tradeHandler().active())throw new IOException("Finish the trade first");
                 var knight=session.selectedKnight();
-                var result=store.town(session.sceneRegistry().town()).adminGear(store.accountId(),knight.id(),session.authRevision(),method,args);
+                var result=store.services().town(session.sceneRegistry().town()).adminGear(store.accountId(),knight.id(),session.authRevision(),method,args);
                 session.townChanged(result);
                 if(method==23)responder.result(listener.requestId(),result.result(),session.currentProfile());
                 else responder.confirmed(listener.requestId());
@@ -139,7 +139,7 @@ final class AdminHandler {
             if(args.size()!=2||!(args.getFirst() instanceof org.tortodrone.core.wire.ConfigReference reference))throw new SessionDecoder.Rejected("Invalid monster spawn request");
             try{
                 session.requireAdminReady();
-                store.town(session.sceneRegistry().town()).requireGameMaster(store.accountId(),session.authRevision());
+                store.services().town(session.sceneRegistry().town()).requireGameMaster(store.accountId(),session.authRevision());
                 var location=session.adminLocation();
                 if(location.scene().map().town())throw new IOException("Monsters can only be spawned in a level scene");
                 int count=1;float radius=0;
@@ -188,7 +188,7 @@ final class AdminHandler {
             if(session.isClosed()||!session.selected())return "Select a knight first";
             if(!session.gameMasterRole())return "Game Master permission required";
             var knight=session.selectedKnight();
-            var result=store.town(session.sceneRegistry().town()).adminSprite(store.accountId(),knight.id(),session.authRevision(),method,args);
+            var result=store.services().town(session.sceneRegistry().town()).adminSprite(store.accountId(),knight.id(),session.authRevision(),method,args);
             session.townChanged(result);
             session.sessionLog().info("Updated battle sprite; knightId="+session.currentProfile().worldId()+"; adminMethod="+method);
             return null;

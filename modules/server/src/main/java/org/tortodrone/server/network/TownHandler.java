@@ -79,7 +79,7 @@ final class TownHandler {
             int price=g.price()>=0?g.price():def==null?0:session.sceneRegistry().town().price(g.item(),def.rarity(),true);
             return new TownCatalog.Good(g.item(),g.count(),price,g.energy(),g.limit(),g.token(),g.tokenCount());
         }).toList();
-        var available=store.town(session.sceneRegistry().town()).availability(store.accountId(),knight.id(),session.authRevision(),dialog,shopCycle);
+        var available=store.services().town(session.sceneRegistry().town()).availability(store.accountId(),knight.id(),session.authRevision(),dialog,shopCycle);
         responder.send(()->responder.codec().townShop(responder.oid(),goods,available));
     }
 
@@ -111,7 +111,7 @@ final class TownHandler {
                     throw new IOException("Enter a town first");
                 if(session.tradeHandler().active())throw new IOException("Finish the trade first");
                 if(rename){
-                    var result=store.town(session.sceneRegistry().town()).rename(store.accountId(),knight.id(),session.authRevision(),(String)a.getFirst());
+                    var result=store.services().town(session.sceneRegistry().town()).rename(store.accountId(),knight.id(),session.authRevision(),(String)a.getFirst());
                     store.refresh();session.refreshKnight();
                     session.conversations().close();close();session.leaveChatForTown();session.townChanged(result);session.publishPartyState();
                     responder.send(()->responder.codec().knightName(responder.oid(),session.selectedKnight().name()));
@@ -120,7 +120,7 @@ final class TownHandler {
                     // login window carrying the new name, so the server closes it here.
                     session.requestRenameDisconnect();
                 }else{
-                    store.town(session.sceneRegistry().town()).canRename(store.accountId(),knight.id(),session.authRevision());
+                    store.services().town(session.sceneRegistry().town()).canRename(store.accountId(),knight.id(),session.authRevision());
                     responder.confirmed(listener.requestId());
                 }
             }catch(IOException failure){responder.failure(listener.requestId(),failure.getMessage());}
@@ -137,7 +137,7 @@ final class TownHandler {
                 session.loadOwnProfile();
                 if(session.tradeHandler().active())throw new IOException("Finish the trade first");
                 if(!session.trashTemporary(id))
-                    session.townChanged(store.town(session.sceneRegistry().town()).trash(store.accountId(),knight.id(),session.authRevision(),id));
+                    session.townChanged(store.services().town(session.sceneRegistry().town()).trash(store.accountId(),knight.id(),session.authRevision(),id));
                 responder.confirmed(listener.requestId());
             }catch(CharacterStore.Refused|IOException refused){
                 responder.failure(listener.requestId(),refused.getMessage());
@@ -179,7 +179,7 @@ final class TownHandler {
                     if(a.size()!=4||!(a.get(0) instanceof Long item)||!(a.get(1) instanceof Integer crystals)||!(a.get(2) instanceof Integer level))
                         throw new SessionDecoder.Rejected("Invalid forge request");
                     if(session.tradeHandler().active())throw new IOException("Finish the trade first");
-                    var forged=store.town(rules).forge(store.accountId(),knight.id(),session.authRevision(),item,crystals,level);
+                    var forged=store.services().town(rules).forge(store.accountId(),knight.id(),session.authRevision(),item,crystals,level);
                     session.townChanged(forged);responder.result(listener.requestId(),forged.result(),forged.profile());
                     return true;
                 }
@@ -190,7 +190,7 @@ final class TownHandler {
             boolean staff=session.gameMasterRole();
             var map=session.currentScene().map();
             if(!map.town()&&!map.kind().equals("training")&&!staff)throw new IOException("This operation requires a town");
-            var town=store.town(rules);TownStore.Result result;
+            var town=store.services().town(rules);TownStore.Result result;
             var priorRecipes=profile.town().recipes();
             if(extend){
                 if(a.size()!=3||!(a.get(0) instanceof Long active)||!(a.get(1) instanceof Long unused))

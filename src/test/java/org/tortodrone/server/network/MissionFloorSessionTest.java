@@ -74,7 +74,7 @@ public final class MissionFloorSessionTest {
                 var after=characters.worldProfile(knight.name(),1);
                 check(portalMapId(session)==1,"the final elevator returns to Haven");
                 check(after.progress().prestige()>before.progress().prestige(),"the final floor settles the mission once");
-                check(characters.openingMissions(registry.town(),registry.missions()).load(account,knight.id(),1)
+                check(characters.services().openingMissions(registry.town(),registry.missions()).load(account,knight.id(),1)
                     .containsKey("shadow_beast"),"the settlement stores one Shadow Beast receipt");
                 check(socket.text().contains("com.threerings.projectx.mission.data.MissionCompleteDialogInfo"),
                     "the client receives the mission completion dialog");

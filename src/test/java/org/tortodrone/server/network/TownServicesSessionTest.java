@@ -70,7 +70,7 @@ public final class TownServicesSessionTest {
                 var learned=db.worldProfile(account,knight.id(),1);
                 check(learned.town().recipes().size()==1&&learned.items().stream().filter(i->i.config().equals(recipe)).mapToInt(WorldProfile.Item::count).sum()==1,"native Use consumes one recipe and publishes the learned book");
                 world.townInvocation(use);check(simulation.snapshot().effectsSince(baseline).size()==1,"failed duplicate recipe Use cannot replay its effect");check(db.worldProfile(account,knight.id(),1).equals(learned),"duplicate Use preserves recipes, currency, revision and remaining item");
-                var energyOffer=characters.depot(scenes.town()).catalog().offers().stream().filter(o->o.enabled()&&o.good().energy()>0&&o.good().limit()==0&&items.find(o.good().item()).grantable()).findFirst().orElseThrow();
+                var energyOffer=characters.services().depot(scenes.town()).catalog().offers().stream().filter(o->o.enabled()&&o.good().energy()>0&&o.good().limit()==0&&items.find(o.good().item()).grantable()).findFirst().orElseThrow();
                 var offerReply=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)19);
                 world.townInvocation(new SessionDecoder.Invocation(3,16,4,List.of(offerReply)));
                 var energyBaseline=simulation.snapshot();var beforePurchase=db.worldProfile(account,knight.id(),1);

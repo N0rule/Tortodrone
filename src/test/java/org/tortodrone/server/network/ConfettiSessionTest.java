@@ -30,7 +30,7 @@ public final class ConfettiSessionTest {
             var characters=new CharacterStore(db,account,"Alice",items);
             var knight=characters.create(new Knight(0,"Confetti-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             for(var definition:definitions)db.grantItems("Alice",knight.name(),-1,-1,definition,2,-1,-1);
-            var store=characters.town(content.town());var initial=db.worldProfile(account,knight.id(),1);
+            var store=characters.services().town(content.town());var initial=db.worldProfile(account,knight.id(),1);
             long id=initial.items().stream().filter(i->i.config().equals("Usable/Confetti, Dark Harvest")).findFirst().orElseThrow().id();
             refused(()->store.confetti(account,knight.id(),99,initial.revision(),id));
             refused(()->store.confetti(account,knight.id(),1,initial.revision()-1,id));

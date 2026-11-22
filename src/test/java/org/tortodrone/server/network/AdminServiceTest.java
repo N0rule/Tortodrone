@@ -186,7 +186,7 @@ public final class AdminServiceTest {
         world.admin(spriteInvoke(45,(short)39,0));response(frames,socket,(short)39,(byte)0,"Game Master permission required");
         check(staff.worldProfile(knight.name(),1).equals(baseline),"revoked GM cannot edit a sprite using stale session privileges");
         accounts.setGameMaster("Master",true);
-        try{staff.town(scenes.town()).adminSprite(2,knight.id(),999,45,List.of(0));throw new AssertionError("Stale authentication accepted");}catch(IOException expected){}
+        try{staff.services().town(scenes.town()).adminSprite(2,knight.id(),999,45,List.of(0));throw new AssertionError("Stale authentication accepted");}catch(IOException expected){}
         check(database.worldProfile(2,knight.id(),1).equals(baseline),"stale authentication leaves all sprite state unchanged");
     }
 

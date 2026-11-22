@@ -52,7 +52,7 @@ final class ItemUseHandler {
                 var current=session.loadOwnProfile();
                 if(session.tradeHandler().active())throw new IOException("Finish the trade first");
                 if(!session.canOpenBox())throw new IOException("e.not_use_busy");
-                var town=store.town(session.sceneRegistry().town());
+                var town=store.services().town(session.sceneRegistry().town());
                 int knight=session.selectedKnight().id();
                 var result=Confetti.supports(held.config())?town.confetti(store.accountId(),knight,session.authRevision(),current.revision(),id)
                     :town.animatedItem(store.accountId(),knight,session.authRevision(),current.revision(),id);
@@ -72,7 +72,7 @@ final class ItemUseHandler {
             try{
                 var current=session.loadOwnProfile();
                 if(session.tradeHandler().active())throw new IOException("Finish the trade first");
-                var town=store.town(session.sceneRegistry().town());
+                var town=store.services().town(session.sceneRegistry().town());
                 int knight=session.selectedKnight().id();
                 var outcome=session.useOwnedItem(id,persistent,
                     ()->town.useItem(store.accountId(),knight,session.authRevision(),current.revision(),id));

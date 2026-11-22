@@ -59,7 +59,7 @@ final class AuctionHandler {
                             || mail && (method == 1 || method == 2 || method == 5)))
                     throw new IOException("Finish the trade first");
                 Knight knight = session.selectedKnight();
-                var house = store.auction(session.sceneRegistry().town());
+                var house = store.services().auction(session.sceneRegistry().town());
                 var result = auction
                     ? house.operate(store.accountId(), knight.id(), session.authRevision(), method, a,
                         session.gameMasterRole(), WorldSession.auctionPresence(store.worldStorageFile()))

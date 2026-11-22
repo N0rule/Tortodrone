@@ -25,18 +25,10 @@ public final class CharacterStore {
     private final String username;
     private final int accountId;
     private ItemCatalog catalog=ItemCatalog.starter();
+    private final CharacterServices services;
     public ItemCatalog catalog(){return catalog;}
-    public org.tortodrone.storage.EnergyExchange exchange()throws IOException{if(database==null)throw new IOException("Energy Exchange requires SQLite storage");return new org.tortodrone.storage.EnergyExchange(database);}
-    public org.tortodrone.storage.FriendStore friends()throws IOException{if(database==null)throw new IOException("Friend lists require SQLite storage");return new org.tortodrone.storage.FriendStore(database);}
-    public org.tortodrone.storage.DepotStore depot(org.tortodrone.core.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Supply Depot requires SQLite storage");return new org.tortodrone.storage.DepotStore(database,catalog,rules);}
-    public org.tortodrone.storage.StyleStore styles()throws IOException{if(database==null)throw new IOException("Styles require SQLite storage");return new org.tortodrone.storage.StyleStore(database,catalog);}
-    public org.tortodrone.storage.AuctionHouse auction(org.tortodrone.core.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Auctions require SQLite storage");return new org.tortodrone.storage.AuctionHouse(database,catalog,rules);}
-    public org.tortodrone.storage.TownStore town(org.tortodrone.core.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Town operations require SQLite storage");return new org.tortodrone.storage.TownStore(database,catalog,rules);}
-    public org.tortodrone.storage.GuildStore guilds()throws IOException{if(database==null)throw new IOException("Guilds require SQLite storage");return new org.tortodrone.storage.GuildStore(database);}
-    public org.tortodrone.storage.BoxOpeningService boxes(org.tortodrone.resources.BoxCatalog boxes)throws IOException {
-        if(database==null)throw new IOException("Box opening requires SQLite storage");
-        return new org.tortodrone.storage.BoxOpeningService(database,catalog,boxes);
-    }
+    /** Storage-facing services for session handlers; the roster stays storage-free. */
+    public CharacterServices services(){return services;}
     private List<Knight> knights = List.of();
     private int nextId = 1;
     private long storageRevision;
@@ -70,14 +62,16 @@ public final class CharacterStore {
     public CharacterStore(int accountId, String username) {
         if (accountId < 1 || username == null) throw new IllegalArgumentException("Invalid account identity");
         database = null; this.username = username; this.accountId = accountId;
+        services = new CharacterServices(database, catalog);
     }
 
     public CharacterStore(Database database, int accountId, String username) throws IOException {
-        this.database = database; this.accountId = accountId; this.username = username;
-        refresh();
+        this(database, accountId, username, ItemCatalog.starter());
     }
     public CharacterStore(Database database,int accountId,String username,ItemCatalog catalog)throws IOException {
-        this(database,accountId,username);this.catalog=catalog;
+        this.database = database; this.accountId = accountId; this.username = username; this.catalog = catalog;
+        services = new CharacterServices(database, catalog);
+        refresh();
     }
     public WorldProfile grantItems(String username,String name,String config,int quantity,long revision)throws IOException {
         if(database==null)throw new IOException("Item grants require SQLite storage");
@@ -270,9 +264,6 @@ public final class CharacterStore {
     }
     public Map<String,KnightObjective.State> knightObjectives(int knightId,long authRevision)throws IOException {
         if(database==null)throw new IOException("Objectives require SQLite storage");return database.knightObjectives(accountId,knightId,authRevision);
-    }
-    public org.tortodrone.storage.OpeningMissionStore openingMissions(org.tortodrone.core.town.TownCatalog rules,org.tortodrone.core.mission.MissionCatalog missions)throws IOException {
-        if(database==null)throw new IOException("Opening missions require SQLite storage");return new org.tortodrone.storage.OpeningMissionStore(database,catalog,rules,missions);
     }
     public KnightStory knightStory(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> memories,List<KnightObjective> objectives)throws IOException {
         if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid story owner");

@@ -45,7 +45,7 @@ final class StyleHandler {
                 try{style=new StyleStore.Style(kind,ordinal);}catch(IllegalArgumentException invalid){throw new IOException("m.internal_error");}
             }
             var current=session.loadOwnProfile();
-            var result=store.styles().change(store.accountId(),session.selectedKnight().id(),session.authRevision(),current.revision(),use?(Long)args.getFirst():null,style);
+            var result=store.services().styles().change(store.accountId(),session.selectedKnight().id(),session.authRevision(),current.revision(),use?(Long)args.getFirst():null,style);
             store.refresh();session.refreshKnight();
             session.townChanged(result);publish();session.publishPartyState();
             responder.confirmed(listener.requestId());
@@ -55,7 +55,7 @@ final class StyleHandler {
 
     void publish()throws IOException { synchronized (session) {
         if(!store.hasWorldStorage())return;
-        var saved=store.styles().saved(store.accountId(),session.selectedKnight().id(),session.authRevision());
+        var saved=store.services().styles().saved(store.accountId(),session.selectedKnight().id(),session.authRevision());
         var knight=session.selectedKnight();
         responder.send(()->responder.codec().styles(responder.oid(),knight,saved));
     }}

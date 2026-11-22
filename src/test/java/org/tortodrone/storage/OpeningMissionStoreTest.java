@@ -23,7 +23,7 @@ public final class OpeningMissionStoreTest {
             int account=db.create("MissionOwner",protection,false),foreign=db.create("MissionPeer",protection,false);
             var owner=new CharacterStore(db,account,"MissionOwner",content.items());var peer=new CharacterStore(db,foreign,"MissionPeer",content.items());
             var knight=owner.createForOpening(knight("Mission-Knight"),1);var other=peer.createForOpening(knight("Mission-Peer"),1);
-            var store=owner.openingMissions(content.town(),content.missions());var incomplete=owner.worldProfile(knight.name(),1);
+            var store=owner.services().openingMissions(content.town(),content.missions());var incomplete=owner.worldProfile(knight.name(),1);
             refused(()->store.complete(account,knight.id(),1,incomplete,OpeningMission.SECURING_CAMP.id(),null));
             // Explicit legacy Camp checkpoint: new tutorial completions now skip this route.
             db.write(c->{try(var s=c.prepareStatement("UPDATE metadata SET value=1 WHERE key=?")){s.setString(1,"world."+incomplete.worldId()+".opening-stage");s.executeUpdate();}return null;});
@@ -87,7 +87,7 @@ public final class OpeningMissionStoreTest {
                 else check(replay.equals(original),"a conversation replay keeps its receipt");
             }
             var reopened=new CharacterStore(new Database(home,false),account,"MissionOwner",content.items());
-            check(reopened.openingMissions(content.town(),content.missions()).load(account,knight.id(),1).equals(replayed)&&reopened.worldProfile(knight.name(),1).equals(finalState),"receipts and reward state survive reopening SQLite");
+            check(reopened.services().openingMissions(content.town(),content.missions()).load(account,knight.id(),1).equals(replayed)&&reopened.worldProfile(knight.name(),1).equals(finalState),"receipts and reward state survive reopening SQLite");
             check(peer.worldProfile(other.name(),1).equals(peerBefore),"foreign knight unaffected");
         }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}}
         System.out.println("PASS: opening settlement auth/ownership, prerequisites/revisions, exact locked rewards, native rank/prestige/checkpoints, injected rollback, concurrent receipts, replay and reopen (storage only; floors not exercised)");

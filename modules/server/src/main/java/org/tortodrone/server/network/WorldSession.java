@@ -229,7 +229,7 @@ final class WorldSession implements AutoCloseable {
                     if(Arrays.stream(quickbar).noneMatch(value->value==id))for(int slot=0;slot<quickbar.length;slot++)if(quickbar[slot]==0){quickbar[slot]=id;break;}
                     }
                 }else{
-                    var reward=characters.town(scenes.town()).pickup(characters.accountId(),knight.id(),authRevision,membership.pickupReceipt(pickup.entityId()),pickup.item());
+                    var reward=characters.services().town(scenes.town()).pickup(characters.accountId(),knight.id(),authRevision,membership.pickupReceipt(pickup.entityId()),pickup.item());
                     // A notification failure must not reopen a durably awarded actor.
                     success=true;
                     townChanged(reward,false);
@@ -280,7 +280,7 @@ final class WorldSession implements AutoCloseable {
         try{
             if(closed||!selected()||!entered||!subscribed||!exchangeHandler.subscribed()||!scene.map().town()&&!scene.map().kind().equals("training"))throw new IOException("Open the Energy Exchange in town first");
             if(trade.active())throw new IOException("Finish the trade first");
-            var exchange=characters.exchange();var result=switch(method){case 1->exchange.cancel(characters.accountId(),knight.id(),authRevision,(Integer)a.getFirst());case 2->exchange.offers(characters.accountId(),knight.id(),authRevision);default->exchange.trade(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),(Integer)a.get(1),(Boolean)a.get(2),(Boolean)a.get(3));};
+            var exchange=characters.services().exchange();var result=switch(method){case 1->exchange.cancel(characters.accountId(),knight.id(),authRevision,(Integer)a.getFirst());case 2->exchange.offers(characters.accountId(),knight.id(),authRevision);default->exchange.trade(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),(Integer)a.get(1),(Boolean)a.get(2),(Boolean)a.get(3));};
             townChanged(result);refreshExchange(exchange.book());
             if(method==1)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));else output.send(()->codec.townResult(oid,listener.requestId(),result.result(),profile));
         }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}return true;
@@ -294,7 +294,7 @@ final class WorldSession implements AutoCloseable {
         if(closed||!selected()||forcedReceiver==null||portalMove!=null||deferredMove!=null||scene.map().kind().equals("level")
             ||!readyRoom&&(!entered||!subscribed||membership==null||membership.health().current()<=0))throw new IOException("m.internal_error");
         if(trade.active())throw new IOException("Finish the trade first");
-        profile=loadProfile(profile);completedOpening=characters.openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
+        profile=loadProfile(profile);completedOpening=characters.services().openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
         var route=scenes.missionRoute(missionId,profile.worldId(),partyOid(),difficulty);
         if(route==null||!scenes.missions().eligible(missionId,profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
         scenes.parties().soloGate(partyMember,partyOid(),()->Boolean.TRUE);return route;
@@ -303,7 +303,7 @@ final class WorldSession implements AutoCloseable {
         if(closed||!selected()||forcedReceiver==null||portalMove!=null||deferredMove!=null||scene.map().id()!=217||!scene.map().town()
             ||!readyRoom&&(!entered||!subscribed||membership==null||membership.health().current()<=0))throw new IOException("m.internal_error");
         if(trade.active())throw new IOException("Finish the trade first");
-        profile=loadProfile(profile);completedOpening=characters.openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
+        profile=loadProfile(profile);completedOpening=characters.services().openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
         var gate=scenes.openingGate(mission);
         if(gate==null||!scenes.missions().eligible(mission.id(),profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
         scenes.parties().soloGate(partyMember,partyOid(),()->Boolean.TRUE);return gate;
@@ -326,7 +326,7 @@ final class WorldSession implements AutoCloseable {
     }
     void settleMissionExchange(String missionId,long[] itemIds)throws IOException {
         profile=loadProfile(profile);var before=profile;boolean firstEver=completedOpening.isEmpty();
-        var settled=characters.openingMissions(scenes.town(),scenes.missions()).exchange(characters.accountId(),knight.id(),authRevision,profile,missionId,itemIds);
+        var settled=characters.services().openingMissions(scenes.town(),scenes.missions()).exchange(characters.accountId(),knight.id(),authRevision,profile,missionId,itemIds);
         profile=settled.profile();
         if(!settled.completion().equals(completedOpening.get(missionId))){var completed=new LinkedHashMap<>(completedOpening);completed.put(missionId,settled.completion());completedOpening=Map.copyOf(completed);}
         if(settled.first()){
@@ -417,7 +417,7 @@ final class WorldSession implements AutoCloseable {
     /** A secret proves consent to travel, not friendship; private parties still admit friends of a member. */
     private boolean friendsWithParty(PartyRegistry.Member member)throws IOException {
         var view=scenes.parties().view(member);
-        var friends=characters.friends().list(characters.accountId(),knight.id(),authRevision);
+        var friends=characters.services().friends().list(characters.accountId(),knight.id(),authRevision);
         return view.members().stream().anyMatch(p->p.worldId()!=profile.worldId()
             &&friends.stream().anyMatch(f->f.world()==p.worldId()));
     }
@@ -458,18 +458,18 @@ final class WorldSession implements AutoCloseable {
         try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
     }
     private int friendNamed(String name)throws IOException {
-        return characters.friends().list(characters.accountId(),knight.id(),authRevision).stream().filter(p->p.name().equalsIgnoreCase(name))
+        return characters.services().friends().list(characters.accountId(),knight.id(),authRevision).stream().filter(p->p.name().equalsIgnoreCase(name))
             .mapToInt(org.tortodrone.storage.FriendStore.Peer::world).findFirst().orElseThrow(()->new IOException("m.internal_error"));
     }
     void removeFriend(String name)throws IOException,CharacterStore.Refused {
         synchronized(this){
-            requireFriendCurrent();var friends=characters.friends();friends.remove(characters.accountId(),knight.id(),authRevision,name);
+            requireFriendCurrent();var friends=characters.services().friends();friends.remove(characters.accountId(),knight.id(),authRevision,name);
             profile=characters.worldProfile(knight.name(),authRevision,profile);refreshFriends(null,friends.snapshot(),friendPresence(characters.worldStorageFile()));
         }
     }
     void requestFriend(String name,String message,String response)throws IOException,CharacterStore.Refused {
         synchronized(this){
-            requireFriendCurrent();var friends=characters.friends();
+            requireFriendCurrent();var friends=characters.services().friends();
             if(!chats.rate().allow(System.nanoTime()))throw new IOException("Please slow down before sending another friend request");
             friends.request(characters.accountId(),knight.id(),authRevision,name,message,response);
         }
@@ -622,7 +622,7 @@ final class WorldSession implements AutoCloseable {
     record PreparedSettlement(WorldProfile before,org.tortodrone.storage.OpeningMissionStore.Settlement settled,boolean firstEver) { }
     PreparedSettlement prepareConversationSettlement(String terminalId)throws IOException {
         profile=loadProfile(profile);var before=profile;boolean firstEver=completedOpening.isEmpty();
-        var settled=characters.openingMissions(scenes.town(),scenes.missions()).complete(characters.accountId(),knight.id(),authRevision,profile,terminalId,null);
+        var settled=characters.services().openingMissions(scenes.town(),scenes.missions()).complete(characters.accountId(),knight.id(),authRevision,profile,terminalId,null);
         return new PreparedSettlement(before,settled,firstEver);
     }
     void applyConversationSettlement(PreparedSettlement prepared,String terminalId,ActorState own,long dialog)throws IOException {
@@ -728,12 +728,12 @@ final class WorldSession implements AutoCloseable {
         }
         created = SceneClock.now();
         if(characters.hasWorldStorage()){
-            var house=characters.auction(scenes.town());
+            var house=characters.services().auction(scenes.town());
             boolean delivered=house.deliverCampaigns(profile.worldId());
             if(house.deliverWelcome(profile.worldId(),knight.createdAt()))delivered=true;
             if(delivered)profile=characters.worldProfile(knight.name(),authRevision,profile);
         }
-        if(characters.hasWorldStorage()){characters.friends().session(characters.accountId(),knight.id(),authRevision);profile=characters.worldProfile(knight.name(),authRevision,profile);}
+        if(characters.hasWorldStorage()){characters.services().friends().session(characters.accountId(),knight.id(),authRevision);profile=characters.worldProfile(knight.name(),authRevision,profile);}
         guilds.reload();
         friendOnline=true;
         readyRoom=stageInReadyRoom;
@@ -744,7 +744,7 @@ final class WorldSession implements AutoCloseable {
         partyState();
         if(characters.hasWorldStorage())memories=characters.knightMemories(knight.id(),authRevision);
         if(characters.hasWorldStorage())objectives=characters.knightObjectives(knight.id(),authRevision);
-        if(characters.hasWorldStorage())completedOpening=characters.openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
+        if(characters.hasWorldStorage())completedOpening=characters.services().openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
         output.send(() -> codec.selected(oid, knight, profile, guilds.guildInfo()));
         output.send(() -> codec.knightMemories(oid,memories));
         publishObjectives();
@@ -752,7 +752,7 @@ final class WorldSession implements AutoCloseable {
         output.send(() -> codec.townState(oid,profile));
         styles.publish();
         output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
-        if(characters.hasWorldStorage())refreshFriends(null,characters.friends().snapshot(),friendPresence(characters.worldStorageFile()));
+        if(characters.hasWorldStorage())refreshFriends(null,characters.services().friends().snapshot(),friendPresence(characters.worldStorageFile()));
         refreshParty();
         receiverChanged(receivers);
         log.selected(knight.id(),profile.worldId(),knight.name());
@@ -925,7 +925,7 @@ final class WorldSession implements AutoCloseable {
                 if(!selected()||!readyRoom&&(!subscribed||!entered||portalMove!=null))throw new IOException("Enter a scene first");
                 if(trade.active())throw new IOException("Finish the trade first");
                 if(request.method()==4&&!readyRoom&&!membership.equipmentAllowed())throw new IOException("Equipment is locked outside an Arsenal Station in this level");
-                var result=characters.town(scenes.town()).loadout(characters.accountId(),knight.id(),authRevision,name,request.method()==10);
+                var result=characters.services().town(scenes.town()).loadout(characters.accountId(),knight.id(),authRevision,name,request.method()==10);
                 townChanged(result);output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
             return true;
@@ -933,7 +933,7 @@ final class WorldSession implements AutoCloseable {
         if(service==SessionCodec.ITEM_SERVICE&&request.method()==2){
             if(request.oid()!=SessionCodec.INVOCATION_OID||args.size()!=2||!(args.getFirst() instanceof String name)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid loadout removal");
             try{if(!selected()||!readyRoom&&(!entered||!subscribed||portalMove!=null))throw new IOException("Enter a scene first");
-                townChanged(characters.town(scenes.town()).removeLoadout(characters.accountId(),knight.id(),authRevision,name));
+                townChanged(characters.services().town(scenes.town()).removeLoadout(characters.accountId(),knight.id(),authRevision,name));
                 output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
         }
@@ -947,7 +947,7 @@ final class WorldSession implements AutoCloseable {
             try{
                 // The Ready Room has no party view, like every other stock loadout context.
                 if(!selected()||!readyRoom&&(!subscribed||!entered||portalMove!=null))throw new IOException("Enter a scene first");
-                townChanged(characters.town(scenes.town()).loadoutPvp(characters.accountId(),knight.id(),authRevision,name,enabled));
+                townChanged(characters.services().town(scenes.town()).loadoutPvp(characters.accountId(),knight.id(),authRevision,name,enabled));
                 output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
             return true;
@@ -1406,7 +1406,7 @@ final class WorldSession implements AutoCloseable {
         if(!capsuleCounters.isEmpty()){
             var before=visibleProfile();
             try{
-                var result=characters.town(scenes.town()).stats(characters.accountId(),knight.id(),authRevision,capsuleCounters);
+                var result=characters.services().town(scenes.town()).stats(characters.accountId(),knight.id(),authRevision,capsuleCounters);
                 profile=result.profile();
                 var changes=codec.achievementChanges(oid,before,visibleProfile());
                 if(changes!=null)output.send(()->changes);
@@ -1512,7 +1512,7 @@ final class WorldSession implements AutoCloseable {
                     org.tortodrone.storage.OpeningMissionStore.Settlement settled;
                     try{
                         settled=scenes.parties().soloGate(partyMember,run.partyOid(),()->membership.settleSoloFloor(request,
-                            ()->characters.openingMissions(scenes.town(),scenes.missions()).complete(characters.accountId(),knight.id(),authRevision,before,run.missionId(),run.difficulty(),membership.floorHeat())));
+                            ()->characters.services().openingMissions(scenes.town(),scenes.missions()).complete(characters.accountId(),knight.id(),authRevision,before,run.missionId(),run.difficulty(),membership.floorHeat())));
                     }catch(IOException failure){
                         openingPayoutRetry=stamp+1000;
                         if(!openingPayoutWarning){openingPayoutWarning=true;log.warn("Opening mission settlement failed; keeping the owned ride for retry");}

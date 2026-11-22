@@ -111,7 +111,7 @@ public final class OpeningComlinkSessionTest {
         db.write(c->{try(var s=c.prepareStatement("UPDATE metadata SET value=1 WHERE key=?")){s.setString(1,"world."+world+".opening-stage");s.executeUpdate();}return null;});
         profile=owner.worldProfile(knight.name(),1);
         profile=owner.knightStory(knight.id(),1,profile,List.of(new KnightMemory("talkedRhendonRC",true)),List.of()).profile();
-        for(var mission:OpeningMission.values()){if(mission==target)break;profile=owner.openingMissions(registry.town(),registry.missions()).complete(owner.accountId(),knight.id(),1,profile,mission.id(),mission.gate()?"EASY":null).profile();}
+        for(var mission:OpeningMission.values()){if(mission==target)break;profile=owner.services().openingMissions(registry.town(),registry.missions()).complete(owner.accountId(),knight.id(),1,profile,mission.id(),mission.gate()?"EASY":null).profile();}
         return profile;
     }
     private static void enterScene(WorldSession world,SceneRegistry registry,int sceneId)throws Exception {

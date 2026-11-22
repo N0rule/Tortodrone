@@ -46,7 +46,7 @@ final class BoxHandler {
             var current=session.loadOwnProfile();
             if(session.tradeHandler().active())throw new IOException("Finish the trade first");
             if(request.method()==6){
-                var table=store.boxes(session.sceneRegistry().boxes()).spawnTable(store.accountId(),knight.id(),session.authRevision(),id);
+                var table=store.services().boxes(session.sceneRegistry().boxes()).spawnTable(store.accountId(),knight.id(),session.authRevision(),id);
                 var tableProfile=current;
                 responder.send(()->responder.codec().townResult(responder.oid(),listener.requestId(),table,tableProfile));
                 return true;
@@ -60,7 +60,7 @@ final class BoxHandler {
                 return true;
             }
             if(!session.canOpenBox())throw new IOException("Finish your current action before opening a box");
-            var boxes=store.boxes(session.sceneRegistry().boxes());
+            var boxes=store.services().boxes(session.sceneRegistry().boxes());
             var result=normal?boxes.open(store.accountId(),knight.id(),session.authRevision(),current.revision(),id,option)
                 :boxes.spawnAll(store.accountId(),knight.id(),session.authRevision(),current.revision(),id);
             // Retain the receipt before publication: a queued-output failure must never cause a second write.
