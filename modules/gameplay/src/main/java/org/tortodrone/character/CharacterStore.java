@@ -105,7 +105,15 @@ public final class CharacterStore {
 
     public boolean hasWorldStorage(){return database!=null;}
     public Path worldStorageFile(){return database.file();}
-    public Map<Integer,Database.WorldState> worldStates()throws IOException{return database.worldStates();}
+    /** Domain view of the poller's batch metadata; storage records stay inside the facade. */
+    public Map<Integer,WorldSummary> worldStates()throws IOException{
+        var result=new java.util.LinkedHashMap<Integer,WorldSummary>();
+        for(var entry:database.worldStates().entrySet()){
+            var state=entry.getValue();
+            result.put(entry.getKey(),new WorldSummary(state.accountId(),state.knightId(),state.worldId(),state.name(),state.revision(),state.authRevision(),state.gameMaster()));
+        }
+        return Map.copyOf(result);
+    }
 
     public String username() { return username; }
     public int accountId() { return accountId; }
@@ -266,13 +274,15 @@ public final class CharacterStore {
     public org.tortodrone.storage.OpeningMissionStore openingMissions(org.tortodrone.core.town.TownCatalog rules,org.tortodrone.core.mission.MissionCatalog missions)throws IOException {
         if(database==null)throw new IOException("Opening missions require SQLite storage");return new org.tortodrone.storage.OpeningMissionStore(database,catalog,rules,missions);
     }
-    public Database.StoryState knightStory(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> memories,List<KnightObjective> objectives)throws IOException {
+    public KnightStory knightStory(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> memories,List<KnightObjective> objectives)throws IOException {
         if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid story owner");
-        return database.knightStory(accountId,knightId,authRevision,expected.worldId(),expected.revision(),memories,objectives);
+        var result=database.knightStory(accountId,knightId,authRevision,expected.worldId(),expected.revision(),memories,objectives);
+        return new KnightStory(result.profile(),result.memories(),result.objectives());
     }
-    public Database.MemoryState knightMemories(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> operations)throws IOException {
+    public KnightMemoryState knightMemories(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> operations)throws IOException {
         if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid knight memory owner");
-        return database.knightMemories(accountId,knightId,authRevision,expected.worldId(),expected.revision(),operations);
+        var result=database.knightMemories(accountId,knightId,authRevision,expected.worldId(),expected.revision(),operations);
+        return new KnightMemoryState(result.profile(),result.memories());
     }
     public void inspectionHidden(long authRevision,boolean hidden)throws IOException {
         if(database==null)throw new IOException("Preferences require SQLite storage");

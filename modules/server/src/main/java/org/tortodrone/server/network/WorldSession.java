@@ -2418,7 +2418,7 @@ final class WorldSession implements AutoCloseable {
     }
     /** Batch metadata is validated against this exact subscription before publication.
      * Changed inventory loads without holding the session or simulation lock. */
-    void refreshState(WorldStatePoller.Registration registration,Database.WorldState state)throws IOException {
+    void refreshState(WorldStatePoller.Registration registration,org.tortodrone.character.WorldSummary state)throws IOException {
         WorldProfile before;
         synchronized(this) {
             if(closed||!entered||persistence!=registration)return;
