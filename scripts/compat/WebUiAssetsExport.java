@@ -53,8 +53,17 @@ public final class WebUiAssetsExport {
         var originalItem=ClientArtworkApi.method(ItemConfig.class,"original item",false,ItemConfig.Original.class,ConfigManager.class);
         var itemConfigs=configurations(manager,ItemConfig.class);
         var spriteConfigs=configurations(manager,BattleSpriteConfig.class);
-        // Work units: one item, three icons plus each skill per Sprite, and 36 UI jobs.
-        total=itemConfigs.size()+spriteConfigs.stream().mapToInt(c->3+c.skills.length).sum()+36;
+        var navigation=new TreeMap<String,String>();
+        for(var entry:Map.ofEntries(Map.entry("overview","readyroom"),Map.entry("players","social"),Map.entry("accounts","guildhall"),Map.entry("knights","equipment"),Map.entry("equipment","loadout"),Map.entry("inventory","arsenal"),Map.entry("progression","missions"),Map.entry("depot","supplydepot"),Map.entry("news","feed"),Map.entry("mailing","mail"),Map.entry("content","arsenal"),Map.entry("console","settings"),Map.entry("logs","notice"),Map.entry("webui-users","settings"),Map.entry("details","help"),Map.entry("edit","forge")).entrySet())navigation.put(entry.getKey(),"ui/hud_v2/images/icons/system/"+entry.getValue()+".png");
+        navigation.put("auctions","ui/icon/market_32.png");navigation.put("sprites","ui/icon/inventory/categories/icon_battlesprite.png");
+        navigation.put("audit","ui/icon/check.png");navigation.put("save","ui/icon/check.png");navigation.put("add","ui/icon/icon_plus.png");navigation.put("remove","ui/button/dismiss-sml.png");
+        var slots=Map.ofEntries(Map.entry("helmet","helmet"),Map.entry("armor","armor"),Map.entry("shield","shield"),Map.entry("weapon","sword"),Map.entry("trinket","amulet"),Map.entry("costume","costume"));
+        var resources=Map.of("crowns","ui/icon/crown_32.png","energy","ui/icon/energy_32.png","prestige","ui/icon/prestige_16.png",
+                "heat","ui/window/geartip_levelbar.png","variants","ui/window/tooltip_parts/icon_variant.png","equipment","ui/status/images/backing_slots.png",
+                "button","ui/button/up.png","button-active","ui/button/up_yellow.png");
+        // Work units: one item, three icons plus each skill per Sprite, and one job per UI asset.
+        total=itemConfigs.size()+spriteConfigs.stream().mapToInt(c->3+c.skills.length).sum()
+            +navigation.size()+slots.size()+resources.size()+1;
         progress();
         for(var config:itemConfigs) {
             try {var item=(ItemConfig.Original)ClientArtworkApi.invoke(originalItem,config,manager);if(item!=null&&item.icon!=null&&!item.icon.file.isBlank())items.put(config.getName(),write(item.icon));else missing++;}
@@ -72,15 +81,9 @@ public final class WebUiAssetsExport {
             if(icon!=null&&!icon.file.isBlank())sprites.put(config.getName()+":skill:"+i,write(icon));
             completed++;progress();
         }
-        var navigation=new TreeMap<String,String>();
-        for(var entry:Map.ofEntries(Map.entry("overview","readyroom"),Map.entry("players","social"),Map.entry("accounts","guildhall"),Map.entry("knights","equipment"),Map.entry("equipment","loadout"),Map.entry("inventory","arsenal"),Map.entry("progression","missions"),Map.entry("depot","supplydepot"),Map.entry("news","feed"),Map.entry("mailing","mail"),Map.entry("content","arsenal"),Map.entry("console","settings"),Map.entry("logs","notice"),Map.entry("webui-users","settings"),Map.entry("details","help"),Map.entry("edit","forge")).entrySet())navigation.put(entry.getKey(),"ui/hud_v2/images/icons/system/"+entry.getValue()+".png");
-        navigation.put("auctions","ui/icon/market_32.png");navigation.put("sprites","ui/icon/inventory/categories/icon_battlesprite.png");
-        navigation.put("audit","ui/icon/check.png");navigation.put("save","ui/icon/check.png");navigation.put("add","ui/icon/icon_plus.png");navigation.put("remove","ui/button/dismiss-sml.png");
         for(var entry:navigation.entrySet()){var icon=new IconConfig.ColorizedImage();icon.file=entry.getValue();if(icon.file.contains("/categories/"))icon.colorizations=socketColors;ui.put("nav-"+entry.getKey(),write(icon));symbols.put("nav-"+entry.getKey(),writeSymbol(icon.file,icon.file.contains("/categories/")));completed++;progress();}
-        for(var entry:Map.ofEntries(Map.entry("helmet","helmet"),Map.entry("armor","armor"),Map.entry("shield","shield"),Map.entry("weapon","sword"),Map.entry("trinket","amulet"),Map.entry("costume","costume")).entrySet()){var icon=new IconConfig.ColorizedImage();icon.file="ui/icon/inventory/categories/icon_"+entry.getValue()+".png";icon.colorizations=socketColors;ui.put("slot-"+entry.getKey(),write(icon));symbols.put("slot-"+entry.getKey(),writeSymbol(icon.file,true));completed++;progress();}
-        for(var entry:Map.of("crowns","ui/icon/crown_32.png","energy","ui/icon/energy_32.png","prestige","ui/icon/prestige_16.png",
-                "heat","ui/window/geartip_levelbar.png","variants","ui/window/tooltip_parts/icon_variant.png","equipment","ui/status/images/backing_slots.png",
-                "button","ui/button/up.png","button-active","ui/button/up_yellow.png").entrySet()) {
+        for(var entry:slots.entrySet()){var icon=new IconConfig.ColorizedImage();icon.file="ui/icon/inventory/categories/icon_"+entry.getValue()+".png";icon.colorizations=socketColors;ui.put("slot-"+entry.getKey(),write(icon));symbols.put("slot-"+entry.getKey(),writeSymbol(icon.file,true));completed++;progress();}
+        for(var entry:resources.entrySet()) {
             var icon=new IconConfig.ColorizedImage();icon.file=entry.getValue();ui.put(entry.getKey(),write(icon));
             completed++;progress();
         }
