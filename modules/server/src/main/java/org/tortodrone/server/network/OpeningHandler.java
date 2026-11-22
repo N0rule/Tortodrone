@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import org.tortodrone.core.character.OpeningMission;
 import org.tortodrone.core.mission.MissionRun;
+import org.tortodrone.core.mission.OpeningGate;
 import org.tortodrone.core.wire.EnumValue;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
@@ -15,6 +16,8 @@ import org.tortodrone.core.world.ScenePortals;
 final class OpeningHandler {
     private final WorldSession session;
     private final SessionResponder responder;
+    private MissionRun lastGateStart;
+    private Short lastGateStartRequest;
 
     OpeningHandler(WorldSession session) {
         this.session = session;
@@ -63,7 +66,7 @@ final class OpeningHandler {
                 if(session.isClosed()||!session.selected())throw new IOException("m.internal_error");
                 var missionId=(String)args.getFirst();var itemIds=(long[])args.get(1);
                 if(session.tradeHandler().active())throw new IOException("Finish the trade first");
-                session.settleMissionExchange(missionId,itemIds);
+                settleMissionExchange(missionId,itemIds);
                 responder.confirmed(listener.requestId());
             }catch(IOException failure){responder.failure(listener.requestId(),failure.getMessage());}
             return true;
@@ -75,20 +78,20 @@ final class OpeningHandler {
                         ||method==2&&(!Boolean.FALSE.equals(args.get(3))||!Boolean.FALSE.equals(args.get(4))))
                     throw new IOException("m.internal_error");
                 String difficulty=List.of("EASY","MEDIUM","HARD").get(band);
-                if(method==2&&session.sameGateStart(missionId,difficulty,listener.requestId())){
+                if(method==2&&sameGateStart(missionId,difficulty,listener.requestId())){
                     session.reloadProfile();
                     responder.confirmed(listener.requestId());return true;
                 }
                 var opening=OpeningMission.byId(missionId);MissionRun run;ScenePortals.Entrance start;
                 if(opening!=null&&session.sceneRegistry().openingGate(opening)!=null){
-                    var gate=session.preflightOpeningGate(opening);
+                    var gate=preflightOpeningGate(opening);
                     run=MissionRun.opening(gate,session.currentProfile().worldId(),session.partyOid(),difficulty);
                     start=gate.entrance();
                 }else{
-                    run=session.preflightMissionRoute(missionId,difficulty);start=run.entrance();
+                    run=preflightMissionRoute(missionId,difficulty);start=run.entrance();
                 }
                 if(method==7){responder.result(listener.requestId(),Boolean.TRUE,session.currentProfile());return true;}
-                session.beginMissionRun(run,start,listener.requestId());
+                beginMissionRun(run,start,listener.requestId());
             }catch(IOException failure){responder.failure(listener.requestId(),failure.getMessage());}
             return true;
         }
@@ -96,4 +99,72 @@ final class OpeningHandler {
         // Gate start is enabled only when its actual floor gameplay/route is implemented.
         responder.failure(listener.requestId(),"m.internal_error");return true;
     }}
+
+    /** Re-check readiness, reload the roster snapshot and reserve the solo gate. */
+    private MissionRun preflightMissionRoute(String missionId,String difficulty)throws IOException {
+        if(session.isClosed()||!session.selected()||session.forcedReceiverValue()==null||session.sceneTravelPending()
+                ||session.deferredMovePending()||session.currentScene().map().kind().equals("level")
+                ||!session.inReadyRoom()&&(!session.sceneEntered()||!session.sceneSubscribed()
+                    ||session.membership()==null||session.membership().health().current()<=0))
+            throw new IOException("m.internal_error");
+        if(session.tradeHandler().active())throw new IOException("Finish the trade first");
+        session.reloadProfile();session.loadOpeningCompletions();
+        var progress=session.currentProfile().progress();
+        var route=session.sceneRegistry().missionRoute(missionId,session.currentProfile().worldId(),session.partyOid(),difficulty);
+        if(route==null||!session.sceneRegistry().missions().eligible(missionId,progress,session.completedOpeningKeys()))
+            throw new IOException("m.internal_error");
+        session.sceneRegistry().parties().soloGate(session.partyMember(),session.partyOid(),()->Boolean.TRUE);
+        return route;
+    }
+
+    private OpeningGate preflightOpeningGate(OpeningMission mission)throws IOException {
+        if(session.isClosed()||!session.selected()||session.forcedReceiverValue()==null||session.sceneTravelPending()
+                ||session.deferredMovePending()||session.currentScene().map().id()!=217||!session.currentScene().map().town()
+                ||!session.inReadyRoom()&&(!session.sceneEntered()||!session.sceneSubscribed()
+                    ||session.membership()==null||session.membership().health().current()<=0))
+            throw new IOException("m.internal_error");
+        if(session.tradeHandler().active())throw new IOException("Finish the trade first");
+        session.reloadProfile();session.loadOpeningCompletions();
+        var progress=session.currentProfile().progress();
+        var gate=session.sceneRegistry().openingGate(mission);
+        if(gate==null||!session.sceneRegistry().missions().eligible(mission.id(),progress,session.completedOpeningKeys()))
+            throw new IOException("m.internal_error");
+        session.sceneRegistry().parties().soloGate(session.partyMember(),session.partyOid(),()->Boolean.TRUE);
+        return gate;
+    }
+
+    /** A retried start for the same listener and live run is answered without a second lease. */
+    private boolean sameGateStart(String missionId,String difficulty,short requestId){
+        var pending=session.pendingPortalDestination();
+        var active=pending!=null&&pending.run()!=null?pending:session.currentScene();
+        return !session.isClosed()&&lastGateStartRequest!=null&&requestId==lastGateStartRequest&&active.run()==lastGateStart
+            &&lastGateStart.missionId().equals(missionId)&&lastGateStart.difficulty().equals(difficulty)
+            &&session.sceneRegistry().authorized(active,session.currentProfile().worldId(),session.partyMember());
+    }
+
+    /** Commit, acknowledge and force the move in that native order. */
+    private void beginMissionRun(MissionRun run,ScenePortals.Entrance start,short requestId)throws IOException {
+        var next=session.sceneRegistry().startRun(run,session.currentProfile().worldId(),session.partyMember());
+        lastGateStart=run;lastGateStartRequest=requestId;
+        session.beginForcedMissionTravel(next,start,requestId);
+    }
+
+    private void settleMissionExchange(String missionId,long[] itemIds)throws IOException {
+        session.reloadProfile();var before=session.currentProfile();boolean firstEver=session.completedOpeningEmpty();
+        var store=session.charactersStore();
+        var settled=store.services().openingMissions(session.sceneRegistry().town(),session.sceneRegistry().missions())
+            .exchange(store.accountId(),session.selectedKnight().id(),session.authRevision(),before,missionId,itemIds);
+        session.applyProfile(settled.profile());
+        session.recordOpeningCompletion(missionId,settled.completion());
+        if(settled.first()){
+            session.membership().equipment(session.visibleProfileNow());
+            long dialog=session.noteMissionDialog();
+            var settledProfile=session.currentProfile();
+            responder.send(()->responder.codec().missionSettlement(responder.oid(),before,settledProfile,settled.completion(),
+                session.sceneRegistry().missions().grants(missionId),session.sceneRegistry().missions().prestige(missionId),true,dialog));
+            responder.send(()->responder.codec().itemChanges(responder.oid(),session.selectedKnight(),before,settledProfile));
+            if(firstEver)responder.send(()->responder.codec().controllerAction(responder.oid(),"new_mission",null));
+            session.publishPartyState();
+        }
+    }
 }

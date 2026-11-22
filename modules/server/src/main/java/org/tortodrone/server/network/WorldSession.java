@@ -90,8 +90,6 @@ final class WorldSession implements AutoCloseable {
     private PortalMove portalMove;
     /** Stock town commands may arrive from the loading screen or Ready Room; replay the
      *  native destination request once the scene has subscribed and accepted enteredPlace. */
-    private MissionRun lastGateStart;
-    private Short lastGateStartRequest;
     private ScenePortals.Entrance arrival;
     private int departedSceneOid;
     private SceneHealth.State publishedHealth;
@@ -289,51 +287,15 @@ final class WorldSession implements AutoCloseable {
         if(!Set.of(4,5,6,10).contains(request.method()))return opening.invocation(request);
         return depot.invocation(request);
     }
-    MissionRun preflightMissionRoute(String missionId,String difficulty)throws IOException {
-        if(closed||!selected()||forcedReceiver==null||portalMove!=null||deferredMovePending()||scene.map().kind().equals("level")
-            ||!readyRoom&&(!entered||!subscribed||membership==null||membership.health().current()<=0))throw new IOException("m.internal_error");
-        if(trade.active())throw new IOException("Finish the trade first");
-        profile=loadProfile(profile);completedOpening=characters.services().openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
-        var route=scenes.missionRoute(missionId,profile.worldId(),partyOid(),difficulty);
-        if(route==null||!scenes.missions().eligible(missionId,profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
-        scenes.parties().soloGate(partyMember,partyOid(),()->Boolean.TRUE);return route;
-    }
-    OpeningGate preflightOpeningGate(OpeningMission mission)throws IOException {
-        if(closed||!selected()||forcedReceiver==null||portalMove!=null||deferredMovePending()||scene.map().id()!=217||!scene.map().town()
-            ||!readyRoom&&(!entered||!subscribed||membership==null||membership.health().current()<=0))throw new IOException("m.internal_error");
-        if(trade.active())throw new IOException("Finish the trade first");
-        profile=loadProfile(profile);completedOpening=characters.services().openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);
-        var gate=scenes.openingGate(mission);
-        if(gate==null||!scenes.missions().eligible(mission.id(),profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
-        scenes.parties().soloGate(partyMember,partyOid(),()->Boolean.TRUE);return gate;
-    }
-    /** A retried start for the same listener and live run is answered without a second lease. */
-    boolean sameGateStart(String missionId,String difficulty,short requestId){
-        var active=portalMove!=null&&portalMove.destination().run()!=null?portalMove.destination():scene;
-        return !closed&&lastGateStartRequest!=null&&requestId==lastGateStartRequest&&active.run()==lastGateStart
-            &&lastGateStart.missionId().equals(missionId)&&lastGateStart.difficulty().equals(difficulty)
-            &&scenes.authorized(active,profile.worldId(),partyMember);
-    }
-    /** Commit, acknowledge and force the move in that native order. */
-    void beginMissionRun(MissionRun run,ScenePortals.Entrance start,short requestId)throws IOException {
-        var next=scenes.startRun(run,profile.worldId(),partyMember);
-        lastGateStart=run;lastGateStartRequest=requestId;
+    void loadOpeningCompletions()throws IOException{completedOpening=characters.services().openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),knight.id(),authRevision);}
+    Set<String> completedOpeningKeys(){return completedOpening.keySet();}
+    boolean completedOpeningEmpty(){return completedOpening.isEmpty();}
+    /** Commit, acknowledge and force the mission move in that native order. */
+    synchronized void beginForcedMissionTravel(SceneRegistry.Instance next,ScenePortals.Entrance start,short requestId)throws IOException {
         closeConversation();closeTownDialog();portalMove=new PortalMove(next,start);departedSceneOid=scene.oid();
         partyState();leaveChat();subscribed=entered=false;sceneGeneration++;if(membership!=null)membership.pause();
         short receiver=forcedReceiver;
         output.send(()->codec.invocationConfirmed(oid,requestId));output.send(()->codec.forceScene(oid,receiver,next));
-    }
-    void settleMissionExchange(String missionId,long[] itemIds)throws IOException {
-        profile=loadProfile(profile);var before=profile;boolean firstEver=completedOpening.isEmpty();
-        var settled=characters.services().openingMissions(scenes.town(),scenes.missions()).exchange(characters.accountId(),knight.id(),authRevision,profile,missionId,itemIds);
-        profile=settled.profile();
-        if(!settled.completion().equals(completedOpening.get(missionId))){var completed=new LinkedHashMap<>(completedOpening);completed.put(missionId,settled.completion());completedOpening=Map.copyOf(completed);}
-        if(settled.first()){
-            membership.equipment(visibleProfile());missionDialogCreated=conversations.touch();
-            output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),scenes.missions().grants(missionId),scenes.missions().prestige(missionId),true,missionDialogCreated));
-            output.send(()->codec.itemChanges(oid,knight,before,profile));
-            if(firstEver)output.send(()->codec.controllerAction(oid,"new_mission",null));partyState();
-        }
     }
     void clearArrivalComlink(){arrivalComlink=null;}
     void leaveChatForTown(){leaveChat();}
