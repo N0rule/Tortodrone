@@ -90,13 +90,12 @@ public final class WorldSessionTest {
                 first.subscribe((short)2);
                 first.entered();
                 synchronized(first){
-                    var generation=WorldSession.class.getDeclaredField("sceneGeneration");generation.setAccessible(true);
                     var stamp=WorldSession.class.getDeclaredField("lastStamp");stamp.setAccessible(true);
                     int before=stamp.getInt(first);Thread.sleep(80);
                     var place=org.tortodrone.world.SceneRegistry.system().entry();
                     var publication=Class.forName(SessionPublications.class.getName()+"$Publication");
                     var constructor=publication.getDeclaredConstructors()[0];constructor.setAccessible(true);
-                    var stalePublication=(SessionPublications.Publication)constructor.newInstance(place,generation.getInt(first)-2,place.simulation().snapshot());
+                    var stalePublication=(SessionPublications.Publication)constructor.newInstance(place,first.sceneGenerationValue()-2,place.simulation().snapshot());
                     first.forcePublish(stalePublication);
                     check(stamp.getInt(first)==before,"old subscription callback cannot advance a replacement baseline in the same instance");
                 }
@@ -136,16 +135,14 @@ public final class WorldSessionTest {
     }
     private static void publicationBoundaries(WorldSession session)throws Exception {
         var mailboxField=WorldSession.class.getDeclaredField("publications");mailboxField.setAccessible(true);
-        var membershipField=WorldSession.class.getDeclaredField("membership");membershipField.setAccessible(true);
-        var generationField=WorldSession.class.getDeclaredField("sceneGeneration");generationField.setAccessible(true);
         var mailbox=mailboxField.get(session);
         var monitorField=SessionPublications.class.getDeclaredField("monitor");monitorField.setAccessible(true);
         var queueField=SessionPublications.class.getDeclaredField("activityPublications");queueField.setAccessible(true);
         var offer=WorldSession.class.getDeclaredMethod("offer",org.tortodrone.world.SceneRegistry.Instance.class,int.class,org.tortodrone.world.SceneSnapshot.class);offer.setAccessible(true);
         var publication=Class.forName(SessionPublications.class.getName()+"$Publication");var snapshot=publication.getDeclaredMethod("snapshot");snapshot.setAccessible(true);
         synchronized(session){synchronized(monitorField.get(mailbox)){
-            var place=org.tortodrone.world.SceneRegistry.system().entry();int generation=generationField.getInt(session);
-            var member=(org.tortodrone.world.SceneMembership)membershipField.get(session);
+            var place=org.tortodrone.world.SceneRegistry.system().entry();int generation=session.sceneGenerationValue();
+            var member=session.membership();
             Thread.sleep(2);offer.invoke(session,place,generation,place.simulation().snapshot());
             member.openBox(List.of(new StarterCatalog.Model("Upgrade/Prize Box/Lucky Prize Box",Map.of()),new StarterCatalog.Model("Material/Brimstone",Map.of())));
             Thread.sleep(2);var boundary=place.simulation().snapshot();offer.invoke(session,place,generation,boundary);
@@ -156,8 +153,7 @@ public final class WorldSessionTest {
         }}
     }
     private static WorldStatePoller.Registration persistence(WorldSession session)throws ReflectiveOperationException {
-        var field=WorldSession.class.getDeclaredField("persistence");field.setAccessible(true);
-        return (WorldStatePoller.Registration)field.get(session);
+        return session.runtime().persistence();
     }
     /** Actor count of the shared town entry scene, including the content NPC actors it publishes. */
     private static int sceneActors()throws Exception {

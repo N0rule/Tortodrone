@@ -71,7 +71,7 @@ final class WorldSession implements AutoCloseable {
     private final RoleSource roles;
     private boolean gameMaster,inspectionHidden;
     private final SessionPublications publications=new SessionPublications();
-    private StarterCatalog.Model appearance;
+    final SessionAppearance appearance;
     private Knight knight;
     private WorldProfile profile;
     private Set<String> memories=Set.of();
@@ -373,6 +373,7 @@ final class WorldSession implements AutoCloseable {
         this.codec = codec;
         this.oid = oid;
         this.runtime = new SessionRuntime(this);
+        appearance = new SessionAppearance(this);
         authRevision = revision;
         this.log = log;
         this.welcomeMessage = welcomeMessage == null ? "" : welcomeMessage;
@@ -446,6 +447,8 @@ final class WorldSession implements AutoCloseable {
     }
     void resetReferences(){reference=acknowledge=0;}
     void applySelectionFlags(boolean gm,boolean hidden){gameMaster=gm;inspectionHidden=hidden;}
+    SessionRuntime runtime(){return runtime;}
+    int sceneCreated(){return created;}
     void setSelectedKnight(Knight value){knight=value;}
     void setPartyMember(PartyRegistry.Member value){partyMember=value;}
     void setCompletedOpening(Map<String,OpeningCompletion> value){completedOpening=value;}
@@ -487,7 +490,7 @@ final class WorldSession implements AutoCloseable {
     }
     void setInspectionHidden(boolean hidden)throws IOException {
         characters.inspectionHidden(authRevision,hidden);inspectionHidden=hidden;
-        gameMaster=roles.gameMaster();if(runtime.membership()!=null)runtime.membership().appearance(actorAppearance());
+        gameMaster=roles.gameMaster();if(runtime.membership()!=null)runtime.membership().appearance(appearance.actor());
         output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
     }
     int pendingPortalMap(){var move=runtime.portalMove();return move==null?-1:move.destination().map().id();}
@@ -528,7 +531,7 @@ final class WorldSession implements AutoCloseable {
     void publishVisited(Set<Integer> visited)throws IOException{parties.publishVisited(visited);}
     boolean stateRefreshActive(WorldStatePoller.Registration registration){return !closed&&runtime.entered()&&runtime.persistence()==registration;}
     void setGameMaster(boolean value){gameMaster=value;}
-    void applyActorAppearance(){runtime.membership().appearance(actorAppearance());}
+    void applyActorAppearance(){runtime.membership().appearance(appearance.actor());}
     void publishOutbids(WorldProfile before,WorldProfile after)throws IOException{auction.publishOutbids(before,after);}
     void refreshOutbids(WorldProfile before,WorldProfile after)throws IOException{auction.publishOutbids(before,after);}
 
@@ -798,28 +801,13 @@ final class WorldSession implements AutoCloseable {
         if(!runtime.scene().map().kind().equals("training")&&partyMember!=null)try{scenes.parties().leaveTraining(partyMember);}catch(IOException invalid){throw new IllegalStateException(invalid);}
         publishedArsenal=null;
         runtime.membership(null); // The old runtime.scene() runtime.membership() is closed before rebuilding its replacement.
-        rebuildAppearance();var place=runtime.scene();
-        runtime.membership(place.simulation().join(actorAppearance(),snapshot->{},this::sceneFailed));
+        appearance.rebuild();var place=runtime.scene();
+        runtime.membership(place.simulation().join(appearance.actor(),snapshot->{},this::sceneFailed));
         runtime.membership().equipment(visibleProfile());
         if(!place.map().town())runtime.membership().combat(weapons,scenes.equipment(),visibleProfile());
         try{partyState();}catch(IOException invalid){throw new IllegalStateException(invalid);}
     }
-    private void rebuildAppearance() {
-        var model=runtime.scene().map().town()?StarterCatalog.town(knight,visibleProfile(),characters.catalog()):StarterCatalog.interior(knight,visibleProfile(),characters.catalog());
-        var modelArgs=new TreeMap<String,Object>(model.arguments());var visible=visibleProfile();long[] slots=visible.equipment();
-        for(var item:visible.items())if(item.equippedSlot()!=null){int slot=item.equippedSlot();if(slot==0&&slots[3]!=0||slot==1&&slots[4]!=0)continue;
-            for(String accessory:item.additionalAccessories()){var nativeModel=scenes.town().accessoryModel(accessory);String parameter=scenes.town().accessoryParameter(accessory);if(nativeModel!=null&&parameter!=null)modelArgs.put(parameter,nativeModel);}}
-        model=new StarterCatalog.Model(model.name(),modelArgs);
-        appearance=new StarterCatalog.Model(runtime.scene().map().town()?"Character/PC/Default":"Character/PC/Level",
-            Map.of("Model",model,"Height",model.arguments().get("Height")));
-    }
-    void updateAppearance(){rebuildAppearance();if(runtime.membership()!=null){runtime.membership().equipment(visibleProfile());runtime.membership().appearance(actorAppearance());}}
-    private ActorState actorAppearance() {
-        var checkpoint=runtime.arrival()==null?runtime.scene().simulation().defaultEntrance():null;
-        return new ActorState(profile.worldId(),oid,knight.name(),256|knight.color(),created,
-            runtime.arrival()==null?checkpoint==null?runtime.scene().map().spawnX():checkpoint.x():runtime.arrival().x(),runtime.arrival()==null?checkpoint==null?runtime.scene().map().spawnY():checkpoint.y():runtime.arrival().y(),
-            runtime.arrival()==null?checkpoint==null?runtime.scene().map().spawnRotation():checkpoint.rotation():runtime.arrival().rotation(),0,0,0,created,appearance,gameMaster);
-    }
+    void updateAppearance(){appearance.update();}
 
     static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
     void monitorScene() {
