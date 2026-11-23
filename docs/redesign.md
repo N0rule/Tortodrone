@@ -391,8 +391,9 @@ remaining stores were split the same way:
   scene item use and revive payment, and `AdminStore` for the GM setters.
 - `GuildStore` composes `GuildHallStore` for the treasury well, hall state and
   expansion tickets, `GuildLogStore` for the guild record, `GuildMembershipStore`
-  for formation, invitations and roster commands, and `GuildSchema` for the guild
-  tables.
+  for formation, invitations and roster commands, `GuildSettingsStore` for name
+  checks, the rename window and the message of the day, and `GuildSchema` for the
+  guild tables.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.

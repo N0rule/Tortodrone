@@ -14,12 +14,12 @@ final class GuildMembershipStore {
 
     /** {@code GuildMarshaller} id 8: form a guild and make the founder its master. */
     TownStore.Result form(int account, int knight, long auth, String name) throws IOException {
-        String error = GuildStore.nameError(name);
+        String error = GuildSettingsStore.nameError(name);
         if (error != null) throw new IOException(error);
         return database.write(c -> {
             var profile = WorldProfiles.load(c, account, knight, auth);
             if (GuildStore.guildOf(c, profile.worldId()) != null) throw new IOException("m.internal_error");
-            if (GuildStore.nameTaken(c, name)) throw new IOException("m.name_in_use");
+            if (GuildSettingsStore.nameTaken(c, name)) throw new IOException("m.name_in_use");
             if (profile.crowns() < GuildStore.FORMATION_CROWNS) throw new IOException("m.nsf_crowns");
             if (profile.energy() < GuildStore.FORMATION_ENERGY) throw new IOException("m.nsf_energy");
             TownLedger.pay(c, profile, GuildStore.FORMATION_CROWNS, GuildStore.FORMATION_ENERGY);
