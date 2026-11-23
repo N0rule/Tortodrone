@@ -117,7 +117,7 @@ final class FloorHandler {
                     OpeningMissionStore.Settlement settled;
                     try{
                         settled=scenes.parties().soloGate(session.partyMember(),run.partyOid(),()->session.membership().settleSoloFloor(request,
-                            ()->session.charactersStore().services().openingMissions(scenes.town(),scenes.missions()).complete(
+                            ()->session.charactersStore().services().openingMissions(scenes.town(),scenes.missions()).completeUnderLock(
                                 session.charactersStore().accountId(),session.selectedKnight().id(),session.authRevision(),
                                 before,run.missionId(),run.difficulty(),session.membership().floorHeat())));
                     }catch(IOException failure){

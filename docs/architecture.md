@@ -73,6 +73,14 @@ Named commit-under-lock paths (the only allowed SCENE/party → storage edges):
 - solo elevator settlement;
 - party solo-gate and party revive transactions.
 
+The storage-reaching transactions among those paths (`TownStore.revive`,
+`TownStore.useItem` and `OpeningMissionStore.completeUnderLock`) use
+`Database.writeBounded`: they wait at most one second for the dedicated writer to
+start, refuse before opening a connection when the queue is still blocked, and never
+abandon a transaction that has started. This bounds the monitor window without
+weakening commit-before-publish; the other settlements listed above pass in-memory
+callbacks and perform no storage under the lock.
+
 `SceneSimulation` never runs a scene tick concurrently with itself. A bounded platform carrier pool drives one serial lane per scene at a fixed 50 ms cadence with no burst catch-up; a scene that overruns is counted and skipped, not restarted back-to-back. The active-scene count is capped, and a tick failure stops only that lane, recycles a private interior, and returns affected sessions through a safe close. Towns use the template's authored `instances` count as their shard policy: a world is assigned by `worldId` across those instances, so increasing the count shards Haven without changing isolated interiors.
 
 `SessionOutput` is bounded by both frames and bytes. Reliable state changes are never dropped; optional scene/effect frames are skipped before encoding when a reader is behind, and a reader that stays over budget for the sustained window is disconnected. Encoding and socket writes stay off the scene thread.

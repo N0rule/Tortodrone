@@ -39,10 +39,22 @@ public final class OpeningMissionStore {
         }}}return Collections.unmodifiableMap(result);
     }
     public Settlement complete(int account,int knight,long auth,WorldProfile expected,String missionId,String difficulty)throws IOException {
-        return complete(account,knight,auth,expected,missionId,difficulty,0);
+        return complete(account,knight,auth,expected,missionId,difficulty,0,0);
     }
     /** The scene supplies collected heat, never the client. The receipt covers heat and rewards. */
     public Settlement complete(int account,int knight,long auth,WorldProfile expected,String missionId,String difficulty,float floorHeat)throws IOException {
+        return complete(account,knight,auth,expected,missionId,difficulty,floorHeat,0);
+    }
+    /** The NextFloor settlement runs while the solo-gate and scene monitors are held; the
+     *  writer handoff is bounded so a stalled writer cannot hold the scene indefinitely.
+     *  A refusal happens before the transaction starts and the owned ride stays retryable. */
+    public Settlement completeUnderLock(int account,int knight,long auth,WorldProfile expected,String missionId,String difficulty,float floorHeat)throws IOException {
+        return complete(account,knight,auth,expected,missionId,difficulty,floorHeat,Database.LOCKED_WRITE_TIMEOUT_MILLIS);
+    }
+    private <T> T write(long timeoutMillis,Database.Work<T> work)throws IOException{
+        return timeoutMillis>0?database.writeBounded(timeoutMillis,work):database.write(work);
+    }
+    private Settlement complete(int account,int knight,long auth,WorldProfile expected,String missionId,String difficulty,float floorHeat,long timeoutMillis)throws IOException {
         requireAuth(auth);Objects.requireNonNull(missionId);Objects.requireNonNull(expected);
         MissionCatalog.Entry mission=missions.mission(missionId);
         if(mission==null||!mission.rankMission())throw new IOException("Unknown rank mission");
@@ -50,7 +62,7 @@ public final class OpeningMissionStore {
         if(!Float.isFinite(floorHeat)||floorHeat<0||floorHeat>1_000_000||floorHeat>0&&!gate)throw new IOException("Invalid mission floor heat");
         if(expected.accountId()!=account||expected.knightId()!=knight)throw new IOException("Invalid mission owner");
         if(gate!=(difficulty!=null))throw new IOException("Invalid mission difficulty");
-        return database.write(c->{
+        return write(timeoutMillis,c->{
             var profile=WorldProfiles.load(c,account,knight,auth);
             if(profile.worldId()!=expected.worldId())throw new IOException("Mission world ownership changed");
             var completed=load(c,profile.worldId());var receipt=completed.get(missionId);

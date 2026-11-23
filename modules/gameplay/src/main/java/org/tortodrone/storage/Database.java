@@ -192,11 +192,16 @@ public final class Database {
     }
     private volatile boolean closed;
     private final ThreadLocal<Boolean> storageThread=ThreadLocal.withInitial(()->Boolean.FALSE);
-    private ExecutorService writer,readers;
+    private ThreadPoolExecutor writer;
+    private ExecutorService readers;
+
+    /** Queue-wait ceiling for a write issued while a scene or party monitor is held. */
+    public static final long LOCKED_WRITE_TIMEOUT_MILLIS=1_000;
 
     /** One platform writer thread; SQLite never runs JDBC on a session virtual thread. */
-    private synchronized ExecutorService writer() {
-        if(writer==null)writer=Executors.newSingleThreadExecutor(runnable->{
+    private synchronized ThreadPoolExecutor writer() {
+        if(writer==null)writer=new ThreadPoolExecutor(1,1,0L,TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(),runnable->{
             Thread thread=new Thread(runnable,"StorageWriter");thread.setDaemon(true);return thread;});
         return writer;
     }
@@ -214,22 +219,54 @@ public final class Database {
         if(closed)throw new IOException("Storage is closed");
         return submit(writer(),"write",work);
     }
+    /** Write with a bounded wait for the dedicated writer to start it.
+     *
+     * <p>Used only by transactions that run while a scene/party monitor is held. If the writer
+     * is still busy when the budget expires, the queued task is removed and refused before it
+     * opens a connection, so no payment can commit without the caller seeing it. Once the task
+     * has started it is never abandoned: the caller waits for the real outcome, preserving
+     * commit-before-publish. */
+    public <T> T writeBounded(long timeoutMillis,Work<T> work)throws IOException {
+        if(closed)throw new IOException("Storage is closed");
+        if(storageThread.get())return writeDirect(work);
+        if(timeoutMillis<=0)throw new IOException("Storage busy; try again");
+        ThreadPoolExecutor pool=writer();
+        var task=new FutureTask<T>(()->{
+            storageThread.set(Boolean.TRUE);
+            try{return writeDirect(work);}
+            finally{storageThread.remove();}
+        });
+        pool.execute(task);
+        try{return task.get(timeoutMillis,TimeUnit.MILLISECONDS);}
+        catch(TimeoutException timeout){
+            // remove() is true only when the task never left the queue; the worker cannot
+            // start it afterwards, so a refusal is unambiguous and nothing was written.
+            if(pool.remove(task))throw new IOException("Storage busy; try again");
+            return unpack(task);
+        }
+        catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new IOException("Storage interrupted",interrupted);}
+        catch(ExecutionException failure){return unpack(failure);}
+    }
     private <T> T submit(ExecutorService pool,String kind,Work<T> work)throws IOException {
         // A storage callback may read or write as part of its own transaction; run it inline.
         if(storageThread.get())return kind.equals("write")?writeDirect(work):readDirect(work);
-        try{return pool.submit(()->{
+        return unpack(pool.submit(()->{
             storageThread.set(Boolean.TRUE);
             try{return kind.equals("write")?writeDirect(work):readDirect(work);}
             finally{storageThread.remove();}
-        }).get();}
+        }));
+    }
+    private static <T> T unpack(Future<T> task)throws IOException {
+        try{return task.get();}
         catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new IOException("Storage interrupted",interrupted);}
-        catch(ExecutionException failure){
-            Throwable cause=failure.getCause();
-            if(cause instanceof IOException io)throw io;
-            if(cause instanceof RuntimeException runtime)throw runtime;
-            if(cause instanceof Error error)throw error;
-            throw new IOException("Storage failed",cause);
-        }
+        catch(ExecutionException failure){return unpack(failure);}
+    }
+    private static <T> T unpack(ExecutionException failure)throws IOException {
+        Throwable cause=failure.getCause();
+        if(cause instanceof IOException io)throw io;
+        if(cause instanceof RuntimeException runtime)throw runtime;
+        if(cause instanceof Error error)throw error;
+        throw new IOException("Storage failed",cause);
     }
     private <T> T readDirect(Work<T> work) throws IOException {
         long start=System.nanoTime();boolean failed=true;
@@ -270,7 +307,7 @@ public final class Database {
     /** Stop accepting work and join both dedicated pools before the final checkpoint. */
     public void close() {
         ExecutorService stoppingWriter,stoppingReaders;
-        synchronized(this){closed=true;stoppingWriter=writer;stoppingReaders=readers;writer=readers=null;}
+        synchronized(this){closed=true;stoppingWriter=writer;stoppingReaders=readers;writer=null;readers=null;}
         if(stoppingWriter!=null)stoppingWriter.shutdown();
         if(stoppingReaders!=null)stoppingReaders.shutdown();
         try{

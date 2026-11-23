@@ -161,7 +161,7 @@ public final class TownStore {
     /** Consume one owned scene-usable item; the scene applies its prepared effect under
      *  the same lock, so a refused revision or item leaves both sides unchanged. */
     public Result useItem(int account,int knight,long auth,long revision,long item)throws IOException{
-        return change(account,knight,auth,(c,p)->{
+        return changeBounded(account,knight,auth,(c,p)->{
             if(p.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
             var held=owned(p,item);
             var definition=items.find(held.config());
@@ -195,7 +195,7 @@ public final class TownStore {
     /** Native PartyMarshaller.revive: -1 spends one owned Spark; a positive approval buys its use. */
     public Result revive(int account,int knight,long auth,int approvedCost)throws IOException{
         if(approvedCost < -1)throw new IOException("m.costupdate");
-        return change(account,knight,auth,(c,p)->{
+        return changeBounded(account,knight,auth,(c,p)->{
             if(approvedCost<0){
                 var spark=p.items().stream().filter(i->i.config().equals("Rarity/Spark of Life")&&i.count()>0).findFirst().orElseThrow(()->new IOException("m.costupdate"));
                 consume(c,p,spark.id(),1);
@@ -207,8 +207,18 @@ public final class TownStore {
         });
     }
     @FunctionalInterface private interface Mutation{Object run(Connection c,WorldProfile profile)throws SQLException,IOException;}
+    @FunctionalInterface private interface Transaction{Result run(Database.Work<Result> work)throws IOException;}
     private Result change(int account,int knight,long auth,Mutation mutation)throws IOException{
-        return database.write(c->{var profile=WorldProfiles.load(c,account,knight,auth);Object result=mutation.run(c,profile);InventoryExpiry.reconcile(c,profile.worldId(),System.currentTimeMillis());touch(c,profile.worldId());
+        return change(account,knight,auth,mutation,database::write);
+    }
+    /** Scene-locked item use and revive: refuse before opening a connection when the
+     *  shared writer is still busy after the queue budget. */
+    private Result changeBounded(int account,int knight,long auth,Mutation mutation)throws IOException{
+        return change(account,knight,auth,mutation,
+            work->database.writeBounded(Database.LOCKED_WRITE_TIMEOUT_MILLIS,work));
+    }
+    private Result change(int account,int knight,long auth,Mutation mutation,Transaction transaction)throws IOException{
+        return transaction.run(c->{var profile=WorldProfiles.load(c,account,knight,auth);Object result=mutation.run(c,profile);InventoryExpiry.reconcile(c,profile.worldId(),System.currentTimeMillis());touch(c,profile.worldId());
             var updated=WorldProfiles.load(c,account,knight,auth);
             updated=AccountAchievements.reconcile(c,updated,items,updated.progress().tutorialComplete()?32:0,System.currentTimeMillis());
             return new Result(updated,result);});

@@ -143,6 +143,18 @@ outcomes before Phase 4 exits:
 
 No new commit-under-lock path may be added.
 
+**Landed outcome 1:** the three transactions that actually reach storage under a
+scene or party monitor — `TownStore.revive`, `TownStore.useItem` and
+`OpeningMissionStore.completeUnderLock` — use `Database.writeBounded` with a 1 s
+queue-wait budget. If the dedicated writer has not started the transaction when the
+budget expires, the queued task is removed and refused before it opens a connection,
+so nothing commits behind the caller. Once started, the task is never abandoned; the
+caller waits for the real outcome, preserving commit-before-publish.
+`BoundedWriteTest` covers both sides, and `SparkRevivalTest`,
+`SceneItemUseTest` and `MissionFloorSessionTest` exercise the callers. Floor/elevator
+settlements whose callback is in-memory (`() -> Boolean.TRUE`) hold no storage under
+the lock.
+
 ### Target model
 
 - **Storage:** one writer and a small number of readers on dedicated **platform**
