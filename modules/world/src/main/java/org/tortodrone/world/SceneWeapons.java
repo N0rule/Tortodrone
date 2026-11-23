@@ -14,6 +14,7 @@ import org.tortodrone.core.world.SceneEntityState;
 import org.tortodrone.core.world.SceneCollision;
 import org.tortodrone.core.world.SceneDamage;
 import org.tortodrone.core.world.CollisionMap;
+import org.tortodrone.world.DiskgunPolicy.PiercePolicy;
 
 /** Scene-owned stock fire actions, with contact and damage resolved by instance entities. */
 public final class SceneWeapons {
@@ -39,14 +40,6 @@ public final class SceneWeapons {
     private Targets targets;
     public void targets(Targets value){targets=value;}
     private static final int MAX_ACTORS=512, MAX_EFFECTS=1024, MAX_RUNS=256;
-    /** Custom forward-only Diskgun projectile policy. Normal shots pass through one enemy and
-     *  expire on the next; charged shots pass through every enemy until their fuse. */
-    private record PiercePolicy(int extraPierces,boolean singleProjectile,boolean forwardOnly) {
-        static final PiercePolicy NONE=new PiercePolicy(0,false,false);
-        static final PiercePolicy ONE=new PiercePolicy(1,true,true);
-        static final PiercePolicy ALL=new PiercePolicy(Integer.MAX_VALUE,true,true);
-        boolean pierces(){return extraPierces>0;}
-    }
     private record Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId,GearStats.Damage damage,Object sceneSource,PiercePolicy pierce) {
         Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId,GearStats.Damage damage,Object sceneSource){this(x,y,rotation,ownerId,ownerOid,shape,actorId,damage,sceneSource,PiercePolicy.NONE);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId,GearStats.Damage damage){this(x,y,rotation,ownerId,ownerOid,shape,actorId,damage,null);}
@@ -111,21 +104,10 @@ public final class SceneWeapons {
     public void catalog(FireCatalog catalog){this.catalog=Objects.requireNonNull(catalog);}
     private java.util.function.BiFunction<Integer,KnightCombat.AttackStart,GearStats.Damage> damageModifiers=(owner,attack)->GearStats.Damage.NONE;
     public void damageModifiers(java.util.function.BiFunction<Integer,KnightCombat.AttackStart,GearStats.Damage> source){damageModifiers=Objects.requireNonNull(source);}
-    /** Unused client Diskguns rebuilt as forward-only sawguns. The recovered Fiery/Static
-     *  graphs are the old Mixer carrier/orbital prototype; use the corresponding normal
-     *  Mixer-disk graph so the shot shape is the final one, while the item's client-visible
-     *  Fire 3 / Shock 3 data stays unchanged. */
-    private static final Map<String,String> FORWARD_DISKGUNS=Map.of(
-        "Weapon/Handgun/Fiery Diskgun","Weapon/Handgun/Celestial Orbitgun",
-        "Weapon/Handgun/Static Diskgun","Weapon/Handgun/Overcharged Mixmaster");
-    private static PiercePolicy diskgunPolicy(String config,int activity){
-        if(!FORWARD_DISKGUNS.containsKey(config))return PiercePolicy.NONE;
-        return activity==KnightCombat.CHARGED?PiercePolicy.ALL:PiercePolicy.ONE;
-    }
     public void attack(int owner,KnightCombat.AttackStart start){
-        var attack=catalog.find(FORWARD_DISKGUNS.getOrDefault(start.config(),start.config()),start.activity());
+        var attack=catalog.find(DiskgunPolicy.resolvedFire(start.config()),start.activity());
         if(attack==null)attack=catalog.find(start.config(),start.activity());
-        attack(owner,start,attack,damageModifiers.apply(owner,start),diskgunPolicy(start.config(),start.activity()));
+        attack(owner,start,attack,damageModifiers.apply(owner,start),DiskgunPolicy.policy(start.config(),start.activity()));
     }
     public void attack(int owner,KnightCombat.AttackStart start,FireCatalog.AttackFire attack){
         attack(owner,start,attack,GearStats.Damage.NONE,PiercePolicy.NONE);
@@ -333,13 +315,6 @@ public final class SceneWeapons {
         }
     }
     private static float spin(int elapsed,float speed,boolean reverse){int rate=speed==0?0:(int)(1000/speed);return rate==0?0:(reverse?-1:1)*(float)(2*Math.PI)*(elapsed%rate)/rate;}
-    /** Keep the native orbital disk moving outward for its whole life instead of entering
-     *  the return/home phase authored at {@code outDuration}. */
-    private static FireCatalog.ActorSpec forwardOnly(FireCatalog.ActorSpec spec){
-        var o=spec.orbit();int out=Math.max(o.outDuration(),Math.max(spec.fuse(),o.lifespan()));
-        var orbit=new FireCatalog.OrbitSpec(o.radius(),o.angularSpeed(),o.startingRotation(),o.flightSpeed(),out,o.lifespan(),o.follow(),o.alternateSpin(),o.secondOrbitRadius(),o.secondSpeed(),o.secondStartingRotation());
-        return new FireCatalog.ActorSpec(spec.nativeType(),spec.config(),spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),orbit,spec.collisionMask(),spec.collisionShape(),spec.timers(),spec.shutdown(),spec.startup(),spec.attachment(),spec.activation(),spec.activatesAttachments());
-    }
     private void destroy(Shot shot,int stamp,boolean fizzle){destroy(shot,stamp,fizzle,true);}
     private void destroy(Shot shot,int stamp,boolean fizzle,boolean detonate){if(shot.destroyed!=Integer.MAX_VALUE)return;shot.destroyed=stamp;shot.fizzle=fizzle;
         if(shot.spec.shutdown()!=null)execute(shot.spec.shutdown(),shotPose(shot),stamp,0);
@@ -434,7 +409,7 @@ public final class SceneWeapons {
                 var config=new org.tortodrone.core.character.StarterCatalog.Model(spec.config().name(),arguments);
                 spec=new FireCatalog.ActorSpec(spec.nativeType(),config,spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),spec.orbit(),spec.collisionMask(),spec.collisionShape(),spec.timers(),spec.shutdown(),spec.startup(),spec.attachment(),spec.activation(),spec.activatesAttachments());
             }
-            if(source.pierce.forwardOnly()&&spec.orbit()!=null)spec=forwardOnly(spec);
+            if(source.pierce.forwardOnly()&&spec.orbit()!=null)spec=DiskgunPolicy.forwardOnly(spec);
             float rc=(float)Math.cos(rotation),rs=(float)Math.sin(rotation);
             float ox=spec.offsetX()*rc-spec.offsetY()*rs,oy=spec.offsetX()*rs+spec.offsetY()*rc;
             var controller=action.config()!=null&&action.config().name().equals("ServerSpawned")?new Pose(source.x,source.y,source.rotation,source.ownerId,0,source.shape,source.actorId,source.damage,source.sceneSource,source.pierce):source;
