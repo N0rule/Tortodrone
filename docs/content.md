@@ -89,7 +89,9 @@ as described in the [README](../README.md#step-5-connect-the-game-client).
 `party-max-players` bounds party admission (1-8, shipped as 4). It is policy, not a
 client constant: `LevelPartyObject.memberLimit` is server-supplied, and the client both
 renders the members it receives and only compares the limit with 1 to decide whether
-party controls are offered. Only the party cap is player-facing policy; chat and trade have no switch. The knight dodge cooldown is the verified
+party controls are offered. The cap is enforced in `PartyRegistry`, so a raise to five
+does admit a fifth knight; whether the client's dungeon HUD draws that fifth portrait
+has not been verified, so 4 stays the shipped value. Only the party cap is player-facing policy; chat and trade have no switch. The knight dodge cooldown is the verified
 stock value (`8000` ms in `WeaponCatalog`), not a deployment setting: `config/` holds
 server policy only.
 Static merchant rules belong to Town YAML. Depot offers/promotions and auctions
