@@ -21,7 +21,7 @@ final class ServerConsole implements AutoCloseable {
     private final ServerControl control;
     private final Object executionLock=new Object();
     private final Prompts prompts;
-    private org.tortodrone.web.WebIdentityStore webIdentities;
+    private WebIdentities webIdentities;
     interface Prompts { char[] password(String prompt) throws IOException; String confirmation(int limit) throws IOException; }
 
     ServerConsole(AccountStore accounts, ServerLog log, Runnable stop, BooleanSupplier running) {
@@ -209,7 +209,7 @@ final class ServerConsole implements AutoCloseable {
         if(webIdentities==null){
             var data=control!=null?control.dataDirectory():accounts.databaseFile()==null?null:accounts.databaseFile().getParent();
             if(data==null)throw new IOException("WebUI accounts require persistent server storage");
-            webIdentities=new org.tortodrone.web.WebIdentityStore(data);
+            webIdentities=WebFrontend.identities(data);
         }
         if(list){for(var id:webIdentities.list())log.info(id.username()+" | "+id.role());return;}
         String name=words[2];
@@ -218,8 +218,8 @@ final class ServerConsole implements AutoCloseable {
             if(!name.equals(prompts.confirmation(64)))throw new IOException("Revocation confirmation did not match");
             if(running.getAsBoolean()){webIdentities.revoke(name);log.info("WebUI account revoked: "+name);}return;
         }
-        org.tortodrone.web.WebIdentityStore.Role role=null;
-        if(user)try{role=org.tortodrone.web.WebIdentityStore.Role.valueOf(words[3].toUpperCase(Locale.ROOT));}
+        WebIdentities.Role role=null;
+        if(user)try{role=WebIdentities.Role.valueOf(words[3].toUpperCase(Locale.ROOT));}
         catch(IllegalArgumentException invalid){throw new IOException("WebUI role must be VIEWER, MODERATOR or ADMINISTRATOR");}
         var before=password?webIdentities.find(name):null;
         char[] first=prompts.password("WebUI password (8–128 characters): "),second=null;

@@ -5,6 +5,8 @@ import java.nio.file.*;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
+import org.tortodrone.server.WebFrontend;
+import org.tortodrone.server.WebIdentities;
 import static org.tortodrone.support.TestWire.check;
 
 /** Atomic setup, authorization, last-administrator protection, recovery and audit rollback. */
@@ -59,6 +61,8 @@ public final class WebIdentityStoreTest {
             }
             check(store.list().stream().filter(i->i.role()==WebIdentityStore.Role.ADMINISTRATOR).count()==1,"last-administrator invariant");
             check(new WebIdentityStore(root).bootstrapAvailable()==false,"setup closure survives restart without migration");
+            var viaSeam=WebFrontend.identities(root);
+            check(viaSeam.list().equals(store.list())&&viaSeam.find("SecondAdmin").role()==WebIdentities.Role.ADMINISTRATOR,"local console reaches identities through the server seam");
             check(store.audit().stream().anyMatch(e->e.get("action").equals("identity.bootstrap")),"bootstrap is persistently audited");
             Path failed=root.resolve("failed-bootstrap");var candidate=new WebIdentityStore(failed);
             try(var c=DriverManager.getConnection("jdbc:sqlite:"+failed.resolve("webui.sqlite"));var s=c.createStatement()){s.execute("CREATE TRIGGER reject_setup_audit BEFORE INSERT ON audit BEGIN SELECT RAISE(ABORT,'fixture'); END");}

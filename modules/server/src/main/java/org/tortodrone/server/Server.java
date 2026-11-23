@@ -56,32 +56,34 @@ public final class Server {
                 if(settings.webui().enabled())ClientArtworkSetup.prepare(directory,options.client(),options.skipClientAssets(),log::info,log::warn);
                 ServerControl control=new ServerControl(version(),dataDirectory);
                 var content=org.tortodrone.resources.ContentManager.load(directory,settings);
-                try(var adminAccounts=new AccountStore(dataDirectory,true,content.items(),content.town());
-                    var adminService=settings.webui().enabled()?new org.tortodrone.web.AdminService(adminAccounts,control,log,directory,content,config):null;
-                    var console=new ServerConsole(adminAccounts,log,()->{if(settings.webui().enabled())control.stop();else control.exit();},()->!control.exiting(),control,true)) {
-                    com.sun.net.httpserver.HttpHandler handler=null;
-                    String setupCode=null;
-                    if(settings.webui().enabled()) {
-                        var identities=new org.tortodrone.web.WebIdentityStore(dataDirectory);
-                        var security=new org.tortodrone.web.WebSecurity(settings.webui(),identities,dataDirectory);
-                        setupCode=security.setupCode();
-                        if(!settings.webui().directHttp())log.info("WebUI proxy secret file: "+dataDirectory.resolve("webui-proxy.key"));
-                        handler=new org.tortodrone.web.AdminHandler(security,identities,adminService,directory.resolve("webui"));
-                    }
-                    // Finish identity schema initialization before the console can issue recovery commands.
-                    console.start();
-                    try(var http=NewsServer.start(InetAddress.getByName(settings.bind()),settings.httpPort(),directory.resolve("content/shared/news"),log::debug,handler)) {
-                        ServerLog startupLog=log;
-                        String code=setupCode;
-                        var codePrinted=new java.util.concurrent.atomic.AtomicBoolean();
-                        Runnable webReady=handler==null?()->{}:()->startupLog.info("WebUI Ready "+String.join(", ",settings.webui().browserAddresses(http.address(),http.port())));
-                        Runnable setupNotice=()->{if(code!=null&&codePrinted.compareAndSet(false,true))startupLog.localNotice("WebUI first-run setup code: "+code);};
-                        if(handler==null)log.info("Shared HTTP listener: "+http.port()+"; WebUI disabled");
-                        while(control.awaitStart(settings.webui().enabled())) {
-                            try {run(settings,dataDirectory,log,control,console,content,adminAccounts,webReady,setupNotice);content=null;}
-                            catch(Exception failed){control.failed(failed);log.error("Server startup failed: "+failed.getMessage());webReady.run();setupNotice.run();if(!settings.webui().enabled())throw failed;}
-                            finally{control.stopped();}
+                try(var adminAccounts=new AccountStore(dataDirectory,true,content.items(),content.town())) {
+                    WebFrontend frontend=null;
+                    try(var console=new ServerConsole(adminAccounts,log,()->{if(settings.webui().enabled())control.stop();else control.exit();},()->!control.exiting(),control,true)) {
+                        com.sun.net.httpserver.HttpHandler handler=null;
+                        String setupCode=null;
+                        if(settings.webui().enabled()) {
+                            frontend=WebFrontend.create(adminAccounts,control,log,directory,config,content,settings);
+                            setupCode=frontend.setupCode();
+                            if(!settings.webui().directHttp())log.info("WebUI proxy secret file: "+dataDirectory.resolve("webui-proxy.key"));
+                            handler=frontend.handler();
                         }
+                        // Finish identity schema initialization before the console can issue recovery commands.
+                        console.start();
+                        try(var http=NewsServer.start(InetAddress.getByName(settings.bind()),settings.httpPort(),directory.resolve("content/shared/news"),log::debug,handler)) {
+                            ServerLog startupLog=log;
+                            String code=setupCode;
+                            var codePrinted=new java.util.concurrent.atomic.AtomicBoolean();
+                            Runnable webReady=handler==null?()->{}:()->startupLog.info("WebUI Ready "+String.join(", ",settings.webui().browserAddresses(http.address(),http.port())));
+                            Runnable setupNotice=()->{if(code!=null&&codePrinted.compareAndSet(false,true))startupLog.localNotice("WebUI first-run setup code: "+code);};
+                            if(handler==null)log.info("Shared HTTP listener: "+http.port()+"; WebUI disabled");
+                            while(control.awaitStart(settings.webui().enabled())) {
+                                try {run(settings,dataDirectory,log,control,console,content,adminAccounts,webReady,setupNotice);content=null;}
+                                catch(Exception failed){control.failed(failed);log.error("Server startup failed: "+failed.getMessage());webReady.run();setupNotice.run();if(!settings.webui().enabled())throw failed;}
+                                finally{control.stopped();}
+                            }
+                        }
+                    } finally {
+                        if(frontend!=null)frontend.close();
                     }
                 }
             }

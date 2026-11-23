@@ -8,11 +8,10 @@ import java.util.*;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import org.tortodrone.core.ContentFiles;
+import org.tortodrone.server.WebIdentities;
 
 /** Independent credentials and atomic identity/audit writes. No game account or GM inference. */
-public final class WebIdentityStore {
-    public enum Role { VIEWER, MODERATOR, ADMINISTRATOR }
-    public record Identity(String username,Role role,long revision) { }
+public final class WebIdentityStore implements WebIdentities {
     private final Path file;
     public WebIdentityStore(Path data)throws IOException {
         file=data.resolve("webui.sqlite");ContentFiles.safe(file);
