@@ -376,8 +376,7 @@ final class WorldSession implements AutoCloseable {
     long noteMissionDialog(){return story.noteMissionDialog();}
     /** Install a forced destination before the client acknowledges its move. */
     void beginForcedTravel(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException {
-        runtime.beginPortal(next,entrance);runtime.departedSceneOid(runtime.scene().oid());
-        partyState();leaveChat();runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();runtime.membership().pause();
+        runtime.beginPortal(next,entrance);partyState();runtime.retireScene(runtime.scene().oid());
     }
     void resetReferences(){flags.resetReferences();}
     void applySelectionFlags(boolean gm,boolean hidden){flags.apply(gm,hidden);}
