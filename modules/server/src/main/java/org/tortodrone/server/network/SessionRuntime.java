@@ -177,13 +177,12 @@ final class SessionRuntime {
                 target=loaded.progress().openingStage()==1?217:218;
                 if(!scenes.catalog().scene(target).town())throw new IOException("The opening camp is unavailable; please try again later");
             }
-            synchronized(SessionDirectory.ACTIVE){
-                if(SessionDirectory.ACTIVE.containsKey(loaded.worldId()))throw new IOException("This knight is already online");
+            int destination=target;
+            SessionDirectory.register(loaded.worldId(),session,()->{
                 session.applyProfile(loaded);
                 session.setSelectedKnight(choice);
-                scene=scenes.destination(target,loaded.worldId());
-                SessionDirectory.ACTIVE.put(loaded.worldId(),session);
-            }
+                scene=scenes.destination(destination,loaded.worldId());
+            });
         }
         session.markSceneCreated();
         if(characters.hasWorldStorage()){
@@ -344,7 +343,7 @@ final class SessionRuntime {
             if(portalMove!=null)session.sceneRegistry().release(portalMove.destination(),profile.worldId());
         }
         session.stopPublications();
-        if(profile!=null)synchronized(SessionDirectory.ACTIVE){SessionDirectory.ACTIVE.remove(profile.worldId(),session);}
+        if(profile!=null)SessionDirectory.leave(profile.worldId(),session);
     }}
 
     /** Detach the client subscription while keeping the installed instance and membership. */

@@ -41,8 +41,8 @@ final class InspectionHandler {
             place=session.currentScene();
         }
         WorldSession peer;
-        synchronized(SessionDirectory.ACTIVE) {peer=SessionDirectory.ACTIVE.values().stream().filter(w->w.selectedKnightName().equalsIgnoreCase(target)
-            &&w.charactersStore().worldStorageFile().equals(store.worldStorageFile())).findFirst().orElse(null);}
+        peer=SessionDirectory.activeSessions().stream().filter(w->w.selectedKnightName().equalsIgnoreCase(target)
+            &&w.charactersStore().worldStorageFile().equals(store.worldStorageFile())).findFirst().orElse(null);
         Inspection found=peer==null?null:peer.inspectionNow(place);
         synchronized(session) {
             if(session.isClosed()||session.currentScene()!=place||!session.sceneSubscribed()||!session.sceneEntered())return;

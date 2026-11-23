@@ -9,9 +9,22 @@ import java.util.Map;
  *  revision a direct auction refund must re-check. Only this class owns the live-session map;
  *  every read acquires its monitor and never acquires a peer session monitor. */
 final class SessionDirectory {
-    static final Map<Integer,WorldSession> ACTIVE=new HashMap<>();
+    private static final Map<Integer,WorldSession> ACTIVE=new HashMap<>();
+
+    /** Install a newly selected knight while the directory monitor is held. */
+    @FunctionalInterface interface Registration { void install()throws java.io.IOException; }
 
     private SessionDirectory() { }
+
+    static void register(int world,WorldSession session,Registration install)throws java.io.IOException {
+        synchronized(ACTIVE){
+            if(ACTIVE.containsKey(world))throw new java.io.IOException("This knight is already online");
+            install.install();
+            ACTIVE.put(world,session);
+        }
+    }
+
+    static void leave(int world,WorldSession session){synchronized(ACTIVE){ACTIVE.remove(world,session);}}
 
     static WorldSession activeSession(int world){synchronized(ACTIVE){return ACTIVE.get(world);}}
 
