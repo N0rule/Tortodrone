@@ -132,7 +132,7 @@ final class WorldSession implements AutoCloseable {
                 ?run.destination().id():217;
         var next=destination(safeTown);
         runtime.beginPortal(next,new ScenePortals.Entrance(1,next.map().spawnX(),next.map().spawnY(),next.map().spawnRotation()));
-        moves.clearDeferred();runtime.departedSceneOid(runtime.scene().oid());leaveChat();runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();runtime.membership().pause();
+        moves.clearDeferred();runtime.retireScene(runtime.scene().oid());
         var receiver=refreshState.forcedReceiver();if(receiver!=null)output.send(()->codec.forceScene(oid,receiver,next));
     }
     /** Verified stock SteamMarshaller: 2[int] and 5[boolean] are unacknowledged client reports;
@@ -208,8 +208,7 @@ final class WorldSession implements AutoCloseable {
     boolean completedOpeningEmpty(){return story.completedEmpty();}
     /** Commit, acknowledge and force the mission move in that native order. */
     synchronized void beginForcedMissionTravel(SceneRegistry.Instance next,ScenePortals.Entrance start,short requestId)throws IOException {
-        closeConversation();closeTownDialog();runtime.beginPortal(next,start);runtime.departedSceneOid(runtime.scene().oid());
-        partyState();leaveChat();runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();if(runtime.membership()!=null)runtime.membership().pause();
+        closeConversation();closeTownDialog();runtime.beginPortal(next,start);partyState();runtime.retireScene(runtime.scene().oid());
         short receiver=refreshState.forcedReceiver();
         output.send(()->codec.invocationConfirmed(oid,requestId));output.send(()->codec.forceScene(oid,receiver,next));
     }
@@ -638,8 +637,8 @@ final class WorldSession implements AutoCloseable {
     /** The game-master travel tail; location validation lives in AdminHandler. */
     synchronized void beginAdminTravel(SceneRegistry.Instance next,AdminHandler.AdminLocation location)throws IOException {
         runtime.beginPortal(next,new ScenePortals.Entrance(1,location.x(),location.y(),location.rotation()));
-        runtime.departedSceneOid(runtime.readyRoom()?0:runtime.scene().oid());leaveChat();runtime.subscribed(false);runtime.entered(false);runtime.bumpSceneGeneration();
-        if(runtime.membership()!=null)runtime.membership().pause();short receiver=refreshState.forcedReceiver();
+        runtime.retireScene(runtime.readyRoom()?0:runtime.scene().oid());
+        short receiver=refreshState.forcedReceiver();
         output.send(()->codec.forceScene(oid,receiver,next));
     }
     AdminHandler adminHandler(){return adminTools;}

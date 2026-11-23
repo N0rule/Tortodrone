@@ -80,6 +80,14 @@ final class SessionRuntime {
 
     int departedSceneOid(){return departedSceneOid;}
     void departedSceneOid(int value){departedSceneOid=value;}
+    /** Retire the current scene for a forced move after the destination portal is installed.
+     *  The caller keeps its own preflight/settlement and sends the native confirmation. */
+    void retireScene(int departedOid){
+        departedSceneOid(departedOid);
+        session.leaveChat();
+        subscribed(false);entered(false);bumpSceneGeneration();
+        if(membership()!=null)membership().pause();
+    }
 
     /** Bind the connection's subscription to the installed instance and reset the scene clock. */
     void subscribe(short message)throws IOException { synchronized(session){
