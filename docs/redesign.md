@@ -388,7 +388,8 @@ remaining stores were split the same way:
   crafting, `GearStore` for forge and heat, `ShopStore` for storefront and Depot
   purchases, `GiftWrapStore` for gift boxes, `CustomizeStore` for variants,
   unbinding and accessories, `UpgradeStore` for Arsenal upgrades, `UseStore` for
-  scene item use and revive payment, and `AdminStore` for the GM setters.
+  scene item use and revive payment, `AdminStore` for the GM setters and
+  `RenameStore` for the knight rename window and ticket.
 - `GuildStore` composes `GuildHallStore` for the treasury well, hall state and
   expansion tickets, `GuildLogStore` for the guild record, `GuildMembershipStore`
   for formation, invitations and roster commands, `GuildSettingsStore` for name

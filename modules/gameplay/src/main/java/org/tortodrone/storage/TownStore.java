@@ -34,31 +34,16 @@ public final class TownStore {
     private final UpgradeStore upgrades;
     private final UseStore uses;
     private final AdminStore admins;
-    public TownStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;this.rules=rules;this.sprites=new SpriteStore(items,rules);this.crafts=new CraftStore(items,rules);this.gears=new GearStore(items,rules);this.shops=new ShopStore(database,items,rules);this.gifts=new GiftWrapStore(items,rules);this.customize=new CustomizeStore(items,rules);this.upgrades=new UpgradeStore();this.uses=new UseStore(database,items);this.admins=new AdminStore(items,rules);}
+    private final RenameStore renames;
+    public TownStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;this.rules=rules;this.sprites=new SpriteStore(items,rules);this.crafts=new CraftStore(items,rules);this.gears=new GearStore(items,rules);this.shops=new ShopStore(database,items,rules);this.gifts=new GiftWrapStore(items,rules);this.customize=new CustomizeStore(items,rules);this.upgrades=new UpgradeStore();this.uses=new UseStore(database,items);this.admins=new AdminStore(items,rules);this.renames=new RenameStore(database,items);}
     public static final long RENAME_INTERVAL=30L*24*60*60*1000;
     /** Stock canRename: the window only opens inside the thirty-day rename interval. */
     public void canRename(int account,int knight,long auth)throws IOException {
-        database.read(c->{checkRenamable(c,account,knight,auth);return null;});
-    }
-    private static void checkRenamable(Connection c,int account,int knight,long auth)throws SQLException,IOException {
-        WorldProfiles.load(c,account,knight,auth);
-        long last;try(var s=c.prepareStatement("SELECT last_renamed FROM knights WHERE account_id=? AND id=?")){s.setInt(1,account);s.setInt(2,knight);try(var r=s.executeQuery()){if(!r.next())throw new IOException("m.internal_error");last=r.getLong(1);}}
-        if(last>0&&System.currentTimeMillis()-last<RENAME_INTERVAL)throw new IOException("m.rename_too_soon");
+        renames.canRename(account,knight,auth);
     }
     /** The rename ticket and globally unique identity commit in the same authenticated write. */
     public Result rename(int account,int knight,long auth,String name)throws IOException {
-        String error=CharacterStore.nameError(name);if(error!=null)throw new IOException(error);
-        return change(account,knight,auth,(c,p)->{
-            checkRenamable(c,account,knight,auth);
-            var ticket=p.items().stream().filter(i->i.config().equals("Upgrade/Rename Knight")).findFirst().orElseThrow(()->new IOException("m.no_rename_item"));
-            try(var st=c.prepareStatement("UPDATE knights SET name=?,name_key=?,last_renamed=? WHERE account_id=? AND id=? AND name_key<>?")){
-                st.setString(1,name);st.setString(2,name.toLowerCase(Locale.ROOT));st.setLong(3,System.currentTimeMillis());st.setInt(4,account);st.setInt(5,knight);st.setString(6,name.toLowerCase(Locale.ROOT));
-                if(st.executeUpdate()!=1)throw new IOException("Choose a different knight name");
-            }
-            TownLedger.consume(c,p,ticket.id(),1);
-            try(var st=c.prepareStatement("UPDATE accounts SET revision=revision+1 WHERE id=?")){st.setInt(1,account);st.executeUpdate();}
-            return name;
-        });
+        return renames.rename(account,knight,auth,name);
     }
     static TownState load(Connection c,int world)throws SQLException,IOException{
         var recipes=new ArrayList<TownState.LearnedRecipe>();var sprites=new ArrayList<TownState.Sprite>();var harnesses=new ArrayList<TownState.Harness>();int equipped=0;
@@ -110,22 +95,13 @@ public final class TownStore {
         if(approvedCost < -1)throw new IOException("m.costupdate");
         return changeBounded(account,knight,auth,(c,p)->uses.revive(c,p,approvedCost));
     }
-    @FunctionalInterface private interface Mutation{Object run(Connection c,WorldProfile profile)throws SQLException,IOException;}
-    @FunctionalInterface private interface Transaction{Result run(Database.Work<Result> work)throws IOException;}
-    private Result change(int account,int knight,long auth,Mutation mutation)throws IOException{
-        return change(account,knight,auth,mutation,database::write);
+    private Result change(int account,int knight,long auth,TownMutations.Mutation mutation)throws IOException{
+        return TownMutations.change(database,items,account,knight,auth,mutation);
     }
     /** Scene-locked item use and revive: refuse before opening a connection when the
      *  shared writer is still busy after the queue budget. */
-    private Result changeBounded(int account,int knight,long auth,Mutation mutation)throws IOException{
-        return change(account,knight,auth,mutation,
-            work->database.writeBounded(Database.LOCKED_WRITE_TIMEOUT_MILLIS,work));
-    }
-    private Result change(int account,int knight,long auth,Mutation mutation,Transaction transaction)throws IOException{
-        return transaction.run(c->{var profile=WorldProfiles.load(c,account,knight,auth);Object result=mutation.run(c,profile);InventoryExpiry.reconcile(c,profile.worldId(),System.currentTimeMillis());TownLedger.touch(c,profile.worldId());
-            var updated=WorldProfiles.load(c,account,knight,auth);
-            updated=AccountAchievements.reconcile(c,updated,items,updated.progress().tutorialComplete()?32:0,System.currentTimeMillis());
-            return new Result(updated,result);});
+    private Result changeBounded(int account,int knight,long auth,TownMutations.Mutation mutation)throws IOException{
+        return TownMutations.changeBounded(database,items,account,knight,auth,mutation);
     }
     long create(Connection c,WorldProfile p,String config,int count,boolean locked,int level,float heat,List<StarterCatalog.Model> variants)throws SQLException,IOException{
         return TownLedger.create(c,p,items,config,count,locked,level,heat,variants);
