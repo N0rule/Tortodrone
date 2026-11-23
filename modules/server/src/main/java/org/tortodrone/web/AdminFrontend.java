@@ -25,10 +25,10 @@ public final class AdminFrontend implements WebFrontend,WebFrontend.Factory {
     }
 
     @Override public WebFrontend create(AccountStore accounts,ServerControl control,ServerLog log,Path deployment,
-            Path config,ContentRegistry content,ServerSettings settings)throws IOException {
+            Path data,Path config,ContentRegistry content,ServerSettings settings)throws IOException {
         var service=new AdminService(accounts,control,log,deployment,content,config);
-        var identities=new WebIdentityStore(deployment);
-        var security=new WebSecurity(settings.webui(),identities,deployment);
+        var identities=new WebIdentityStore(data);
+        var security=new WebSecurity(settings.webui(),identities,data);
         var handler=new AdminHandler(security,identities,service,deployment.resolve("webui"));
         return new AdminFrontend(service,handler,security.setupCode());
     }

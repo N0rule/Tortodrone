@@ -25,7 +25,7 @@ public interface WebFrontend extends AutoCloseable {
 
     interface Factory {
         WebFrontend create(AccountStore accounts,ServerControl control,ServerLog log,Path deployment,
-                Path config,ContentRegistry content,ServerSettings settings)throws IOException;
+                Path data,Path config,ContentRegistry content,ServerSettings settings)throws IOException;
 
         /** Local-console identity access, available even when the WebUI listener is disabled. */
         WebIdentities identities(Path data)throws IOException;
@@ -34,8 +34,8 @@ public interface WebFrontend extends AutoCloseable {
     /** Load the single registered frontend; a missing provider is a broken build, not a
      *  silently disabled WebUI. */
     static WebFrontend create(AccountStore accounts,ServerControl control,ServerLog log,Path deployment,
-            Path config,ContentRegistry content,ServerSettings settings)throws IOException {
-        return factory().create(accounts,control,log,deployment,config,content,settings);
+            Path data,Path config,ContentRegistry content,ServerSettings settings)throws IOException {
+        return factory().create(accounts,control,log,deployment,data,config,content,settings);
     }
 
     /** Local-console identity access through the same single provider. */

@@ -62,7 +62,7 @@ public final class Server {
                         com.sun.net.httpserver.HttpHandler handler=null;
                         String setupCode=null;
                         if(settings.webui().enabled()) {
-                            frontend=WebFrontend.create(adminAccounts,control,log,directory,config,content,settings);
+                            frontend=WebFrontend.create(adminAccounts,control,log,directory,dataDirectory,config,content,settings);
                             setupCode=frontend.setupCode();
                             if(!settings.webui().directHttp())log.info("WebUI proxy secret file: "+dataDirectory.resolve("webui-proxy.key"));
                             handler=frontend.handler();
