@@ -10,7 +10,7 @@ Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights 
 | Login/session orchestration | `server/network/{SecureHandshake,ClientSession,WorldSession,SessionInvocationRouter,SessionResponder,SessionOutput,WorldStatePoller}` and feature handlers (`GuildHandler`, `TradeHandler`, `ExchangeHandler`, `AuctionHandler`, `BillingHandler`, `SteamHandler`, `FriendHandler`) |
 | Client framing, class tables and serialization | `protocol/{HandshakeCodec,SessionDecoder,WireContext,WireWriter,SessionCodec}` and per-feature codecs (`BootstrapCodec`, `SocialCodec`, `MissionCodec`, `KnightCodec`, `TradeCodec`, `TownCodec`, `PartyCodec`, `SceneCodec`, `GuildCodec`) |
 | Authentication and account/knight services | `account/`, `character/` |
-| Transactions, persisted identity, items and trades | `storage/{Database,WorldProfiles,TradeTransfer}` |
+| Transactions, persisted identity, items, town services and trades | `storage/` (`Database`, `SchemaMigrations`, the `Account`/`Roster`/`World`/`Administration`/`Preference` repositories, `WorldProfiles`, `TradeTransfer` and the town domain stores) |
 | Scene templates, instances, movement and tick | `world/{SceneCatalog,SceneRegistry,SceneSimulation,TownMovement,CollisionMap,SceneContent,SceneEntities,SceneCollision}` |
 | Player combat / effects | `world/{KnightCombat,SceneWeapons,WeaponCatalog,EquipmentCatalog,FireCatalog}` |
 | Atomic unified YAML resolution | `resources/{ContentManager,ContentRegistry}` |
