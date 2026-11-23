@@ -32,7 +32,8 @@ public final class TownStore {
     private final GiftWrapStore gifts;
     private final CustomizeStore customize;
     private final UpgradeStore upgrades;
-    public TownStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;this.rules=rules;this.sprites=new SpriteStore(items,rules);this.crafts=new CraftStore(items,rules);this.gears=new GearStore(items,rules);this.shops=new ShopStore(database,items,rules);this.gifts=new GiftWrapStore(items,rules);this.customize=new CustomizeStore(items,rules);this.upgrades=new UpgradeStore();}
+    private final UseStore uses;
+    public TownStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;this.rules=rules;this.sprites=new SpriteStore(items,rules);this.crafts=new CraftStore(items,rules);this.gears=new GearStore(items,rules);this.shops=new ShopStore(database,items,rules);this.gifts=new GiftWrapStore(items,rules);this.customize=new CustomizeStore(items,rules);this.upgrades=new UpgradeStore();this.uses=new UseStore(database,items);}
     public static final long RENAME_INTERVAL=30L*24*60*60*1000;
     /** Stock canRename: the window only opens inside the thirty-day rename interval. */
     public void canRename(int account,int knight,long auth)throws IOException {
@@ -73,40 +74,12 @@ public final class TownStore {
     /** Scene-issued receipt, never accepted from a client invocation. Commit before actor removal.
      * The receipt is global to the pickup, so a reconnect/competing account cannot claim it twice. */
     public Result pickup(int account,int knight,long auth,String receipt,String config)throws IOException {
-        if(receipt==null||!receipt.matches("[0-9a-f-]{36}:[0-9]{1,10}"))throw new IOException("Invalid scene reward receipt");
-        return database.write(c->{
-            var profile=WorldProfiles.load(c,account,knight,auth);String key="scene-pickup:"+receipt;
-            try(var st=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){
-                st.setString(1,key);try(var row=st.executeQuery()){if(row.next()){
-                    if(!row.getString(1).equals(Integer.toString(profile.worldId())))throw new IOException("Pickup already claimed");
-                    return new Result(profile,null);
-                }}
-            }
-            int crowns=switch(config){
-                // Original Treasure/Crowns/Value/Base denominations, also item.xml's Crowns argument.
-                case "Instant/Crown/Copper Crown"->1;case "Instant/Crown/Copper-Silver Crown"->5;
-                case "Instant/Crown/Silver Crown"->10;case "Instant/Crown/Silver-Gold Crown"->25;
-                case "Instant/Crown/Gold Crown"->50;default->0;
-            };
-            if(crowns>0)TownLedger.credit(c,profile.worldId(),crowns,0);
-            else{
-                var definition=items.require(config);
-                if(!definition.grantable()||definition.permanent()||definition.type().equals("InstantAction"))throw new IOException("Unsupported persistent scene reward");
-                create(c,profile,config,1,false,0,0,List.of());
-            }
-            try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?)")){st.setString(1,key);st.setInt(2,profile.worldId());st.executeUpdate();}
-            TownLedger.touch(c,profile.worldId());return new Result(WorldProfiles.load(c,account,knight,auth),null);
-        });
+        return uses.pickup(account,knight,auth,receipt,config);
     }
     public static final int SPARK_COST=org.tortodrone.core.economy.Fees.SPARK_COST;
     /** Official ItemMarshaller.deleteItem: one owned, non-permanent, unequipped item goes whole. */
     public Result trash(int account,int knight,long auth,long item)throws IOException {
-        return change(account,knight,auth,(c,p)->{
-            var held=TownLedger.owned(p,item);
-            if(held.permanent()||held.equippedSlot()!=null)throw new IOException("m.internal_error");
-            TownLedger.consume(c,p,item,held.count());
-            return null;
-        });
+        return change(account,knight,auth,(c,p)->uses.trash(c,p,item));
     }
     /** Only verified cosmetic AnimatedAction items; revision/ownership checked in the same write. */
     public Result confetti(int account,int knight,long auth,long revision,long item)throws IOException {
@@ -116,25 +89,12 @@ public final class TownStore {
         return animatedItem(account,knight,auth,revision,item,false);
     }
     private Result animatedItem(int account,int knight,long auth,long revision,long item,boolean confetti)throws IOException {
-        return change(account,knight,auth,(c,p)->{
-            if(p.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
-            var held=TownLedger.owned(p,item);
-            if(!(confetti?Confetti.supports(held.config()):AnimatedItems.supports(held.config()))||!items.require(held.config()).type().equals("AnimatedAction")
-                    ||held.gift()!=null||held.expired(System.currentTimeMillis()))throw new IOException("m.internal_error");
-            TownLedger.consume(c,p,item,1);return held.config();
-        });
+        return change(account,knight,auth,(c,p)->uses.animated(c,p,revision,item,confetti));
     }
     /** Consume one owned scene-usable item; the scene applies its prepared effect under
      *  the same lock, so a refused revision or item leaves both sides unchanged. */
     public Result useItem(int account,int knight,long auth,long revision,long item)throws IOException{
-        return changeBounded(account,knight,auth,(c,p)->{
-            if(p.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
-            var held=TownLedger.owned(p,item);
-            var definition=items.find(held.config());
-            if(definition==null||!Set.of("InstantAction","SpawnActor","Lift").contains(definition.type())
-                    ||held.gift()!=null||held.expired(System.currentTimeMillis()))throw new IOException("m.internal_error");
-            TownLedger.consume(c,p,item,1);return held.config();
-        });
+        return changeBounded(account,knight,auth,(c,p)->uses.use(c,p,revision,item));
     }
     /**
      * Credit the account-scoped lifetime counters that native scene actions attach to a
@@ -142,35 +102,12 @@ public final class TownStore {
      * and reconciles achievements before the caller publishes the updated profile.
      */
     public Result stats(int account,int knight,long auth,Map<String,Integer> counters)throws IOException{
-        if(counters==null||counters.isEmpty())throw new IOException("m.internal_error");
-        var ordinals=new TreeMap<Integer,Integer>();
-        for(var entry:counters.entrySet()){
-            int ordinal;
-            try{ordinal=org.tortodrone.core.character.NativeStats.ordinal(entry.getKey());}
-            catch(IllegalArgumentException invalid){throw new IOException("Unknown lifetime stat "+entry.getKey(),invalid);}
-            int delta=entry.getValue()==null?0:entry.getValue();
-            if(delta<1||delta>1_000_000)throw new IOException("Invalid lifetime stat increment");
-            ordinals.merge(ordinal,delta,Integer::sum);
-            if(ordinals.get(ordinal)>1_000_000)throw new IOException("Invalid lifetime stat increment");
-        }
-        return change(account,knight,auth,(c,p)->{
-            for(var entry:ordinals.entrySet())AccountAchievements.increment(c,p.accountId(),entry.getKey(),entry.getValue());
-            return null;
-        });
+        return change(account,knight,auth,(c,p)->uses.stats(c,p,counters));
     }
     /** Native PartyMarshaller.revive: -1 spends one owned Spark; a positive approval buys its use. */
     public Result revive(int account,int knight,long auth,int approvedCost)throws IOException{
         if(approvedCost < -1)throw new IOException("m.costupdate");
-        return changeBounded(account,knight,auth,(c,p)->{
-            if(approvedCost<0){
-                var spark=p.items().stream().filter(i->i.config().equals("Rarity/Spark of Life")&&i.count()>0).findFirst().orElseThrow(()->new IOException("m.costupdate"));
-                TownLedger.consume(c,p,spark.id(),1);
-            }else{
-                if(approvedCost<SPARK_COST)throw new IOException("m.costupdate");
-                TownLedger.pay(c,p,0,SPARK_COST);
-            }
-            return null;
-        });
+        return changeBounded(account,knight,auth,(c,p)->uses.revive(c,p,approvedCost));
     }
     @FunctionalInterface private interface Mutation{Object run(Connection c,WorldProfile profile)throws SQLException,IOException;}
     @FunctionalInterface private interface Transaction{Result run(Database.Work<Result> work)throws IOException;}
