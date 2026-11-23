@@ -15,13 +15,29 @@ final class SchemaMigrations {
     /** Fixed project marker written to {@code PRAGMA application_id}; earlier releases wrote 0. */
     static final int APPLICATION_ID = 0x5444524E; // TDRN
     static final int BASELINE = 1;
-    static final int LATEST = 1;
+    static final int LATEST = 2;
 
     @FunctionalInterface interface Step { void apply(Connection connection) throws SQLException, IOException; }
     record Migration(int version, String description, Step step) { }
 
     /** Ordered steps above the baseline. Add one entry per released schema change. */
-    static final java.util.List<Migration> ALL = java.util.List.of();
+    static final java.util.List<Migration> ALL = java.util.List.of(
+        new Migration(2,"lookup indexes",SchemaMigrations::lookupIndexes));
+
+    /** Every foreign-key column and hot lookup that previously scanned its table. */
+    private static void lookupIndexes(Connection connection)throws SQLException {
+        try(Statement statement=connection.createStatement()){
+            statement.execute("CREATE INDEX IF NOT EXISTS inventory_items_world ON inventory_items(world_id)");
+            statement.execute("CREATE INDEX IF NOT EXISTS town_mail_world ON town_mail(world_id,sent)");
+            statement.execute("CREATE INDEX IF NOT EXISTS town_mail_auction ON town_mail(auction)");
+            statement.execute("CREATE INDEX IF NOT EXISTS town_sprites_world ON town_sprites(world_id)");
+            statement.execute("CREATE INDEX IF NOT EXISTS town_harnesses_world ON town_harnesses(world_id)");
+            statement.execute("CREATE INDEX IF NOT EXISTS currency_events_world ON currency_events(world_id)");
+            statement.execute("CREATE INDEX IF NOT EXISTS item_events_world ON item_events(world_id)");
+            statement.execute("CREATE INDEX IF NOT EXISTS account_events_account ON account_events(account_id)");
+            statement.execute("CREATE INDEX IF NOT EXISTS town_auction_bids_world ON town_auction_bids(world_id)");
+        }
+    }
 
     private SchemaMigrations() { }
 

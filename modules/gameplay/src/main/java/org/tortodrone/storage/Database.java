@@ -301,6 +301,7 @@ public final class Database {
                 statement.execute("PRAGMA application_id=" + SchemaMigrations.APPLICATION_ID); } return null; });
             write(connection -> {
                 SchemaMigrations.baseline(connection);
+                SchemaMigrations.apply(connection, SchemaMigrations.BASELINE);
                 try (Statement statement = connection.createStatement()) {
                     statement.execute("PRAGMA user_version=" + SchemaMigrations.LATEST);
                 }

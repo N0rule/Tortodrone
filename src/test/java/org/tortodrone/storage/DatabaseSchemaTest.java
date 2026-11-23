@@ -19,8 +19,12 @@ public final class DatabaseSchemaTest {
             Path current = home.resolve("current");
             var db = new Database(current, false);
             check(applicationId(db) == SchemaMigrations.APPLICATION_ID, "fresh database carries the project marker");
-            check(version(db) == Database.SCHEMA_VERSION && Database.SCHEMA_VERSION == SchemaMigrations.BASELINE,
-                "fresh database starts at the 0.42.0 baseline");
+            check(version(db) == Database.SCHEMA_VERSION && Database.SCHEMA_VERSION == SchemaMigrations.LATEST,
+                "fresh database starts at the latest schema with every migration recorded");
+            check(db.read(c -> indexes(c).containsAll(List.of("inventory_items_world","town_mail_world",
+                    "town_mail_auction","town_sprites_world","town_harnesses_world","currency_events_world",
+                    "item_events_world","account_events_account","town_auction_bids_world"))),
+                "the baseline build carries the lookup indexes");
             check(db.read(c -> { try (var s = c.createStatement();
                     var r = s.executeQuery("SELECT COUNT(*) FROM schema_migrations WHERE version=1")) { r.next(); return r.getInt(1); } }) == 1,
                 "the baseline row is recorded in schema_migrations");
@@ -35,6 +39,26 @@ public final class DatabaseSchemaTest {
                 check(new Database(current,false).worldProfile(1,1,1).equals(profile), "current schema can open alongside a live server");
             }
 
+            // A baseline-era file (schema 1) opens through the ordered step, after a backup.
+            Path upgrade = home.resolve("upgrade");
+            new Database(upgrade, false);
+            try (Connection c = DriverManager.getConnection("jdbc:sqlite:" + upgrade.resolve("tortodrone.db"));
+                 Statement statement = c.createStatement()) {
+                for (String index : List.of("inventory_items_world","town_mail_world","town_mail_auction",
+                        "town_sprites_world","town_harnesses_world","currency_events_world","item_events_world",
+                        "account_events_account","town_auction_bids_world"))
+                    statement.execute("DROP INDEX " + index);
+                statement.execute("DELETE FROM schema_migrations WHERE version=2");
+                statement.execute("PRAGMA user_version=1");
+            }
+            var upgraded = new Database(upgrade, false);
+            check(version(upgraded) == Database.SCHEMA_VERSION, "a schema-1 file upgrades to the latest schema");
+            check(upgraded.read(c -> indexes(c).contains("inventory_items_world")), "the upgrade creates the lookup indexes");
+            try (var backups = Files.list(upgrade.resolve("backups"))) {
+                check(backups.anyMatch(path -> path.getFileName().toString().startsWith("tortodrone-pre-1-to-")),
+                    "the upgrade takes a consistent pre-migration backup");
+            }
+
             // Ordered migration runner: every step above the stored version runs once, in order.
             Path migration = home.resolve("migration");
             new Database(migration, false);
@@ -43,16 +67,16 @@ public final class DatabaseSchemaTest {
                  Statement statement = c.createStatement()) {
                 statement.execute("PRAGMA foreign_keys=OFF");
                 statement.execute("BEGIN IMMEDIATE");
-                SchemaMigrations.apply(c, 1, List.of(
-                    new SchemaMigrations.Migration(2, "second", connection -> order.add(2)),
-                    new SchemaMigrations.Migration(3, "third", connection -> order.add(3))));
-                statement.execute("PRAGMA user_version=3");
+                SchemaMigrations.apply(c, SchemaMigrations.LATEST, List.of(
+                    new SchemaMigrations.Migration(SchemaMigrations.LATEST + 1, "next", connection -> order.add(3)),
+                    new SchemaMigrations.Migration(SchemaMigrations.LATEST + 2, "later", connection -> order.add(4))));
+                statement.execute("PRAGMA user_version=" + (SchemaMigrations.LATEST + 2));
                 statement.execute("COMMIT");
-                check(order.equals(List.of(2,3)), "ordered steps run above the stored version");
+                check(order.equals(List.of(3,4)), "ordered steps run above the stored version");
                 try (var r = statement.executeQuery("SELECT version FROM schema_migrations ORDER BY version")) {
                     var rows = new ArrayList<Integer>();
                     while (r.next()) rows.add(r.getInt(1));
-                    check(rows.equals(List.of(1,2,3)), "each applied step is recorded");
+                    check(rows.equals(List.of(1,2,3,4)), "each applied step is recorded");
                 }
             }
             boolean refusedStep = false;
@@ -123,6 +147,14 @@ public final class DatabaseSchemaTest {
         } finally {try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
 
+    private static Set<String> indexes(Connection c) throws SQLException {
+        var names = new HashSet<String>();
+        try (var s = c.createStatement(); var r = s.executeQuery(
+                "SELECT name FROM sqlite_master WHERE type='index'")) {
+            while (r.next()) names.add(r.getString(1));
+        }
+        return names;
+    }
     private static int applicationId(Database db) throws IOException {
         return db.read(c -> { try (var s=c.createStatement(); var r=s.executeQuery("PRAGMA application_id")) { r.next(); return r.getInt(1); } });
     }
