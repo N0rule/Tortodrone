@@ -31,7 +31,8 @@ public final class UpgradeSessionTest {
             var heat=db.grantItems("Alice",knight.name(),-1,-1,items.require("Upgrade/Heat Bonus"),2,-1,-1)
                 .items().stream().filter(i->i.config().equals("Upgrade/Heat Bonus")).map(WorldProfile.Item::id).toList();
             var socket=new Socket(){public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}};
-            try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},org.tortodrone.world.SceneRegistry.create(snapshot))) {
+            var scenes=SceneRegistry.create(snapshot);SceneRegistry.install(scenes);
+            try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)) {
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();
                 var listener=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)12);
                 var use=new SessionDecoder.Invocation(3,9,14,Arrays.asList(ids.getFirst(),null,listener));

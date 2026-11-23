@@ -381,7 +381,7 @@ owners that compose named collaborators instead of mixing responsibilities:
 The line counts are the size of each facade, not a target: a facade gains a line
 whenever a protocol entry point or a new collaborator is added. The two largest
 remaining stores were split the same way: `TownStore` composes `SpriteStore`,
-`TownLedger`, `TownSchema` and `CraftStore`, and `GuildStore` composes
+`TownLedger`, `TownSchema`, `CraftStore` and `GearStore`, and `GuildStore` composes
 `GuildHallStore` for the treasury well, hall state and expansion tickets. Phase 9
 stays evidence-gated and is not part of this table; it needs the per-epic stock
 evidence listed in `docs/baseline.md`.

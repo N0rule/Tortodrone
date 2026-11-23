@@ -17,7 +17,6 @@ import org.tortodrone.core.character.Currency;
 import org.tortodrone.core.character.AnimatedItems;
 import org.tortodrone.core.character.Confetti;
 import org.tortodrone.core.town.TownState;
-import org.tortodrone.core.town.GearRules;
 import org.tortodrone.core.town.SpriteRules;
 import org.tortodrone.core.town.TownCatalog;
 
@@ -28,7 +27,8 @@ public final class TownStore {
     private final TownCatalog rules;
     private final SpriteStore sprites;
     private final CraftStore crafts;
-    public TownStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;this.rules=rules;this.sprites=new SpriteStore(items,rules);this.crafts=new CraftStore(items,rules);}
+    private final GearStore gears;
+    public TownStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;this.rules=rules;this.sprites=new SpriteStore(items,rules);this.crafts=new CraftStore(items,rules);this.gears=new GearStore(items,rules);}
     public static final long RENAME_INTERVAL=30L*24*60*60*1000;
     /** Stock canRename: the window only opens inside the thirty-day rename interval. */
     public void canRename(int account,int knight,long auth)throws IOException {
@@ -238,41 +238,16 @@ public final class TownStore {
             try(var st=c.prepareStatement("INSERT INTO town_purchases(world_id,catalog,item,cycle,purchased) VALUES(?,'Supply Depot',?,0,1) ON CONFLICT(world_id,catalog,item,cycle) DO UPDATE SET purchased=purchased+1")){st.setInt(1,p.worldId());st.setString(2,good.item());st.executeUpdate();}return null;
         });
     }
-    private static final String[] FIRE_CRYSTALS={"Cracked","Dim","Warm","Glowing","Shining","Radiant"};
     public Result forge(int account,int knight,long auth,long itemId,int crystals,int expectedLevel)throws IOException{
-        return change(account,knight,auth,(c,p)->{
-            var item=TownLedger.owned(p,itemId);var definition=items.require(item.config());var gear=rules.gear().gear(item.config());
-            if(gear==null||gear.maximum(item.level()))throw new IOException("m.forge_already");
-            if(item.level()!=expectedLevel)throw new IOException("m.costupdate");
-            if(item.heatProgress()!=1)throw new IOException("m.forge_locked");
-            var props=rules.gear().forge(gear,item.level());if(props==null)throw new IOException("m.forge_already");
-            float chance=props.chance(crystals,true);int rarity=definition.rarity();if(rarity<0||rarity>=FIRE_CRYSTALS.length)throw new IOException("m.internal_error");
-            int remaining=crystals;var consumes=new LinkedHashMap<Long,Integer>();String config="Rarity/Fire Crystal/"+FIRE_CRYSTALS[rarity];
-            for(var held:p.items())if(held.config().equals(config)&&held.equippedSlot()==null&&!held.permanent()&&remaining>0){int take=Math.min(held.count(),remaining);consumes.put(held.id(),take);remaining-=take;}
-            if(remaining!=0)throw new Database.Refused("m.insufficient_crystals");
-            for(var consume:consumes.entrySet())TownLedger.consume(c,p,consume.getKey(),consume.getValue());
-            // Like the archive, failed attempts spend crystals but preserve the full heat bar.
-            if(java.util.concurrent.ThreadLocalRandom.current().nextFloat()>=chance)return null;
-            // Live ForgeAnswerProbe: a qualified localization key followed by a tainted
-            // displayed level (stored levels are zero based), in this exact order.
-            setGearProgress(c,p.worldId(),item.id(),item.level()+1,0);
-            return GearRules.forgeMessage(definition.nameKey(),item.level()+1);
-        });
+        return change(account,knight,auth,(c,p)->gears.forge(c,p,itemId,crystals,expectedLevel));
     }
     /** Trusted heat awards split only across equipped gear still able to receive heat. */
     public Result addHeat(int account,int knight,long auth,float amount)throws IOException{
         if(!Float.isFinite(amount)||amount<=0||amount>1_000_000)throw new IOException("Invalid heat award");
-        return change(account,knight,auth,(c,p)->{
-            applyHeat(c,p,rules,amount);return null;
-        });
+        return change(account,knight,auth,(c,p)->gears.addHeat(c,p,amount));
     }
     static void applyHeat(Connection c,WorldProfile p,TownCatalog rules,float amount)throws SQLException,IOException {
-        float awarded=SlotUpgrades.heatBonusActive(p)?amount*2:amount;
-        var eligible=p.items().stream().filter(i->i.equippedSlot()!=null&&Set.of(0,1,2,6,7,8,9).contains(i.equippedSlot())).filter(i->{var g=rules.gear().gear(i.config());return g!=null&&!g.maximum(i.level())&&i.heatProgress()<1;}).toList();
-        for(var item:eligible){var g=rules.gear().gear(item.config());setGearProgress(c,p.worldId(),item.id(),item.level(),g.addHeat(item.level(),item.heatProgress(),awarded/eligible.size()));}
-    }
-    private static void setGearProgress(Connection c,int world,long item,int level,float heat)throws SQLException,IOException{
-        try(var st=c.prepareStatement("UPDATE inventory_items SET level=?,heat_progress=? WHERE world_id=? AND item_id=?")){st.setInt(1,level);st.setFloat(2,heat);st.setInt(3,world);st.setLong(4,item);if(st.executeUpdate()!=1)throw new IOException("Item changed");}
+        GearStore.applyHeat(c,p,rules,amount);
     }
     static void requireGameMaster(Connection c,int account,long auth)throws SQLException,IOException{
         try(var st=c.prepareStatement("SELECT game_master FROM accounts WHERE id=? AND auth_revision=?")){st.setInt(1,account);st.setLong(2,auth);try(var r=st.executeQuery()){if(!r.next()||!r.getBoolean(1))throw new IOException("Game Master permission required");}}
@@ -347,19 +322,19 @@ public final class TownStore {
                 var weapons=p.items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()>=6&&i.equippedSlot()<=9).toList();
                 if(weapons.isEmpty())throw new IOException("Equip a weapon first");
                 boolean applied=false;
-                for(var weapon:weapons){var weaponGear=rules.gear().gear(weapon.config());if(weaponGear==null||weaponGear.levels()<1)continue;setGearProgress(c,p.worldId(),weapon.id(),weapon.level(),percent/100f);applied=true;}
+                for(var weapon:weapons){var weaponGear=rules.gear().gear(weapon.config());if(weaponGear==null||weaponGear.levels()<1)continue;GearStore.setGearProgress(c,p.worldId(),weapon.id(),weapon.level(),percent/100f);applied=true;}
                 if(!applied)throw new IOException("This item has no heat progression");
                 return null;
             }
             var item=p.items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()==slot).findFirst().orElseThrow(()->new IOException("Equip an item in that slot first"));
             var gear=rules.gear().gear(item.config());if(gear==null||gear.levels()<1)throw new IOException("This item has no heat progression");
-            if(method==41){float percent=(Float)args.get(1);if(!Float.isFinite(percent)||percent<0||percent>100)throw new IOException("Heat progress must be between 0 and 100");setGearProgress(c,p.worldId(),item.id(),item.level(),percent/100f);return null;}
-            if(method==42){int level=(Integer)args.get(1);if(level<0||level>=gear.levels())throw new IOException("Item level is outside its progression table");setGearProgress(c,p.worldId(),item.id(),level,0);return null;}
+            if(method==41){float percent=(Float)args.get(1);if(!Float.isFinite(percent)||percent<0||percent>100)throw new IOException("Heat progress must be between 0 and 100");GearStore.setGearProgress(c,p.worldId(),item.id(),item.level(),percent/100f);return null;}
+            if(method==42){int level=(Integer)args.get(1);if(level<0||level>=gear.levels())throw new IOException("Item level is outside its progression table");GearStore.setGearProgress(c,p.worldId(),item.id(),level,0);return null;}
             if(method!=23)throw new IOException("Unknown gear admin operation");
             if(gear.maximum(item.level()))return null;var props=rules.gear().forge(gear,item.level());if(props==null)return null;
             int crystals=(Integer)args.get(1);if(crystals<0||crystals>9999)throw new IOException("Invalid forge crystal tier");
             float chance=props.chance(crystals,false);if(java.util.concurrent.ThreadLocalRandom.current().nextFloat()>=chance)return null;
-            setGearProgress(c,p.worldId(),item.id(),item.level()+1,0);return item.level()+1;
+            GearStore.setGearProgress(c,p.worldId(),item.id(),item.level()+1,0);return item.level()+1;
         });
     }
     /** Native extendUpgrade(active item, unused item), ItemMarshaller method five. */
