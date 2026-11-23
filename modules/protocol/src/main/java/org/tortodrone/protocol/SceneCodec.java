@@ -54,7 +54,10 @@ import org.tortodrone.core.party.PartyView;
 
 /** Scene-owned downstream frames; shares the connection symbol tables. */
 public final class SceneCodec extends WireWriter {
-    public SceneCodec(WireContext context, ItemCatalog catalog){super(context,catalog);}
+    private final SceneActorWire actorWire;
+    public SceneCodec(WireContext context, ItemCatalog catalog){super(context,catalog);actorWire=new SceneActorWire(context,catalog);}
+    /** Shared scene-actor records; the template builder reuses the same encoder. */
+    void sceneDeltaActors(DataOutputStream out,int observer,List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline,boolean interior,List<SceneEffect> effects,List<SceneCombatEvent> combat)throws IOException{actorWire.sceneDeltaActors(out,observer,added,updated,removed,baseline,interior,effects,combat);}
     public byte[] forceTown(int oid,short receiver) throws IOException {
         return forceScene(oid,receiver,SceneSources.current().entry());
     }
@@ -138,7 +141,7 @@ public final class SceneCodec extends WireWriter {
             objectHeader(out,id,scene.map().town()?"com.threerings.projectx.town.data.TownSceneObject":"com.threerings.projectx.data.ProjectXSceneObject",scene.oid());
             type(out,"com.threerings.presents.dobj.OidList");out.writeBoolean(true);out.writeInt(actors.size());for(var a:actors)out.writeInt(a.clientOid());out.writeInt(actors.size());
             // DSet.readObject retains wire order; its key lookup requires ascending bodyOid.
-            type(out,WireTypes.DSET);out.writeInt(actors.size());for(var a:actors.stream().sorted(java.util.Comparator.comparingInt(ActorState::clientOid)).toList())occupant(out,a);
+            type(out,WireTypes.DSET);out.writeInt(actors.size());for(var a:actors.stream().sorted(java.util.Comparator.comparingInt(ActorState::clientOid)).toList())actorWire.occupant(out,a);
             type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(scene.oid());out.writeInt(org.tortodrone.core.world.SceneChat.SERVICE);
             type(out,"com.threerings.tudey.data.TudeySceneMarshaller");out.writeInt(scene.oid());out.writeInt(TUDEY_SCENE_INVOCATION);
             type(out,"com.threerings.projectx.data.ProjectXSceneMarshaller");out.writeInt(scene.oid());out.writeInt(PROJECTX_SCENE_INVOCATION);
@@ -166,7 +169,7 @@ public final class SceneCodec extends WireWriter {
             });
             attribute(out, sceneOid, "occupantInfo", o -> {
                 type(o, WireTypes.DSET); o.writeInt(actors.size());
-                for (var actor : actors.stream().sorted(java.util.Comparator.comparingInt(ActorState::clientOid)).toList()) occupant(o, actor);
+                for (var actor : actors.stream().sorted(java.util.Comparator.comparingInt(ActorState::clientOid)).toList()) actorWire.occupant(o, actor);
             });
         });
     }
@@ -184,7 +187,7 @@ public final class SceneCodec extends WireWriter {
                 type(out,"com.threerings.presents.dobj.ObjectRemovedEvent");out.writeInt(sceneOid);string(out,"occupants");out.writeInt(old.getValue());
             }
             for(var actor:actors)if(!previous.containsKey(actor.id())||previous.get(actor.id())!=actor.clientOid()){
-                type(out,"com.threerings.presents.dobj.EntryAddedEvent");out.writeInt(sceneOid);string(out,"occupantInfo");occupant(out,actor);
+                type(out,"com.threerings.presents.dobj.EntryAddedEvent");out.writeInt(sceneOid);string(out,"occupantInfo");actorWire.occupant(out,actor);
                 type(out,"com.threerings.presents.dobj.ObjectAddedEvent");out.writeInt(sceneOid);string(out,"occupants");out.writeInt(actor.clientOid());
             }
         });
@@ -196,7 +199,7 @@ public final class SceneCodec extends WireWriter {
             type(out,WireTypes.ARRAY_LIST);out.writeInt(changed.size());
             for(var actor:changed) {
                 type(out,WireTypes.ENTRY_UPDATED_EVENT);out.writeInt(sceneOid);
-                string(out,"occupantInfo");occupant(out,actor);
+                string(out,"occupantInfo");actorWire.occupant(out,actor);
             }
         });
     }
@@ -231,8 +234,8 @@ public final class SceneCodec extends WireWriter {
     public byte[] sceneDelta(int oid,int sceneOid,int acknowledge,short ping,int reference,int timestamp,
             short elapsed,List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline,boolean interior,List<SceneEffect> effects,List<SceneCombatEvent> combat)throws IOException {
         return frame(out -> {
-            sceneDeltaHeader(out,oid,sceneOid,acknowledge,ping,reference,timestamp,elapsed);
-            sceneDeltaActors(out,oid,added,updated,removed,baseline,interior,effects,combat);
+            actorWire.sceneDeltaHeader(out,oid,sceneOid,acknowledge,ping,reference,timestamp,elapsed);
+            actorWire.sceneDeltaActors(out,oid,added,updated,removed,baseline,interior,effects,combat);
         });
     }
 

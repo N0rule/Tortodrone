@@ -265,7 +265,7 @@ public final class SessionCodec extends WireWriter {
             int referenceOffset=body.size();out.writeInt(0);
             out.writeInt(timestamp);
             int elapsedOffset=body.size();out.writeShort(0);
-            codec.sceneDeltaActors(out,0,added,updated,removed,baseline,interior,effects,combat);
+            codec.sceneCodec.sceneDeltaActors(out,0,added,updated,removed,baseline,interior,effects,combat);
             out.flush();
             if(body.size()+4>MAX_DOWNSTREAM_FRAME)throw new IOException("Session frame too large");
             int total=body.size()+4;
