@@ -148,7 +148,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final Map<SceneEntity,List<SceneEntity>> arsenalProps=new LinkedHashMap<>();
     private int nextId=1_000_000_000,lastStamp;
     private long entityOrder;
-    private final ScenePathBudget pathBudget=new ScenePathBudget();
+    private final ScenePathBudget pathBudget;
     private final MonsterMetrics monsterMetrics=new MonsterMetrics();
     private final boolean spatialQuery;
     private final java.util.random.RandomGenerator random;
@@ -195,7 +195,16 @@ public final class SceneEntities implements SceneWeapons.Targets {
     SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision,java.util.random.RandomGenerator random,boolean spatialQuery,int stamp){
         this(content,terrain,staticCollision,random,spatialQuery,stamp,MonsterCatalog.empty());
     }
+    /** Fixed path-budget clock for deterministic differential replays. */
+    SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision,java.util.random.RandomGenerator random,boolean spatialQuery,int stamp,java.util.function.LongSupplier pathClock){
+        this(content,terrain,staticCollision,random,spatialQuery,stamp,MonsterCatalog.empty(),pathClock);
+    }
     SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision,java.util.random.RandomGenerator random,boolean spatialQuery,int stamp,MonsterCatalog monsters){
+        this(content,terrain,staticCollision,random,spatialQuery,stamp,monsters,null);
+    }
+    /** A fixed budget clock keeps the differential replay independent of wall-clock admission. */
+    SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision,java.util.random.RandomGenerator random,boolean spatialQuery,int stamp,MonsterCatalog monsters,java.util.function.LongSupplier pathClock){
+        pathBudget=pathClock==null?new ScenePathBudget():new ScenePathBudget(pathClock);
         this.random=Objects.requireNonNull(random);this.spatialQuery=spatialQuery;this.monsters=Objects.requireNonNull(monsters);
         this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);pawnCollisionMask=Math.round(content.stats().getOrDefault("player.collision-mask",SceneContent.DEFAULT_PLAYER_COLLISION_MASK));
         var rules=new ArrayList<SceneActions.Rule>();

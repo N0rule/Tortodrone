@@ -28,8 +28,8 @@ public final class SpatialIndexDifferentialTest {
             var terrain = map.collision();
             float[] spawn = walkableSpawn(terrain, map.spawnX(), map.spawnY());
             var content = staged(map.content(), spawn);
-            var indexed = new SceneEntities(content, terrain, map.staticCollision(), new Random(7319), true, 1000);
-            var linear = new SceneEntities(content, terrain, map.staticCollision(), new Random(7319), false, 1000);
+            var indexed = new SceneEntities(content, terrain, map.staticCollision(), new Random(7319), true, 1000, () -> 0L);
+            var linear = new SceneEntities(content, terrain, map.staticCollision(), new Random(7319), false, 1000, () -> 0L);
             var players = players(spawn, 1000);
             int stamp = 1000;
             for (int tick = 0; tick <= 240; tick++, stamp += 50) {
