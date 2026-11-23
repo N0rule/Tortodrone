@@ -29,10 +29,13 @@ public final class HandshakeKeys {
         if (!(key instanceof RSAPrivateCrtKey rsa) || rsa.getModulus().bitLength() != 2048) {
             throw new java.io.IOException("Server requires a 2048-bit RSA private key");
         }
-        String publicValue = rsa.getModulus().toString(16) + "#" + rsa.getPublicExponent().toString(16);
+        String publicValue =
+                rsa.getModulus().toString(16) + "#" + rsa.getPublicExponent().toString(16);
         if (Files.exists(publicFile)) {
-            if (Files.size(publicFile) > 4096 || !Files.readString(publicFile).trim().equals(publicValue)) {
-                throw new java.io.IOException("keys/public.txt does not match keys/private.pk8; restore the matching pair");
+            if (Files.size(publicFile) > 4096
+                    || !Files.readString(publicFile).trim().equals(publicValue)) {
+                throw new java.io.IOException(
+                        "keys/public.txt does not match keys/private.pk8; restore the matching pair");
             }
             restrict(publicFile, "rw-------");
         } else {
@@ -43,8 +46,7 @@ public final class HandshakeKeys {
 
     private static void write(Path path, byte[] value) throws Exception {
         if (Files.getFileStore(path.getParent()).supportsFileAttributeView("posix")) {
-            Files.createFile(path, PosixFilePermissions.asFileAttribute(
-                PosixFilePermissions.fromString("rw-------")));
+            Files.createFile(path, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
         } else {
             Files.createFile(path);
         }

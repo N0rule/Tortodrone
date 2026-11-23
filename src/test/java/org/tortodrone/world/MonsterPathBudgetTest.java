@@ -1,8 +1,9 @@
 package org.tortodrone.world;
 
+import static org.tortodrone.support.TestWire.check;
+
 import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
-import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.ActorState;
 import org.tortodrone.core.world.SceneContent;
 
@@ -12,7 +13,7 @@ import org.tortodrone.core.world.SceneContent;
  * exceeds the queue depth.
  */
 public final class MonsterPathBudgetTest {
-    private MonsterPathBudgetTest() { }
+    private MonsterPathBudgetTest() {}
 
     public static void main(String[] args) throws Exception {
         var budget = new ScenePathBudget();
@@ -53,32 +54,70 @@ public final class MonsterPathBudgetTest {
 
         // Scene-level: eight blocked pursuers all want a path on the same tick.
         var fields = new HashMap<String, String>();
-        fields.putAll(Map.of("config", "Fixture/PathBudget", "kind", "Monster",
-            "native-type", "com.threerings.projectx.dungeon.data.actor.Monster",
-            "health", "100", "damage-mask", "2", "radius", ".4", "speed", "2", "collision-mask", "1"));
-        fields.putAll(Map.of("acquire-distance", "40", "acquisition-interval", "0",
-            "attack-distance", "2", "attack", "0", "turn-rate", "100"));
+        fields.putAll(Map.of(
+                "config",
+                "Fixture/PathBudget",
+                "kind",
+                "Monster",
+                "native-type",
+                "com.threerings.projectx.dungeon.data.actor.Monster",
+                "health",
+                "100",
+                "damage-mask",
+                "2",
+                "radius",
+                ".4",
+                "speed",
+                "2",
+                "collision-mask",
+                "1"));
+        fields.putAll(Map.of(
+                "acquire-distance",
+                "40",
+                "acquisition-interval",
+                "0",
+                "attack-distance",
+                "2",
+                "attack",
+                "0",
+                "turn-rate",
+                "100"));
         var entries = new ArrayList<SceneContent.Entry>();
         for (int i = 0; i < 8; i++)
             entries.add(new SceneContent.Entry("monster" + i, i - 4, 20, 0, new SceneContent.Spec(fields)));
-        entries.add(new SceneContent.Entry("wall", 0, 4, 0, new SceneContent.Spec(Map.of(
-            "native-type", "com.threerings.projectx.dungeon.data.actor.Block", "kind", "Block",
-            "config", "Fixture/Wall", "radius", "3", "collision-flags", "1"))));
+        entries.add(new SceneContent.Entry(
+                "wall",
+                0,
+                4,
+                0,
+                new SceneContent.Spec(Map.of(
+                        "native-type",
+                        "com.threerings.projectx.dungeon.data.actor.Block",
+                        "kind",
+                        "Block",
+                        "config",
+                        "Fixture/Wall",
+                        "radius",
+                        "3",
+                        "collision-flags",
+                        "1"))));
         var world = new SceneEntities(new SceneContent(entries, Map.of()), SceneWeaponsTest.openTerrain());
-        var player = new ActorState(219, 1001, "Fixture", 256, 1, 0, 0, 0, 0, 0,
-            new StarterCatalog.Model("Fixture", Map.of()));
+        var player = new ActorState(
+                219, 1001, "Fixture", 256, 1, 0, 0, 0, 0, 0, new StarterCatalog.Model("Fixture", Map.of()));
 
         int stamp = 1000;
         world.advance(stamp, List.of(player));
-        check(world.pathSearches() >= 1 && world.pathSearches() <= ScenePathBudget.PER_TICK,
-            "a burst is clipped to the tick's admission slice (" + world.pathSearches() + " searches)");
+        check(
+                world.pathSearches() >= 1 && world.pathSearches() <= ScenePathBudget.PER_TICK,
+                "a burst is clipped to the tick's admission slice (" + world.pathSearches() + " searches)");
         check(world.pathQueued() == 8 - world.pathSearches(), "the denied pursuers wait in the scene queue");
         var firstMetrics = world.metrics();
-        check(firstMetrics.pathSearches() == world.pathSearches() && firstMetrics.pathQueued() == world.pathQueued(),
-            "scene metrics expose the same admitted and queued searches");
+        check(
+                firstMetrics.pathSearches() == world.pathSearches() && firstMetrics.pathQueued() == world.pathQueued(),
+                "scene metrics expose the same admitted and queued searches");
         var before = new HashMap<Integer, float[]>();
         for (var actor : world.actors())
-            if (actor.entity().kind().equals("Monster")) before.put(actor.id(), new float[]{actor.x(), actor.y()});
+            if (actor.entity().kind().equals("Monster")) before.put(actor.id(), new float[] {actor.x(), actor.y()});
         int seen = 0;
         for (int tick = 0; tick < 6; tick++) {
             world.advance(stamp += 50, List.of(player));
@@ -86,11 +125,16 @@ public final class MonsterPathBudgetTest {
             seen += world.pathSearches();
         }
         check(seen > 0, "deferred pursuers retry on later ticks");
-        check(world.actors().stream().filter(a -> a.entity().kind().equals("Monster")).anyMatch(a -> {
-            var origin = before.get(a.id());
-            return origin != null && (a.x() != origin[0] || a.y() != origin[1]);
-        }), "a budgeted pursuer still starts moving");
+        check(
+                world.actors().stream()
+                        .filter(a -> a.entity().kind().equals("Monster"))
+                        .anyMatch(a -> {
+                            var origin = before.get(a.id());
+                            return origin != null && (a.x() != origin[0] || a.y() != origin[1]);
+                        }),
+                "a budgeted pursuer still starts moving");
 
-        System.out.println("PASS: per-tick path admission, bounded burst queue with oldest-drop, and deferred retry across ticks");
+        System.out.println(
+                "PASS: per-tick path admission, bounded burst queue with oldest-drop, and deferred retry across ticks");
     }
 }

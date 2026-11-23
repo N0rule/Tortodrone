@@ -1,8 +1,9 @@
 package org.tortodrone.world;
 
+import static org.tortodrone.support.TestWire.check;
+
 import java.nio.file.*;
 import org.tortodrone.resources.ContentManager;
-import static org.tortodrone.support.TestWire.check;
 
 /** A catalog keeps map bodies on disk until a scene is addressed. */
 public final class LazyMapLoadTest {

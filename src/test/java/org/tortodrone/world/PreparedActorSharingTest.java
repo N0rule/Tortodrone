@@ -1,20 +1,21 @@
 package org.tortodrone.world;
-import org.tortodrone.core.world.SceneClock;
+
+import static org.tortodrone.support.TestWire.check;
 
 import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
-import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.PreparedActor;
-import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.SceneAttackMotion;
+import org.tortodrone.core.world.SceneClock;
+import org.tortodrone.core.world.SceneContent;
 
 /**
  * Phase 3: native behaviour is parsed once per prepared actor and shared by every instance.
  * Mutable combat state must stay per entity, and the shared object must be deeply immutable.
  */
 public final class PreparedActorSharingTest {
-    private PreparedActorSharingTest() { }
+    private PreparedActorSharingTest() {}
 
     public static void main(String[] args) throws Exception {
         var fields = new TreeMap<String, String>();
@@ -43,8 +44,7 @@ public final class PreparedActorSharingTest {
 
         var entries = new ArrayList<SceneContent.Entry>();
         int count = 100;
-        for (int i = 1; i <= count; i++)
-            entries.add(new SceneContent.Entry(Integer.toString(i), i, 0, 0, spec));
+        for (int i = 1; i <= count; i++) entries.add(new SceneContent.Entry(Integer.toString(i), i, 0, 0, spec));
         var content = new SceneContent(entries, Map.of());
         var world = new SceneEntities(content, SceneWeaponsTest.openTerrain());
 
@@ -61,24 +61,31 @@ public final class PreparedActorSharingTest {
         // Sharing is only safe while every exposed collection stays immutable.
         expectImmutable(() -> shared.attackMotion().put(0, new SceneAttackMotion(0, 1, 0, 0)), "attack motion");
         expectImmutable(() -> shared.meleeRangeCaps().put(0, 1f), "melee range caps");
-        expectImmutable(() -> shared.sceneFireActions().put("attack.0.fire.0.scene-action", null), "scene fire actions");
+        expectImmutable(
+                () -> shared.sceneFireActions().put("attack.0.fire.0.scene-action", null), "scene fire actions");
 
         // Entity state remains per instance: damaging one monster must not leak.
-        var damage = new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",
-            Map.of("flags", 2, "amount", 3f, "shouldReact", true, "majorReact", false));
-        var region = new StarterCatalog.Model("DamageRegion",
-            Map.of("shape", new FireCatalog.DataValue("Shape$Circle", Map.of("radius", 1f)), "damage", damage));
+        var damage = new FireCatalog.DataValue(
+                "com.threerings.projectx.dungeon.config.DamageConfig$Normal",
+                Map.of("flags", 2, "amount", 3f, "shouldReact", true, "majorReact", false));
+        var region = new StarterCatalog.Model(
+                "DamageRegion",
+                Map.of("shape", new FireCatalog.DataValue("Shape$Circle", Map.of("radius", 1f)), "damage", damage));
         int first = spawned.getFirst().id(), second = spawned.get(1).id();
         world.damage(region, 0, 0, 0, SceneClock.now() + 100, 219);
         check(world.actor(first).entity().health() == 0.7f, "damage mutates only the target instance");
         check(world.actor(second).entity().health() == 1f, "the shared prepared actor carries no health state");
         check(world.prepared(second) == shared, "combat does not replace the shared actor");
 
-        System.out.println("PASS: prepared monster behaviour is parsed once, shared immutably across 100 instances and keeps mutable state per entity");
+        System.out.println(
+                "PASS: prepared monster behaviour is parsed once, shared immutably across 100 instances and keeps mutable state per entity");
     }
 
     private static void expectImmutable(Runnable mutation, String what) {
-        try { mutation.run(); throw new AssertionError("Shared prepared " + what + " is mutable"); }
-        catch (UnsupportedOperationException expected) { }
+        try {
+            mutation.run();
+            throw new AssertionError("Shared prepared " + what + " is mutable");
+        } catch (UnsupportedOperationException expected) {
+        }
     }
 }

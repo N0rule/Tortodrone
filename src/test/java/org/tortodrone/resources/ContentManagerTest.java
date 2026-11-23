@@ -1,102 +1,329 @@
 package org.tortodrone.resources;
 
+import static org.tortodrone.support.TestWire.check;
+
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.world.*;
-import org.tortodrone.protocol.SessionCodec;
-import org.tortodrone.support.ContentFixture;
-import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.core.ContentFiles;
 import org.tortodrone.core.Json;
 import org.tortodrone.core.Yaml;
-import org.tortodrone.core.ContentFiles;
 import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.protocol.SessionCodec;
+import org.tortodrone.support.ContentFixture;
+import org.tortodrone.world.*;
 
 /** Real administrator edits, unchanged defaults, bounded inputs and failed snapshot isolation. */
 public final class ContentManagerTest {
-    public static void main(String[] args)throws Exception {
-        var baseline=ContentManager.load(Path.of("."));
-        check(baseline.scenes().scenes().size()==17&&baseline.items().entries().size()==9355,"all verified maps and items retained");
-        var opening=org.tortodrone.world.SceneRegistry.create(baseline).tutorial();
-        check(opening!=null&&opening.source().id()==398&&opening.source().version()==2008859103
-            &&opening.destination().id()==1&&opening.entrance().id()==1&&opening.entrance().x()==1&&opening.entrance().y()==-30.5f,"bundled defaults route the verified Crash Site exit directly to Haven's authored spawn");
-        check(baseline.weapons().weapons().size()==386&&baseline.weapons().shields().size()==123,"verified combat controls retained");
-        check(baseline.scenes().scenes().stream().mapToInt(s->s.portals().triggers().size()).sum()==18,"all directed stock portals retained");
-        var training=baseline.scenes().scene(294);var konway=training.content().conversations().get("Character/NPC/Advanced Training Gym/Greeter");
-        check(konway.initial().equals("part 1a")&&konway.nodes().get("part 1a").message().equals("m.atg_greeter_1a"),"default dialogue retains localized wire keys and jumps");
-        check(baseline.town().stations().size()==99&&baseline.town().recipes().size()==671,"Town service and recipe catalogs retained");
-        check(training.content().cycles().get("A").number("up",0)==4&&training.content().cycles().get("A").text("inverse","").equals("B2"),"shared trap timing and inversion retained");
-        check(baseline.news().enabled()&&baseline.news().size()==1&&baseline.news().propertyList(0).contains("news/featured.png"),"Uplink News packs compile into the published snapshot");
-        Path home=Files.createTempDirectory("tortodrone-unified-test-");
+    public static void main(String[] args) throws Exception {
+        var baseline = ContentManager.load(Path.of("."));
+        check(
+                baseline.scenes().scenes().size() == 17
+                        && baseline.items().entries().size() == 9355,
+                "all verified maps and items retained");
+        var opening = org.tortodrone.world.SceneRegistry.create(baseline).tutorial();
+        check(
+                opening != null
+                        && opening.source().id() == 398
+                        && opening.source().version() == 2008859103
+                        && opening.destination().id() == 1
+                        && opening.entrance().id() == 1
+                        && opening.entrance().x() == 1
+                        && opening.entrance().y() == -30.5f,
+                "bundled defaults route the verified Crash Site exit directly to Haven's authored spawn");
+        check(
+                baseline.weapons().weapons().size() == 386
+                        && baseline.weapons().shields().size() == 123,
+                "verified combat controls retained");
+        check(
+                baseline.scenes().scenes().stream()
+                                .mapToInt(s -> s.portals().triggers().size())
+                                .sum()
+                        == 18,
+                "all directed stock portals retained");
+        var training = baseline.scenes().scene(294);
+        var konway = training.content().conversations().get("Character/NPC/Advanced Training Gym/Greeter");
+        check(
+                konway.initial().equals("part 1a")
+                        && konway.nodes().get("part 1a").message().equals("m.atg_greeter_1a"),
+                "default dialogue retains localized wire keys and jumps");
+        check(
+                baseline.town().stations().size() == 99
+                        && baseline.town().recipes().size() == 671,
+                "Town service and recipe catalogs retained");
+        check(
+                training.content().cycles().get("A").number("up", 0) == 4
+                        && training.content()
+                                .cycles()
+                                .get("A")
+                                .text("inverse", "")
+                                .equals("B2"),
+                "shared trap timing and inversion retained");
+        check(
+                baseline.news().enabled()
+                        && baseline.news().size() == 1
+                        && baseline.news().propertyList(0).contains("news/featured.png"),
+                "Uplink News packs compile into the published snapshot");
+        Path home = Files.createTempDirectory("tortodrone-unified-test-");
         try {
-            ContentFixture.copy(Path.of("content"),home.resolve("content"));ContentFixture.copy(Path.of("config"),home.resolve("config"));
-            Path npc=home.resolve("content/maps/training/advanced_training/npcs/konway.yml");String original=Files.readString(npc);
-            check(original.contains("Welcome to our advanced training hall."),"verified English default is readable beside its map");
-            Files.writeString(npc,original.replace("Welcome to our advanced training hall.","An arbitrary new sentence."));
-            failure(()->MapYaml.prepare(npc.getParent().getParent(),home.resolve("content/shared")),"literal dialogue text is unsupported");
-            Files.writeString(npc,original);
-            var edited=Yaml.read(npc);var dialogue=Yaml.map(edited.get("dialogue"),"dialogue");var nodes=Yaml.map(dialogue.get("nodes"),"nodes");
-            Yaml.map(nodes.get("part 1a"),"node").put("text","Thanks! I'm off to explore now.");Files.delete(npc);Yaml.write(npc,edited);
-            Path weaponFile=home.resolve("content/items/weapons.yml");var weaponYaml=Yaml.read(weaponFile);var weaponRows=Yaml.map(weaponYaml.get("items"),"weapons");
-            var weaponRow=weaponRows.entrySet().stream().filter(e->{try{return Yaml.map(e.getValue(),"weapon").containsKey("combat");}catch(IOException bad){throw new UncheckedIOException(bad);}}).findFirst().orElseThrow();
-            var controls=Yaml.map(Yaml.map(Yaml.map(weaponRow.getValue(),"weapon").get("combat"),"combat").get("charge"),"charge");int oldCharge=Yaml.integer(controls.get("fullChargeAfterMs"),"fullChargeAfterMs");controls.put("fullChargeAfterMs",oldCharge+123);Files.delete(weaponFile);Yaml.write(weaponFile,weaponYaml);
-            Path actorFile=home.resolve("content/maps/training/advanced_training/actors.yml");var actorYaml=Yaml.read(actorFile);var actorRows=Yaml.map(actorYaml.get("actors"),"actors");
-            var bindings=Yaml.map(Json.parseCatalog(Files.readString(home.resolve("content/maps/training/advanced_training/native/bindings.json"))),"bindings");
-            var inherited=Yaml.map(bindings.get("actorDefaults"),"defaults");var aliases=Yaml.map(bindings.get("actorAliases"),"aliases");
-            String nativeActor=inherited.entrySet().stream().filter(e->{try{return Yaml.map(e.getValue(),"actor").containsKey("child.health");}catch(IOException bad){throw new UncheckedIOException(bad);}}).findFirst().orElseThrow().getKey();
-            String alias=aliases.entrySet().stream().filter(e->e.getValue().equals(nativeActor)).findFirst().orElseThrow().getKey();
-            actorRows.put(alias,Map.of("monster",Map.of("health",31)));Files.delete(actorFile);Yaml.write(actorFile,actorYaml);
-            Path portalEdit=home.resolve("content/maps/training/advanced_training/portals.yml");var portalYaml=Yaml.read(portalEdit);var portalRows=Yaml.map(portalYaml.get("portals"),"portals");Yaml.map(portalRows.values().iterator().next(),"portal").put("entrance","from_bazaar_east");Files.delete(portalEdit);Yaml.write(portalEdit,portalYaml);
-            Path shopFile=home.resolve("content/town/shops.yml");check(!Yaml.read(shopFile).containsKey("depot"),"Depot is not YAML configuration");
-            Path recipeFile=home.resolve("content/town/recipes.yml");var recipes=Yaml.read(recipeFile);var recipeRow=Yaml.map(Yaml.list(recipes.get("recipes"),"recipes").getFirst(),"recipe");var costs=new ArrayList<Object>(Yaml.list(recipeRow.get("crowns"),"crowns"));int oldCost=Yaml.integer(costs.getFirst(),"crowns");costs.set(0,oldCost+1);recipeRow.put("crowns",costs);Files.delete(recipeFile);Yaml.write(recipeFile,recipes);
-            Path serverConfig=home.resolve("config/server.yml");Files.writeString(serverConfig,Files.readString(serverConfig).replace("startup-map: haven","startup-map: bazaar"));
-            var changed=ContentManager.load(home);
-            check(changed.scenes().entry().id()==2&&baseline.scenes().entry().id()==1,"startup-map selects a readable town folder without changing existing snapshots");var conversation=changed.scenes().scene(294).content().conversations().get(konway.actor());
-            check(conversation.nodes().get("part 1a").message().equals("r.atg_greeter_2a"),"verified changed text reaches the runtime conversation");
-            check(changed.weapons().find(changed.items().resolveConfig(weaponRow.getKey())).chargeTime()==oldCharge+123,"weapon YAML changes supported timing");
-            check(changed.scenes().scene(294).content().entries().stream().anyMatch(e->e.spec().number("child.health",0)==31),"actor YAML changes existing monster-generator health");
-            check(changed.scenes().scene(294).portals().triggers().getFirst().entrance().equals("from_bazaar_east"),"portal YAML redirects existing native geometry");
-            check(changed.town().recipe((String)recipeRow.get("config")).cost(0)==oldCost+1,"shop and recipe YAML updates reach existing transaction catalogs");
-            var codec=new SessionCodec();byte[] serialized=codec.conversationDialog(1,2,conversation,"part 1a",new SceneEntities(training.content(),training.collision()).actors().stream().filter(a->a.config().name().equals(konway.actor())).findFirst().orElseThrow(),1L);
-            check(new String(serialized,java.nio.charset.StandardCharsets.ISO_8859_1).contains("r.atg_greeter_2a"),"edited sentence is serialized to the native dialog");
-            check(conversation.nodes().get("part 1a").responses().equals(konway.nodes().get("part 1a").responses()),"sentence edit preserves response order and jumps");
-            Files.writeString(npc,original.replace("next: part 2a","next: absent"));
-            failure(()->{var p=MapYaml.prepare(npc.getParent().getParent(),home.resolve("content/shared"));SceneContent.load(p.content(),p.descriptor().getProperty("scene-sha256"));},"Broken conversation jump");
-            Files.writeString(npc,original);
-            Path portal=home.resolve("content/maps/training/advanced_training/portals.yml");String portals=Files.readString(portal);
-            Files.writeString(portal,portals.replace("destination: haven","destination: absent_map"));failure(()->loadAll(home),"absent_map");Files.writeString(portal,portals);
-            Path nativeFile=home.resolve("content/maps/training/advanced_training/native/bindings.json");String nativeText=Files.readString(nativeFile);Files.writeString(nativeFile,nativeText+" ");failure(()->MapYaml.prepare(npc.getParent().getParent(),home.resolve("content/shared")),"fingerprint");Files.writeString(nativeFile,nativeText);
-            Path gear=home.resolve("content/items/materials.yml");var yaml=Yaml.read(gear);var definitions=Yaml.map(yaml.get("items"),"items");var first=definitions.entrySet().iterator().next();var item=Yaml.map(first.getValue(),"item");item.put("stockId","invalid");Files.delete(gear);Yaml.write(gear,yaml);failure(()->ContentManager.load(home),"stockId");item.remove("stockId");Files.delete(gear);Yaml.write(gear,yaml);
-            check(baseline.items().entries().size()==9355&&baseline.scenes().scene(294).content().conversations().get(konway.actor()).equals(konway),"failed loads never mutate an existing snapshot");
-            Path mapFile=home.resolve("content/maps/training/advanced_training/map.yml");String mapText=Files.readString(mapFile);Files.writeString(mapFile,mapText.replace("id: 294","id: 1"));failure(()->MapYaml.folders(home.resolve("content/maps")),"Duplicate");Files.writeString(mapFile,mapText);
-            Path duplicateFolder=home.resolve("content/maps/level/advanced_training");Files.createDirectories(duplicateFolder);
-            Files.writeString(duplicateFolder.resolve("map.yml"),mapText.replace("id: 294","id: 295").replace("type: training","type: level"));
-            failure(()->MapYaml.folders(home.resolve("content/maps")),"duplicate map folder name");
+            ContentFixture.copy(Path.of("content"), home.resolve("content"));
+            ContentFixture.copy(Path.of("config"), home.resolve("config"));
+            Path npc = home.resolve("content/maps/training/advanced_training/npcs/konway.yml");
+            String original = Files.readString(npc);
+            check(
+                    original.contains("Welcome to our advanced training hall."),
+                    "verified English default is readable beside its map");
+            Files.writeString(
+                    npc, original.replace("Welcome to our advanced training hall.", "An arbitrary new sentence."));
+            failure(
+                    () -> MapYaml.prepare(npc.getParent().getParent(), home.resolve("content/shared")),
+                    "literal dialogue text is unsupported");
+            Files.writeString(npc, original);
+            var edited = Yaml.read(npc);
+            var dialogue = Yaml.map(edited.get("dialogue"), "dialogue");
+            var nodes = Yaml.map(dialogue.get("nodes"), "nodes");
+            Yaml.map(nodes.get("part 1a"), "node").put("text", "Thanks! I'm off to explore now.");
+            Files.delete(npc);
+            Yaml.write(npc, edited);
+            Path weaponFile = home.resolve("content/items/weapons.yml");
+            var weaponYaml = Yaml.read(weaponFile);
+            var weaponRows = Yaml.map(weaponYaml.get("items"), "weapons");
+            var weaponRow = weaponRows.entrySet().stream()
+                    .filter(e -> {
+                        try {
+                            return Yaml.map(e.getValue(), "weapon").containsKey("combat");
+                        } catch (IOException bad) {
+                            throw new UncheckedIOException(bad);
+                        }
+                    })
+                    .findFirst()
+                    .orElseThrow();
+            var controls = Yaml.map(
+                    Yaml.map(Yaml.map(weaponRow.getValue(), "weapon").get("combat"), "combat")
+                            .get("charge"),
+                    "charge");
+            int oldCharge = Yaml.integer(controls.get("fullChargeAfterMs"), "fullChargeAfterMs");
+            controls.put("fullChargeAfterMs", oldCharge + 123);
+            Files.delete(weaponFile);
+            Yaml.write(weaponFile, weaponYaml);
+            Path actorFile = home.resolve("content/maps/training/advanced_training/actors.yml");
+            var actorYaml = Yaml.read(actorFile);
+            var actorRows = Yaml.map(actorYaml.get("actors"), "actors");
+            var bindings = Yaml.map(
+                    Json.parseCatalog(Files.readString(
+                            home.resolve("content/maps/training/advanced_training/native/bindings.json"))),
+                    "bindings");
+            var inherited = Yaml.map(bindings.get("actorDefaults"), "defaults");
+            var aliases = Yaml.map(bindings.get("actorAliases"), "aliases");
+            String nativeActor = inherited.entrySet().stream()
+                    .filter(e -> {
+                        try {
+                            return Yaml.map(e.getValue(), "actor").containsKey("child.health");
+                        } catch (IOException bad) {
+                            throw new UncheckedIOException(bad);
+                        }
+                    })
+                    .findFirst()
+                    .orElseThrow()
+                    .getKey();
+            String alias = aliases.entrySet().stream()
+                    .filter(e -> e.getValue().equals(nativeActor))
+                    .findFirst()
+                    .orElseThrow()
+                    .getKey();
+            actorRows.put(alias, Map.of("monster", Map.of("health", 31)));
+            Files.delete(actorFile);
+            Yaml.write(actorFile, actorYaml);
+            Path portalEdit = home.resolve("content/maps/training/advanced_training/portals.yml");
+            var portalYaml = Yaml.read(portalEdit);
+            var portalRows = Yaml.map(portalYaml.get("portals"), "portals");
+            Yaml.map(portalRows.values().iterator().next(), "portal").put("entrance", "from_bazaar_east");
+            Files.delete(portalEdit);
+            Yaml.write(portalEdit, portalYaml);
+            Path shopFile = home.resolve("content/town/shops.yml");
+            check(!Yaml.read(shopFile).containsKey("depot"), "Depot is not YAML configuration");
+            Path recipeFile = home.resolve("content/town/recipes.yml");
+            var recipes = Yaml.read(recipeFile);
+            var recipeRow =
+                    Yaml.map(Yaml.list(recipes.get("recipes"), "recipes").getFirst(), "recipe");
+            var costs = new ArrayList<Object>(Yaml.list(recipeRow.get("crowns"), "crowns"));
+            int oldCost = Yaml.integer(costs.getFirst(), "crowns");
+            costs.set(0, oldCost + 1);
+            recipeRow.put("crowns", costs);
+            Files.delete(recipeFile);
+            Yaml.write(recipeFile, recipes);
+            Path serverConfig = home.resolve("config/server.yml");
+            Files.writeString(
+                    serverConfig, Files.readString(serverConfig).replace("startup-map: haven", "startup-map: bazaar"));
+            var changed = ContentManager.load(home);
+            check(
+                    changed.scenes().entry().id() == 2
+                            && baseline.scenes().entry().id() == 1,
+                    "startup-map selects a readable town folder without changing existing snapshots");
+            var conversation =
+                    changed.scenes().scene(294).content().conversations().get(konway.actor());
+            check(
+                    conversation.nodes().get("part 1a").message().equals("r.atg_greeter_2a"),
+                    "verified changed text reaches the runtime conversation");
+            check(
+                    changed.weapons()
+                                    .find(changed.items().resolveConfig(weaponRow.getKey()))
+                                    .chargeTime()
+                            == oldCharge + 123,
+                    "weapon YAML changes supported timing");
+            check(
+                    changed.scenes().scene(294).content().entries().stream()
+                            .anyMatch(e -> e.spec().number("child.health", 0) == 31),
+                    "actor YAML changes existing monster-generator health");
+            check(
+                    changed.scenes()
+                            .scene(294)
+                            .portals()
+                            .triggers()
+                            .getFirst()
+                            .entrance()
+                            .equals("from_bazaar_east"),
+                    "portal YAML redirects existing native geometry");
+            check(
+                    changed.town().recipe((String) recipeRow.get("config")).cost(0) == oldCost + 1,
+                    "shop and recipe YAML updates reach existing transaction catalogs");
+            var codec = new SessionCodec();
+            byte[] serialized = codec.conversationDialog(
+                    1,
+                    2,
+                    conversation,
+                    "part 1a",
+                    new SceneEntities(training.content(), training.collision())
+                            .actors().stream()
+                                    .filter(a -> a.config().name().equals(konway.actor()))
+                                    .findFirst()
+                                    .orElseThrow(),
+                    1L);
+            check(
+                    new String(serialized, java.nio.charset.StandardCharsets.ISO_8859_1).contains("r.atg_greeter_2a"),
+                    "edited sentence is serialized to the native dialog");
+            check(
+                    conversation
+                            .nodes()
+                            .get("part 1a")
+                            .responses()
+                            .equals(konway.nodes().get("part 1a").responses()),
+                    "sentence edit preserves response order and jumps");
+            Files.writeString(npc, original.replace("next: part 2a", "next: absent"));
+            failure(
+                    () -> {
+                        var p = MapYaml.prepare(npc.getParent().getParent(), home.resolve("content/shared"));
+                        SceneContent.load(p.content(), p.descriptor().getProperty("scene-sha256"));
+                    },
+                    "Broken conversation jump");
+            Files.writeString(npc, original);
+            Path portal = home.resolve("content/maps/training/advanced_training/portals.yml");
+            String portals = Files.readString(portal);
+            Files.writeString(portal, portals.replace("destination: haven", "destination: absent_map"));
+            failure(() -> loadAll(home), "absent_map");
+            Files.writeString(portal, portals);
+            Path nativeFile = home.resolve("content/maps/training/advanced_training/native/bindings.json");
+            String nativeText = Files.readString(nativeFile);
+            Files.writeString(nativeFile, nativeText + " ");
+            failure(() -> MapYaml.prepare(npc.getParent().getParent(), home.resolve("content/shared")), "fingerprint");
+            Files.writeString(nativeFile, nativeText);
+            Path gear = home.resolve("content/items/materials.yml");
+            var yaml = Yaml.read(gear);
+            var definitions = Yaml.map(yaml.get("items"), "items");
+            var first = definitions.entrySet().iterator().next();
+            var item = Yaml.map(first.getValue(), "item");
+            item.put("stockId", "invalid");
+            Files.delete(gear);
+            Yaml.write(gear, yaml);
+            failure(() -> ContentManager.load(home), "stockId");
+            item.remove("stockId");
+            Files.delete(gear);
+            Yaml.write(gear, yaml);
+            check(
+                    baseline.items().entries().size() == 9355
+                            && baseline.scenes()
+                                    .scene(294)
+                                    .content()
+                                    .conversations()
+                                    .get(konway.actor())
+                                    .equals(konway),
+                    "failed loads never mutate an existing snapshot");
+            Path mapFile = home.resolve("content/maps/training/advanced_training/map.yml");
+            String mapText = Files.readString(mapFile);
+            Files.writeString(mapFile, mapText.replace("id: 294", "id: 1"));
+            failure(() -> MapYaml.folders(home.resolve("content/maps")), "Duplicate");
+            Files.writeString(mapFile, mapText);
+            Path duplicateFolder = home.resolve("content/maps/level/advanced_training");
+            Files.createDirectories(duplicateFolder);
+            Files.writeString(
+                    duplicateFolder.resolve("map.yml"),
+                    mapText.replace("id: 294", "id: 295").replace("type: training", "type: level"));
+            failure(() -> MapYaml.folders(home.resolve("content/maps")), "duplicate map folder name");
             ContentFixture.delete(duplicateFolder);
-            Path wrongCategory=home.resolve("content/maps/level/advanced_training");Files.createDirectories(wrongCategory);
-            Files.writeString(wrongCategory.resolve("map.yml"),mapText.replace("id: 294","id: 295"));
-            failure(()->MapYaml.folders(home.resolve("content/maps")),"must live under training/");
+            Path wrongCategory = home.resolve("content/maps/level/advanced_training");
+            Files.createDirectories(wrongCategory);
+            Files.writeString(wrongCategory.resolve("map.yml"), mapText.replace("id: 294", "id: 295"));
+            failure(() -> MapYaml.folders(home.resolve("content/maps")), "must live under training/");
             ContentFixture.delete(wrongCategory);
-            Path misc=home.resolve("content/items/misc.yml");String miscOriginal=Files.readString(misc);var miscYaml=Yaml.read(misc);Yaml.map(miscYaml.get("items"),"items").put(first.getKey(),item);Files.delete(misc);Yaml.write(misc,miscYaml);failure(()->ContentManager.load(home),"duplicate item ID");Files.writeString(misc,miscOriginal);
-            var town=TownYaml.data(home.resolve("content/town"));var recipe=Yaml.map(Yaml.list(town.get("recipes"),"recipes").getFirst(),"recipe");recipe.put("item","Missing/Item");failure(()->TownYaml.references(town,baseline.items()),"missing item");
-            Path bad=home.resolve("invalid.yml");
-            for(String text:List.of("id: 1\nid: 2\n","a: [\n","a: !!java.net.URL [bad]\n","a: &a [1]\nb: *a\n")) {Files.writeString(bad,text);failure(()->Yaml.read(bad),"invalid.yml");}
-            failure(()->ContentFiles.relative(home,"../escape"),"escapes");failure(()->ContentFiles.relative(home,"a/../../escape"),"escapes");
-            Path link=home.resolve("link.yml");try{Files.createSymbolicLink(link,bad);failure(()->Yaml.read(link),"Symlink");}catch(UnsupportedOperationException unavailable){ }
+            Path misc = home.resolve("content/items/misc.yml");
+            String miscOriginal = Files.readString(misc);
+            var miscYaml = Yaml.read(misc);
+            Yaml.map(miscYaml.get("items"), "items").put(first.getKey(), item);
+            Files.delete(misc);
+            Yaml.write(misc, miscYaml);
+            failure(() -> ContentManager.load(home), "duplicate item ID");
+            Files.writeString(misc, miscOriginal);
+            var town = TownYaml.data(home.resolve("content/town"));
+            var recipe = Yaml.map(Yaml.list(town.get("recipes"), "recipes").getFirst(), "recipe");
+            recipe.put("item", "Missing/Item");
+            failure(() -> TownYaml.references(town, baseline.items()), "missing item");
+            Path bad = home.resolve("invalid.yml");
+            for (String text : List.of("id: 1\nid: 2\n", "a: [\n", "a: !!java.net.URL [bad]\n", "a: &a [1]\nb: *a\n")) {
+                Files.writeString(bad, text);
+                failure(() -> Yaml.read(bad), "invalid.yml");
+            }
+            failure(() -> ContentFiles.relative(home, "../escape"), "escapes");
+            failure(() -> ContentFiles.relative(home, "a/../../escape"), "escapes");
+            Path link = home.resolve("link.yml");
+            try {
+                Files.createSymbolicLink(link, bad);
+                failure(() -> Yaml.read(link), "Symlink");
+            } catch (UnsupportedOperationException unavailable) {
+            }
             // createScenes consumes the validated Town/pet objects even if source files disappear.
-            Files.move(home.resolve("content/town"),home.resolve("removed-town"));check(org.tortodrone.world.SceneRegistry.create(changed).town()==changed.town(),"published registry performs no Town file reads");
-            System.out.println("PASS: unified stock snapshot, readable localized dialogue edits and literal rejection, immutable publication, graphs, portals, Town references, native fingerprints, YAML diagnostics and path safety");
-        }finally{ContentFixture.delete(home);}
+            Files.move(home.resolve("content/town"), home.resolve("removed-town"));
+            check(
+                    org.tortodrone.world.SceneRegistry.create(changed).town() == changed.town(),
+                    "published registry performs no Town file reads");
+            System.out.println(
+                    "PASS: unified stock snapshot, readable localized dialogue edits and literal rejection, immutable publication, graphs, portals, Town references, native fingerprints, YAML diagnostics and path safety");
+        } finally {
+            ContentFixture.delete(home);
+        }
     }
-    private interface Action{void run()throws Exception;}
+
+    private interface Action {
+        void run() throws Exception;
+    }
     /** Startup is lazy; force every body so a release snapshot proves its full graph. */
-    private static void loadAll(Path home)throws IOException {
-        var registry=ContentManager.load(home);
-        try {registry.scenes().scenes();}
-        catch(java.io.UncheckedIOException failure){
-            if(failure.getCause() instanceof IOException invalid)throw invalid;
+    private static void loadAll(Path home) throws IOException {
+        var registry = ContentManager.load(home);
+        try {
+            registry.scenes().scenes();
+        } catch (java.io.UncheckedIOException failure) {
+            if (failure.getCause() instanceof IOException invalid) throw invalid;
             throw failure;
         }
     }
-    private static void failure(Action action,String message)throws Exception {try{action.run();throw new AssertionError("Invalid content accepted: "+message);}catch(IOException expected){check(expected.toString().toLowerCase(Locale.ROOT).contains(message.toLowerCase(Locale.ROOT)),"actionable error: "+expected);}}
+
+    private static void failure(Action action, String message) throws Exception {
+        try {
+            action.run();
+            throw new AssertionError("Invalid content accepted: " + message);
+        } catch (IOException expected) {
+            check(
+                    expected.toString().toLowerCase(Locale.ROOT).contains(message.toLowerCase(Locale.ROOT)),
+                    "actionable error: " + expected);
+        }
+    }
 }

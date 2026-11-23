@@ -9,9 +9,9 @@ import java.util.regex.Pattern;
  *  readiness, log tails and interrupt-preserving cleanup. No check assertions live here. */
 final class ClientCheckHarness {
     static final List<Process> CHILDREN = new ArrayList<>();
-    private static final Pattern LISTENING=Pattern.compile("Listening on 127\\.0\\.0\\.1:(\\d+)");
+    private static final Pattern LISTENING = Pattern.compile("Listening on 127\\.0\\.0\\.1:(\\d+)");
 
-    private ClientCheckHarness() { }
+    private ClientCheckHarness() {}
 
     static String executable(String name) {
         return Path.of(System.getProperty("java.home"), "bin", name).toString();
@@ -19,11 +19,15 @@ final class ClientCheckHarness {
 
     static Process start(Path scratch, List<String> command, Path log, Path directory) throws IOException {
         ProcessBuilder builder = new ProcessBuilder(command)
-            .directory(directory.toFile()).redirectErrorStream(true).redirectOutput(log.toFile());
+                .directory(directory.toFile())
+                .redirectErrorStream(true)
+                .redirectOutput(log.toFile());
         // The stock graphical client expects its WM hint even when launched headless here.
         builder.environment().put("_JAVA_AWT_WM_NONREPARENTING", "1");
         Process process = builder.start();
-        synchronized (CHILDREN) { CHILDREN.add(process); }
+        synchronized (CHILDREN) {
+            CHILDREN.add(process);
+        }
         return process;
     }
 
@@ -31,14 +35,17 @@ final class ClientCheckHarness {
     static void run(Path scratch, List<String> command, String name, String input, int timeout) throws Exception {
         Path log = scratch.resolve(name + ".log");
         Process process = start(scratch, command, log, scratch);
-        try (var out = process.outputWriter()) { out.write(input); }
+        try (var out = process.outputWriter()) {
+            out.write(input);
+        }
         if (!process.waitFor(timeout, TimeUnit.SECONDS)) throw new IOException(name + " timed out:\n" + tail(log));
         if (process.exitValue() != 0) throw new IOException(name + " failed:\n" + tail(log));
         for (String line : Files.readAllLines(log)) if (line.startsWith("PASS:")) System.out.println(line);
     }
 
     /** Run a disposable child from an explicit working directory without echoing its log. */
-    static void runQuiet(Path scratch, List<String> command, String name, int timeout, Path directory) throws Exception {
+    static void runQuiet(Path scratch, List<String> command, String name, int timeout, Path directory)
+            throws Exception {
         Path log = scratch.resolve(name + ".log");
         Process process = start(scratch, command, log, directory == null ? scratch : directory);
         if (!process.waitFor(timeout, TimeUnit.SECONDS)) throw new IOException(name + " timed out:\n" + tail(log));

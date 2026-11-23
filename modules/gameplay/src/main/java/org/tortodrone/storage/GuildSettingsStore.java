@@ -3,14 +3,16 @@ package org.tortodrone.storage;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.core.Json;
 
 /** Guild name policy, the rename window and the message of the day. Formation and
  *  roster commands live in {@link GuildMembershipStore}; these are the guild-profile
  *  settings every command shares. */
 final class GuildSettingsStore {
     private final Database database;
-    GuildSettingsStore(Database database){this.database=database;}
+
+    GuildSettingsStore(Database database) {
+        this.database = database;
+    }
 
     /** {@code GuildMarshaller} id 4, the same gates {@code formGuild} applies to a name. */
     void checkName(String name) throws IOException {
@@ -49,8 +51,10 @@ final class GuildSettingsStore {
             if (nameTaken(c, name) && !guild.name().equalsIgnoreCase(name)) throw new IOException("m.name_in_use");
             if (guild.renamed() > 0 && System.currentTimeMillis() - guild.renamed() < GuildStore.RENAME_INTERVAL)
                 throw new IOException("m.rename_too_soon");
-            var ticket = profile.items().stream().filter(i -> i.config().equals(GuildStore.RENAME_ITEM)).findFirst()
-                .orElseThrow(() -> new IOException("m.no_rename_item"));
+            var ticket = profile.items().stream()
+                    .filter(i -> i.config().equals(GuildStore.RENAME_ITEM))
+                    .findFirst()
+                    .orElseThrow(() -> new IOException("m.no_rename_item"));
             try (var s = c.prepareStatement("UPDATE guilds SET name=?,name_key=?,renamed=? WHERE id=?")) {
                 s.setString(1, name);
                 s.setString(2, name.toLowerCase(Locale.ROOT));
@@ -66,8 +70,7 @@ final class GuildSettingsStore {
     }
 
     /** {@code GuildMarshaller} id 18. Only an officer or master may write the message of the day. */
-    TownStore.Result setMotd(int account, int knight, long auth, long guildId, String motd)
-            throws IOException {
+    TownStore.Result setMotd(int account, int knight, long auth, long guildId, String motd) throws IOException {
         if (motd == null) motd = "";
         if (motd.length() > GuildStore.MOTD_LENGTH) throw new IOException("Invalid message of the day");
         String value = motd;
@@ -91,7 +94,9 @@ final class GuildSettingsStore {
     static boolean nameTaken(Connection c, String name) throws SQLException {
         try (var s = c.prepareStatement("SELECT 1 FROM guilds WHERE name_key=?")) {
             s.setString(1, name.trim().toLowerCase(Locale.ROOT));
-            try (var r = s.executeQuery()) { return r.next(); }
+            try (var r = s.executeQuery()) {
+                return r.next();
+            }
         }
     }
 
@@ -99,8 +104,8 @@ final class GuildSettingsStore {
     static String nameError(String name) {
         if (name == null) return "m.internal_error";
         String trimmed = name.trim();
-        if (trimmed.isEmpty() || trimmed.length() > 32
-                || !trimmed.matches("[A-Za-z0-9][A-Za-z0-9 '\\-]*")) return "m.internal_error";
+        if (trimmed.isEmpty() || trimmed.length() > 32 || !trimmed.matches("[A-Za-z0-9][A-Za-z0-9 '\\-]*"))
+            return "m.internal_error";
         return null;
     }
 }

@@ -25,8 +25,13 @@ final class ScenePathBudget {
     private int stamp = Integer.MIN_VALUE, granted, dropped;
     private long sliceStarted;
 
-    ScenePathBudget() { this(System::nanoTime); }
-    ScenePathBudget(LongSupplier clock) { this.clock = Objects.requireNonNull(clock); }
+    ScenePathBudget() {
+        this(System::nanoTime);
+    }
+
+    ScenePathBudget(LongSupplier clock) {
+        this.clock = Objects.requireNonNull(clock);
+    }
 
     void begin(int stamp) {
         if (stamp == this.stamp) return;
@@ -59,8 +64,19 @@ final class ScenePathBudget {
         return granted == 0 || clock.getAsLong() - sliceStarted < SLICE_NANOS;
     }
 
-    int granted() { return granted; }
-    int queued() { return waiting.size(); }
-    int dropped() { return dropped; }
-    boolean waiting(int id) { return waiting.contains(id); }
+    int granted() {
+        return granted;
+    }
+
+    int queued() {
+        return waiting.size();
+    }
+
+    int dropped() {
+        return dropped;
+    }
+
+    boolean waiting(int id) {
+        return waiting.contains(id);
+    }
 }

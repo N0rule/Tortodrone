@@ -7,7 +7,7 @@ import org.tortodrone.core.character.ItemCatalog;
 
 /** Validation and gift encoding for administrative mail campaigns. */
 final class MailCampaignRules {
-    private MailCampaignRules() { }
+    private MailCampaignRules() {}
 
     static void validateWindow(long starts, long ends) throws IOException {
         if (starts < 0 || ends < 0) throw new IOException("Choose a valid delivery window");
@@ -20,7 +20,8 @@ final class MailCampaignRules {
         if (value.startsWith(" ") || value.chars().anyMatch(Character::isISOControl))
             throw new IOException("Sender name contains unsupported characters");
         String label = value.strip();
-        if (label.length() > MailCampaignStore.MAX_SENDER_LABEL) throw new IOException("Sender name must be at most " + MailCampaignStore.MAX_SENDER_LABEL + " characters");
+        if (label.length() > MailCampaignStore.MAX_SENDER_LABEL)
+            throw new IOException("Sender name must be at most " + MailCampaignStore.MAX_SENDER_LABEL + " characters");
         return label;
     }
 
@@ -38,21 +39,29 @@ final class MailCampaignRules {
     }
 
     /** Merges identical gifts and enforces the client's fourteen-unit attachment budget. */
-    static List<MailCampaignStore.Gift> normalizeGifts(ItemCatalog items,List<MailCampaignStore.Gift> gifts) throws IOException {
-        if (gifts == null || gifts.size() > MailCampaignStore.MAX_UNITS) throw new IOException("Add at most " + MailCampaignStore.MAX_UNITS + " gift stacks");
+    static List<MailCampaignStore.Gift> normalizeGifts(ItemCatalog items, List<MailCampaignStore.Gift> gifts)
+            throws IOException {
+        if (gifts == null || gifts.size() > MailCampaignStore.MAX_UNITS)
+            throw new IOException("Add at most " + MailCampaignStore.MAX_UNITS + " gift stacks");
         var merged = new LinkedHashMap<String, MailCampaignStore.Gift>();
         int units = 0;
         for (var gift : gifts) {
-            if (gift == null || gift.config() == null || gift.config().isBlank()) throw new IOException("Choose a gift item");
-            if (gift.count() < 1 || gift.count() > 999) throw new IOException("Gift quantities must be between 1 and 999");
+            if (gift == null || gift.config() == null || gift.config().isBlank())
+                throw new IOException("Choose a gift item");
+            if (gift.count() < 1 || gift.count() > 999)
+                throw new IOException("Gift quantities must be between 1 and 999");
             var entry = items.find(gift.config());
             if (entry == null || !entry.grantable()) throw new IOException("Gift is not grantable: " + gift.config());
             units += gift.count();
-            if (units > MailCampaignStore.MAX_UNITS) throw new IOException("A mailing can carry at most " + MailCampaignStore.MAX_UNITS + " item units");
+            if (units > MailCampaignStore.MAX_UNITS)
+                throw new IOException("A mailing can carry at most " + MailCampaignStore.MAX_UNITS + " item units");
             String key = gift.config() + "\u0000" + gift.bound();
             var prior = merged.get(key);
-            merged.put(key, prior == null ? gift
-                : new MailCampaignStore.Gift(prior.config(), prior.count() + gift.count(), prior.bound()));
+            merged.put(
+                    key,
+                    prior == null
+                            ? gift
+                            : new MailCampaignStore.Gift(prior.config(), prior.count() + gift.count(), prior.bound()));
         }
         return List.copyOf(merged.values());
     }
@@ -73,8 +82,10 @@ final class MailCampaignRules {
             var gifts = new ArrayList<MailCampaignStore.Gift>(rows.size());
             for (var row : rows) {
                 var map = (Map<String, Object>) row;
-                gifts.add(new MailCampaignStore.Gift((String) map.get("config"), ((Number) map.get("count")).intValue(),
-                    Boolean.TRUE.equals(map.get("bound"))));
+                gifts.add(new MailCampaignStore.Gift(
+                        (String) map.get("config"),
+                        ((Number) map.get("count")).intValue(),
+                        Boolean.TRUE.equals(map.get("bound"))));
             }
             return List.copyOf(gifts);
         } catch (RuntimeException bad) {

@@ -19,24 +19,32 @@ final class KnightCommandHandler {
 
     /** KnightMarshaller 11 is the stock return-to-last request (used by Ready Room return);
      *  method 13 is the inspect-privacy toggle. */
-    boolean invocation(SessionDecoder.Invocation request)throws IOException { synchronized (session) {
-        int service=request.service(),method=request.method();
-        if(service!=SessionCodec.KNIGHT_SERVICE)return false;
-        var args=request.arguments();
-        if(method==11){
-            if(!args.isEmpty())throw new SessionDecoder.Rejected("Invalid return-to-last request");
-            if(!session.selected()||session.forcedReceiverValue()==null)throw new SessionDecoder.Rejected("Select a knight first");
-            try{session.charactersStore().worldProfile(session.selectedKnight().name(),session.authRevision(),session.currentProfile());}
-            catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-            if(session.inReadyRoom())session.requestReturnToLast();
-            return true;
+    boolean invocation(SessionDecoder.Invocation request) throws IOException {
+        synchronized (session) {
+            int service = request.service(), method = request.method();
+            if (service != SessionCodec.KNIGHT_SERVICE) return false;
+            var args = request.arguments();
+            if (method == 11) {
+                if (!args.isEmpty()) throw new SessionDecoder.Rejected("Invalid return-to-last request");
+                if (!session.selected() || session.forcedReceiverValue() == null)
+                    throw new SessionDecoder.Rejected("Select a knight first");
+                try {
+                    session.charactersStore()
+                            .worldProfile(
+                                    session.selectedKnight().name(), session.authRevision(), session.currentProfile());
+                } catch (CharacterStore.Refused refused) {
+                    throw new IOException("Knight changed; reconnect", refused);
+                }
+                if (session.inReadyRoom()) session.requestReturnToLast();
+                return true;
+            }
+            if (method == 13) {
+                if (args.size() != 1 || !(args.getFirst() instanceof Boolean hidden))
+                    throw new SessionDecoder.Rejected("Invalid inspect privacy request");
+                session.setInspectionHidden(hidden);
+                return true;
+            }
+            return false;
         }
-        if(method==13){
-            if(args.size()!=1||!(args.getFirst() instanceof Boolean hidden))
-                throw new SessionDecoder.Rejected("Invalid inspect privacy request");
-            session.setInspectionHidden(hidden);
-            return true;
-        }
-        return false;
-    }}
+    }
 }

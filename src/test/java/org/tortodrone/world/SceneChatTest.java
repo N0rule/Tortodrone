@@ -1,92 +1,168 @@
 package org.tortodrone.world;
 
+import static org.tortodrone.support.TestWire.check;
+
 import java.io.IOException;
 import java.util.*;
-import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.world.SceneChat;
 
 public final class SceneChatTest {
-    public static void main(String[] args)throws Exception {
-        var router=new SceneChat();var a=new ArrayList<SceneChat.Message>();var b=new ArrayList<SceneChat.Message>();var isolated=new ArrayList<SceneChat.Message>();
-        var budget=new SceneChat.RateLimit();
-        var alice=router.join(10,1001,"Alice-Knight",budget,a::add);
-        var bob=router.join(10,1002,"Bob-Knight",new SceneChat.RateLimit(),b::add);
-        var other=router.join(11,1003,"Other-Knight",new SceneChat.RateLimit(),isolated::add);
-        var failed=router.join(10,1004,"Failed-Knight",new SceneChat.RateLimit(),message->{throw new IOException("Fixture queue failure");});
-        check(router.speak(alice,"  hello 🌍  ",(byte)0),"normal scene chat accepted");
-        check(a.size()==1&&b.equals(a)&&isolated.isEmpty()&&a.get(0).speaker().equals("Alice-Knight")&&a.get(0).text().equals("hello 🌍"),"authoritative sender, sender echo and instance isolation");
-        check(router.speak(bob,"waves",(byte)2)&&a.get(1).mode()==2,"verified emote mode retained; failed recipient does not block peers");
-        bob.close();router.speak(alice,"after departure",(byte)0);
-        check(b.size()==2&&a.size()==3,"departed recipients stop receiving");
-        var replacement=router.join(11,1001,"Alice-Knight",budget,isolated::add);
-        alice.close();refuse(()->router.speak(alice,"stale",(byte)0));
-        check(router.speak(replacement,"new instance",(byte)0)&&a.size()==3&&isolated.size()==2&&isolated.get(0).equals(isolated.get(1)),"late cleanup cannot remove replacement membership or route to old scene");
-        refuse(()->router.speak(replacement,"spoof broadcast",(byte)4));
-        var third=router.join(12,1005,"Third-Knight",new SceneChat.RateLimit(),a::add);
-        check(router.broadcast(replacement,"staff announcement")&&a.size()==4&&isolated.size()==4
-            &&a.get(3).mode()==4&&a.get(3).speaker().equals("Alice-Knight"),"authorized server broadcast reaches every ready instance with authoritative identity");
-        refuse(()->router.speak(replacement,"x".repeat(257),(byte)0));
-        refuse(()->SceneChat.validate("bad\ntext"));refuse(()->SceneChat.validate("\ud800"));refuse(()->SceneChat.validate("  "));
-        check(SceneChat.validate("🌍".repeat(256)).codePointCount(0,512)==256,"Unicode limit counts characters rather than UTF-16 units");
-        var rate=new SceneChat.RateLimit(0);
-        for(int i=0;i<5;i++)check(rate.allow(0),"bounded initial burst");
-        check(!rate.allow(0)&&!rate.allow(999_999_999)&&rate.allow(1_000_000_000),"rate limit replenishes at one message per second");
-        check(!rate.allow(-1),"clock reversal cannot grant tokens");
-        replacement.close();other.close();failed.close();third.close();
-        tells();away();
-        System.out.println("PASS: scene chat identity, echo/modes, instance isolation, departure/re-entry, failed peers, Unicode bounds and persistent rate budget");
+    public static void main(String[] args) throws Exception {
+        var router = new SceneChat();
+        var a = new ArrayList<SceneChat.Message>();
+        var b = new ArrayList<SceneChat.Message>();
+        var isolated = new ArrayList<SceneChat.Message>();
+        var budget = new SceneChat.RateLimit();
+        var alice = router.join(10, 1001, "Alice-Knight", budget, a::add);
+        var bob = router.join(10, 1002, "Bob-Knight", new SceneChat.RateLimit(), b::add);
+        var other = router.join(11, 1003, "Other-Knight", new SceneChat.RateLimit(), isolated::add);
+        var failed = router.join(10, 1004, "Failed-Knight", new SceneChat.RateLimit(), message -> {
+            throw new IOException("Fixture queue failure");
+        });
+        check(router.speak(alice, "  hello 🌍  ", (byte) 0), "normal scene chat accepted");
+        check(
+                a.size() == 1
+                        && b.equals(a)
+                        && isolated.isEmpty()
+                        && a.get(0).speaker().equals("Alice-Knight")
+                        && a.get(0).text().equals("hello 🌍"),
+                "authoritative sender, sender echo and instance isolation");
+        check(
+                router.speak(bob, "waves", (byte) 2) && a.get(1).mode() == 2,
+                "verified emote mode retained; failed recipient does not block peers");
+        bob.close();
+        router.speak(alice, "after departure", (byte) 0);
+        check(b.size() == 2 && a.size() == 3, "departed recipients stop receiving");
+        var replacement = router.join(11, 1001, "Alice-Knight", budget, isolated::add);
+        alice.close();
+        refuse(() -> router.speak(alice, "stale", (byte) 0));
+        check(
+                router.speak(replacement, "new instance", (byte) 0)
+                        && a.size() == 3
+                        && isolated.size() == 2
+                        && isolated.get(0).equals(isolated.get(1)),
+                "late cleanup cannot remove replacement membership or route to old scene");
+        refuse(() -> router.speak(replacement, "spoof broadcast", (byte) 4));
+        var third = router.join(12, 1005, "Third-Knight", new SceneChat.RateLimit(), a::add);
+        check(
+                router.broadcast(replacement, "staff announcement")
+                        && a.size() == 4
+                        && isolated.size() == 4
+                        && a.get(3).mode() == 4
+                        && a.get(3).speaker().equals("Alice-Knight"),
+                "authorized server broadcast reaches every ready instance with authoritative identity");
+        refuse(() -> router.speak(replacement, "x".repeat(257), (byte) 0));
+        refuse(() -> SceneChat.validate("bad\ntext"));
+        refuse(() -> SceneChat.validate("\ud800"));
+        refuse(() -> SceneChat.validate("  "));
+        check(
+                SceneChat.validate("🌍".repeat(256)).codePointCount(0, 512) == 256,
+                "Unicode limit counts characters rather than UTF-16 units");
+        var rate = new SceneChat.RateLimit(0);
+        for (int i = 0; i < 5; i++) check(rate.allow(0), "bounded initial burst");
+        check(
+                !rate.allow(0) && !rate.allow(999_999_999) && rate.allow(1_000_000_000),
+                "rate limit replenishes at one message per second");
+        check(!rate.allow(-1), "clock reversal cannot grant tokens");
+        replacement.close();
+        other.close();
+        failed.close();
+        third.close();
+        tells();
+        away();
+        System.out.println(
+                "PASS: scene chat identity, echo/modes, instance isolation, departure/re-entry, failed peers, Unicode bounds and persistent rate budget");
     }
-    private static void away()throws Exception {
-        var router=new SceneChat();var source=router.join(10,1,"Sender",new SceneChat.RateLimit(),m->true);
-        var target=router.join(11,2,"Recipient",new SceneChat.RateLimit(),m->true);
-        router.away(target,"Back soon");
-        check("Back soon".equals(router.tell(source,"Recipient","hello")),"successful tell returns the recipient's away message");
-        var replacement=router.join(12,2,"Recipient",new SceneChat.RateLimit(),m->true);
-        check(router.tell(source,"Recipient","after travel")==null,"replacement membership starts without stale away state");
-        router.away(replacement,"At lunch");target.close();
-        check("At lunch".equals(router.tell(source,"Recipient","new membership")),"late departure preserves the replacement's away state");
-        refuse(()->router.away(target,"stale update"));
-        router.away(replacement,null);
-        check(router.tell(source,"Recipient","back")==null,"back clears the away response");
-        source.close();replacement.close();
+
+    private static void away() throws Exception {
+        var router = new SceneChat();
+        var source = router.join(10, 1, "Sender", new SceneChat.RateLimit(), m -> true);
+        var target = router.join(11, 2, "Recipient", new SceneChat.RateLimit(), m -> true);
+        router.away(target, "Back soon");
+        check(
+                "Back soon".equals(router.tell(source, "Recipient", "hello")),
+                "successful tell returns the recipient's away message");
+        var replacement = router.join(12, 2, "Recipient", new SceneChat.RateLimit(), m -> true);
+        check(
+                router.tell(source, "Recipient", "after travel") == null,
+                "replacement membership starts without stale away state");
+        router.away(replacement, "At lunch");
+        target.close();
+        check(
+                "At lunch".equals(router.tell(source, "Recipient", "new membership")),
+                "late departure preserves the replacement's away state");
+        refuse(() -> router.away(target, "stale update"));
+        router.away(replacement, null);
+        check(router.tell(source, "Recipient", "back") == null, "back clears the away response");
+        source.close();
+        replacement.close();
         System.out.println("PASS: tell-away response, back, replacement membership and stale-away isolation");
     }
-    private static void tells()throws Exception {
-        var router=new SceneChat();var sourceMessages=new ArrayList<SceneChat.Message>();
-        var targetMessages=new ArrayList<SceneChat.Message>();var bystander=new ArrayList<SceneChat.Message>();
-        var source=router.join(10,1,"Sender",new SceneChat.RateLimit(),sourceMessages::add);
-        var target=router.join(11,2,"Recipient",new SceneChat.RateLimit(),targetMessages::add);
-        router.join(10,3,"Bystander",new SceneChat.RateLimit(),bystander::add);
-        router.tell(source,"rEcIpIeNt","hello 🌍");
-        check(targetMessages.size()==1&&sourceMessages.isEmpty()&&bystander.isEmpty(),"tell crosses instances without sender echo or bystander disclosure");
-        var message=targetMessages.getFirst();
-        check(message.personal()&&message.mode()==0&&message.speaker().equals("Sender")&&message.text().equals("hello 🌍"),"tell uses authoritative speaker and stock default mode");
-        router.tell(target,"Sender","reply");
-        check(sourceMessages.size()==1&&sourceMessages.getFirst().speaker().equals("Recipient"),"reply routes as a normal tell");
-        target.close();refuse(()->router.tell(source,"Recipient","offline"));
-        var departed=router.join(11,2,"Recipient",new SceneChat.RateLimit(),m->false);
-        refuse(()->router.tell(source,"Recipient","departed during delivery"));
-        var replacement=router.join(12,2,"Recipient",new SceneChat.RateLimit(),targetMessages::add);
-        departed.close();router.tell(source,"RECIPIENT","after travel");
-        check(targetMessages.size()==2,"late departure cannot evict a replacement tell recipient");
-        source.close();refuse(()->router.tell(source,"Recipient","stale sender"));
-        var budget=new SceneChat.RateLimit(System.nanoTime()+60_000_000_000L);
-        var limited=router.join(10,4,"Limited",budget,m->true);
-        for(int i=0;i<4;i++)check(router.speak(limited,"local",(byte)0),"local chat shares budget");
-        router.tell(limited,"Recipient","last token");
-        refuse(()->router.tell(limited,"Recipient","rate limited"));
-        check(!router.broadcast(limited,"rate limited"),"tell, scene chat and broadcast share rate budget");
-        var errors=router.join(10,5,"Errors",new SceneChat.RateLimit(),m->true);
-        router.join(11,6,"Broken",new SceneChat.RateLimit(),m->{throw new IOException("Queue full");});
-        refuse(()->router.tell(errors,"Broken","failed delivery"));
-        refuse(()->router.tell(errors,"Recipient","x".repeat(257)));
-        refuse(()->router.tell(errors,"Recipient","bad\ntext"));
-        refuse(()->router.tell(errors,"invalid target","text"));
-        refuse(()->router.tell(errors,null,"text"));
+
+    private static void tells() throws Exception {
+        var router = new SceneChat();
+        var sourceMessages = new ArrayList<SceneChat.Message>();
+        var targetMessages = new ArrayList<SceneChat.Message>();
+        var bystander = new ArrayList<SceneChat.Message>();
+        var source = router.join(10, 1, "Sender", new SceneChat.RateLimit(), sourceMessages::add);
+        var target = router.join(11, 2, "Recipient", new SceneChat.RateLimit(), targetMessages::add);
+        router.join(10, 3, "Bystander", new SceneChat.RateLimit(), bystander::add);
+        router.tell(source, "rEcIpIeNt", "hello 🌍");
+        check(
+                targetMessages.size() == 1 && sourceMessages.isEmpty() && bystander.isEmpty(),
+                "tell crosses instances without sender echo or bystander disclosure");
+        var message = targetMessages.getFirst();
+        check(
+                message.personal()
+                        && message.mode() == 0
+                        && message.speaker().equals("Sender")
+                        && message.text().equals("hello 🌍"),
+                "tell uses authoritative speaker and stock default mode");
+        router.tell(target, "Sender", "reply");
+        check(
+                sourceMessages.size() == 1
+                        && sourceMessages.getFirst().speaker().equals("Recipient"),
+                "reply routes as a normal tell");
+        target.close();
+        refuse(() -> router.tell(source, "Recipient", "offline"));
+        var departed = router.join(11, 2, "Recipient", new SceneChat.RateLimit(), m -> false);
+        refuse(() -> router.tell(source, "Recipient", "departed during delivery"));
+        var replacement = router.join(12, 2, "Recipient", new SceneChat.RateLimit(), targetMessages::add);
+        departed.close();
+        router.tell(source, "RECIPIENT", "after travel");
+        check(targetMessages.size() == 2, "late departure cannot evict a replacement tell recipient");
+        source.close();
+        refuse(() -> router.tell(source, "Recipient", "stale sender"));
+        var budget = new SceneChat.RateLimit(System.nanoTime() + 60_000_000_000L);
+        var limited = router.join(10, 4, "Limited", budget, m -> true);
+        for (int i = 0; i < 4; i++) check(router.speak(limited, "local", (byte) 0), "local chat shares budget");
+        router.tell(limited, "Recipient", "last token");
+        refuse(() -> router.tell(limited, "Recipient", "rate limited"));
+        check(!router.broadcast(limited, "rate limited"), "tell, scene chat and broadcast share rate budget");
+        var errors = router.join(10, 5, "Errors", new SceneChat.RateLimit(), m -> true);
+        router.join(11, 6, "Broken", new SceneChat.RateLimit(), m -> {
+            throw new IOException("Queue full");
+        });
+        refuse(() -> router.tell(errors, "Broken", "failed delivery"));
+        refuse(() -> router.tell(errors, "Recipient", "x".repeat(257)));
+        refuse(() -> router.tell(errors, "Recipient", "bad\ntext"));
+        refuse(() -> router.tell(errors, "invalid target", "text"));
+        refuse(() -> router.tell(errors, null, "text"));
         replacement.close();
-        System.out.println("PASS: private tell routing/replies, cross-instance privacy, offline/stale/failed delivery, bounds and shared rate limit");
+        System.out.println(
+                "PASS: private tell routing/replies, cross-instance privacy, offline/stale/failed delivery, bounds and shared rate limit");
     }
-    private static void refuse(Action action)throws Exception{try{action.run();throw new AssertionError("Invalid chat accepted");}catch(IOException expected){}}
-    @FunctionalInterface interface Action{void run()throws Exception;}
+
+    private static void refuse(Action action) throws Exception {
+        try {
+            action.run();
+            throw new AssertionError("Invalid chat accepted");
+        } catch (IOException expected) {
+        }
+    }
+
+    @FunctionalInterface
+    interface Action {
+        void run() throws Exception;
+    }
 }

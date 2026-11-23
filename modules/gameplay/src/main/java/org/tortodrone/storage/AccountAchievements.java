@@ -2,7 +2,6 @@ package org.tortodrone.storage;
 
 import java.io.IOException;
 import java.sql.*;
-import java.util.Map;
 import java.util.TreeMap;
 import org.tortodrone.core.character.AchievementState;
 import org.tortodrone.core.character.ItemCatalog;
@@ -23,7 +22,7 @@ final class AccountAchievements {
     private static final String ACHIEVEMENT = "account.achievement.";
     private static final String STAT = "account.stat.";
 
-    private AccountAchievements() { }
+    private AccountAchievements() {}
 
     static AchievementState load(Connection c, int accountId) throws SQLException, IOException {
         var unlocked = new TreeMap<Integer, Long>();
@@ -75,14 +74,13 @@ final class AccountAchievements {
     static WorldProfile reconcile(Connection c, WorldProfile profile, ItemCatalog items, int flags, long now)
             throws SQLException, IOException {
         var stats = NativeStats.values(profile, items, now);
-        var desired = NativeAchievements.qualifying(stats, flags, profile.progress().progressFlags(),
-                profile.equipment());
+        var desired =
+                NativeAchievements.qualifying(stats, flags, profile.progress().progressFlags(), profile.equipment());
         var additions = new TreeMap<Integer, Long>();
-        for (int type : desired)
-            if (!profile.achievements().unlocked().containsKey(type)) additions.put(type, now);
+        for (int type : desired) if (!profile.achievements().unlocked().containsKey(type)) additions.put(type, now);
         if (additions.isEmpty()) return profile;
-        try (var s = c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) "
-                + "ON CONFLICT(key) DO NOTHING")) {
+        try (var s =
+                c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) " + "ON CONFLICT(key) DO NOTHING")) {
             for (var entry : additions.entrySet()) {
                 s.setString(1, ACHIEVEMENT + profile.accountId() + "." + entry.getKey());
                 s.setLong(2, entry.getValue());

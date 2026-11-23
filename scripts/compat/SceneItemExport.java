@@ -1,13 +1,3 @@
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import com.threerings.config.ConfigGroup;
 import com.threerings.config.ConfigManager;
 import com.threerings.config.ConfigReference;
@@ -17,67 +7,123 @@ import com.threerings.projectx.item.config.ItemConfig;
 import com.threerings.tudey.config.ActionConfig;
 import com.threerings.tudey.config.ActorConfig;
 import com.threerings.tudey.config.TargetConfig;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
-import org.tortodrone.core.Json;
 
 /** Exports numeric and typed action fields for native dungeon capsules and vials. */
 public final class SceneItemExport {
-    private SceneItemExport() { }
+    private SceneItemExport() {}
 
     /** Refresh executable numeric capsule graphs without reimporting scene geometry. */
-    public static void main(String[] args)throws Exception {
-        java.nio.file.Path game=java.nio.file.Path.of(args[0]).toRealPath(),out=java.nio.file.Path.of(args[1]).toAbsolutePath();
-        if(out.startsWith(game)||java.nio.file.Files.exists(out))throw new IOException("Choose a fresh output outside the client");
-        var manager=NativeConfig.load(game);
-        var actions=new TreeMap<String,Object>();var stats=new TreeMap<String,Object>();
-        for(var config:itemGroup(manager).kR()){
-            var original=config.w(manager);
-            if(!(original instanceof DungeonItemConfig.Capsule)||config.getConfigId()==0||original.name==null||original.name.isBlank()
-                    ||config.getName().contains("/Parts/")||config.getName().contains("/Test/")||config.getName().contains("/Slime/")||config.getName().endsWith("/Base")||config.getName().endsWith(" Base"))continue;
-            var nativeAction=((ItemConfig.ActionItem)original).action;
-            var action=gameplay(readAction(manager,nativeAction));
-            if(org.tortodrone.world.SceneWeapons.usable(action)){
-                actions.put(config.getName(),FireCatalog.actionJson(action));
-                var counter=counter(nativeAction);
-                if(counter!=null)stats.put(config.getName(),counter);
+    public static void main(String[] args) throws Exception {
+        java.nio.file.Path game = java.nio.file.Path.of(args[0]).toRealPath(),
+                out = java.nio.file.Path.of(args[1]).toAbsolutePath();
+        if (out.startsWith(game) || java.nio.file.Files.exists(out))
+            throw new IOException("Choose a fresh output outside the client");
+        var manager = NativeConfig.load(game);
+        var actions = new TreeMap<String, Object>();
+        var stats = new TreeMap<String, Object>();
+        for (var config : itemGroup(manager).kR()) {
+            var original = config.w(manager);
+            if (!(original instanceof DungeonItemConfig.Capsule)
+                    || config.getConfigId() == 0
+                    || original.name == null
+                    || original.name.isBlank()
+                    || config.getName().contains("/Parts/")
+                    || config.getName().contains("/Test/")
+                    || config.getName().contains("/Slime/")
+                    || config.getName().endsWith("/Base")
+                    || config.getName().endsWith(" Base")) continue;
+            var nativeAction = ((ItemConfig.ActionItem) original).action;
+            var action = gameplay(readAction(manager, nativeAction));
+            if (org.tortodrone.world.SceneWeapons.usable(action)) {
+                actions.put(config.getName(), FireCatalog.actionJson(action));
+                var counter = counter(nativeAction);
+                if (counter != null) stats.put(config.getName(), counter);
             }
         }
-        java.nio.file.Files.writeString(out,org.tortodrone.core.Json.stringify(Map.of("format",1,"actions",actions,"stats",stats)),java.nio.file.StandardOpenOption.CREATE_NEW);
-        System.out.println("Exported "+actions.size()+" executable capsule actions ("+stats.size()+" lifetime counters) to "+out);
+        java.nio.file.Files.writeString(
+                out,
+                org.tortodrone.core.Json.stringify(Map.of("format", 1, "actions", actions, "stats", stats)),
+                java.nio.file.StandardOpenOption.CREATE_NEW);
+        System.out.println("Exported " + actions.size() + " executable capsule actions (" + stats.size()
+                + " lifetime counters) to " + out);
     }
     /** One native lifetime counter from the same graph: the activator's {@code StatType}. */
-    private static Map<String,Object> counter(ActionConfig action)throws Exception{
-        var found=new ArrayList<Object[]>();
-        counters(action,found,0,java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>()));
-        if(found.isEmpty())return null;
-        if(found.size()!=1)throw new IOException("Capsule carries more than one native stat counter");
-        var stat=(com.threerings.projectx.data.StatType)found.getFirst()[0];
-        return Map.of("stat",stat.name(),"delta",found.getFirst()[1]);
+    private static Map<String, Object> counter(ActionConfig action) throws Exception {
+        var found = new ArrayList<Object[]>();
+        counters(action, found, 0, java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>()));
+        if (found.isEmpty()) return null;
+        if (found.size() != 1) throw new IOException("Capsule carries more than one native stat counter");
+        var stat = (com.threerings.projectx.data.StatType) found.getFirst()[0];
+        return Map.of("stat", stat.name(), "delta", found.getFirst()[1]);
     }
-    private static void counters(ActionConfig action,List<Object[]> out,int depth,java.util.Set<ActionConfig> seen)throws Exception{
-        if(action==null||depth>32||!seen.add(action))return;
-        if(action instanceof com.threerings.projectx.config.ProjectXActionConfig.IncrementStat increment){
-            if(!(increment.target instanceof TargetConfig.Activator))throw new IOException("Capsule stat counter does not target the activator");
-            out.add(new Object[]{increment.type,increment.delta});return;
+
+    private static void counters(ActionConfig action, List<Object[]> out, int depth, java.util.Set<ActionConfig> seen)
+            throws Exception {
+        if (action == null || depth > 32 || !seen.add(action)) return;
+        if (action instanceof com.threerings.projectx.config.ProjectXActionConfig.IncrementStat increment) {
+            if (!(increment.target instanceof TargetConfig.Activator))
+                throw new IOException("Capsule stat counter does not target the activator");
+            out.add(new Object[] {increment.type, increment.delta});
+            return;
         }
-        for(Class<?> type=action.getClass();type!=null&&type!=Object.class;type=type.getSuperclass())for(var field:type.getDeclaredFields()){
-            if(Modifier.isStatic(field.getModifiers()))continue;
-            Class<?> fieldType=field.getType();
-            if(!ActionConfig.class.isAssignableFrom(fieldType)&&!fieldType.isArray()&&!Iterable.class.isAssignableFrom(fieldType))continue;
-            field.setAccessible(true);Object value=field.get(action);if(value==null)continue;
-            if(ActionConfig.class.isAssignableFrom(fieldType))counters((ActionConfig)value,out,depth+1,seen);
-            else if(fieldType.isArray()&&ActionConfig.class.isAssignableFrom(fieldType.getComponentType()))
-                for(Object child:(Object[])value)counters((ActionConfig)child,out,depth+1,seen);
-            else if(Iterable.class.isAssignableFrom(fieldType))
-                for(Object child:(Iterable<?>)value)counters((ActionConfig)child,out,depth+1,seen);
-        }
+        for (Class<?> type = action.getClass(); type != null && type != Object.class; type = type.getSuperclass())
+            for (var field : type.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers())) continue;
+                Class<?> fieldType = field.getType();
+                if (!ActionConfig.class.isAssignableFrom(fieldType)
+                        && !fieldType.isArray()
+                        && !Iterable.class.isAssignableFrom(fieldType)) continue;
+                field.setAccessible(true);
+                Object value = field.get(action);
+                if (value == null) continue;
+                if (ActionConfig.class.isAssignableFrom(fieldType))
+                    counters((ActionConfig) value, out, depth + 1, seen);
+                else if (fieldType.isArray() && ActionConfig.class.isAssignableFrom(fieldType.getComponentType()))
+                    for (Object child : (Object[]) value) counters((ActionConfig) child, out, depth + 1, seen);
+                else if (Iterable.class.isAssignableFrom(fieldType))
+                    for (Object child : (Iterable<?>) value) counters((ActionConfig) child, out, depth + 1, seen);
+            }
     }
     /** Mission/statistic counters are outside this gameplay graph; never omit gameplay actions. */
-    private static FireCatalog.Action gameplay(FireCatalog.Action action){
-        if(action==null)return null;
-        var children=action.children().stream().filter(a->!a.unsupportedType().equals("com.threerings.projectx.config.ProjectXActionConfig$IncrementStat")).map(SceneItemExport::gameplay).toList();
-        return new FireCatalog.Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
+    private static FireCatalog.Action gameplay(FireCatalog.Action action) {
+        if (action == null) return null;
+        var children = action.children().stream()
+                .filter(a -> !a.unsupportedType()
+                        .equals("com.threerings.projectx.config.ProjectXActionConfig$IncrementStat"))
+                .map(SceneItemExport::gameplay)
+                .toList();
+        return new FireCatalog.Action(
+                action.kind(),
+                action.config(),
+                action.actor(),
+                action.targetType(),
+                action.facingType(),
+                action.collisionSourceType(),
+                action.x(),
+                action.y(),
+                action.rotation(),
+                action.rotationVariance(),
+                action.relative(),
+                action.count(),
+                action.stepSize(),
+                action.steps(),
+                action.collisionMask(),
+                action.stopOnFailure(),
+                children,
+                action.unsupportedType(),
+                action.parameter(),
+                action.values());
     }
 
     /** Adds bounded native item data to the caller's deterministic properties map. */
@@ -91,7 +137,8 @@ public final class SceneItemExport {
         int exportId = 0;
         for (ItemConfig config : configs) {
             ItemConfig.Original original = config.w(cm);
-            if (!(original instanceof DungeonItemConfig.Capsule || original instanceof DungeonItemConfig.Vial)) continue;
+            if (!(original instanceof DungeonItemConfig.Capsule || original instanceof DungeonItemConfig.Vial))
+                continue;
             int id = exportId++;
             String prefix = "item." + id + ".";
             ids.add(Integer.toString(id));
@@ -100,26 +147,36 @@ public final class SceneItemExport {
                 put(values, prefix + "kind", "capsule");
                 put(values, prefix + "delay", Integer.toString(capsule.actionDelay));
             } else {
-                DungeonItemConfig.Vial vial = (DungeonItemConfig.Vial)original;
+                DungeonItemConfig.Vial vial = (DungeonItemConfig.Vial) original;
                 put(values, prefix + "kind", "vial");
                 put(values, prefix + "delay", "0");
-                putModel(values, prefix + "vial-destruction-transient", FireCatalogExport.model(vial.destructionTransient));
-                ConfigReference<ActorConfig> drop = new ConfigReference<>("Dynamic/Lift Objects/Throwing Vial",
-                    "Colorizations", original.icon.colorizations,
-                    "Destruction Transient", vial.destructionTransient,
-                    "Icon File", original.icon.file,
-                    "Item", new ConfigReference<ItemConfig>(config.getName()));
+                putModel(
+                        values,
+                        prefix + "vial-destruction-transient",
+                        FireCatalogExport.model(vial.destructionTransient));
+                ConfigReference<ActorConfig> drop = new ConfigReference<>(
+                        "Dynamic/Lift Objects/Throwing Vial",
+                        "Colorizations",
+                        original.icon.colorizations,
+                        "Destruction Transient",
+                        vial.destructionTransient,
+                        "Icon File",
+                        original.icon.file,
+                        "Item",
+                        new ConfigReference<ItemConfig>(config.getName()));
                 put(values, prefix + "vial-config", drop.getName());
                 ActorConfig actor = cm.a(ActorConfig.class, drop);
-                if (actor == null || !(actor.al(cm) instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.PickupLift lift))
+                if (actor == null
+                        || !(actor.al(cm)
+                                instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.PickupLift lift))
                     throw new IOException("Unresolved native Throwing Vial actor config");
                 if (lift.item == null || !config.getName().equals(lift.item.getName()))
                     throw new IOException("Throwing Vial actor is not bound to its source item " + config.getName());
                 put(values, prefix + "vial-model", modelJson(FireCatalogExport.model(drop)));
-                SceneContentExport.writeLift(cm,values,prefix+"lift.",drop,lift,true);
+                SceneContentExport.writeLift(cm, values, prefix + "lift.", drop, lift, true);
             }
             putIcon(values, prefix, original);
-            writeAction(cm, prefix, ((ItemConfig.ActionItem)original).action, values);
+            writeAction(cm, prefix, ((ItemConfig.ActionItem) original).action, values);
         }
         if (ids.isEmpty()) throw new IOException("No native DungeonItemConfig Capsule/Vial entries found");
         put(values, "items", String.join(",", ids));
@@ -132,17 +189,18 @@ public final class SceneItemExport {
     @SuppressWarnings("unchecked")
     private static ConfigGroup<ItemConfig> itemGroup(ConfigManager cm) throws Exception {
         List<Method> methods = Arrays.stream(cm.getClass().getMethods())
-            .filter(m -> m.getParameterCount() == 1 && m.getParameterTypes()[0] == Class.class)
-            .filter(m -> ConfigGroup.class.isAssignableFrom(m.getReturnType()))
-            .filter(m -> !Modifier.isStatic(m.getModifiers())).toList();
+                .filter(m -> m.getParameterCount() == 1 && m.getParameterTypes()[0] == Class.class)
+                .filter(m -> ConfigGroup.class.isAssignableFrom(m.getReturnType()))
+                .filter(m -> !Modifier.isStatic(m.getModifiers()))
+                .toList();
         if (methods.size() != 1) throw new IOException("Cannot identify native ItemConfig group accessor");
         Object result = methods.getFirst().invoke(cm, ItemConfig.class);
         if (!(result instanceof ConfigGroup<?> group)) throw new IOException("Native item group unavailable");
-        return (ConfigGroup<ItemConfig>)group;
+        return (ConfigGroup<ItemConfig>) group;
     }
 
     private static void putIcon(Map<String, String> out, String prefix, ItemConfig.Original original)
-        throws IOException {
+            throws IOException {
         put(out, prefix + "icon-file", original.icon.file);
         if (original.icon.colorizations == null) {
             put(out, prefix + "icon-colorizations", "[]");
@@ -155,16 +213,25 @@ public final class SceneItemExport {
             else if (color instanceof com.threerings.opengl.renderer.config.ColorizationConfig.TransNormal trans)
                 colors.add(new StarterCatalog.TransColorization(trans.clazz, trans.colorization));
             else if (color instanceof com.threerings.opengl.renderer.config.ColorizationConfig.CustomOffsets custom)
-                colors.add(new FireCatalog.DataValue(color.getClass().getName(), List.of(
-                    new FireCatalog.FieldValue("clazz", "int", custom.clazz),
-                    new FireCatalog.FieldValue("offsets", custom.offsets.getClass().getName(), FireCatalogExport.argumentValue(custom.offsets)))));
+                colors.add(new FireCatalog.DataValue(
+                        color.getClass().getName(),
+                        List.of(
+                                new FireCatalog.FieldValue("clazz", "int", custom.clazz),
+                                new FireCatalog.FieldValue(
+                                        "offsets",
+                                        custom.offsets.getClass().getName(),
+                                        FireCatalogExport.argumentValue(custom.offsets)))));
             else colors.add(FireCatalogExport.argumentValue(color));
         }
-        put(out, prefix + "icon-colorizations", FireCatalog.modelJson(new StarterCatalog.Model("metadata", Map.of("colorizations", new FireCatalog.ListValue("colorization", colors)))));
+        put(
+                out,
+                prefix + "icon-colorizations",
+                FireCatalog.modelJson(new StarterCatalog.Model(
+                        "metadata", Map.of("colorizations", new FireCatalog.ListValue("colorization", colors)))));
     }
 
-    private static void writeAction(ConfigManager cm, String prefix, ActionConfig action,
-        Map<String, String> out) throws Exception {
+    private static void writeAction(ConfigManager cm, String prefix, ActionConfig action, Map<String, String> out)
+            throws Exception {
         put(out, prefix + "use-action", FireCatalog.actionJson(readAction(cm, action)));
         put(out, prefix + "use-effect", modelJson(findFireEffect(action)));
         int healAmount = findHeal(action);
@@ -173,8 +240,11 @@ public final class SceneItemExport {
 
     private static StarterCatalog.Model findFireEffect(ActionConfig action) throws IOException {
         if (action instanceof ActionConfig.FireEffect effect) {
-            try { return FireCatalogExport.model(effect.effect); }
-            catch (IOException failure) { throw failure; }
+            try {
+                return FireCatalogExport.model(effect.effect);
+            } catch (IOException failure) {
+                throw failure;
+            }
         }
         if (action instanceof ActionConfig.Compound compound && compound.actions != null) {
             for (ActionConfig child : compound.actions) {
@@ -186,7 +256,7 @@ public final class SceneItemExport {
     }
 
     private static FireCatalog.Action readAction(ConfigManager cm, ActionConfig action) throws Exception {
-        return FireCatalogExport.readAction(cm,action);
+        return FireCatalogExport.readAction(cm, action);
     }
 
     private static int findHeal(ActionConfig action) throws IOException {
@@ -205,8 +275,7 @@ public final class SceneItemExport {
         return -1;
     }
 
-    private static void putModel(Map<String, String> out, String key, StarterCatalog.Model model)
-        throws IOException {
+    private static void putModel(Map<String, String> out, String key, StarterCatalog.Model model) throws IOException {
         if (model != null) put(out, key, modelJson(model));
     }
 

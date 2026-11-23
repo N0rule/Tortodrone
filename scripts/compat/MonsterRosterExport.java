@@ -1,12 +1,12 @@
+import com.threerings.config.*;
+import com.threerings.projectx.config.DescriptionConfig;
+import com.threerings.projectx.dungeon.config.DungeonActorConfig;
+import com.threerings.tudey.config.ActorConfig;
 import java.io.*;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.zip.ZipFile;
-import com.threerings.config.*;
-import com.threerings.projectx.config.DescriptionConfig;
-import com.threerings.projectx.dungeon.config.DungeonActorConfig;
-import com.threerings.tudey.config.ActorConfig;
 import org.tortodrone.core.Json;
 
 /**
@@ -19,11 +19,13 @@ import org.tortodrone.core.Json;
  */
 public final class MonsterRosterExport {
     public static final int FORMAT = 1;
-    private MonsterRosterExport() { }
+
+    private MonsterRosterExport() {}
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 2 || args.length > 3) throw new IllegalArgumentException(
-            "Usage: MonsterRosterExport game-directory output-directory [--catalog]");
+        if (args.length < 2 || args.length > 3)
+            throw new IllegalArgumentException(
+                    "Usage: MonsterRosterExport game-directory output-directory [--catalog]");
         Path game = Path.of(args[0]).toRealPath();
         Path out = Path.of(args[1]).toAbsolutePath().normalize();
         Path ancestor = out;
@@ -37,11 +39,15 @@ public final class MonsterRosterExport {
         Path output = out.resolve(catalog ? "catalog.json" : "monster-roster.json");
         Files.writeString(output, Json.stringify(document) + "\n");
         if (catalog) Files.writeString(out.resolve("catalog.sha256"), sha256(output) + "\n");
-        @SuppressWarnings("unchecked") var types = (Map<String, Object>) document.get("types");
-        long supported = types.values().stream().filter(value -> Boolean.TRUE.equals(((Map<?, ?>) value).get("supported"))).count();
+        @SuppressWarnings("unchecked")
+        var types = (Map<String, Object>) document.get("types");
+        long supported = types.values().stream()
+                .filter(value -> Boolean.TRUE.equals(((Map<?, ?>) value).get("supported")))
+                .count();
         if (!catalog) Files.writeString(out.resolve("monster-roster.txt"), summary(types));
-        System.out.printf("PASS: exported %d monster types (%d supported, %d unsupported) to %s%n",
-            types.size(), supported, types.size() - supported, out);
+        System.out.printf(
+                "PASS: exported %d monster types (%d supported, %d unsupported) to %s%n",
+                types.size(), supported, types.size() - supported, out);
         if (!catalog) {
             var families = new TreeMap<String, int[]>();
             for (Object raw : types.values()) {
@@ -50,7 +56,7 @@ public final class MonsterRosterExport {
                 counts[Boolean.TRUE.equals(type.get("supported")) ? 0 : 1]++;
             }
             families.forEach((family, counts) ->
-                System.out.printf("FAMILY\t%s\t%d supported\t%d unsupported%n", family, counts[0], counts[1]));
+                    System.out.printf("FAMILY\t%s\t%d supported\t%d unsupported%n", family, counts[0], counts[1]));
         }
     }
 
@@ -74,31 +80,41 @@ public final class MonsterRosterExport {
         for (var row : roster) types.put(row.id, row.type);
         var document = new LinkedHashMap<String, Object>();
         document.put("format", FORMAT);
-        document.put("generatedFrom", Map.of(
-            "actorSha256", sha256(game.resolve("rsrc/config/actor.dat")),
-            "descriptionSha256", sha256(game.resolve("rsrc/config/description.dat")),
-            "monsterPropertiesSha256", sha256(game.resolve("code/projectx-config.jar"))));
+        document.put(
+                "generatedFrom",
+                Map.of(
+                        "actorSha256", sha256(game.resolve("rsrc/config/actor.dat")),
+                        "descriptionSha256", sha256(game.resolve("rsrc/config/description.dat")),
+                        "monsterPropertiesSha256", sha256(game.resolve("code/projectx-config.jar"))));
         document.put("types", types);
         return document;
     }
 
-    private static Row row(Path game, ConfigManager manager, Properties messages, List<ActorRow> actors,
-                           DescriptionConfig description, boolean includeSpec) throws Exception {
+    private static Row row(
+            Path game,
+            ConfigManager manager,
+            Properties messages,
+            List<ActorRow> actors,
+            DescriptionConfig description,
+            boolean includeSpec)
+            throws Exception {
         String name = description.getName();
         String leaf = leaf(name);
         String family = family(name);
         String display = display(description, messages, leaf);
         var matching = new ArrayList<ActorRow>();
         for (var actor : actors) if (name.equals(actor.description)) matching.add(actor);
-        if (matching.isEmpty()) for (var actor : actors) if (leaf.equalsIgnoreCase(leaveName(actor.config))) matching.add(actor);
+        if (matching.isEmpty())
+            for (var actor : actors) if (leaf.equalsIgnoreCase(leaveName(actor.config))) matching.add(actor);
         // Prefer the actor whose own name matches the description, then the shortest concrete
         // config. A part/preset variant that cannot export must never mask a supported base.
         String target = leaf.toLowerCase(Locale.ROOT);
         matching.sort(Comparator.comparingInt((ActorRow actor) -> {
-                String own = leaveName(actor.config).toLowerCase(Locale.ROOT);
-                return own.equals(target) ? 0 : own.startsWith(target) ? 1 : 2;
-            }).thenComparingInt(actor -> actor.config.length())
-            .thenComparing(actor -> actor.config));
+                    String own = leaveName(actor.config).toLowerCase(Locale.ROOT);
+                    return own.equals(target) ? 0 : own.startsWith(target) ? 1 : 2;
+                })
+                .thenComparingInt(actor -> actor.config.length())
+                .thenComparing(actor -> actor.config));
         var type = new LinkedHashMap<String, Object>();
         type.put("config", name);
         type.put("display", display);
@@ -173,7 +189,8 @@ public final class MonsterRosterExport {
 
     /** Stable lower_snake identifier; empty results are refused so no type loses its name. */
     static String slug(String text) {
-        String slug = text.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "_").replaceAll("^_+|_+$", "");
+        String slug =
+                text.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "_").replaceAll("^_+|_+$", "");
         if (slug.isEmpty()) throw new IllegalArgumentException("Cannot derive a monster type identifier from: " + text);
         return slug;
     }
@@ -202,7 +219,9 @@ public final class MonsterRosterExport {
         String key = description.dname;
         if (key == null || key.isBlank()) return fallback;
         String value = resolve(messages, key);
-        return value == null || value.isBlank() ? fallback : value.replaceAll("\\s+", " ").trim();
+        return value == null || value.isBlank()
+                ? fallback
+                : value.replaceAll("\\s+", " ").trim();
     }
 
     /** Native dname supports composite keys joined with {@code |} and {@code {0}} substitution. */
@@ -234,7 +253,9 @@ public final class MonsterRosterExport {
         try (var zip = new ZipFile(game.resolve("code/projectx-config.jar").toFile())) {
             var entry = zip.getEntry("rsrc/i18n/monster.properties");
             if (entry == null) throw new IOException("Installed client has no monster.properties");
-            try (var in = zip.getInputStream(entry)) { properties.load(in); }
+            try (var in = zip.getInputStream(entry)) {
+                properties.load(in);
+            }
         }
         return properties;
     }
@@ -243,14 +264,15 @@ public final class MonsterRosterExport {
         var rows = new ArrayList<ActorRow>();
         for (var config : manager.be(ActorConfig.class).kR()) {
             if (!(config.al(manager) instanceof DungeonActorConfig.Monster monster)) continue;
-            rows.add(new ActorRow(config.getName(), monster.property == null ? null : monster.property.getName(), monster));
+            rows.add(new ActorRow(
+                    config.getName(), monster.property == null ? null : monster.property.getName(), monster));
         }
         rows.sort(Comparator.comparing(actor -> actor.config));
         return rows;
     }
 
     private static ConfigManager manager(Path game) throws Exception {
-        var manager=NativeConfig.load(game);
+        var manager = NativeConfig.load(game);
         return manager;
     }
 
@@ -282,15 +304,16 @@ public final class MonsterRosterExport {
         if (value instanceof Map<?, ?> map) {
             var sorted = new TreeMap<String, Object>();
             for (var entry : map.entrySet())
-                sorted.put(String.valueOf(entry.getKey()),
-                    canonical(entry.getValue(), "fields".equals(entry.getKey())));
+                sorted.put(
+                        String.valueOf(entry.getKey()), canonical(entry.getValue(), "fields".equals(entry.getKey())));
             return sorted;
         }
         if (value instanceof List<?> list) {
             var values = new ArrayList<Object>();
             for (var item : list) values.add(canonical(item, false));
-            if (descriptorFields) values.sort(Comparator.comparing(item -> item instanceof Map<?, ?> map
-                ? String.valueOf(map.get("name")) : String.valueOf(item)));
+            if (descriptorFields)
+                values.sort(Comparator.comparing(item ->
+                        item instanceof Map<?, ?> map ? String.valueOf(map.get("name")) : String.valueOf(item)));
             return values;
         }
         return value;
@@ -329,8 +352,7 @@ public final class MonsterRosterExport {
         }
         if ("SPAWN_ACTOR".equals(kind) || "SPAWN_FACING".equals(kind) || "RANDOM_TRANSLATED".equals(kind))
             flags[2] = true;
-        if (action.get("children") instanceof List<?> children)
-            for (var child : children) scanArchetype(child, flags);
+        if (action.get("children") instanceof List<?> children) for (var child : children) scanArchetype(child, flags);
     }
 
     private static String summary(Map<String, Object> types) {
@@ -341,14 +363,19 @@ public final class MonsterRosterExport {
             var counts = families.computeIfAbsent(String.valueOf(type.get("family")), key -> new int[2]);
             counts[Boolean.TRUE.equals(type.get("supported")) ? 0 : 1]++;
         }
-        families.forEach((family, counts) -> out.append(String.format("%-12s %3d supported %3d unsupported%n", family, counts[0], counts[1])));
+        families.forEach((family, counts) ->
+                out.append(String.format("%-12s %3d supported %3d unsupported%n", family, counts[0], counts[1])));
         out.append(String.format("%-12s %3d total%n", "", types.size()));
         out.append("\nUnsupported types\n-----------------\n");
         for (var entry : types.entrySet()) {
             var type = (Map<?, ?>) entry.getValue();
             if (Boolean.TRUE.equals(type.get("supported"))) continue;
             out.append(entry.getKey()).append(" (").append(type.get("config")).append("): ");
-            out.append(String.join(", ", ((List<?>) type.get("unsupported")).stream().map(String::valueOf).toList())).append('\n');
+            out.append(String.join(
+                            ", ",
+                            ((List<?>) type.get("unsupported"))
+                                    .stream().map(String::valueOf).toList()))
+                    .append('\n');
         }
         return out.toString();
     }
@@ -370,10 +397,14 @@ public final class MonsterRosterExport {
         String id;
         final String config, family, display;
         final Map<String, Object> type;
+
         Row(String config, String family, String display, Map<String, Object> type) {
-            this.config = config; this.family = family; this.display = display; this.type = type;
+            this.config = config;
+            this.family = family;
+            this.display = display;
+            this.type = type;
         }
     }
 
-    private record ActorRow(String config, String description, DungeonActorConfig.Monster monster) { }
+    private record ActorRow(String config, String description, DungeonActorConfig.Monster monster) {}
 }

@@ -4,11 +4,10 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
-import org.tortodrone.account.AccountStore;
-import org.tortodrone.core.character.Currency;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.UserInterruptException;
-import org.tortodrone.core.character.Knight;
+import org.tortodrone.account.AccountStore;
+import org.tortodrone.core.character.Currency;
 
 /** Local server terminal. Commands never accept passwords as arguments or echo input to logs. */
 final class ServerConsole implements AutoCloseable {
@@ -19,34 +18,52 @@ final class ServerConsole implements AutoCloseable {
     private final ConsoleInput input;
     private volatile boolean closed;
     private final ServerControl control;
-    private final Object executionLock=new Object();
+    private final Object executionLock = new Object();
     private final Prompts prompts;
     private WebIdentities webIdentities;
-    interface Prompts { char[] password(String prompt) throws IOException; String confirmation(int limit) throws IOException; }
+
+    interface Prompts {
+        char[] password(String prompt) throws IOException;
+
+        String confirmation(int limit) throws IOException;
+    }
 
     ServerConsole(AccountStore accounts, ServerLog log, Runnable stop, BooleanSupplier running) {
-        this(accounts,log,stop,running,null,true);
+        this(accounts, log, stop, running, null, true);
     }
-    ServerConsole(AccountStore accounts,ServerLog log,Runnable stop,BooleanSupplier running,ServerControl control,boolean terminal) {
-        this.accounts=accounts;this.log=log;this.stop=stop;this.running=running;this.control=control;
-        input=terminal?new ConsoleInput(log):null;
-        prompts=new Prompts() {
+
+    ServerConsole(
+            AccountStore accounts,
+            ServerLog log,
+            Runnable stop,
+            BooleanSupplier running,
+            ServerControl control,
+            boolean terminal) {
+        this.accounts = accounts;
+        this.log = log;
+        this.stop = stop;
+        this.running = running;
+        this.control = control;
+        input = terminal ? new ConsoleInput(log) : null;
+        prompts = new Prompts() {
             public char[] password(String prompt) throws IOException {
-                if(input==null)throw new IOException("Password entry requires the local server terminal");
-                return input.password(prompt,log);
+                if (input == null) throw new IOException("Password entry requires the local server terminal");
+                return input.password(prompt, log);
             }
+
             public String confirmation(int limit) throws IOException {
-                if(input==null)throw new IOException("Confirmation requires the local server terminal");
+                if (input == null) throw new IOException("Confirmation requires the local server terminal");
                 return input.confirmation(limit);
             }
         };
     }
 
     void start() {
-        if(input==null)return;
+        if (input == null) return;
         log.setConsoleOutput(input::printAbove);
         Thread thread = new Thread(this::readCommands, "ServerConsole");
-        thread.setDaemon(true); thread.start();
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void readCommands() {
@@ -54,187 +71,296 @@ final class ServerConsole implements AutoCloseable {
             while (running.getAsBoolean()) {
                 try {
                     String line = input.command();
-                    if (line == null) { log.debug("Terminal input closed; server remains running"); return; }
+                    if (line == null) {
+                        log.debug("Terminal input closed; server remains running");
+                        return;
+                    }
                     if (!running.getAsBoolean()) return;
-                    line = line.trim(); if (line.isEmpty()) continue;
+                    line = line.trim();
+                    if (line.isEmpty()) continue;
                     executeLine(line);
                 } catch (IOException failure) {
                     log.warn(failure.getMessage());
                 }
             }
         } catch (UserInterruptException interrupted) {
-            log.info("Stopping server…"); if(control!=null)control.exit();else stop.run();
+            log.info("Stopping server…");
+            if (control != null) control.exit();
+            else stop.run();
         } catch (EndOfFileException ended) {
             log.debug("Terminal input closed; server remains running");
         } catch (IOError failed) {
             log.warn("Terminal input failed; server remains running");
-        } finally { close(); }
+        } finally {
+            close();
+        }
     }
 
-    @Override public void close() {
-        if(input==null){synchronized(executionLock){closeInput();}}else closeInput();
+    @Override
+    public void close() {
+        if (input == null) {
+            synchronized (executionLock) {
+                closeInput();
+            }
+        } else closeInput();
     }
+
     private synchronized void closeInput() {
         if (closed) return;
         closed = true;
         log.setConsoleOutput(null);
-        if(input!=null)input.close();
+        if (input != null) input.close();
     }
 
     void executeLine(String line) throws IOException {
-        if(input==null){synchronized(executionLock){dispatch(line);}}else dispatch(line);
+        if (input == null) {
+            synchronized (executionLock) {
+                dispatch(line);
+            }
+        } else dispatch(line);
     }
+
     private void dispatch(String line) throws IOException {
-        if(closed||!running.getAsBoolean())throw new IOException("Server is not running");
-        line=line.strip();if(line.startsWith("/"))line=line.substring(1);
-        if(line.isEmpty())return;
-        if(line.length()>4096)throw new IOException("Command is too long");
+        if (closed || !running.getAsBoolean()) throw new IOException("Server is not running");
+        line = line.strip();
+        if (line.startsWith("/")) line = line.substring(1);
+        if (line.isEmpty()) return;
+        if (line.length() > 4096) throw new IOException("Command is too long");
         execute(line.split("\\s+"));
     }
 
     private void execute(String[] words) throws IOException {
         String command = ConsoleHelp.canonical(words[0]);
-        words[0]=command;
-        if(command.equals("help")) {
-            if(words.length==1||words.length==2&&words[1].equalsIgnoreCase("--help"))showHelp(ConsoleHelp.overview());
-            else if(words.length<=3)showHelp(ConsoleHelp.topic(words[1],words.length==3?words[2]:""));
-            else showHelp(ConsoleHelp.topic("help",""));
+        words[0] = command;
+        if (command.equals("help")) {
+            if (words.length == 1 || words.length == 2 && words[1].equalsIgnoreCase("--help"))
+                showHelp(ConsoleHelp.overview());
+            else if (words.length <= 3) showHelp(ConsoleHelp.topic(words[1], words.length == 3 ? words[2] : ""));
+            else showHelp(ConsoleHelp.topic("help", ""));
             return;
         }
-        boolean group=command.equals("account")||command.equals("knight")||command.equals("currency")||command.equals("webui");
-        if(ConsoleHelp.known(command) && words.length==1 && !command.equals("items")
-                && !command.equals("status") && !command.equals("backup") && !command.equals("stop") && !command.equals("players")
-                && !command.equals("start") && !command.equals("restart") && !command.equals("shutdown")) {
-            showHelp(ConsoleHelp.topic(command,""));return;
+        boolean group = command.equals("account")
+                || command.equals("knight")
+                || command.equals("currency")
+                || command.equals("webui");
+        if (ConsoleHelp.known(command)
+                && words.length == 1
+                && !command.equals("items")
+                && !command.equals("status")
+                && !command.equals("backup")
+                && !command.equals("stop")
+                && !command.equals("players")
+                && !command.equals("start")
+                && !command.equals("restart")
+                && !command.equals("shutdown")) {
+            showHelp(ConsoleHelp.topic(command, ""));
+            return;
         }
-        if(ConsoleHelp.known(command)&&words.length==2&&words[1].equalsIgnoreCase("--help")) {
-            showHelp(ConsoleHelp.topic(command,""));return;
+        if (ConsoleHelp.known(command) && words.length == 2 && words[1].equalsIgnoreCase("--help")) {
+            showHelp(ConsoleHelp.topic(command, ""));
+            return;
         }
-        if(group&&words.length>1) {
-            words[1]=words[1].toLowerCase(Locale.ROOT);
-            if(words[1].equals("help")&&words.length<=3) {
-                showHelp(ConsoleHelp.topic(command,words.length==3?words[2]:""));return;
+        if (group && words.length > 1) {
+            words[1] = words[1].toLowerCase(Locale.ROOT);
+            if (words[1].equals("help") && words.length <= 3) {
+                showHelp(ConsoleHelp.topic(command, words.length == 3 ? words[2] : ""));
+                return;
             }
-            if(words.length==3&&words[2].equalsIgnoreCase("--help")) {
-                showHelp(ConsoleHelp.topic(command,words[1]));return;
+            if (words.length == 3 && words[2].equalsIgnoreCase("--help")) {
+                showHelp(ConsoleHelp.topic(command, words[1]));
+                return;
             }
         }
-        if(command.equals("backup")&&words.length<=2) {
-            if(accounts.databaseFile()==null)throw new IOException("Backups require persistent SQLite storage");
-            java.nio.file.Path data=accounts.databaseFile().getParent();
-            java.nio.file.Path requested=words.length==2?java.nio.file.Path.of(words[1]):data.resolve("backups");
-            boolean file=requested.getFileName().toString().endsWith(".db");
-            if(!file)java.nio.file.Files.createDirectories(requested);
-            java.nio.file.Path target=file?requested:requested.resolve("tortodrone-"+System.currentTimeMillis()+".db");
-            java.nio.file.Path written=accounts.backup(target);
-            log.info("Database backup written: "+written+" ("+java.nio.file.Files.size(written)+" bytes); the server keeps running.");
-        } else if(command.equals("giveitem")||command.equals("items")) {
+        if (command.equals("backup") && words.length <= 2) {
+            if (accounts.databaseFile() == null) throw new IOException("Backups require persistent SQLite storage");
+            java.nio.file.Path data = accounts.databaseFile().getParent();
+            java.nio.file.Path requested =
+                    words.length == 2 ? java.nio.file.Path.of(words[1]) : data.resolve("backups");
+            boolean file = requested.getFileName().toString().endsWith(".db");
+            if (!file) java.nio.file.Files.createDirectories(requested);
+            java.nio.file.Path target =
+                    file ? requested : requested.resolve("tortodrone-" + System.currentTimeMillis() + ".db");
+            java.nio.file.Path written = accounts.backup(target);
+            log.info("Database backup written: " + written + " (" + java.nio.file.Files.size(written)
+                    + " bytes); the server keeps running.");
+        } else if (command.equals("giveitem") || command.equals("items")) {
             try {
-                log.info(ItemCommands.execute(String.join(" ",words),accounts.catalog(),
-                    (user,name,config,count)->accounts.grantItems(user,name,config,count,-1,-1)));
-            } catch(IOException failure) {
-                if(failure.getMessage().startsWith("Usage:"))throw new IOException(ConsoleHelp.usage(words));
+                log.info(ItemCommands.execute(
+                        String.join(" ", words),
+                        accounts.catalog(),
+                        (user, name, config, count) -> accounts.grantItems(user, name, config, count, -1, -1)));
+            } catch (IOException failure) {
+                if (failure.getMessage().startsWith("Usage:")) throw new IOException(ConsoleHelp.usage(words));
                 throw failure;
             }
-        } else if(command.equals("rank")||command.equals("prestige")){
-            if(words.length!=(command.equals("rank")?4:3))throw new IOException(ConsoleHelp.usage(words));
-            try{
-                var profile=accounts.progress(null,words[1],command.equals("rank")?Integer.valueOf(words[2]):null,command.equals("rank")?Integer.valueOf(words[3]):null,command.equals("prestige")?Integer.valueOf(words[2]):null,-1,-1);
-                log.info("Knight "+words[1]+" | rank="+profile.progress().rankPair()+" | prestige="+profile.progress().prestige());
-            }catch(NumberFormatException invalid){throw new IOException("Rank and prestige must be whole numbers");}
-        } else if (words.length == 1 && command.equals("status")) {
-            if(control==null)log.info("Server running. Accounts: " + accounts.list().size());
-            else {
-                var status=control.snapshot();var metrics=status.metrics();
-                log.info("Tortodrone "+status.version()+" | "+status.state()+" | "+status.endpoint()+" | uptime="+status.uptimeSeconds()+"s");
-                log.info("Sessions: "+status.sessions().size()+" | Players: "+status.sessions().stream().filter(p->p.knightId()!=null).count()+" | Maps: "+status.maps()+" | Items: "+status.items()+" | Instances: "+status.scenes().size());
-                log.info("Heap: "+RuntimeMetrics.mib(metrics.heapUsed())+" / "+RuntimeMetrics.mib(metrics.heapMax())+" MiB | Accounts: "+accounts.list().size());
-                var output=status.output();
-                log.info("Output: frames="+output.get("frames")+" bytes="+output.get("bytes")+" largestFrame="+output.get("largestFrame")
-                    +" droppedOptional="+output.get("droppedOptional")
-                    +" reliableOverflows="+output.get("reliableOverflows")+" budgetDisconnects="+output.get("budgetDisconnects")
-                    +" peakPendingFrames="+output.get("peakPendingFrames")+" peakPendingBytes="+output.get("peakPendingBytes"));
+        } else if (command.equals("rank") || command.equals("prestige")) {
+            if (words.length != (command.equals("rank") ? 4 : 3)) throw new IOException(ConsoleHelp.usage(words));
+            try {
+                var profile = accounts.progress(
+                        null,
+                        words[1],
+                        command.equals("rank") ? Integer.valueOf(words[2]) : null,
+                        command.equals("rank") ? Integer.valueOf(words[3]) : null,
+                        command.equals("prestige") ? Integer.valueOf(words[2]) : null,
+                        -1,
+                        -1);
+                log.info("Knight " + words[1] + " | rank=" + profile.progress().rankPair() + " | prestige="
+                        + profile.progress().prestige());
+            } catch (NumberFormatException invalid) {
+                throw new IOException("Rank and prestige must be whole numbers");
             }
-        } else if(command.equals("webui")) {
+        } else if (words.length == 1 && command.equals("status")) {
+            if (control == null)
+                log.info("Server running. Accounts: " + accounts.list().size());
+            else {
+                var status = control.snapshot();
+                var metrics = status.metrics();
+                log.info("Tortodrone " + status.version() + " | " + status.state() + " | " + status.endpoint()
+                        + " | uptime=" + status.uptimeSeconds() + "s");
+                log.info("Sessions: " + status.sessions().size() + " | Players: "
+                        + status.sessions().stream()
+                                .filter(p -> p.knightId() != null)
+                                .count() + " | Maps: " + status.maps() + " | Items: " + status.items()
+                        + " | Instances: " + status.scenes().size());
+                log.info("Heap: " + RuntimeMetrics.mib(metrics.heapUsed()) + " / "
+                        + RuntimeMetrics.mib(metrics.heapMax()) + " MiB | Accounts: "
+                        + accounts.list().size());
+                var output = status.output();
+                log.info("Output: frames=" + output.get("frames") + " bytes=" + output.get("bytes") + " largestFrame="
+                        + output.get("largestFrame")
+                        + " droppedOptional=" + output.get("droppedOptional")
+                        + " reliableOverflows=" + output.get("reliableOverflows") + " budgetDisconnects="
+                        + output.get("budgetDisconnects")
+                        + " peakPendingFrames=" + output.get("peakPendingFrames") + " peakPendingBytes="
+                        + output.get("peakPendingBytes"));
+            }
+        } else if (command.equals("webui")) {
             webui(words);
-        } else if(words.length==1&&(command.equals("start")||command.equals("restart"))) {
-            if(control==null)throw new IOException("Lifecycle control unavailable");
-            if(command.equals("start"))control.start();else control.restart();
-            log.info("Game listener "+command+" requested.");
-        } else if(words.length==1&&command.equals("shutdown")) {
-            if(control==null)throw new IOException("Lifecycle control unavailable");
+        } else if (words.length == 1 && (command.equals("start") || command.equals("restart"))) {
+            if (control == null) throw new IOException("Lifecycle control unavailable");
+            if (command.equals("start")) control.start();
+            else control.restart();
+            log.info("Game listener " + command + " requested.");
+        } else if (words.length == 1 && command.equals("shutdown")) {
+            if (control == null) throw new IOException("Lifecycle control unavailable");
             log.info("Type SHUT DOWN PROCESS to confirm full process shutdown:");
-            if(!"SHUT DOWN PROCESS".equals(prompts.confirmation(32)))throw new IOException("Shutdown confirmation did not match");
+            if (!"SHUT DOWN PROCESS".equals(prompts.confirmation(32)))
+                throw new IOException("Shutdown confirmation did not match");
             control.exit();
         } else if (words.length == 1 && command.equals("stop")) {
-            log.info("Stopping server…"); stop.run();
-        } else if(command.equals("grant")||command.equals("set")) {
-            if(words.length!=4)throw new IOException(ConsoleHelp.usage(words));
-            long amount;try{amount=Long.parseLong(words[3]);}catch(NumberFormatException invalid){throw new IOException("Amount must be a whole number");}
-            var result=command.equals("grant")?accounts.currency(null,words[1],Currency.parse(words[2]),amount,-1,-1)
-                :accounts.setCurrency(null,words[1],Currency.parse(words[2]),amount,-1,-1);
-            log.info("Currency "+command+" | knight="+words[1]+" (#"+result.worldId()+") | accountId="+result.accountId()+" | Crowns: "+result.crowns()+" | Energy: "+result.energy());
-        } else if(command.equals("players")&&words.length==1) {
-            if(control==null)throw new IOException("Session monitoring unavailable");
+            log.info("Stopping server…");
+            stop.run();
+        } else if (command.equals("grant") || command.equals("set")) {
+            if (words.length != 4) throw new IOException(ConsoleHelp.usage(words));
+            long amount;
+            try {
+                amount = Long.parseLong(words[3]);
+            } catch (NumberFormatException invalid) {
+                throw new IOException("Amount must be a whole number");
+            }
+            var result = command.equals("grant")
+                    ? accounts.currency(null, words[1], Currency.parse(words[2]), amount, -1, -1)
+                    : accounts.setCurrency(null, words[1], Currency.parse(words[2]), amount, -1, -1);
+            log.info("Currency " + command + " | knight=" + words[1] + " (#" + result.worldId() + ") | accountId="
+                    + result.accountId() + " | Crowns: " + result.crowns() + " | Energy: " + result.energy());
+        } else if (command.equals("players") && words.length == 1) {
+            if (control == null) throw new IOException("Session monitoring unavailable");
             log.info("Session | Account | Knight | Scene | Duration | State");
-            for(var player:control.sessions().snapshots())log.info(player.id()+" | "+player.username()+" (#"+player.accountId()+") | "+player.knight()+" (#"+player.knightId()+") | "+player.scene()+" (template="+player.sceneId()+", instance="+player.instanceId()+") | "+duration(player.connectedAt())+" | "+player.state());
-            log.info("Sessions: "+control.sessions().snapshots().size());
-        } else if(command.equals("session")&&words.length==2) {
-            if(control==null)throw new IOException("Session monitoring unavailable");
-            long id;try{id=Long.parseLong(words[1]);}catch(NumberFormatException invalid){throw new IOException("Session ID must be a whole number");}
-            var player=control.sessions().find(id);if(player==null)throw new IOException("No such active session");
+            for (var player : control.sessions().snapshots())
+                log.info(player.id() + " | " + player.username() + " (#" + player.accountId() + ") | " + player.knight()
+                        + " (#" + player.knightId() + ") | " + player.scene() + " (template=" + player.sceneId()
+                        + ", instance=" + player.instanceId() + ") | " + duration(player.connectedAt()) + " | "
+                        + player.state());
+            log.info("Sessions: " + control.sessions().snapshots().size());
+        } else if (command.equals("session") && words.length == 2) {
+            if (control == null) throw new IOException("Session monitoring unavailable");
+            long id;
+            try {
+                id = Long.parseLong(words[1]);
+            } catch (NumberFormatException invalid) {
+                throw new IOException("Session ID must be a whole number");
+            }
+            var player = control.sessions().find(id);
+            if (player == null) throw new IOException("No such active session");
             log.info(player.toString());
-        } else if(command.equals("inspect")&&words.length==2) {
-            var profile=accounts.inspectKnight(words[1]);
-            log.info("Knight "+words[1]+" | knightId="+profile.worldId()+" | rosterId="+profile.knightId()+" | accountId="+profile.accountId()+" | Crowns: "+profile.crowns()+" | Energy: "+profile.energy()+" | Items: "+profile.items().size());
-            if(control!=null)control.sessions().snapshots().stream().filter(p->java.util.Objects.equals(p.knightId(),profile.worldId())).forEach(p->log.info("Online | session="+p.id()+" | scene="+p.scene()+" | instanceId="+p.instanceId()));
+        } else if (command.equals("inspect") && words.length == 2) {
+            var profile = accounts.inspectKnight(words[1]);
+            log.info("Knight " + words[1] + " | knightId=" + profile.worldId() + " | rosterId=" + profile.knightId()
+                    + " | accountId=" + profile.accountId() + " | Crowns: " + profile.crowns() + " | Energy: "
+                    + profile.energy() + " | Items: " + profile.items().size());
+            if (control != null)
+                control.sessions().snapshots().stream()
+                        .filter(p -> java.util.Objects.equals(p.knightId(), profile.worldId()))
+                        .forEach(p -> log.info("Online | session=" + p.id() + " | scene=" + p.scene() + " | instanceId="
+                                + p.instanceId()));
         } else if (command.equals("currency")) {
             currency(words);
         } else if (command.equals("knight")) {
             knight(words);
         } else if (command.equals("gm")) {
-            if(!(words.length==2||words.length==3&&(words[2].equals("true")||words[2].equals("false"))))
+            if (!(words.length == 2 || words.length == 3 && (words[2].equals("true") || words[2].equals("false"))))
                 throw new IOException(ConsoleHelp.usage(words));
-            String[] accountWords = new String[words.length+1];
-            accountWords[0]="account";accountWords[1]="gm";
-            System.arraycopy(words,1,accountWords,2,words.length-1);
+            String[] accountWords = new String[words.length + 1];
+            accountWords[0] = "account";
+            accountWords[1] = "gm";
+            System.arraycopy(words, 1, accountWords, 2, words.length - 1);
             account(accountWords);
         } else if (command.equals("account") || command.equals("ac")) {
             account(words);
-        } else if(ConsoleHelp.known(command))throw new IOException(ConsoleHelp.usage(words));
+        } else if (ConsoleHelp.known(command)) throw new IOException(ConsoleHelp.usage(words));
         else throw new IOException("Unknown command. Type help to see commands, or press Up to correct your input.");
     }
 
-    private void webui(String[] words)throws IOException {
-        boolean list=words.length==2&&words[1].equals("list");
-        boolean user=words.length==4&&words[1].equals("user");
-        boolean password=words.length==3&&words[1].equals("password");
-        boolean revoke=words.length==3&&words[1].equals("revoke");
-        if(!list&&!user&&!password&&!revoke)throw new IOException(ConsoleHelp.usage(words));
-        if(webIdentities==null){
-            var data=control!=null?control.dataDirectory():accounts.databaseFile()==null?null:accounts.databaseFile().getParent();
-            if(data==null)throw new IOException("WebUI accounts require persistent server storage");
-            webIdentities=WebFrontend.identities(data);
+    private void webui(String[] words) throws IOException {
+        boolean list = words.length == 2 && words[1].equals("list");
+        boolean user = words.length == 4 && words[1].equals("user");
+        boolean password = words.length == 3 && words[1].equals("password");
+        boolean revoke = words.length == 3 && words[1].equals("revoke");
+        if (!list && !user && !password && !revoke) throw new IOException(ConsoleHelp.usage(words));
+        if (webIdentities == null) {
+            var data = control != null
+                    ? control.dataDirectory()
+                    : accounts.databaseFile() == null
+                            ? null
+                            : accounts.databaseFile().getParent();
+            if (data == null) throw new IOException("WebUI accounts require persistent server storage");
+            webIdentities = WebFrontend.identities(data);
         }
-        if(list){for(var id:webIdentities.list())log.info(id.username()+" | "+id.role());return;}
-        String name=words[2];
-        if(revoke){
-            log.info("Type the exact WebUI username to revoke access: "+name);
-            if(!name.equals(prompts.confirmation(64)))throw new IOException("Revocation confirmation did not match");
-            if(running.getAsBoolean()){webIdentities.revoke(name);log.info("WebUI account revoked: "+name);}return;
+        if (list) {
+            for (var id : webIdentities.list()) log.info(id.username() + " | " + id.role());
+            return;
         }
-        WebIdentities.Role role=null;
-        if(user)try{role=WebIdentities.Role.valueOf(words[3].toUpperCase(Locale.ROOT));}
-        catch(IllegalArgumentException invalid){throw new IOException("WebUI role must be VIEWER, MODERATOR or ADMINISTRATOR");}
-        var before=password?webIdentities.find(name):null;
-        char[] first=prompts.password("WebUI password (8–128 characters): "),second=null;
+        String name = words[2];
+        if (revoke) {
+            log.info("Type the exact WebUI username to revoke access: " + name);
+            if (!name.equals(prompts.confirmation(64))) throw new IOException("Revocation confirmation did not match");
+            if (running.getAsBoolean()) {
+                webIdentities.revoke(name);
+                log.info("WebUI account revoked: " + name);
+            }
+            return;
+        }
+        WebIdentities.Role role = null;
+        if (user)
+            try {
+                role = WebIdentities.Role.valueOf(words[3].toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException invalid) {
+                throw new IOException("WebUI role must be VIEWER, MODERATOR or ADMINISTRATOR");
+            }
+        var before = password ? webIdentities.find(name) : null;
+        char[] first = prompts.password("WebUI password (8–128 characters): "), second = null;
         try {
-            second=prompts.password("Confirm WebUI password: ");
-            if(!Arrays.equals(first,second))throw new IOException("Passwords do not match");
-            if(!running.getAsBoolean())return;
-            if(user)webIdentities.put(name,first,role);else webIdentities.password(name,first,before.revision());
-            log.info((user?"WebUI account saved: ":"WebUI password changed: ")+name+"; existing sessions revoked.");
-        }finally{Arrays.fill(first,'\0');if(second!=null)Arrays.fill(second,'\0');}
+            second = prompts.password("Confirm WebUI password: ");
+            if (!Arrays.equals(first, second)) throw new IOException("Passwords do not match");
+            if (!running.getAsBoolean()) return;
+            if (user) webIdentities.put(name, first, role);
+            else webIdentities.password(name, first, before.revision());
+            log.info((user ? "WebUI account saved: " : "WebUI password changed: ") + name
+                    + "; existing sessions revoked.");
+        } finally {
+            Arrays.fill(first, '\0');
+            if (second != null) Arrays.fill(second, '\0');
+        }
     }
 
     private void knight(String[] words) throws IOException {
@@ -244,19 +370,27 @@ final class ServerConsole implements AutoCloseable {
             for (var knight : knights) log.info(knight.id() + " | " + knight.name());
             log.info("Knights: " + knights.size());
         } else if (words.length == 4 && words[1].equals("info")) {
-            var profile = accounts.worldProfile(words[2],words[3]);
-            log.info("Knight " + words[3] + ": account=" + profile.accountId() + ", roster ID=" + profile.knightId() + ", world ID=" + profile.worldId());
+            var profile = accounts.worldProfile(words[2], words[3]);
+            log.info("Knight " + words[3] + ": account=" + profile.accountId() + ", roster ID=" + profile.knightId()
+                    + ", world ID=" + profile.worldId());
             log.info("Crowns: " + profile.crowns() + " | Energy: " + profile.energy());
-            for (var item : profile.items()) log.info(item.slot() + " | item=" + item.id() + " | " + item.config().substring(item.config().lastIndexOf('/')+1) + " | path=" + item.config()
-                + (item.accessory() == null ? "" : " | accessory=" + item.accessory()) + " | heat=" + item.heat() + " | equipped=" + item.equippedSlot());
-        } else if(words.length==4&&words[1].equals("delete")) {
-            var profile=accounts.worldProfile(words[2],words[3]);
-            var name=accounts.knights(words[2]).stream().filter(k->k.id()==profile.knightId()).findFirst().orElseThrow(()->new IOException("Knight changed; refresh"));
-            log.info("Delete "+name.name()+" and all its items/balances? Type the exact knight name to confirm:");
-            if(!name.name().equals(prompts.confirmation(16)))throw new IOException("Deletion confirmation did not match");
-            if(!running.getAsBoolean())return;
-            accounts.deleteKnight(words[2],name.name(),profile.accountId(),profile.worldId());
-            log.info("Knight deleted: "+name.name()+"; this account's sessions will disconnect.");
+            for (var item : profile.items())
+                log.info(item.slot() + " | item=" + item.id() + " | "
+                        + item.config().substring(item.config().lastIndexOf('/') + 1) + " | path=" + item.config()
+                        + (item.accessory() == null ? "" : " | accessory=" + item.accessory()) + " | heat="
+                        + item.heat() + " | equipped=" + item.equippedSlot());
+        } else if (words.length == 4 && words[1].equals("delete")) {
+            var profile = accounts.worldProfile(words[2], words[3]);
+            var name = accounts.knights(words[2]).stream()
+                    .filter(k -> k.id() == profile.knightId())
+                    .findFirst()
+                    .orElseThrow(() -> new IOException("Knight changed; refresh"));
+            log.info("Delete " + name.name() + " and all its items/balances? Type the exact knight name to confirm:");
+            if (!name.name().equals(prompts.confirmation(16)))
+                throw new IOException("Deletion confirmation did not match");
+            if (!running.getAsBoolean()) return;
+            accounts.deleteKnight(words[2], name.name(), profile.accountId(), profile.worldId());
+            log.info("Knight deleted: " + name.name() + "; this account's sessions will disconnect.");
         } else throw new IOException(ConsoleHelp.usage(words));
     }
 
@@ -264,48 +398,73 @@ final class ServerConsole implements AutoCloseable {
         if (words.length != 6 || !(words[1].equals("give") || words[1].equals("withdraw")))
             throw new IOException(ConsoleHelp.usage(words));
         long amount;
-        try { amount = Long.parseLong(words[5]); }
-        catch (NumberFormatException failure) { throw new IOException("Amount must be a positive whole number"); }
+        try {
+            amount = Long.parseLong(words[5]);
+        } catch (NumberFormatException failure) {
+            throw new IOException("Amount must be a positive whole number");
+        }
         if (amount <= 0 || amount > Integer.MAX_VALUE) throw new IOException("Amount must be between 1 and 2147483647");
-        var result = accounts.currency(words[2],words[3],Currency.parse(words[4]),words[1].equals("give") ? amount : -amount,-1,-1);
+        var result = accounts.currency(
+                words[2], words[3], Currency.parse(words[4]), words[1].equals("give") ? amount : -amount, -1, -1);
         log.info(words[3] + " | Crowns: " + result.crowns() + " | Energy: " + result.energy());
     }
 
     private void account(String[] words) throws IOException {
         if (words.length == 2 && words[1].equals("list")) {
             log.info("ID | Username | Game Master | Characters");
-            for (var account : accounts.list()) log.info(account.id() + " | " + account.username() + " | " + account.gameMaster() + " | " + account.knights());
-            log.info("Accounts: " + accounts.list().size()); return;
+            for (var account : accounts.list())
+                log.info(account.id() + " | " + account.username() + " | " + account.gameMaster() + " | "
+                        + account.knights());
+            log.info("Accounts: " + accounts.list().size());
+            return;
         }
         if (words.length < 3) throw new IOException(ConsoleHelp.usage(words));
         boolean create = words[1].equals("create") && (words.length == 3 || words.length == 4 && words[3].equals("gm"));
         boolean reset = words[1].equals("password") && words.length == 3;
         boolean check = words[1].equals("check") && words.length == 3;
-        boolean role = words[1].equals("gm") && (words.length == 3 || words.length == 4 && (words[3].equals("true")||words[3].equals("false")));
+        boolean role = words[1].equals("gm")
+                && (words.length == 3 || words.length == 4 && (words[3].equals("true") || words[3].equals("false")));
         boolean delete = words[1].equals("delete") && words.length == 3;
-        if(!create&&!reset&&!check&&!role&&!delete)throw new IOException(ConsoleHelp.usage(words));
-        String name = words[2]; AccountStore.validateUsername(name);
+        if (!create && !reset && !check && !role && !delete) throw new IOException(ConsoleHelp.usage(words));
+        String name = words[2];
+        AccountStore.validateUsername(name);
         if (words[1].equals("gm") && words.length == 3) {
-            boolean enabled=accounts.toggleGameMaster(name);
-            log.info("Game Master status changed: " + name + " = " + enabled); return;
+            boolean enabled = accounts.toggleGameMaster(name);
+            log.info("Game Master status changed: " + name + " = " + enabled);
+            return;
         }
         if (words[1].equals("gm") && words.length == 4 && (words[3].equals("true") || words[3].equals("false"))) {
-            accounts.setGameMaster(name, Boolean.parseBoolean(words[3])); log.info("Game Master status changed: " + name + " = " + words[3]); return;
+            accounts.setGameMaster(name, Boolean.parseBoolean(words[3]));
+            log.info("Game Master status changed: " + name + " = " + words[3]);
+            return;
         }
         if (words[1].equals("delete") && words.length == 3) {
-            var selected = accounts.list().stream().filter(a -> a.username().equalsIgnoreCase(name)).findFirst().orElseThrow(() -> new IOException("No such account"));
-            log.info("Delete " + selected.username() + " and " + selected.knights() + " character(s)? Type the exact username to confirm:");
-            if (!selected.username().equals(prompts.confirmation(32))) throw new IOException("Deletion confirmation did not match");
+            var selected = accounts.list().stream()
+                    .filter(a -> a.username().equalsIgnoreCase(name))
+                    .findFirst()
+                    .orElseThrow(() -> new IOException("No such account"));
+            log.info("Delete " + selected.username() + " and " + selected.knights()
+                    + " character(s)? Type the exact username to confirm:");
+            if (!selected.username().equals(prompts.confirmation(32)))
+                throw new IOException("Deletion confirmation did not match");
             if (!running.getAsBoolean()) return;
-            accounts.delete(name, selected.id()); log.info("Account deleted: " + selected.username()); return;
+            accounts.delete(name, selected.id());
+            log.info("Account deleted: " + selected.username());
+            return;
         }
         // Capture the selected identity before prompting; deletion/recreation must not redirect a reset.
         int expectedId = -1;
-        if (!create) expectedId = accounts.list().stream().filter(a -> a.username().equalsIgnoreCase(name)).findFirst().orElseThrow(() -> new IOException("No such account")).id();
+        if (!create)
+            expectedId = accounts.list().stream()
+                    .filter(a -> a.username().equalsIgnoreCase(name))
+                    .findFirst()
+                    .orElseThrow(() -> new IOException("No such account"))
+                    .id();
         char[] password = prompts.password("Password: "), confirmation = null;
         try {
             if (check) {
-                if (running.getAsBoolean()) log.info(accounts.checkPassword(name, password) ? "Password matches." : "Password does not match.");
+                if (running.getAsBoolean())
+                    log.info(accounts.checkPassword(name, password) ? "Password matches." : "Password does not match.");
                 return;
             }
             confirmation = prompts.password("Confirm password: ");
@@ -315,12 +474,18 @@ final class ServerConsole implements AutoCloseable {
             else accounts.setPassword(name, password, expectedId);
             log.info((create ? "Account created: " : "Password changed: ") + name);
         } finally {
-            Arrays.fill(password, '\0'); if (confirmation != null) Arrays.fill(confirmation, '\0');
+            Arrays.fill(password, '\0');
+            if (confirmation != null) Arrays.fill(confirmation, '\0');
         }
     }
 
-    private static String duration(java.time.Instant start) {return start==null?"0s":java.time.Duration.between(start,java.time.Instant.now()).toSeconds()+"s";}
+    private static String duration(java.time.Instant start) {
+        return start == null
+                ? "0s"
+                : java.time.Duration.between(start, java.time.Instant.now()).toSeconds() + "s";
+    }
 
-    private void showHelp(java.util.List<String> lines) { lines.forEach(log::info); }
-
+    private void showHelp(java.util.List<String> lines) {
+        lines.forEach(log::info);
+    }
 }

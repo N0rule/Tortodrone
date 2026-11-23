@@ -1,32 +1,48 @@
+import com.threerings.config.*;
+import com.threerings.tudey.data.*;
 import java.nio.file.*;
 import java.security.*;
 import java.util.*;
-import com.threerings.config.*;
-import com.threerings.tudey.data.*;
 import org.tortodrone.core.world.SceneCollision;
 
 /** Stock getFloorZ is the oracle for terrain plus authored floorTile placeables. */
 public final class SceneFloorCompatibility {
-    public static void main(String[] args)throws Exception {
-        var cm=NativeConfig.load(Path.of(args[0]));
-        byte[] bytes=Files.readAllBytes(Path.of(args[1]));var scene=(TudeySceneModel)com.threerings.export.util.b.e(bytes);scene.init(cm);
-        String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));var floor=SceneCollision.load(Path.of(args[2]),hash);
-        int comparisons=0,platforms=0;
-        for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class))if(entry.aE(cm).floorTile){
-            var bounds=entry.ay(cm).afo();var min=bounds.tA();var max=bounds.tB();
-            if(max.x-min.x>512||max.y-min.y>512)throw new AssertionError("Floor probe footprint exceeds bound");
-            for(float x=min.x-.25f;x<=max.x+.25f;x+=.25f)for(float y=min.y-.25f;y<=max.y+.25f;y+=.25f){
-                boolean expected=Float.isFinite(scene.q(x,y,Float.NaN));
-                if(floor.floorSupported(x,y)!=expected)throw new AssertionError("Native floor mismatch at "+x+","+y+" entry="+entry.getKey());comparisons++;
+    public static void main(String[] args) throws Exception {
+        var cm = NativeConfig.load(Path.of(args[0]));
+        byte[] bytes = Files.readAllBytes(Path.of(args[1]));
+        var scene = (TudeySceneModel) com.threerings.export.util.b.e(bytes);
+        scene.init(cm);
+        String hash =
+                HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+        var floor = SceneCollision.load(Path.of(args[2]), hash);
+        int comparisons = 0, platforms = 0;
+        for (var entry : scene.ci(TudeySceneModel.PlaceableEntry.class))
+            if (entry.aE(cm).floorTile) {
+                var bounds = entry.ay(cm).afo();
+                var min = bounds.tA();
+                var max = bounds.tB();
+                if (max.x - min.x > 512 || max.y - min.y > 512)
+                    throw new AssertionError("Floor probe footprint exceeds bound");
+                for (float x = min.x - .25f; x <= max.x + .25f; x += .25f)
+                    for (float y = min.y - .25f; y <= max.y + .25f; y += .25f) {
+                        boolean expected = Float.isFinite(scene.q(x, y, Float.NaN));
+                        if (floor.floorSupported(x, y) != expected)
+                            throw new AssertionError(
+                                    "Native floor mismatch at " + x + "," + y + " entry=" + entry.getKey());
+                        comparisons++;
+                    }
+                platforms++;
+                if (entry.au(cm)) {
+                    var p = entry.transform.tK();
+                    if (!floor.floorSupported(p.x, p.y) || !Float.isFinite(scene.q(p.x, p.y, Float.NaN)))
+                        throw new AssertionError("Default entrance has no native floor");
+                    System.out.println("ENTRANCE: entry=" + entry.getKey() + " at=" + p.x + "," + p.y + " nativeZ="
+                            + scene.q(p.x, p.y, Float.NaN) + " terrainTile="
+                            + (scene.aS((int) Math.floor(p.x), (int) Math.floor(p.y)) != null));
+                }
             }
-            platforms++;
-            if(entry.au(cm)){
-                var p=entry.transform.tK();
-                if(!floor.floorSupported(p.x,p.y)||!Float.isFinite(scene.q(p.x,p.y,Float.NaN)))throw new AssertionError("Default entrance has no native floor");
-                System.out.println("ENTRANCE: entry="+entry.getKey()+" at="+p.x+","+p.y+" nativeZ="+scene.q(p.x,p.y,Float.NaN)+" terrainTile="+(scene.aS((int)Math.floor(p.x),(int)Math.floor(p.y))!=null));
-            }
-        }
-        if(platforms==0||comparisons==0)throw new AssertionError("No native floor-placeable control exercised");
-        System.out.println("PASS: scene "+scene.sceneId+" native terrain/platform floor parity, "+platforms+" floor placeables and "+comparisons+" quarter-unit comparisons; no arrival coordinates changed");
+        if (platforms == 0 || comparisons == 0) throw new AssertionError("No native floor-placeable control exercised");
+        System.out.println("PASS: scene " + scene.sceneId + " native terrain/platform floor parity, " + platforms
+                + " floor placeables and " + comparisons + " quarter-unit comparisons; no arrival coordinates changed");
     }
 }

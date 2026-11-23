@@ -14,16 +14,21 @@ import org.yaml.snakeyaml.Yaml;
  */
 public final class MapCompiler {
     public static void main(String[] args) throws Exception {
-        if (args.length == 2 && args[0].equals("--list")) { list(Path.of(args[1])); return; }
-        boolean replace = false; String only = null;
+        if (args.length == 2 && args[0].equals("--list")) {
+            list(Path.of(args[1]));
+            return;
+        }
+        boolean replace = false;
+        String only = null;
         var rest = new ArrayList<String>();
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--replace")) replace = true;
             else if (args[i].equals("--only") && i + 1 < args.length) only = args[++i];
             else rest.add(args[i]);
         }
-        if (rest.size() != 3) throw new IllegalArgumentException(
-            "Usage: MapCompiler <game-directory|-> <map-sources> <deployment> [--replace] | --list <map-sources>");
+        if (rest.size() != 3)
+            throw new IllegalArgumentException(
+                    "Usage: MapCompiler <game-directory|-> <map-sources> <deployment> [--replace] | --list <map-sources>");
         Path game = rest.get(0).isBlank() || rest.get(0).equals("-") ? null : Path.of(rest.get(0));
         compile(game, Path.of(rest.get(1)), Path.of(rest.get(2)), replace, only);
     }
@@ -36,25 +41,27 @@ public final class MapCompiler {
         }
         for (var entry : entries.entrySet()) {
             var map = entry.getValue();
-            System.out.println(entry.getKey() + "\tid=" + map.get("id") + "\ttype=" + map.get("type")
-                + "\tzone=" + map.get("zone-id") + "\t" + map.get("name"));
+            System.out.println(entry.getKey() + "\tid=" + map.get("id") + "\ttype=" + map.get("type") + "\tzone="
+                    + map.get("zone-id") + "\t" + map.get("name"));
         }
         System.out.println(entries.size() + " map source(s)");
     }
 
-    private static void compile(Path explicitGame, Path root, Path deployment, boolean replace, String only) throws Exception {
+    private static void compile(Path explicitGame, Path root, Path deployment, boolean replace, String only)
+            throws Exception {
         Path game = explicitGame;
         if (game == null) {
-            game = org.tortodrone.server.SteamClientLocator.find(
-                org.tortodrone.server.SteamClientLocator.roots(Path.of(System.getProperty("user.home")),
-                    System.getProperty("os.name"), System.getenv()))
-                .orElseThrow(() -> new IOException("Spiral Knights was not found; pass its install directory or set STEAM_PATH"));
+            game = org.tortodrone.server.SteamClientLocator.find(org.tortodrone.server.SteamClientLocator.roots(
+                            Path.of(System.getProperty("user.home")), System.getProperty("os.name"), System.getenv()))
+                    .orElseThrow(() -> new IOException(
+                            "Spiral Knights was not found; pass its install directory or set STEAM_PATH"));
             System.out.println("Using client: " + game);
         }
         if (!Files.isDirectory(game.resolve("code"))) throw new IOException("game directory has no code/: " + game);
         var manifests = manifests(root);
-        if (manifests.isEmpty()) throw new IOException(
-            "No map sources under " + root + "; copy map.example.yml to <name>/map.yml and read map-sources/README.md");
+        if (manifests.isEmpty())
+            throw new IOException("No map sources under " + root
+                    + "; copy map.example.yml to <name>/map.yml and read map-sources/README.md");
         Path deploymentRoot = deployment.toAbsolutePath().normalize();
         if (!Files.isDirectory(deploymentRoot.resolve("content/shared")))
             throw new IOException("deployment content is not prepared; run prepareContent first: " + deploymentRoot);
@@ -65,18 +72,30 @@ public final class MapCompiler {
             Map<String, Object> map = entry.getValue();
             Path scene = root.resolve(name).resolve("scene.dat");
             if (!Files.isRegularFile(scene)) throw new IOException("Missing scene.dat: " + scene);
-            String id = text(map, "id"), type = text(map, "type"), zoneId = text(map, "zone-id"), zoneName = text(map, "zone-name");
+            String id = text(map, "id"),
+                    type = text(map, "type"),
+                    zoneId = text(map, "zone-id"),
+                    zoneName = text(map, "zone-name");
             if (!id.matches("[1-9][0-9]{0,9}")) throw new IOException(name + ": id must be a positive scene id");
             if (!Set.of("town", "training", "level").contains(type))
                 throw new IOException(name + ": type must be town, training or level");
             if (!zoneId.matches("[1-9][0-9]{0,9}")) throw new IOException(name + ": zone-id is required");
-            if (!zoneName.startsWith("%")) throw new IOException(name + ": zone-name must be a bundle key such as %town:m.haven");
+            if (!zoneName.startsWith("%"))
+                throw new IOException(name + ": zone-name must be a bundle key such as %town:m.haven");
             Path target = deploymentRoot.resolve("content/maps/" + type + "/" + name);
             if (Files.exists(target) && !replace)
                 throw new IOException("Map already exists; pass --replace for a disposable build output: " + target);
-            String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
-            var command = new ArrayList<>(List.of(java, "scripts/build/MapImport.java", game.toString(),
-                scene.toString(), deploymentRoot.toString(), name, zoneId, zoneName));
+            String java =
+                    Path.of(System.getProperty("java.home"), "bin", "java").toString();
+            var command = new ArrayList<>(List.of(
+                    java,
+                    "scripts/build/MapImport.java",
+                    game.toString(),
+                    scene.toString(),
+                    deploymentRoot.toString(),
+                    name,
+                    zoneId,
+                    zoneName));
             if (map.get("spawn-x") != null && map.get("spawn-y") != null) {
                 command.add(text(map, "spawn-x"));
                 command.add(text(map, "spawn-y"));
@@ -88,14 +107,26 @@ public final class MapCompiler {
             // pack that still carries static metadata needs the separate conversion step.
             if (!Files.isRegularFile(pack.resolve("native/collision.bin"))) CollisionPackExport.export(pack);
             var report = new StringBuilder()
-                .append("source=").append(root.resolve(name)).append('\n')
-                .append("scene-id=").append(id).append('\n')
-                .append("type=").append(type).append('\n')
-                .append("zone-id=").append(zoneId).append('\n')
-                .append("zone-name=").append(zoneName).append('\n')
-                .append("link=").append(map.getOrDefault("link", "none")).append('\n')
-                .append("The visual scene, collision, portals and supported bindings are generated.\n")
-                .append("Routing beyond an existing portal is a design decision and is not invented.\n");
+                    .append("source=")
+                    .append(root.resolve(name))
+                    .append('\n')
+                    .append("scene-id=")
+                    .append(id)
+                    .append('\n')
+                    .append("type=")
+                    .append(type)
+                    .append('\n')
+                    .append("zone-id=")
+                    .append(zoneId)
+                    .append('\n')
+                    .append("zone-name=")
+                    .append(zoneName)
+                    .append('\n')
+                    .append("link=")
+                    .append(map.getOrDefault("link", "none"))
+                    .append('\n')
+                    .append("The visual scene, collision, portals and supported bindings are generated.\n")
+                    .append("Routing beyond an existing portal is a design decision and is not invented.\n");
             Files.writeString(pack.resolve("native/compile-report.txt"), report);
             compiled++;
         }

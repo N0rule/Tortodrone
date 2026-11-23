@@ -1,7 +1,6 @@
 package org.tortodrone.server.network;
 
 import java.io.IOException;
-import java.util.List;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
 
@@ -10,7 +9,8 @@ import org.tortodrone.protocol.SessionDecoder;
  *  never writes to the socket directly; responses go through the session's responder path. */
 final class SessionInvocationRouter {
     /** Character roster operations need the caller's receiver registry and subscription state. */
-    @FunctionalInterface interface CharacterRequests {
+    @FunctionalInterface
+    interface CharacterRequests {
         void handle(SessionDecoder.Invocation invocation) throws IOException;
     }
 
@@ -45,36 +45,61 @@ final class SessionInvocationRouter {
         if (world.guildInvocation(invocation)) return;
         if (world.auctionInvocation(invocation)) return;
         if (world.townInvocation(invocation)) {
-            if (world.takeRenameDisconnect()) { world.close(); responder.disconnect(); }
+            if (world.takeRenameDisconnect()) {
+                world.close();
+                responder.disconnect();
+            }
             return;
         }
         if (world.conversationInvocation(invocation)) return;
         if (world.tradeInvocation(invocation)) return;
-        if (world.departingScene(invocation.oid()) && invocation.service() == 10
-                && invocation.method() == 1 && invocation.arguments().isEmpty()) return;
+        if (world.departingScene(invocation.oid())
+                && invocation.service() == 10
+                && invocation.method() == 1
+                && invocation.arguments().isEmpty()) return;
         if ((invocation.service() == org.tortodrone.core.world.SceneChat.SERVICE
-                || invocation.service() == org.tortodrone.core.world.SceneChat.PARTY_SERVICE)
+                        || invocation.service() == org.tortodrone.core.world.SceneChat.PARTY_SERVICE)
                 && invocation.oid() != SessionCodec.INVOCATION_OID) {
             world.speak(invocation);
             return;
         }
         if (world.ownsScene(invocation.oid()) && invocation.service() >= 6 && invocation.service() <= 11) {
-            if (invocation.service() == 6 && invocation.method() == 2) { world.inspect(invocation); return; }
-            if (invocation.service() == 6 && invocation.method() == 3) { world.emote(invocation); return; }
-            if (invocation.service() == 10 && invocation.method() == 1 && invocation.arguments().isEmpty()) {
+            if (invocation.service() == 6 && invocation.method() == 2) {
+                world.inspect(invocation);
+                return;
+            }
+            if (invocation.service() == 6 && invocation.method() == 3) {
+                world.emote(invocation);
+                return;
+            }
+            if (invocation.service() == 10
+                    && invocation.method() == 1
+                    && invocation.arguments().isEmpty()) {
                 world.entered();
                 return;
             }
             for (Object arg : invocation.arguments())
                 if (arg instanceof SessionDecoder.Listener listener)
-                    responder.send(() -> responder.codec().invocationFailure(responder.oid(), listener.requestId(), "Town operation is not available yet"));
+                    responder.send(() -> responder
+                            .codec()
+                            .invocationFailure(
+                                    responder.oid(), listener.requestId(), "Town operation is not available yet"));
             return;
         }
         if (invocation.oid() != SessionCodec.INVOCATION_OID || invocation.service() > SessionCodec.SERVICES.size())
             throw new SessionDecoder.Rejected("Invalid invocation target");
-        if (invocation.service() == SessionCodec.CHAT_SERVICE && invocation.method() == 1) { world.away(invocation); return; }
-        if (invocation.service() == SessionCodec.CHAT_SERVICE && invocation.method() == 2) { world.broadcast(invocation); return; }
-        if (invocation.service() == SessionCodec.CHAT_SERVICE && invocation.method() == 3) { world.tell(invocation); return; }
+        if (invocation.service() == SessionCodec.CHAT_SERVICE && invocation.method() == 1) {
+            world.away(invocation);
+            return;
+        }
+        if (invocation.service() == SessionCodec.CHAT_SERVICE && invocation.method() == 2) {
+            world.broadcast(invocation);
+            return;
+        }
+        if (invocation.service() == SessionCodec.CHAT_SERVICE && invocation.method() == 3) {
+            world.tell(invocation);
+            return;
+        }
         if (invocation.service() == SessionCodec.ADMIN_SERVICE) {
             if (invocation.oid() != SessionCodec.INVOCATION_OID)
                 throw new SessionDecoder.Rejected("Invalid admin invocation target");
@@ -88,7 +113,10 @@ final class SessionInvocationRouter {
             return;
         }
         if (invocation.service() == SessionCodec.KNIGHT_SERVICE
-                && (invocation.method() == 3 || invocation.method() == 4 || invocation.method() == 5 || invocation.method() == 6)) {
+                && (invocation.method() == 3
+                        || invocation.method() == 4
+                        || invocation.method() == 5
+                        || invocation.method() == 6)) {
             characterRequests.handle(invocation);
             return;
         }
@@ -105,6 +133,7 @@ final class SessionInvocationRouter {
     private void logRequest(SessionDecoder.Invocation invocation) {
         String service = SessionCodec.SERVICES.get(invocation.service() - 1);
         log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
-            + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());
+                + "; method=" + invocation.method() + "; arguments="
+                + invocation.arguments().size());
     }
 }

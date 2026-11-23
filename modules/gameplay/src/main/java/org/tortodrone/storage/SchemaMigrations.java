@@ -14,21 +14,26 @@ import java.sql.*;
 final class SchemaMigrations {
     /** Fixed project marker written to {@code PRAGMA application_id}; earlier releases wrote 0. */
     static final int APPLICATION_ID = 0x5444524E; // TDRN
+
     static final int BASELINE = 1;
     static final int LATEST = 4;
 
-    @FunctionalInterface interface Step { void apply(Connection connection) throws SQLException, IOException; }
-    record Migration(int version, String description, Step step) { }
+    @FunctionalInterface
+    interface Step {
+        void apply(Connection connection) throws SQLException, IOException;
+    }
+
+    record Migration(int version, String description, Step step) {}
 
     /** Ordered steps above the baseline. Add one entry per released schema change. */
     static final java.util.List<Migration> ALL = java.util.List.of(
-        new Migration(2,"lookup indexes",SchemaMigrations::lookupIndexes),
-        new Migration(3,"strict tables",SchemaMigrations::strictTables),
-        new Migration(4,"foreign-key indexes",SchemaMigrations::foreignKeyIndexes));
+            new Migration(2, "lookup indexes", SchemaMigrations::lookupIndexes),
+            new Migration(3, "strict tables", SchemaMigrations::strictTables),
+            new Migration(4, "foreign-key indexes", SchemaMigrations::foreignKeyIndexes));
 
     /** Every foreign-key column and hot lookup that previously scanned its table. */
-    private static void lookupIndexes(Connection connection)throws SQLException {
-        try(Statement statement=connection.createStatement()){
+    private static void lookupIndexes(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE INDEX IF NOT EXISTS inventory_items_world ON inventory_items(world_id)");
             statement.execute("CREATE INDEX IF NOT EXISTS town_mail_world ON town_mail(world_id,sent)");
             statement.execute("CREATE INDEX IF NOT EXISTS town_mail_auction ON town_mail(auction)");
@@ -42,11 +47,12 @@ final class SchemaMigrations {
     }
 
     /** Child-side foreign keys whose tables still lacked a usable index. */
-    private static void foreignKeyIndexes(Connection connection)throws SQLException {
-        try(Statement statement=connection.createStatement()){
+    private static void foreignKeyIndexes(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE INDEX IF NOT EXISTS town_auctions_seller ON town_auctions(seller)");
             statement.execute("CREATE INDEX IF NOT EXISTS town_auctions_bidder ON town_auctions(bidder)");
-            statement.execute("CREATE INDEX IF NOT EXISTS mail_campaign_deliveries_world ON mail_campaign_deliveries(world_id)");
+            statement.execute(
+                    "CREATE INDEX IF NOT EXISTS mail_campaign_deliveries_world ON mail_campaign_deliveries(world_id)");
         }
     }
 
@@ -59,107 +65,135 @@ final class SchemaMigrations {
      * turns foreign keys off for the transaction and validates with {@code foreign_key_check}
      * before committing; no other table ever references the temporary name.
      */
-    static void strictTables(Connection connection)throws SQLException {
-        var names=new java.util.ArrayList<String>();
-        var tables=new java.util.LinkedHashMap<String,String>();
-        var indexes=new java.util.LinkedHashMap<String,java.util.List<String>>();
-        var triggers=new java.util.LinkedHashMap<String,java.util.List<String>>();
-        var sequences=new java.util.LinkedHashMap<String,Long>();
-        var strict=new java.util.HashSet<String>();
-        try(var statement=connection.createStatement();var rows=statement.executeQuery("PRAGMA table_list")){
-            while(rows.next())if("main".equals(rows.getString("schema"))&&rows.getInt("strict")!=0)strict.add(rows.getString("name"));
+    static void strictTables(Connection connection) throws SQLException {
+        var names = new java.util.ArrayList<String>();
+        var tables = new java.util.LinkedHashMap<String, String>();
+        var indexes = new java.util.LinkedHashMap<String, java.util.List<String>>();
+        var triggers = new java.util.LinkedHashMap<String, java.util.List<String>>();
+        var sequences = new java.util.LinkedHashMap<String, Long>();
+        var strict = new java.util.HashSet<String>();
+        try (var statement = connection.createStatement();
+                var rows = statement.executeQuery("PRAGMA table_list")) {
+            while (rows.next())
+                if ("main".equals(rows.getString("schema")) && rows.getInt("strict") != 0)
+                    strict.add(rows.getString("name"));
         }
-        try(var statement=connection.createStatement();
-            var rows=statement.executeQuery("SELECT name,sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")){
-            while(rows.next()){
-                var name=rows.getString(1);var sql=rows.getString(2);
-                if(sql!=null&&!strict.contains(name)){names.add(name);tables.put(name,sql);}
-            }
-        }
-        if(!names.isEmpty()){
-            try(var statement=connection.createStatement();var rows=statement.executeQuery("PRAGMA foreign_keys")){
-                if(!rows.next()||rows.getInt(1)!=0)
-                    throw new SQLException("STRICT table rebuild requires foreign_keys=OFF");
-            }
-        }
-        for(var name:names){
-            indexes.put(name,objects(connection,"index",name));
-            triggers.put(name,objects(connection,"trigger",name));
-            if(tables.get(name).toUpperCase(java.util.Locale.ROOT).contains("AUTOINCREMENT")){
-                try(var sequence=connection.prepareStatement("SELECT seq FROM sqlite_sequence WHERE name=?")){
-                    sequence.setString(1,name);
-                    try(var value=sequence.executeQuery()){if(value.next())sequences.put(name,value.getLong(1));}
+        try (var statement = connection.createStatement();
+                var rows = statement.executeQuery(
+                        "SELECT name,sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")) {
+            while (rows.next()) {
+                var name = rows.getString(1);
+                var sql = rows.getString(2);
+                if (sql != null && !strict.contains(name)) {
+                    names.add(name);
+                    tables.put(name, sql);
                 }
             }
         }
-        for(var table:tables.entrySet()){
-            var name=table.getKey();var temporary=name+"__strict";
+        if (!names.isEmpty()) {
+            try (var statement = connection.createStatement();
+                    var rows = statement.executeQuery("PRAGMA foreign_keys")) {
+                if (!rows.next() || rows.getInt(1) != 0)
+                    throw new SQLException("STRICT table rebuild requires foreign_keys=OFF");
+            }
+        }
+        for (var name : names) {
+            indexes.put(name, objects(connection, "index", name));
+            triggers.put(name, objects(connection, "trigger", name));
+            if (tables.get(name).toUpperCase(java.util.Locale.ROOT).contains("AUTOINCREMENT")) {
+                try (var sequence = connection.prepareStatement("SELECT seq FROM sqlite_sequence WHERE name=?")) {
+                    sequence.setString(1, name);
+                    try (var value = sequence.executeQuery()) {
+                        if (value.next()) sequences.put(name, value.getLong(1));
+                    }
+                }
+            }
+        }
+        for (var table : tables.entrySet()) {
+            var name = table.getKey();
+            var temporary = name + "__strict";
             // The metadata value column must accept both integer progress counters and the text
             // mission receipts and objective payloads written by existing stores.
-            var create="metadata".equals(name)
-                ?"CREATE TABLE "+temporary+"(key TEXT PRIMARY KEY, value ANY NOT NULL) STRICT"
-                :replaceTableName(table.getValue(),name,temporary)+" STRICT";
-            try(var statement=connection.createStatement()){
+            var create = "metadata".equals(name)
+                    ? "CREATE TABLE " + temporary + "(key TEXT PRIMARY KEY, value ANY NOT NULL) STRICT"
+                    : replaceTableName(table.getValue(), name, temporary) + " STRICT";
+            try (var statement = connection.createStatement()) {
                 statement.execute(create);
-                statement.execute("INSERT INTO "+temporary+" SELECT * FROM "+name);
-                statement.execute("DROP TABLE "+name);
-                statement.execute("ALTER TABLE "+temporary+" RENAME TO "+name);
-                for(var index:indexes.get(name))statement.execute(index);
-                for(var trigger:triggers.get(name))statement.execute(trigger);
+                statement.execute("INSERT INTO " + temporary + " SELECT * FROM " + name);
+                statement.execute("DROP TABLE " + name);
+                statement.execute("ALTER TABLE " + temporary + " RENAME TO " + name);
+                for (var index : indexes.get(name)) statement.execute(index);
+                for (var trigger : triggers.get(name)) statement.execute(trigger);
             }
-            restoreSequence(connection,name,sequences.get(name));
+            restoreSequence(connection, name, sequences.get(name));
         }
     }
 
     /** sqlite_master definitions that belong to one table and must survive its rebuild. */
-    private static java.util.List<String> objects(Connection connection,String type,String table)throws SQLException{
-        var statements=new java.util.ArrayList<String>();
-        try(var query=connection.prepareStatement("SELECT sql FROM sqlite_master WHERE type=? AND tbl_name=? AND sql IS NOT NULL ORDER BY name")){
-            query.setString(1,type);query.setString(2,table);
-            try(var rows=query.executeQuery()){while(rows.next())statements.add(rows.getString(1));}
+    private static java.util.List<String> objects(Connection connection, String type, String table)
+            throws SQLException {
+        var statements = new java.util.ArrayList<String>();
+        try (var query = connection.prepareStatement(
+                "SELECT sql FROM sqlite_master WHERE type=? AND tbl_name=? AND sql IS NOT NULL ORDER BY name")) {
+            query.setString(1, type);
+            query.setString(2, table);
+            try (var rows = query.executeQuery()) {
+                while (rows.next()) statements.add(rows.getString(1));
+            }
         }
         return statements;
     }
 
     /** Keep the AUTOINCREMENT counter so a rebuild never reuses a previously issued id. */
-    private static void restoreSequence(Connection connection,String table,Long sequence)throws SQLException{
-        if(sequence==null)return;
-        try(var statement=connection.createStatement()){
-            statement.execute("DELETE FROM sqlite_sequence WHERE name='"+table+"__strict'");
+    private static void restoreSequence(Connection connection, String table, Long sequence) throws SQLException {
+        if (sequence == null) return;
+        try (var statement = connection.createStatement()) {
+            statement.execute("DELETE FROM sqlite_sequence WHERE name='" + table + "__strict'");
         }
-        try(var update=connection.prepareStatement("UPDATE sqlite_sequence SET seq=? WHERE name=? AND seq<?")){
-            update.setLong(1,sequence);update.setString(2,table);update.setLong(3,sequence);
-            if(update.executeUpdate()>0)return;
+        try (var update = connection.prepareStatement("UPDATE sqlite_sequence SET seq=? WHERE name=? AND seq<?")) {
+            update.setLong(1, sequence);
+            update.setString(2, table);
+            update.setLong(3, sequence);
+            if (update.executeUpdate() > 0) return;
         }
-        try(var found=connection.prepareStatement("SELECT 1 FROM sqlite_sequence WHERE name=?")){
-            found.setString(1,table);
-            try(var rows=found.executeQuery()){if(rows.next())return;}
+        try (var found = connection.prepareStatement("SELECT 1 FROM sqlite_sequence WHERE name=?")) {
+            found.setString(1, table);
+            try (var rows = found.executeQuery()) {
+                if (rows.next()) return;
+            }
         }
-        try(var insert=connection.prepareStatement("INSERT INTO sqlite_sequence(name,seq) VALUES(?,?)")){
-            insert.setString(1,table);insert.setLong(2,sequence);insert.executeUpdate();
+        try (var insert = connection.prepareStatement("INSERT INTO sqlite_sequence(name,seq) VALUES(?,?)")) {
+            insert.setString(1, table);
+            insert.setLong(2, sequence);
+            insert.executeUpdate();
         }
     }
 
     /** Rewrite the declared name while leaving every other byte of the definition intact. */
-    private static String replaceTableName(String create,String name,String replacement)throws SQLException{
-        var pattern=java.util.regex.Pattern.compile("(?is)\\bCREATE\\s+TABLE\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?[\\\"`\\[]?"
-            +java.util.regex.Pattern.quote(name)+"[\\\"`\\]]?(?=\\s*\\()");
-        var matcher=pattern.matcher(create);
-        if(!matcher.find())throw new SQLException("Cannot rebuild table "+name+": unexpected definition");
-        return create.substring(0,matcher.start())+"CREATE TABLE "+replacement+create.substring(matcher.end());
+    private static String replaceTableName(String create, String name, String replacement) throws SQLException {
+        var pattern =
+                java.util.regex.Pattern.compile("(?is)\\bCREATE\\s+TABLE\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?[\\\"`\\[]?"
+                        + java.util.regex.Pattern.quote(name) + "[\\\"`\\]]?(?=\\s*\\()");
+        var matcher = pattern.matcher(create);
+        if (!matcher.find()) throw new SQLException("Cannot rebuild table " + name + ": unexpected definition");
+        return create.substring(0, matcher.start()) + "CREATE TABLE " + replacement + create.substring(matcher.end());
     }
 
-    private SchemaMigrations() { }
+    private SchemaMigrations() {}
 
     /** Fresh baseline: one transaction creates every table this release needs. */
     static void baseline(Connection connection) throws SQLException, IOException {
         try (Statement statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE schema_migrations(version INTEGER PRIMARY KEY, description TEXT NOT NULL, applied_at INTEGER NOT NULL) STRICT");
+            statement.execute(
+                    "CREATE TABLE schema_migrations(version INTEGER PRIMARY KEY, description TEXT NOT NULL, applied_at INTEGER NOT NULL) STRICT");
             statement.execute("CREATE TABLE metadata(key TEXT PRIMARY KEY, value ANY NOT NULL) STRICT");
             statement.execute("INSERT INTO metadata VALUES('next-account-id',1)");
-            statement.execute("CREATE TABLE accounts(id INTEGER PRIMARY KEY CHECK(id>0), username TEXT NOT NULL, name_key TEXT NOT NULL UNIQUE, salt BLOB NOT NULL CHECK(length(salt)=16), verifier BLOB NOT NULL CHECK(length(verifier)=32), game_master INTEGER NOT NULL DEFAULT 0 CHECK(game_master IN(0,1)), auth_revision INTEGER NOT NULL DEFAULT 1, revision INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL, next_knight_id INTEGER NOT NULL DEFAULT 1 CHECK(next_knight_id>0)) STRICT");
-            statement.execute("CREATE TABLE knights(account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, id INTEGER NOT NULL CHECK(id>0), name TEXT NOT NULL, name_key TEXT NOT NULL, helm TEXT NOT NULL, armor TEXT NOT NULL, helm_accessory TEXT, armor_accessory TEXT, costume TEXT NOT NULL, color INTEGER NOT NULL CHECK(color BETWEEN 0 AND 255), height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4), eye INTEGER NOT NULL CHECK(eye BETWEEN 0 AND 46), created_at INTEGER NOT NULL, PRIMARY KEY(account_id,id), UNIQUE(account_id,name_key)) STRICT");
-            statement.execute("CREATE TABLE account_events(id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL, action TEXT NOT NULL, created_at INTEGER NOT NULL) STRICT");
+            statement.execute(
+                    "CREATE TABLE accounts(id INTEGER PRIMARY KEY CHECK(id>0), username TEXT NOT NULL, name_key TEXT NOT NULL UNIQUE, salt BLOB NOT NULL CHECK(length(salt)=16), verifier BLOB NOT NULL CHECK(length(verifier)=32), game_master INTEGER NOT NULL DEFAULT 0 CHECK(game_master IN(0,1)), auth_revision INTEGER NOT NULL DEFAULT 1, revision INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL, next_knight_id INTEGER NOT NULL DEFAULT 1 CHECK(next_knight_id>0)) STRICT");
+            statement.execute(
+                    "CREATE TABLE knights(account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, id INTEGER NOT NULL CHECK(id>0), name TEXT NOT NULL, name_key TEXT NOT NULL, helm TEXT NOT NULL, armor TEXT NOT NULL, helm_accessory TEXT, armor_accessory TEXT, costume TEXT NOT NULL, color INTEGER NOT NULL CHECK(color BETWEEN 0 AND 255), height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4), eye INTEGER NOT NULL CHECK(eye BETWEEN 0 AND 46), created_at INTEGER NOT NULL, PRIMARY KEY(account_id,id), UNIQUE(account_id,name_key)) STRICT");
+            statement.execute(
+                    "CREATE TABLE account_events(id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL, action TEXT NOT NULL, created_at INTEGER NOT NULL) STRICT");
         }
         WorldProfiles.initialize(connection);
         TownSchema.initialize(connection);
@@ -167,8 +201,8 @@ final class SchemaMigrations {
         DepotSchema.upgrade(connection, DepotSeed.bundled());
         try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE UNIQUE INDEX global_knight_names ON knights(name_key)");
-            statement.execute("INSERT INTO schema_migrations(version,description,applied_at) VALUES("
-                + BASELINE + ",'0.42.0 baseline'," + System.currentTimeMillis() + ")");
+            statement.execute("INSERT INTO schema_migrations(version,description,applied_at) VALUES(" + BASELINE
+                    + ",'0.42.0 baseline'," + System.currentTimeMillis() + ")");
         }
     }
 
@@ -177,7 +211,8 @@ final class SchemaMigrations {
         apply(connection, from, ALL);
     }
     /** Testable form of {@link #apply(Connection, int)} with an explicit ordered step list. */
-    static void apply(Connection connection, int from, java.util.List<Migration> steps) throws SQLException, IOException {
+    static void apply(Connection connection, int from, java.util.List<Migration> steps)
+            throws SQLException, IOException {
         if (from < BASELINE) throw new IOException("Unsupported database schema " + from);
         for (Migration migration : steps) {
             if (migration.version() <= from) continue;

@@ -1,72 +1,191 @@
 package org.tortodrone.town;
 
+import static org.tortodrone.support.TestWire.check;
+
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.*;
-import org.tortodrone.protocol.SessionDecoder;
+import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.town.AuctionState;
 import org.tortodrone.resources.ContentManager;
 import org.tortodrone.storage.*;
 import org.tortodrone.support.ContentFixture;
-import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.core.character.Knight;
-import org.tortodrone.core.character.Currency;
-import org.tortodrone.core.character.Confetti;
-import org.tortodrone.core.town.AuctionState;
 
 /** Native increment boundaries, per-unit ordering and compatible scheduled featured publication. */
 public final class AuctionParityTest {
-    public static void main(String[] args)throws Exception {
-        Path root=Files.createTempDirectory("tortodrone-auction-parity-");
+    public static void main(String[] args) throws Exception {
+        Path root = Files.createTempDirectory("tortodrone-auction-parity-");
         try {
-            var content=ContentManager.load(Path.of("."));var items=content.items();var rules=content.town();
-            var db=new Database(root,false);int owner=db.create("Alice",new Passwords.Protection(new byte[16],new byte[32]),false);
-            new CharacterStore(db,owner,"Alice",items).create(new Knight(0,"Auction-Alice","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0));
-            db.currency("Alice","Auction-Alice",owner,-1,org.tortodrone.core.character.Currency.CROWNS,10000);
-            var house=new AuctionHouse(db,items,rules);
-            var confetti=house.createFeatured("Usable/Confetti, Leaf",1,10,10,0,2);
-            var usable=new org.tortodrone.core.wire.AuctionSearch(true,new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.item.data.ItemCodes$Group",17),null,0,true,false);
-            var usablePage=(AuctionState.Page)house.operate(owner,1,1,5,List.of(usable,0),false).result();
-            var box=house.createFeatured(items.require("anniversary_prize_box_2018").config(),1,10,10,0,2);
-            usablePage=(AuctionState.Page)house.operate(owner,1,1,5,List.of(usable,0),false).result();
-            check(usablePage.listings().stream().anyMatch(l->l.id()==box.id()),"native Usable category includes prize boxes");
-            check(usablePage.listings().stream().anyMatch(l->l.id()==confetti.id()),"native Usable category includes AnimatedAction items");
-            check(AuctionHouse.nextBid(1,0,false)==2&&AuctionHouse.nextBid(99,0,false)==103&&AuctionHouse.nextBid(1000,0,false)==1050&&AuctionHouse.nextBid(Integer.MAX_VALUE,0,false)==Integer.MAX_VALUE,"native rounded increment boundaries");
-            check(AuctionHouse.nextBid(1000,1020,false)==1020&&AuctionHouse.nextBid(1000,0,true)==1000,"buyout cap and first bid");
-            var cheapLot=house.createFeatured("Material/Gel Drop",2,40,40,0,2);
-            var expensiveUnit=house.createFeatured("Material/Gel Drop",1,30,30,0,2);
-            var search=new org.tortodrone.core.wire.AuctionSearch(true,null,Set.of(items.find("Material/Gel Drop").stockId()),1,true,false);
-            var page=(AuctionState.Page)house.operate(owner,1,1,5,List.of(search,0),false).result();
-            check(page.listings().getFirst().id()==cheapLot.id(),"bid sorting compares price per item, not per lot");
-            var buySearch=new org.tortodrone.core.wire.AuctionSearch(true,null,search.configs(),2,false,false);
-            page=(AuctionState.Page)house.operate(owner,1,1,5,List.of(buySearch,0),false).result();check(page.listings().getFirst().id()==expensiveUnit.id(),"descending buyout price per item");
-            var town=new TownStore(db,items,rules);
-            var granted=db.grantItems("Alice","Auction-Alice",owner,-1,items.require("calibur"),1,-1,-1);
-            long sword=granted.items().stream().filter(i->i.config().equals("Weapon/Sword/Calibur")).findFirst().orElseThrow().id();
-            var infinite=new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.auction.data.Duration",9);
-            refused(()->house.operate(owner,1,1,6,List.of(sword,1,10,20,infinite,true),true));
-            check(db.worldProfile(owner,1,1).equals(granted),"forged staff flag cannot bypass stored GM role or consume escrow");
-            db.gameMaster("Alice",true,owner);
-            var gm=(AuctionState.Listing)house.operate(owner,1,1,6,List.of(sword,1,10,20,infinite,true),true).result();
-            check(gm.featured()&&gm.seller()==0&&gm.expires()==Long.MAX_VALUE&&db.worldProfile(owner,1,1).items().stream().anyMatch(i->i.id()==sword),"authorized GM can create infinite featured listing");
-            check(((AuctionState.Page)house.operate(owner,1,1,5,List.of(new org.tortodrone.core.wire.AuctionSearch(true,null,null,0,true,false),0),true).result()).listings().stream().anyMatch(a->a.id()==gm.id()),"GM-created featured listing is searchable");
-            house.operate(owner,1,1,1,List.of(gm.id(),10),true);
-            house.operate(owner,1,1,2,List.of(gm.id()),true);check(house.deliveries(gm.id()).size()==1&&house.deliveries(gm.id()).getFirst().crowns()==10&&!house.deliveries(gm.id()).getFirst().item(),"GM cancellation refunds outstanding featured bids without duplicating the retained source item");
-            long now=System.currentTimeMillis();var future=house.scheduleFeatured("Material/Gel Drop",1,5,0,1,now+3600000,now+7200000);
-            var saved=db.worldProfile(owner,1,1);refused(()->house.operate(owner,1,1,1,List.of(future.id(),5),false));check(db.worldProfile(owner,1,1).equals(saved),"unpublished schedule cannot reserve crowns");
-            page=(AuctionState.Page)house.operate(owner,1,1,5,List.of(search,0),false).result();check(page.listings().stream().noneMatch(a->a.id()==future.id()),"scheduled listing absent from native search");
-            check(new AuctionHouse(new Database(root,false),items,rules).overview().stream().anyMatch(a->a.listing().id()==future.id()&&a.listing().availableAt()==future.availableAt()),"schedule survives restart");
-            db.write(c->{try(var s=c.prepareStatement("UPDATE town_auctions SET available_at=0 WHERE id=?")){s.setLong(1,future.id());s.executeUpdate();}return null;});
-            house.operate(owner,1,1,1,List.of(future.id(),5),false);
-            db.write(c->{try(var s=c.prepareStatement("UPDATE town_auctions SET expires=0 WHERE id=?")){s.setLong(1,future.id());s.executeUpdate();}return null;});
-            var reopened=new AuctionHouse(new Database(root,false),items,rules);reopened.settleExpired();reopened.settleExpired();check(reopened.deliveries(future.id()).size()==1,"scheduled bid settles exactly once after restart");
+            var content = ContentManager.load(Path.of("."));
+            var items = content.items();
+            var rules = content.town();
+            var db = new Database(root, false);
+            int owner = db.create("Alice", new Passwords.Protection(new byte[16], new byte[32]), false);
+            new CharacterStore(db, owner, "Alice", items)
+                    .create(new Knight(
+                            0,
+                            "Auction-Alice",
+                            "Gear/Helm/Spiral Sallet (Blue)",
+                            "Gear/Armor/Spiral Culet (Blue)",
+                            null,
+                            null,
+                            "Blue",
+                            0,
+                            2,
+                            0,
+                            0));
+            db.currency("Alice", "Auction-Alice", owner, -1, org.tortodrone.core.character.Currency.CROWNS, 10000);
+            var house = new AuctionHouse(db, items, rules);
+            var confetti = house.createFeatured("Usable/Confetti, Leaf", 1, 10, 10, 0, 2);
+            var usable = new org.tortodrone.core.wire.AuctionSearch(
+                    true,
+                    new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.item.data.ItemCodes$Group", 17),
+                    null,
+                    0,
+                    true,
+                    false);
+            var usablePage = (AuctionState.Page)
+                    house.operate(owner, 1, 1, 5, List.of(usable, 0), false).result();
+            var box = house.createFeatured(
+                    items.require("anniversary_prize_box_2018").config(), 1, 10, 10, 0, 2);
+            usablePage = (AuctionState.Page)
+                    house.operate(owner, 1, 1, 5, List.of(usable, 0), false).result();
+            check(
+                    usablePage.listings().stream().anyMatch(l -> l.id() == box.id()),
+                    "native Usable category includes prize boxes");
+            check(
+                    usablePage.listings().stream().anyMatch(l -> l.id() == confetti.id()),
+                    "native Usable category includes AnimatedAction items");
+            check(
+                    AuctionHouse.nextBid(1, 0, false) == 2
+                            && AuctionHouse.nextBid(99, 0, false) == 103
+                            && AuctionHouse.nextBid(1000, 0, false) == 1050
+                            && AuctionHouse.nextBid(Integer.MAX_VALUE, 0, false) == Integer.MAX_VALUE,
+                    "native rounded increment boundaries");
+            check(
+                    AuctionHouse.nextBid(1000, 1020, false) == 1020 && AuctionHouse.nextBid(1000, 0, true) == 1000,
+                    "buyout cap and first bid");
+            var cheapLot = house.createFeatured("Material/Gel Drop", 2, 40, 40, 0, 2);
+            var expensiveUnit = house.createFeatured("Material/Gel Drop", 1, 30, 30, 0, 2);
+            var search = new org.tortodrone.core.wire.AuctionSearch(
+                    true, null, Set.of(items.find("Material/Gel Drop").stockId()), 1, true, false);
+            var page = (AuctionState.Page)
+                    house.operate(owner, 1, 1, 5, List.of(search, 0), false).result();
+            check(page.listings().getFirst().id() == cheapLot.id(), "bid sorting compares price per item, not per lot");
+            var buySearch = new org.tortodrone.core.wire.AuctionSearch(true, null, search.configs(), 2, false, false);
+            page = (AuctionState.Page)
+                    house.operate(owner, 1, 1, 5, List.of(buySearch, 0), false).result();
+            check(page.listings().getFirst().id() == expensiveUnit.id(), "descending buyout price per item");
+            var town = new TownStore(db, items, rules);
+            var granted = db.grantItems("Alice", "Auction-Alice", owner, -1, items.require("calibur"), 1, -1, -1);
+            long sword = granted.items().stream()
+                    .filter(i -> i.config().equals("Weapon/Sword/Calibur"))
+                    .findFirst()
+                    .orElseThrow()
+                    .id();
+            var infinite = new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.auction.data.Duration", 9);
+            refused(() -> house.operate(owner, 1, 1, 6, List.of(sword, 1, 10, 20, infinite, true), true));
+            check(
+                    db.worldProfile(owner, 1, 1).equals(granted),
+                    "forged staff flag cannot bypass stored GM role or consume escrow");
+            db.gameMaster("Alice", true, owner);
+            var gm = (AuctionState.Listing)
+                    house.operate(owner, 1, 1, 6, List.of(sword, 1, 10, 20, infinite, true), true)
+                            .result();
+            check(
+                    gm.featured()
+                            && gm.seller() == 0
+                            && gm.expires() == Long.MAX_VALUE
+                            && db.worldProfile(owner, 1, 1).items().stream().anyMatch(i -> i.id() == sword),
+                    "authorized GM can create infinite featured listing");
+            check(
+                    ((AuctionState.Page) house.operate(
+                                            owner,
+                                            1,
+                                            1,
+                                            5,
+                                            List.of(
+                                                    new org.tortodrone.core.wire.AuctionSearch(
+                                                            true, null, null, 0, true, false),
+                                                    0),
+                                            true)
+                                    .result())
+                            .listings().stream().anyMatch(a -> a.id() == gm.id()),
+                    "GM-created featured listing is searchable");
+            house.operate(owner, 1, 1, 1, List.of(gm.id(), 10), true);
+            house.operate(owner, 1, 1, 2, List.of(gm.id()), true);
+            check(
+                    house.deliveries(gm.id()).size() == 1
+                            && house.deliveries(gm.id()).getFirst().crowns() == 10
+                            && !house.deliveries(gm.id()).getFirst().item(),
+                    "GM cancellation refunds outstanding featured bids without duplicating the retained source item");
+            long now = System.currentTimeMillis();
+            var future = house.scheduleFeatured("Material/Gel Drop", 1, 5, 0, 1, now + 3600000, now + 7200000);
+            var saved = db.worldProfile(owner, 1, 1);
+            refused(() -> house.operate(owner, 1, 1, 1, List.of(future.id(), 5), false));
+            check(db.worldProfile(owner, 1, 1).equals(saved), "unpublished schedule cannot reserve crowns");
+            page = (AuctionState.Page)
+                    house.operate(owner, 1, 1, 5, List.of(search, 0), false).result();
+            check(
+                    page.listings().stream().noneMatch(a -> a.id() == future.id()),
+                    "scheduled listing absent from native search");
+            check(
+                    new AuctionHouse(new Database(root, false), items, rules)
+                            .overview().stream()
+                                    .anyMatch(a -> a.listing().id() == future.id()
+                                            && a.listing().availableAt() == future.availableAt()),
+                    "schedule survives restart");
+            db.write(c -> {
+                try (var s = c.prepareStatement("UPDATE town_auctions SET available_at=0 WHERE id=?")) {
+                    s.setLong(1, future.id());
+                    s.executeUpdate();
+                }
+                return null;
+            });
+            house.operate(owner, 1, 1, 1, List.of(future.id(), 5), false);
+            db.write(c -> {
+                try (var s = c.prepareStatement("UPDATE town_auctions SET expires=0 WHERE id=?")) {
+                    s.setLong(1, future.id());
+                    s.executeUpdate();
+                }
+                return null;
+            });
+            var reopened = new AuctionHouse(new Database(root, false), items, rules);
+            reopened.settleExpired();
+            reopened.settleExpired();
+            check(reopened.deliveries(future.id()).size() == 1, "scheduled bid settles exactly once after restart");
             // The older listing must remain findable even after over 5,000 newer ended listings.
-            db.write(c->{try(var s=c.prepareStatement("INSERT INTO town_auctions(seller,item,start_bid,buy_price,bid,expires,ended,featured_total,featured_remaining) SELECT seller,item,start_bid,buy_price,bid,0,1,featured_total,featured_remaining FROM town_auctions WHERE id=?")){s.setLong(1,expensiveUnit.id());for(int i=0;i<5001;i++)s.executeUpdate();}return null;});
-            page=(AuctionState.Page)house.operate(owner,1,1,5,List.of(search,0),false).result();check(page.listings().stream().anyMatch(a->a.id()==cheapLot.id()),"ended history cannot hide active search results before pagination");
-            System.out.println("PASS: native increment boundaries, per-unit bid/buy sorting, filter-before-pagination, scheduled publication, stale/early refusal, restart and exactly-once featured settlement");
-        }finally{ContentFixture.delete(root);}
+            db.write(c -> {
+                try (var s = c.prepareStatement(
+                        "INSERT INTO town_auctions(seller,item,start_bid,buy_price,bid,expires,ended,featured_total,featured_remaining) SELECT seller,item,start_bid,buy_price,bid,0,1,featured_total,featured_remaining FROM town_auctions WHERE id=?")) {
+                    s.setLong(1, expensiveUnit.id());
+                    for (int i = 0; i < 5001; i++) s.executeUpdate();
+                }
+                return null;
+            });
+            page = (AuctionState.Page)
+                    house.operate(owner, 1, 1, 5, List.of(search, 0), false).result();
+            check(
+                    page.listings().stream().anyMatch(a -> a.id() == cheapLot.id()),
+                    "ended history cannot hide active search results before pagination");
+            System.out.println(
+                    "PASS: native increment boundaries, per-unit bid/buy sorting, filter-before-pagination, scheduled publication, stale/early refusal, restart and exactly-once featured settlement");
+        } finally {
+            ContentFixture.delete(root);
+        }
     }
-    private interface Work {void run()throws Exception;}
-    private static void refused(Work work)throws Exception {try{work.run();throw new AssertionError("Expected refusal");}catch(IOException expected){}}
+
+    private interface Work {
+        void run() throws Exception;
+    }
+
+    private static void refused(Work work) throws Exception {
+        try {
+            work.run();
+            throw new AssertionError("Expected refusal");
+        } catch (IOException expected) {
+        }
+    }
 }

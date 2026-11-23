@@ -48,8 +48,8 @@ public record MonsterType(
 
     /** Fail-closed spawn check used by placement resolution and administrative tools. */
     public void requireSpawnable() throws java.io.IOException {
-        if (!supported) throw new java.io.IOException(
-            "Unsupported monster type " + id + ": " + String.join(", ", unsupported));
+        if (!supported)
+            throw new java.io.IOException("Unsupported monster type " + id + ": " + String.join(", ", unsupported));
         if (actor == null) throw new java.io.IOException("Monster type has no native actor config: " + id);
     }
 }

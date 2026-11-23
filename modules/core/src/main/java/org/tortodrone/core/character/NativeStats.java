@@ -33,17 +33,33 @@ public final class NativeStats {
     public static final int UNUSED = 19;
 
     private static final String[] NAMES = {
-        "ITEMS_CRAFTED", "SWORDS_OWNED", "HANDGUNS_OWNED", "BOMBS_OWNED",
-        "HELMS_OWNED", "ARMORS_OWNED", "SHIELDS_OWNED", "FIVE_STAR_SWORDS_OWNED",
-        "FIVE_STAR_HANDGUNS_OWNED", "FIVE_STAR_BOMBS_OWNED", "FIVE_STAR_HELMS_OWNED",
-        "FIVE_STAR_ARMORS_OWNED", "FIVE_STAR_SHIELDS_OWNED", "HEALTH_CAPSULES_USED",
-        "REMEDY_CAPSULES_USED", "LUCK_POTIONS_USED", "LEVELS_COMPLETED", "CASINO_SPINS",
-        "SLIME_LOCKBOXES_OPENED", "UNUSED"
+        "ITEMS_CRAFTED",
+        "SWORDS_OWNED",
+        "HANDGUNS_OWNED",
+        "BOMBS_OWNED",
+        "HELMS_OWNED",
+        "ARMORS_OWNED",
+        "SHIELDS_OWNED",
+        "FIVE_STAR_SWORDS_OWNED",
+        "FIVE_STAR_HANDGUNS_OWNED",
+        "FIVE_STAR_BOMBS_OWNED",
+        "FIVE_STAR_HELMS_OWNED",
+        "FIVE_STAR_ARMORS_OWNED",
+        "FIVE_STAR_SHIELDS_OWNED",
+        "HEALTH_CAPSULES_USED",
+        "REMEDY_CAPSULES_USED",
+        "LUCK_POTIONS_USED",
+        "LEVELS_COMPLETED",
+        "CASINO_SPINS",
+        "SLIME_LOCKBOXES_OPENED",
+        "UNUSED"
     };
 
-    private NativeStats() { }
+    private NativeStats() {}
 
-    public static int count() { return NAMES.length; }
+    public static int count() {
+        return NAMES.length;
+    }
 
     public static String name(int ordinal) {
         if (ordinal < 0 || ordinal >= NAMES.length) throw new IllegalArgumentException("Unknown stat " + ordinal);

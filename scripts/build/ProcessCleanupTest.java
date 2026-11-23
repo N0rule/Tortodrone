@@ -8,8 +8,19 @@ import java.util.concurrent.TimeUnit;
 
 /** Deterministic lifecycle checks for the standalone stock-tool child processes. */
 public final class ProcessCleanupTest {
-    private enum Scenario { GRACEFUL, FORCED, TIMED_WAIT_INTERRUPTED, FORCED_WAIT_INTERRUPTED, PRE_INTERRUPTED, ALREADY_EXITED }
-    private enum EntryPoint { STOCK_TOOLS, CLIENT_CHECKS }
+    private enum Scenario {
+        GRACEFUL,
+        FORCED,
+        TIMED_WAIT_INTERRUPTED,
+        FORCED_WAIT_INTERRUPTED,
+        PRE_INTERRUPTED,
+        ALREADY_EXITED
+    }
+
+    private enum EntryPoint {
+        STOCK_TOOLS,
+        CLIENT_CHECKS
+    }
 
     public static void main(String[] args) throws Exception {
         for (EntryPoint entryPoint : EntryPoint.values()) {
@@ -27,15 +38,18 @@ public final class ProcessCleanupTest {
             invokeCleanup(entryPoint, child);
             check(!child.isAlive(), entryPoint + " left child alive for " + scenario);
             boolean expectsInterrupt = scenario == Scenario.TIMED_WAIT_INTERRUPTED
-                || scenario == Scenario.FORCED_WAIT_INTERRUPTED || scenario == Scenario.PRE_INTERRUPTED;
-            check(Thread.currentThread().isInterrupted() == expectsInterrupt,
-                entryPoint + " has wrong interrupt status for " + scenario);
+                    || scenario == Scenario.FORCED_WAIT_INTERRUPTED
+                    || scenario == Scenario.PRE_INTERRUPTED;
+            check(
+                    Thread.currentThread().isInterrupted() == expectsInterrupt,
+                    entryPoint + " has wrong interrupt status for " + scenario);
             if (scenario == Scenario.ALREADY_EXITED) {
                 check(!child.destroyed && !child.forced, entryPoint + " touched an exited child");
             } else {
                 check(child.destroyed, entryPoint + " did not request graceful termination");
             }
-            if (scenario == Scenario.FORCED || scenario == Scenario.TIMED_WAIT_INTERRUPTED
+            if (scenario == Scenario.FORCED
+                    || scenario == Scenario.TIMED_WAIT_INTERRUPTED
                     || scenario == Scenario.FORCED_WAIT_INTERRUPTED) {
                 check(child.forced, entryPoint + " did not request forcible termination for " + scenario);
             }
@@ -62,7 +76,8 @@ public final class ProcessCleanupTest {
         }
         Field children = owner.getDeclaredField("CHILDREN");
         children.setAccessible(true);
-        @SuppressWarnings("unchecked") List<Process> processes = (List<Process>) children.get(null);
+        @SuppressWarnings("unchecked")
+        List<Process> processes = (List<Process>) children.get(null);
         processes.clear();
         processes.add(child);
         Method stopChildren = owner.getDeclaredMethod("stopChildren");
@@ -76,10 +91,14 @@ public final class ProcessCleanupTest {
         clearInterrupt();
         try {
             invokeChildrenCleanup(entryPoint, List.of(remaining, interrupted));
-            check(!interrupted.isAlive() && !remaining.isAlive(), entryPoint + " left a child alive after interrupted wait");
+            check(
+                    !interrupted.isAlive() && !remaining.isAlive(),
+                    entryPoint + " left a child alive after interrupted wait");
             check(interrupted.forced && remaining.forced, entryPoint + " did not force-stop both children");
             check(interrupted.blockingInterruptions == 2, entryPoint + " did not consume scripted interruptions");
-            check(Thread.currentThread().isInterrupted(), entryPoint + " did not restore interruption after draining children");
+            check(
+                    Thread.currentThread().isInterrupted(),
+                    entryPoint + " did not restore interruption after draining children");
         } finally {
             clearInterrupt();
             clearChildList(entryPoint);
@@ -91,7 +110,8 @@ public final class ProcessCleanupTest {
         Class<?> owner = Class.forName(className);
         Field field = owner.getDeclaredField("CHILDREN");
         field.setAccessible(true);
-        @SuppressWarnings("unchecked") List<Process> processes = (List<Process>) field.get(null);
+        @SuppressWarnings("unchecked")
+        List<Process> processes = (List<Process>) field.get(null);
         processes.clear();
         processes.addAll(children);
         Method stopChildren = owner.getDeclaredMethod("stopChildren");
@@ -100,8 +120,9 @@ public final class ProcessCleanupTest {
     }
 
     private static void call(Method method, Object receiver, Object... arguments) throws Exception {
-        try { method.invoke(receiver, arguments); }
-        catch (InvocationTargetException failure) {
+        try {
+            method.invoke(receiver, arguments);
+        } catch (InvocationTargetException failure) {
             Throwable cause = failure.getCause();
             if (cause instanceof Exception exception) throw exception;
             if (cause instanceof Error error) throw error;
@@ -114,11 +135,14 @@ public final class ProcessCleanupTest {
         String className = "ClientCheckHarness";
         Field children = Class.forName(className).getDeclaredField("CHILDREN");
         children.setAccessible(true);
-        @SuppressWarnings("unchecked") List<Process> processes = (List<Process>) children.get(null);
+        @SuppressWarnings("unchecked")
+        List<Process> processes = (List<Process>) children.get(null);
         processes.clear();
     }
 
-    private static void clearInterrupt() { Thread.interrupted(); }
+    private static void clearInterrupt() {
+        Thread.interrupted();
+    }
 
     private static void check(boolean condition, String message) {
         if (!condition) throw new AssertionError(message);
@@ -136,11 +160,23 @@ public final class ProcessCleanupTest {
             alive = scenario != Scenario.ALREADY_EXITED;
         }
 
-        @Override public OutputStream getOutputStream() { return OutputStream.nullOutputStream(); }
-        @Override public InputStream getInputStream() { return InputStream.nullInputStream(); }
-        @Override public InputStream getErrorStream() { return InputStream.nullInputStream(); }
+        @Override
+        public OutputStream getOutputStream() {
+            return OutputStream.nullOutputStream();
+        }
 
-        @Override public int waitFor() throws InterruptedException {
+        @Override
+        public InputStream getInputStream() {
+            return InputStream.nullInputStream();
+        }
+
+        @Override
+        public InputStream getErrorStream() {
+            return InputStream.nullInputStream();
+        }
+
+        @Override
+        public int waitFor() throws InterruptedException {
             if (scenario == Scenario.FORCED_WAIT_INTERRUPTED && blockingInterruptions < 2) {
                 blockingInterruptions++;
                 throw new InterruptedException("scripted blocking wait interruption");
@@ -149,7 +185,8 @@ public final class ProcessCleanupTest {
             return 0;
         }
 
-        @Override public boolean waitFor(long timeout, TimeUnit unit) throws InterruptedException {
+        @Override
+        public boolean waitFor(long timeout, TimeUnit unit) throws InterruptedException {
             if (scenario == Scenario.TIMED_WAIT_INTERRUPTED)
                 throw new InterruptedException("scripted timed wait interruption");
             if (scenario == Scenario.GRACEFUL) {
@@ -159,19 +196,27 @@ public final class ProcessCleanupTest {
             return false;
         }
 
-        @Override public int exitValue() {
+        @Override
+        public int exitValue() {
             if (alive) throw new IllegalThreadStateException("process still running");
             return 0;
         }
 
-        @Override public void destroy() { destroyed = true; }
+        @Override
+        public void destroy() {
+            destroyed = true;
+        }
 
-        @Override public Process destroyForcibly() {
+        @Override
+        public Process destroyForcibly() {
             forced = true;
             if (scenario != Scenario.FORCED_WAIT_INTERRUPTED) alive = false;
             return this;
         }
 
-        @Override public boolean isAlive() { return alive; }
+        @Override
+        public boolean isAlive() {
+            return alive;
+        }
     }
 }

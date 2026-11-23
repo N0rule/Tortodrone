@@ -5,33 +5,46 @@ import java.util.*;
 /** Small server-owned catalog of verified references; the client supplies its own game assets. */
 public final class StarterCatalog {
     public record Model(String name, Map<String, Object> arguments) {
-        public Model { arguments = Map.copyOf(arguments); }
+        public Model {
+            arguments = Map.copyOf(arguments);
+        }
     }
-    public record Colorization(int value) { }
-    public record TransColorization(int clazz,int value) { }
-    public record CustomColorization(int clazz,float hue,float saturation,float value) {
-        public CustomColorization { if(!Float.isFinite(hue)||!Float.isFinite(saturation)||!Float.isFinite(value))throw new IllegalArgumentException("Nonfinite color offsets"); }
+
+    public record Colorization(int value) {}
+
+    public record TransColorization(int clazz, int value) {}
+
+    public record CustomColorization(int clazz, float hue, float saturation, float value) {
+        public CustomColorization {
+            if (!Float.isFinite(hue) || !Float.isFinite(saturation) || !Float.isFinite(value))
+                throw new IllegalArgumentException("Nonfinite color offsets");
+        }
     }
-    record Entry(String category, String parameter, String model, Map<String, String> arguments) { }
+
+    record Entry(String category, String parameter, String model, Map<String, String> arguments) {}
+
     private static final Map<String, Entry> ENTRIES = StarterCatalogReader.load();
     private static final Set<String> COSTUMES = Set.of("Blue", "Gold", "Green", "Heavy", "Pink", "Purple", "Red");
-    private static final String[] EYES = ("default almond cheeky closed determined dot eks happy jolly pill plus rage sad shifty sleepy spiral sultry squint wat blank lash star club diamond heart spade snow clover skull circuit flower_round flower_sharp sparkle cheer flower_tri lotus propeller square triangle hexagon sun moon bug bee gear joy bright").split(" ");
+    private static final String[] EYES =
+            ("default almond cheeky closed determined dot eks happy jolly pill plus rage sad shifty sleepy spiral sultry squint wat blank lash star club diamond heart spade snow clover skull circuit flower_round flower_sharp sparkle cheer flower_tri lotus propeller square triangle hexagon sun moon bug bee gear joy bright")
+                    .split(" ");
 
-    private StarterCatalog() { }
+    private StarterCatalog() {}
 
     /** New characters can only request equipment offered by the verified character creator. */
     public static boolean accepts(Knight knight) {
         return COSTUMES.contains(knight.costume())
-            && matches(knight.helm(), "HELM", " (" + knight.costume() + ")")
-            && matches(knight.armor(), "ARMOR", " (" + knight.costume() + ")")
-            && accessory(knight.helmAccessory(), "HELM_ACCESSORY", knight.costume())
-            && accessory(knight.armorAccessory(), "BACK_ACCESSORY", knight.costume());
+                && matches(knight.helm(), "HELM", " (" + knight.costume() + ")")
+                && matches(knight.armor(), "ARMOR", " (" + knight.costume() + ")")
+                && accessory(knight.helmAccessory(), "HELM_ACCESSORY", knight.costume())
+                && accessory(knight.armorAccessory(), "BACK_ACCESSORY", knight.costume());
     }
 
     private static boolean matches(String name, String category, String suffix) {
         Entry entry = ENTRIES.get(name);
         return entry != null && entry.category().equals(category) && name.endsWith(suffix);
     }
+
     private static boolean accessory(String name, String category, String costume) {
         return name == null || name.isEmpty() || matches(name + ", " + costume, category, ", " + costume);
     }
@@ -46,89 +59,150 @@ public final class StarterCatalog {
         if (knight.eye() == 19) args.put("Texture - Closed", eye + ".png");
         else if (knight.eye() == 29 || knight.eye() == 46) args.put("Texture - Closed", eye + "_closed.png");
         // Unknown unsupported choices stay saved; never guess an asset path for them.
-        add(args, knight.helm(), color); add(args, knight.armor(), color);
+        add(args, knight.helm(), color);
+        add(args, knight.armor(), color);
         if (knight.helmAccessory() != null) add(args, knight.helmAccessory() + ", " + knight.costume(), color);
         if (knight.armorAccessory() != null) add(args, knight.armorAccessory() + ", " + knight.costume(), color);
         return new Model("character/pc/model_level.dat", args);
     }
 
     /** Equipment preview includes the lowest occupied weapon slot and equipped cosmetics. */
-    public static Model equipped(Knight knight,WorldProfile profile) {
-        return equipped(knight,profile,ItemCatalog.starter());
+    public static Model equipped(Knight knight, WorldProfile profile) {
+        return equipped(knight, profile, ItemCatalog.starter());
     }
-    public static Model equipped(Knight knight,WorldProfile profile,ItemCatalog catalog) {
-        return equipped(knight,profile,catalog,View.EQUIPPED);
+
+    public static Model equipped(Knight knight, WorldProfile profile, ItemCatalog catalog) {
+        return equipped(knight, profile, catalog, View.EQUIPPED);
     }
 
     /** Peaceful town appearance: empty hands and the equipped shield carried on the back. */
-    public static Model town(Knight knight,WorldProfile profile,ItemCatalog catalog) {
-        return equipped(knight,profile,catalog,View.TOWN);
+    public static Model town(Knight knight, WorldProfile profile, ItemCatalog catalog) {
+        return equipped(knight, profile, catalog, View.TOWN);
     }
 
     /** Stock Dungeoneer sprites attach weapon and shield models from their actor fields. */
-    public static Model interior(Knight knight,WorldProfile profile,ItemCatalog catalog) {
-        return equipped(knight,profile,catalog,View.INTERIOR);
+    public static Model interior(Knight knight, WorldProfile profile, ItemCatalog catalog) {
+        return equipped(knight, profile, catalog, View.INTERIOR);
     }
     /** Native PartyMember portrait: the non-level PC model, without held equipment. */
-    public static Model portrait(Knight knight,WorldProfile profile,ItemCatalog catalog){
-        return new Model("character/pc/model.dat",equipped(knight,profile,catalog,View.INTERIOR).arguments());
+    public static Model portrait(Knight knight, WorldProfile profile, ItemCatalog catalog) {
+        return new Model(
+                "character/pc/model.dat",
+                equipped(knight, profile, catalog, View.INTERIOR).arguments());
     }
 
-    private enum View { EQUIPPED, TOWN, INTERIOR }
+    private enum View {
+        EQUIPPED,
+        TOWN,
+        INTERIOR
+    }
 
-    private static Model equipped(Knight knight,WorldProfile profile,ItemCatalog catalog,View view) {
-        var visible=new Knight(knight.id(),knight.name(),null,null,null,null,knight.costume(),knight.color(),knight.height(),knight.eye(),knight.createdAt());
-        var args=new TreeMap<>(preview(visible).arguments());int color=256|knight.color();
+    private static Model equipped(Knight knight, WorldProfile profile, ItemCatalog catalog, View view) {
+        var visible = new Knight(
+                knight.id(),
+                knight.name(),
+                null,
+                null,
+                null,
+                null,
+                knight.costume(),
+                knight.color(),
+                knight.height(),
+                knight.eye(),
+                knight.createdAt());
+        var args = new TreeMap<>(preview(visible).arguments());
+        int color = 256 | knight.color();
         // Apply armor/helm before accessories; use the lowest occupied weapon slot.
-        boolean weapon=false;
-        for(var item:profile.items().stream().filter(i->i.equippedSlot()!=null)
-                .sorted(Comparator.comparingInt(WorldProfile.Item::equippedSlot)).toList()) {
-            int equipped=item.equippedSlot();
-            if(equipped==0 && profile.equipment()[3]!=0
-                || equipped==1 && profile.equipment()[4]!=0
-                || equipped==2 && profile.equipment()[15]!=0)continue;
-            if(view==View.INTERIOR&&(item.slot()==WorldProfile.Slot.SHIELD||item.slot()==WorldProfile.Slot.SHIELD_COSTUME))continue;
-            if(item.slot().weapon()) {if(view!=View.EQUIPPED||weapon)continue;weapon=true;}
-            var entry=catalog.find(item.config());
-            if(entry!=null)args.putAll(entry.arguments(color));
-            if(item.accessory()!=null)add(args,item.accessory()+", "+knight.costume(),color);
+        boolean weapon = false;
+        for (var item : profile.items().stream()
+                .filter(i -> i.equippedSlot() != null)
+                .sorted(Comparator.comparingInt(WorldProfile.Item::equippedSlot))
+                .toList()) {
+            int equipped = item.equippedSlot();
+            if (equipped == 0 && profile.equipment()[3] != 0
+                    || equipped == 1 && profile.equipment()[4] != 0
+                    || equipped == 2 && profile.equipment()[15] != 0) continue;
+            if (view == View.INTERIOR
+                    && (item.slot() == WorldProfile.Slot.SHIELD || item.slot() == WorldProfile.Slot.SHIELD_COSTUME))
+                continue;
+            if (item.slot().weapon()) {
+                if (view != View.EQUIPPED || weapon) continue;
+                weapon = true;
+            }
+            var entry = catalog.find(item.config());
+            if (entry != null) args.putAll(entry.arguments(color));
+            if (item.accessory() != null) add(args, item.accessory() + ", " + knight.costume(), color);
         }
-        if(view==View.TOWN)args.put("Shield Away","True");
-        return new Model("character/pc/model_level.dat",args);
+        if (view == View.TOWN) args.put("Shield Away", "True");
+        return new Model("character/pc/model_level.dat", args);
     }
 
     static List<ItemCatalog.Entry> catalogEntries() {
-        var result=new ArrayList<ItemCatalog.Entry>();
-        for(var e:ENTRIES.entrySet()) if(e.getValue().category().equals("HELM")||e.getValue().category().equals("ARMOR")) {
-            var args=new TreeMap<String,Object>();add(args,e.getKey(),-12345);
-            var model=(Model)args.get(e.getValue().parameter());var values=new TreeMap<>(model.arguments());
-            values.replaceAll((k,v)->v instanceof Integer n&&n==-12345?ItemCatalog.PlayerColor.VALUE:v);
-            args.put(e.getValue().parameter(),new Model(model.name(),values));
-            result.add(new ItemCatalog.Entry(e.getKey(),0,e.getValue().category(),"",0,false,
-                WorldProfile.Slot.valueOf(e.getValue().category()),true,args));
-        }
-        for(var slot:List.of(WorldProfile.Slot.SWORD,WorldProfile.Slot.GUN,WorldProfile.Slot.SHIELD)) {
-            boolean sword=slot==WorldProfile.Slot.SWORD,shield=slot==WorldProfile.Slot.SHIELD;
-            var args=new TreeMap<String,Object>();
-            args.put(shield?"Shield":"Weapon",new Model(shield?"item/gear/shield/buckler/model.dat":sword?
-                "item/weapon/sword/proto/model.dat":"item/weapon/handgun/proto/model.dat",
-                Map.of("Colorization",ItemCatalog.PlayerColor.VALUE,"variant","proto(green)")));
-            if(!shield)args.put("Weapon Idle",sword?"ready_sword":"ready_pistol");
-            result.add(new ItemCatalog.Entry(shield?"Gear/Shield/Proto Shield":sword?"Weapon/Sword/Proto Sword":"Weapon/Handgun/Proto Gun",
-                0,slot.name(),"",0,false,slot,true,args));
+        var result = new ArrayList<ItemCatalog.Entry>();
+        for (var e : ENTRIES.entrySet())
+            if (e.getValue().category().equals("HELM")
+                    || e.getValue().category().equals("ARMOR")) {
+                var args = new TreeMap<String, Object>();
+                add(args, e.getKey(), -12345);
+                var model = (Model) args.get(e.getValue().parameter());
+                var values = new TreeMap<>(model.arguments());
+                values.replaceAll((k, v) -> v instanceof Integer n && n == -12345 ? ItemCatalog.PlayerColor.VALUE : v);
+                args.put(e.getValue().parameter(), new Model(model.name(), values));
+                result.add(new ItemCatalog.Entry(
+                        e.getKey(),
+                        0,
+                        e.getValue().category(),
+                        "",
+                        0,
+                        false,
+                        WorldProfile.Slot.valueOf(e.getValue().category()),
+                        true,
+                        args));
+            }
+        for (var slot : List.of(WorldProfile.Slot.SWORD, WorldProfile.Slot.GUN, WorldProfile.Slot.SHIELD)) {
+            boolean sword = slot == WorldProfile.Slot.SWORD, shield = slot == WorldProfile.Slot.SHIELD;
+            var args = new TreeMap<String, Object>();
+            args.put(
+                    shield ? "Shield" : "Weapon",
+                    new Model(
+                            shield
+                                    ? "item/gear/shield/buckler/model.dat"
+                                    : sword
+                                            ? "item/weapon/sword/proto/model.dat"
+                                            : "item/weapon/handgun/proto/model.dat",
+                            Map.of("Colorization", ItemCatalog.PlayerColor.VALUE, "variant", "proto(green)")));
+            if (!shield) args.put("Weapon Idle", sword ? "ready_sword" : "ready_pistol");
+            result.add(new ItemCatalog.Entry(
+                    shield
+                            ? "Gear/Shield/Proto Shield"
+                            : sword ? "Weapon/Sword/Proto Sword" : "Weapon/Handgun/Proto Gun",
+                    0,
+                    slot.name(),
+                    "",
+                    0,
+                    false,
+                    slot,
+                    true,
+                    args));
         }
         return List.copyOf(result);
     }
 
     private static void add(Map<String, Object> args, String name, int color) {
-        if(name==null)return;
+        if (name == null) return;
         Entry entry = ENTRIES.get(name);
         if (entry == null) return;
         Map<String, Object> values = new TreeMap<>();
-        entry.arguments().forEach((key, value) -> values.put(key, value.equals("PLAYER_COLOR") ? color
-            : value.startsWith("I:") ? Integer.parseInt(value.substring(2))
-            : value.startsWith("C:") ? new Colorization(Integer.parseInt(value.substring(2)))
-            : value.substring(2)));
+        entry.arguments()
+                .forEach((key, value) -> values.put(
+                        key,
+                        value.equals("PLAYER_COLOR")
+                                ? color
+                                : value.startsWith("I:")
+                                        ? Integer.parseInt(value.substring(2))
+                                        : value.startsWith("C:")
+                                                ? new Colorization(Integer.parseInt(value.substring(2)))
+                                                : value.substring(2)));
         args.put(entry.parameter(), new Model(entry.model(), values));
     }
 }

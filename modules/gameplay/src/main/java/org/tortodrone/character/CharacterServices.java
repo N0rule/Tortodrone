@@ -23,22 +23,49 @@ public final class CharacterServices {
     private final Database database;
     private final ItemCatalog catalog;
 
-    CharacterServices(Database database,ItemCatalog catalog) {
-        this.database=database;this.catalog=catalog;
+    CharacterServices(Database database, ItemCatalog catalog) {
+        this.database = database;
+        this.catalog = catalog;
     }
 
-    private Database require()throws IOException{
-        if(database==null)throw new IOException("SQLite storage is required");
+    private Database require() throws IOException {
+        if (database == null) throw new IOException("SQLite storage is required");
         return database;
     }
 
-    public EnergyExchange exchange()throws IOException{return new EnergyExchange(require());}
-    public FriendStore friends()throws IOException{return new FriendStore(require());}
-    public DepotStore depot(TownCatalog rules)throws IOException{return new DepotStore(require(),catalog,rules);}
-    public StyleStore styles()throws IOException{return new StyleStore(require(),catalog);}
-    public AuctionHouse auction(TownCatalog rules)throws IOException{return new AuctionHouse(require(),catalog,rules);}
-    public TownStore town(TownCatalog rules)throws IOException{return new TownStore(require(),catalog,rules);}
-    public GuildStore guilds()throws IOException{return new GuildStore(require());}
-    public BoxOpeningService boxes(BoxCatalog boxes)throws IOException{return new BoxOpeningService(require(),catalog,boxes);}
-    public OpeningMissionStore openingMissions(TownCatalog rules,MissionCatalog missions)throws IOException{return new OpeningMissionStore(require(),catalog,rules,missions);}
+    public EnergyExchange exchange() throws IOException {
+        return new EnergyExchange(require());
+    }
+
+    public FriendStore friends() throws IOException {
+        return new FriendStore(require());
+    }
+
+    public DepotStore depot(TownCatalog rules) throws IOException {
+        return new DepotStore(require(), catalog, rules);
+    }
+
+    public StyleStore styles() throws IOException {
+        return new StyleStore(require(), catalog);
+    }
+
+    public AuctionHouse auction(TownCatalog rules) throws IOException {
+        return new AuctionHouse(require(), catalog, rules);
+    }
+
+    public TownStore town(TownCatalog rules) throws IOException {
+        return new TownStore(require(), catalog, rules);
+    }
+
+    public GuildStore guilds() throws IOException {
+        return new GuildStore(require());
+    }
+
+    public BoxOpeningService boxes(BoxCatalog boxes) throws IOException {
+        return new BoxOpeningService(require(), catalog, boxes);
+    }
+
+    public OpeningMissionStore openingMissions(TownCatalog rules, MissionCatalog missions) throws IOException {
+        return new OpeningMissionStore(require(), catalog, rules, missions);
+    }
 }

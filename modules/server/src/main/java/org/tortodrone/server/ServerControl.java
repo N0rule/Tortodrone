@@ -6,85 +6,208 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
-import org.tortodrone.account.AccountStore;
 import org.tortodrone.world.SceneRegistry;
 
 /** Small lifecycle owner shared by the listener, terminal and optional WebUI. */
 public final class ServerControl {
-    public enum State { STARTING, RUNNING, STOPPING, STOPPED, FAILED }
-    public record Snapshot(String version,State state,String endpoint,Instant startedAt,long uptimeSeconds,int maps,int items,
-            List<SessionRegistry.Snapshot> sessions,List<SceneRegistry.Status> scenes,
-            RuntimeMetrics metrics,java.util.Map<String,Long> output,String failure) { }
+    public enum State {
+        STARTING,
+        RUNNING,
+        STOPPING,
+        STOPPED,
+        FAILED
+    }
+
+    public record Snapshot(
+            String version,
+            State state,
+            String endpoint,
+            Instant startedAt,
+            long uptimeSeconds,
+            int maps,
+            int items,
+            List<SessionRegistry.Snapshot> sessions,
+            List<SceneRegistry.Status> scenes,
+            RuntimeMetrics metrics,
+            java.util.Map<String, Long> output,
+            String failure) {}
+
     private final String version;
     private final Path data;
-    private final SessionRegistry sessions=new SessionRegistry();
-    private final AtomicLong ids=new AtomicLong();
-    private State state=State.STOPPED;
+    private final SessionRegistry sessions = new SessionRegistry();
+    private final AtomicLong ids = new AtomicLong();
+    private State state = State.STOPPED;
     private ServerSocket listener;
     private ServerConsole console;
     private SceneRegistry scenes;
     private Instant startedAt;
-    private long startedNanos,stoppedNanos;
-    private String endpoint="",failure="";
+    private long startedNanos, stoppedNanos;
+    private String endpoint = "", failure = "";
     private int itemCount;
-    private boolean startRequested=true,exitRequested;
-    private final java.util.concurrent.ConcurrentHashMap<Long,java.net.Socket> sockets=new java.util.concurrent.ConcurrentHashMap<>();
-    void connection(long id,java.net.Socket socket){sockets.put(id,socket);}
-    void disconnected(long id){sockets.remove(id);}
-    public boolean kick(long id)throws IOException{var socket=sockets.get(id);if(socket==null)return false;socket.close();return true;}
-    public synchronized void restart(){stop();startRequested=true;notifyAll();}
-    public ServerControl(String version,Path data) {this.version=version;this.data=data;}
-    public Path dataDirectory() {return data;}
-    public SessionRegistry sessions() {return sessions;}
+    private boolean startRequested = true, exitRequested;
+    private final java.util.concurrent.ConcurrentHashMap<Long, java.net.Socket> sockets =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    void connection(long id, java.net.Socket socket) {
+        sockets.put(id, socket);
+    }
+
+    void disconnected(long id) {
+        sockets.remove(id);
+    }
+
+    public boolean kick(long id) throws IOException {
+        var socket = sockets.get(id);
+        if (socket == null) return false;
+        socket.close();
+        return true;
+    }
+
+    public synchronized void restart() {
+        stop();
+        startRequested = true;
+        notifyAll();
+    }
+
+    public ServerControl(String version, Path data) {
+        this.version = version;
+        this.data = data;
+    }
+
+    public Path dataDirectory() {
+        return data;
+    }
+
+    public SessionRegistry sessions() {
+        return sessions;
+    }
     /** Session and destination guards surround the read; no control lock enters a scene. */
-    public org.tortodrone.world.SceneSimulation.Companion companion(long session,int account,int knight) {
+    public org.tortodrone.world.SceneSimulation.Companion companion(long session, int account, int knight) {
         SceneRegistry registry;
-        synchronized(this){if(state!=State.RUNNING)return null;registry=scenes;}
-        var before=sessions.find(session);
-        if(registry==null||before==null||!java.util.Objects.equals(before.accountId(),account)
-                ||!java.util.Objects.equals(before.knightId(),knight)||before.instanceId()==null)return null;
-        var result=registry.companion(before.instanceId(),knight);
-        var after=sessions.find(session);
-        synchronized(this){if(state!=State.RUNNING||scenes!=registry)return null;}
-        if(after==null||!java.util.Objects.equals(after.accountId(),account)||!java.util.Objects.equals(after.knightId(),knight)
-                ||!java.util.Objects.equals(after.instanceId(),before.instanceId()))return null;
+        synchronized (this) {
+            if (state != State.RUNNING) return null;
+            registry = scenes;
+        }
+        var before = sessions.find(session);
+        if (registry == null
+                || before == null
+                || !java.util.Objects.equals(before.accountId(), account)
+                || !java.util.Objects.equals(before.knightId(), knight)
+                || before.instanceId() == null) return null;
+        var result = registry.companion(before.instanceId(), knight);
+        var after = sessions.find(session);
+        synchronized (this) {
+            if (state != State.RUNNING || scenes != registry) return null;
+        }
+        if (after == null
+                || !java.util.Objects.equals(after.accountId(), account)
+                || !java.util.Objects.equals(after.knightId(), knight)
+                || !java.util.Objects.equals(after.instanceId(), before.instanceId())) return null;
         return result;
     }
-    long nextSessionId() {return ids.incrementAndGet();}
+
+    long nextSessionId() {
+        return ids.incrementAndGet();
+    }
+
     public synchronized Snapshot snapshot() {
         org.tortodrone.core.LockOrder.enter(org.tortodrone.core.LockOrder.CONTROL);
         try {
-            long uptime=startedAt==null?0:Math.max(0,((stoppedNanos==0?System.nanoTime():stoppedNanos)-startedNanos)/1000000000);
-            return new Snapshot(version,state,endpoint,startedAt,uptime,scenes==null?0:scenes.catalog().sceneCount(),itemCount,
-                sessions.snapshots(),scenes==null?List.of():scenes.statuses(),RuntimeMetrics.capture(),
-                org.tortodrone.server.network.NetworkMetrics.snapshot(),failure);
-        } finally { org.tortodrone.core.LockOrder.exit(); }
+            long uptime = startedAt == null
+                    ? 0
+                    : Math.max(0, ((stoppedNanos == 0 ? System.nanoTime() : stoppedNanos) - startedNanos) / 1000000000);
+            return new Snapshot(
+                    version,
+                    state,
+                    endpoint,
+                    startedAt,
+                    uptime,
+                    scenes == null ? 0 : scenes.catalog().sceneCount(),
+                    itemCount,
+                    sessions.snapshots(),
+                    scenes == null ? List.of() : scenes.statuses(),
+                    RuntimeMetrics.capture(),
+                    org.tortodrone.server.network.NetworkMetrics.snapshot(),
+                    failure);
+        } finally {
+            org.tortodrone.core.LockOrder.exit();
+        }
     }
+
     public synchronized boolean awaitStart(boolean persistent) throws InterruptedException {
-        while(!startRequested&&!exitRequested&&persistent)wait();
-        if(exitRequested||!startRequested)return false;
-        startRequested=false;state=State.STARTING;failure="";startedAt=Instant.now();startedNanos=System.nanoTime();stoppedNanos=0;return true;
+        while (!startRequested && !exitRequested && persistent) wait();
+        if (exitRequested || !startRequested) return false;
+        startRequested = false;
+        state = State.STARTING;
+        failure = "";
+        startedAt = Instant.now();
+        startedNanos = System.nanoTime();
+        stoppedNanos = 0;
+        return true;
     }
-    synchronized void resources(SceneRegistry scenes,int items) {this.scenes=scenes;this.itemCount=items;}
-    synchronized void listening(ServerSocket socket,ServerConsole commands) throws IOException {
-        if(exitRequested||state==State.STOPPING){socket.close();return;}
-        listener=socket;console=commands;endpoint=socket.getInetAddress().getHostAddress()+":"+socket.getLocalPort();state=State.RUNNING;
+
+    synchronized void resources(SceneRegistry scenes, int items) {
+        this.scenes = scenes;
+        this.itemCount = items;
     }
-    synchronized void stopped() {listener=null;console=null;stoppedNanos=System.nanoTime();if(state!=State.FAILED)state=State.STOPPED;notifyAll();}
-    synchronized void failed(Exception error) {failure=error.getClass().getSimpleName()+": "+error.getMessage();state=State.FAILED;}
+
+    synchronized void listening(ServerSocket socket, ServerConsole commands) throws IOException {
+        if (exitRequested || state == State.STOPPING) {
+            socket.close();
+            return;
+        }
+        listener = socket;
+        console = commands;
+        endpoint = socket.getInetAddress().getHostAddress() + ":" + socket.getLocalPort();
+        state = State.RUNNING;
+    }
+
+    synchronized void stopped() {
+        listener = null;
+        console = null;
+        stoppedNanos = System.nanoTime();
+        if (state != State.FAILED) state = State.STOPPED;
+        notifyAll();
+    }
+
+    synchronized void failed(Exception error) {
+        failure = error.getClass().getSimpleName() + ": " + error.getMessage();
+        state = State.FAILED;
+    }
+
     public synchronized void start() {
-        if(state==State.STOPPED||state==State.FAILED){startRequested=true;notifyAll();}
+        if (state == State.STOPPED || state == State.FAILED) {
+            startRequested = true;
+            notifyAll();
+        }
     }
+
     public synchronized void stop() {
-        startRequested=false;
-        if(state==State.STARTING||state==State.RUNNING)state=State.STOPPING;
-        if(listener!=null)try{listener.close();}catch(IOException ignored){ }
+        startRequested = false;
+        if (state == State.STARTING || state == State.RUNNING) state = State.STOPPING;
+        if (listener != null)
+            try {
+                listener.close();
+            } catch (IOException ignored) {
+            }
     }
-    public synchronized void exit() {exitRequested=true;stop();notifyAll();}
+
+    public synchronized void exit() {
+        exitRequested = true;
+        stop();
+        notifyAll();
+    }
+
     public void command(String text) throws IOException {
         ServerConsole target;
-        synchronized(this){if(state!=State.RUNNING||console==null)throw new IOException("Server is not running");target=console;}
+        synchronized (this) {
+            if (state != State.RUNNING || console == null) throw new IOException("Server is not running");
+            target = console;
+        }
         target.executeLine(text);
     }
-    public synchronized boolean exiting() {return exitRequested;}
+
+    public synchronized boolean exiting() {
+        return exitRequested;
+    }
 }

@@ -36,24 +36,36 @@ public final class TestWire {
     private final Map<Integer, String> interns = new HashMap<>();
 
     public TestWire() {
-        String[] names = {NET + "SecureResponse", NET + "AuthResponseData", NET + "AuthResponse",
-            "com.threerings.projectx.data.ProjectXAuthResponseData", "com.threerings.util.Name"};
+        String[] names = {
+            NET + "SecureResponse",
+            NET + "AuthResponseData",
+            NET + "AuthResponse",
+            "com.threerings.projectx.data.ProjectXAuthResponseData",
+            "com.threerings.util.Name"
+        };
         for (int i = 0; i < names.length; i++) classes.put(i + 1, names[i]);
     }
 
     public DataInputStream frame(InputStream source) throws IOException {
         return new DataInputStream(new ByteArrayInputStream(Objects.requireNonNull(HandshakeCodec.readFrame(source))));
     }
-    public DataInputStream frame(byte[] frame) throws IOException { return frame(new ByteArrayInputStream(frame)); }
+
+    public DataInputStream frame(byte[] frame) throws IOException {
+        return frame(new ByteArrayInputStream(frame));
+    }
 
     public String type(DataInputStream in) throws IOException {
         int code = in.readShort();
         if (code == 0) return null;
         if (code < 0) {
             check(-code == classes.size() + 1, "sequential downstream class mapping");
-            String name = in.readUTF(); classes.put(-code, name); return name;
+            String name = in.readUTF();
+            classes.put(-code, name);
+            return name;
         }
-        String name = classes.get(code); check(name != null, "known downstream class mapping"); return name;
+        String name = classes.get(code);
+        check(name != null, "known downstream class mapping");
+        return name;
     }
 
     public int bootstrap(DataInputStream in, int port) throws IOException {
@@ -63,35 +75,45 @@ public final class TestWire {
     public int bootstrap(DataInputStream in, int port, String expectedHost) throws IOException {
         check(type(in).equals(NET + "BootstrapNotification") && in.readShort() == -1, "bootstrap notification");
         check(type(in).equals("com.threerings.projectx.data.ProjectXBootstrapData"), "current bootstrap type");
-        check(in.readInt() > 0, "connection identity"); int oid = in.readInt(); check(oid > 3, "client identity reserved range");
+        check(in.readInt() > 0, "connection identity");
+        int oid = in.readInt();
+        check(oid > 3, "client identity reserved range");
         check(in.readBoolean(), "bootstrap ready");
-        int count = in.readInt();check(count >= 16 && count <= 24, "login service count");
+        int count = in.readInt();
+        check(count >= 16 && count <= 24, "login service count");
         Set<String> services = new HashSet<>();
         for (int i = 0; i < count; i++) {
-            String name = type(in); check(name.endsWith("Marshaller"), "service handle type"); services.add(name);
+            String name = type(in);
+            check(name.endsWith("Marshaller"), "service handle type");
+            services.add(name);
             check(in.readInt() == 3 && in.readInt() == i + 1, "service routing");
         }
-        check(services.size() == count && services.contains("com.threerings.projectx.data.KnightMarshaller")
-            &&services.contains("com.threerings.projectx.social.data.SocialMarshaller")
-            &&services.contains("com.threerings.projectx.admin.data.ProjectXAdminMarshaller")
-            &&services.contains("com.threerings.projectx.sprites.data.BattleSpriteMarshaller")
-            &&services.contains("com.threerings.projectx.auction.data.AuctionMarshaller")
-            &&services.contains("com.threerings.projectx.mission.data.MissionMarshaller"),
-            "distinct login, trade, admin and other response services");
+        check(
+                services.size() == count
+                        && services.contains("com.threerings.projectx.data.KnightMarshaller")
+                        && services.contains("com.threerings.projectx.social.data.SocialMarshaller")
+                        && services.contains("com.threerings.projectx.admin.data.ProjectXAdminMarshaller")
+                        && services.contains("com.threerings.projectx.sprites.data.BattleSpriteMarshaller")
+                        && services.contains("com.threerings.projectx.auction.data.AuctionMarshaller")
+                        && services.contains("com.threerings.projectx.mission.data.MissionMarshaller"),
+                "distinct login, trade, admin and other response services");
         check(in.readInt() == 2, "configuration identity");
         check(in.readBoolean(), "bootstrap host present");
         String host = in.readUTF();
-        check(!host.isEmpty() && !host.equals("0.0.0.0") && !host.equals("::"), "bootstrap uses a concrete server address");
+        check(
+                !host.isEmpty() && !host.equals("0.0.0.0") && !host.equals("::"),
+                "bootstrap uses a concrete server address");
         if (expectedHost != null) check(host.equals(expectedHost), "bootstrap host matches connected server interface");
         check(in.readBoolean() && in.readInt() == 1 && in.readInt() == port, "advertised TCP port");
         check(in.readBoolean() && in.readInt() == 0, "no UDP endpoints");
         check(in.readInt() == 1, "server object identity");
-        check(in.readInt() == 4,"Energy Exchange object identity");
+        check(in.readInt() == 4, "Energy Exchange object identity");
         check(in.readInt() == 0 && in.readInt() == 0, "unavailable PvP objects");
         check(in.readInt() == org.tortodrone.protocol.SessionCodec.LOVE_TEST_OID, "love test object identity");
         check(in.readInt() == 5, "mission object identity");
         for (int i = 0; i < 5; i++) check(in.readInt() == 0, "unavailable optional object");
-        end(in); return oid;
+        end(in);
+        return oid;
     }
 
     public Object object(DataInputStream in) throws IOException {
@@ -101,11 +123,14 @@ public final class TestWire {
             case "java.lang.String" -> in.readUTF();
             case "java.lang.Integer" -> in.readInt();
             case "java.lang.Boolean" -> in.readBoolean();
-            case "com.threerings.opengl.renderer.config.ColorizationConfig$Normal" -> Map.of("colorization",in.readInt());
+            case "com.threerings.opengl.renderer.config.ColorizationConfig$Normal" ->
+                Map.of("colorization", in.readInt());
             case "com.threerings.util.Name" -> string(in);
-            case "com.threerings.presents.client.InvocationReceiver$Registration" -> Map.of("code", string(in), "id", in.readShort());
+            case "com.threerings.presents.client.InvocationReceiver$Registration" ->
+                Map.of("code", string(in), "id", in.readShort());
             case "com.threerings.presents.dobj.DSet" -> {
-                int count = in.readInt(); check(count >= 0 && count <= 128, "snapshot DSet count");
+                int count = in.readInt();
+                check(count >= 0 && count <= 128, "snapshot DSet count");
                 List<Object> entries = new ArrayList<>();
                 for (int i = 0; i < count; i++) entries.add(object(in));
                 yield entries;
@@ -113,65 +138,85 @@ public final class TestWire {
             case "com.threerings.projectx.data.ProjectXTokenRing" -> in.readInt();
             case "com.threerings.projectx.data.PlayerObject" -> fields(in, PLAYER);
             case "com.threerings.projectx.data.ServerObject" -> fields(in, SERVER);
-            case "com.threerings.projectx.town.data.TownSummary" -> fields(in,
-                "name:s icon:s colorizations:o description:s flags:i defaultSceneId:i _townId:i");
-            case "com.threerings.projectx.dungeon.data.GateSummary" -> fields(in,
-                "_gateId:I _name:s _icon:s _colorizations:o _description:s _sourceId:i _destId:i _priority:i _tokens:i _ownerKnightId:i _flags:i _wheels:o");
-            case "com.threerings.projectx.dungeon.data.MissionGateSummary" -> fields(in,
-                "_gateId:I _name:s _icon:s _colorizations:o _description:s _sourceId:i _destId:i _priority:i _tokens:i _ownerKnightId:i _flags:i _wheels:o expansion:s prestige:s");
+            case "com.threerings.projectx.town.data.TownSummary" ->
+                fields(in, "name:s icon:s colorizations:o description:s flags:i defaultSceneId:i _townId:i");
+            case "com.threerings.projectx.dungeon.data.GateSummary" ->
+                fields(
+                        in,
+                        "_gateId:I _name:s _icon:s _colorizations:o _description:s _sourceId:i _destId:i _priority:i _tokens:i _ownerKnightId:i _flags:i _wheels:o");
+            case "com.threerings.projectx.dungeon.data.MissionGateSummary" ->
+                fields(
+                        in,
+                        "_gateId:I _name:s _icon:s _colorizations:o _description:s _sourceId:i _destId:i _priority:i _tokens:i _ownerKnightId:i _flags:i _wheels:o expansion:s prestige:s");
             case "com.threerings.projectx.dungeon.data.GateSummary$Constant" -> in.readUnsignedByte();
             case "com.threerings.projectx.dungeon.data.GateSummary$Level" -> List.of(string(in), string(in));
             case "com.threerings.projectx.dungeon.data.DungeonCodes$LevelType" -> in.readUnsignedByte();
-            case "[Lcom.threerings.opengl.renderer.config.ColorizationConfig;" -> array(in, 32, "bounded colorizations");
+            case "[Lcom.threerings.opengl.renderer.config.ColorizationConfig;" ->
+                array(in, 32, "bounded colorizations");
             case "[Lcom.threerings.projectx.dungeon.data.GateSummary$Wheel;" -> {
-                int count = in.readInt(); check(count >= 0 && count <= 8, "bounded gate wheels");
+                int count = in.readInt();
+                check(count >= 0 && count <= 8, "bounded gate wheels");
                 List<Object> wheels = new ArrayList<>();
                 for (int i = 0; i < count; i++) {
-                    object(in);                 // wheel controller
-                    wheels.add(object(in));     // wedges
+                    object(in); // wheel controller
+                    wheels.add(object(in)); // wedges
                 }
                 yield wheels;
             }
             case "[Lcom.threerings.projectx.dungeon.data.GateSummary$Wedge;" -> wedgeArray(in);
-            case "com.threerings.config.dist.data.DConfigObject" -> fields(in, "_oid:i dconfigService:o added:o updated:o removed:o");
+            case "com.threerings.config.dist.data.DConfigObject" ->
+                fields(in, "_oid:i dconfigService:o added:o updated:o removed:o");
             case "com.threerings.projectx.data.LootReportLevel" -> in.readUnsignedByte();
             case "[Lcom.threerings.projectx.data.AvailableKnight;" -> {
-                int count = in.readInt(); check(count >= 0 && count <= 3, "bounded knight roster");
+                int count = in.readInt();
+                check(count >= 0 && count <= 3, "bounded knight roster");
                 List<Object> entries = new ArrayList<>();
-                for (int i = 0; i < count; i++) entries.add(object(in)); yield entries;
+                for (int i = 0; i < count; i++) entries.add(object(in));
+                yield entries;
             }
-            case "com.threerings.projectx.data.AvailableKnight" -> fields(in,
-                "id:i name:o rank:i guild:s sessionSeconds:i model:o senders:c");
+            case "com.threerings.projectx.data.AvailableKnight" ->
+                fields(in, "id:i name:o rank:i guild:s sessionSeconds:i model:o senders:c");
             case "com.threerings.config.ConfigReference" -> fields(in, "_name:n _arguments:o");
             case "com.threerings.config.ArgumentMap" -> {
-                int count = in.readInt(); check(count >= 0 && count <= 128, "bounded preview arguments");
+                int count = in.readInt();
+                check(count >= 0 && count <= 128, "bounded preview arguments");
                 Map<String, Object> arguments = new HashMap<>();
-                for (int i = 0; i < count; i++) arguments.put(intern(in), object(in)); yield arguments;
+                for (int i = 0; i < count; i++) arguments.put(intern(in), object(in));
+                yield arguments;
             }
-            case "[Ljava.lang.String;", "[Lcom.threerings.projectx.data.ProjectXCodes$EyeType;",
-                "[Lcom.threerings.projectx.data.ProjectXCodes$KnightHeight;" -> {
-                check(in.readInt() == 0 && in.readUnsignedShort() == 0, "empty final-component array null mask"); yield List.of();
+            case "[Ljava.lang.String;",
+                    "[Lcom.threerings.projectx.data.ProjectXCodes$EyeType;",
+                    "[Lcom.threerings.projectx.data.ProjectXCodes$KnightHeight;" -> {
+                check(in.readInt() == 0 && in.readUnsignedShort() == 0, "empty final-component array null mask");
+                yield List.of();
             }
             default -> throw new AssertionError("Unexpected snapshot class: " + name);
         };
     }
 
     private List<Object> array(DataInputStream in, int max, String bound) throws IOException {
-        int count = in.readInt(); check(count >= 0 && count <= max, bound);
+        int count = in.readInt();
+        check(count >= 0 && count <= max, bound);
         List<Object> values = new ArrayList<>();
         for (int i = 0; i < count; i++) values.add(object(in));
         return values;
     }
 
     private List<Object> wedgeArray(DataInputStream in) throws IOException {
-        int count = in.readInt(); check(count >= 0 && count <= 8, "bounded gate wedges");
+        int count = in.readInt();
+        check(count >= 0 && count <= 8, "bounded gate wedges");
         List<Object> wedges = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            object(in);   // level reference
-            object(in);   // colorizations
-            string(in);   // description
-            object(in);   // level type
-            in.readBoolean(); in.readFloat(); in.readBoolean(); in.readInt(); in.readFloat(); in.readLong();
+            object(in); // level reference
+            object(in); // colorizations
+            string(in); // description
+            object(in); // level type
+            in.readBoolean();
+            in.readFloat();
+            in.readBoolean();
+            in.readInt();
+            in.readFloat();
+            in.readLong();
             wedges.add(Map.of());
         }
         return wedges;
@@ -182,10 +227,18 @@ public final class TestWire {
         for (String field : schema.trim().split("\\s+")) {
             String[] parts = field.split(":");
             Object value = switch (parts[1]) {
-                case "i" -> in.readInt(); case "l" -> in.readLong(); case "b" -> in.readByte();
-                case "I" -> in.readBoolean()?in.readInt():null;
-                case "f" -> in.readFloat(); case "s" -> string(in); case "o" -> object(in); case "n" -> intern(in);
-                case "c" -> { check(in.readBoolean() && in.readInt() == 0, "empty typed collection"); yield List.of(); }
+                case "i" -> in.readInt();
+                case "l" -> in.readLong();
+                case "b" -> in.readByte();
+                case "I" -> in.readBoolean() ? in.readInt() : null;
+                case "f" -> in.readFloat();
+                case "s" -> string(in);
+                case "o" -> object(in);
+                case "n" -> intern(in);
+                case "c" -> {
+                    check(in.readBoolean() && in.readInt() == 0, "empty typed collection");
+                    yield List.of();
+                }
                 default -> throw new AssertionError("Unknown schema kind");
             };
             fields.put(parts[0], value);
@@ -198,37 +251,74 @@ public final class TestWire {
         if (code == 0) return null;
         if (code < 0) {
             check(-code == interns.size() + 1, "sequential string intern mapping");
-            String value = in.readUTF(); interns.put(-code, value); return value;
+            String value = in.readUTF();
+            interns.put(-code, value);
+            return value;
         }
-        check(interns.containsKey(code), "known string intern mapping"); return interns.get(code);
+        check(interns.containsKey(code), "known string intern mapping");
+        return interns.get(code);
     }
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> snapshot(DataInputStream in, short id, int oid) throws IOException {
         check(type(in).equals(NET + "ObjectResponse") && in.readShort() == id, "object response correlation");
         Map<String, Object> fields = (Map<String, Object>) object(in);
-        check(fields.get("_oid").equals(oid), "object response identity"); end(in); return fields;
+        check(fields.get("_oid").equals(oid), "object response identity");
+        end(in);
+        return fields;
     }
-    public static String string(DataInputStream in) throws IOException { return in.readBoolean() ? in.readUTF() : null; }
-    public static void end(DataInputStream in) throws IOException { check(in.available() == 0, "complete current schema boundary"); }
-    public static void check(boolean condition, String message) { if (!condition) throw new AssertionError(message); }
+
+    public static String string(DataInputStream in) throws IOException {
+        return in.readBoolean() ? in.readUTF() : null;
+    }
+
+    public static void end(DataInputStream in) throws IOException {
+        check(in.available() == 0, "complete current schema boundary");
+    }
+
+    public static void check(boolean condition, String message) {
+        if (!condition) throw new AssertionError(message);
+    }
 
     /** Synthetic client encoder, independent from the server decoder. */
     public static final class Writer {
         private final Map<String, Integer> classes = new HashMap<>();
-        public Writer(String... initial) { for (String name : initial) classes.put(name, classes.size() + 1); }
+
+        public Writer(String... initial) {
+            for (String name : initial) classes.put(name, classes.size() + 1);
+        }
+
         public void type(DataOutputStream out, String name) throws IOException {
             Integer code = classes.get(name);
-            if (code == null) { code = classes.size() + 1; classes.put(name, code); out.writeShort(-code); out.writeUTF(name); }
-            else out.writeShort(code);
+            if (code == null) {
+                code = classes.size() + 1;
+                classes.put(name, code);
+                out.writeShort(-code);
+                out.writeUTF(name);
+            } else out.writeShort(code);
         }
+
         public byte[] body(Encoder encoder) throws IOException {
-            ByteArrayOutputStream bytes = new ByteArrayOutputStream(); encoder.write(new DataOutputStream(bytes)); return bytes.toByteArray();
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            encoder.write(new DataOutputStream(bytes));
+            return bytes.toByteArray();
         }
+
         public void send(OutputStream output, Encoder encoder) throws IOException {
-            byte[] body = body(encoder); new DataOutputStream(output).writeInt(body.length + 4); output.write(body); output.flush();
+            byte[] body = body(encoder);
+            new DataOutputStream(output).writeInt(body.length + 4);
+            output.write(body);
+            output.flush();
         }
-        public void message(DataOutputStream out, String name, int id) throws IOException { type(out, NET + name); out.writeShort(id); }
+
+        public void message(DataOutputStream out, String name, int id) throws IOException {
+            type(out, NET + name);
+            out.writeShort(id);
+        }
     }
-    @FunctionalInterface public interface Encoder { void write(DataOutputStream out) throws IOException; }
+
+    @FunctionalInterface
+    public interface Encoder {
+        void write(DataOutputStream out) throws IOException;
+    }
 }

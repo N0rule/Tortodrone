@@ -1,381 +1,1070 @@
+import com.threerings.config.*;
+import com.threerings.math.Vector2f;
+import com.threerings.projectx.dungeon.config.*;
+import com.threerings.projectx.item.config.ItemConfig;
+import com.threerings.tudey.config.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.nio.file.*;
 import java.util.*;
-import com.threerings.config.*;
-import com.threerings.projectx.dungeon.config.*;
-import com.threerings.projectx.item.config.ItemConfig;
-import com.threerings.math.Vector2f;
-import com.threerings.tudey.config.*;
 import org.tortodrone.core.character.StarterCatalog;
 import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.FireCatalog.*;
-import org.tortodrone.core.Json;
-import org.tortodrone.core.world.SceneDamage;
 
 /** Exports numeric stock attack/fire-action references; never copies client assets or code. */
 public final class FireCatalogExport {
-    private static final Map<String,Integer> UNSUPPORTED = new TreeMap<>();
+    private static final Map<String, Integer> UNSUPPORTED = new TreeMap<>();
     private static final Set<String> NESTED_FIRES = new HashSet<>();
     private static final Set<ConfigReference<ActorConfig>> NESTED_ACTORS = new HashSet<>();
     private static boolean sceneActors;
-    private static final Set<String> SCENE_ACTORS=new HashSet<>();
+    private static final Set<String> SCENE_ACTORS = new HashSet<>();
     private static int actionCount, projectileCount;
     private static int damageRarity;
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 2 || args.length > 4 || args.length==4&&!Set.of("--vortex","--status-bombs","--sealed").contains(args[3])) throw new IllegalArgumentException("Usage: FireCatalogExport game-directory fresh-output-directory [existing-catalogue [--vortex|--status-bombs|--sealed]]");
-        Path game = Path.of(args[0]).toRealPath(), out = Path.of(args[1]).toAbsolutePath().normalize();
-        Path ancestor = out; while (!Files.exists(ancestor)) ancestor = ancestor.getParent();
-        if (ancestor.toRealPath().startsWith(game) || Files.exists(out)) throw new IOException("Choose a fresh output directory outside the installation");
-        var manager=NativeConfig.load(game);
+        if (args.length < 2
+                || args.length > 4
+                || args.length == 4
+                        && !Set.of("--vortex", "--status-bombs", "--sealed").contains(args[3]))
+            throw new IllegalArgumentException(
+                    "Usage: FireCatalogExport game-directory fresh-output-directory [existing-catalogue [--vortex|--status-bombs|--sealed]]");
+        Path game = Path.of(args[0]).toRealPath(),
+                out = Path.of(args[1]).toAbsolutePath().normalize();
+        Path ancestor = out;
+        while (!Files.exists(ancestor)) ancestor = ancestor.getParent();
+        if (ancestor.toRealPath().startsWith(game) || Files.exists(out))
+            throw new IOException("Choose a fresh output directory outside the installation");
+        var manager = NativeConfig.load(game);
 
         var entries = new ArrayList<AttackFire>();
-        var previous=args.length>=3?FireCatalog.load(Path.of(args[2])):null;
-        boolean vortex=args.length==4&&args[3].equals("--vortex"),statusBombs=args.length==4&&args[3].equals("--status-bombs"),sealed=args.length==4&&args[3].equals("--sealed");
+        var previous = args.length >= 3 ? FireCatalog.load(Path.of(args[2])) : null;
+        boolean vortex = args.length == 4 && args[3].equals("--vortex"),
+                statusBombs = args.length == 4 && args[3].equals("--status-bombs"),
+                sealed = args.length == 4 && args[3].equals("--sealed");
         for (ItemConfig config : manager.be(ItemConfig.class).kR()) {
             ItemConfig.Original item = config.w(manager);
             if (!playerDefinition(config.getConfigId(), item)) continue;
-            damageRarity=item.rarity;
-            if(previous!=null){
-                if(item instanceof ItemConfig.Weapon weapon){
-                    var charged=previous.find(config.getName(),290);
-                    if(charged!=null&&(sealed?config.getName().equals("Weapon/Sword/Sealed Sword"):vortex?Set.of("Weapon/Bomb/Graviton Vortex","Weapon/Bomb/Electron Vortex","Weapon/Bomb/Celestial Vortex").contains(config.getName()):statusBombs?charged.fireRefs().stream().anyMatch(ref->chemicalCloud(ref.action())):charged.fireRefs().stream().anyMatch(ref->fragmentation(ref.action()))))addAttack(manager,config.getName(),290,weapon.chargedAttack,entries);
+            damageRarity = item.rarity;
+            if (previous != null) {
+                if (item instanceof ItemConfig.Weapon weapon) {
+                    var charged = previous.find(config.getName(), 290);
+                    if (charged != null
+                            && (sealed
+                                    ? config.getName().equals("Weapon/Sword/Sealed Sword")
+                                    : vortex
+                                            ? Set.of(
+                                                            "Weapon/Bomb/Graviton Vortex",
+                                                            "Weapon/Bomb/Electron Vortex",
+                                                            "Weapon/Bomb/Celestial Vortex")
+                                                    .contains(config.getName())
+                                            : statusBombs
+                                                    ? charged.fireRefs().stream()
+                                                            .anyMatch(ref -> chemicalCloud(ref.action()))
+                                                    : charged.fireRefs().stream()
+                                                            .anyMatch(ref -> fragmentation(ref.action()))))
+                        addAttack(manager, config.getName(), 290, weapon.chargedAttack, entries);
                 }
                 continue;
             }
             if (item instanceof ItemConfig.Weapon weapon) addWeapon(manager, config.getName(), weapon, entries);
             else if (item instanceof ItemConfig.Shield shield) addShield(manager, config.getName(), shield, entries);
         }
-        var repaired=new HashSet<String>();
-        if(previous!=null){
-            entries.forEach(entry->repaired.add(entry.weaponConfig()));
-            var replacements=new HashMap<String,AttackFire>();for(var entry:entries){
-                var old=previous.find(entry.weaponConfig(),entry.activity());
-                var refs=new ArrayList<FireRef>();
-                for(int i=0;i<entry.fireRefs().size();i++){
-                    var ref=entry.fireRefs().get(i);var oldRef=old.fireRefs().get(i);
-                    refs.add(new FireRef(ref.config(),ref.delay(),ref.refractory(),ref.advance(),ref.maxLoop(),ref.successIncrement(),ref.incrementReduction(),preserveHeadings(ref.action(),oldRef.action()),ref.endAction()));
+        var repaired = new HashSet<String>();
+        if (previous != null) {
+            entries.forEach(entry -> repaired.add(entry.weaponConfig()));
+            var replacements = new HashMap<String, AttackFire>();
+            for (var entry : entries) {
+                var old = previous.find(entry.weaponConfig(), entry.activity());
+                var refs = new ArrayList<FireRef>();
+                for (int i = 0; i < entry.fireRefs().size(); i++) {
+                    var ref = entry.fireRefs().get(i);
+                    var oldRef = old.fireRefs().get(i);
+                    refs.add(new FireRef(
+                            ref.config(),
+                            ref.delay(),
+                            ref.refractory(),
+                            ref.advance(),
+                            ref.maxLoop(),
+                            ref.successIncrement(),
+                            ref.incrementReduction(),
+                            preserveHeadings(ref.action(), oldRef.action()),
+                            ref.endAction()));
                 }
-                replacements.put(entry.weaponConfig(),new AttackFire(entry.weaponConfig(),entry.activity(),entry.attack(),entry.fireSpeed(),refs));
+                replacements.put(
+                        entry.weaponConfig(),
+                        new AttackFire(
+                                entry.weaponConfig(), entry.activity(), entry.attack(), entry.fireSpeed(), refs));
             }
-            entries=new ArrayList<>(previous.entries().stream().map(entry->entry.activity()==290?replacements.getOrDefault(entry.weaponConfig(),entry):entry).toList());
+            entries = new ArrayList<>(previous.entries().stream()
+                    .map(entry ->
+                            entry.activity() == 290 ? replacements.getOrDefault(entry.weaponConfig(), entry) : entry)
+                    .toList());
             UNSUPPORTED.putAll(previous.unsupportedTypes());
         }
         Files.createDirectories(out);
         FireCatalog.write(out.resolve("fires.json"), entries, UNSUPPORTED);
-        if(previous!=null){
+        if (previous != null) {
             // Preserve raw rows outside this repair, including their original numeric precision.
-            @SuppressWarnings("unchecked") var document=(Map<String,Object>)org.tortodrone.core.Json.parse(Files.readString(Path.of(args[2])),128);
-            @SuppressWarnings("unchecked") var generated=(Map<String,Object>)org.tortodrone.core.Json.parse(Files.readString(out.resolve("fires.json")),128);
-            @SuppressWarnings("unchecked") var generatedRows=(List<Map<String,Object>>)generated.get("entries");
-            var rows=new HashMap<String,Map<String,Object>>();for(var row:generatedRows)if(((Number)row.get("activity")).intValue()==290&&repaired.contains(row.get("weapon")))rows.put((String)row.get("weapon"),row);
-            @SuppressWarnings("unchecked") var existingRows=(List<Map<String,Object>>)document.get("entries");
-            document.put("entries",existingRows.stream().map(row->((Number)row.get("activity")).intValue()==290?rows.getOrDefault(row.get("weapon"),row):row).toList());
-            @SuppressWarnings("unchecked") var unsupported=(Map<String,Object>)document.get("unsupported");
-            var actual=new TreeMap<String,Integer>();countUnsupported(document.get("entries"),actual);
-            unsupported.keySet().removeIf(type->type.startsWith("com.")&&!actual.containsKey(type));unsupported.putAll(actual);
-            Files.writeString(out.resolve("fires.json"),org.tortodrone.core.Json.stringify(document,128)+"\n");
+            @SuppressWarnings("unchecked")
+            var document =
+                    (Map<String, Object>) org.tortodrone.core.Json.parse(Files.readString(Path.of(args[2])), 128);
+            @SuppressWarnings("unchecked")
+            var generated = (Map<String, Object>)
+                    org.tortodrone.core.Json.parse(Files.readString(out.resolve("fires.json")), 128);
+            @SuppressWarnings("unchecked")
+            var generatedRows = (List<Map<String, Object>>) generated.get("entries");
+            var rows = new HashMap<String, Map<String, Object>>();
+            for (var row : generatedRows)
+                if (((Number) row.get("activity")).intValue() == 290 && repaired.contains(row.get("weapon")))
+                    rows.put((String) row.get("weapon"), row);
+            @SuppressWarnings("unchecked")
+            var existingRows = (List<Map<String, Object>>) document.get("entries");
+            document.put(
+                    "entries",
+                    existingRows.stream()
+                            .map(row -> ((Number) row.get("activity")).intValue() == 290
+                                    ? rows.getOrDefault(row.get("weapon"), row)
+                                    : row)
+                            .toList());
+            @SuppressWarnings("unchecked")
+            var unsupported = (Map<String, Object>) document.get("unsupported");
+            var actual = new TreeMap<String, Integer>();
+            countUnsupported(document.get("entries"), actual);
+            unsupported.keySet().removeIf(type -> type.startsWith("com.") && !actual.containsKey(type));
+            unsupported.putAll(actual);
+            Files.writeString(out.resolve("fires.json"), org.tortodrone.core.Json.stringify(document, 128) + "\n");
         }
         var loaded = FireCatalog.load(out.resolve("fires.json"));
-        System.out.printf("PASS: exported %d weapon/shield attack entries; %d fire refs; %d projectile actor emissions; %d unsupported action types%n",
-            loaded.entries().size(), loaded.entries().stream().mapToInt(e -> e.fireRefs().size()).sum(), projectileCount, loaded.unsupportedTypes().size());
-        loaded.unsupportedTypes().forEach((type,count) -> System.out.println("UNSUPPORTED\t" + type + "\t" + count));
+        System.out.printf(
+                "PASS: exported %d weapon/shield attack entries; %d fire refs; %d projectile actor emissions; %d unsupported action types%n",
+                loaded.entries().size(),
+                loaded.entries().stream().mapToInt(e -> e.fireRefs().size()).sum(),
+                projectileCount,
+                loaded.unsupportedTypes().size());
+        loaded.unsupportedTypes().forEach((type, count) -> System.out.println("UNSUPPORTED\t" + type + "\t" + count));
     }
 
-    private static void countUnsupported(Object value,Map<String,Integer> counts){
-        if(value instanceof Map<?,?> map){
-            if("UNSUPPORTED".equals(map.get("kind")))counts.merge((String)map.get("unsupportedType"),1,Integer::sum);
-            map.values().forEach(child->countUnsupported(child,counts));
-        }else if(value instanceof List<?> list)list.forEach(child->countUnsupported(child,counts));
+    private static void countUnsupported(Object value, Map<String, Integer> counts) {
+        if (value instanceof Map<?, ?> map) {
+            if ("UNSUPPORTED".equals(map.get("kind")))
+                counts.merge((String) map.get("unsupportedType"), 1, Integer::sum);
+            map.values().forEach(child -> countUnsupported(child, counts));
+        } else if (value instanceof List<?> list) list.forEach(child -> countUnsupported(child, counts));
     }
 
     /** Retain previously prepared headings; the retail export strips these server fields. */
-    private static Action preserveHeadings(Action fresh,Action old){
-        if(fresh==null||old==null||old.kind()==Kind.UNSUPPORTED||fresh.kind()!=old.kind())return fresh;
-        var children=new ArrayList<Action>();for(int i=0;i<fresh.children().size();i++)children.add(preserveHeadings(fresh.children().get(i),i<old.children().size()?old.children().get(i):null));
-        var actor=fresh.actor();if(actor!=null&&old.actor()!=null){
-            var timers=new ArrayList<ActorTimer>();for(int i=0;i<actor.timers().size();i++){var t=actor.timers().get(i);timers.add(new ActorTimer(t.delay(),t.interval(),t.limit(),preserveHeadings(t.action(),i<old.actor().timers().size()?old.actor().timers().get(i).action():null),t.endAction()));}
-            actor=new ActorSpec(actor.nativeType(),actor.config(),actor.fuse(),actor.speed(),actor.maxStep(),actor.flags(),actor.offsetX(),actor.offsetY(),actor.height(),actor.detonation(),actor.orbit(),actor.collisionMask(),actor.collisionShape(),timers,actor.shutdown());
+    private static Action preserveHeadings(Action fresh, Action old) {
+        if (fresh == null || old == null || old.kind() == Kind.UNSUPPORTED || fresh.kind() != old.kind()) return fresh;
+        var children = new ArrayList<Action>();
+        for (int i = 0; i < fresh.children().size(); i++)
+            children.add(preserveHeadings(
+                    fresh.children().get(i),
+                    i < old.children().size() ? old.children().get(i) : null));
+        var actor = fresh.actor();
+        if (actor != null && old.actor() != null) {
+            var timers = new ArrayList<ActorTimer>();
+            for (int i = 0; i < actor.timers().size(); i++) {
+                var t = actor.timers().get(i);
+                timers.add(new ActorTimer(
+                        t.delay(),
+                        t.interval(),
+                        t.limit(),
+                        preserveHeadings(
+                                t.action(),
+                                i < old.actor().timers().size()
+                                        ? old.actor().timers().get(i).action()
+                                        : null),
+                        t.endAction()));
+            }
+            actor = new ActorSpec(
+                    actor.nativeType(),
+                    actor.config(),
+                    actor.fuse(),
+                    actor.speed(),
+                    actor.maxStep(),
+                    actor.flags(),
+                    actor.offsetX(),
+                    actor.offsetY(),
+                    actor.height(),
+                    actor.detonation(),
+                    actor.orbit(),
+                    actor.collisionMask(),
+                    actor.collisionShape(),
+                    timers,
+                    actor.shutdown());
         }
-        boolean repairedFan=fresh.actor()!=null&&fresh.actor().config().name().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")&&fresh.relative()&&!old.relative()&&old.rotation()==0;
-        var config=fresh.config();
-        if(fresh.kind()==Kind.CONDITIONAL&&config!=null&&old.config()!=null
-                &&config.arguments().get("condition") instanceof DataValue current&&current.type().endsWith("$Tagged")
-                &&Objects.equals(org.tortodrone.core.world.SceneDamage.field(current,"tag"),"")
-                &&old.config().arguments().get("condition") instanceof DataValue prior&&!prior.type().endsWith("$Tagged"))config=old.config();
-        return new Action(fresh.kind(),config,actor,fresh.targetType(),fresh.facingType(),fresh.collisionSourceType(),fresh.x(),fresh.y(),repairedFan?fresh.rotation():old.rotation(),old.rotationVariance(),repairedFan||old.relative(),fresh.count(),fresh.stepSize(),fresh.steps(),fresh.collisionMask(),fresh.stopOnFailure(),children,fresh.unsupportedType(),fresh.parameter(),fresh.values());
+        boolean repairedFan = fresh.actor() != null
+                && fresh.actor().config().name().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")
+                && fresh.relative()
+                && !old.relative()
+                && old.rotation() == 0;
+        var config = fresh.config();
+        if (fresh.kind() == Kind.CONDITIONAL
+                && config != null
+                && old.config() != null
+                && config.arguments().get("condition") instanceof DataValue current
+                && current.type().endsWith("$Tagged")
+                && Objects.equals(org.tortodrone.core.world.SceneDamage.field(current, "tag"), "")
+                && old.config().arguments().get("condition") instanceof DataValue prior
+                && !prior.type().endsWith("$Tagged")) config = old.config();
+        return new Action(
+                fresh.kind(),
+                config,
+                actor,
+                fresh.targetType(),
+                fresh.facingType(),
+                fresh.collisionSourceType(),
+                fresh.x(),
+                fresh.y(),
+                repairedFan ? fresh.rotation() : old.rotation(),
+                old.rotationVariance(),
+                repairedFan || old.relative(),
+                fresh.count(),
+                fresh.stepSize(),
+                fresh.steps(),
+                fresh.collisionMask(),
+                fresh.stopOnFailure(),
+                children,
+                fresh.unsupportedType(),
+                fresh.parameter(),
+                fresh.values());
     }
 
-    private static boolean fragmentation(Action action){
-        return action!=null&&(action.actor()!=null&&action.actor().config().name().startsWith("Bomb/Parts/Shard/Bomb (Timer)")||action.children().stream().anyMatch(FireCatalogExport::fragmentation));
-    }
-    private static boolean chemicalCloud(Action action){
-        return action!=null&&(action.actor()!=null&&action.actor().config().name().equals("Bomb/Parts/Chemical (Cloud)")
-            ||action.actor()!=null&&(action.actor().detonation()!=null&&chemicalCloud(action.actor().detonation())
-                ||action.actor().timers().stream().anyMatch(timer->chemicalCloud(timer.action())))
-            ||action.children().stream().anyMatch(FireCatalogExport::chemicalCloud));
+    private static boolean fragmentation(Action action) {
+        return action != null
+                && (action.actor() != null && action.actor().config().name().startsWith("Bomb/Parts/Shard/Bomb (Timer)")
+                        || action.children().stream().anyMatch(FireCatalogExport::fragmentation));
     }
 
-    private static void addWeapon(ConfigManager manager, String name, ItemConfig.Weapon weapon, List<AttackFire> entries) throws Exception {
-        for (int i=0; i<weapon.attacks.length; i++) {
+    private static boolean chemicalCloud(Action action) {
+        return action != null
+                && (action.actor() != null && action.actor().config().name().equals("Bomb/Parts/Chemical (Cloud)")
+                        || action.actor() != null
+                                && (action.actor().detonation() != null
+                                                && chemicalCloud(action.actor().detonation())
+                                        || action.actor().timers().stream()
+                                                .anyMatch(timer -> chemicalCloud(timer.action())))
+                        || action.children().stream().anyMatch(FireCatalogExport::chemicalCloud));
+    }
+
+    private static void addWeapon(
+            ConfigManager manager, String name, ItemConfig.Weapon weapon, List<AttackFire> entries) throws Exception {
+        for (int i = 0; i < weapon.attacks.length; i++) {
             AttackConfig.AttackReference r = weapon.attacks[i];
-            addAttack(manager, name, 292+i, r == null ? null : r.ref, entries);
+            addAttack(manager, name, 292 + i, r == null ? null : r.ref, entries);
         }
-        addAttack(manager,name,289,weapon.incompleteChargedAttack,entries);
-        addAttack(manager,name,290,weapon.chargedAttack,entries);
-        addAttack(manager,name,291,weapon.cooldownAttack,entries);
+        addAttack(manager, name, 289, weapon.incompleteChargedAttack, entries);
+        addAttack(manager, name, 290, weapon.chargedAttack, entries);
+        addAttack(manager, name, 291, weapon.cooldownAttack, entries);
     }
-    private static void addShield(ConfigManager manager, String name, ItemConfig.Shield shield, List<AttackFire> entries) throws Exception {
-        addAttack(manager,name,287,shield.bash,entries);
-        ActionConfig defense=shield.action;
-        if(defense instanceof DungeonActionConfig.FireAction fire&&fire.fireAction==null){
+
+    private static void addShield(
+            ConfigManager manager, String name, ItemConfig.Shield shield, List<AttackFire> entries) throws Exception {
+        addAttack(manager, name, 287, shield.bash, entries);
+        ActionConfig defense = shield.action;
+        if (defense instanceof DungeonActionConfig.FireAction fire && fire.fireAction == null) {
             // Reconstructed missing binding to the surviving stock push-back base;
             // its own rarity/intersection/cooldown guards remain authoritative.
-            var restored=new DungeonActionConfig.FireAction();restored.fireAction=new ConfigReference<>("Item/Gear/Shield/PushBack (Base)");defense=restored;
+            var restored = new DungeonActionConfig.FireAction();
+            restored.fireAction = new ConfigReference<>("Item/Gear/Shield/PushBack (Base)");
+            defense = restored;
         }
-        if(defense!=null)entries.add(new AttackFire(name,284,new StarterCatalog.Model("ShieldDefense",Map.of("rarity",shield.rarity)),1,List.of(
-            new FireRef(new StarterCatalog.Model("ShieldDefense",Map.of()),shield.actionDelay,0,false,0,0,0,readAction(manager,defense),null))));
+        if (defense != null)
+            entries.add(new AttackFire(
+                    name,
+                    284,
+                    new StarterCatalog.Model("ShieldDefense", Map.of("rarity", shield.rarity)),
+                    1,
+                    List.of(new FireRef(
+                            new StarterCatalog.Model("ShieldDefense", Map.of()),
+                            shield.actionDelay,
+                            0,
+                            false,
+                            0,
+                            0,
+                            0,
+                            readAction(manager, defense),
+                            null))));
     }
-    static void addAttack(ConfigManager manager, String weapon, int activity,
-            ConfigReference<AttackConfig> reference, List<AttackFire> entries) throws Exception {
+
+    static void addAttack(
+            ConfigManager manager,
+            String weapon,
+            int activity,
+            ConfigReference<AttackConfig> reference,
+            List<AttackFire> entries)
+            throws Exception {
         if (reference == null) return;
         AttackConfig.Original attack = AttackConfig.b(manager, reference);
         if (attack == null) throw new IOException("Unresolved stock attack " + reference.getName() + " for " + weapon);
         StarterCatalog.Model attackModel = model(reference);
-        if(weapon.startsWith("Sprite/")){var metadata=new TreeMap<>(attackModel.arguments());metadata.put("land",attack.QP());metadata.put("rearm",attack.QO());metadata.put("clear",attack.QN());attackModel=new StarterCatalog.Model(attackModel.name(),metadata);}
+        if (weapon.startsWith("Sprite/")) {
+            var metadata = new TreeMap<>(attackModel.arguments());
+            metadata.put("land", attack.QP());
+            metadata.put("rearm", attack.QO());
+            metadata.put("clear", attack.QN());
+            attackModel = new StarterCatalog.Model(attackModel.name(), metadata);
+        }
         var refs = new ArrayList<FireRef>();
-        if(attack instanceof AttackConfig.ShieldBash bash&&bash.handler instanceof DungeonHandlerConfig.OneTimeIntersection handler
-            &&handler.action instanceof DungeonActionConfig.DamageTargetFromPoint hit){
+        if (attack instanceof AttackConfig.ShieldBash bash
+                && bash.handler instanceof DungeonHandlerConfig.OneTimeIntersection handler
+                && handler.action instanceof DungeonActionConfig.DamageTargetFromPoint hit) {
             // Capture-calibrated archive reconstruction: 0.60 ahead, radius 0.67,
             // armed at 550/attackSpeed ms; one hit per target for this bash.
-            var args=new TreeMap<String,Object>();args.put("damage",resolvedDamage(manager,hit.damage));
-            var shape=new com.threerings.tudey.shape.config.ShapeConfig.Circle();shape.radius=.67f;args.put("shape",argumentValue(shape));
-            args.put("impulse",argumentValue(hit.impulseDealt));args.put("impulse-origin",argumentValue(new Vector2f(hit.impulseTranslation.x-.6f,hit.impulseTranslation.y)));
-            Action sweep=new Action(Kind.SWEEP_DAMAGE,new StarterCatalog.Model("ShieldBash",args),null,"Source","","",.6f,0,0,0,true,0,0,0,hit.collisionMask,false,List.of(),"");
-            refs.add(new FireRef(new StarterCatalog.Model("ShieldBash",Map.of()),Math.max(0,550-attack.QP()),50,false,0,0,0,sweep,null));
+            var args = new TreeMap<String, Object>();
+            args.put("damage", resolvedDamage(manager, hit.damage));
+            var shape = new com.threerings.tudey.shape.config.ShapeConfig.Circle();
+            shape.radius = .67f;
+            args.put("shape", argumentValue(shape));
+            args.put("impulse", argumentValue(hit.impulseDealt));
+            args.put(
+                    "impulse-origin",
+                    argumentValue(new Vector2f(hit.impulseTranslation.x - .6f, hit.impulseTranslation.y)));
+            Action sweep = new Action(
+                    Kind.SWEEP_DAMAGE,
+                    new StarterCatalog.Model("ShieldBash", args),
+                    null,
+                    "Source",
+                    "",
+                    "",
+                    .6f,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    hit.collisionMask,
+                    false,
+                    List.of(),
+                    "");
+            refs.add(new FireRef(
+                    new StarterCatalog.Model("ShieldBash", Map.of()),
+                    Math.max(0, 550 - attack.QP()),
+                    50,
+                    false,
+                    0,
+                    0,
+                    0,
+                    sweep,
+                    null));
         }
-        if (attack.fireRefs != null) for (FireActionConfig.FireActionReference fireRef : attack.fireRefs) {
-            if (fireRef == null || fireRef.ref == null) {
-                UNSUPPORTED.merge("null-fire-reference",1,Integer::sum);
-                continue;
+        if (attack.fireRefs != null)
+            for (FireActionConfig.FireActionReference fireRef : attack.fireRefs) {
+                if (fireRef == null || fireRef.ref == null) {
+                    UNSUPPORTED.merge("null-fire-reference", 1, Integer::sum);
+                    continue;
+                }
+                FireActionConfig fire = manager.a(FireActionConfig.class, fireRef.ref);
+                if (fire == null) throw new IOException("Unresolved fire action " + fireRef.ref.getName());
+                Action action;
+                if (fire.action instanceof DungeonActionConfig.SpawnPrespawned spawn
+                        && spawn.actor != null
+                        && (spawn.actor.getName().equals("Bullet/Sword/Burst Bullet")
+                                || spawn.actor.getName().equals("Bullet/Sword/Burst Bullet (Obsidian)"))) {
+                    // Stock charge parameters address pre-strip fire-ref indices.
+                    // The official captures retain the weapon's Burst Color/Damage
+                    // on its carrier and trails; bind the surviving attack arguments.
+                    var bound = (DungeonActionConfig.SpawnPrespawned) spawn.clone();
+                    bound.actor = new ConfigReference<>(spawn.actor.getName());
+                    bound.actor.ld().putAll(spawn.actor.ld());
+                    if (reference.ld().containsKey("Burst Color"))
+                        bound.actor.ld().put("Color", reference.ld().get("Burst Color"));
+                    if (reference.ld().containsKey("Burst Damage"))
+                        bound.actor.ld().put("Damage", reference.ld().get("Burst Damage"));
+                    action = readPrespawned(manager, bound);
+                } else action = readFireAction(manager, fireRef.ref, fire);
+                if (action == null)
+                    throw new IOException("Stock fire reference has no action: " + fireRef.ref.getName());
+                int loop = fire instanceof FireActionConfig.Looped l ? l.maxLoop : 0;
+                int success = fire instanceof FireActionConfig.IncreasingLooped l ? l.successIncrement : 0;
+                int reduction = fire instanceof FireActionConfig.IncreasingLooped l ? l.incrementReduction : 0;
+                Action endAction = fire instanceof FireActionConfig.Looped l ? readAction(manager, l.endAction) : null;
+                refs.add(new FireRef(
+                        model(fireRef.ref),
+                        fire.delay,
+                        fire.refractory,
+                        fire.advance,
+                        loop,
+                        success,
+                        reduction,
+                        action,
+                        endAction));
             }
-            FireActionConfig fire = manager.a(FireActionConfig.class, fireRef.ref);
-            if (fire == null) throw new IOException("Unresolved fire action " + fireRef.ref.getName());
-            Action action;
-            if(fire.action instanceof DungeonActionConfig.SpawnPrespawned spawn&&spawn.actor!=null
-                &&(spawn.actor.getName().equals("Bullet/Sword/Burst Bullet")||spawn.actor.getName().equals("Bullet/Sword/Burst Bullet (Obsidian)"))){
-                // Stock charge parameters address pre-strip fire-ref indices.
-                // The official captures retain the weapon's Burst Color/Damage
-                // on its carrier and trails; bind the surviving attack arguments.
-                var bound=(DungeonActionConfig.SpawnPrespawned)spawn.clone();
-                bound.actor=new ConfigReference<>(spawn.actor.getName());bound.actor.ld().putAll(spawn.actor.ld());
-                if(reference.ld().containsKey("Burst Color"))bound.actor.ld().put("Color",reference.ld().get("Burst Color"));
-                if(reference.ld().containsKey("Burst Damage"))bound.actor.ld().put("Damage",reference.ld().get("Burst Damage"));
-                action=readPrespawned(manager,bound);
-            }else action = readFireAction(manager, fireRef.ref, fire);
-            if (action == null) throw new IOException("Stock fire reference has no action: " + fireRef.ref.getName());
-            int loop = fire instanceof FireActionConfig.Looped l ? l.maxLoop : 0;
-            int success = fire instanceof FireActionConfig.IncreasingLooped l ? l.successIncrement : 0;
-            int reduction = fire instanceof FireActionConfig.IncreasingLooped l ? l.incrementReduction : 0;
-            Action endAction = fire instanceof FireActionConfig.Looped l ? readAction(manager,l.endAction) : null;
-            refs.add(new FireRef(model(fireRef.ref),fire.delay,fire.refractory,fire.advance,loop,success,reduction,action,endAction));
-        }
         if (!Float.isFinite(attack.fireSpeed) || attack.fireSpeed <= 0f)
             throw new IOException("Invalid stock fireSpeed for " + weapon + " activity " + activity);
-        entries.add(new AttackFire(weapon,activity,attackModel,attack.fireSpeed,refs));
+        entries.add(new AttackFire(weapon, activity, attackModel, attack.fireSpeed, refs));
     }
 
     static Action readAction(ConfigManager manager, ActionConfig action) throws Exception {
         if (action == null) return null;
         actionCount++;
-        if(action instanceof ActionConfig.Delayed delayed){
-            return new Action(Kind.DELAYED,new StarterCatalog.Model("Delayed",Map.of("delay",delayed.delay,"variance",delayed.variance)),null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(delayed.action==null?noop():readAction(manager,delayed.action)),"");
+        if (action instanceof ActionConfig.Delayed delayed) {
+            return new Action(
+                    Kind.DELAYED,
+                    new StarterCatalog.Model("Delayed", Map.of("delay", delayed.delay, "variance", delayed.variance)),
+                    null,
+                    "Source",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(delayed.action == null ? noop() : readAction(manager, delayed.action)),
+                    "");
         }
-        if(action instanceof DungeonActionConfig.TableSpawn spawn){
-            if(spawn.getClass()!=DungeonActionConfig.TableSpawn.class&&spawn.getClass()!=DungeonActionConfig.TableSpawnRotated.class)return unsupported(action);
-            var table=spawn.spawnTable==null?null:manager.a(SpawnTableConfig.class,spawn.spawnTable);
-            if(!(table instanceof SpawnTableConfig.Original original))return unsupported(action);
-            return tableEntry(manager,original.root,spawn,0);
+        if (action instanceof DungeonActionConfig.TableSpawn spawn) {
+            if (spawn.getClass() != DungeonActionConfig.TableSpawn.class
+                    && spawn.getClass() != DungeonActionConfig.TableSpawnRotated.class) return unsupported(action);
+            var table = spawn.spawnTable == null ? null : manager.a(SpawnTableConfig.class, spawn.spawnTable);
+            if (!(table instanceof SpawnTableConfig.Original original)) return unsupported(action);
+            return tableEntry(manager, original.root, spawn, 0);
         }
-        if(action.getClass().getSimpleName().equals("DestroyActor"))return destroySource();
-        if(action instanceof ActionConfig.Fail)return new Action(Kind.FAIL,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");
-        if(action instanceof DungeonActionConfig.ClearStatus clear)
-            return new Action(Kind.CLEAR_STATUS,new StarterCatalog.Model("ClearStatus",Map.of("mask",clear.mask)),null,target(clear.target),"","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
-        if(action instanceof DungeonActionConfig.Heal heal&&heal.getClass()==DungeonActionConfig.Heal.class&&heal.maximum==0)
-            return new Action(Kind.HEAL,new StarterCatalog.Model("Heal",Map.of("current",heal.current)),null,target(heal.target),"","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
-        if(action instanceof DungeonActionConfig.DepthScaleHeal heal){
-            var scale=manager.a(DepthScaleConfig.class,heal.depthScale);
-            if(scale==null)return unsupported(action);
-            return new Action(Kind.HEAL,new StarterCatalog.Model("Heal",Map.of("current",(int)scale.a(manager,0,0,com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM))),null,target(heal.target),"","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        if (action.getClass().getSimpleName().equals("DestroyActor")) return destroySource();
+        if (action instanceof ActionConfig.Fail)
+            return new Action(Kind.FAIL, null, null, "", "", "", 0, 0, 0, 0, false, 0, 0, 0, 0, false, List.of(), "");
+        if (action instanceof DungeonActionConfig.ClearStatus clear)
+            return new Action(
+                    Kind.CLEAR_STATUS,
+                    new StarterCatalog.Model("ClearStatus", Map.of("mask", clear.mask)),
+                    null,
+                    target(clear.target),
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(),
+                    "");
+        if (action instanceof DungeonActionConfig.Heal heal
+                && heal.getClass() == DungeonActionConfig.Heal.class
+                && heal.maximum == 0)
+            return new Action(
+                    Kind.HEAL,
+                    new StarterCatalog.Model("Heal", Map.of("current", heal.current)),
+                    null,
+                    target(heal.target),
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(),
+                    "");
+        if (action instanceof DungeonActionConfig.DepthScaleHeal heal) {
+            var scale = manager.a(DepthScaleConfig.class, heal.depthScale);
+            if (scale == null) return unsupported(action);
+            return new Action(
+                    Kind.HEAL,
+                    new StarterCatalog.Model("Heal", Map.of("current", (int) scale.a(
+                            manager, 0, 0, com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM))),
+                    null,
+                    target(heal.target),
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(),
+                    "");
         }
-        if(action instanceof DungeonActionConfig.ApplyStatus status){
-            if(status.condition==null)return noop();
-            var values=new TreeMap<String,Object>();values.put("reference",model(status.condition));
-            if(status.condition!=null){var resolved=manager.a(StatusConditionConfig.class,status.condition);if(resolved!=null)values.put("data",FireCatalog.modelJson(SceneStatusExport.statusData(resolved)).arguments().get("data"));}
-            return new Action(Kind.APPLY_STATUS,new StarterCatalog.Model("Status",values),null,target(status.target),"","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        if (action instanceof DungeonActionConfig.ApplyStatus status) {
+            if (status.condition == null) return noop();
+            var values = new TreeMap<String, Object>();
+            values.put("reference", model(status.condition));
+            if (status.condition != null) {
+                var resolved = manager.a(StatusConditionConfig.class, status.condition);
+                if (resolved != null)
+                    values.put(
+                            "data",
+                            FireCatalog.modelJson(SceneStatusExport.statusData(resolved))
+                                    .arguments()
+                                    .get("data"));
+            }
+            return new Action(
+                    Kind.APPLY_STATUS,
+                    new StarterCatalog.Model("Status", values),
+                    null,
+                    target(status.target),
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(),
+                    "");
         }
-        if(action instanceof DungeonActionConfig.StartSpriteShield shield){
-            var scale=manager.a(DepthScaleConfig.class,shield.healthScale);var values=new TreeMap<String,Object>();values.put("health",scale==null?0:scale.a(manager,0,0,com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM));values.put("power",shield.power);values.put("defense",argumentValue(shield.defense));
-            return new Action(Kind.START_SPRITE_SHIELD,new StarterCatalog.Model("SpriteShield",values),null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        if (action instanceof DungeonActionConfig.StartSpriteShield shield) {
+            var scale = manager.a(DepthScaleConfig.class, shield.healthScale);
+            var values = new TreeMap<String, Object>();
+            values.put(
+                    "health",
+                    scale == null
+                            ? 0
+                            : scale.a(
+                                    manager,
+                                    0,
+                                    0,
+                                    com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM));
+            values.put("power", shield.power);
+            values.put("defense", argumentValue(shield.defense));
+            return new Action(
+                    Kind.START_SPRITE_SHIELD,
+                    new StarterCatalog.Model("SpriteShield", values),
+                    null,
+                    "Source",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(),
+                    "");
         }
-        if(action instanceof DungeonActionConfig.EndSpriteShield)return new Action(Kind.END_SPRITE_SHIELD,null,null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
-        if(action instanceof ActionConfig.Conditional conditional){
-            return new Action(Kind.CONDITIONAL,new StarterCatalog.Model("Condition",Map.of("condition",argumentValue(conditional.condition))),null,"Source","","",0,0,0,0,true,0,0,0,0,false,
-                List.of(conditional.action==null?noop():readAction(manager,conditional.action),conditional.elseAction==null?noop():readAction(manager,conditional.elseAction)),"");
+        if (action instanceof DungeonActionConfig.EndSpriteShield)
+            return new Action(
+                    Kind.END_SPRITE_SHIELD,
+                    null,
+                    null,
+                    "Source",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(),
+                    "");
+        if (action instanceof ActionConfig.Conditional conditional) {
+            return new Action(
+                    Kind.CONDITIONAL,
+                    new StarterCatalog.Model("Condition", Map.of("condition", argumentValue(conditional.condition))),
+                    null,
+                    "Source",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(
+                            conditional.action == null ? noop() : readAction(manager, conditional.action),
+                            conditional.elseAction == null ? noop() : readAction(manager, conditional.elseAction)),
+                    "");
         }
         if (action instanceof DungeonActionConfig.FireAction fireAction) {
-            FireActionConfig fire = fireAction.fireAction == null ? null : manager.a(FireActionConfig.class, fireAction.fireAction);
+            FireActionConfig fire =
+                    fireAction.fireAction == null ? null : manager.a(FireActionConfig.class, fireAction.fireAction);
             if (fire == null) throw new IOException("Unresolved nested fire action " + fireAction.fireAction);
             String name = fireAction.fireAction.getName();
-            if (!NESTED_FIRES.add(name)) { UNSUPPORTED.merge("nested-fire-cycle",1,Integer::sum); return unsupported(action); }
-            try { return readFireAction(manager, fireAction.fireAction, fire); } finally { NESTED_FIRES.remove(name); }
+            if (!NESTED_FIRES.add(name)) {
+                UNSUPPORTED.merge("nested-fire-cycle", 1, Integer::sum);
+                return unsupported(action);
+            }
+            try {
+                return readFireAction(manager, fireAction.fireAction, fire);
+            } finally {
+                NESTED_FIRES.remove(name);
+            }
         }
         if (action instanceof DungeonActionConfig.FirePrefired firePrefired) {
-            return new Action(Kind.FIRE_EFFECT, model(firePrefired.effect), null, target(firePrefired.location), "", "",
-                0,0,0,0,false,0,0,0,0,false,List.of(),"");
+            return new Action(
+                    Kind.FIRE_EFFECT,
+                    model(firePrefired.effect),
+                    null,
+                    target(firePrefired.location),
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(),
+                    "");
         }
-        if(action instanceof DungeonActionConfig.DamageTargetFromPoint damage){
-            var data=new TreeMap<String,Object>();data.put("damage",resolvedDamage(manager,damage.damage));data.put("region",argumentValue(new RegionConfig.Default()));data.put("impulse",argumentValue(damage.impulseDealt));
-            return new Action(Kind.DAMAGE_REGION,new StarterCatalog.Model("DamageTarget",data),null,"Source","","",0,0,0,0,true,0,0,0,damage.collisionMask,false,List.of(),"");
+        if (action instanceof DungeonActionConfig.DamageTargetFromPoint damage) {
+            var data = new TreeMap<String, Object>();
+            data.put("damage", resolvedDamage(manager, damage.damage));
+            data.put("region", argumentValue(new RegionConfig.Default()));
+            data.put("impulse", argumentValue(damage.impulseDealt));
+            return new Action(
+                    Kind.DAMAGE_REGION,
+                    new StarterCatalog.Model("DamageTarget", data),
+                    null,
+                    "Source",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    damage.collisionMask,
+                    false,
+                    List.of(),
+                    "");
         }
-        if(action instanceof DungeonActionConfig.DamageRegionFromPoint damage){
-            var data=new TreeMap<String,Object>();data.put("damage",resolvedDamage(manager,damage.damage));
-            data.put("region",argumentValue(damage.region));
-            data.put("impulse",argumentValue(damage.impulseDealt));data.put("impulse-origin",argumentValue(damage.impulseTranslation));
-            return new Action(Kind.DAMAGE_REGION,new StarterCatalog.Model("DamageRegionFromPoint",data),null,
-                target(damage.location),"","",damage.translation.x,damage.translation.y,0,0,true,0,0,0,
-                damage.collisionMask,false,List.of(),"");
+        if (action instanceof DungeonActionConfig.DamageRegionFromPoint damage) {
+            var data = new TreeMap<String, Object>();
+            data.put("damage", resolvedDamage(manager, damage.damage));
+            data.put("region", argumentValue(damage.region));
+            data.put("impulse", argumentValue(damage.impulseDealt));
+            data.put("impulse-origin", argumentValue(damage.impulseTranslation));
+            return new Action(
+                    Kind.DAMAGE_REGION,
+                    new StarterCatalog.Model("DamageRegionFromPoint", data),
+                    null,
+                    target(damage.location),
+                    "",
+                    "",
+                    damage.translation.x,
+                    damage.translation.y,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    damage.collisionMask,
+                    false,
+                    List.of(),
+                    "");
         }
-        if(action instanceof DungeonActionConfig.DamageRegion damage){
-            var data=new TreeMap<String,Object>();data.put("damage",resolvedDamage(manager,damage.damage));data.put("region",argumentValue(damage.region));
-            return new Action(Kind.DAMAGE_REGION,new StarterCatalog.Model("DamageRegion",data),null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        if (action instanceof DungeonActionConfig.DamageRegion damage) {
+            var data = new TreeMap<String, Object>();
+            data.put("damage", resolvedDamage(manager, damage.damage));
+            data.put("region", argumentValue(damage.region));
+            return new Action(
+                    Kind.DAMAGE_REGION,
+                    new StarterCatalog.Model("DamageRegion", data),
+                    null,
+                    "Source",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(),
+                    "");
         }
-        if(action instanceof DungeonActionConfig.ImpartImpulse impulse){
-            var data=new TreeMap<String,Object>();data.put("region",argumentValue(impulse.region));data.put("impulse",argumentValue(impulse.impulseDealt));data.put("impulse-origin",argumentValue(impulse.impulseTranslation));data.put("flags",impulse.flags);
-            return new Action(Kind.IMPULSE_REGION,new StarterCatalog.Model("ImpartImpulse",data),null,target(impulse.location),"","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        if (action instanceof DungeonActionConfig.ImpartImpulse impulse) {
+            var data = new TreeMap<String, Object>();
+            data.put("region", argumentValue(impulse.region));
+            data.put("impulse", argumentValue(impulse.impulseDealt));
+            data.put("impulse-origin", argumentValue(impulse.impulseTranslation));
+            data.put("flags", impulse.flags);
+            return new Action(
+                    Kind.IMPULSE_REGION,
+                    new StarterCatalog.Model("ImpartImpulse", data),
+                    null,
+                    target(impulse.location),
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(),
+                    "");
         }
         if (action instanceof DungeonActionConfig.SpawnTransformedPrespawnedArgModify modified)
             return readPrespawned(manager, modified);
         if (action instanceof DungeonActionConfig.MultiSpawnPrespawned multi) {
             var children = new ArrayList<Action>();
-            if (multi.spawns != null) for (DungeonActionConfig.SpawnPrespawned spawn : multi.spawns) {
-                Action converted = readPrespawned(manager, spawn); if (converted != null) children.add(converted);
-            }
-            return new Action(Kind.MULTI_PRESPAWNED,null,null,"","","",0,0,0,0,false,0,0,0,0,false,children,"");
+            if (multi.spawns != null)
+                for (DungeonActionConfig.SpawnPrespawned spawn : multi.spawns) {
+                    Action converted = readPrespawned(manager, spawn);
+                    if (converted != null) children.add(converted);
+                }
+            return new Action(
+                    Kind.MULTI_PRESPAWNED, null, null, "", "", "", 0, 0, 0, 0, false, 0, 0, 0, 0, false, children, "");
         }
         if (action instanceof DungeonActionConfig.SpawnPrespawned spawn) return readPrespawned(manager, spawn);
         if (action instanceof ActionConfig.Compound compound) {
             var children = new ArrayList<Action>();
-            if (compound.actions != null) for (ActionConfig child : compound.actions) {
-                Action converted = readAction(manager,child); if(converted!=null)children.add(converted);
-            }
-            return new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,compound.stopOnFailure,children,"");
+            if (compound.actions != null)
+                for (ActionConfig child : compound.actions) {
+                    Action converted = readAction(manager, child);
+                    if (converted != null) children.add(converted);
+                }
+            return new Action(
+                    Kind.COMPOUND,
+                    null,
+                    null,
+                    "",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    0,
+                    0,
+                    0,
+                    0,
+                    compound.stopOnFailure,
+                    children,
+                    "");
         }
         if (action instanceof ActionConfig.Random random) {
             if (random.actions != null && random.actions.length == 0) return noop();
             if (random.actions == null) return unsupported(action);
-            var choices=new ArrayList<Action>();var weights=new ArrayList<Object>();float weight=-1;double total=0;boolean equal=true;
-            for(var entry:random.actions){
-                if(entry==null||!Float.isFinite(entry.weight)||entry.weight<0f)return unsupported(action);
-                if(weight>=0&&entry.weight!=weight)equal=false;
-                weight=entry.weight;total+=weight;weights.add(weight);
-                var child=readAction(manager,entry.action);choices.add(child==null?noop():child);
+            var choices = new ArrayList<Action>();
+            var weights = new ArrayList<Object>();
+            float weight = -1;
+            double total = 0;
+            boolean equal = true;
+            for (var entry : random.actions) {
+                if (entry == null || !Float.isFinite(entry.weight) || entry.weight < 0f) return unsupported(action);
+                if (weight >= 0 && entry.weight != weight) equal = false;
+                weight = entry.weight;
+                total += weight;
+                weights.add(weight);
+                var child = readAction(manager, entry.action);
+                choices.add(child == null ? noop() : child);
             }
-            if(total<=0)return unsupported(action);
-            if(choices.size()==1)return choices.getFirst();
-            return new Action(equal?Kind.RANDOM_EQUAL:Kind.RANDOM_WEIGHTED,equal?null:new StarterCatalog.Model("Weighted",Map.of("weights",new ListValue("float",weights))),null,"","","",0,0,0,0,false,0,0,0,0,false,choices,"");
+            if (total <= 0) return unsupported(action);
+            if (choices.size() == 1) return choices.getFirst();
+            return new Action(
+                    equal ? Kind.RANDOM_EQUAL : Kind.RANDOM_WEIGHTED,
+                    equal
+                            ? null
+                            : new StarterCatalog.Model("Weighted", Map.of("weights", new ListValue("float", weights))),
+                    null,
+                    "",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    choices,
+                    "");
         }
         if (action instanceof ActionConfig.FireEffect effect) {
-            return new Action(Kind.FIRE_EFFECT,model(effect.effect),null,target(effect.location),"","",0,0,0,0,false,0,0,0,0,false,List.of(),"");
+            return new Action(
+                    Kind.FIRE_EFFECT,
+                    model(effect.effect),
+                    null,
+                    target(effect.location),
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    List.of(),
+                    "");
         }
         if (action instanceof ActionConfig.SpawnActor spawn) {
             if (spawn.actor == null) return noop();
-            ActorConfig config = manager.a(ActorConfig.class,spawn.actor);
+            ActorConfig config = manager.a(ActorConfig.class, spawn.actor);
             ActorConfig.Original actor = config == null ? null : config.al(manager);
             if (actor == null) throw new IOException("Unresolved actor reference " + spawn.actor.getName());
-            if(actor instanceof DungeonActorConfig.Pickup pickup)return pickupSpawn(manager,spawn,pickup);
-            if(sceneActors&&actor instanceof DungeonActorConfig.Monster&&action.getClass()==ActionConfig.SpawnActor.class
-                    &&spawn.location instanceof TargetConfig.Source){
-                String template=SceneContentExport.deferSceneActor(manager,spawn.actor);
-                if(template!=null)return new Action(Kind.SPAWN_SCENE_ACTOR,new StarterCatalog.Model("SceneActorTemplate",Map.of("template",template)),null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+            if (actor instanceof DungeonActorConfig.Pickup pickup) return pickupSpawn(manager, spawn, pickup);
+            if (sceneActors
+                    && actor instanceof DungeonActorConfig.Monster
+                    && action.getClass() == ActionConfig.SpawnActor.class
+                    && spawn.location instanceof TargetConfig.Source) {
+                String template = SceneContentExport.deferSceneActor(manager, spawn.actor);
+                if (template != null)
+                    return new Action(
+                            Kind.SPAWN_SCENE_ACTOR,
+                            new StarterCatalog.Model("SceneActorTemplate", Map.of("template", template)),
+                            null,
+                            "Source",
+                            "",
+                            "",
+                            0,
+                            0,
+                            0,
+                            0,
+                            true,
+                            0,
+                            0,
+                            0,
+                            0,
+                            false,
+                            List.of(),
+                            "");
             }
-            ActorSpec spec = actor(manager,spawn.actor,actor);
-            Kind kind = isProjectile(spec.nativeType()) ? Kind.EMIT_PROJECTILE
-                : action instanceof ActionConfig.SpawnRandomTranslatedActor ? Kind.RANDOM_TRANSLATED
-                : action instanceof ActionConfig.SpawnFacingActor ? Kind.SPAWN_FACING : Kind.SPAWN_ACTOR;
-            if(kind==Kind.EMIT_PROJECTILE) projectileCount++;
-            float x=0,y=0,rotation=0,rotationVariance=0;boolean relative=true;
-            if(action instanceof ActionConfig.SpawnRotatedActor rotated){rotation=rotated.rotation;rotationVariance=rotated.rotationVariance;relative=rotated.relative;}
-            if(action instanceof ActionConfig.SpawnTransformedActor transformed&&transformed.translation!=null){x=transformed.translation.x;y=transformed.translation.y;}
-            int count=0,steps=0,mask=0;float step=0;String collision="",facing="";
-            if(action instanceof ActionConfig.SpawnRandomTranslatedActor random){count=random.count;steps=random.steps;step=random.stepSize;mask=random.collisionMask;collision=target(random.collisionSource);}
-            if(action instanceof ActionConfig.SpawnFacingActor f)facing=target(f.facing);
-            return new Action(kind,kind==Kind.EMIT_PROJECTILE?new StarterCatalog.Model("ServerSpawned",Map.of()):null,spec,target(spawn.location),facing,collision,x,y,rotation,rotationVariance,relative,count,step,steps,mask,false,List.of(),"");
+            ActorSpec spec = actor(manager, spawn.actor, actor);
+            Kind kind = isProjectile(spec.nativeType())
+                    ? Kind.EMIT_PROJECTILE
+                    : action instanceof ActionConfig.SpawnRandomTranslatedActor
+                            ? Kind.RANDOM_TRANSLATED
+                            : action instanceof ActionConfig.SpawnFacingActor ? Kind.SPAWN_FACING : Kind.SPAWN_ACTOR;
+            if (kind == Kind.EMIT_PROJECTILE) projectileCount++;
+            float x = 0, y = 0, rotation = 0, rotationVariance = 0;
+            boolean relative = true;
+            if (action instanceof ActionConfig.SpawnRotatedActor rotated) {
+                rotation = rotated.rotation;
+                rotationVariance = rotated.rotationVariance;
+                relative = rotated.relative;
+            }
+            if (action instanceof ActionConfig.SpawnTransformedActor transformed && transformed.translation != null) {
+                x = transformed.translation.x;
+                y = transformed.translation.y;
+            }
+            int count = 0, steps = 0, mask = 0;
+            float step = 0;
+            String collision = "", facing = "";
+            if (action instanceof ActionConfig.SpawnRandomTranslatedActor random) {
+                count = random.count;
+                steps = random.steps;
+                step = random.stepSize;
+                mask = random.collisionMask;
+                collision = target(random.collisionSource);
+            }
+            if (action instanceof ActionConfig.SpawnFacingActor f) facing = target(f.facing);
+            return new Action(
+                    kind,
+                    kind == Kind.EMIT_PROJECTILE ? new StarterCatalog.Model("ServerSpawned", Map.of()) : null,
+                    spec,
+                    target(spawn.location),
+                    facing,
+                    collision,
+                    x,
+                    y,
+                    rotation,
+                    rotationVariance,
+                    relative,
+                    count,
+                    step,
+                    steps,
+                    mask,
+                    false,
+                    List.of(),
+                    "");
         }
         return unsupported(action);
     }
-    private static Action pickupSpawn(ConfigManager manager,ActionConfig.SpawnActor spawn,DungeonActorConfig.Pickup pickup)throws Exception {
-        if(spawn instanceof ActionConfig.SpawnRandomTranslatedActor||spawn instanceof ActionConfig.SpawnFacingActor
-                ||!(pickup.shape instanceof com.threerings.tudey.shape.config.ShapeConfig.Circle circle))return unsupported(spawn);
+
+    private static Action pickupSpawn(
+            ConfigManager manager, ActionConfig.SpawnActor spawn, DungeonActorConfig.Pickup pickup) throws Exception {
+        if (spawn instanceof ActionConfig.SpawnRandomTranslatedActor
+                || spawn instanceof ActionConfig.SpawnFacingActor
+                || !(pickup.shape instanceof com.threerings.tudey.shape.config.ShapeConfig.Circle circle))
+            return unsupported(spawn);
         // Party pickups pay every member natively. Heat embers credit the whole instance at
         // runtime (denomination from the stripped GrantHeat rules); crowns are marked party and
         // the runtime accepts them only where the instance can hold a single member. Any other
         // party reward still needs a per-member transaction and stays unsupported.
-        String heat=SceneContentExport.rule("actor."+spawn.actor.getName()+".pickup-heat");
-        Object tooltip=field(pickup.sprite,"tooltipItem");
-        var fields=new TreeMap<String,String>();fields.put("native-type","com.threerings.projectx.dungeon.data.actor.Pickup");
-        fields.put("config-json",FireCatalog.modelJson(model(spawn.actor)));fields.put("shape","Circle");fields.put("radius",Float.toString(circle.radius));
-        if(pickup.party)fields.put("pickup-party","true");
-        if(heat!=null)fields.put("pickup-heat",heat);
-        else{
-            if(!(tooltip instanceof ConfigReference<?> item))return unsupported(spawn);
-            if(pickup.party&&!item.getName().startsWith("Instant/Crown/"))return unsupported(spawn);
-            var itemConfig=manager.a(ItemConfig.class,new ConfigReference<ItemConfig>(item.getName()));
-            if(itemConfig==null)return unsupported(spawn);
-            fields.put("pickup-item",item.getName());fields.put("pickup-transient",Boolean.toString(itemConfig.w(manager).QU()));
+        String heat = SceneContentExport.rule("actor." + spawn.actor.getName() + ".pickup-heat");
+        Object tooltip = field(pickup.sprite, "tooltipItem");
+        var fields = new TreeMap<String, String>();
+        fields.put("native-type", "com.threerings.projectx.dungeon.data.actor.Pickup");
+        fields.put("config-json", FireCatalog.modelJson(model(spawn.actor)));
+        fields.put("shape", "Circle");
+        fields.put("radius", Float.toString(circle.radius));
+        if (pickup.party) fields.put("pickup-party", "true");
+        if (heat != null) fields.put("pickup-heat", heat);
+        else {
+            if (!(tooltip instanceof ConfigReference<?> item)) return unsupported(spawn);
+            if (pickup.party && !item.getName().startsWith("Instant/Crown/")) return unsupported(spawn);
+            var itemConfig = manager.a(ItemConfig.class, new ConfigReference<ItemConfig>(item.getName()));
+            if (itemConfig == null) return unsupported(spawn);
+            fields.put("pickup-item", item.getName());
+            fields.put(
+                    "pickup-transient", Boolean.toString(itemConfig.w(manager).QU()));
         }
-        fields.put("vacuum-expansion",Float.toString(pickup.vacuumExpansion));fields.put("vacuum-speed",Float.toString(pickup.vacuumSpeed));fields.put("lifespan",Integer.toString(pickup.lifespan));
-        float x=0,y=0,rotation=0,variance=0;boolean relative=true;
-        if(spawn instanceof ActionConfig.SpawnTransformedActor transformed){x=transformed.translation.x;y=transformed.translation.y;}
-        if(spawn instanceof ActionConfig.SpawnRotatedActor rotated){rotation=rotated.rotation;variance=rotated.rotationVariance;relative=rotated.relative;}
-        return new Action(Kind.SPAWN_PICKUP,new StarterCatalog.Model("Pickup",Map.of("fields",org.tortodrone.core.Json.stringify(fields))),null,target(spawn.location),"","",x,y,rotation,variance,relative,0,0,0,0,false,List.of(),"");
+        fields.put("vacuum-expansion", Float.toString(pickup.vacuumExpansion));
+        fields.put("vacuum-speed", Float.toString(pickup.vacuumSpeed));
+        fields.put("lifespan", Integer.toString(pickup.lifespan));
+        float x = 0, y = 0, rotation = 0, variance = 0;
+        boolean relative = true;
+        if (spawn instanceof ActionConfig.SpawnTransformedActor transformed) {
+            x = transformed.translation.x;
+            y = transformed.translation.y;
+        }
+        if (spawn instanceof ActionConfig.SpawnRotatedActor rotated) {
+            rotation = rotated.rotation;
+            variance = rotated.rotationVariance;
+            relative = rotated.relative;
+        }
+        return new Action(
+                Kind.SPAWN_PICKUP,
+                new StarterCatalog.Model("Pickup", Map.of("fields", org.tortodrone.core.Json.stringify(fields))),
+                null,
+                target(spawn.location),
+                "",
+                "",
+                x,
+                y,
+                rotation,
+                variance,
+                relative,
+                0,
+                0,
+                0,
+                0,
+                false,
+                List.of(),
+                "");
     }
     /** Preserve source table weights and bound actor arguments; never sample a table at export time. */
-    private static Action tableEntry(ConfigManager manager,SpawnTableConfig.Entry entry,DungeonActionConfig.TableSpawn spawn,int depth)throws Exception {
-        if(entry==null)return noop();if(depth>16)return unsupported(spawn);
-        if(entry.getClass()==SpawnTableConfig.ActorEntry.class){
-            var leaf=(SpawnTableConfig.ActorEntry)entry;
-            var action=new ActionConfig.SpawnTransformedActor();action.actor=leaf.actor;action.location=spawn.location;
-            action.translation=spawn.translation;action.rotation=spawn.rotation;action.relative=spawn.relative;
-            if(spawn instanceof DungeonActionConfig.TableSpawnRotated rotated)action.rotationVariance=rotated.rotationVariance;
-            return readAction(manager,action);
+    private static Action tableEntry(
+            ConfigManager manager, SpawnTableConfig.Entry entry, DungeonActionConfig.TableSpawn spawn, int depth)
+            throws Exception {
+        if (entry == null) return noop();
+        if (depth > 16) return unsupported(spawn);
+        if (entry.getClass() == SpawnTableConfig.ActorEntry.class) {
+            var leaf = (SpawnTableConfig.ActorEntry) entry;
+            var action = new ActionConfig.SpawnTransformedActor();
+            action.actor = leaf.actor;
+            action.location = spawn.location;
+            action.translation = spawn.translation;
+            action.rotation = spawn.rotation;
+            action.relative = spawn.relative;
+            if (spawn instanceof DungeonActionConfig.TableSpawnRotated rotated)
+                action.rotationVariance = rotated.rotationVariance;
+            return readAction(manager, action);
         }
-        if(entry.getClass()==SpawnTableConfig.CompoundEntry.class){
-            var children=new ArrayList<Action>();for(var child:((SpawnTableConfig.CompoundEntry)entry).entries)children.add(tableEntry(manager,child,spawn,depth+1));
-            return new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,children,"");
+        if (entry.getClass() == SpawnTableConfig.CompoundEntry.class) {
+            var children = new ArrayList<Action>();
+            for (var child : ((SpawnTableConfig.CompoundEntry) entry).entries)
+                children.add(tableEntry(manager, child, spawn, depth + 1));
+            return new Action(
+                    Kind.COMPOUND, null, null, "", "", "", 0, 0, 0, 0, false, 0, 0, 0, 0, false, children, "");
         }
-        if(entry.getClass()==SpawnTableConfig.RandomEntry.class){
-            var children=new ArrayList<Action>();var weights=new ArrayList<Object>();
-            for(var child:((SpawnTableConfig.RandomEntry)entry).entries){
-                if(!Float.isFinite(child.weight)||child.weight<0||!child.dropModifierTag.isEmpty())return unsupported(spawn);
-                weights.add(child.weight);children.add(tableEntry(manager,child.entry,spawn,depth+1));
+        if (entry.getClass() == SpawnTableConfig.RandomEntry.class) {
+            var children = new ArrayList<Action>();
+            var weights = new ArrayList<Object>();
+            for (var child : ((SpawnTableConfig.RandomEntry) entry).entries) {
+                if (!Float.isFinite(child.weight) || child.weight < 0 || !child.dropModifierTag.isEmpty())
+                    return unsupported(spawn);
+                weights.add(child.weight);
+                children.add(tableEntry(manager, child.entry, spawn, depth + 1));
             }
-            return new Action(Kind.RANDOM_WEIGHTED,new StarterCatalog.Model("Weighted",Map.of("weights",new ListValue("float",weights))),null,"","","",0,0,0,0,false,0,0,0,0,false,children,"");
+            return new Action(
+                    Kind.RANDOM_WEIGHTED,
+                    new StarterCatalog.Model("Weighted", Map.of("weights", new ListValue("float", weights))),
+                    null,
+                    "",
+                    "",
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    children,
+                    "");
         }
-        if(entry.getClass()==SpawnTableConfig.SimpleRandomEntry.class){
-            var children=new ArrayList<Action>();for(var child:((SpawnTableConfig.SimpleRandomEntry)entry).entries)children.add(tableEntry(manager,child,spawn,depth+1));
-            return new Action(Kind.RANDOM_EQUAL,null,null,"","","",0,0,0,0,false,0,0,0,0,false,children,"");
+        if (entry.getClass() == SpawnTableConfig.SimpleRandomEntry.class) {
+            var children = new ArrayList<Action>();
+            for (var child : ((SpawnTableConfig.SimpleRandomEntry) entry).entries)
+                children.add(tableEntry(manager, child, spawn, depth + 1));
+            return new Action(
+                    Kind.RANDOM_EQUAL, null, null, "", "", "", 0, 0, 0, 0, false, 0, 0, 0, 0, false, children, "");
         }
-        if(entry.getClass()==SpawnTableConfig.TableEntry.class){
-            var reference=((SpawnTableConfig.TableEntry)entry).spawnTable;
-            var table=reference==null?null:manager.a(SpawnTableConfig.class,reference);
-            if(table instanceof SpawnTableConfig.Original original)return tableEntry(manager,original.root,spawn,depth+1);
+        if (entry.getClass() == SpawnTableConfig.TableEntry.class) {
+            var reference = ((SpawnTableConfig.TableEntry) entry).spawnTable;
+            var table = reference == null ? null : manager.a(SpawnTableConfig.class, reference);
+            if (table instanceof SpawnTableConfig.Original original)
+                return tableEntry(manager, original.root, spawn, depth + 1);
         }
         return unsupported(spawn);
     }
-    private static Action readPrespawned(ConfigManager manager, DungeonActionConfig.SpawnPrespawned spawn) throws Exception {
+
+    private static Action readPrespawned(ConfigManager manager, DungeonActionConfig.SpawnPrespawned spawn)
+            throws Exception {
         // SpawnPrespawned.shouldPreExecute() is exactly actor != null in the stock archive.
         if (spawn == null || spawn.actor == null) return noop();
         ActorConfig config = manager.a(ActorConfig.class, spawn.actor);
@@ -384,89 +1073,222 @@ public final class FireCatalogExport {
         ActorSpec spec = actor(manager, spawn.actor, original);
         Kind kind = isProjectile(spec.nativeType()) ? Kind.EMIT_PROJECTILE : Kind.SPAWN_ACTOR;
         if (kind == Kind.EMIT_PROJECTILE) projectileCount++;
-        float x=0,y=0;
-        if (spawn instanceof DungeonActionConfig.SpawnTransformedPrespawned transformed && transformed.translation != null) {
-            x=transformed.translation.x; y=transformed.translation.y;
+        float x = 0, y = 0;
+        if (spawn instanceof DungeonActionConfig.SpawnTransformedPrespawned transformed
+                && transformed.translation != null) {
+            x = transformed.translation.x;
+            y = transformed.translation.y;
         }
-        String parameter = ""; List<String> values = List.of();
+        String parameter = "";
+        List<String> values = List.of();
         if (spawn instanceof DungeonActionConfig.SpawnTransformedPrespawnedArgModify modified) {
             parameter = modified.parameter;
             values = modified.values == null ? List.of() : Arrays.asList(modified.values.clone());
         }
-        return new Action(kind,new StarterCatalog.Model("Prespawned",Map.of()),spec,target(spawn.location),"","",x,y,spawn.rotation,spawn.rotationVariance,
-            spawn.relative,0,0,0,0,false,List.of(),"",parameter,values);
+        return new Action(
+                kind,
+                new StarterCatalog.Model("Prespawned", Map.of()),
+                spec,
+                target(spawn.location),
+                "",
+                "",
+                x,
+                y,
+                spawn.rotation,
+                spawn.rotationVariance,
+                spawn.relative,
+                0,
+                0,
+                0,
+                0,
+                false,
+                List.of(),
+                "",
+                parameter,
+                values);
     }
+
     private static Action noop() {
-        return new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");
+        return new Action(Kind.COMPOUND, null, null, "", "", "", 0, 0, 0, 0, false, 0, 0, 0, 0, false, List.of(), "");
     }
-    static Action readFireAction(ConfigManager manager, ConfigReference<FireActionConfig> reference,
-            FireActionConfig fire) throws Exception {
-        ActionConfig raw=fire.action;
-        if(reference.getName().equals("Item/Gear/Shield/PushBack (Base)")){
+
+    static Action readFireAction(
+            ConfigManager manager, ConfigReference<FireActionConfig> reference, FireActionConfig fire)
+            throws Exception {
+        ActionConfig raw = fire.action;
+        if (reference.getName().equals("Item/Gear/Shield/PushBack (Base)")) {
             // Authored fire_action.xml guards survive only as empty Tagged placeholders
             // in the installed binary. Restore this named graph, including cooldown.
-            if(!(raw instanceof ActionConfig.Conditional first)||!(first.action instanceof ActionConfig.Conditional second))throw new IOException("Shield push-back graph changed");
-            var outer=(ActionConfig.Conditional)first.clone();var inner=(ActionConfig.Conditional)second.clone();
-            var rarity=new com.threerings.projectx.config.ProjectXConditionConfig.ShieldRarityEquipped();rarity.rarity=2;
-            var intersection=new ConditionConfig.Intersecting();var region=new RegionConfig.Transformed();var circle=new com.threerings.tudey.shape.config.ShapeConfig.Circle();circle.radius=1.1f;region.shape=circle;
-            intersection.first=region;var monsters=new RegionConfig.Default();var type=new TargetConfig.InstanceOf();type.logicClass="com.threerings.projectx.dungeon.server.logic.MonsterLogic";monsters.location=type;intersection.second=monsters;
-            var all=new ConditionConfig.All();all.conditions=new ConditionConfig[]{rarity,intersection};outer.condition=all;
-            var cooldown=new ConditionConfig.Cooldown();cooldown.time=1500;inner.condition=cooldown;outer.action=inner;raw=outer;
-            if(!(inner.action instanceof ActionConfig.Compound original))throw new IOException("Shield push-back action changed");
-            var compound=(ActionConfig.Compound)original.clone();compound.actions=original.actions.clone();
-            var choice=(com.threerings.config.Parameter.Choice)fire.getParameter("Knock-Back Power");
-            String selected=Objects.toString(reference.ld().get("Knock-Back Power"),choice.choice);ImpulseConfig.DamageImpulse impulse=null;
-            for(var option:choice.options)if(option.name.equals(selected)){var field=option.getClass().getDeclaredField("_arguments");field.setAccessible(true);impulse=(ImpulseConfig.DamageImpulse)((Map<?,?>)field.get(option)).get("KB");}
-            if(impulse==null)throw new IOException("Shield push-back power binding changed");
-            for(int i=0;i<compound.actions.length;i++)if(compound.actions[i] instanceof DungeonActionConfig.ImpartImpulse push){
-                var restored=(DungeonActionConfig.ImpartImpulse)push.clone();restored.impulseDealt=impulse;
-                var area=new RegionConfig.Transformed();area.shape=new com.threerings.tudey.shape.config.ShapeConfig.Circle();restored.region=area;compound.actions[i]=restored;
-            }
-            inner.action=compound;
+            if (!(raw instanceof ActionConfig.Conditional first)
+                    || !(first.action instanceof ActionConfig.Conditional second))
+                throw new IOException("Shield push-back graph changed");
+            var outer = (ActionConfig.Conditional) first.clone();
+            var inner = (ActionConfig.Conditional) second.clone();
+            var rarity = new com.threerings.projectx.config.ProjectXConditionConfig.ShieldRarityEquipped();
+            rarity.rarity = 2;
+            var intersection = new ConditionConfig.Intersecting();
+            var region = new RegionConfig.Transformed();
+            var circle = new com.threerings.tudey.shape.config.ShapeConfig.Circle();
+            circle.radius = 1.1f;
+            region.shape = circle;
+            intersection.first = region;
+            var monsters = new RegionConfig.Default();
+            var type = new TargetConfig.InstanceOf();
+            type.logicClass = "com.threerings.projectx.dungeon.server.logic.MonsterLogic";
+            monsters.location = type;
+            intersection.second = monsters;
+            var all = new ConditionConfig.All();
+            all.conditions = new ConditionConfig[] {rarity, intersection};
+            outer.condition = all;
+            var cooldown = new ConditionConfig.Cooldown();
+            cooldown.time = 1500;
+            inner.condition = cooldown;
+            outer.action = inner;
+            raw = outer;
+            if (!(inner.action instanceof ActionConfig.Compound original))
+                throw new IOException("Shield push-back action changed");
+            var compound = (ActionConfig.Compound) original.clone();
+            compound.actions = original.actions.clone();
+            var choice = (com.threerings.config.Parameter.Choice) fire.getParameter("Knock-Back Power");
+            String selected = Objects.toString(reference.ld().get("Knock-Back Power"), choice.choice);
+            ImpulseConfig.DamageImpulse impulse = null;
+            for (var option : choice.options)
+                if (option.name.equals(selected)) {
+                    var field = option.getClass().getDeclaredField("_arguments");
+                    field.setAccessible(true);
+                    impulse = (ImpulseConfig.DamageImpulse) ((Map<?, ?>) field.get(option)).get("KB");
+                }
+            if (impulse == null) throw new IOException("Shield push-back power binding changed");
+            for (int i = 0; i < compound.actions.length; i++)
+                if (compound.actions[i] instanceof DungeonActionConfig.ImpartImpulse push) {
+                    var restored = (DungeonActionConfig.ImpartImpulse) push.clone();
+                    restored.impulseDealt = impulse;
+                    var area = new RegionConfig.Transformed();
+                    area.shape = new com.threerings.tudey.shape.config.ShapeConfig.Circle();
+                    restored.region = area;
+                    compound.actions[i] = restored;
+                }
+            inner.action = compound;
         }
         Action action = readAction(manager, raw);
-        if(reference.getName().equals("Traps and Hazards/Trap, floor")){
+        if (reference.getName().equals("Traps and Hazards/Trap, floor")) {
             // Prepared Training content has depth zero: preserve the authored first
             // tier's damage graph. Its stripped UP guard is enforced by Trap runtime.
-            if(!(fire.action instanceof ActionConfig.Compound compound)||compound.actions.length<1
-                ||!(compound.actions[0] instanceof ActionConfig.Conditional conditional))throw new IOException("Floor trap graph changed");
-            action=readAction(manager,conditional.action);
-            var choice=(com.threerings.config.Parameter.Choice)fire.getParameter("Damage Size");
-            for(var option:choice.options)if(option.name.equals(Objects.toString(reference.ld().get("Damage Size"),choice.choice))){
-                var field=option.getClass().getDeclaredField("_arguments");field.setAccessible(true);
-                Object shape=((Map<?,?>)field.get(option)).get("Damage Region");
-                if(shape==null)throw new IOException("Floor trap shape missing");
-                action=withShape(action,argumentValue(shape));
-            }
+            if (!(fire.action instanceof ActionConfig.Compound compound)
+                    || compound.actions.length < 1
+                    || !(compound.actions[0] instanceof ActionConfig.Conditional conditional))
+                throw new IOException("Floor trap graph changed");
+            action = readAction(manager, conditional.action);
+            var choice = (com.threerings.config.Parameter.Choice) fire.getParameter("Damage Size");
+            for (var option : choice.options)
+                if (option.name.equals(Objects.toString(reference.ld().get("Damage Size"), choice.choice))) {
+                    var field = option.getClass().getDeclaredField("_arguments");
+                    field.setAccessible(true);
+                    Object shape = ((Map<?, ?>) field.get(option)).get("Damage Region");
+                    if (shape == null) throw new IOException("Floor trap shape missing");
+                    action = withShape(action, argumentValue(shape));
+                }
         }
-        if(reference.getName().equals("Base/Damage Origin Transformed")||reference.getName().equals("Base/Damage Region Transformed")){
+        if (reference.getName().equals("Base/Damage Origin Transformed")
+                || reference.getName().equals("Base/Damage Region Transformed")) {
             // The original base contains RegionConfig.Transformed -> Compound[Shape].
             // RegionConfig's server-only shape is stripped, but each attack's Shape
             // argument survives. Preserve that exact argument rather than the empty
             // Default region prototype returned by the client configuration manager.
-            Object shape=reference.ld().get("Shape");
-            if(action.kind()!=Kind.DAMAGE_REGION||shape==null)throw new IOException("Verified transformed damage action changed shape");
-            var data=new TreeMap<>(action.config().arguments());data.put("shape",argumentValue(shape));
-            action=new Action(action.kind(),new StarterCatalog.Model(action.config().name(),data),action.actor(),action.targetType(),
-                action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),
-                action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),action.children(),action.unsupportedType(),action.parameter(),action.values());
+            Object shape = reference.ld().get("Shape");
+            if (action.kind() != Kind.DAMAGE_REGION || shape == null)
+                throw new IOException("Verified transformed damage action changed shape");
+            var data = new TreeMap<>(action.config().arguments());
+            data.put("shape", argumentValue(shape));
+            action = new Action(
+                    action.kind(),
+                    new StarterCatalog.Model(action.config().name(), data),
+                    action.actor(),
+                    action.targetType(),
+                    action.facingType(),
+                    action.collisionSourceType(),
+                    action.x(),
+                    action.y(),
+                    action.rotation(),
+                    action.rotationVariance(),
+                    action.relative(),
+                    action.count(),
+                    action.stepSize(),
+                    action.steps(),
+                    action.collisionMask(),
+                    action.stopOnFailure(),
+                    action.children(),
+                    action.unsupportedType(),
+                    action.parameter(),
+                    action.values());
         }
-        if(reference.getName().equals("Character/NPC/Monster/Construct/Lumber/Slam, Lumber")){
+        if (reference.getName().equals("Character/NPC/Monster/Construct/Lumber/Slam, Lumber")) {
             // The original fire_action.xml has a point at (1.5,.312) plus the
             // supplied Attack Shape for damage, and that supplied shape for pushback.
             // Retail strips both regions, but retains this exact two-path binding.
-            var parameter=fire.getParameter("Attack Shape");Object rawShape=reference.ld().get("Attack Shape");
-            if(!(parameter instanceof com.threerings.config.Parameter.Direct direct)
-                ||!Arrays.equals(direct.paths,new String[]{"action.actions[0].region.shape.shapes[1]","action.actions[1].region.shape.shapes[0]"})
-                ||!(rawShape instanceof com.threerings.tudey.shape.config.ShapeConfig.TransformedShape)
-                ||action.kind()!=Kind.COMPOUND||action.children().size()!=2||action.children().get(0).kind()!=Kind.DAMAGE_REGION||action.children().get(1).kind()!=Kind.IMPULSE_REGION)throw new IOException("Native Lumber slam shape footprint changed: parameter="+parameter+", paths="+(parameter instanceof com.threerings.config.Parameter.Direct d?Arrays.toString(d.paths):"none")+", shape="+rawShape+", children="+action.children().stream().map(Action::kind).toList());
-            Object shape=argumentValue(rawShape);
-            var point=new DataValue("com.threerings.tudey.shape.config.ShapeConfig$TransformedShape",Map.of(
-                "shape",new DataValue("com.threerings.tudey.shape.config.ShapeConfig$Point",Map.of()),
-                "transform",new DataValue("com.threerings.math.Transform2D",Map.of("_translation",new DataValue("com.threerings.math.Vector2f",Map.of("x",1.5f,"y",.312f)),"_rotation",0f,"_scale",1f))));
-            var damageShape=new DataValue("com.threerings.tudey.shape.config.ShapeConfig$Compound",Map.of("shapes",new ListValue("com.threerings.tudey.shape.config.ShapeConfig",List.of(point,shape))));
-            var children=List.of(withShape(action.children().get(0),damageShape),withShape(action.children().get(1),shape));
-            action=new Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
+            var parameter = fire.getParameter("Attack Shape");
+            Object rawShape = reference.ld().get("Attack Shape");
+            if (!(parameter instanceof com.threerings.config.Parameter.Direct direct)
+                    || !Arrays.equals(direct.paths, new String[] {
+                        "action.actions[0].region.shape.shapes[1]", "action.actions[1].region.shape.shapes[0]"
+                    })
+                    || !(rawShape instanceof com.threerings.tudey.shape.config.ShapeConfig.TransformedShape)
+                    || action.kind() != Kind.COMPOUND
+                    || action.children().size() != 2
+                    || action.children().get(0).kind() != Kind.DAMAGE_REGION
+                    || action.children().get(1).kind() != Kind.IMPULSE_REGION)
+                throw new IOException("Native Lumber slam shape footprint changed: parameter=" + parameter + ", paths="
+                        + (parameter instanceof com.threerings.config.Parameter.Direct d
+                                ? Arrays.toString(d.paths)
+                                : "none")
+                        + ", shape=" + rawShape + ", children="
+                        + action.children().stream().map(Action::kind).toList());
+            Object shape = argumentValue(rawShape);
+            var point = new DataValue(
+                    "com.threerings.tudey.shape.config.ShapeConfig$TransformedShape",
+                    Map.of(
+                            "shape", new DataValue("com.threerings.tudey.shape.config.ShapeConfig$Point", Map.of()),
+                            "transform",
+                                    new DataValue(
+                                            "com.threerings.math.Transform2D",
+                                            Map.of(
+                                                    "_translation",
+                                                    new DataValue(
+                                                            "com.threerings.math.Vector2f",
+                                                            Map.of("x", 1.5f, "y", .312f)),
+                                                    "_rotation",
+                                                    0f,
+                                                    "_scale",
+                                                    1f))));
+            var damageShape = new DataValue(
+                    "com.threerings.tudey.shape.config.ShapeConfig$Compound",
+                    Map.of(
+                            "shapes",
+                            new ListValue("com.threerings.tudey.shape.config.ShapeConfig", List.of(point, shape))));
+            var children = List.of(
+                    withShape(action.children().get(0), damageShape),
+                    withShape(action.children().get(1), shape));
+            action = new Action(
+                    action.kind(),
+                    action.config(),
+                    action.actor(),
+                    action.targetType(),
+                    action.facingType(),
+                    action.collisionSourceType(),
+                    action.x(),
+                    action.y(),
+                    action.rotation(),
+                    action.rotationVariance(),
+                    action.relative(),
+                    action.count(),
+                    action.stepSize(),
+                    action.steps(),
+                    action.collisionMask(),
+                    action.stopOnFailure(),
+                    children,
+                    action.unsupportedType(),
+                    action.parameter(),
+                    action.values());
         }
         // SpawnRotatedActor.relative is stripped to the class default (false) in the
         // stock client. The original named base action explicitly has relative=true
@@ -474,311 +1296,785 @@ public final class FireCatalogExport {
         // its absolute sibling and all other actions retain their authored semantics.
         if (reference.getName().equals("Base/Spawn Relative Rotated Actor")) {
             if (fire.action.getClass() != ActionConfig.SpawnRotatedActor.class
-                    || action.kind() != Kind.EMIT_PROJECTILE || !action.targetType().equals("Source"))
+                    || action.kind() != Kind.EMIT_PROJECTILE
+                    || !action.targetType().equals("Source"))
                 throw new IOException("Verified relative fire action changed shape");
-            return new Action(action.kind(), action.config(), action.actor(), action.targetType(),
-                action.facingType(), action.collisionSourceType(), action.x(), action.y(), action.rotation(),
-                action.rotationVariance(), true, action.count(), action.stepSize(), action.steps(),
-                action.collisionMask(), action.stopOnFailure(), action.children(), action.unsupportedType(),
-                action.parameter(), action.values());
+            return new Action(
+                    action.kind(),
+                    action.config(),
+                    action.actor(),
+                    action.targetType(),
+                    action.facingType(),
+                    action.collisionSourceType(),
+                    action.x(),
+                    action.y(),
+                    action.rotation(),
+                    action.rotationVariance(),
+                    true,
+                    action.count(),
+                    action.stepSize(),
+                    action.steps(),
+                    action.collisionMask(),
+                    action.stopOnFailure(),
+                    action.children(),
+                    action.unsupportedType(),
+                    action.parameter(),
+                    action.values());
         }
         return action;
     }
-    private static Action withShape(Action action,Object shape){
-        var children=action.children().stream().map(a->withShape(a,shape)).toList();var config=action.config();
-        if(action.kind()==Kind.DAMAGE_REGION||action.kind()==Kind.IMPULSE_REGION){var arguments=new TreeMap<>(config.arguments());arguments.put("shape",shape);config=new StarterCatalog.Model(config.name(),arguments);}
-        return new Action(action.kind(),config,action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
+
+    private static Action withShape(Action action, Object shape) {
+        var children = action.children().stream().map(a -> withShape(a, shape)).toList();
+        var config = action.config();
+        if (action.kind() == Kind.DAMAGE_REGION || action.kind() == Kind.IMPULSE_REGION) {
+            var arguments = new TreeMap<>(config.arguments());
+            arguments.put("shape", shape);
+            config = new StarterCatalog.Model(config.name(), arguments);
+        }
+        return new Action(
+                action.kind(),
+                config,
+                action.actor(),
+                action.targetType(),
+                action.facingType(),
+                action.collisionSourceType(),
+                action.x(),
+                action.y(),
+                action.rotation(),
+                action.rotationVariance(),
+                action.relative(),
+                action.count(),
+                action.stepSize(),
+                action.steps(),
+                action.collisionMask(),
+                action.stopOnFailure(),
+                children,
+                action.unsupportedType(),
+                action.parameter(),
+                action.values());
     }
+
     private static Action unsupported(ActionConfig action) throws IOException {
-        String type=action.getClass().getName();
-        UNSUPPORTED.merge(type,1,Integer::sum);
-        return new Action(Kind.UNSUPPORTED,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(),type);
+        String type = action.getClass().getName();
+        UNSUPPORTED.merge(type, 1, Integer::sum);
+        return new Action(
+                Kind.UNSUPPORTED, null, null, "", "", "", 0, 0, 0, 0, false, 0, 0, 0, 0, false, List.of(), type);
     }
-    private static Object resolvedDamage(ConfigManager manager,DamageConfig damage)throws Exception{
-        if(damage instanceof DamageConfig.Compound compound){
-            var fields=new ArrayList<FieldValue>();var children=new ArrayList<Object>();for(var child:compound.damages)children.add(resolvedDamage(manager,child));
-            fields.add(new FieldValue("damages",DamageConfig[].class.getName(),new ListValue(DamageConfig.class.getName(),children)));
-            return new DataValue(DamageConfig.Compound.class.getName(),fields);
+
+    private static Object resolvedDamage(ConfigManager manager, DamageConfig damage) throws Exception {
+        if (damage instanceof DamageConfig.Compound compound) {
+            var fields = new ArrayList<FieldValue>();
+            var children = new ArrayList<Object>();
+            for (var child : compound.damages) children.add(resolvedDamage(manager, child));
+            fields.add(new FieldValue(
+                    "damages", DamageConfig[].class.getName(), new ListValue(DamageConfig.class.getName(), children)));
+            return new DataValue(DamageConfig.Compound.class.getName(), fields);
         }
-        if(damage instanceof DamageConfig.Status status&&status.statusCondition!=null){
-            var fields=new ArrayList<FieldValue>(((DataValue)argumentValue(damage)).fields());
-            var config=manager.a(StatusConditionConfig.class,status.statusCondition);
-            if(config!=null)fields.add(new FieldValue("statusData","java.lang.Object",FireCatalog.modelJson(SceneStatusExport.statusData(config)).arguments().get("data")));
-            return new DataValue(damage.getClass().getName(),fields);
+        if (damage instanceof DamageConfig.Status status && status.statusCondition != null) {
+            var fields = new ArrayList<FieldValue>(((DataValue) argumentValue(damage)).fields());
+            var config = manager.a(StatusConditionConfig.class, status.statusCondition);
+            if (config != null)
+                fields.add(new FieldValue(
+                        "statusData",
+                        "java.lang.Object",
+                        FireCatalog.modelJson(SceneStatusExport.statusData(config))
+                                .arguments()
+                                .get("data")));
+            return new DataValue(damage.getClass().getName(), fields);
         }
-        if(!(damage instanceof DamageConfig.DepthScale scaled))return argumentValue(damage);
-        var config=manager.a(DepthScaleConfig.class,scaled.depthScale);if(config==null)throw new IOException("Unresolved damage scale "+scaled.depthScale);
-        float amount=config.a(manager,0,damageRarity,com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM);
-        if(scaled instanceof DamageConfig.DepthScaleMulti multi){
-            var split=manager.a(DepthScaleConfig.class,multi.splitDepth);
-            float fraction=split==null?.5f:split.a(manager,0,damageRarity,com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM),offset=fraction>0&&fraction<1?.02f:0;
-            return new DataValue(DamageConfig.Compound.class.getName(),List.of(new FieldValue("damages",DamageConfig[].class.getName(),new ListValue(DamageConfig.class.getName(),List.of(
-                flatDamage(scaled,scaled.type,com.threerings.projectx.dungeon.util.DamageSummary.v(amount,Math.min(1,fraction+offset))),
-                flatDamage(scaled,multi.type2,com.threerings.projectx.dungeon.util.DamageSummary.v(amount,Math.min(1,1-fraction+offset))))))));
+        if (!(damage instanceof DamageConfig.DepthScale scaled)) return argumentValue(damage);
+        var config = manager.a(DepthScaleConfig.class, scaled.depthScale);
+        if (config == null) throw new IOException("Unresolved damage scale " + scaled.depthScale);
+        float amount =
+                config.a(manager, 0, damageRarity, com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM);
+        if (scaled instanceof DamageConfig.DepthScaleMulti multi) {
+            var split = manager.a(DepthScaleConfig.class, multi.splitDepth);
+            float
+                    fraction =
+                            split == null
+                                    ? .5f
+                                    : split.a(
+                                            manager,
+                                            0,
+                                            damageRarity,
+                                            com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM),
+                    offset = fraction > 0 && fraction < 1 ? .02f : 0;
+            return new DataValue(
+                    DamageConfig.Compound.class.getName(),
+                    List.of(new FieldValue(
+                            "damages",
+                            DamageConfig[].class.getName(),
+                            new ListValue(
+                                    DamageConfig.class.getName(),
+                                    List.of(
+                                            flatDamage(
+                                                    scaled,
+                                                    scaled.type,
+                                                    com.threerings.projectx.dungeon.util.DamageSummary.v(
+                                                            amount, Math.min(1, fraction + offset))),
+                                            flatDamage(
+                                                    scaled,
+                                                    multi.type2,
+                                                    com.threerings.projectx.dungeon.util.DamageSummary.v(
+                                                            amount, Math.min(1, 1 - fraction + offset))))))));
         }
-        return flatDamage(scaled,scaled.type,amount);
+        return flatDamage(scaled, scaled.type, amount);
     }
-    private static Object flatDamage(DamageConfig.DepthScale source,com.threerings.projectx.dungeon.util.DamageSummary.DamageType type,float amount)throws IOException{
-        DamageConfig.Base result=switch(type){case NORMAL->new DamageConfig.Normal();case PIERCING->new DamageConfig.Piercing();case ELEMENTAL->new DamageConfig.Elemental();case SHADOW->new DamageConfig.Shadow();case UNBLOCKABLE->new DamageConfig.Unblockable();};
-        result.amount=amount;result.flags=source.flags;result.shouldReact=source.shouldReact;result.majorReact=source.majorReact;result.limiter=source.limiter;
+
+    private static Object flatDamage(
+            DamageConfig.DepthScale source,
+            com.threerings.projectx.dungeon.util.DamageSummary.DamageType type,
+            float amount)
+            throws IOException {
+        DamageConfig.Base result = switch (type) {
+            case NORMAL -> new DamageConfig.Normal();
+            case PIERCING -> new DamageConfig.Piercing();
+            case ELEMENTAL -> new DamageConfig.Elemental();
+            case SHADOW -> new DamageConfig.Shadow();
+            case UNBLOCKABLE -> new DamageConfig.Unblockable();
+        };
+        result.amount = amount;
+        result.flags = source.flags;
+        result.shouldReact = source.shouldReact;
+        result.majorReact = source.majorReact;
+        result.limiter = source.limiter;
         return argumentValue(result);
     }
     /** Scene-owned entity graphs cannot embed recursive respawn actors in projectile metadata. */
-    static Action readSceneAction(ConfigManager manager,ActionConfig action)throws Exception {
-        boolean previous=sceneActors;sceneActors=true;
-        try{return readAction(manager,action);}finally{sceneActors=previous;if(!previous)SCENE_ACTORS.clear();}
-    }
-    private static ActorSpec actor(ConfigManager manager,ConfigReference<ActorConfig> reference,ActorConfig.Original actor)throws Exception {
-        if(!sceneActors)return actorBody(manager,reference,actor);
-        if(SCENE_ACTORS.size()>=16||!SCENE_ACTORS.add(reference.getName()))throw new IOException("Recursive or oversized scene actor graph: "+reference.getName());
-        try{return actorBody(manager,reference,actor);}finally{SCENE_ACTORS.remove(reference.getName());}
-    }
-    private static ActorSpec actorBody(ConfigManager manager, ConfigReference<ActorConfig> reference, ActorConfig.Original actor) throws Exception {
-        String type; int fuse=0; float speed=0,maxStep=-1,ox=0,oy=0,height=0;Action detonation=null; OrbitSpec orbit=null;
-        String refName=reference.getName();
-        if (isNamedSubtype(actor.getClass(), "com.threerings.projectx.dungeon.config.DungeonActorConfig$CompoundOrbitalBullet")) {
-            type = "COMPOUND_ORBITAL_BULLET"; orbit = orbital(actor, true); fuse = orbit.lifespan(); speed = orbit.angularSpeed(); height = floatField(actor,"height");
+    static Action readSceneAction(ConfigManager manager, ActionConfig action) throws Exception {
+        boolean previous = sceneActors;
+        sceneActors = true;
+        try {
+            return readAction(manager, action);
+        } finally {
+            sceneActors = previous;
+            if (!previous) SCENE_ACTORS.clear();
         }
-        else if (isNamedSubtype(actor.getClass(), "com.threerings.projectx.dungeon.config.DungeonActorConfig$OrbitalBullet")) {
-            type = "ORBITAL_BULLET"; orbit = orbital(actor, false); fuse = orbit.lifespan(); speed = orbit.angularSpeed(); height = floatField(actor,"height");
+    }
+
+    private static ActorSpec actor(
+            ConfigManager manager, ConfigReference<ActorConfig> reference, ActorConfig.Original actor)
+            throws Exception {
+        if (!sceneActors) return actorBody(manager, reference, actor);
+        if (SCENE_ACTORS.size() >= 16 || !SCENE_ACTORS.add(reference.getName()))
+            throw new IOException("Recursive or oversized scene actor graph: " + reference.getName());
+        try {
+            return actorBody(manager, reference, actor);
+        } finally {
+            SCENE_ACTORS.remove(reference.getName());
         }
-        else if(actor instanceof DungeonActorConfig.Orbital o){type="ORBITAL";fuse=600000;speed=o.speed;height=o.height;orbit=new OrbitSpec(o.orbitRadius,o.speed,o.startingRotation,0,0,600000,o.follow.name(),false,null,null,null);}
-        else if(actor instanceof ActorConfig.Agent agent&&refName.startsWith("Bullet/")){
+    }
+
+    private static ActorSpec actorBody(
+            ConfigManager manager, ConfigReference<ActorConfig> reference, ActorConfig.Original actor)
+            throws Exception {
+        String type;
+        int fuse = 0;
+        float speed = 0, maxStep = -1, ox = 0, oy = 0, height = 0;
+        Action detonation = null;
+        OrbitSpec orbit = null;
+        String refName = reference.getName();
+        if (isNamedSubtype(
+                actor.getClass(), "com.threerings.projectx.dungeon.config.DungeonActorConfig$CompoundOrbitalBullet")) {
+            type = "COMPOUND_ORBITAL_BULLET";
+            orbit = orbital(actor, true);
+            fuse = orbit.lifespan();
+            speed = orbit.angularSpeed();
+            height = floatField(actor, "height");
+        } else if (isNamedSubtype(
+                actor.getClass(), "com.threerings.projectx.dungeon.config.DungeonActorConfig$OrbitalBullet")) {
+            type = "ORBITAL_BULLET";
+            orbit = orbital(actor, false);
+            fuse = orbit.lifespan();
+            speed = orbit.angularSpeed();
+            height = floatField(actor, "height");
+        } else if (actor instanceof DungeonActorConfig.Orbital o) {
+            type = "ORBITAL";
+            fuse = 600000;
+            speed = o.speed;
+            height = o.height;
+            orbit = new OrbitSpec(
+                    o.orbitRadius, o.speed, o.startingRotation, 0, 0, 600000, o.follow.name(), false, null, null, null);
+        } else if (actor instanceof ActorConfig.Agent agent && refName.startsWith("Bullet/")) {
             // Legacy mixer carrier: retained speed/startMoving/startup; cleanup time was stripped.
             // The 1700 ms bound is a reconstruction from its replacement disk family, not a live capture.
-            type="AGENT";fuse=1700;speed=agent.speed;maxStep=.1f;
+            type = "AGENT";
+            fuse = 1700;
+            speed = agent.speed;
+            maxStep = .1f;
+        } else if (actor instanceof DungeonActorConfig.Laser laser) {
+            type = "LASER";
+            fuse = laser.duration;
+            speed = laser.length;
+        } else if (refName.startsWith("Bullet/Pet/") && actor.getClass() == ActorConfig.Original.class) {
+            type = "ACTOR";
+            fuse = 600000;
         }
-        else if(actor instanceof DungeonActorConfig.Laser laser){type="LASER";fuse=laser.duration;speed=laser.length;}
-        else if(refName.startsWith("Bullet/Pet/")&&actor.getClass()==ActorConfig.Original.class){type="ACTOR";fuse=600000;}
         // Tutorial Ironwood Giant slam telegraph: retail strips its Timer handler's interval and
         // removal action. Live wire removes each marker 1306-1406 ms after it appears (three
         // samples); the bracket midpoint is INTERIM until the server timer is recovered.
-        else if(refName.equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Parts/Warning")&&actor.getClass()==ActorConfig.Original.class){type="ACTOR";fuse=1356;}
-        else if(actor.getClass()==ActorConfig.Original.class&&inertActor(manager,actor)){type="ACTOR";}
-        else if(actor instanceof DungeonActorConfig.Bullet bullet){type="BULLET";fuse=bullet.fuse;speed=bullet.speed;ox=bullet.offset==null?0:bullet.offset.x;oy=bullet.offset==null?0:bullet.offset.y;height=bullet.height;if(NESTED_ACTORS.add(reference)){try{detonation=readAction(manager,bullet.detonationAction);}finally{NESTED_ACTORS.remove(reference);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
-        else if(actor instanceof DungeonActorConfig.Bomb bomb){type="BOMB";fuse=bomb.fuse;if(NESTED_ACTORS.add(reference)){try{detonation=readAction(manager,bomb.detonationAction);}finally{NESTED_ACTORS.remove(reference);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
-        else {type=actor.getClass().getName();UNSUPPORTED.merge("actor:"+type,1,Integer::sum);}
+        else if (refName.equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Parts/Warning")
+                && actor.getClass() == ActorConfig.Original.class) {
+            type = "ACTOR";
+            fuse = 1356;
+        } else if (actor.getClass() == ActorConfig.Original.class && inertActor(manager, actor)) {
+            type = "ACTOR";
+        } else if (actor instanceof DungeonActorConfig.Bullet bullet) {
+            type = "BULLET";
+            fuse = bullet.fuse;
+            speed = bullet.speed;
+            ox = bullet.offset == null ? 0 : bullet.offset.x;
+            oy = bullet.offset == null ? 0 : bullet.offset.y;
+            height = bullet.height;
+            if (NESTED_ACTORS.add(reference)) {
+                try {
+                    detonation = readAction(manager, bullet.detonationAction);
+                } finally {
+                    NESTED_ACTORS.remove(reference);
+                }
+            } else UNSUPPORTED.merge("recursive-actor-detonation", 1, Integer::sum);
+        } else if (actor instanceof DungeonActorConfig.Bomb bomb) {
+            type = "BOMB";
+            fuse = bomb.fuse;
+            if (NESTED_ACTORS.add(reference)) {
+                try {
+                    detonation = readAction(manager, bomb.detonationAction);
+                } finally {
+                    NESTED_ACTORS.remove(reference);
+                }
+            } else UNSUPPORTED.merge("recursive-actor-detonation", 1, Integer::sum);
+        } else {
+            type = actor.getClass().getName();
+            UNSUPPORTED.merge("actor:" + type, 1, Integer::sum);
+        }
         // The distance checker retains its planting action, but its server-only guard is
         // an empty Tagged placeholder in retail. Keep the retained payload on termination;
         // exact retail collision/planting gating still requires an official capture.
-        if(refName.equals("Bomb/Parts/Shard/Shard Base (Distance Check)")&&actor instanceof DungeonActorConfig.Bullet bullet
-            &&bullet.detonationAction instanceof ActionConfig.Conditional gate&&gate.condition instanceof ConditionConfig.Tagged tag
-            &&tag.tag.isEmpty()&&gate.elseAction==null)detonation=readAction(manager,gate.action);
-        com.threerings.tudey.data.actor.Actor nativeActor=actor.a(reference,0,0,new Vector2f(),0f);
+        if (refName.equals("Bomb/Parts/Shard/Shard Base (Distance Check)")
+                && actor instanceof DungeonActorConfig.Bullet bullet
+                && bullet.detonationAction instanceof ActionConfig.Conditional gate
+                && gate.condition instanceof ConditionConfig.Tagged tag
+                && tag.tag.isEmpty()
+                && gate.elseAction == null) detonation = readAction(manager, gate.action);
+        com.threerings.tudey.data.actor.Actor nativeActor = actor.a(reference, 0, 0, new Vector2f(), 0f);
         nativeActor.init(manager);
-        int flags=intField(nativeActor,"_flags");
-        if(nativeActor instanceof com.threerings.tudey.data.actor.Mobile)maxStep=floatField(nativeActor,"_maxStep");
-        var timers=new ArrayList<ActorTimer>();var shutdown=new ArrayList<Action>();
-        var startupActions=new ArrayList<Action>();Action activation=null;ActorSpec attachment=null;
-        boolean catalyst=refName.startsWith("Bullet/Handgun/Catalyzer/");
-        for(var handler:actor.handlers){
-            if(handler instanceof HandlerConfig.Startup start)startupActions.add(readAction(manager,start.action));
-            if(catalyst&&type.equals("ORBITAL")&&handler instanceof HandlerConfig.SignalStart signal)activation=readAction(manager,signal.action);
+        int flags = intField(nativeActor, "_flags");
+        if (nativeActor instanceof com.threerings.tudey.data.actor.Mobile)
+            maxStep = floatField(nativeActor, "_maxStep");
+        var timers = new ArrayList<ActorTimer>();
+        var shutdown = new ArrayList<Action>();
+        var startupActions = new ArrayList<Action>();
+        Action activation = null;
+        ActorSpec attachment = null;
+        boolean catalyst = refName.startsWith("Bullet/Handgun/Catalyzer/");
+        for (var handler : actor.handlers) {
+            if (handler instanceof HandlerConfig.Startup start) startupActions.add(readAction(manager, start.action));
+            if (catalyst && type.equals("ORBITAL") && handler instanceof HandlerConfig.SignalStart signal)
+                activation = readAction(manager, signal.action);
         }
-        if(catalyst&&type.equals("ORBITAL")){
+        if (catalyst && type.equals("ORBITAL")) {
             // Archived Catalyzer combat description: attached tags expire after 20 seconds.
-            fuse=20000;activation=activationShape(activation,1.5f);
-        }else if(type.equals("ORBITAL")&&refName.startsWith("Bullet/Handgun/Parts/Mixer/"))fuse=1700;
-        if(catalyst&&actor instanceof DungeonActorConfig.Bullet bullet){
-            var orbital=statusAttachment(bullet.detonationAction);
-            if(orbital!=null){var definition=manager.a(ActorConfig.class,orbital);
-                if(definition==null)throw new IOException("Missing retained Catalyzer orbital");
-                attachment=actor(manager,orbital,definition.al(manager));
+            fuse = 20000;
+            activation = activationShape(activation, 1.5f);
+        } else if (type.equals("ORBITAL") && refName.startsWith("Bullet/Handgun/Parts/Mixer/")) fuse = 1700;
+        if (catalyst && actor instanceof DungeonActorConfig.Bullet bullet) {
+            var orbital = statusAttachment(bullet.detonationAction);
+            if (orbital != null) {
+                var definition = manager.a(ActorConfig.class, orbital);
+                if (definition == null) throw new IOException("Missing retained Catalyzer orbital");
+                attachment = actor(manager, orbital, definition.al(manager));
             }
         }
-        if(refName.equals("Bullet/Monster/Mecha Zombie Beam")){
+        if (refName.equals("Bullet/Monster/Mecha Zombie Beam")) {
             // The retained carrier lays damaging trail bombs; it has no impact damage.
             // Retail strips the Timer's interval to 1000 ms, beyond its 450 ms fuse.
             // Capture-calibrated delivery: first trail on the next 50 ms scene tick,
             // then one per tick until collision/fuse. Archive family-live-behaviour.json
             // records trail spawns at +50 ms and throughout the carrier's lifetime.
             // This cadence is a reconstruction, not recovered original timing.
-            if(!(actor instanceof DungeonActorConfig.Bullet)||fuse!=450||speed!=16||actor.handlers.length!=1
-                ||!(actor.handlers[0] instanceof HandlerConfig.Timer timer)||timer.interval!=1||timer.offset!=0||timer.limit!=0
-                ||!(timer.action instanceof ActionConfig.SpawnActor spawn)||spawn.actor==null
-                ||!spawn.actor.getName().equals("Bullet/Monster/Parts/Mecha Zombie Beam Trail"))throw new IOException("Mecha beam stripped timer footprint changed");
-            var trail=new ActionConfig.SpawnActor();trail.location=spawn.location;trail.actor=new ConfigReference<>(spawn.actor.getName());trail.actor.ld().putAll(spawn.actor.ld());
-            for(String key:List.of("Color","Damage (Status)","Signal (Status)"))if(reference.ld().containsKey(key))trail.actor.ld().put(key,reference.ld().get(key));
-            timers.add(new ActorTimer(50,50,9,readAction(manager,trail),null));
+            if (!(actor instanceof DungeonActorConfig.Bullet)
+                    || fuse != 450
+                    || speed != 16
+                    || actor.handlers.length != 1
+                    || !(actor.handlers[0] instanceof HandlerConfig.Timer timer)
+                    || timer.interval != 1
+                    || timer.offset != 0
+                    || timer.limit != 0
+                    || !(timer.action instanceof ActionConfig.SpawnActor spawn)
+                    || spawn.actor == null
+                    || !spawn.actor.getName().equals("Bullet/Monster/Parts/Mecha Zombie Beam Trail"))
+                throw new IOException("Mecha beam stripped timer footprint changed");
+            var trail = new ActionConfig.SpawnActor();
+            trail.location = spawn.location;
+            trail.actor = new ConfigReference<>(spawn.actor.getName());
+            trail.actor.ld().putAll(spawn.actor.ld());
+            for (String key : List.of("Color", "Damage (Status)", "Signal (Status)"))
+                if (reference.ld().containsKey(key))
+                    trail.actor.ld().put(key, reference.ld().get(key));
+            timers.add(new ActorTimer(50, 50, 9, readAction(manager, trail), null));
         }
-        for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Shutdown ended){
-            Action action=readAction(manager,ended.action);
-            if(type.equals("ORBITAL_BULLET")||type.equals("COMPOUND_ORBITAL_BULLET"))action=orbitalShutdown(action);
-            if(action!=null)shutdown.add(action);
-        }
-        if(refName.equals("Bullet/Sword/Burst Bullet")||refName.equals("Bullet/Sword/Burst Bullet (Obsidian)")) {
+        for (var handler : actor.handlers)
+            if (handler instanceof HandlerConfig.Shutdown ended) {
+                Action action = readAction(manager, ended.action);
+                if (type.equals("ORBITAL_BULLET") || type.equals("COMPOUND_ORBITAL_BULLET"))
+                    action = orbitalShutdown(action);
+                if (action != null) shutdown.add(action);
+            }
+        if (refName.equals("Bullet/Sword/Burst Bullet") || refName.equals("Bullet/Sword/Burst Bullet (Obsidian)")) {
             // The stock Timer retains the trail reference/arguments but strips its
             // interval and counter. Local official captures contain five trails
             // at +123,+224,+324,+424,+526 ms; the authored Burst Count is five.
-            if(actor.handlers.length!=3||!(actor.handlers[1] instanceof HandlerConfig.Timer timer)
-                ||!(timer.action instanceof ActionConfig.Conditional conditional)
-                ||!(conditional.action instanceof ActionConfig.Compound compound)||compound.actions.length!=1
-                ||!(compound.actions[0] instanceof ActionConfig.SpawnActor spawn)||spawn.actor==null)
-                throw new IOException("Burst bullet timer layout changed");
-            Object count=reference.ld().get("Burst Count");
-            if(count!=null){int bursts=Integer.parseInt(count.toString());
-                if(bursts<1||bursts>32)throw new IOException("Invalid burst count");
+            if (actor.handlers.length != 3
+                    || !(actor.handlers[1] instanceof HandlerConfig.Timer timer)
+                    || !(timer.action instanceof ActionConfig.Conditional conditional)
+                    || !(conditional.action instanceof ActionConfig.Compound compound)
+                    || compound.actions.length != 1
+                    || !(compound.actions[0] instanceof ActionConfig.SpawnActor spawn)
+                    || spawn.actor == null) throw new IOException("Burst bullet timer layout changed");
+            Object count = reference.ld().get("Burst Count");
+            if (count != null) {
+                int bursts = Integer.parseInt(count.toString());
+                if (bursts < 1 || bursts > 32) throw new IOException("Invalid burst count");
                 // Retail's parameter paths still address stripped server nodes.
                 // Captures show the carrier's Color/Damage/FX passed verbatim to
                 // each trail, with Burst Scale renamed Scale. Resolve that child
                 // afresh so it cannot retain the prototype's monster damage.
-                var trail=new ActionConfig.SpawnActor();trail.location=spawn.location;
-                trail.actor=new ConfigReference<>(spawn.actor.getName());trail.actor.ld().putAll(spawn.actor.ld());
-                for(String key:List.of("Color","Damage","Extra FX","Ground Scar"))
-                    if(reference.ld().containsKey(key))trail.actor.ld().put(key,reference.ld().get(key));
-                if(reference.ld().containsKey("Burst Scale"))trail.actor.ld().put("Scale",reference.ld().get("Burst Scale"));
-                timers.add(new ActorTimer(100,100,bursts,readAction(manager,trail),destroySource()));}
-        } else if(refName.startsWith("Bullet/Handgun/Pulsar/")&&!refName.contains("(Charged)")) {
-            for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Timer timer
-                &&timer.action instanceof ActionConfig.Compound compound
-                &&Arrays.stream(compound.actions).anyMatch(a->a instanceof ActionConfig.SpawnActor spawn
-                    &&spawn.actor!=null&&spawn.actor.getName().equals("Bullet/Handgun/Pulsar/Parts/Base Stage2"))) {
-                // Maturation replaces the first stage; never repeat a replacement
-                // every tick. Stage2's fuse, visuals and damage remain stock data.
-                timers.add(new ActorTimer(1000,0,1,readAction(manager,timer.action),destroySource()));
+                var trail = new ActionConfig.SpawnActor();
+                trail.location = spawn.location;
+                trail.actor = new ConfigReference<>(spawn.actor.getName());
+                trail.actor.ld().putAll(spawn.actor.ld());
+                for (String key : List.of("Color", "Damage", "Extra FX", "Ground Scar"))
+                    if (reference.ld().containsKey(key))
+                        trail.actor.ld().put(key, reference.ld().get(key));
+                if (reference.ld().containsKey("Burst Scale"))
+                    trail.actor.ld().put("Scale", reference.ld().get("Burst Scale"));
+                timers.add(new ActorTimer(100, 100, bursts, readAction(manager, trail), destroySource()));
             }
+        } else if (refName.startsWith("Bullet/Handgun/Pulsar/") && !refName.contains("(Charged)")) {
+            for (var handler : actor.handlers)
+                if (handler instanceof HandlerConfig.Timer timer
+                        && timer.action instanceof ActionConfig.Compound compound
+                        && Arrays.stream(compound.actions)
+                                .anyMatch(a -> a instanceof ActionConfig.SpawnActor spawn
+                                        && spawn.actor != null
+                                        && spawn.actor.getName().equals("Bullet/Handgun/Pulsar/Parts/Base Stage2"))) {
+                    // Maturation replaces the first stage; never repeat a replacement
+                    // every tick. Stage2's fuse, visuals and damage remain stock data.
+                    timers.add(new ActorTimer(1000, 0, 1, readAction(manager, timer.action), destroySource()));
+                }
         }
-        if(refName.startsWith("Bullet/Handgun/Parts/Alchemical/")&&refName.endsWith("/Secondary")
-            &&detonation!=null&&detonation.kind()==Kind.COMPOUND){
+        if (refName.startsWith("Bullet/Handgun/Parts/Alchemical/")
+                && refName.endsWith("/Secondary")
+                && detonation != null
+                && detonation.kind() == Kind.COMPOUND) {
             // The local official Voltech capture has twenty secondary -> tertiary
             // bounces in the parent's +90..180 degree sector, rather than the
             // stripped SpawnRotatedActor default of absolute east. This bounded
             // fan is a capture reconstruction; charged fan angles remain unknown.
-            var children=new ArrayList<Action>();
-            for(var child:detonation.children()){
-                if(child.kind()==Kind.EMIT_PROJECTILE&&child.actor().config().name().endsWith("/Tirtiary"))
-                    child=new Action(child.kind(),child.config(),child.actor(),child.targetType(),child.facingType(),child.collisionSourceType(),child.x(),child.y(),(float)(Math.PI*.75),(float)(Math.PI*.5),true,child.count(),child.stepSize(),child.steps(),child.collisionMask(),child.stopOnFailure(),child.children(),child.unsupportedType(),child.parameter(),child.values());
+            var children = new ArrayList<Action>();
+            for (var child : detonation.children()) {
+                if (child.kind() == Kind.EMIT_PROJECTILE
+                        && child.actor().config().name().endsWith("/Tirtiary"))
+                    child = new Action(
+                            child.kind(),
+                            child.config(),
+                            child.actor(),
+                            child.targetType(),
+                            child.facingType(),
+                            child.collisionSourceType(),
+                            child.x(),
+                            child.y(),
+                            (float) (Math.PI * .75),
+                            (float) (Math.PI * .5),
+                            true,
+                            child.count(),
+                            child.stepSize(),
+                            child.steps(),
+                            child.collisionMask(),
+                            child.stopOnFailure(),
+                            child.children(),
+                            child.unsupportedType(),
+                            child.parameter(),
+                            child.values());
                 children.add(child);
             }
-            detonation=new Action(detonation.kind(),detonation.config(),detonation.actor(),detonation.targetType(),detonation.facingType(),detonation.collisionSourceType(),detonation.x(),detonation.y(),detonation.rotation(),detonation.rotationVariance(),detonation.relative(),detonation.count(),detonation.stepSize(),detonation.steps(),detonation.collisionMask(),detonation.stopOnFailure(),children,detonation.unsupportedType(),detonation.parameter(),detonation.values());
+            detonation = new Action(
+                    detonation.kind(),
+                    detonation.config(),
+                    detonation.actor(),
+                    detonation.targetType(),
+                    detonation.facingType(),
+                    detonation.collisionSourceType(),
+                    detonation.x(),
+                    detonation.y(),
+                    detonation.rotation(),
+                    detonation.rotationVariance(),
+                    detonation.relative(),
+                    detonation.count(),
+                    detonation.stepSize(),
+                    detonation.steps(),
+                    detonation.collisionMask(),
+                    detonation.stopOnFailure(),
+                    children,
+                    detonation.unsupportedType(),
+                    detonation.parameter(),
+                    detonation.values());
         }
-        if(refName.startsWith("Bullet/Pet/")){
-            if(actor instanceof DungeonActorConfig.Laser laser){
-                var action=readAction(manager,laser.damageAction);int interval=Math.max(1,laser.damageInterval),limit=Math.max(1,Math.min(128,(fuse-laser.warmup+interval-1)/interval));
-                timers.add(new ActorTimer(laser.warmup,interval,limit,action,null));
+        if (refName.startsWith("Bullet/Pet/")) {
+            if (actor instanceof DungeonActorConfig.Laser laser) {
+                var action = readAction(manager, laser.damageAction);
+                int interval = Math.max(1, laser.damageInterval),
+                        limit = Math.max(1, Math.min(128, (fuse - laser.warmup + interval - 1) / interval));
+                timers.add(new ActorTimer(laser.warmup, interval, limit, action, null));
             }
-            for(var handler:actor.handlers){
-                if(handler instanceof HandlerConfig.Startup start){var a=readAction(manager,start.action);if(a!=null)timers.add(new ActorTimer(0,0,1,a,null));}
-                if(handler instanceof HandlerConfig.Timer timer){
-                    var a=readAction(manager,timer.action);if(a==null)continue;
-                    int interval=Math.max(1,(int)(timer.interval*1000)),delay=Math.max(0,interval+(int)(timer.offset*1000));
-                    if(a.kind()==Kind.DESTROY_SOURCE){fuse=Math.min(fuse,delay);continue;}
-                    timers.add(new ActorTimer(delay,interval,Math.min(128,timer.limit==0?128:timer.limit),a,null));
+            for (var handler : actor.handlers) {
+                if (handler instanceof HandlerConfig.Startup start) {
+                    var a = readAction(manager, start.action);
+                    if (a != null) timers.add(new ActorTimer(0, 0, 1, a, null));
+                }
+                if (handler instanceof HandlerConfig.Timer timer) {
+                    var a = readAction(manager, timer.action);
+                    if (a == null) continue;
+                    int interval = Math.max(1, (int) (timer.interval * 1000)),
+                            delay = Math.max(0, interval + (int) (timer.offset * 1000));
+                    if (a.kind() == Kind.DESTROY_SOURCE) {
+                        fuse = Math.min(fuse, delay);
+                        continue;
+                    }
+                    timers.add(new ActorTimer(
+                            delay, interval, Math.min(128, timer.limit == 0 ? 128 : timer.limit), a, null));
                 }
             }
         }
-        boolean shardBomb=refName.startsWith("Bomb/Parts/Shard/Bomb (Timer)");
-        if(shardBomb){
+        boolean shardBomb = refName.startsWith("Bomb/Parts/Shard/Bomb (Timer)");
+        if (shardBomb) {
             // An explosive's retained graph is a single detonation, not a repeating pulse.
             // The client bomb wrapper retains its fuse even though Timer fields are stripped.
-            Object visualFuse=actor.sprite.model==null?null:actor.sprite.model.ld().get("Fuse");
-            if(!(visualFuse instanceof Float seconds)||!Float.isFinite(seconds)||seconds<=0)throw new IOException("Shard bomb has no visual fuse");
-            for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Timer timer)
-                timers.add(new ActorTimer((int)(seconds*1000),0,1,shardFan(readAction(manager,bindShardBranches(timer.action,reference))),destroySource()));
+            Object visualFuse =
+                    actor.sprite.model == null ? null : actor.sprite.model.ld().get("Fuse");
+            if (!(visualFuse instanceof Float seconds) || !Float.isFinite(seconds) || seconds <= 0)
+                throw new IOException("Shard bomb has no visual fuse");
+            for (var handler : actor.handlers)
+                if (handler instanceof HandlerConfig.Timer timer)
+                    timers.add(new ActorTimer(
+                            (int) (seconds * 1000),
+                            0,
+                            1,
+                            shardFan(readAction(manager, bindShardBranches(timer.action, reference))),
+                            destroySource()));
         }
-        if(refName.equals("Bomb/Parts/Shard/Shard Base (Timer)")){
+        if (refName.equals("Bomb/Parts/Shard/Shard Base (Timer)")) {
             // Its signal trigger/timer is stripped. End the retained visual and damage
             // together at the authored model lifespan rather than leave an invisible bomb.
-            Object lifespan=actor.sprite.model==null?null:actor.sprite.model.ld().get("Lifespan");
-            if(!(lifespan instanceof Float seconds)||!Float.isFinite(seconds)||seconds<=0)throw new IOException("Shard has no visual lifespan");
-            for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Signal signal)
-                timers.add(new ActorTimer((int)(seconds*1000),0,1,readAction(manager,signal.action),destroySource()));
+            Object lifespan =
+                    actor.sprite.model == null ? null : actor.sprite.model.ld().get("Lifespan");
+            if (!(lifespan instanceof Float seconds) || !Float.isFinite(seconds) || seconds <= 0)
+                throw new IOException("Shard has no visual lifespan");
+            for (var handler : actor.handlers)
+                if (handler instanceof HandlerConfig.Signal signal)
+                    timers.add(new ActorTimer(
+                            (int) (seconds * 1000), 0, 1, readAction(manager, signal.action), destroySource()));
         }
-        if(!shardBomb&&!refName.equals("Bomb/Parts/Shard/Shard Base (Timer)")&&!refName.startsWith("Bullet/Pet/"))for(var handler:actor.handlers){
-            // Piercing charged bullets exclude monsters from their blocking mask.
-            // Their intersection handler, rather than detonation, deals the hits.
-            if(handler instanceof HandlerConfig.BaseIntersection intersection){
-                Action hit=intersectionDamage(readAction(manager,intersection.action));
-                if(hit!=null){int interval=Math.max(16,(fuse+126)/127);
-                    timers.add(new ActorTimer(0,interval,Math.min(128,1+(fuse+interval-1)/interval),hit,null));}
-            }
-            if(handler instanceof HandlerConfig.Timer timer&& !refName.equals("Bullet/Sword/Burst Bullet")
-                && !refName.equals("Bullet/Sword/Burst Bullet (Obsidian)")&&!refName.startsWith("Bullet/Handgun/Pulsar/")){
-                Action action=readAction(manager,timer.action);
-                // The chemical bomb clouds keep their pulse damage action, but the
-                // retail client strips the authored region radius from that handler.
-                // Recover it from the actor's existing Radius parameter just as we
-                // do for the one-shot detonation region below.
-                int handlerIndex=Arrays.asList(actor.handlers).indexOf(handler);
-                action=restoreHandlerDamageShape(manager,reference,handlerIndex,action);
-                if(action!=null&&containsDamage(action)){
-                    int interval=Math.max(1,(int)(timer.interval*1000)),delay=Math.max(0,interval+(int)(timer.offset*1000));
-                    if(refName.equals("Bullet/Sword/Spur (Charged)")){
-                        // Archived Spur/Winmillion combat description: the short
-                        // piercing charge projectile can hit up to three times.
-                        timers.add(new ActorTimer(0,Math.max(1,fuse/3),3,action,null));
-                    }else if(type.equals("BULLET")&&speed>0&&(actor.collisionMask&8)==0&&delay>=fuse){
-                        // Stripped timers can outlive their moving blade. Its
-                        // surviving damage graph is a piercing contact attack.
-                        int step=Math.max(16,(fuse+126)/127);
-                        timers.add(new ActorTimer(0,step,Math.min(128,1+(fuse+step-1)/step),intersectionDamage(action),null));
-                    }else timers.add(new ActorTimer(delay,interval,Math.min(128,timer.limit==0?128:timer.limit),action,null));
+        if (!shardBomb && !refName.equals("Bomb/Parts/Shard/Shard Base (Timer)") && !refName.startsWith("Bullet/Pet/"))
+            for (var handler : actor.handlers) {
+                // Piercing charged bullets exclude monsters from their blocking mask.
+                // Their intersection handler, rather than detonation, deals the hits.
+                if (handler instanceof HandlerConfig.BaseIntersection intersection) {
+                    Action hit = intersectionDamage(readAction(manager, intersection.action));
+                    if (hit != null) {
+                        int interval = Math.max(16, (fuse + 126) / 127);
+                        timers.add(new ActorTimer(
+                                0, interval, Math.min(128, 1 + (fuse + interval - 1) / interval), hit, null));
+                    }
+                }
+                if (handler instanceof HandlerConfig.Timer timer
+                        && !refName.equals("Bullet/Sword/Burst Bullet")
+                        && !refName.equals("Bullet/Sword/Burst Bullet (Obsidian)")
+                        && !refName.startsWith("Bullet/Handgun/Pulsar/")) {
+                    Action action = readAction(manager, timer.action);
+                    // The chemical bomb clouds keep their pulse damage action, but the
+                    // retail client strips the authored region radius from that handler.
+                    // Recover it from the actor's existing Radius parameter just as we
+                    // do for the one-shot detonation region below.
+                    int handlerIndex = Arrays.asList(actor.handlers).indexOf(handler);
+                    action = restoreHandlerDamageShape(manager, reference, handlerIndex, action);
+                    if (action != null && containsDamage(action)) {
+                        int interval = Math.max(1, (int) (timer.interval * 1000)),
+                                delay = Math.max(0, interval + (int) (timer.offset * 1000));
+                        if (refName.equals("Bullet/Sword/Spur (Charged)")) {
+                            // Archived Spur/Winmillion combat description: the short
+                            // piercing charge projectile can hit up to three times.
+                            timers.add(new ActorTimer(0, Math.max(1, fuse / 3), 3, action, null));
+                        } else if (type.equals("BULLET")
+                                && speed > 0
+                                && (actor.collisionMask & 8) == 0
+                                && delay >= fuse) {
+                            // Stripped timers can outlive their moving blade. Its
+                            // surviving damage graph is a piercing contact attack.
+                            int step = Math.max(16, (fuse + 126) / 127);
+                            timers.add(new ActorTimer(
+                                    0,
+                                    step,
+                                    Math.min(128, 1 + (fuse + step - 1) / step),
+                                    intersectionDamage(action),
+                                    null));
+                        } else
+                            timers.add(new ActorTimer(
+                                    delay,
+                                    interval,
+                                    Math.min(128, timer.limit == 0 ? 128 : timer.limit),
+                                    action,
+                                    null));
+                    }
                 }
             }
-        }
-        if(type.equals("ORBITAL")&&reference.ld().get("Duration") instanceof Number duration)fuse=Math.max(1,(int)(duration.floatValue()*1000));
-        if(type.equals("ACTOR")&&!timers.isEmpty())fuse=timers.stream().filter(t->t.action().kind()!=Kind.COMPOUND||!t.action().children().isEmpty()).mapToInt(t->t.delay()+t.interval()*(t.limit()-1)+1).max().orElse(1);
-        detonation=restoreDamageShape(manager,reference,detonation);
-        return new ActorSpec(type,model(reference),fuse,speed,maxStep,flags,ox,oy,height,detonation,orbit,actor.collisionMask,argumentValue(actor.shape),timers,
-            shutdown.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,shutdown,""),
-            startupActions.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,startupActions,""),
-            attachment,activation,catalyst&&type.equals("BULLET")&&refName.contains("(Charged)"));
+        if (type.equals("ORBITAL") && reference.ld().get("Duration") instanceof Number duration)
+            fuse = Math.max(1, (int) (duration.floatValue() * 1000));
+        if (type.equals("ACTOR") && !timers.isEmpty())
+            fuse = timers.stream()
+                    .filter(t -> t.action().kind() != Kind.COMPOUND
+                            || !t.action().children().isEmpty())
+                    .mapToInt(t -> t.delay() + t.interval() * (t.limit() - 1) + 1)
+                    .max()
+                    .orElse(1);
+        detonation = restoreDamageShape(manager, reference, detonation);
+        return new ActorSpec(
+                type,
+                model(reference),
+                fuse,
+                speed,
+                maxStep,
+                flags,
+                ox,
+                oy,
+                height,
+                detonation,
+                orbit,
+                actor.collisionMask,
+                argumentValue(actor.shape),
+                timers,
+                shutdown.isEmpty()
+                        ? null
+                        : new Action(
+                                Kind.COMPOUND,
+                                null,
+                                null,
+                                "",
+                                "",
+                                "",
+                                0,
+                                0,
+                                0,
+                                0,
+                                false,
+                                0,
+                                0,
+                                0,
+                                0,
+                                false,
+                                shutdown,
+                                ""),
+                startupActions.isEmpty()
+                        ? null
+                        : new Action(
+                                Kind.COMPOUND,
+                                null,
+                                null,
+                                "",
+                                "",
+                                "",
+                                0,
+                                0,
+                                0,
+                                0,
+                                false,
+                                0,
+                                0,
+                                0,
+                                0,
+                                false,
+                                startupActions,
+                                ""),
+                attachment,
+                activation,
+                catalyst && type.equals("BULLET") && refName.contains("(Charged)"));
     }
     /** Only retained no-op server helpers: never turn an unknown actor into a decoration. */
-    private static boolean inertActor(ConfigManager manager,ActorConfig.Original actor)throws Exception {
-        if(actor.collisionMask!=0||actor.collisionFlags!=0||actor.sprite.model!=null)return false;
-        for(var handler:actor.handlers){
-            if(!(handler instanceof HandlerConfig.Tick||handler instanceof HandlerConfig.Timer))return false;
-            if(!emptyAction(readAction(manager,(ActionConfig)field(handler,"action"))))return false;
+    private static boolean inertActor(ConfigManager manager, ActorConfig.Original actor) throws Exception {
+        if (actor.collisionMask != 0 || actor.collisionFlags != 0 || actor.sprite.model != null) return false;
+        for (var handler : actor.handlers) {
+            if (!(handler instanceof HandlerConfig.Tick || handler instanceof HandlerConfig.Timer)) return false;
+            if (!emptyAction(readAction(manager, (ActionConfig) field(handler, "action")))) return false;
         }
         return true;
     }
-    private static boolean emptyAction(Action action){return action!=null&&action.kind()==Kind.COMPOUND&&action.children().stream().allMatch(FireCatalogExport::emptyAction);}
-    private static ConfigReference<ActorConfig> statusAttachment(ActionConfig action){
-        if(action instanceof ActionConfig.Compound compound)for(var child:compound.actions){var found=statusAttachment(child);if(found!=null)return found;}
-        if(action instanceof DungeonActionConfig.DamageRegion region)return statusAttachment(region.damage);
+
+    private static boolean emptyAction(Action action) {
+        return action != null
+                && action.kind() == Kind.COMPOUND
+                && action.children().stream().allMatch(FireCatalogExport::emptyAction);
+    }
+
+    private static ConfigReference<ActorConfig> statusAttachment(ActionConfig action) {
+        if (action instanceof ActionConfig.Compound compound)
+            for (var child : compound.actions) {
+                var found = statusAttachment(child);
+                if (found != null) return found;
+            }
+        if (action instanceof DungeonActionConfig.DamageRegion region) return statusAttachment(region.damage);
         return null;
     }
-    private static ConfigReference<ActorConfig> statusAttachment(DamageConfig damage){
-        if(damage instanceof DamageConfig.Compound compound)for(var child:compound.damages){var found=statusAttachment(child);if(found!=null)return found;}
-        if(damage instanceof DamageConfig.Status status&&status.statusCondition!=null&&status.statusCondition.ld().get("Actor") instanceof ConfigReference<?> actor){
-            @SuppressWarnings("unchecked") var ref=(ConfigReference<ActorConfig>)actor;return ref;
+
+    private static ConfigReference<ActorConfig> statusAttachment(DamageConfig damage) {
+        if (damage instanceof DamageConfig.Compound compound)
+            for (var child : compound.damages) {
+                var found = statusAttachment(child);
+                if (found != null) return found;
+            }
+        if (damage instanceof DamageConfig.Status status
+                && status.statusCondition != null
+                && status.statusCondition.ld().get("Actor") instanceof ConfigReference<?> actor) {
+            @SuppressWarnings("unchecked")
+            var ref = (ConfigReference<ActorConfig>) actor;
+            return ref;
         }
         return null;
     }
     /** Reconstructed stripped disk guards: discard fizzle damage, then select return damage.
      *  RETURNING on the outer gate incorrectly made every outbound object collision harmless. */
-    private static Action orbitalShutdown(Action action)throws Exception {
-        if(action==null||action.kind()!=Kind.CONDITIONAL)return action;
-        var children=new ArrayList<Action>();
-        for(var branch:action.children()){
-            var nested=new ArrayList<Action>();for(var child:branch.children())nested.add(child.kind()==Kind.CONDITIONAL?withCondition(child,"RETURNING",true):child);
-            children.add(new Action(branch.kind(),branch.config(),branch.actor(),branch.targetType(),branch.facingType(),branch.collisionSourceType(),branch.x(),branch.y(),branch.rotation(),branch.rotationVariance(),branch.relative(),branch.count(),branch.stepSize(),branch.steps(),branch.collisionMask(),branch.stopOnFailure(),nested,branch.unsupportedType(),branch.parameter(),branch.values()));
+    private static Action orbitalShutdown(Action action) throws Exception {
+        if (action == null || action.kind() != Kind.CONDITIONAL) return action;
+        var children = new ArrayList<Action>();
+        for (var branch : action.children()) {
+            var nested = new ArrayList<Action>();
+            for (var child : branch.children())
+                nested.add(child.kind() == Kind.CONDITIONAL ? withCondition(child, "RETURNING", true) : child);
+            children.add(new Action(
+                    branch.kind(),
+                    branch.config(),
+                    branch.actor(),
+                    branch.targetType(),
+                    branch.facingType(),
+                    branch.collisionSourceType(),
+                    branch.x(),
+                    branch.y(),
+                    branch.rotation(),
+                    branch.rotationVariance(),
+                    branch.relative(),
+                    branch.count(),
+                    branch.stepSize(),
+                    branch.steps(),
+                    branch.collisionMask(),
+                    branch.stopOnFailure(),
+                    nested,
+                    branch.unsupportedType(),
+                    branch.parameter(),
+                    branch.values()));
         }
-        var fixed=withCondition(action,"FIZZLE",false);
-        return new Action(fixed.kind(),fixed.config(),fixed.actor(),fixed.targetType(),fixed.facingType(),fixed.collisionSourceType(),fixed.x(),fixed.y(),fixed.rotation(),fixed.rotationVariance(),fixed.relative(),fixed.count(),fixed.stepSize(),fixed.steps(),fixed.collisionMask(),fixed.stopOnFailure(),children,fixed.unsupportedType(),fixed.parameter(),fixed.values());
+        var fixed = withCondition(action, "FIZZLE", false);
+        return new Action(
+                fixed.kind(),
+                fixed.config(),
+                fixed.actor(),
+                fixed.targetType(),
+                fixed.facingType(),
+                fixed.collisionSourceType(),
+                fixed.x(),
+                fixed.y(),
+                fixed.rotation(),
+                fixed.rotationVariance(),
+                fixed.relative(),
+                fixed.count(),
+                fixed.stepSize(),
+                fixed.steps(),
+                fixed.collisionMask(),
+                fixed.stopOnFailure(),
+                children,
+                fixed.unsupportedType(),
+                fixed.parameter(),
+                fixed.values());
     }
-    private static Action withCondition(Action action,String name,boolean set)throws Exception {
-        var condition=new ConditionConfig.FlagSet();condition.flagName=name;condition.set=set;
-        return new Action(action.kind(),new StarterCatalog.Model("Condition",Map.of("condition",argumentValue(condition))),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),action.children(),action.unsupportedType(),action.parameter(),action.values());
+
+    private static Action withCondition(Action action, String name, boolean set) throws Exception {
+        var condition = new ConditionConfig.FlagSet();
+        condition.flagName = name;
+        condition.set = set;
+        return new Action(
+                action.kind(),
+                new StarterCatalog.Model("Condition", Map.of("condition", argumentValue(condition))),
+                action.actor(),
+                action.targetType(),
+                action.facingType(),
+                action.collisionSourceType(),
+                action.x(),
+                action.y(),
+                action.rotation(),
+                action.rotationVariance(),
+                action.relative(),
+                action.count(),
+                action.stepSize(),
+                action.steps(),
+                action.collisionMask(),
+                action.stopOnFailure(),
+                action.children(),
+                action.unsupportedType(),
+                action.parameter(),
+                action.values());
     }
     /** The orbital explosion's retained VFX explicitly carries Radius=1.5.
      *  Applying that radius to the stripped damage region is a documented reconstruction. */
-    private static Action activationShape(Action action,float radius)throws Exception {
-        if(action==null)return null;
-        if(action.kind()==Kind.DAMAGE_REGION)return withShape(action,circle(radius));
-        var children=new ArrayList<Action>();for(var child:action.children())children.add(activationShape(child,radius));
-        return new Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
+    private static Action activationShape(Action action, float radius) throws Exception {
+        if (action == null) return null;
+        if (action.kind() == Kind.DAMAGE_REGION) return withShape(action, circle(radius));
+        var children = new ArrayList<Action>();
+        for (var child : action.children()) children.add(activationShape(child, radius));
+        return new Action(
+                action.kind(),
+                action.config(),
+                action.actor(),
+                action.targetType(),
+                action.facingType(),
+                action.collisionSourceType(),
+                action.x(),
+                action.y(),
+                action.rotation(),
+                action.rotationVariance(),
+                action.relative(),
+                action.count(),
+                action.stepSize(),
+                action.steps(),
+                action.collisionMask(),
+                action.stopOnFailure(),
+                children,
+                action.unsupportedType(),
+                action.parameter(),
+                action.values());
     }
     /** Retail's Shard Damage path has an extra closing bracket on one branch. Bind
      *  the surviving shared arguments to every retained child instead of default damage. */
-    private static ActionConfig bindShardBranches(ActionConfig raw,ConfigReference<ActorConfig> source){
-        if(raw instanceof ActionConfig.Compound compound){var copy=(ActionConfig.Compound)compound.clone();copy.actions=Arrays.stream(compound.actions).map(a->bindShardBranches(a,source)).toArray(ActionConfig[]::new);return copy;}
-        if(raw instanceof ActionConfig.Delayed delayed){var copy=(ActionConfig.Delayed)delayed.clone();copy.action=bindShardBranches(delayed.action,source);return copy;}
-        if(raw instanceof ActionConfig.SpawnActor spawn&&spawn.actor!=null&&spawn.actor.getName().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")){
-            var copy=(ActionConfig.SpawnActor)spawn.clone();copy.actor=spawn.actor.le();
-            if(source.ld().containsKey("Shard Damage"))copy.actor.ld().put("Damage",source.ld().get("Shard Damage"));
-            if(source.ld().containsKey("Shard Color"))copy.actor.ld().put("Color",source.ld().get("Shard Color"));
+    private static ActionConfig bindShardBranches(ActionConfig raw, ConfigReference<ActorConfig> source) {
+        if (raw instanceof ActionConfig.Compound compound) {
+            var copy = (ActionConfig.Compound) compound.clone();
+            copy.actions = Arrays.stream(compound.actions)
+                    .map(a -> bindShardBranches(a, source))
+                    .toArray(ActionConfig[]::new);
+            return copy;
+        }
+        if (raw instanceof ActionConfig.Delayed delayed) {
+            var copy = (ActionConfig.Delayed) delayed.clone();
+            copy.action = bindShardBranches(delayed.action, source);
+            return copy;
+        }
+        if (raw instanceof ActionConfig.SpawnActor spawn
+                && spawn.actor != null
+                && spawn.actor.getName().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")) {
+            var copy = (ActionConfig.SpawnActor) spawn.clone();
+            copy.actor = spawn.actor.le();
+            if (source.ld().containsKey("Shard Damage"))
+                copy.actor.ld().put("Damage", source.ld().get("Shard Damage"));
+            if (source.ld().containsKey("Shard Color"))
+                copy.actor.ld().put("Color", source.ld().get("Shard Color"));
             return copy;
         }
         return raw;
@@ -787,157 +2083,409 @@ public final class FireCatalogExport {
     /** The retained Rock Salt graph supplies the family's equally spaced relative fan.
      * Retail strips SpawnTransformedActor headings from later tier graphs; otherwise all
      * authored branches overlap at absolute east. Keep the authored branch count/timing. */
-    private static Action shardFan(Action action){
-        if(action==null||action.kind()!=Kind.COMPOUND)return action;
-        var branches=action.children().stream().filter(a->a.kind()==Kind.DELAYED&&a.children().size()==1&&a.children().getFirst().actor()!=null&&a.children().getFirst().actor().config().name().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")).toList();
-        if(branches.size()<2||branches.stream().anyMatch(a->a.children().getFirst().rotation()!=0))return action;
-        var children=new ArrayList<Action>();int index=0;
-        for(var child:action.children()){
-            if(branches.contains(child)){
-                var a=child.children().getFirst();
-                var spread=new Action(a.kind(),a.config(),a.actor(),a.targetType(),a.facingType(),a.collisionSourceType(),a.x(),a.y(),(float)(index++*2*Math.PI/branches.size()),a.rotationVariance(),true,a.count(),a.stepSize(),a.steps(),a.collisionMask(),a.stopOnFailure(),a.children(),a.unsupportedType(),a.parameter(),a.values());
-                child=new Action(child.kind(),child.config(),child.actor(),child.targetType(),child.facingType(),child.collisionSourceType(),child.x(),child.y(),child.rotation(),child.rotationVariance(),child.relative(),child.count(),child.stepSize(),child.steps(),child.collisionMask(),child.stopOnFailure(),List.of(spread),child.unsupportedType(),child.parameter(),child.values());
+    private static Action shardFan(Action action) {
+        if (action == null || action.kind() != Kind.COMPOUND) return action;
+        var branches = action.children().stream()
+                .filter(a -> a.kind() == Kind.DELAYED
+                        && a.children().size() == 1
+                        && a.children().getFirst().actor() != null
+                        && a.children()
+                                .getFirst()
+                                .actor()
+                                .config()
+                                .name()
+                                .equals("Bomb/Parts/Shard/Shard Base (Distance Check)"))
+                .toList();
+        if (branches.size() < 2
+                || branches.stream().anyMatch(a -> a.children().getFirst().rotation() != 0)) return action;
+        var children = new ArrayList<Action>();
+        int index = 0;
+        for (var child : action.children()) {
+            if (branches.contains(child)) {
+                var a = child.children().getFirst();
+                var spread = new Action(
+                        a.kind(),
+                        a.config(),
+                        a.actor(),
+                        a.targetType(),
+                        a.facingType(),
+                        a.collisionSourceType(),
+                        a.x(),
+                        a.y(),
+                        (float) (index++ * 2 * Math.PI / branches.size()),
+                        a.rotationVariance(),
+                        true,
+                        a.count(),
+                        a.stepSize(),
+                        a.steps(),
+                        a.collisionMask(),
+                        a.stopOnFailure(),
+                        a.children(),
+                        a.unsupportedType(),
+                        a.parameter(),
+                        a.values());
+                child = new Action(
+                        child.kind(),
+                        child.config(),
+                        child.actor(),
+                        child.targetType(),
+                        child.facingType(),
+                        child.collisionSourceType(),
+                        child.x(),
+                        child.y(),
+                        child.rotation(),
+                        child.rotationVariance(),
+                        child.relative(),
+                        child.count(),
+                        child.stepSize(),
+                        child.steps(),
+                        child.collisionMask(),
+                        child.stopOnFailure(),
+                        List.of(spread),
+                        child.unsupportedType(),
+                        child.parameter(),
+                        child.values());
             }
             children.add(child);
         }
-        return new Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
+        return new Action(
+                action.kind(),
+                action.config(),
+                action.actor(),
+                action.targetType(),
+                action.facingType(),
+                action.collisionSourceType(),
+                action.x(),
+                action.y(),
+                action.rotation(),
+                action.rotationVariance(),
+                action.relative(),
+                action.count(),
+                action.stepSize(),
+                action.steps(),
+                action.collisionMask(),
+                action.stopOnFailure(),
+                children,
+                action.unsupportedType(),
+                action.parameter(),
+                action.values());
     }
 
-    private static Action destroySource(){return new Action(Kind.DESTROY_SOURCE,null,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");}
-    private static boolean containsDamage(Action action){return action.kind()==Kind.DAMAGE_REGION||action.children().stream().anyMatch(FireCatalogExport::containsDamage);}
-    private static Action intersectionDamage(Action action){
-        if(action==null)return null;
-        if(action.kind()==Kind.DAMAGE_REGION)return new Action(Kind.SWEEP_DAMAGE,action.config(),null,action.targetType(),"","",action.x(),action.y(),0,0,true,0,0,0,action.collisionMask(),false,List.of(),"");
-        if(action.kind()!=Kind.COMPOUND)return null;
-        var children=new ArrayList<Action>();for(var child:action.children()){var hit=intersectionDamage(child);if(hit!=null)children.add(hit);}
-        return children.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,children,"");
+    private static Action destroySource() {
+        return new Action(
+                Kind.DESTROY_SOURCE, null, null, "Source", "", "", 0, 0, 0, 0, false, 0, 0, 0, 0, false, List.of(), "");
     }
-    private static Action restoreDamageShape(ConfigManager manager,ConfigReference<ActorConfig> reference,Action action)throws Exception {
-        if(action==null)return null;
+
+    private static boolean containsDamage(Action action) {
+        return action.kind() == Kind.DAMAGE_REGION
+                || action.children().stream().anyMatch(FireCatalogExport::containsDamage);
+    }
+
+    private static Action intersectionDamage(Action action) {
+        if (action == null) return null;
+        if (action.kind() == Kind.DAMAGE_REGION)
+            return new Action(
+                    Kind.SWEEP_DAMAGE,
+                    action.config(),
+                    null,
+                    action.targetType(),
+                    "",
+                    "",
+                    action.x(),
+                    action.y(),
+                    0,
+                    0,
+                    true,
+                    0,
+                    0,
+                    0,
+                    action.collisionMask(),
+                    false,
+                    List.of(),
+                    "");
+        if (action.kind() != Kind.COMPOUND) return null;
+        var children = new ArrayList<Action>();
+        for (var child : action.children()) {
+            var hit = intersectionDamage(child);
+            if (hit != null) children.add(hit);
+        }
+        return children.isEmpty()
+                ? null
+                : new Action(Kind.COMPOUND, null, null, "", "", "", 0, 0, 0, 0, false, 0, 0, 0, 0, false, children, "");
+    }
+
+    private static Action restoreDamageShape(
+            ConfigManager manager, ConfigReference<ActorConfig> reference, Action action) throws Exception {
+        if (action == null) return null;
         // Direct and choice arguments survive stripping even when the region they address
         // does not. Follow the actual derived bindings and restore only an
         // explicitly authored detonation circle radius, never a guessed area.
-        var seen=new HashSet<String>();
-        while(reference!=null&&seen.add(reference.getName())){
-            var config=manager.a(ActorConfig.class,reference);if(config==null)break;
-            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct){
-                for(String path:direct.paths)action=restoreDetonationCircle(action,path,reference.ld().get(direct.name));
-            }else if(parameter instanceof com.threerings.config.Parameter.Choice choice){
-                for(var direct:choice.directs)for(String path:direct.paths)
-                    if(path.matches("implementation\\.detonation_action(?:\\.actions\\[\\d+\\])?\\.region\\.shape\\.radius")){
-                        String selected=Objects.toString(reference.ld().get(choice.name),choice.choice);
-                        for(var option:choice.options)if(option.name.equals(selected)){
-                            var field=option.getClass().getDeclaredField("_arguments");field.setAccessible(true);
-                            Object value=((Map<?,?>)field.get(option)).get(direct.name);
-                            action=restoreDetonationCircle(action,path,value);
-                        }
-                    }
-            }
-            reference=config.implementation instanceof ActorConfig.Derived derived?derived.actor:null;
+        var seen = new HashSet<String>();
+        while (reference != null && seen.add(reference.getName())) {
+            var config = manager.a(ActorConfig.class, reference);
+            if (config == null) break;
+            for (var parameter : config.parameters)
+                if (parameter instanceof com.threerings.config.Parameter.Direct direct) {
+                    for (String path : direct.paths)
+                        action = restoreDetonationCircle(
+                                action, path, reference.ld().get(direct.name));
+                } else if (parameter instanceof com.threerings.config.Parameter.Choice choice) {
+                    for (var direct : choice.directs)
+                        for (String path : direct.paths)
+                            if (path.matches(
+                                    "implementation\\.detonation_action(?:\\.actions\\[\\d+\\])?\\.region\\.shape\\.radius")) {
+                                String selected =
+                                        Objects.toString(reference.ld().get(choice.name), choice.choice);
+                                for (var option : choice.options)
+                                    if (option.name.equals(selected)) {
+                                        var field = option.getClass().getDeclaredField("_arguments");
+                                        field.setAccessible(true);
+                                        Object value = ((Map<?, ?>) field.get(option)).get(direct.name);
+                                        action = restoreDetonationCircle(action, path, value);
+                                    }
+                            }
+                }
+            reference = config.implementation instanceof ActorConfig.Derived derived ? derived.actor : null;
         }
         return action;
     }
-    private static Action restoreHandlerDamageShape(ConfigManager manager,ConfigReference<ActorConfig> reference,int handlerIndex,Action action)throws Exception {
-        if(action==null||handlerIndex<0)return action;
-        var seen=new HashSet<String>();
-        while(reference!=null&&seen.add(reference.getName())){
-            var config=manager.a(ActorConfig.class,reference);if(config==null)break;
-            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct){
-                String path="implementation.handlers["+handlerIndex+"].action.region.shape.radius";
-                if(Arrays.asList(direct.paths).contains(path)&&reference.ld().get(direct.name) instanceof Number radius)
-                    action=withShape(action,circle(radius.floatValue()));
-            }
-            reference=config.implementation instanceof ActorConfig.Derived derived?derived.actor:null;
+
+    private static Action restoreHandlerDamageShape(
+            ConfigManager manager, ConfigReference<ActorConfig> reference, int handlerIndex, Action action)
+            throws Exception {
+        if (action == null || handlerIndex < 0) return action;
+        var seen = new HashSet<String>();
+        while (reference != null && seen.add(reference.getName())) {
+            var config = manager.a(ActorConfig.class, reference);
+            if (config == null) break;
+            for (var parameter : config.parameters)
+                if (parameter instanceof com.threerings.config.Parameter.Direct direct) {
+                    String path = "implementation.handlers[" + handlerIndex + "].action.region.shape.radius";
+                    if (Arrays.asList(direct.paths).contains(path)
+                            && reference.ld().get(direct.name) instanceof Number radius)
+                        action = withShape(action, circle(radius.floatValue()));
+                }
+            reference = config.implementation instanceof ActorConfig.Derived derived ? derived.actor : null;
         }
         return action;
     }
-    private static Object circle(float radius)throws IOException {
-        if(!Float.isFinite(radius)||radius<=0)throw new IOException("Invalid configured damage radius: "+radius);
-        var shape=new com.threerings.tudey.shape.config.ShapeConfig.Circle();shape.radius=radius;return argumentValue(shape);
+
+    private static Object circle(float radius) throws IOException {
+        if (!Float.isFinite(radius) || radius <= 0)
+            throw new IOException("Invalid configured damage radius: " + radius);
+        var shape = new com.threerings.tudey.shape.config.ShapeConfig.Circle();
+        shape.radius = radius;
+        return argumentValue(shape);
     }
-    private static Action restoreDetonationCircle(Action action,String path,Object value)throws Exception {
-        if(!path.matches("implementation\\.detonation_action(?:\\.actions\\[\\d+\\])?\\.region\\.shape\\.radius")||!(value instanceof Number radius))return action;
-        if(!Float.isFinite(radius.floatValue())||radius.floatValue()<=0)throw new IOException("Invalid detonation radius: "+path);
-        Object shape=circle(radius.floatValue());
-        var index=java.util.regex.Pattern.compile(".*\\.actions\\[(\\d+)\\].*").matcher(path);
-        if(index.matches()){
-            int at=Integer.parseInt(index.group(1));
-            if(action.kind()!=Kind.COMPOUND||at>=action.children().size())throw new IOException("Detonation shape path changed: "+path);
-            var children=new ArrayList<>(action.children());var child=children.get(at);
-            if(child.kind()!=Kind.DAMAGE_REGION&&child.kind()!=Kind.IMPULSE_REGION)throw new IOException("Detonation circle has no matching region action: "+path);
-            children.set(at,withShape(child,shape));
-            return new Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
+
+    private static Action restoreDetonationCircle(Action action, String path, Object value) throws Exception {
+        if (!path.matches("implementation\\.detonation_action(?:\\.actions\\[\\d+\\])?\\.region\\.shape\\.radius")
+                || !(value instanceof Number radius)) return action;
+        if (!Float.isFinite(radius.floatValue()) || radius.floatValue() <= 0)
+            throw new IOException("Invalid detonation radius: " + path);
+        Object shape = circle(radius.floatValue());
+        var index =
+                java.util.regex.Pattern.compile(".*\\.actions\\[(\\d+)\\].*").matcher(path);
+        if (index.matches()) {
+            int at = Integer.parseInt(index.group(1));
+            if (action.kind() != Kind.COMPOUND || at >= action.children().size())
+                throw new IOException("Detonation shape path changed: " + path);
+            var children = new ArrayList<>(action.children());
+            var child = children.get(at);
+            if (child.kind() != Kind.DAMAGE_REGION && child.kind() != Kind.IMPULSE_REGION)
+                throw new IOException("Detonation circle has no matching region action: " + path);
+            children.set(at, withShape(child, shape));
+            return new Action(
+                    action.kind(),
+                    action.config(),
+                    action.actor(),
+                    action.targetType(),
+                    action.facingType(),
+                    action.collisionSourceType(),
+                    action.x(),
+                    action.y(),
+                    action.rotation(),
+                    action.rotationVariance(),
+                    action.relative(),
+                    action.count(),
+                    action.stepSize(),
+                    action.steps(),
+                    action.collisionMask(),
+                    action.stopOnFailure(),
+                    children,
+                    action.unsupportedType(),
+                    action.parameter(),
+                    action.values());
         }
-        if(action.kind()!=Kind.DAMAGE_REGION&&action.kind()!=Kind.IMPULSE_REGION)throw new IOException("Detonation circle has no matching region action: "+path);
-        return withShape(action,shape);
+        if (action.kind() != Kind.DAMAGE_REGION && action.kind() != Kind.IMPULSE_REGION)
+            throw new IOException("Detonation circle has no matching region action: " + path);
+        return withShape(action, shape);
     }
-    private static boolean isProjectile(String type) { return type.equals("ORBITAL") || type.equals("LASER") || type.equals("ACTOR") || type.equals("AGENT") || type.equals("BULLET") || type.equals("BOMB") || type.equals("ORBITAL_BULLET") || type.equals("COMPOUND_ORBITAL_BULLET"); }
-    private static boolean isNamedSubtype(Class<?> type,String name) { for(Class<?> c=type;c!=null;c=c.getSuperclass())if(c.getName().equals(name))return true;return false; }
-    private static OrbitSpec orbital(Object config,boolean compound)throws IOException {
-        Object follow=field(config,"follow");
-        if(!(follow instanceof Enum<?> value))throw new IOException("Invalid stock orbital follow enum");
-        return new OrbitSpec(floatField(config,"orbitRadius"),floatField(config,"speed"),floatField(config,"startingRotation"),
-            floatField(config,"flightSpeed"),intField(config,"outDuration"),intField(config,"lifespan"),value.name(),
-            (Boolean)readField(config,"alternateSpin"),compound?floatField(config,"secondOrbitRadius"):null,
-            compound?floatField(config,"secondSpeed"):null,compound?floatField(config,"secondStartingRotation"):null);
+
+    private static boolean isProjectile(String type) {
+        return type.equals("ORBITAL")
+                || type.equals("LASER")
+                || type.equals("ACTOR")
+                || type.equals("AGENT")
+                || type.equals("BULLET")
+                || type.equals("BOMB")
+                || type.equals("ORBITAL_BULLET")
+                || type.equals("COMPOUND_ORBITAL_BULLET");
     }
-    private static String target(TargetConfig target) { return target==null?"":target.getClass().getSimpleName(); }
+
+    private static boolean isNamedSubtype(Class<?> type, String name) {
+        for (Class<?> c = type; c != null; c = c.getSuperclass())
+            if (c.getName().equals(name)) return true;
+        return false;
+    }
+
+    private static OrbitSpec orbital(Object config, boolean compound) throws IOException {
+        Object follow = field(config, "follow");
+        if (!(follow instanceof Enum<?> value)) throw new IOException("Invalid stock orbital follow enum");
+        return new OrbitSpec(
+                floatField(config, "orbitRadius"),
+                floatField(config, "speed"),
+                floatField(config, "startingRotation"),
+                floatField(config, "flightSpeed"),
+                intField(config, "outDuration"),
+                intField(config, "lifespan"),
+                value.name(),
+                (Boolean) readField(config, "alternateSpin"),
+                compound ? floatField(config, "secondOrbitRadius") : null,
+                compound ? floatField(config, "secondSpeed") : null,
+                compound ? floatField(config, "secondStartingRotation") : null);
+    }
+
+    private static String target(TargetConfig target) {
+        return target == null ? "" : target.getClass().getSimpleName();
+    }
 
     static StarterCatalog.Model model(ConfigReference<?> reference) throws IOException {
         if (reference == null) return null;
-        return new StarterCatalog.Model(reference.getName(),arguments(reference.ld(),0,new IdentityHashMap<>(),new int[]{0}));
+        return new StarterCatalog.Model(
+                reference.getName(), arguments(reference.ld(), 0, new IdentityHashMap<>(), new int[] {0}));
     }
-    static Object argumentValue(Object value)throws IOException{return argument(value,0,new IdentityHashMap<>(),new int[]{0});}
-    private static Map<String,Object> arguments(Map<?,?> input,int depth,IdentityHashMap<Object,Boolean> visiting,int[] nodes)throws IOException {
-        if(depth>12||input.size()>4096)throw new IOException("Stock fire arguments exceed bounds");
-        var result=new TreeMap<String,Object>();
-        for(var e:input.entrySet()) {
-            if(!(e.getKey() instanceof String key)||key.length()>1024||key.chars().anyMatch(c->c<32))throw new IOException("Invalid stock argument key");
-            result.put(key,argument(e.getValue(),depth+1,visiting,nodes));
+
+    static Object argumentValue(Object value) throws IOException {
+        return argument(value, 0, new IdentityHashMap<>(), new int[] {0});
+    }
+
+    private static Map<String, Object> arguments(
+            Map<?, ?> input, int depth, IdentityHashMap<Object, Boolean> visiting, int[] nodes) throws IOException {
+        if (depth > 12 || input.size() > 4096) throw new IOException("Stock fire arguments exceed bounds");
+        var result = new TreeMap<String, Object>();
+        for (var e : input.entrySet()) {
+            if (!(e.getKey() instanceof String key)
+                    || key.length() > 1024
+                    || key.chars().anyMatch(c -> c < 32)) throw new IOException("Invalid stock argument key");
+            result.put(key, argument(e.getValue(), depth + 1, visiting, nodes));
         }
         return result;
     }
-    private static Object argument(Object value,int depth,IdentityHashMap<Object,Boolean> visiting,int[] nodes)throws IOException {
-        if(++nodes[0]>100_000||depth>16)throw new IOException("Stock fire argument graph exceeds bounds");
-        if(value==null)return FireCatalog.NullValue.INSTANCE;
-        if(value instanceof String||value instanceof Integer||value instanceof Boolean)return value;
-        if(value instanceof Character c)return (int)c.charValue();
-        if(value instanceof Float f&&Float.isFinite(f))return f;
-        if(value instanceof Double d&&Double.isFinite(d))return BigDecimal.valueOf(d);
-        if(value instanceof Long||value instanceof Short||value instanceof Byte)return ((Number)value).longValue();
-        if(value instanceof BigDecimal b)return b;
-        if(value instanceof Enum<?> e)return new FireCatalog.EnumValue(e.getDeclaringClass().getName(),e.name(),e.ordinal());
-        if(value instanceof ConfigReference<?> ref)return model(ref);
-        if(visiting.put(value,Boolean.TRUE)!=null)throw new IOException("Cyclic stock fire argument: "+value.getClass().getName());
+
+    private static Object argument(Object value, int depth, IdentityHashMap<Object, Boolean> visiting, int[] nodes)
+            throws IOException {
+        if (++nodes[0] > 100_000 || depth > 16) throw new IOException("Stock fire argument graph exceeds bounds");
+        if (value == null) return FireCatalog.NullValue.INSTANCE;
+        if (value instanceof String || value instanceof Integer || value instanceof Boolean) return value;
+        if (value instanceof Character c) return (int) c.charValue();
+        if (value instanceof Float f && Float.isFinite(f)) return f;
+        if (value instanceof Double d && Double.isFinite(d)) return BigDecimal.valueOf(d);
+        if (value instanceof Long || value instanceof Short || value instanceof Byte)
+            return ((Number) value).longValue();
+        if (value instanceof BigDecimal b) return b;
+        if (value instanceof Enum<?> e)
+            return new FireCatalog.EnumValue(e.getDeclaringClass().getName(), e.name(), e.ordinal());
+        if (value instanceof ConfigReference<?> ref) return model(ref);
+        if (visiting.put(value, Boolean.TRUE) != null)
+            throw new IOException(
+                    "Cyclic stock fire argument: " + value.getClass().getName());
         try {
-            if(value instanceof Map<?,?> map)return new FireCatalog.MapValue(arguments(map,depth+1,visiting,nodes));
-            if(value instanceof Iterable<?> iterable&&!(value instanceof com.threerings.io.Streamable)){var list=new ArrayList<Object>();for(Object item:iterable)list.add(argument(item,depth+1,visiting,nodes));return new FireCatalog.ListValue(value.getClass().getName(),list);}
-            if(value.getClass().isArray()){int length=Array.getLength(value);if(length>10_000)throw new IOException("Oversized stock argument array");var list=new ArrayList<Object>();for(int i=0;i<length;i++)list.add(argument(Array.get(value,i),depth+1,visiting,nodes));return new FireCatalog.ListValue(value.getClass().getComponentType().getName(),list);}
-            var fields=new ArrayList<FireCatalog.FieldValue>();
-            var hierarchy=new ArrayList<Class<?>>();for(Class<?> c=value.getClass();c!=null&&c!=Object.class;c=c.getSuperclass())hierarchy.add(c);
+            if (value instanceof Map<?, ?> map)
+                return new FireCatalog.MapValue(arguments(map, depth + 1, visiting, nodes));
+            if (value instanceof Iterable<?> iterable && !(value instanceof com.threerings.io.Streamable)) {
+                var list = new ArrayList<Object>();
+                for (Object item : iterable) list.add(argument(item, depth + 1, visiting, nodes));
+                return new FireCatalog.ListValue(value.getClass().getName(), list);
+            }
+            if (value.getClass().isArray()) {
+                int length = Array.getLength(value);
+                if (length > 10_000) throw new IOException("Oversized stock argument array");
+                var list = new ArrayList<Object>();
+                for (int i = 0; i < length; i++) list.add(argument(Array.get(value, i), depth + 1, visiting, nodes));
+                return new FireCatalog.ListValue(
+                        value.getClass().getComponentType().getName(), list);
+            }
+            var fields = new ArrayList<FireCatalog.FieldValue>();
+            var hierarchy = new ArrayList<Class<?>>();
+            for (Class<?> c = value.getClass(); c != null && c != Object.class; c = c.getSuperclass()) hierarchy.add(c);
             Collections.reverse(hierarchy);
-            for(Class<?> c:hierarchy)for(Field field:c.getDeclaredFields())
-                if(!Modifier.isStatic(field.getModifiers())&&!Modifier.isTransient(field.getModifiers())&&!field.isSynthetic()
-                    && Arrays.stream(field.getAnnotations()).noneMatch(a->a.annotationType().getSimpleName().equals("NotStreamable"))) {
-                    try { field.setAccessible(true); fields.add(new FireCatalog.FieldValue(field.getName(),field.getType().getName(),argument(field.get(value),depth+1,visiting,nodes))); }
-                    catch(IllegalAccessException|RuntimeException inaccessible){throw new IOException("Unreadable stock argument field "+field,inaccessible);}
-                }
-            return new FireCatalog.DataValue(value.getClass().getName(),fields);
-        } finally { visiting.remove(value); }
+            for (Class<?> c : hierarchy)
+                for (Field field : c.getDeclaredFields())
+                    if (!Modifier.isStatic(field.getModifiers())
+                            && !Modifier.isTransient(field.getModifiers())
+                            && !field.isSynthetic()
+                            && Arrays.stream(field.getAnnotations())
+                                    .noneMatch(a ->
+                                            a.annotationType().getSimpleName().equals("NotStreamable"))) {
+                        try {
+                            field.setAccessible(true);
+                            fields.add(new FireCatalog.FieldValue(
+                                    field.getName(),
+                                    field.getType().getName(),
+                                    argument(field.get(value), depth + 1, visiting, nodes)));
+                        } catch (IllegalAccessException | RuntimeException inaccessible) {
+                            throw new IOException("Unreadable stock argument field " + field, inaccessible);
+                        }
+                    }
+            return new FireCatalog.DataValue(value.getClass().getName(), fields);
+        } finally {
+            visiting.remove(value);
+        }
     }
-    private static int intField(Object value,String name)throws IOException{Object field=field(value,name);if(field instanceof Number n)return n.intValue();throw new IOException("Missing stock actor integer "+name);}
-    private static float floatField(Object value,String name)throws IOException{Object field=field(value,name);if(field instanceof Number n&&Float.isFinite(n.floatValue()))return n.floatValue();throw new IOException("Missing stock actor float "+name);}
-    private static Object field(Object value,String name)throws IOException { return readField(value,name); }
-    private static Object readField(Object value,String name)throws IOException {
-        for(Class<?> type=value.getClass();type!=null;type=type.getSuperclass())try{Field field=type.getDeclaredField(name);field.setAccessible(true);return field.get(value);}catch(NoSuchFieldException absent){}catch(ReflectiveOperationException|RuntimeException failure){throw new IOException("Cannot read stock runtime field "+name,failure);}
-        throw new IOException("Stock runtime field not found: "+name);
+
+    private static int intField(Object value, String name) throws IOException {
+        Object field = field(value, name);
+        if (field instanceof Number n) return n.intValue();
+        throw new IOException("Missing stock actor integer " + name);
     }
+
+    private static float floatField(Object value, String name) throws IOException {
+        Object field = field(value, name);
+        if (field instanceof Number n && Float.isFinite(n.floatValue())) return n.floatValue();
+        throw new IOException("Missing stock actor float " + name);
+    }
+
+    private static Object field(Object value, String name) throws IOException {
+        return readField(value, name);
+    }
+
+    private static Object readField(Object value, String name) throws IOException {
+        for (Class<?> type = value.getClass(); type != null; type = type.getSuperclass())
+            try {
+                Field field = type.getDeclaredField(name);
+                field.setAccessible(true);
+                return field.get(value);
+            } catch (NoSuchFieldException absent) {
+            } catch (ReflectiveOperationException | RuntimeException failure) {
+                throw new IOException("Cannot read stock runtime field " + name, failure);
+            }
+        throw new IOException("Stock runtime field not found: " + name);
+    }
+
     private static boolean playerDefinition(int id, ItemConfig.Original item) {
         boolean eligibleSlot = item instanceof ItemConfig.Weapon weapon
-            && weapon.h(6, false)
-            && (item instanceof ItemConfig.Sword || item instanceof ItemConfig.Handgun || item instanceof ItemConfig.Bomb)
-            || item instanceof ItemConfig.Shield shield && shield.h(2, false);
-        return id != 0 && item.name != null && !item.name.isBlank() && item.icon != null
-            && item.expireDays == 0 && (item.expireEvent == null || item.expireEvent.isBlank()) && eligibleSlot;
+                        && weapon.h(6, false)
+                        && (item instanceof ItemConfig.Sword
+                                || item instanceof ItemConfig.Handgun
+                                || item instanceof ItemConfig.Bomb)
+                || item instanceof ItemConfig.Shield shield && shield.h(2, false);
+        return id != 0
+                && item.name != null
+                && !item.name.isBlank()
+                && item.icon != null
+                && item.expireDays == 0
+                && (item.expireEvent == null || item.expireEvent.isBlank())
+                && eligibleSlot;
     }
 }

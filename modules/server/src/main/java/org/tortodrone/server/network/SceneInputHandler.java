@@ -17,22 +17,38 @@ final class SceneInputHandler {
         this.session = session;
     }
 
-    void input(SessionDecoder.Input input)throws IOException { synchronized (session) {
-        // Old frames can already be in flight when the server forces a portal move.
-        // Ignore only the known departing scene until the destination becomes ready.
-        if(!session.isClosed()&&!!session.responder().open()&&session.departedSceneOid()!=0&&input.oid()==session.departedSceneOid())return;
-        if(session.isClosed()||!session.responder().open()||!session.sceneSubscribed()||!session.sceneEntered()
-                ||input.oid()!=session.currentScene().oid())
-            throw new SessionDecoder.Rejected("Unauthorized movement input");
-        // TCP delivers every queued snapshot in order, even while scene loading delays input.
-        // Client acknowledgements are for unreliable transport; they do not choose our baseline.
-        long now=WorldSession.monotonicTime();
-        int sceneTime=SceneClock.now();
-        if(!session.sceneRegistry().authorized(session.currentScene(),session.currentProfile().worldId(),session.partyMember()))
-            return; // Revoked memberships await their queued safe return.
-        session.ping((short)Math.max(0,Math.min(Short.MAX_VALUE,(long)sceneTime-input.smoothedTime())));
-        for(var frame:input.frames())
-            if(session.membership().input(frame.timestamp(),frame.rotation(),frame.direction(),
-                    frame.flags(),frame.actionChanged(),sceneTime,now))session.acknowledge(frame.timestamp());
-    }}
+    void input(SessionDecoder.Input input) throws IOException {
+        synchronized (session) {
+            // Old frames can already be in flight when the server forces a portal move.
+            // Ignore only the known departing scene until the destination becomes ready.
+            if (!session.isClosed()
+                    && !!session.responder().open()
+                    && session.departedSceneOid() != 0
+                    && input.oid() == session.departedSceneOid()) return;
+            if (session.isClosed()
+                    || !session.responder().open()
+                    || !session.sceneSubscribed()
+                    || !session.sceneEntered()
+                    || input.oid() != session.currentScene().oid())
+                throw new SessionDecoder.Rejected("Unauthorized movement input");
+            // TCP delivers every queued snapshot in order, even while scene loading delays input.
+            // Client acknowledgements are for unreliable transport; they do not choose our baseline.
+            long now = WorldSession.monotonicTime();
+            int sceneTime = SceneClock.now();
+            if (!session.sceneRegistry()
+                    .authorized(session.currentScene(), session.currentProfile().worldId(), session.partyMember()))
+                return; // Revoked memberships await their queued safe return.
+            session.ping((short) Math.max(0, Math.min(Short.MAX_VALUE, (long) sceneTime - input.smoothedTime())));
+            for (var frame : input.frames())
+                if (session.membership()
+                        .input(
+                                frame.timestamp(),
+                                frame.rotation(),
+                                frame.direction(),
+                                frame.flags(),
+                                frame.actionChanged(),
+                                sceneTime,
+                                now)) session.acknowledge(frame.timestamp());
+        }
+    }
 }

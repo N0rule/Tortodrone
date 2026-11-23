@@ -1,12 +1,5 @@
 package org.tortodrone.protocol;
 
-import org.tortodrone.core.wire.AuctionSearch;
-import org.tortodrone.core.wire.ConfigReference;
-import org.tortodrone.core.wire.EnumValue;
-import org.tortodrone.core.wire.Multiset;
-import org.tortodrone.core.wire.SentMail;
-import org.tortodrone.core.wire.SteamFriend;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,42 +7,71 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.tortodrone.core.WireTypes;
-import org.tortodrone.core.character.Knight;
+import org.tortodrone.core.wire.AuctionSearch;
+import org.tortodrone.core.wire.EnumValue;
+import org.tortodrone.core.wire.Multiset;
+import org.tortodrone.core.wire.SentMail;
+import org.tortodrone.core.wire.SteamFriend;
 
 /** A bounded, explicit Presents subset. Never loads classes named by the peer. */
 public final class SessionDecoder {
     /** Fixed parser diagnostics, containing no peer strings or argument values. */
     public static final class Rejected extends IOException {
-        public Rejected(String reason) { super(reason); }
+        public Rejected(String reason) {
+            super(reason);
+        }
     }
+
     private static final String NET = WireTypes.NET_PREFIX;
     private static final String DOB = WireTypes.DOBJ_PREFIX;
     private static final String INV = WireTypes.LISTENER_PREFIX;
     private final Types types;
     private final Interns interns;
-    private final Map<Integer,String> mapped = new LinkedHashMap<>();
+    private final Map<Integer, String> mapped = new LinkedHashMap<>();
     private int nodes;
 
     /** Single-table decoder for isolated fixtures; the connection mapping belongs to the caller. */
-    SessionDecoder(Types types) { this.types = types; interns = null; }
+    SessionDecoder(Types types) {
+        this.types = types;
+        interns = null;
+    }
 
-    public sealed interface Event permits Compound, Mutation, Invocation, Input { int oid(); }
-    public record Compound(int oid, List<Event> events) implements Event { }
-    public record Mutation(int oid, String operation, String field, Object value) implements Event { }
-    public record Invocation(int oid, int service, int method, List<Object> arguments) implements Event { }
-    public record Input(int oid,int acknowledge,int smoothedTime,List<InputFrame> frames) implements Event { }
-    public record InputFrame(int timestamp,float rotation,float direction,int flags,int actionChanged) {
-        public InputFrame(int timestamp,float rotation,float direction,int flags) {
-            this(timestamp,rotation,direction,flags,timestamp);
+    public sealed interface Event permits Compound, Mutation, Invocation, Input {
+        int oid();
+    }
+
+    public record Compound(int oid, List<Event> events) implements Event {}
+
+    public record Mutation(int oid, String operation, String field, Object value) implements Event {}
+
+    public record Invocation(int oid, int service, int method, List<Object> arguments) implements Event {}
+
+    public record Input(int oid, int acknowledge, int smoothedTime, List<InputFrame> frames) implements Event {}
+
+    public record InputFrame(int timestamp, float rotation, float direction, int flags, int actionChanged) {
+        public InputFrame(int timestamp, float rotation, float direction, int flags) {
+            this(timestamp, rotation, direction, flags, timestamp);
         }
     }
-    public record Registration(String code, short id) { }
-    public record Listener(String type, short requestId) { }
 
-    @FunctionalInterface interface Types { String read(DataInputStream in) throws IOException; }
-    @FunctionalInterface interface Interns { String read(DataInputStream in) throws IOException; }
+    public record Registration(String code, short id) {}
 
-    SessionDecoder(Types types, Interns interns) { this.types = types; this.interns = interns; }
+    public record Listener(String type, short requestId) {}
+
+    @FunctionalInterface
+    interface Types {
+        String read(DataInputStream in) throws IOException;
+    }
+
+    @FunctionalInterface
+    interface Interns {
+        String read(DataInputStream in) throws IOException;
+    }
+
+    SessionDecoder(Types types, Interns interns) {
+        this.types = types;
+        this.interns = interns;
+    }
 
     List<HandshakeCodec.SessionRequest> decode(byte[] body) throws IOException {
         DataInputStream in = new DataInputStream(new ByteArrayInputStream(body));
@@ -59,7 +81,8 @@ public final class SessionDecoder {
         return List.copyOf(requests);
     }
 
-    private void request(DataInputStream in, List<HandshakeCodec.SessionRequest> requests, int depth) throws IOException {
+    private void request(DataInputStream in, List<HandshakeCodec.SessionRequest> requests, int depth)
+            throws IOException {
         limit(depth);
         String type = types.read(in);
         check(type != null && type.startsWith(NET), "Expected upstream message");
@@ -76,12 +99,13 @@ public final class SessionDecoder {
                 return;
             }
             case "SubscribeRequest", "UnsubscribeRequest" -> {
-                oid = in.readInt(); check(oid > 0, "Invalid object ID");
+                oid = in.readInt();
+                check(oid > 0, "Invalid object ID");
             }
             case "ForwardEventRequest" -> event = event(in, depth + 1);
             // Stock Client.cC sends the no-argument ACK constructor, whose int is zero.
-            case "ThrottleUpdatedMessage" -> check(in.readInt()==0,"Invalid throttle acknowledgement");
-            case "PingRequest", "LogoffRequest" -> { }
+            case "ThrottleUpdatedMessage" -> check(in.readInt() == 0, "Invalid throttle acknowledgement");
+            case "PingRequest", "LogoffRequest" -> {}
             default -> throw new Rejected("Unsupported upstream message");
         }
         requests.add(new HandshakeCodec.SessionRequest(name, id, oid, event));
@@ -90,29 +114,33 @@ public final class SessionDecoder {
     private Event event(DataInputStream in, int depth) throws IOException {
         limit(depth);
         String type = types.read(in);
-        if("com.threerings.tudey.data.InputEnqueueEvent".equals(type)) {
-            int oid=in.readInt(),ack=in.readInt(),time=in.readInt();
-            check(oid>0,"Invalid input target");
-            check("[Lcom.threerings.tudey.data.InputFrame;".equals(types.read(in)),"Expected input frames");
-            int length=count(in);check(length<=32,"Invalid input frame count");
-            List<InputFrame> frames=new ArrayList<>();
-            for(int i=0;i<length;i++) {
-                String frameType=types.read(in);
+        if ("com.threerings.tudey.data.InputEnqueueEvent".equals(type)) {
+            int oid = in.readInt(), ack = in.readInt(), time = in.readInt();
+            check(oid > 0, "Invalid input target");
+            check("[Lcom.threerings.tudey.data.InputFrame;".equals(types.read(in)), "Expected input frames");
+            int length = count(in);
+            check(length <= 32, "Invalid input frame count");
+            List<InputFrame> frames = new ArrayList<>();
+            for (int i = 0; i < length; i++) {
+                String frameType = types.read(in);
                 // DungeonInputFrame inherits the same five fields; its extra controls
                 // are packed into flags and remain outside peaceful scene movement.
-                boolean extended="com.threerings.projectx.data.ProjectXInputFrame".equals(frameType)
-                    ||"com.threerings.projectx.dungeon.data.DungeonInputFrame".equals(frameType);
-                check(extended||"com.threerings.tudey.data.InputFrame".equals(frameType),"Expected input frame");
-                int stamp=in.readInt();float rotation=in.readFloat(),direction=in.readFloat();int flags=in.readInt();
-                int actionChanged=extended?in.readInt():stamp;
-                check(Float.isFinite(rotation)&&Float.isFinite(direction),"Invalid input angles");
-                frames.add(new InputFrame(stamp,rotation,direction,flags,actionChanged));
+                boolean extended = "com.threerings.projectx.data.ProjectXInputFrame".equals(frameType)
+                        || "com.threerings.projectx.dungeon.data.DungeonInputFrame".equals(frameType);
+                check(extended || "com.threerings.tudey.data.InputFrame".equals(frameType), "Expected input frame");
+                int stamp = in.readInt();
+                float rotation = in.readFloat(), direction = in.readFloat();
+                int flags = in.readInt();
+                int actionChanged = extended ? in.readInt() : stamp;
+                check(Float.isFinite(rotation) && Float.isFinite(direction), "Invalid input angles");
+                frames.add(new InputFrame(stamp, rotation, direction, flags, actionChanged));
             }
-            return new Input(oid,ack,time,List.copyOf(frames));
+            return new Input(oid, ack, time, List.copyOf(frames));
         }
         check(type != null && type.startsWith(DOB), "Expected distributed event");
         String name = type.substring(DOB.length());
-        int oid = in.readInt(); check(oid > 0, "Invalid event target");
+        int oid = in.readInt();
+        check(oid > 0, "Invalid event target");
         if (name.equals("CompoundEvent")) {
             check(WireTypes.ARRAY_LIST.equals(types.read(in)), "Expected event list");
             int size = count(in);
@@ -121,12 +149,17 @@ public final class SessionDecoder {
             return new Compound(oid, List.copyOf(events));
         }
         if (name.equals("InvocationRequestEvent")) {
-            int service = in.readInt(); int method = in.readUnsignedByte();
+            int service = in.readInt();
+            int method = in.readUnsignedByte();
             check(service > 0, "Invalid service code");
             return new Invocation(oid, service, method, arguments(in, depth + 1));
         }
-        check(name.equals("AttributeChangedEvent") || name.equals("EntryAddedEvent")
-            || name.equals("EntryUpdatedEvent") || name.equals("EntryRemovedEvent"), "Unsupported distributed event");
+        check(
+                name.equals("AttributeChangedEvent")
+                        || name.equals("EntryAddedEvent")
+                        || name.equals("EntryUpdatedEvent")
+                        || name.equals("EntryRemovedEvent"),
+                "Unsupported distributed event");
         String field = string(in);
         return new Mutation(oid, name, field, value(in, depth + 1));
     }
@@ -148,8 +181,29 @@ public final class SessionDecoder {
         String type = types.read(in);
         if (type == null) return null;
         return switch (type) {
-            case "com.google.common.collect.Multiset","com.google.common.collect.HashMultiset","com.google.common.collect.LinkedHashMultiset" -> {int size=count(in);var entries=new LinkedHashMap<Object,Integer>();for(int i=0;i<size;i++){Object entry=value(in,depth+1);int number=in.readInt();check((entry instanceof Long||entry instanceof Integer)&&number>0&&number<=9999&&entries.put(entry,number)==null,"Invalid Town multiset");}yield new Multiset(entries);}
-            case "[J" -> {int size=count(in);long[] values=new long[size];for(int i=0;i<size;i++)values[i]=in.readLong();yield values;}
+            case "com.google.common.collect.Multiset",
+                    "com.google.common.collect.HashMultiset",
+                    "com.google.common.collect.LinkedHashMultiset" -> {
+                int size = count(in);
+                var entries = new LinkedHashMap<Object, Integer>();
+                for (int i = 0; i < size; i++) {
+                    Object entry = value(in, depth + 1);
+                    int number = in.readInt();
+                    check(
+                            (entry instanceof Long || entry instanceof Integer)
+                                    && number > 0
+                                    && number <= 9999
+                                    && entries.put(entry, number) == null,
+                            "Invalid Town multiset");
+                }
+                yield new Multiset(entries);
+            }
+            case "[J" -> {
+                int size = count(in);
+                long[] values = new long[size];
+                for (int i = 0; i < size; i++) values[i] = in.readLong();
+                yield values;
+            }
             // Stock party suggestions replaced the streamed ArrayList with a Name[] whose
             // elements, like list elements, each carry their own class record.
             case WireTypes.NAME_ARRAY -> values(in, depth);
@@ -160,117 +214,173 @@ public final class SessionDecoder {
             case "java.lang.Long" -> in.readLong();
             case "java.lang.Float" -> in.readFloat();
             case WireTypes.NAME -> string(in);
-            case "com.threerings.projectx.item.data.ItemCodes$Group" -> enumeration(in,type,29);
-            case "com.threerings.projectx.item.data.ItemCodes$AccessoryLocation" -> enumeration(in,type,11);
-            case WireTypes.SPRITE_PERK -> enumeration(in,type,72);
-            case WireTypes.SPRITE_ULTIMATE -> enumeration(in,type,3);
-            case "com.threerings.projectx.auction.data.Duration" -> enumeration(in,type,10);
-            case "com.threerings.projectx.auction.data.Search$Sort" -> enumeration(in,type,6);
-            case "com.threerings.projectx.auction.data.Search" -> auctionSearch(in,depth);
-            case "com.threerings.projectx.uplink.data.SentMail" -> sentMail(in,depth);
+            case "com.threerings.projectx.item.data.ItemCodes$Group" -> enumeration(in, type, 29);
+            case "com.threerings.projectx.item.data.ItemCodes$AccessoryLocation" -> enumeration(in, type, 11);
+            case WireTypes.SPRITE_PERK -> enumeration(in, type, 72);
+            case WireTypes.SPRITE_ULTIMATE -> enumeration(in, type, 3);
+            case "com.threerings.projectx.auction.data.Duration" -> enumeration(in, type, 10);
+            case "com.threerings.projectx.auction.data.Search$Sort" -> enumeration(in, type, 6);
+            case "com.threerings.projectx.auction.data.Search" -> auctionSearch(in, depth);
+            case "com.threerings.projectx.uplink.data.SentMail" -> sentMail(in, depth);
             // The native create-knight call streams the player's Steam friend hints as
             // List<Tuple<Long,String>>. A StreamableTuple field carries its own class record.
             case WireTypes.STREAMABLE_TUPLE -> {
-                Object id=value(in,depth+1),name=value(in,depth+1);
-                check(id==null||id instanceof Long,"Invalid Steam friend id");
-                check(name==null||name instanceof String,"Invalid Steam friend name");
-                yield new SteamFriend((Long)id,(String)name);
+                Object id = value(in, depth + 1), name = value(in, depth + 1);
+                check(id == null || id instanceof Long, "Invalid Steam friend id");
+                check(name == null || name instanceof String, "Invalid Steam friend name");
+                yield new SteamFriend((Long) id, (String) name);
             }
-            case WireTypes.CONFIG_REFERENCE -> configReference(in,depth);
-            case "com.threerings.config.ArgumentMap" -> argumentEntries(in,depth);
-            case WireTypes.DSET, WireTypes.ARRAY_LIST, "java.util.List", "java.util.Set", "java.util.ArrayList", "java.util.HashSet", "java.util.LinkedHashSet" -> values(in, depth);
+            case WireTypes.CONFIG_REFERENCE -> configReference(in, depth);
+            case "com.threerings.config.ArgumentMap" -> argumentEntries(in, depth);
+            case WireTypes.DSET,
+                    WireTypes.ARRAY_LIST,
+                    "java.util.List",
+                    "java.util.Set",
+                    "java.util.ArrayList",
+                    "java.util.HashSet",
+                    "java.util.LinkedHashSet" -> values(in, depth);
             case WireTypes.KNIGHT_HEIGHT -> enumeration(in, type, 5);
             case WireTypes.EYE_TYPE -> enumeration(in, type, 47);
-            case WireTypes.ITEM_LOCATION -> enumeration(in,type,4);
+            case WireTypes.ITEM_LOCATION -> enumeration(in, type, 4);
             case "com.threerings.projectx.data.Pref" -> enumeration(in, type, 3);
             // Stock Knight/Social options requests carry these ordinals even when
             // the operation is unsupported. Decode so its listener can be refused.
-            case "com.threerings.projectx.data.LootReportLevel",
-                 WireTypes.DIFFICULTY -> enumeration(in, type, 3);
+            case "com.threerings.projectx.data.LootReportLevel", WireTypes.DIFFICULTY -> enumeration(in, type, 3);
             case "com.threerings.presents.client.InvocationReceiver$Registration" ->
                 new Registration(string(in), in.readShort());
-            case INV + "ListenerMarshaller", INV + "ConfirmMarshaller", INV + "ResultMarshaller",
-                 "com.threerings.crowd.chat.data.ChatMarshaller$TellMarshaller",
-                 "com.threerings.crowd.data.LocationMarshaller$MoveMarshaller",
-                 "com.threerings.whirled.data.SceneMarshaller$SceneMoveMarshaller",
-                 "com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller" ->
+            case INV + "ListenerMarshaller",
+                    INV + "ConfirmMarshaller",
+                    INV + "ResultMarshaller",
+                    "com.threerings.crowd.chat.data.ChatMarshaller$TellMarshaller",
+                    "com.threerings.crowd.data.LocationMarshaller$MoveMarshaller",
+                    "com.threerings.whirled.data.SceneMarshaller$SceneMoveMarshaller",
+                    "com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller" ->
                 new Listener(type, in.readShort());
             default -> throw new Rejected("Unsupported event value");
         };
     }
 
-    private AuctionSearch auctionSearch(DataInputStream in,int depth)throws IOException {
-        boolean featured=present(in);Object group=value(in,depth+1);
-        java.util.Set<Integer> configs=null;
-        if(present(in)){int size=count(in);configs=new java.util.HashSet<>();for(int i=0;i<size;i++){Object v=value(in,depth+1);check(v instanceof Integer,"Invalid auction config");configs.add((Integer)v);}}
-        Object sort=value(in,depth+1);check(group==null||group instanceof EnumValue&&((EnumValue)group).type().equals("com.threerings.projectx.item.data.ItemCodes$Group"),"Invalid auction group");
-        check(sort==null||sort instanceof EnumValue&&((EnumValue)sort).type().equals("com.threerings.projectx.auction.data.Search$Sort"),"Invalid auction sort");
-        return new AuctionSearch(featured,(EnumValue)group,configs==null?null:java.util.Set.copyOf(configs),sort==null?0:((EnumValue)sort).ordinal(),present(in),present(in));
-    }
-    /** Name, subject, body, Multiset&lt;Long&gt; item ids, crowns, energy, in that streamed order. */
-    private SentMail sentMail(DataInputStream in,int depth)throws IOException {
-        Object recipient=value(in,depth+1);
-        check(recipient==null||recipient instanceof String,"Invalid mail recipient");
-        String subject=string(in),body=string(in);
-        var items=new LinkedHashMap<Long,Integer>();
-        if(present(in)){
-            int size=count(in);
-            for(int i=0;i<size;i++){
-                Object entry=value(in,depth+1);int number=in.readInt();
-                check(entry instanceof Long&&number>0&&number<=9999
-                    &&items.put((Long)entry,number)==null,"Invalid mail items");
+    private AuctionSearch auctionSearch(DataInputStream in, int depth) throws IOException {
+        boolean featured = present(in);
+        Object group = value(in, depth + 1);
+        java.util.Set<Integer> configs = null;
+        if (present(in)) {
+            int size = count(in);
+            configs = new java.util.HashSet<>();
+            for (int i = 0; i < size; i++) {
+                Object v = value(in, depth + 1);
+                check(v instanceof Integer, "Invalid auction config");
+                configs.add((Integer) v);
             }
         }
-        return new SentMail((String)recipient,subject,body,items,in.readInt(),in.readInt());
+        Object sort = value(in, depth + 1);
+        check(
+                group == null
+                        || group instanceof EnumValue
+                                && ((EnumValue) group)
+                                        .type()
+                                        .equals("com.threerings.projectx.item.data.ItemCodes$Group"),
+                "Invalid auction group");
+        check(
+                sort == null
+                        || sort instanceof EnumValue
+                                && ((EnumValue) sort).type().equals("com.threerings.projectx.auction.data.Search$Sort"),
+                "Invalid auction sort");
+        return new AuctionSearch(
+                featured,
+                (EnumValue) group,
+                configs == null ? null : java.util.Set.copyOf(configs),
+                sort == null ? 0 : ((EnumValue) sort).ordinal(),
+                present(in),
+                present(in));
     }
-    private org.tortodrone.core.wire.ConfigReference configReference(DataInputStream in,int depth)throws IOException {
-        String name=intern(in);
-        return new org.tortodrone.core.wire.ConfigReference(name,argumentMap(in,depth));
+    /** Name, subject, body, Multiset&lt;Long&gt; item ids, crowns, energy, in that streamed order. */
+    private SentMail sentMail(DataInputStream in, int depth) throws IOException {
+        Object recipient = value(in, depth + 1);
+        check(recipient == null || recipient instanceof String, "Invalid mail recipient");
+        String subject = string(in), body = string(in);
+        var items = new LinkedHashMap<Long, Integer>();
+        if (present(in)) {
+            int size = count(in);
+            for (int i = 0; i < size; i++) {
+                Object entry = value(in, depth + 1);
+                int number = in.readInt();
+                check(
+                        entry instanceof Long
+                                && number > 0
+                                && number <= 9999
+                                && items.put((Long) entry, number) == null,
+                        "Invalid mail items");
+            }
+        }
+        return new SentMail((String) recipient, subject, body, items, in.readInt(), in.readInt());
     }
-    private Map<String,Object> argumentMap(DataInputStream in,int depth)throws IOException {
+
+    private org.tortodrone.core.wire.ConfigReference configReference(DataInputStream in, int depth) throws IOException {
+        String name = intern(in);
+        return new org.tortodrone.core.wire.ConfigReference(name, argumentMap(in, depth));
+    }
+
+    private Map<String, Object> argumentMap(DataInputStream in, int depth) throws IOException {
         limit(depth);
-        check("com.threerings.config.ArgumentMap".equals(types.read(in)),"Expected argument map");
-        return argumentEntries(in,depth);
+        check("com.threerings.config.ArgumentMap".equals(types.read(in)), "Expected argument map");
+        return argumentEntries(in, depth);
     }
-    private Map<String,Object> argumentEntries(DataInputStream in,int depth)throws IOException {
-        int size=count(in);var arguments=new LinkedHashMap<String,Object>();
-        for(int index=0;index<size;index++) {
-            String key=intern(in);
-            check(key!=null,"Missing argument map key");
-            arguments.put(key,value(in,depth+1));
+
+    private Map<String, Object> argumentEntries(DataInputStream in, int depth) throws IOException {
+        int size = count(in);
+        var arguments = new LinkedHashMap<String, Object>();
+        for (int index = 0; index < size; index++) {
+            String key = intern(in);
+            check(key != null, "Missing argument map key");
+            arguments.put(key, value(in, depth + 1));
         }
         return Collections.unmodifiableMap(arguments);
     }
     /** Narya string interning: a positive code repeats, a negative code introduces a new string.
      * The mapping belongs to the connection like the class codes, not to a single frame. */
-    private String intern(DataInputStream in)throws IOException {
-        if(interns!=null)return interns.read(in);
-        int code=in.readShort();
-        if(code<0) {
-            check(-code==mapped.size()+1,"Sequential string intern mapping");
-            String value=in.readUTF();mapped.put(-code,value);return value;
+    private String intern(DataInputStream in) throws IOException {
+        if (interns != null) return interns.read(in);
+        int code = in.readShort();
+        if (code < 0) {
+            check(-code == mapped.size() + 1, "Sequential string intern mapping");
+            String value = in.readUTF();
+            mapped.put(-code, value);
+            return value;
         }
-        String value=mapped.get(code);
-        check(value!=null,"Known string intern mapping");return value;
+        String value = mapped.get(code);
+        check(value != null, "Known string intern mapping");
+        return value;
     }
+
     private void limit(int depth) throws IOException {
         // 250 native Steam friend hints expand to three values each inside the create call.
         check(depth <= 8 && ++nodes <= 1024, "Session nesting or element limit exceeded");
     }
+
     private static EnumValue enumeration(DataInputStream in, String type, int count) throws IOException {
-        int ordinal = in.readUnsignedByte(); check(ordinal < count, "Invalid enum ordinal");
+        int ordinal = in.readUnsignedByte();
+        check(ordinal < count, "Invalid enum ordinal");
         return new EnumValue(type, ordinal);
     }
+
     private static int count(DataInputStream in) throws IOException {
         // The native create-knight call allows up to 250 Steam friend hints.
-        int size = in.readInt(); check(size >= 0 && size <= 256, "Invalid collection length"); return size;
+        int size = in.readInt();
+        check(size >= 0 && size <= 256, "Invalid collection length");
+        return size;
     }
+
     private static String string(DataInputStream in) throws IOException {
         return present(in) ? in.readUTF() : null;
     }
+
     private static boolean present(DataInputStream in) throws IOException {
-        int flag = in.readUnsignedByte(); check(flag <= 1, "Invalid presence flag"); return flag == 1;
+        int flag = in.readUnsignedByte();
+        check(flag <= 1, "Invalid presence flag");
+        return flag == 1;
     }
+
     private static void check(boolean condition, String reason) throws IOException {
         if (!condition) throw new Rejected(reason);
     }

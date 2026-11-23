@@ -5,130 +5,263 @@ import java.math.BigDecimal;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.core.Json;
-import org.tortodrone.core.character.WorldProfile;
-import org.tortodrone.core.character.ItemCatalog;
-import org.tortodrone.core.character.StarterCatalog;
 
 /** Human-readable item metadata with explicit types for stock model arguments. */
 final class ItemCatalogJson {
-    private static final Set<String> FIELDS_V1 = Set.of("config", "stockId", "type", "nameKey", "rarity", "stackable", "slot", "bindOnEquip", "permanent", "modelArguments");
-    private static final Set<String> FIELDS_V2 = Set.of("config", "stockId", "type", "nameKey", "rarity", "stackable", "slot", "bindOnEquip", "permanent", "locked", "variant", "seed", "modelArguments");
+    private static final Set<String> FIELDS_V1 = Set.of(
+            "config",
+            "stockId",
+            "type",
+            "nameKey",
+            "rarity",
+            "stackable",
+            "slot",
+            "bindOnEquip",
+            "permanent",
+            "modelArguments");
+    private static final Set<String> FIELDS_V2 = Set.of(
+            "config",
+            "stockId",
+            "type",
+            "nameKey",
+            "rarity",
+            "stackable",
+            "slot",
+            "bindOnEquip",
+            "permanent",
+            "locked",
+            "variant",
+            "seed",
+            "modelArguments");
+
     static void write(Path file, Collection<ItemCatalog.Entry> entries) throws IOException {
-        if (entries.size()>50_000) throw new IOException("Item catalogue exceeds limits");
-        try (var out=Files.newBufferedWriter(file, StandardOpenOption.CREATE_NEW)) {
+        if (entries.size() > 50_000) throw new IOException("Item catalogue exceeds limits");
+        try (var out = Files.newBufferedWriter(file, StandardOpenOption.CREATE_NEW)) {
             out.write("{\n  \"format\": \"tortodrone-items\",\n  \"version\": 2,\n  \"items\": [\n");
-            boolean comma=false;
-            for (var entry:entries.stream().sorted(Comparator.comparing(ItemCatalog.Entry::config)).toList()) {
-                var row=new LinkedHashMap<String,Object>();
-                row.put("config",entry.config()); row.put("stockId",entry.stockId()); row.put("type",entry.type());
-                row.put("nameKey",entry.nameKey()); row.put("rarity",entry.rarity()); row.put("stackable",entry.stackable());
-                row.put("slot",entry.slot()==null?null:entry.slot().name()); row.put("bindOnEquip",entry.bindOnEquip());
-                row.put("permanent",entry.permanent()); row.put("locked",entry.locked()); row.put("variant",entry.variant().name());
-                row.put("expireDays",entry.expireDays()); row.put("seed",entry.seed()); row.put("modelArguments",encode(entry.modelArgs(),0,new int[]{0}));
-                if(entry.auctionGroup()>=0)row.put("auctionGroup",entry.auctionGroup());
-                if (comma) out.write(",\n"); comma=true; out.write("    "+Json.stringify(row));
+            boolean comma = false;
+            for (var entry : entries.stream()
+                    .sorted(Comparator.comparing(ItemCatalog.Entry::config))
+                    .toList()) {
+                var row = new LinkedHashMap<String, Object>();
+                row.put("config", entry.config());
+                row.put("stockId", entry.stockId());
+                row.put("type", entry.type());
+                row.put("nameKey", entry.nameKey());
+                row.put("rarity", entry.rarity());
+                row.put("stackable", entry.stackable());
+                row.put("slot", entry.slot() == null ? null : entry.slot().name());
+                row.put("bindOnEquip", entry.bindOnEquip());
+                row.put("permanent", entry.permanent());
+                row.put("locked", entry.locked());
+                row.put("variant", entry.variant().name());
+                row.put("expireDays", entry.expireDays());
+                row.put("seed", entry.seed());
+                row.put("modelArguments", encode(entry.modelArgs(), 0, new int[] {0}));
+                if (entry.auctionGroup() >= 0) row.put("auctionGroup", entry.auctionGroup());
+                if (comma) out.write(",\n");
+                comma = true;
+                out.write("    " + Json.stringify(row));
             }
             out.write("\n  ]\n}\n");
         }
     }
+
     static ItemCatalog load(Path file) throws IOException {
-        if (Files.size(file)>32_000_000) throw new IOException("Item catalogue exceeds size limit");
+        if (Files.size(file) > 32_000_000) throw new IOException("Item catalogue exceeds size limit");
         try {
             return load(Json.parse(Files.readString(file)));
-        } catch (IllegalArgumentException invalid) { throw new IOException("Invalid JSON item catalogue",invalid); }
+        } catch (IllegalArgumentException invalid) {
+            throw new IOException("Invalid JSON item catalogue", invalid);
+        }
     }
+
     static ItemCatalog load(Object data) throws IOException {
         try {
-            var root=object(data,Set.of("format","version","items"));
-            int version=integer(root.get("version"));
-            if (!"tortodrone-items".equals(root.get("format")) || (version!=1&&version!=2))
+            var root = object(data, Set.of("format", "version", "items"));
+            int version = integer(root.get("version"));
+            if (!"tortodrone-items".equals(root.get("format")) || (version != 1 && version != 2))
                 throw new IOException("Unsupported JSON item catalogue");
             if (!(root.get("items") instanceof List<?> rows)) throw new IOException("Invalid item list");
-            var entries=new ArrayList<ItemCatalog.Entry>();
-            for (Object value:rows) {
-                var fields=new HashSet<>(version==1?FIELDS_V1:FIELDS_V2);
-                if(value instanceof Map<?,?> m&&m.containsKey("expireDays"))fields.add("expireDays");
-                if(value instanceof Map<?,?> m&&m.containsKey("auctionGroup"))fields.add("auctionGroup");
-                var row=object(value,fields);
-                String config=text(row.get("config"),512),type=text(row.get("type"),512),name=text(row.get("nameKey"),1024);
-                int rarity=integer(row.get("rarity")); if (rarity < -1 || rarity > 10) throw new IOException("Invalid item rarity");
-                WorldProfile.Slot slot=row.get("slot")==null?null:WorldProfile.Slot.valueOf(text(row.get("slot"),32));
-                boolean permanent=bool(row.get("permanent"));
-                boolean locked=version==1?ItemCatalog.stockLocked(type,permanent):bool(row.get("locked"));
-                ItemCatalog.Variant variant=version==1?ItemCatalog.Variant.ITEM:ItemCatalog.Variant.valueOf(text(row.get("variant"),32));
-                Long seed=version==1||row.get("seed")==null?null:longInteger(row.get("seed"));
-                entries.add(new ItemCatalog.Entry(config,integer(row.get("stockId")),type,name,rarity,
-                    bool(row.get("stackable")),slot,bool(row.get("bindOnEquip")),permanent,locked,variant,seed,
-                    decode(row.get("modelArguments"),0,new int[]{0}),row.containsKey("expireDays")?integer(row.get("expireDays")):0,row.containsKey("auctionGroup")?integer(row.get("auctionGroup")):-1));
+            var entries = new ArrayList<ItemCatalog.Entry>();
+            for (Object value : rows) {
+                var fields = new HashSet<>(version == 1 ? FIELDS_V1 : FIELDS_V2);
+                if (value instanceof Map<?, ?> m && m.containsKey("expireDays")) fields.add("expireDays");
+                if (value instanceof Map<?, ?> m && m.containsKey("auctionGroup")) fields.add("auctionGroup");
+                var row = object(value, fields);
+                String config = text(row.get("config"), 512),
+                        type = text(row.get("type"), 512),
+                        name = text(row.get("nameKey"), 1024);
+                int rarity = integer(row.get("rarity"));
+                if (rarity < -1 || rarity > 10) throw new IOException("Invalid item rarity");
+                WorldProfile.Slot slot =
+                        row.get("slot") == null ? null : WorldProfile.Slot.valueOf(text(row.get("slot"), 32));
+                boolean permanent = bool(row.get("permanent"));
+                boolean locked = version == 1 ? ItemCatalog.stockLocked(type, permanent) : bool(row.get("locked"));
+                ItemCatalog.Variant variant = version == 1
+                        ? ItemCatalog.Variant.ITEM
+                        : ItemCatalog.Variant.valueOf(text(row.get("variant"), 32));
+                Long seed = version == 1 || row.get("seed") == null ? null : longInteger(row.get("seed"));
+                entries.add(new ItemCatalog.Entry(
+                        config,
+                        integer(row.get("stockId")),
+                        type,
+                        name,
+                        rarity,
+                        bool(row.get("stackable")),
+                        slot,
+                        bool(row.get("bindOnEquip")),
+                        permanent,
+                        locked,
+                        variant,
+                        seed,
+                        decode(row.get("modelArguments"), 0, new int[] {0}),
+                        row.containsKey("expireDays") ? integer(row.get("expireDays")) : 0,
+                        row.containsKey("auctionGroup") ? integer(row.get("auctionGroup")) : -1));
             }
             return new ItemCatalog(entries);
-        } catch (IllegalArgumentException invalid) { throw new IOException("Invalid JSON item catalogue",invalid); }
+        } catch (IllegalArgumentException invalid) {
+            throw new IOException("Invalid JSON item catalogue", invalid);
+        }
     }
-    private static Map<String,Object> encode(Map<String,Object> args,int depth,int[] nodes) throws IOException {
-        bounds(args.size(),depth); var result=new TreeMap<String,Object>();
-        for (var entry:args.entrySet()) {
-            if (++nodes[0]>128) throw new IOException("Too many item arguments");
-            Object value=entry.getValue(), encoded;
-            if (value instanceof String || value instanceof Integer || value instanceof Boolean) encoded=value;
-            else if (value instanceof StarterCatalog.Model model) encoded=Map.of("type","model","name",model.name(),"arguments",encode(model.arguments(),depth+1,nodes));
-            else if (value instanceof StarterCatalog.Colorization c) encoded=Map.of("type","colorization","value",c.value());
-            else if (value instanceof StarterCatalog.TransColorization c) encoded=Map.of("type","transColorization","class",c.clazz(),"value",c.value());
-            else if (value instanceof StarterCatalog.CustomColorization c) encoded=Map.of("type","customColorization","class",c.clazz(),"hue",c.hue(),"saturation",c.saturation(),"value",c.value());
-            else if (value==ItemCatalog.PlayerColor.VALUE) encoded=Map.of("type","playerColor");
-            else if (value instanceof Float f && Float.isFinite(f)) encoded=Map.of("type","float","value",f);
+
+    private static Map<String, Object> encode(Map<String, Object> args, int depth, int[] nodes) throws IOException {
+        bounds(args.size(), depth);
+        var result = new TreeMap<String, Object>();
+        for (var entry : args.entrySet()) {
+            if (++nodes[0] > 128) throw new IOException("Too many item arguments");
+            Object value = entry.getValue(), encoded;
+            if (value instanceof String || value instanceof Integer || value instanceof Boolean) encoded = value;
+            else if (value instanceof StarterCatalog.Model model)
+                encoded = Map.of(
+                        "type",
+                        "model",
+                        "name",
+                        model.name(),
+                        "arguments",
+                        encode(model.arguments(), depth + 1, nodes));
+            else if (value instanceof StarterCatalog.Colorization c)
+                encoded = Map.of("type", "colorization", "value", c.value());
+            else if (value instanceof StarterCatalog.TransColorization c)
+                encoded = Map.of("type", "transColorization", "class", c.clazz(), "value", c.value());
+            else if (value instanceof StarterCatalog.CustomColorization c)
+                encoded = Map.of(
+                        "type",
+                        "customColorization",
+                        "class",
+                        c.clazz(),
+                        "hue",
+                        c.hue(),
+                        "saturation",
+                        c.saturation(),
+                        "value",
+                        c.value());
+            else if (value == ItemCatalog.PlayerColor.VALUE) encoded = Map.of("type", "playerColor");
+            else if (value instanceof Float f && Float.isFinite(f)) encoded = Map.of("type", "float", "value", f);
             else throw new IOException("Unsupported item model argument");
-            result.put(entry.getKey(),encoded);
+            result.put(entry.getKey(), encoded);
         }
         return result;
     }
-    private static Map<String,Object> decode(Object value,int depth,int[] nodes) throws IOException {
-        if (!(value instanceof Map<?,?> args)) throw new IOException("Invalid item arguments");
-        bounds(args.size(),depth); var result=new TreeMap<String,Object>();
-        for (var entry:args.entrySet()) {
-            if (++nodes[0]>128) throw new IOException("Too many item arguments");
-            String key=text(entry.getKey(),1024); Object v=entry.getValue(), decoded;
-            if (v instanceof String) decoded=text(v,65536);
-            else if (v instanceof Boolean) decoded=v;
-            else if (v instanceof BigDecimal) decoded=integer(v);
-            else if (v instanceof Map<?,?> typed) {
-                String type=text(typed.get("type"),32);
-                decoded=switch (type) {
-                    case "model" -> { var m=object(v,Set.of("type","name","arguments")); yield new StarterCatalog.Model(text(m.get("name"),1024),decode(m.get("arguments"),depth+1,nodes)); }
-                    case "playerColor" -> { object(v,Set.of("type")); yield ItemCatalog.PlayerColor.VALUE; }
-                    case "colorization" -> { var m=object(v,Set.of("type","value")); yield new StarterCatalog.Colorization(integer(m.get("value"))); }
-                    case "transColorization" -> { var m=object(v,Set.of("type","class","value")); yield new StarterCatalog.TransColorization(integer(m.get("class")),integer(m.get("value"))); }
-                    case "customColorization" -> { var m=object(v,Set.of("type","class","hue","saturation","value")); yield new StarterCatalog.CustomColorization(integer(m.get("class")),number(m.get("hue")),number(m.get("saturation")),number(m.get("value"))); }
+
+    private static Map<String, Object> decode(Object value, int depth, int[] nodes) throws IOException {
+        if (!(value instanceof Map<?, ?> args)) throw new IOException("Invalid item arguments");
+        bounds(args.size(), depth);
+        var result = new TreeMap<String, Object>();
+        for (var entry : args.entrySet()) {
+            if (++nodes[0] > 128) throw new IOException("Too many item arguments");
+            String key = text(entry.getKey(), 1024);
+            Object v = entry.getValue(), decoded;
+            if (v instanceof String) decoded = text(v, 65536);
+            else if (v instanceof Boolean) decoded = v;
+            else if (v instanceof BigDecimal) decoded = integer(v);
+            else if (v instanceof Map<?, ?> typed) {
+                String type = text(typed.get("type"), 32);
+                decoded = switch (type) {
+                    case "model" -> {
+                        var m = object(v, Set.of("type", "name", "arguments"));
+                        yield new StarterCatalog.Model(
+                                text(m.get("name"), 1024), decode(m.get("arguments"), depth + 1, nodes));
+                    }
+                    case "playerColor" -> {
+                        object(v, Set.of("type"));
+                        yield ItemCatalog.PlayerColor.VALUE;
+                    }
+                    case "colorization" -> {
+                        var m = object(v, Set.of("type", "value"));
+                        yield new StarterCatalog.Colorization(integer(m.get("value")));
+                    }
+                    case "transColorization" -> {
+                        var m = object(v, Set.of("type", "class", "value"));
+                        yield new StarterCatalog.TransColorization(integer(m.get("class")), integer(m.get("value")));
+                    }
+                    case "customColorization" -> {
+                        var m = object(v, Set.of("type", "class", "hue", "saturation", "value"));
+                        yield new StarterCatalog.CustomColorization(
+                                integer(m.get("class")),
+                                number(m.get("hue")),
+                                number(m.get("saturation")),
+                                number(m.get("value")));
+                    }
                     case "float" -> {
-                        var m=object(v,Set.of("type","value"));
-                        if (!(m.get("value") instanceof BigDecimal number)) throw new IOException("Invalid model float");
-                        float f=number.floatValue(); if (!Float.isFinite(f)) throw new IOException("Invalid model float"); yield f;
+                        var m = object(v, Set.of("type", "value"));
+                        if (!(m.get("value") instanceof BigDecimal number))
+                            throw new IOException("Invalid model float");
+                        float f = number.floatValue();
+                        if (!Float.isFinite(f)) throw new IOException("Invalid model float");
+                        yield f;
                     }
                     default -> throw new IOException("Unknown item argument type");
                 };
             } else throw new IOException("Invalid item model value");
-            result.put(key,decoded);
+            result.put(key, decoded);
         }
         return Map.copyOf(result);
     }
-    private static void bounds(int count,int depth) throws IOException { if (count>64 || depth>8) throw new IOException("Item arguments exceed limits"); }
-    private static Map<?,?> object(Object value,Set<String> fields) throws IOException {
-        if (!(value instanceof Map<?,?> map) || !map.keySet().equals(fields)) throw new IOException("Missing or unknown JSON item fields");
+
+    private static void bounds(int count, int depth) throws IOException {
+        if (count > 64 || depth > 8) throw new IOException("Item arguments exceed limits");
+    }
+
+    private static Map<?, ?> object(Object value, Set<String> fields) throws IOException {
+        if (!(value instanceof Map<?, ?> map) || !map.keySet().equals(fields))
+            throw new IOException("Missing or unknown JSON item fields");
         return map;
     }
-    private static String text(Object value,int max) throws IOException {
-        if (!(value instanceof String s) || s.length()>max || s.chars().anyMatch(c->c<32)) throw new IOException("Invalid item text");
+
+    private static String text(Object value, int max) throws IOException {
+        if (!(value instanceof String s) || s.length() > max || s.chars().anyMatch(c -> c < 32))
+            throw new IOException("Invalid item text");
         return s;
     }
-    private static float number(Object value)throws IOException{if(!(value instanceof Number n)||!Float.isFinite(n.floatValue()))throw new IOException("Invalid model float");return n.floatValue();}
-    private static boolean bool(Object value) throws IOException { if (!(value instanceof Boolean b)) throw new IOException("Invalid item flag"); return b; }
+
+    private static float number(Object value) throws IOException {
+        if (!(value instanceof Number n) || !Float.isFinite(n.floatValue()))
+            throw new IOException("Invalid model float");
+        return n.floatValue();
+    }
+
+    private static boolean bool(Object value) throws IOException {
+        if (!(value instanceof Boolean b)) throw new IOException("Invalid item flag");
+        return b;
+    }
+
     private static int integer(Object value) throws IOException {
         if (!(value instanceof Number)) throw new IOException("Invalid item integer");
-        BigDecimal n=new BigDecimal(value.toString());
-        try { return n.intValueExact(); } catch (ArithmeticException invalid) { throw new IOException("Invalid item integer",invalid); }
+        BigDecimal n = new BigDecimal(value.toString());
+        try {
+            return n.intValueExact();
+        } catch (ArithmeticException invalid) {
+            throw new IOException("Invalid item integer", invalid);
+        }
     }
+
     private static long longInteger(Object value) throws IOException {
         if (!(value instanceof Number)) throw new IOException("Invalid item integer");
-        BigDecimal n=new BigDecimal(value.toString());
-        try { return n.longValueExact(); } catch (ArithmeticException invalid) { throw new IOException("Invalid item integer",invalid); }
+        BigDecimal n = new BigDecimal(value.toString());
+        try {
+            return n.longValueExact();
+        } catch (ArithmeticException invalid) {
+            throw new IOException("Invalid item integer", invalid);
+        }
     }
 }

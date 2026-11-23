@@ -18,9 +18,9 @@ import org.tortodrone.world.OpeningComlinks;
  *  run's own {@code o.<id>} key. */
 final class SessionStory {
     private final WorldSession session;
-    private Set<String> memories=Set.of();
-    private Map<String,OpeningCompletion> completed=Map.of();
-    private Map<String,KnightObjective.State> objectives=Map.of();
+    private Set<String> memories = Set.of();
+    private Map<String, OpeningCompletion> completed = Map.of();
+    private Map<String, KnightObjective.State> objectives = Map.of();
     private String missionObjective;
     private OpeningMission arrivalComlink;
     private OpeningMission deliveredComlink;
@@ -38,11 +38,11 @@ final class SessionStory {
         memories = value;
     }
 
-    Map<String,KnightObjective.State> objectives() {
+    Map<String, KnightObjective.State> objectives() {
         return objectives;
     }
 
-    void objectives(Map<String,KnightObjective.State> value) {
+    void objectives(Map<String, KnightObjective.State> value) {
         objectives = value;
     }
 
@@ -58,41 +58,49 @@ final class SessionStory {
         return completed.values();
     }
 
-    void completed(Map<String,OpeningCompletion> value) {
+    void completed(Map<String, OpeningCompletion> value) {
         completed = value;
     }
 
-    boolean isCompleted(String mission,OpeningCompletion completion) {
+    boolean isCompleted(String mission, OpeningCompletion completion) {
         return completed.containsKey(mission) && completion.equals(completed.get(mission));
     }
 
-    void recordCompletion(String mission,OpeningCompletion completion) {
-        if (isCompleted(mission,completion)) return;
+    void recordCompletion(String mission, OpeningCompletion completion) {
+        if (isCompleted(mission, completion)) return;
         var next = new LinkedHashMap<>(completed);
-        next.put(mission,completion);
+        next.put(mission, completion);
         completed = Map.copyOf(next);
     }
 
     void load() throws IOException {
-        completed = session.charactersStore().services().openingMissions(
-            session.sceneRegistry().town(),session.sceneRegistry().missions())
-            .load(session.charactersStore().accountId(),session.selectedKnight().id(),session.authRevision());
+        completed = session.charactersStore()
+                .services()
+                .openingMissions(
+                        session.sceneRegistry().town(), session.sceneRegistry().missions())
+                .load(
+                        session.charactersStore().accountId(),
+                        session.selectedKnight().id(),
+                        session.authRevision());
     }
 
     void applyMemories(Set<String> fresh) throws IOException {
         if (memories.equals(fresh)) return;
         var previous = memories;
         memories = fresh;
-        session.responder().send(() -> session.responder().codec().knightMemoryChanges(session.connectionOid(),previous,memories));
+        session.responder()
+                .send(() ->
+                        session.responder().codec().knightMemoryChanges(session.connectionOid(), previous, memories));
     }
 
-    void applyObjectives(Map<String,KnightObjective.State> fresh) throws IOException {
+    void applyObjectives(Map<String, KnightObjective.State> fresh) throws IOException {
         if (objectives.equals(fresh)) return;
         objectives = fresh;
         publishObjectives();
     }
 
-    void applySettlementStory(Set<String> freshMemories,Map<String,KnightObjective.State> freshObjectives) throws IOException {
+    void applySettlementStory(Set<String> freshMemories, Map<String, KnightObjective.State> freshObjectives)
+            throws IOException {
         applyMemories(freshMemories);
         applyObjectives(freshObjectives);
     }
@@ -134,21 +142,22 @@ final class SessionStory {
 
     private java.util.List<ObjectiveEntry> wireObjectives() {
         int next = 0;
-        var result = new java.util.ArrayList<ObjectiveEntry>(objectives.size()+1);
+        var result = new java.util.ArrayList<ObjectiveEntry>(objectives.size() + 1);
         for (var value : objectives.values()) {
-            result.add(new ObjectiveEntry(value.index(),value.name(),value.text(),ObjectiveEntry.KNIGHT));
-            next = Math.max(next,value.index()+1);
+            result.add(new ObjectiveEntry(value.index(), value.name(), value.text(), ObjectiveEntry.KNIGHT));
+            next = Math.max(next, value.index() + 1);
         }
         // The HUD resolves the key through the default (projectx) bundle, so the mission
         // bullet names its own bundle explicitly, exactly like native mission strings.
         if (missionObjective != null)
-            result.add(new ObjectiveEntry(next,missionObjective,"%mission:o."+missionObjective,ObjectiveEntry.PARTY));
+            result.add(
+                    new ObjectiveEntry(next, missionObjective, "%mission:o." + missionObjective, ObjectiveEntry.PARTY));
         return result;
     }
 
     void publishObjectives() throws IOException {
         var wire = wireObjectives();
-        session.responder().send(() -> session.responder().codec().objectives(session.connectionOid(),wire));
+        session.responder().send(() -> session.responder().codec().objectives(session.connectionOid(), wire));
     }
 
     /** The mission bar follows the owned run: the imported mission's {@code o.<id>} objective
@@ -160,7 +169,7 @@ final class SessionStory {
             var mission = session.sceneRegistry().missions().mission(run.missionId());
             if (mission != null && mission.requirement().hasObjective()) next = run.missionId();
         }
-        if (!java.util.Objects.equals(next,missionObjective)) {
+        if (!java.util.Objects.equals(next, missionObjective)) {
             missionObjective = next;
             publishObjectives();
         }

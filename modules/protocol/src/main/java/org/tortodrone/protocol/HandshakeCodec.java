@@ -12,24 +12,45 @@ public final class HandshakeCodec {
     /** Stock secure handshake constants: the client exchanges a 2048-bit RSA block
      * (256 bytes) with a 4-byte salt, and this secure-protocol version tag only. */
     private static final int RSA_BLOCK_BYTES = 256, SALT_BYTES = 4, SECURE_VERSION = 1;
+
     private final Map<Integer, String> classes = new HashMap<>();
     private final Map<Integer, String> interns = new HashMap<>();
 
-    public record Request(short messageId, byte[] encryptedSecret, byte[] salt,
-                          String version, String timezone) { }
-    public record Authentication(short messageId, String version, int groupCount, byte[] encryptedCredentials) { }
-    public record Credentials(String username, char[] passwordHash, boolean normalLogin, String language, String region,
-            boolean steamClient) implements AutoCloseable {
-        public Credentials(String username,char[] passwordHash,boolean normalLogin){this(username,passwordHash,normalLogin,null,null,false);}
-        @Override public void close() { java.util.Arrays.fill(passwordHash, '\0'); }
-        @Override public String toString() { return "Credentials[redacted]"; }
+    public record Request(short messageId, byte[] encryptedSecret, byte[] salt, String version, String timezone) {}
+
+    public record Authentication(short messageId, String version, int groupCount, byte[] encryptedCredentials) {}
+
+    public record Credentials(
+            String username,
+            char[] passwordHash,
+            boolean normalLogin,
+            String language,
+            String region,
+            boolean steamClient)
+            implements AutoCloseable {
+        public Credentials(String username, char[] passwordHash, boolean normalLogin) {
+            this(username, passwordHash, normalLogin, null, null, false);
+        }
+
+        @Override
+        public void close() {
+            java.util.Arrays.fill(passwordHash, '\0');
+        }
+
+        @Override
+        public String toString() {
+            return "Credentials[redacted]";
+        }
     }
-    public record SessionRequest(String type, short messageId, int objectId, SessionDecoder.Event event) { }
+
+    public record SessionRequest(String type, short messageId, int objectId, SessionDecoder.Event event) {}
 
     /** A valid stock Steam/platform-ticket login that this server deliberately refuses with a
      * user-visible message instead of treating as a protocol error. */
     public static final class TicketLogin extends IOException {
-        TicketLogin() { super("Platform ticket login is not supported"); }
+        TicketLogin() {
+            super("Platform ticket login is not supported");
+        }
     }
 
     /** Returns a frame body, or null on clean EOF. Partial frames are errors. */
@@ -37,8 +58,7 @@ public final class HandshakeCodec {
         int first = source.read();
         if (first < 0) return null;
         DataInputStream in = new DataInputStream(source);
-        int size = (first << 24) | (in.readUnsignedByte() << 16)
-            | (in.readUnsignedByte() << 8) | in.readUnsignedByte();
+        int size = (first << 24) | (in.readUnsignedByte() << 16) | (in.readUnsignedByte() << 8) | in.readUnsignedByte();
         if (size < 6 || size > MAX_FRAME) throw new IOException("Invalid frame length");
         byte[] body = new byte[size - 4];
         in.readFully(body);
@@ -63,8 +83,7 @@ public final class HandshakeCodec {
 
     /** Only identifies the next object; authentication fields remain uninterpreted. */
     public boolean isAuthRequest(byte[] body) throws IOException {
-        return type(new DataInputStream(new ByteArrayInputStream(body)))
-            .equals(PREFIX + "AESAuthRequest");
+        return type(new DataInputStream(new ByteArrayInputStream(body))).equals(PREFIX + "AESAuthRequest");
     }
 
     public Authentication authentication(byte[] body) throws IOException {
@@ -104,7 +123,7 @@ public final class HandshakeCodec {
         String username = string(in);
         String passwordHash = string(in);
         nullableString(in); // installation ident; deliberately neither retained nor logged
-        String language=nullableString(in);
+        String language = nullableString(in);
         String session = nullableString(in);
         // Only normal username/password authentication is supported.
         if (in.readUnsignedByte() != 0) throw new TicketLogin();
@@ -112,10 +131,15 @@ public final class HandshakeCodec {
         boolean steamClient = in.readBoolean(); // Client environment flag; the account stays a normal account.
         int site = in.readInt();
         String invite = nullableString(in);
-        String region=nullableString(in);
+        String region = nullableString(in);
         require(in.available() == 0, "Unexpected credential fields");
-        return new Credentials(username, passwordHash.toCharArray(),
-            session == null && !sega && site == 0 && invite == null,language,region,steamClient);
+        return new Credentials(
+                username,
+                passwordHash.toCharArray(),
+                session == null && !sega && site == 0 && invite == null,
+                language,
+                region,
+                steamClient);
     }
 
     public String nextMessageType(byte[] body) throws IOException {
@@ -168,8 +192,7 @@ public final class HandshakeCodec {
         if (code == 0) return null;
         if (code < 0) {
             require(classes.size() < 256, "Too many class mappings");
-            require(code != Short.MIN_VALUE && -code == classes.size() + 1,
-                    "Invalid class mapping");
+            require(code != Short.MIN_VALUE && -code == classes.size() + 1, "Invalid class mapping");
             String name = in.readUTF();
             require(name.length() <= 256, "Class name too long");
             classes.put(-code, name);
@@ -195,15 +218,18 @@ public final class HandshakeCodec {
 
     /** First downstream object on a fresh connection; its mapping space is independent. */
     public static byte[] response(short messageId, String maskedSecret) throws IOException {
-        return HandshakeWire.response(messageId,maskedSecret);
+        return HandshakeWire.response(messageId, maskedSecret);
     }
 
     /** Second downstream frame, after response(): preserve mappings 1 and 2. */
-    public static byte[] authenticationResponse(short messageId, boolean accepted, String sessionId, String username) throws IOException {
-        return HandshakeWire.authenticationResponse(messageId,accepted,sessionId,username);
+    public static byte[] authenticationResponse(short messageId, boolean accepted, String sessionId, String username)
+            throws IOException {
+        return HandshakeWire.authenticationResponse(messageId, accepted, sessionId, username);
     }
-    public static byte[] authenticationResponse(short messageId, String result, String sessionId, String username) throws IOException {
-        return HandshakeWire.authenticationResponse(messageId,result,sessionId,username);
+
+    public static byte[] authenticationResponse(short messageId, String result, String sessionId, String username)
+            throws IOException {
+        return HandshakeWire.authenticationResponse(messageId, result, sessionId, username);
     }
 
     static void require(boolean condition, String message) throws IOException {

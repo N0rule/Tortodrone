@@ -11,10 +11,13 @@ package org.tortodrone.core.world;
  */
 public final class SceneClock {
     private static final long START = System.nanoTime();
-    private SceneClock() { }
+
+    private SceneClock() {}
 
     /** 64-bit monotonic milliseconds since process start. */
-    public static long millis() { return (System.nanoTime() - START) / 1_000_000L; }
+    public static long millis() {
+        return (System.nanoTime() - START) / 1_000_000L;
+    }
 
     /** Wire-visible stamp; never zero so it can stay a sentinel for "unset". */
     public static int now() {
@@ -23,14 +26,22 @@ public final class SceneClock {
     }
 
     /** Wrap-safe elapsed time from {@code earlier} to {@code later}. */
-    public static int elapsed(int earlier, int later) { return later - earlier; }
+    public static int elapsed(int earlier, int later) {
+        return later - earlier;
+    }
 
     /** True once the clock has reached the deadline (inclusive). */
-    public static boolean reached(int now, int deadline) { return now - deadline >= 0; }
+    public static boolean reached(int now, int deadline) {
+        return now - deadline >= 0;
+    }
 
     /** True while the clock is still before the deadline (exclusive). */
-    public static boolean before(int now, int deadline) { return now - deadline < 0; }
+    public static boolean before(int now, int deadline) {
+        return now - deadline < 0;
+    }
 
     /** Wrap-safe later of two nearby deadlines. */
-    public static int later(int left, int right) { return left - right >= 0 ? left : right; }
+    public static int later(int left, int right) {
+        return left - right >= 0 ? left : right;
+    }
 }

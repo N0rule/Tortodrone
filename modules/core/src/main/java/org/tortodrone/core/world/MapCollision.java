@@ -20,23 +20,39 @@ public final class MapCollision {
 
     public record Penetration(float x, float y) {
         public static final Penetration NONE = new Penetration(0, 0);
-        public boolean present() { return x != 0 || y != 0; }
+
+        public boolean present() {
+            return x != 0 || y != 0;
+        }
+
         public Penetration deepest(Penetration other) {
             return other.x * other.x + other.y * other.y > x * x + y * y ? other : this;
         }
     }
 
-    sealed interface Geom permits Circle, Capsule, Polygon, Rail { }
-    record Point(float x, float y) { }
-    record Circle(Point center, float radius) implements Geom { }
-    record Capsule(Point a, Point b, float radius) implements Geom { }
-    record Polygon(List<Point> points) implements Geom { }
-    record Rail(Point a, Point b, Bounds gate) implements Geom { }
+    sealed interface Geom permits Circle, Capsule, Polygon, Rail {}
+
+    record Point(float x, float y) {}
+
+    record Circle(Point center, float radius) implements Geom {}
+
+    record Capsule(Point a, Point b, float radius) implements Geom {}
+
+    record Polygon(List<Point> points) implements Geom {}
+
+    record Rail(Point a, Point b, Bounds gate) implements Geom {}
+
     record Bounds(float minX, float minY, float maxX, float maxY) {
-        boolean intersects(Bounds o) { return minX <= o.maxX && maxX >= o.minX && minY <= o.maxY && maxY >= o.minY; }
-        boolean contains(float x, float y) { return x >= minX && x <= maxX && y >= minY && y <= maxY; }
+        boolean intersects(Bounds o) {
+            return minX <= o.maxX && maxX >= o.minX && minY <= o.maxY && maxY >= o.minY;
+        }
+
+        boolean contains(float x, float y) {
+            return x >= minX && x <= maxX && y >= minY && y <= maxY;
+        }
     }
-    record Shape(int id, int mask, int source, Geom geometry, Bounds bounds) { }
+
+    record Shape(int id, int mask, int source, Geom geometry, Bounds bounds) {}
 
     private final long[] tileKeys;
     private final int[] tileMasks;
@@ -46,8 +62,8 @@ public final class MapCollision {
     private final Grid grid;
     private final String layoutHash;
 
-    MapCollision(long[] tileKeys, int[] tileMasks, long[] floorKeys, List<Shape> shapes,
-            Bounds bounds, String layoutHash) {
+    MapCollision(
+            long[] tileKeys, int[] tileMasks, long[] floorKeys, List<Shape> shapes, Bounds bounds, String layoutHash) {
         this.tileKeys = tileKeys;
         this.tileMasks = tileMasks;
         this.floorKeys = floorKeys;
@@ -57,14 +73,37 @@ public final class MapCollision {
         this.grid = new Grid(bounds, shapes);
     }
 
-    public String layoutHash() { return layoutHash; }
-    long[] tileKeys(){return tileKeys.clone();}
-    int[] tileMasks(){return tileMasks.clone();}
-    long[] floorKeys(){return floorKeys.clone();}
-    List<Shape> shapes(){return shapes;}
-    public int shapeCount() { return shapes.size(); }
-    public int tileCount() { return tileKeys.length; }
-    Bounds bounds() { return bounds; }
+    public String layoutHash() {
+        return layoutHash;
+    }
+
+    long[] tileKeys() {
+        return tileKeys.clone();
+    }
+
+    int[] tileMasks() {
+        return tileMasks.clone();
+    }
+
+    long[] floorKeys() {
+        return floorKeys.clone();
+    }
+
+    List<Shape> shapes() {
+        return shapes;
+    }
+
+    public int shapeCount() {
+        return shapes.size();
+    }
+
+    public int tileCount() {
+        return tileKeys.length;
+    }
+
+    Bounds bounds() {
+        return bounds;
+    }
 
     /** True when the point is on native floor: a floor tile or a floorTile placeable. */
     public boolean floorSupported(float x, float y) {
@@ -78,12 +117,20 @@ public final class MapCollision {
     }
 
     /** True when a circle can stand at (x,y) without touching a walk-masked tile or shape. */
-    public boolean clear(int mask, float x, float y, float radius) { return clear(mask, x, y, radius, Set.of()); }
+    public boolean clear(int mask, float x, float y, float radius) {
+        return clear(mask, x, y, radius, Set.of());
+    }
+
     public boolean clear(int mask, float x, float y, float radius, Set<Integer> disabled) {
         return clear(mask, x, y, radius, disabled, (extraX, extraY) -> false);
     }
     /** Extra floor support for authored moving platforms (native elevators) that bridge a floor shaft. */
-    public boolean clear(int mask, float x, float y, float radius, Set<Integer> disabled,
+    public boolean clear(
+            int mask,
+            float x,
+            float y,
+            float radius,
+            Set<Integer> disabled,
             java.util.function.BiPredicate<Float, Float> extraFloor) {
         if (!valid(x, y) || !Float.isFinite(radius) || radius < 0) return false;
         if (!floorSupported(x, y) && !extraFloor.test(x, y)) return false;
@@ -99,12 +146,21 @@ public final class MapCollision {
     public boolean clearSegment(int mask, float fromX, float fromY, float toX, float toY, float radius) {
         return clearSegment(mask, fromX, fromY, toX, toY, radius, Set.of());
     }
-    public boolean clearSegment(int mask, float fromX, float fromY, float toX, float toY, float radius, Set<Integer> disabled) {
+
+    public boolean clearSegment(
+            int mask, float fromX, float fromY, float toX, float toY, float radius, Set<Integer> disabled) {
         return clearSegment(mask, fromX, fromY, toX, toY, radius, disabled, (extraX, extraY) -> false);
     }
     /** Extra floor support for authored moving platforms (native elevators) that bridge a floor shaft. */
-    public boolean clearSegment(int mask, float fromX, float fromY, float toX, float toY, float radius,
-            Set<Integer> disabled, java.util.function.BiPredicate<Float, Float> extraFloor) {
+    public boolean clearSegment(
+            int mask,
+            float fromX,
+            float fromY,
+            float toX,
+            float toY,
+            float radius,
+            Set<Integer> disabled,
+            java.util.function.BiPredicate<Float, Float> extraFloor) {
         if (!valid(fromX, fromY) || !valid(toX, toY) || !Float.isFinite(radius) || radius < 0) return false;
         float distance = (float) Math.hypot(toX - fromX, toY - fromY);
         if (!Float.isFinite(distance) || distance > 10_000) return false;
@@ -125,17 +181,24 @@ public final class MapCollision {
     }
 
     /** Minimum translation that moves the circle out of walk geometry, or NONE. */
-    public Penetration penetration(int mask, float x, float y, float radius) { return penetration(mask, x, y, radius, Set.of()); }
+    public Penetration penetration(int mask, float x, float y, float radius) {
+        return penetration(mask, x, y, radius, Set.of());
+    }
+
     public Penetration penetration(int mask, float x, float y, float radius, Set<Integer> disabled) {
         if (!valid(x, y) || !Float.isFinite(radius) || radius < 0) return new Penetration(0, 0);
         var result = Penetration.NONE;
-        int minX = floorInt(x - radius), maxX = floorInt(x + radius), minY = floorInt(y - radius), maxY = floorInt(y + radius);
-        for (int cy = minY; cy <= maxY; cy++) for (int cx = minX; cx <= maxX; cx++) {
-            int index = Arrays.binarySearch(tileKeys, key(cx, cy));
-            if (index < 0 || (tileMasks[index] & mask) == 0) continue;
-            if (circleIntersects(new Bounds(cx, cy, cx + 1, cy + 1), x, y, radius))
-                result = result.deepest(aabbPenetration(cx, cy, x, y, radius));
-        }
+        int minX = floorInt(x - radius),
+                maxX = floorInt(x + radius),
+                minY = floorInt(y - radius),
+                maxY = floorInt(y + radius);
+        for (int cy = minY; cy <= maxY; cy++)
+            for (int cx = minX; cx <= maxX; cx++) {
+                int index = Arrays.binarySearch(tileKeys, key(cx, cy));
+                if (index < 0 || (tileMasks[index] & mask) == 0) continue;
+                if (circleIntersects(new Bounds(cx, cy, cx + 1, cy + 1), x, y, radius))
+                    result = result.deepest(aabbPenetration(cx, cy, x, y, radius));
+            }
         for (Shape shape : grid.query(x, y, radius)) {
             if (shape.source != 0 && disabled.contains(shape.source)) continue;
             if ((shape.mask & mask) != 0) result = result.deepest(penetration(shape.geometry, x, y, radius));
@@ -167,12 +230,17 @@ public final class MapCollision {
     // ---- geometry query kernel
 
     private boolean tileHit(int mask, float x, float y, float radius) {
-        int minX = floorInt(x - radius), maxX = floorInt(x + radius), minY = floorInt(y - radius), maxY = floorInt(y + radius);
-        for (int cy = minY; cy <= maxY; cy++) for (int cx = minX; cx <= maxX; cx++) {
-            int index = Arrays.binarySearch(tileKeys, key(cx, cy));
-            if (index >= 0 && (tileMasks[index] & mask) != 0
-                && circleIntersects(new Bounds(cx, cy, cx + 1, cy + 1), x, y, radius)) return true;
-        }
+        int minX = floorInt(x - radius),
+                maxX = floorInt(x + radius),
+                minY = floorInt(y - radius),
+                maxY = floorInt(y + radius);
+        for (int cy = minY; cy <= maxY; cy++)
+            for (int cx = minX; cx <= maxX; cx++) {
+                int index = Arrays.binarySearch(tileKeys, key(cx, cy));
+                if (index >= 0
+                        && (tileMasks[index] & mask) != 0
+                        && circleIntersects(new Bounds(cx, cy, cx + 1, cy + 1), x, y, radius)) return true;
+            }
         return false;
     }
 
@@ -197,20 +265,32 @@ public final class MapCollision {
         }
         if (g instanceof Polygon p) {
             if (inside(p, x, y)) {
-                float best = Float.POSITIVE_INFINITY; Point at = null;
+                float best = Float.POSITIVE_INFINITY;
+                Point at = null;
                 for (int i = 0; i < p.points.size(); i++) {
-                    var a = p.points.get(i); var b = p.points.get((i + 1) % p.points.size());
-                    var q = nearest(x, y, a, b); float d = distance2(x, y, q.x, q.y);
-                    if (d < best) { best = d; at = q; }
+                    var a = p.points.get(i);
+                    var b = p.points.get((i + 1) % p.points.size());
+                    var q = nearest(x, y, a, b);
+                    float d = distance2(x, y, q.x, q.y);
+                    if (d < best) {
+                        best = d;
+                        at = q;
+                    }
                 }
                 if (at == null) return Penetration.NONE;
                 return pushOut(x, y, at.x, at.y, (float) Math.sqrt(distance2(x, y, at.x, at.y)) + r);
             }
-            float best = Float.POSITIVE_INFINITY; Point at = null;
+            float best = Float.POSITIVE_INFINITY;
+            Point at = null;
             for (int i = 0; i < p.points.size(); i++) {
-                var a = p.points.get(i); var b = p.points.get((i + 1) % p.points.size());
-                var q = nearest(x, y, a, b); float d = distance2(x, y, q.x, q.y);
-                if (d < best) { best = d; at = q; }
+                var a = p.points.get(i);
+                var b = p.points.get((i + 1) % p.points.size());
+                var q = nearest(x, y, a, b);
+                float d = distance2(x, y, q.x, q.y);
+                if (d < best) {
+                    best = d;
+                    at = q;
+                }
             }
             return at == null ? Penetration.NONE : radial(x, y, at.x, at.y, r);
         }
@@ -225,11 +305,13 @@ public final class MapCollision {
         if (nearest == bottom) return new Penetration(0, -(bottom + radius));
         return new Penetration(0, top + radius);
     }
+
     private static Penetration pushOut(float x, float y, float qx, float qy, float amount) {
         float dx = x - qx, dy = y - qy, distance = (float) Math.hypot(dx, dy);
         if (distance == 0 || !Float.isFinite(distance)) return new Penetration(amount, 0);
         return new Penetration(dx / distance * amount, dy / distance * amount);
     }
+
     private static Penetration radial(float x, float y, float cx, float cy, float radius) {
         float dx = x - cx, dy = y - cy, distance = (float) Math.hypot(dx, dy);
         if (distance == 0 || distance >= radius) return Penetration.NONE;
@@ -246,7 +328,8 @@ public final class MapCollision {
     private static boolean inside(Polygon p, float x, float y) {
         boolean in = false;
         for (int i = 0, j = p.points.size() - 1; i < p.points.size(); j = i++) {
-            var a = p.points.get(i); var b = p.points.get(j);
+            var a = p.points.get(i);
+            var b = p.points.get(j);
             if ((a.y > y) != (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) in = !in;
         }
         return in;
@@ -255,7 +338,8 @@ public final class MapCollision {
     private static boolean circlePolygon(Polygon p, float x, float y, float r) {
         if (inside(p, x, y)) return true;
         for (int i = 0; i < p.points.size(); i++) {
-            var a = p.points.get(i); var b = p.points.get((i + 1) % p.points.size());
+            var a = p.points.get(i);
+            var b = p.points.get((i + 1) % p.points.size());
             if (distanceToSegment2(x, y, a, b) < square(r)) return true;
         }
         return false;
@@ -272,10 +356,15 @@ public final class MapCollision {
         var q = nearest(x, y, a, b);
         return distance2(x, y, q.x, q.y);
     }
+
     private static float distance2(float ax, float ay, float bx, float by) {
-        float dx = ax - bx, dy = ay - by; return dx * dx + dy * dy;
+        float dx = ax - bx, dy = ay - by;
+        return dx * dx + dy * dy;
     }
-    private static float square(float v) { return v * v; }
+
+    private static float square(float v) {
+        return v * v;
+    }
 
     // ---- grid
 
@@ -292,7 +381,10 @@ public final class MapCollision {
 
         int next(int size) {
             if (stamps.length < size) stamps = Arrays.copyOf(stamps, size);
-            if (++generation <= 1) { Arrays.fill(stamps, 0); generation = 1; }
+            if (++generation <= 1) {
+                Arrays.fill(stamps, 0);
+                generation = 1;
+            }
             return generation;
         }
     }
@@ -303,7 +395,8 @@ public final class MapCollision {
         private final int[][] buckets;
 
         Grid(Bounds bounds, List<Shape> shapes) {
-            originX = bounds.minX - GRID; originY = bounds.minY - GRID;
+            originX = bounds.minX - GRID;
+            originY = bounds.minY - GRID;
             width = Math.max(1, (int) Math.ceil((bounds.maxX - bounds.minX) / GRID) + 2);
             height = Math.max(1, (int) Math.ceil((bounds.maxY - bounds.minY) / GRID) + 2);
             if ((long) width * height > 4_000_000) throw new IllegalArgumentException("Collision bounds are too large");
@@ -315,10 +408,12 @@ public final class MapCollision {
                 int maxX = Math.min(width - 1, (int) Math.floor((shape.bounds.maxX - originX) / GRID));
                 int minY = Math.max(0, (int) Math.floor((shape.bounds.minY - originY) / GRID));
                 int maxY = Math.min(height - 1, (int) Math.floor((shape.bounds.maxY - originY) / GRID));
-                for (int y = minY; y <= maxY; y++) for (int x = minX; x <= maxX; x++) lists.get(y * width + x).add(index);
+                for (int y = minY; y <= maxY; y++)
+                    for (int x = minX; x <= maxX; x++) lists.get(y * width + x).add(index);
             }
             buckets = new int[lists.size()][];
-            for (int i = 0; i < lists.size(); i++) buckets[i] = lists.get(i).stream().mapToInt(Integer::intValue).toArray();
+            for (int i = 0; i < lists.size(); i++)
+                buckets[i] = lists.get(i).stream().mapToInt(Integer::intValue).toArray();
             // Shape ids are positions in the source list; keep the mapping stable.
             this.shapes = shapes.toArray(Shape[]::new);
         }
@@ -338,15 +433,15 @@ public final class MapCollision {
             var marks = QUERY_MARKS.get();
             int mark = marks.next(shapes.length);
             var result = new ArrayList<Shape>();
-            for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) {
-                for (int id : buckets[y * width + x]) {
-                    if (marks.stamps[id] == mark) continue;
-                    marks.stamps[id] = mark;
-                    var shape = shapes[id];
-                    if (shape.bounds.intersects(new Bounds(minX, minY, maxX, maxY)))
-                        result.add(shape);
+            for (int y = y0; y <= y1; y++)
+                for (int x = x0; x <= x1; x++) {
+                    for (int id : buckets[y * width + x]) {
+                        if (marks.stamps[id] == mark) continue;
+                        marks.stamps[id] = mark;
+                        var shape = shapes[id];
+                        if (shape.bounds.intersects(new Bounds(minX, minY, maxX, maxY))) result.add(shape);
+                    }
                 }
-            }
             // Floor shapes (mask 0) are excluded above; floorSupported queries them separately.
             return result;
         }
@@ -357,6 +452,12 @@ public final class MapCollision {
     private static boolean valid(float x, float y) {
         return Float.isFinite(x) && Float.isFinite(y) && Math.abs(x) < 1_000_000 && Math.abs(y) < 1_000_000;
     }
-    private static int floorInt(float value) { return (int) Math.floor(value); }
-    static long key(int x, int y) { return ((long) x << 32) ^ (y & 0xffffffffL); }
+
+    private static int floorInt(float value) {
+        return (int) Math.floor(value);
+    }
+
+    static long key(int x, int y) {
+        return ((long) x << 32) ^ (y & 0xffffffffL);
+    }
 }

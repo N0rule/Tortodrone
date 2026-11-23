@@ -1,15 +1,16 @@
 package org.tortodrone.server;
 
+import static org.tortodrone.support.TestWire.check;
+
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
-import org.tortodrone.support.TestDeployment;
-import org.tortodrone.resources.ContentManager;
 import org.tortodrone.core.Json;
-import static org.tortodrone.support.TestWire.check;
+import org.tortodrone.resources.ContentManager;
+import org.tortodrone.support.TestDeployment;
 
 /** Real packaged startup and HTTP requests; a tiny owned PNG pack, no installed client. */
 public final class ClientArtworkStartupTest {
@@ -18,37 +19,63 @@ public final class ClientArtworkStartupTest {
         Path root = Files.createTempDirectory("tortodrone-artwork-startup-");
         Process process = null;
         try {
-            Path source = Path.of(ClientArtworkSetup.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            Path source = Path.of(ClientArtworkSetup.class
+                    .getProtectionDomain()
+                    .getCodeSource()
+                    .getLocation()
+                    .toURI());
             Path jar = root.resolve("tortodrone.jar");
             TestDeployment.copyServer(source, jar);
             Path config = root.resolve("config/server.yml");
-            Files.writeString(config, "server-ip: 127.0.0.1\nserver-port: 0\nwebui/content_url-port: 0\nwebui-enabled: true\nwebui-public-url: 0.0.0.0\nwebui-tls-mode: http\n");
+            Files.writeString(
+                    config,
+                    "server-ip: 127.0.0.1\nserver-port: 0\nwebui/content_url-port: 0\nwebui-enabled: true\nwebui-public-url: 0.0.0.0\nwebui-tls-mode: http\n");
             var before = ContentManager.load(root);
-            var identities = new TreeMap<String,String>();
-            for (var item : before.items().entries()) identities.put(item.config(), before.items().referenceId(item));
+            var identities = new TreeMap<String, String>();
+            for (var item : before.items().entries())
+                identities.put(item.config(), before.items().referenceId(item));
             var contentBytes = snapshot(root.resolve("content"));
             String clientOnly = "Weapon/Client Update Artwork Only";
             check(before.items().find(clientOnly) == null, "Client-only item not in supported catalog");
             Path cache = root.resolve("webui/assets/game");
             delete(cache);
             ClientArtworkSetupTest.pack(cache, 0xff334455);
-            var manifest = new TreeMap<String,Object>((Map<String,Object>)Json.parse(Files.readString(cache.resolve("manifest.json"))));
-            var itemIcons = new TreeMap<String,Object>((Map<String,Object>)manifest.get("items"));
+            var manifest = new TreeMap<String, Object>(
+                    (Map<String, Object>) Json.parse(Files.readString(cache.resolve("manifest.json"))));
+            var itemIcons = new TreeMap<String, Object>((Map<String, Object>) manifest.get("items"));
             itemIcons.put(clientOnly, itemIcons.values().iterator().next());
             manifest.put("items", itemIcons);
             Files.writeString(cache.resolve("manifest.json"), Json.stringify(manifest));
-            String javaExecutable = Path.of(System.getProperty("java.home"), "bin", System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString();
-            process = new ProcessBuilder(javaExecutable, "-XX:ActiveProcessorCount=2", "-Duser.home=" + root.resolve("isolated-home"), "-jar", jar.toString()).redirectErrorStream(true).start();
+            String javaExecutable = Path.of(
+                            System.getProperty("java.home"),
+                            "bin",
+                            System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java")
+                    .toString();
+            process = new ProcessBuilder(
+                            javaExecutable,
+                            "-XX:ActiveProcessorCount=2",
+                            "-Duser.home=" + root.resolve("isolated-home"),
+                            "-jar",
+                            jar.toString())
+                    .redirectErrorStream(true)
+                    .start();
             var lines = new LinkedBlockingQueue<String>();
             var transcript = new ArrayList<String>();
             Process running = process;
-            Thread reader = new Thread(() -> {
-                try (var input = new BufferedReader(new InputStreamReader(running.getInputStream(), StandardCharsets.UTF_8))) {
-                    String line; while ((line = input.readLine()) != null) lines.add(line);
-                } catch (IOException ignored) { }
-            }, "ArtworkStartupFixtureOutput");
-            reader.setDaemon(true); reader.start();
-            int port = 0; boolean listening = false;
+            Thread reader = new Thread(
+                    () -> {
+                        try (var input = new BufferedReader(
+                                new InputStreamReader(running.getInputStream(), StandardCharsets.UTF_8))) {
+                            String line;
+                            while ((line = input.readLine()) != null) lines.add(line);
+                        } catch (IOException ignored) {
+                        }
+                    },
+                    "ArtworkStartupFixtureOutput");
+            reader.setDaemon(true);
+            reader.start();
+            int port = 0;
+            boolean listening = false;
             long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(40);
             while (port == 0 || !listening) {
                 long left = deadline - System.nanoTime();
@@ -58,67 +85,137 @@ public final class ClientArtworkStartupTest {
                 check(!line.contains("Preparing WebUI images"), "Existing artwork skips extraction");
                 if (line.contains("Done! Listening")) listening = true;
                 if (line.contains("WebUI Ready")) {
-                    var matcher = java.util.regex.Pattern.compile("http://[^ ]+:(\\d+)").matcher(line);
-                    check(matcher.find(), "Ephemeral HTTP address published"); port = Integer.parseInt(matcher.group(1));
+                    var matcher = java.util.regex.Pattern.compile("http://[^ ]+:(\\d+)")
+                            .matcher(line);
+                    check(matcher.find(), "Ephemeral HTTP address published");
+                    port = Integer.parseInt(matcher.group(1));
                 }
             }
             byte[] expected = Files.readAllBytes(cache.resolve("manifest.json"));
-            check(Arrays.equals(get(port, "manifest.json"), expected), "Existing manifest served by the packaged WebUI");
+            check(
+                    Arrays.equals(get(port, "manifest.json"), expected),
+                    "Existing manifest served by the packaged WebUI");
             Path icon;
-            try (var files = Files.list(cache.resolve("icons"))) { icon = files.findFirst().orElseThrow(); }
-            check(Arrays.equals(get(port, "icons/" + icon.getFileName()), Files.readAllBytes(icon)), "Existing PNG bytes served without extraction");
-            try (var channel = java.nio.channels.FileChannel.open(root.resolve("data/server.lock"), StandardOpenOption.WRITE)) {
-                try { check(channel.tryLock() == null, "Server lease protects artwork setup and storage"); }
-                catch (java.nio.channels.OverlappingFileLockException expectedLock) { throw new AssertionError("Fixture unexpectedly shares a process lock", expectedLock); }
+            try (var files = Files.list(cache.resolve("icons"))) {
+                icon = files.findFirst().orElseThrow();
+            }
+            check(
+                    Arrays.equals(get(port, "icons/" + icon.getFileName()), Files.readAllBytes(icon)),
+                    "Existing PNG bytes served without extraction");
+            try (var channel =
+                    java.nio.channels.FileChannel.open(root.resolve("data/server.lock"), StandardOpenOption.WRITE)) {
+                try {
+                    check(channel.tryLock() == null, "Server lease protects artwork setup and storage");
+                } catch (java.nio.channels.OverlappingFileLockException expectedLock) {
+                    throw new AssertionError("Fixture unexpectedly shares a process lock", expectedLock);
+                }
             }
             var commands = process.outputWriter(StandardCharsets.UTF_8);
-            commands.write("status\nshutdown\nSHUT DOWN PROCESS\n"); commands.flush();
-            check(process.waitFor(15, TimeUnit.SECONDS) && process.exitValue() == 0, "Normal console commands remain readable after pre-listener setup");
+            commands.write("status\nshutdown\nSHUT DOWN PROCESS\n");
+            commands.flush();
+            check(
+                    process.waitFor(15, TimeUnit.SECONDS) && process.exitValue() == 0,
+                    "Normal console commands remain readable after pre-listener setup");
             reader.join(1000);
-            check(Files.isRegularFile(cache.resolve("manifest.json")) && !Files.exists(root.resolve("data/client-artwork")), "Single artwork pack survives shutdown without duplicate cache");
+            check(
+                    Files.isRegularFile(cache.resolve("manifest.json"))
+                            && !Files.exists(root.resolve("data/client-artwork")),
+                    "Single artwork pack survives shutdown without duplicate cache");
             var after = ContentManager.load(root);
-            check(after.items().find(clientOnly) == null && after.items().entries().equals(before.items().entries()), "Extra client artwork cannot enable or mutate gameplay items/native identities");
-            for (var item : after.items().entries()) check(identities.get(item.config()).equals(after.items().referenceId(item)), "Existing item reference identity preserved");
-            check(after.scenes().scenes().stream().map(s -> s.id()).toList().equals(before.scenes().scenes().stream().map(s -> s.id()).toList()), "Artwork cannot add gameplay maps");
-            check(contentBytes.equals(snapshot(root.resolve("content"))), "Artwork startup never writes gameplay definitions or bindings");
+            check(
+                    after.items().find(clientOnly) == null
+                            && after.items().entries().equals(before.items().entries()),
+                    "Extra client artwork cannot enable or mutate gameplay items/native identities");
+            for (var item : after.items().entries())
+                check(
+                        identities.get(item.config()).equals(after.items().referenceId(item)),
+                        "Existing item reference identity preserved");
+            check(
+                    after.scenes().scenes().stream()
+                            .map(s -> s.id())
+                            .toList()
+                            .equals(before.scenes().scenes().stream()
+                                    .map(s -> s.id())
+                                    .toList()),
+                    "Artwork cannot add gameplay maps");
+            check(
+                    contentBytes.equals(snapshot(root.resolve("content"))),
+                    "Artwork startup never writes gameplay definitions or bindings");
             // Even a broken artwork path and explicit invalid client must be ignored when disabled.
-            delete(root.resolve("webui")); Files.writeString(root.resolve("webui"), "artwork access must be skipped");
+            delete(root.resolve("webui"));
+            Files.writeString(root.resolve("webui"), "artwork access must be skipped");
             Files.writeString(config, Files.readString(config).replace("webui-enabled: true", "webui-enabled: false"));
-            process = new ProcessBuilder(javaExecutable, "-XX:ActiveProcessorCount=2", "-jar", jar.toString(), "--client", root.resolve("missing-client").toString())
-                .redirectErrorStream(true).redirectOutput(root.resolve("disabled.log").toFile()).start();
+            process = new ProcessBuilder(
+                            javaExecutable,
+                            "-XX:ActiveProcessorCount=2",
+                            "-jar",
+                            jar.toString(),
+                            "--client",
+                            root.resolve("missing-client").toString())
+                    .redirectErrorStream(true)
+                    .redirectOutput(root.resolve("disabled.log").toFile())
+                    .start();
             long disabledDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(40);
-            while (!Files.readString(root.resolve("disabled.log")).contains("Done! Listening") && process.isAlive() && System.nanoTime() < disabledDeadline) Thread.sleep(50);
+            while (!Files.readString(root.resolve("disabled.log")).contains("Done! Listening")
+                    && process.isAlive()
+                    && System.nanoTime() < disabledDeadline) Thread.sleep(50);
             String disabled = Files.readString(root.resolve("disabled.log"));
-            check(disabled.contains("Done! Listening") && !disabled.contains("WebUI artwork") && !disabled.contains("Preparing WebUI") && !disabled.contains("Spiral Knights was not found"), "WebUI disabled skips all artwork preparation even with --client and unusable webui path: " + disabled);
+            check(
+                    disabled.contains("Done! Listening")
+                            && !disabled.contains("WebUI artwork")
+                            && !disabled.contains("Preparing WebUI")
+                            && !disabled.contains("Spiral Knights was not found"),
+                    "WebUI disabled skips all artwork preparation even with --client and unusable webui path: "
+                            + disabled);
             commands = process.outputWriter(StandardCharsets.UTF_8);
-            commands.write("shutdown\nSHUT DOWN PROCESS\n"); commands.flush();
-            check(process.waitFor(15, TimeUnit.SECONDS) && process.exitValue() == 0, "Disabled WebUI server exits normally");
-            System.out.println("PASS: packaged artwork reuse/HTTP/lease/console, gameplay isolation and disabled-WebUI extraction bypass");
+            commands.write("shutdown\nSHUT DOWN PROCESS\n");
+            commands.flush();
+            check(
+                    process.waitFor(15, TimeUnit.SECONDS) && process.exitValue() == 0,
+                    "Disabled WebUI server exits normally");
+            System.out.println(
+                    "PASS: packaged artwork reuse/HTTP/lease/console, gameplay isolation and disabled-WebUI extraction bypass");
         } finally {
-            if (process != null && process.isAlive()) { process.destroyForcibly(); process.waitFor(10, TimeUnit.SECONDS); }
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+                process.waitFor(10, TimeUnit.SECONDS);
+            }
             delete(root);
         }
     }
 
     private static byte[] get(int port, String path) throws IOException {
-        var connection = (HttpURLConnection)URI.create("http://127.0.0.1:" + port + "/admin/assets/game/" + path).toURL().openConnection();
-        connection.setConnectTimeout(5000); connection.setReadTimeout(5000);
-        try { check(connection.getResponseCode() == 200, "Artwork HTTP response"); try (var input = connection.getInputStream()) { return input.readAllBytes(); } }
-        finally { connection.disconnect(); }
+        var connection = (HttpURLConnection) URI.create("http://127.0.0.1:" + port + "/admin/assets/game/" + path)
+                .toURL()
+                .openConnection();
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+        try {
+            check(connection.getResponseCode() == 200, "Artwork HTTP response");
+            try (var input = connection.getInputStream()) {
+                return input.readAllBytes();
+            }
+        } finally {
+            connection.disconnect();
+        }
     }
 
-    private static Map<String,String> snapshot(Path root) throws Exception {
-        var result = new TreeMap<String,String>();
+    private static Map<String, String> snapshot(Path root) throws Exception {
+        var result = new TreeMap<String, String>();
         var digest = java.security.MessageDigest.getInstance("SHA-256");
         try (var files = Files.walk(root)) {
             for (var file : files.filter(Files::isRegularFile).toList())
-                result.put(root.relativize(file).toString(), HexFormat.of().formatHex(digest.digest(Files.readAllBytes(file))));
+                result.put(
+                        root.relativize(file).toString(),
+                        HexFormat.of().formatHex(digest.digest(Files.readAllBytes(file))));
         }
         return result;
     }
 
     private static void delete(Path path) throws IOException {
         if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) return;
-        try (var entries = Files.walk(path)) { for (Path entry : entries.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(entry); }
+        try (var entries = Files.walk(path)) {
+            for (Path entry : entries.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(entry);
+        }
     }
 }

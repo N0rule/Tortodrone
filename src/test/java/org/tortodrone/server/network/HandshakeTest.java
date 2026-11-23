@@ -22,13 +22,17 @@ public final class HandshakeTest {
         check(HandshakeCodec.readFrame(new ByteArrayInputStream(new byte[0])) == null, "clean EOF");
         byte[] response = HandshakeCodec.response((short) 7, "0123456789abcdef0123456789abcdef");
         ByteArrayOutputStream paired = new ByteArrayOutputStream();
-        paired.write(response); paired.write(response);
+        paired.write(response);
+        paired.write(response);
         InputStream fragmented = new FilterInputStream(new ByteArrayInputStream(paired.toByteArray())) {
-            @Override public int read(byte[] b, int off, int len) throws IOException {
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
                 return super.read(b, off, Math.min(len, 1));
             }
         };
-        check(Arrays.equals(HandshakeCodec.readFrame(fragmented), Arrays.copyOfRange(response, 4, response.length)), "fragmented frame");
+        check(
+                Arrays.equals(HandshakeCodec.readFrame(fragmented), Arrays.copyOfRange(response, 4, response.length)),
+                "fragmented frame");
         check(HandshakeCodec.readFrame(fragmented).length == 135, "coalesced frame");
         check(HandshakeCodec.readFrame(fragmented) == null, "frame boundary");
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
@@ -36,7 +40,8 @@ public final class HandshakeTest {
         KeyPair key = generator.generateKeyPair();
         roundTrip(key, false);
         roundTrip(key, true);
-        System.out.println("PASS: frame bounds/truncation/fragmentation/coalescing, RSA exchange, salt rejection, next-message mapping");
+        System.out.println(
+                "PASS: frame bounds/truncation/fragmentation/coalescing, RSA exchange, salt rejection, next-message mapping");
     }
 
     private static void roundTrip(KeyPair key, boolean badSalt) throws Exception {
@@ -48,8 +53,8 @@ public final class HandshakeTest {
         if (badSalt) salt[0] ^= 1;
         byte[] request = request(cipher.doFinal(plain), salt);
         // Parsing rejects unsupported trailing fields rather than silently accepting a changed schema.
-        expectFailure(() -> new HandshakeCodec().request(Arrays.copyOfRange(
-            Arrays.copyOf(request, request.length + 1), 4, request.length + 1)));
+        expectFailure(() -> new HandshakeCodec()
+                .request(Arrays.copyOfRange(Arrays.copyOf(request, request.length + 1), 4, request.length + 1)));
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try (ServerSocket listener = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
             Future<List<String>> result = executor.submit(() -> {
@@ -82,13 +87,16 @@ public final class HandshakeTest {
                     check(in.readUTF().matches("[0-9a-f]{32}") && in.available() == 0, "masked secret");
                     ByteArrayOutputStream next = new ByteArrayOutputStream();
                     DataOutputStream out = new DataOutputStream(next);
-                    out.writeShort(-4); out.writeUTF(PREFIX + "AESAuthRequest");
+                    out.writeShort(-4);
+                    out.writeUTF(PREFIX + "AESAuthRequest");
                     peer.getOutputStream().write(frame(next.toByteArray()));
                     check(peer.getInputStream().read() == -1, "stop before authentication");
                 }
             }
             List<String> logs = result.get(10, TimeUnit.SECONDS);
-            check(badSalt || logs.stream().anyMatch(s -> s.startsWith("AESAuthRequest received")), "next request identified");
+            check(
+                    badSalt || logs.stream().anyMatch(s -> s.startsWith("AESAuthRequest received")),
+                    "next request identified");
         } finally {
             executor.shutdownNow();
         }
@@ -97,20 +105,33 @@ public final class HandshakeTest {
     private static byte[] request(byte[] encrypted, byte[] salt) throws IOException {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(bytes);
-        out.writeShort(-1); out.writeUTF(PREFIX + "SecureRequest"); out.writeShort(7);
-        out.writeShort(-2); out.writeUTF(PREFIX + "PublicKeyCredentials");
-        out.writeBoolean(true); out.writeInt(encrypted.length); out.write(encrypted);
-        out.writeBoolean(true); out.writeInt(salt.length); out.write(salt);
+        out.writeShort(-1);
+        out.writeUTF(PREFIX + "SecureRequest");
+        out.writeShort(7);
+        out.writeShort(-2);
+        out.writeUTF(PREFIX + "PublicKeyCredentials");
+        out.writeBoolean(true);
+        out.writeInt(encrypted.length);
+        out.write(encrypted);
+        out.writeBoolean(true);
+        out.writeInt(salt.length);
+        out.write(salt);
         out.writeInt(1);
-        out.writeBoolean(true); out.writeUTF("synthetic-build");
-        out.writeBoolean(true); out.writeUTF("UTC");
-        out.writeShort(-3); out.writeUTF("[Ljava.lang.String;"); out.writeInt(0); out.writeShort(0);
+        out.writeBoolean(true);
+        out.writeUTF("synthetic-build");
+        out.writeBoolean(true);
+        out.writeUTF("UTC");
+        out.writeShort(-3);
+        out.writeUTF("[Ljava.lang.String;");
+        out.writeInt(0);
+        out.writeShort(0);
         return frame(bytes.toByteArray());
     }
 
     private static byte[] frame(byte[] body) throws IOException {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        bytes.write(intBytes(body.length + 4)); bytes.write(body);
+        bytes.write(intBytes(body.length + 4));
+        bytes.write(body);
         return bytes.toByteArray();
     }
 
@@ -120,11 +141,19 @@ public final class HandshakeTest {
         return bytes.toByteArray();
     }
 
-    private interface Operation { void run() throws Exception; }
+    private interface Operation {
+        void run() throws Exception;
+    }
+
     private static void expectFailure(Operation operation) throws Exception {
-        try { operation.run(); } catch (IOException expected) { return; }
+        try {
+            operation.run();
+        } catch (IOException expected) {
+            return;
+        }
         throw new AssertionError("Expected malformed input rejection");
     }
+
     private static void check(boolean condition, String message) {
         if (!condition) throw new AssertionError(message);
     }

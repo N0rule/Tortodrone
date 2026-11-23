@@ -17,26 +17,32 @@ import java.util.Map;
  * is missing or malformed.
  */
 final class StarterCatalogReader {
-    private StarterCatalogReader() { }
+    private StarterCatalogReader() {}
 
     static Map<String, StarterCatalog.Entry> load() {
         Map<String, StarterCatalog.Entry> result = new HashMap<>();
         try (InputStream stream = StarterCatalogReader.class.getResourceAsStream("/starter-models.txt")) {
             if (stream == null) throw new IOException("Missing starter catalog");
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-                for (String line; (line = reader.readLine()) != null;) {
+                for (String line; (line = reader.readLine()) != null; ) {
                     if (line.isBlank() || line.startsWith("#")) continue;
                     String[] fields = line.split("\\|", -1);
                     if (fields.length != 5) throw new IOException("Malformed starter catalog");
                     Map<String, String> values = new HashMap<>();
                     for (String pair : fields[4].split(";")) {
                         String[] parts = pair.split("=", 2);
-                        if (parts.length != 2 || values.put(parts[0], parts[1]) != null) throw new IOException("Malformed starter arguments");
+                        if (parts.length != 2 || values.put(parts[0], parts[1]) != null)
+                            throw new IOException("Malformed starter arguments");
                     }
-                    if (result.put(fields[1], new StarterCatalog.Entry(fields[0], fields[2], fields[3], Map.copyOf(values))) != null) throw new IOException("Duplicate starter reference");
+                    if (result.put(
+                                    fields[1],
+                                    new StarterCatalog.Entry(fields[0], fields[2], fields[3], Map.copyOf(values)))
+                            != null) throw new IOException("Duplicate starter reference");
                 }
             }
             return Map.copyOf(result);
-        } catch (IOException failure) { throw new ExceptionInInitializerError(failure); }
+        } catch (IOException failure) {
+            throw new ExceptionInInitializerError(failure);
+        }
     }
 }

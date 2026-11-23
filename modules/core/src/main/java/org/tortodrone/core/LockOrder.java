@@ -20,7 +20,7 @@ public final class LockOrder {
     private static final ThreadLocal<int[]> STACK = ThreadLocal.withInitial(() -> new int[32]);
     private static final ThreadLocal<Integer> DEPTH = ThreadLocal.withInitial(() -> 0);
 
-    private LockOrder() { }
+    private LockOrder() {}
 
     public static void enter(int rank) {
         int depth = DEPTH.get();
@@ -42,7 +42,9 @@ public final class LockOrder {
         if (depth > 0) DEPTH.set(depth - 1);
     }
 
-    public static int depth() { return DEPTH.get(); }
+    public static int depth() {
+        return DEPTH.get();
+    }
 
     public static String name(int rank) {
         return switch (rank) {

@@ -1,8 +1,8 @@
 package org.tortodrone.server.network;
 
 import java.io.IOException;
-import org.tortodrone.core.character.WorldSummary;
 import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.character.WorldSummary;
 
 /** Applies one batched world-state read to a session: identity validation, permission changes
  *  and revision-guarded profile publication. Reads happen outside the session monitor; the
@@ -20,8 +20,11 @@ final class WorldStateHandler {
     void refresh(WorldStatePoller.Registration registration, WorldSummary state) throws IOException {
         synchronized (session) {
             if (!session.stateRefreshActive(registration)) return;
-            if (state == null || state.accountId() != registration.accountId || state.knightId() != registration.knightId
-                    || state.authRevision() != registration.authRevision || !state.name().equalsIgnoreCase(registration.name))
+            if (state == null
+                    || state.accountId() != registration.accountId
+                    || state.knightId() != registration.knightId
+                    || state.authRevision() != registration.authRevision
+                    || !state.name().equalsIgnoreCase(registration.name))
                 throw new IOException("Knight or account changed; reconnect");
             session.tradeHandler().changed(state);
         }
@@ -32,9 +35,9 @@ final class WorldStateHandler {
             if (state.gameMaster() != session.gameMasterFlag()) {
                 session.setGameMaster(state.gameMaster());
                 session.applyActorAppearance();
-                boolean gameMaster=session.gameMasterFlag(),hidden=session.inspectionHiddenValue();
-                boolean tutorial=session.currentProfile().progress().tutorialComplete();
-                responder.send(() -> responder.codec().playerFlags(responder.oid(),gameMaster,hidden,tutorial));
+                boolean gameMaster = session.gameMasterFlag(), hidden = session.inspectionHiddenValue();
+                boolean tutorial = session.currentProfile().progress().tutorialComplete();
+                responder.send(() -> responder.codec().playerFlags(responder.oid(), gameMaster, hidden, tutorial));
             }
             // An equip may commit while the read is in flight: never roll back its publication.
             if (fresh.revision() > session.currentProfile().revision()) {
@@ -53,12 +56,14 @@ final class WorldStateHandler {
                     session.refreshOutbids(previous, session.currentProfile());
                 }
                 if (!fresh.town().loadouts().equals(previous.town().loadouts()))
-                    responder.send(() -> responder.codec().loadoutChanges(responder.oid(), previous, session.currentProfile()));
+                    responder.send(() ->
+                            responder.codec().loadoutChanges(responder.oid(), previous, session.currentProfile()));
                 if (!fresh.items().equals(previous.items())) {
                     session.updateAppearance();
                     var visibleAfter = session.visibleProfileNow();
-                    responder.send(() -> responder.codec().itemChanges(responder.oid(),
-                        session.selectedKnight(), visibleBefore, visibleAfter));
+                    responder.send(() -> responder
+                            .codec()
+                            .itemChanges(responder.oid(), session.selectedKnight(), visibleBefore, visibleAfter));
                 }
             }
         }

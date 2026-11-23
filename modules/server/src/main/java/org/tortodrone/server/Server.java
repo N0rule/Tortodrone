@@ -27,23 +27,29 @@ public final class Server {
         int exitCode = 0;
         try {
             if (args.length == 1 && args[0].equals("--help")) {
-                System.out.println("Usage: java -jar tortodrone.jar [--nogui] [--config path/to/server.yml] [--client path/to/Spiral Knights | --skip-client-assets] | --version | --help");
-                System.out.println("Type help in the server terminal for commands. Manage accounts through WebUI or the server console.");
+                System.out.println(
+                        "Usage: java -jar tortodrone.jar [--nogui] [--config path/to/server.yml] [--client path/to/Spiral Knights | --skip-client-assets] | --version | --help");
+                System.out.println(
+                        "Type help in the server terminal for commands. Manage accounts through WebUI or the server console.");
                 return;
             }
             if (args.length == 1 && args[0].equals("--version")) {
                 System.out.println("Tortodrone " + version());
                 return;
             }
-            Path location = Path.of(Server.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            Path location = Path.of(Server.class
+                    .getProtectionDomain()
+                    .getCodeSource()
+                    .getLocation()
+                    .toURI());
             Path directory = Files.isDirectory(location) ? location : location.getParent();
             Path dataDirectory = directory.resolve("data").toAbsolutePath().normalize();
-            ServerOptions options=ServerOptions.parse(args,ServerSettings.defaultPath(directory));
-            Path config=options.config();
+            ServerOptions options = ServerOptions.parse(args, ServerSettings.defaultPath(directory));
+            Path config = options.config();
             Files.createDirectories(dataDirectory);
-            try (FileChannel channel = FileChannel.open(dataDirectory.resolve("server.lock"),
-                    StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-                 FileLock lock = channel.tryLock()) {
+            try (FileChannel channel = FileChannel.open(
+                            dataDirectory.resolve("server.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+                    FileLock lock = channel.tryLock()) {
                 if (lock == null) throw new IOException("Another server is using this JAR's data directory");
                 log = new ServerLog(dataDirectory.resolve("logs"));
                 log.info("Starting Tortodrone server version " + version());
@@ -52,38 +58,82 @@ public final class Server {
                 log.debug("Log mode: " + settings.logMode().name().toLowerCase(java.util.Locale.ROOT));
                 log.debug("Configuration: " + config.toAbsolutePath().normalize());
                 log.debug("Data directory: " + dataDirectory);
-                log.configure(settings.logMaxMiB()*1048576L,settings.logRetention());
-                if(settings.webui().enabled())ClientArtworkSetup.prepare(directory,options.client(),options.skipClientAssets(),log::info,log::warn);
-                ServerControl control=new ServerControl(version(),dataDirectory);
-                var content=org.tortodrone.resources.ContentManager.load(directory,settings);
-                try(var adminAccounts=new AccountStore(dataDirectory,true,content.items(),content.town())) {
-                    WebFrontend frontend=null;
-                    try(var console=new ServerConsole(adminAccounts,log,()->{if(settings.webui().enabled())control.stop();else control.exit();},()->!control.exiting(),control,true)) {
-                        com.sun.net.httpserver.HttpHandler handler=null;
-                        String setupCode=null;
-                        if(settings.webui().enabled()) {
-                            frontend=WebFrontend.create(adminAccounts,control,log,directory,dataDirectory,config,content,settings);
-                            setupCode=frontend.setupCode();
-                            if(!settings.webui().directHttp())log.info("WebUI proxy secret file: "+dataDirectory.resolve("webui-proxy.key"));
-                            handler=frontend.handler();
+                log.configure(settings.logMaxMiB() * 1048576L, settings.logRetention());
+                if (settings.webui().enabled())
+                    ClientArtworkSetup.prepare(
+                            directory, options.client(), options.skipClientAssets(), log::info, log::warn);
+                ServerControl control = new ServerControl(version(), dataDirectory);
+                var content = org.tortodrone.resources.ContentManager.load(directory, settings);
+                try (var adminAccounts = new AccountStore(dataDirectory, true, content.items(), content.town())) {
+                    WebFrontend frontend = null;
+                    try (var console = new ServerConsole(
+                            adminAccounts,
+                            log,
+                            () -> {
+                                if (settings.webui().enabled()) control.stop();
+                                else control.exit();
+                            },
+                            () -> !control.exiting(),
+                            control,
+                            true)) {
+                        com.sun.net.httpserver.HttpHandler handler = null;
+                        String setupCode = null;
+                        if (settings.webui().enabled()) {
+                            frontend = WebFrontend.create(
+                                    adminAccounts, control, log, directory, dataDirectory, config, content, settings);
+                            setupCode = frontend.setupCode();
+                            if (!settings.webui().directHttp())
+                                log.info("WebUI proxy secret file: " + dataDirectory.resolve("webui-proxy.key"));
+                            handler = frontend.handler();
                         }
                         // Finish identity schema initialization before the console can issue recovery commands.
                         console.start();
-                        try(var http=NewsServer.start(InetAddress.getByName(settings.bind()),settings.httpPort(),directory.resolve("content/shared/news"),log::debug,handler)) {
-                            ServerLog startupLog=log;
-                            String code=setupCode;
-                            var codePrinted=new java.util.concurrent.atomic.AtomicBoolean();
-                            Runnable webReady=handler==null?()->{}:()->startupLog.info("WebUI Ready "+String.join(", ",settings.webui().browserAddresses(http.address(),http.port())));
-                            Runnable setupNotice=()->{if(code!=null&&codePrinted.compareAndSet(false,true))startupLog.localNotice("WebUI first-run setup code: "+code);};
-                            if(handler==null)log.info("Shared HTTP listener: "+http.port()+"; WebUI disabled");
-                            while(control.awaitStart(settings.webui().enabled())) {
-                                try {run(settings,dataDirectory,log,control,console,content,adminAccounts,webReady,setupNotice);content=null;}
-                                catch(Exception failed){control.failed(failed);log.error("Server startup failed: "+failed.getMessage());webReady.run();setupNotice.run();if(!settings.webui().enabled())throw failed;}
-                                finally{control.stopped();}
+                        try (var http = NewsServer.start(
+                                InetAddress.getByName(settings.bind()),
+                                settings.httpPort(),
+                                directory.resolve("content/shared/news"),
+                                log::debug,
+                                handler)) {
+                            ServerLog startupLog = log;
+                            String code = setupCode;
+                            var codePrinted = new java.util.concurrent.atomic.AtomicBoolean();
+                            Runnable webReady = handler == null
+                                    ? () -> {}
+                                    : () -> startupLog.info("WebUI Ready "
+                                            + String.join(
+                                                    ", ",
+                                                    settings.webui().browserAddresses(http.address(), http.port())));
+                            Runnable setupNotice = () -> {
+                                if (code != null && codePrinted.compareAndSet(false, true))
+                                    startupLog.localNotice("WebUI first-run setup code: " + code);
+                            };
+                            if (handler == null) log.info("Shared HTTP listener: " + http.port() + "; WebUI disabled");
+                            while (control.awaitStart(settings.webui().enabled())) {
+                                try {
+                                    run(
+                                            settings,
+                                            dataDirectory,
+                                            log,
+                                            control,
+                                            console,
+                                            content,
+                                            adminAccounts,
+                                            webReady,
+                                            setupNotice);
+                                    content = null;
+                                } catch (Exception failed) {
+                                    control.failed(failed);
+                                    log.error("Server startup failed: " + failed.getMessage());
+                                    webReady.run();
+                                    setupNotice.run();
+                                    if (!settings.webui().enabled()) throw failed;
+                                } finally {
+                                    control.stopped();
+                                }
                             }
                         }
                     } finally {
-                        if(frontend!=null)frontend.close();
+                        if (frontend != null) frontend.close();
                     }
                 }
             }
@@ -107,75 +157,131 @@ public final class Server {
         }
     }
 
-    private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,ServerConsole console,org.tortodrone.resources.ContentRegistry initialContent,AccountStore accounts,Runnable webReady,Runnable setupNotice) throws Exception {
-        long startup=System.nanoTime();
+    private static void run(
+            ServerSettings settings,
+            Path dataDirectory,
+            ServerLog log,
+            ServerControl control,
+            ServerConsole console,
+            org.tortodrone.resources.ContentRegistry initialContent,
+            AccountStore accounts,
+            Runnable webReady,
+            Runnable setupNotice)
+            throws Exception {
+        long startup = System.nanoTime();
         hostDiagnostics(log);
-        var content=initialContent==null?org.tortodrone.resources.ContentManager.load(dataDirectory.getParent(),settings):initialContent;
-        var scenes=org.tortodrone.world.SceneRegistry.create(content);
+        var content = initialContent == null
+                ? org.tortodrone.resources.ContentManager.load(dataDirectory.getParent(), settings)
+                : initialContent;
+        var scenes = org.tortodrone.world.SceneRegistry.create(content);
         org.tortodrone.world.SceneRegistry.install(scenes);
-        var catalog=content.items();
-        for(String warning:content.warnings())log.warn(warning);
-        log.info("Unified content: "+content.scenes().sceneCount()+" maps, "+content.items().entries().size()+" items");
-        content.resources().forEach((name,resource)->log.debug("Content "+name+": "+resource.pack()+" / "+resource.path()));
+        var catalog = content.items();
+        for (String warning : content.warnings()) log.warn(warning);
+        log.info("Unified content: " + content.scenes().sceneCount() + " maps, "
+                + content.items().entries().size() + " items");
+        content.resources()
+                .forEach((name, resource) ->
+                        log.debug("Content " + name + ": " + resource.pack() + " / " + resource.path()));
         InetAddress address = InetAddress.getByName(settings.bind());
         try (ServerSocket listener = new ServerSocket()) {
             Path keys = dataDirectory.resolve("keys");
-            boolean generate=!Files.exists(keys.resolve("private.pk8"));
+            boolean generate = !Files.exists(keys.resolve("private.pk8"));
             log.info(generate ? "Generating server keypair" : "Loading server keypair");
             PrivateKey key = HandshakeKeys.loadOrCreate(keys);
-            if(generate)log.info("Public key : "+Files.readString(keys.resolve("public.txt")).trim());
+            if (generate)
+                log.info("Public key : "
+                        + Files.readString(keys.resolve("public.txt")).trim());
             // The console/WebUI and the game share this single account store and writer path.
             {
-                log.debug("Resources and database initialization elapsed-ms="+((System.nanoTime()-startup)/1000000)+"; weapons="+scenes.weapons().weapons().size());
-                accounts.observeDatabase((operation,millis,failed)->{
-                    if(failed)log.warn("Database operation failed; operation="+operation+"; duration-ms="+millis);
-                    else if(millis>=100)log.debug("Slow database operation; operation="+operation+"; duration-ms="+millis);
+                log.debug(
+                        "Resources and database initialization elapsed-ms=" + ((System.nanoTime() - startup) / 1000000)
+                                + "; weapons=" + scenes.weapons().weapons().size());
+                accounts.observeDatabase((operation, millis, failed) -> {
+                    if (failed)
+                        log.warn("Database operation failed; operation=" + operation + "; duration-ms=" + millis);
+                    else if (millis >= 100)
+                        log.debug("Slow database operation; operation=" + operation + "; duration-ms=" + millis);
                 });
                 accounts.watchSessions();
-                accounts.watchStorage(64L*1024*1024,
-                    bytes->log.warn("SQLite WAL is large; bytes="+bytes+"; a maintenance checkpoint is pending"),
-                    log::warn);
-                log.info("Database: SQLite WAL; schema="+org.tortodrone.storage.Database.SCHEMA_VERSION
-                    +"; application="+Integer.toHexString(org.tortodrone.storage.Database.APPLICATION_ID));
+                accounts.watchStorage(
+                        64L * 1024 * 1024,
+                        bytes -> log.warn(
+                                "SQLite WAL is large; bytes=" + bytes + "; a maintenance checkpoint is pending"),
+                        log::warn);
+                log.info("Database: SQLite WAL; schema=" + org.tortodrone.storage.Database.SCHEMA_VERSION
+                        + "; application=" + Integer.toHexString(org.tortodrone.storage.Database.APPLICATION_ID));
                 log.info("Loaded " + scenes.catalog().sceneCount() + " maps, "
-                    + catalog.entries().size() + " items, " + accounts.list().size() + " accounts");
+                        + catalog.entries().size() + " items, "
+                        + accounts.list().size() + " accounts");
                 listener.bind(new InetSocketAddress(address, settings.port()));
                 log.debug("Public key: " + keys.resolve("public.txt"));
                 log.debug("Account database: " + accounts.databaseFile());
-                control.resources(scenes,catalog.entries().size());
-                accept(listener,key,log,accounts,settings.maxClients(),settings.welcomeMessage(),control,console,startup,webReady,setupNotice);
+                control.resources(scenes, catalog.entries().size());
+                accept(
+                        listener,
+                        key,
+                        log,
+                        accounts,
+                        settings.maxClients(),
+                        settings.welcomeMessage(),
+                        control,
+                        console,
+                        startup,
+                        webReady,
+                        setupNotice);
             }
         }
     }
 
-    private static void accept(ServerSocket listener, PrivateKey key, ServerLog log,
-            AccountStore accounts,int maxClients,String welcomeMessage,ServerControl control,ServerConsole console,long startup,Runnable webReady,Runnable setupNotice)
+    private static void accept(
+            ServerSocket listener,
+            PrivateKey key,
+            ServerLog log,
+            AccountStore accounts,
+            int maxClients,
+            String welcomeMessage,
+            ServerControl control,
+            ServerConsole console,
+            long startup,
+            Runnable webReady,
+            Runnable setupNotice)
             throws IOException {
         ClientConnections clients = new ClientConnections();
         Semaphore slots = new Semaphore(maxClients);
-        control.listening(listener,console);
-        if(listener.isClosed()){log.info("Server stopped; startup cancelled.");return;}
-        Thread shutdown = new Thread(() -> {
-            console.close();
-            try { listener.close(); } catch (IOException ignored) { }
-            clients.close();
-            // Stop scene lanes after sessions stop, then checkpoint and close storage before the
-            // logger. AccountStore.close is idempotent, so the normal path's close later is a no-op.
-            org.tortodrone.world.SceneScheduler.shared().close();
-            accounts.close();
-            // Joins must finish before taking the log monitor used by handlers.
-            synchronized (log) {
-                log.info("Server stopped.");
-                log.close();
-            }
-        }, "ServerShutdown");
+        control.listening(listener, console);
+        if (listener.isClosed()) {
+            log.info("Server stopped; startup cancelled.");
+            return;
+        }
+        Thread shutdown = new Thread(
+                () -> {
+                    console.close();
+                    try {
+                        listener.close();
+                    } catch (IOException ignored) {
+                    }
+                    clients.close();
+                    // Stop scene lanes after sessions stop, then checkpoint and close storage before the
+                    // logger. AccountStore.close is idempotent, so the normal path's close later is a no-op.
+                    org.tortodrone.world.SceneScheduler.shared().close();
+                    accounts.close();
+                    // Joins must finish before taking the log monitor used by handlers.
+                    synchronized (log) {
+                        log.info("Server stopped.");
+                        log.close();
+                    }
+                },
+                "ServerShutdown");
         Runtime.getRuntime().addShutdownHook(shutdown);
-        try (var expiry=new AuctionExpiry(accounts.auctions(),log);
-             var inventoryExpiry=new InventoryExpirySweeper(accounts,log)) {
-            log.debug("Limits: "+maxClients+" clients; 64 KiB upstream / 1 MiB downstream frame; 15 s handshake / 60 s session idle timeout");
-            log.info("Done! Listening on " + listener.getInetAddress().getHostAddress() + ":" + listener.getLocalPort() + " (TCP)");
+        try (var expiry = new AuctionExpiry(accounts.auctions(), log);
+                var inventoryExpiry = new InventoryExpirySweeper(accounts, log)) {
+            log.debug("Limits: " + maxClients
+                    + " clients; 64 KiB upstream / 1 MiB downstream frame; 15 s handshake / 60 s session idle timeout");
+            log.info("Done! Listening on " + listener.getInetAddress().getHostAddress() + ":" + listener.getLocalPort()
+                    + " (TCP)");
             webReady.run();
-            log.info("Server ready ("+String.format(java.util.Locale.ROOT,"%.3fs",(System.nanoTime()-startup)/1e9)+")");
+            log.info("Server ready ("
+                    + String.format(java.util.Locale.ROOT, "%.3fs", (System.nanoTime() - startup) / 1e9) + ")");
             log.info("Type help for server commands.");
             setupNotice.run();
             while (!listener.isClosed()) {
@@ -192,10 +298,18 @@ public final class Server {
                     continue;
                 }
                 long id = control.nextSessionId();
-                control.connection(id,client);
+                control.connection(id, client);
                 clients.start(client, "Client-" + id, () -> {
                     try {
-                        receive(client, id, key, listener.getLocalPort(), log, accounts,control.sessions(),welcomeMessage);
+                        receive(
+                                client,
+                                id,
+                                key,
+                                listener.getLocalPort(),
+                                log,
+                                accounts,
+                                control.sessions(),
+                                welcomeMessage);
                     } finally {
                         control.disconnected(id);
                         slots.release();
@@ -215,48 +329,95 @@ public final class Server {
     }
 
     private static void hostDiagnostics(ServerLog log) {
-        var metrics=RuntimeMetrics.capture();
-        log.info("OS: "+System.getProperty("os.name")+" ("+System.getProperty("os.arch")+")");
-        log.info("Java: "+System.getProperty("java.runtime.version")+" / "+System.getProperty("java.vendor"));
-        log.info("CPU: "+metrics.processors()+" logical processors");
-        log.info("Heap: "+RuntimeMetrics.mib(metrics.heapUsed())+" / "+RuntimeMetrics.mib(metrics.heapMax())+" MiB");
-        log.debug("Host: os-version="+System.getProperty("os.version")+"; physical-total="+metrics.physicalTotal()+"; physical-free="+metrics.physicalFree()+"; process-uptime-ms="+metrics.processUptime()+"; process-cpu="+metrics.processCpu());
-        log.debug("Garbage collectors: "+java.lang.management.ManagementFactory.getGarbageCollectorMXBeans().stream().map(java.lang.management.GarbageCollectorMXBean::getName).toList());
+        var metrics = RuntimeMetrics.capture();
+        log.info("OS: " + System.getProperty("os.name") + " (" + System.getProperty("os.arch") + ")");
+        log.info("Java: " + System.getProperty("java.runtime.version") + " / " + System.getProperty("java.vendor"));
+        log.info("CPU: " + metrics.processors() + " logical processors");
+        log.info("Heap: " + RuntimeMetrics.mib(metrics.heapUsed()) + " / " + RuntimeMetrics.mib(metrics.heapMax())
+                + " MiB");
+        log.debug("Host: os-version=" + System.getProperty("os.version") + "; physical-total=" + metrics.physicalTotal()
+                + "; physical-free=" + metrics.physicalFree() + "; process-uptime-ms=" + metrics.processUptime()
+                + "; process-cpu=" + metrics.processCpu());
+        log.debug("Garbage collectors: "
+                + java.lang.management.ManagementFactory.getGarbageCollectorMXBeans().stream()
+                        .map(java.lang.management.GarbageCollectorMXBean::getName)
+                        .toList());
     }
 
-    private static void receive(Socket client, long id, PrivateKey key, int port,
-            ServerLog log, AccountStore accounts,SessionRegistry sessions,String welcomeMessage) {
-        long connected=System.nanoTime();String reason="remote closed";
-        sessions.connected(id,client.getRemoteSocketAddress());
-        log.info("Connected | session="+id+" | endpoint="+client.getRemoteSocketAddress());
+    private static void receive(
+            Socket client,
+            long id,
+            PrivateKey key,
+            int port,
+            ServerLog log,
+            AccountStore accounts,
+            SessionRegistry sessions,
+            String welcomeMessage) {
+        long connected = System.nanoTime();
+        String reason = "remote closed";
+        sessions.connected(id, client.getRemoteSocketAddress());
+        log.info("Connected | session=" + id + " | endpoint=" + client.getRemoteSocketAddress());
         log.debug("Client connected from " + client.getRemoteSocketAddress());
         try (client) {
             // Small movement/acknowledgement frames must not wait for a delayed TCP ACK.
             client.setTcpNoDelay(true);
             client.setSoTimeout(15000);
-            SessionLog sessionLog = sessions.observe(id,new SessionLog() {
-                @Override public boolean debugEnabled() { return log.debugEnabled(); }
-                @Override public void debug(String message) { log.debug(message+" | session="+id); }
-                @Override public void info(String message) { log.info(message+" | session="+id); }
-                @Override public void warn(String message) { log.warn(message+" | session="+id); }
+            SessionLog sessionLog = sessions.observe(id, new SessionLog() {
+                @Override
+                public boolean debugEnabled() {
+                    return log.debugEnabled();
+                }
+
+                @Override
+                public void debug(String message) {
+                    log.debug(message + " | session=" + id);
+                }
+
+                @Override
+                public void info(String message) {
+                    log.info(message + " | session=" + id);
+                }
+
+                @Override
+                public void warn(String message) {
+                    log.warn(message + " | session=" + id);
+                }
             });
             // A wildcard listener uses the concrete local interface of this connection.
-            SecureHandshake.run(client, key, sessionLog, true,
-                Math.toIntExact(id), client.getLocalAddress().getHostAddress(), port, accounts, welcomeMessage);
+            SecureHandshake.run(
+                    client,
+                    key,
+                    sessionLog,
+                    true,
+                    Math.toIntExact(id),
+                    client.getLocalAddress().getHostAddress(),
+                    port,
+                    accounts,
+                    welcomeMessage);
         } catch (SocketTimeoutException e) {
-            reason="idle timeout";log.debug("Client idle timeout | session="+id);
+            reason = "idle timeout";
+            log.debug("Client idle timeout | session=" + id);
         } catch (java.security.GeneralSecurityException e) {
-            reason="secure exchange rejected";log.warn("Secure exchange failed; check the launcher's public key");
+            reason = "secure exchange rejected";
+            log.warn("Secure exchange failed; check the launcher's public key");
         } catch (IOException e) {
-            reason=client.isClosed()?"server closed or session invalidated":"protocol/I/O rejected";log.debug("Protocol/I/O rejected: " +
-                (e instanceof org.tortodrone.protocol.SessionDecoder.Rejected ? e.getMessage() : e.getClass().getSimpleName()));
+            reason = client.isClosed() ? "server closed or session invalidated" : "protocol/I/O rejected";
+            log.debug("Protocol/I/O rejected: "
+                    + (e instanceof org.tortodrone.protocol.SessionDecoder.Rejected
+                            ? e.getMessage()
+                            : e.getClass().getSimpleName()));
         } catch (Exception e) {
-            reason="handshake rejected";log.warn("Handshake rejected: " + e.getClass().getSimpleName());
+            reason = "handshake rejected";
+            log.warn("Handshake rejected: " + e.getClass().getSimpleName());
         } finally {
-            var identity=sessions.find(id);
-            log.info("Disconnected | session="+id+" | account="+(identity==null||identity.accountId()==null?"unverified":identity.username()+" (#"+identity.accountId()+")")+" | duration="+((System.nanoTime()-connected)/1000000000)+"s | reason="+reason);
+            var identity = sessions.find(id);
+            log.info("Disconnected | session=" + id + " | account="
+                    + (identity == null || identity.accountId() == null
+                            ? "unverified"
+                            : identity.username() + " (#" + identity.accountId() + ")")
+                    + " | duration=" + ((System.nanoTime() - connected) / 1000000000) + "s | reason=" + reason);
             sessions.disconnected(id);
-            log.debug("Client disconnected | session="+id);
+            log.debug("Client disconnected | session=" + id);
         }
     }
 }

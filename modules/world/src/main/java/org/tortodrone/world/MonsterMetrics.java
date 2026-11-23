@@ -34,8 +34,13 @@ public final class MonsterMetrics {
         }
     }
 
-    void spawned() { spawned++; }
-    void despawned() { despawned++; }
+    void spawned() {
+        spawned++;
+    }
+
+    void despawned() {
+        despawned++;
+    }
 
     void searched(boolean failed) {
         pathSearches++;
@@ -48,10 +53,21 @@ public final class MonsterMetrics {
         if (tickCount < TICK_WINDOW) tickCount++;
     }
 
-    Snapshot snapshot(int total, int awake, int engaged, Map<String, Integer> byType,
-            int pathQueued, long pathDropped) {
-        return new Snapshot(total, awake, engaged, byType, spawned, despawned, pathSearches,
-            pathFailures, pathQueued, pathDropped, percentile(.50), percentile(.99));
+    Snapshot snapshot(
+            int total, int awake, int engaged, Map<String, Integer> byType, int pathQueued, long pathDropped) {
+        return new Snapshot(
+                total,
+                awake,
+                engaged,
+                byType,
+                spawned,
+                despawned,
+                pathSearches,
+                pathFailures,
+                pathQueued,
+                pathDropped,
+                percentile(.50),
+                percentile(.99));
     }
 
     private double percentile(double fraction) {

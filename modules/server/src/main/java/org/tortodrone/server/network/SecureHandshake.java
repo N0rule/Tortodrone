@@ -1,5 +1,4 @@
 package org.tortodrone.server.network;
-import org.tortodrone.character.CharacterStore;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -11,13 +10,15 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.tortodrone.account.AccountStore;
+import org.tortodrone.character.CharacterStore;
 import org.tortodrone.protocol.HandshakeCodec;
 
 /** Secure exchange and normal authentication against server-owned accounts. */
 public final class SecureHandshake {
     /** Displayed verbatim by the stock logon panel (unknown codes fall back to their own text). */
     static final String STEAM_LOGIN_MESSAGE =
-        "Steam accounts are not supported. Log in using your regular account name and password.";
+            "Steam accounts are not supported. Log in using your regular account name and password.";
+
     static void run(Socket socket, PrivateKey key, SessionLog log) throws Exception {
         run(socket, key, log, false);
     }
@@ -26,25 +27,57 @@ public final class SecureHandshake {
         run(socket, key, log, authenticate, 1, socket.getLocalAddress().getHostAddress(), socket.getLocalPort());
     }
 
-    static void run(Socket socket, PrivateKey key, SessionLog log, boolean authenticate,
-            int connectionId, String host, int port) throws Exception {
+    static void run(
+            Socket socket,
+            PrivateKey key,
+            SessionLog log,
+            boolean authenticate,
+            int connectionId,
+            String host,
+            int port)
+            throws Exception {
         run(socket, key, log, authenticate, connectionId, host, port, new CharacterStore());
     }
 
-    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean authenticate,
-            int connectionId, String host, int port, CharacterStore characters) throws Exception {
+    public static void run(
+            Socket socket,
+            PrivateKey key,
+            SessionLog log,
+            boolean authenticate,
+            int connectionId,
+            String host,
+            int port,
+            CharacterStore characters)
+            throws Exception {
         run(socket, key, log, authenticate, connectionId, host, port, new AccountStore(characters));
     }
 
-    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean authenticate,
-            int connectionId, String host, int port, AccountStore accounts) throws Exception {
-        run(socket,key,log,authenticate,connectionId,host,port,accounts,"");
+    public static void run(
+            Socket socket,
+            PrivateKey key,
+            SessionLog log,
+            boolean authenticate,
+            int connectionId,
+            String host,
+            int port,
+            AccountStore accounts)
+            throws Exception {
+        run(socket, key, log, authenticate, connectionId, host, port, accounts, "");
     }
 
     /** @param authenticate false only for handshake probes that stop before account authentication */
-    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean authenticate,
-            int connectionId, String host, int port, AccountStore accounts, String welcomeMessage) throws Exception {
-        long started=System.nanoTime();
+    public static void run(
+            Socket socket,
+            PrivateKey key,
+            SessionLog log,
+            boolean authenticate,
+            int connectionId,
+            String host,
+            int port,
+            AccountStore accounts,
+            String welcomeMessage)
+            throws Exception {
+        long started = System.nanoTime();
         HandshakeCodec codec = new HandshakeCodec();
         byte[] body = HandshakeCodec.readFrame(socket.getInputStream());
         if (body == null) return;
@@ -62,7 +95,8 @@ public final class SecureHandshake {
             new SecureRandom().nextBytes(secret);
             byte[] masked = new byte[16];
             for (int i = 0; i < 16; i++) masked[i] = (byte) (secret[i] ^ plain[i]);
-            byte[] response = HandshakeCodec.response(request.messageId(), HexFormat.of().formatHex(masked));
+            byte[] response =
+                    HandshakeCodec.response(request.messageId(), HexFormat.of().formatHex(masked));
             socket.getOutputStream().write(response);
             socket.getOutputStream().flush();
             log.debug("SecureResponse sent; frame=" + response.length + " bytes");
@@ -71,17 +105,18 @@ public final class SecureHandshake {
             if (!authenticate) {
                 if (!codec.isAuthRequest(body)) throw new IOException("Unexpected next request type");
                 log.debug("AESAuthRequest received; frame=" + (body.length + 4)
-                    + " bytes; body not decoded; stopping before authentication");
+                        + " bytes; body not decoded; stopping before authentication");
                 return;
             }
             HandshakeCodec.Authentication auth = codec.authentication(body);
             if (!auth.version().equals(request.version())) throw new IOException("Authentication build changed");
-            log.debug("AESAuthRequest decoded; frame=" + (body.length + 4)
-                + " bytes; bootstrap groups=" + auth.groupCount());
+            log.debug("AESAuthRequest decoded; frame=" + (body.length + 4) + " bytes; bootstrap groups="
+                    + auth.groupCount());
             Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
             // Verified stock protocol IV; this is wire compatibility, not a new encryption design.
-            aes.init(Cipher.DECRYPT_MODE, new SecretKeySpec(secret, "AES"), new IvParameterSpec(
-                new byte[] {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8}));
+            aes.init(Cipher.DECRYPT_MODE, new SecretKeySpec(secret, "AES"), new IvParameterSpec(new byte[] {
+                1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8
+            }));
             byte[] credentials = aes.doFinal(auth.encryptedCredentials());
             AccountStore.Account account = null;
             String language = null, region = null;
@@ -99,7 +134,11 @@ public final class SecureHandshake {
                     region = decoded.region();
                     var result = accounts.login(decoded.username(), decoded.passwordHash());
                     account = result.account();
-                    loginResult = account != null ? "success" : result.failure() == AccountStore.LoginFailure.NO_SUCH_USER ? "m.no_such_user" : "m.invalid_password";
+                    loginResult = account != null
+                            ? "success"
+                            : result.failure() == AccountStore.LoginFailure.NO_SUCH_USER
+                                    ? "m.no_such_user"
+                                    : "m.invalid_password";
                 }
             } catch (HandshakeCodec.TicketLogin ticket) {
                 // Steam account/ticket authentication stays unsupported, but the attempt is a valid
@@ -115,33 +154,52 @@ public final class SecureHandshake {
             // alias. Tortodrone never converts accounts, so a Steam client is reported under the
             // server-chosen alias of its authenticated account; the account itself stays normal.
             String authName = accepted ? (steamClient ? "steam:" + account.id() : account.username()) : null;
-            byte[] authResponse = HandshakeCodec.authenticationResponse(auth.messageId(), loginResult,
-                accepted ? UUID.randomUUID().toString() : null, authName);
+            byte[] authResponse = HandshakeCodec.authenticationResponse(
+                    auth.messageId(), loginResult, accepted ? UUID.randomUUID().toString() : null, authName);
             socket.getOutputStream().write(authResponse);
             socket.getOutputStream().flush();
-            log.debug("AuthResponse sent; result=" + (accepted ? "success" : "rejected")
-                + "; frame=" + authResponse.length + " bytes");
+            log.debug("AuthResponse sent; result=" + (accepted ? "success" : "rejected") + "; frame="
+                    + authResponse.length + " bytes");
             if (accepted && steamClient) {
                 log.debug("Steam client alias assigned; accountId=" + account.id()
-                    + "; the authenticated account and its password login are unchanged");
+                        + "; the authenticated account and its password login are unchanged");
             }
             if (!accepted) {
                 if (ticketLogin) {
                     log.warn("Steam platform-ticket login rejected; reason=steam_unsupported");
                 } else {
-                    log.warn("Normal login rejected; account=" + ClientDiagnostics.text(attemptedUser)
-                        + "; reason=" + (normalLogin ? loginResult : "unsupported_login") + "; normalLogin=" + normalLogin);
+                    log.warn("Normal login rejected; account=" + ClientDiagnostics.text(attemptedUser) + "; reason="
+                            + (normalLogin ? loginResult : "unsupported_login") + "; normalLogin=" + normalLogin);
                 }
                 return;
             }
             log.authenticated(account.id(), account.username());
-            log.info("Normal login accepted; account=" + account.username() + " (#" + account.id() + "); accountId=" + account.id());
+            log.info("Normal login accepted; account=" + account.username() + " (#" + account.id() + "); accountId="
+                    + account.id());
             // Do not retain negotiated secrets for the unencrypted distributed-object session.
             Arrays.fill(plain, (byte) 0);
             Arrays.fill(secret, (byte) 0);
-            try (var session = accounts.attach(account,socket)) {
-                ClientDiagnostics.joined(log,socket,connectionId,account,request,language,region,(System.nanoTime()-started)/1_000_000);
-                ClientSession.run(socket, codec, connectionId, host, port, log, account.characters(),account.authRevision(),session,welcomeMessage);
+            try (var session = accounts.attach(account, socket)) {
+                ClientDiagnostics.joined(
+                        log,
+                        socket,
+                        connectionId,
+                        account,
+                        request,
+                        language,
+                        region,
+                        (System.nanoTime() - started) / 1_000_000);
+                ClientSession.run(
+                        socket,
+                        codec,
+                        connectionId,
+                        host,
+                        port,
+                        log,
+                        account.characters(),
+                        account.authRevision(),
+                        session,
+                        welcomeMessage);
             }
         } finally {
             Arrays.fill(plain, (byte) 0);

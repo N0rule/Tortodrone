@@ -15,7 +15,8 @@ import org.tortodrone.world.SceneRegistry;
 /** Independent client verifies the complete creation RPC and its subsequent object update. */
 public final class CharacterCreationTest {
     public static void main(String[] args) throws Exception {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA"); generator.initialize(2048);
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048);
         KeyPair key = generator.generateKeyPair();
         Path directory = Files.createTempDirectory("tortodrone-creation-");
         var content = ContentManager.load(Path.of("."));
@@ -28,15 +29,29 @@ public final class CharacterCreationTest {
         try (ServerSocket listener = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
             var completed = worker.submit(() -> {
                 try (Socket socket = listener.accept()) {
-                    SecureHandshake.run(socket, key.getPrivate(), ignored -> {}, true, 1, "127.0.0.1", listener.getLocalPort(), accounts);
-                } return null;
+                    SecureHandshake.run(
+                            socket,
+                            key.getPrivate(),
+                            ignored -> {},
+                            true,
+                            1,
+                            "127.0.0.1",
+                            listener.getLocalPort(),
+                            accounts);
+                }
+                return null;
             });
             try (Socket peer = new Socket(listener.getInetAddress(), listener.getLocalPort())) {
-                TestClient.authenticate(peer, key.getPublic(), true, (socket, wire, oid) -> CharacterScenario.session(socket, wire, oid, true));
+                TestClient.authenticate(
+                        peer,
+                        key.getPublic(),
+                        true,
+                        (socket, wire, oid) -> CharacterScenario.session(socket, wire, oid, true));
             }
             completed.get(5, TimeUnit.SECONDS);
             TestWire.check(accounts.knights("tortodrone").size() == 1, "only one character created");
-            System.out.println("PASS: creation RPC, confirmation, roster updates, invalid requests and duplicate names");
+            System.out.println(
+                    "PASS: creation RPC, confirmation, roster updates, invalid requests and duplicate names");
         } finally {
             worker.shutdownNow();
             try (var paths = Files.walk(directory)) {

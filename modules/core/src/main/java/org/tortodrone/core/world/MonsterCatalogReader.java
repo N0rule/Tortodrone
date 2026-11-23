@@ -20,7 +20,7 @@ final class MonsterCatalogReader {
     /** Bound the generated document; it is client data, not administrator input. */
     static final long MAX_BYTES = 32L * 1024 * 1024;
 
-    private MonsterCatalogReader() { }
+    private MonsterCatalogReader() {}
 
     /** Load {@code content/monsters}; an absent folder means no catalogue was prepared. */
     static MonsterCatalog load(Path folder) throws IOException {
@@ -33,8 +33,7 @@ final class MonsterCatalogReader {
         Path hash = folder.resolve("catalog.sha256");
         ContentFiles.regular(hash);
         String expected = Files.readString(hash).trim();
-        if (!expected.matches("[0-9a-f]{64}"))
-            throw new IOException("Invalid monster catalogue fingerprint");
+        if (!expected.matches("[0-9a-f]{64}")) throw new IOException("Invalid monster catalogue fingerprint");
         if (!ContentFiles.digest(catalog).equals(expected))
             throw new IOException("Monster catalogue fingerprint mismatch; regenerate from the installed client");
         MonsterCatalog catalogTypes = parse(Files.readString(catalog));
@@ -62,8 +61,7 @@ final class MonsterCatalogReader {
         for (var entry : Yaml.map(document.get("types"), "monster types").entrySet()) {
             String id = entry.getKey();
             var value = Yaml.map(entry.getValue(), "monster type " + id);
-            if (types.put(id, type(id, value)) != null)
-                throw new IOException("Duplicate monster type: " + id);
+            if (types.put(id, type(id, value)) != null) throw new IOException("Duplicate monster type: " + id);
         }
         if (types.isEmpty()) throw new IOException("Monster catalogue is empty");
         checkScriptedBosses(types, Map.of());
@@ -75,7 +73,9 @@ final class MonsterCatalogReader {
         String display = text(value.get("display"), "monster display " + id);
         String family = text(value.get("family"), "monster family " + id);
         String actor = value.get("actor") == null ? null : text(value.get("actor"), "monster actor " + id);
-        var configs = value.get("configs") == null ? List.<String>of() : strings(value.get("configs"), "monster configs " + id);
+        var configs = value.get("configs") == null
+                ? List.<String>of()
+                : strings(value.get("configs"), "monster configs " + id);
         String archetype = text(value.get("archetype"), "monster archetype " + id);
         boolean supported = flag(value.get("supported"), "monster supported " + id);
         var capabilities = strings(value.get("capabilities"), "monster capabilities " + id);
@@ -85,8 +85,8 @@ final class MonsterCatalogReader {
             for (var field : Yaml.map(value.get("spec"), "monster spec " + id).entrySet())
                 spec.put(String.valueOf(field.getKey()), String.valueOf(field.getValue()));
         try {
-            return new MonsterType(id, display, family, config, actor, configs, archetype, supported,
-                capabilities, unsupported, spec);
+            return new MonsterType(
+                    id, display, family, config, actor, configs, archetype, supported, capabilities, unsupported, spec);
         } catch (IllegalArgumentException invalid) {
             throw new IOException(invalid.getMessage(), invalid);
         }
@@ -100,7 +100,8 @@ final class MonsterCatalogReader {
         var types = base.types();
         var generatedFrom = base.generatedFrom();
         var declared = new TreeMap<String, MonsterCatalog.Override>();
-        for (var entry : Yaml.map(root.getOrDefault("monsters", Map.of()), file.toString()).entrySet()) {
+        for (var entry : Yaml.map(root.getOrDefault("monsters", Map.of()), file.toString())
+                .entrySet()) {
             String id = entry.getKey();
             if (!types.containsKey(id)) throw new IOException("Override names an unknown monster type: " + id);
             var fields = Yaml.map(entry.getValue(), "monster override " + id);
@@ -110,7 +111,8 @@ final class MonsterCatalogReader {
             String think = null, archetype = null;
             if (fields.containsKey("activation-radius")) {
                 activation = Yaml.decimal(fields.get("activation-radius"), where + " activation-radius");
-                if (activation < 1 || activation > 512) throw new IOException(where + ": activation-radius must be 1..512");
+                if (activation < 1 || activation > 512)
+                    throw new IOException(where + ": activation-radius must be 1..512");
             }
             if (fields.containsKey("leash-radius")) {
                 leash = Yaml.decimal(fields.get("leash-radius"), where + " leash-radius");
@@ -132,8 +134,8 @@ final class MonsterCatalogReader {
     }
 
     /** Keep the boss escape hatch explicitly bounded; overflow is a data error, not silence. */
-    private static void checkScriptedBosses(Map<String, MonsterType> types, Map<String, MonsterCatalog.Override> overrides)
-            throws IOException {
+    private static void checkScriptedBosses(
+            Map<String, MonsterType> types, Map<String, MonsterCatalog.Override> overrides) throws IOException {
         var bosses = new ArrayList<String>();
         for (var type : types.values()) {
             var tuning = overrides.get(type.id());
@@ -143,14 +145,17 @@ final class MonsterCatalogReader {
         if (bosses.size() > MonsterArchetype.MAX_SCRIPTED_BOSSES) {
             bosses.sort(String::compareTo);
             throw new IOException("At most " + MonsterArchetype.MAX_SCRIPTED_BOSSES
-                + " boss-scripted monster types are supported: " + String.join(", ", bosses));
+                    + " boss-scripted monster types are supported: " + String.join(", ", bosses));
         }
     }
 
     private static int integer(Object value, String where) throws IOException {
         if (!(value instanceof Number number)) throw new IOException(where + ": expected an integer");
-        try { return new BigDecimal(number.toString()).intValueExact(); }
-        catch (ArithmeticException invalid) { throw new IOException(where + ": expected a 32-bit integer"); }
+        try {
+            return new BigDecimal(number.toString()).intValueExact();
+        } catch (ArithmeticException invalid) {
+            throw new IOException(where + ": expected a 32-bit integer");
+        }
     }
 
     private static boolean flag(Object value, String where) throws IOException {

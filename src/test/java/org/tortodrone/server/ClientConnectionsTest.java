@@ -14,7 +14,8 @@ public final class ClientConnectionsTest {
         drain(false);
         drain(true);
         stuckHandlerIsInterrupted();
-        System.out.println("PASS: socket shutdown, handler drain, late-client refusal, concurrent close, stuck-handler deadline and interrupt preservation");
+        System.out.println(
+                "PASS: socket shutdown, handler drain, late-client refusal, concurrent close, stuck-handler deadline and interrupt preservation");
     }
 
     private static void drain(boolean interrupt) throws Exception {
@@ -24,13 +25,15 @@ public final class ClientConnectionsTest {
         var release = new CountDownLatch(1);
         var finished = new AtomicBoolean();
         try (var listener = new ServerSocket(0);
-             var peer = new Socket("127.0.0.1", listener.getLocalPort());
-             var socket = listener.accept()) {
+                var peer = new Socket("127.0.0.1", listener.getLocalPort());
+                var socket = listener.accept()) {
             connections.start(socket, "owned-client-test", () -> {
                 entered.countDown();
-                try { socket.getInputStream().read(); }
-                catch (IOException closed) { /* Closing the owned socket unblocks the read. */ }
-                finally {
+                try {
+                    socket.getInputStream().read();
+                } catch (IOException closed) {
+                    /* Closing the owned socket unblocks the read. */
+                } finally {
                     cleaning.countDown();
                     await(release);
                     finished.set(true);
@@ -51,7 +54,9 @@ public final class ClientConnectionsTest {
                 check(stopped.getCount() == 1 && !first.isDone(), "close waits for blocked cleanup");
                 try (var late = new Socket()) {
                     try {
-                        connections.start(late, "late-client-test", () -> { throw new AssertionError("late handler started"); });
+                        connections.start(late, "late-client-test", () -> {
+                            throw new AssertionError("late handler started");
+                        });
                         throw new AssertionError("late client accepted during shutdown");
                     } catch (IOException stopping) {
                         check(late.isClosed(), "refused client socket closed");
@@ -67,7 +72,9 @@ public final class ClientConnectionsTest {
                 try {
                     check(secondStarted.await(10, TimeUnit.SECONDS), "concurrent close entered");
                     check(!second.isDone(), "concurrent close cannot bypass blocked cleanup");
-                } finally { release.countDown(); }
+                } finally {
+                    release.countDown();
+                }
                 check(second.get(10, TimeUnit.SECONDS), "concurrent close sees finished cleanup");
                 check(first.get(10, TimeUnit.SECONDS) == interrupt, "close preserves interrupt status");
                 check(finished.get(), "handler finished before shutdown returned");
@@ -86,15 +93,17 @@ public final class ClientConnectionsTest {
     /** A handler that ignores its socket can only be stopped by the shutdown deadline. */
     private static void stuckHandlerIsInterrupted() throws Exception {
         var connections = new ClientConnections();
-        try (var listener = new ServerSocket(0); var peer = new Socket("127.0.0.1", listener.getLocalPort())) {
+        try (var listener = new ServerSocket(0);
+                var peer = new Socket("127.0.0.1", listener.getLocalPort())) {
             var socket = listener.accept();
             var entered = new CountDownLatch(1);
             var observed = new CountDownLatch(1);
             var interrupted = new AtomicBoolean();
             connections.start(socket, "stuck-client-test", () -> {
                 entered.countDown();
-                try { new CountDownLatch(1).await(); }
-                catch (InterruptedException expected) {
+                try {
+                    new CountDownLatch(1).await();
+                } catch (InterruptedException expected) {
                     interrupted.set(true);
                     observed.countDown();
                     Thread.currentThread().interrupt();

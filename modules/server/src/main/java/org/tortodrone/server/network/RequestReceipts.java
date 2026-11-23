@@ -10,24 +10,29 @@ import java.util.LinkedHashMap;
  */
 final class RequestReceipts<T> {
     static final int LIMIT = 256;
-    record Key(int world,short request) { }
 
-    private final LinkedHashMap<Key,T> values=new LinkedHashMap<>();
+    record Key(int world, short request) {}
 
-    synchronized T get(int world,short request) { return values.get(new Key(world,request)); }
+    private final LinkedHashMap<Key, T> values = new LinkedHashMap<>();
 
-    synchronized boolean contains(int world,short request) { return values.containsKey(new Key(world,request)); }
-
-    synchronized void put(int world,short request,T value) {
-        values.put(new Key(world,request),value);
-        while(values.size()>LIMIT)values.remove(values.keySet().iterator().next());
+    synchronized T get(int world, short request) {
+        return values.get(new Key(world, request));
     }
 
-    synchronized T putIfAbsent(int world,short request,T value) {
-        var key=new Key(world,request);
-        var prior=values.get(key);
-        if(prior!=null)return prior;
-        put(world,request,value);
+    synchronized boolean contains(int world, short request) {
+        return values.containsKey(new Key(world, request));
+    }
+
+    synchronized void put(int world, short request, T value) {
+        values.put(new Key(world, request), value);
+        while (values.size() > LIMIT) values.remove(values.keySet().iterator().next());
+    }
+
+    synchronized T putIfAbsent(int world, short request, T value) {
+        var key = new Key(world, request);
+        var prior = values.get(key);
+        if (prior != null) return prior;
+        put(world, request, value);
         return null;
     }
 }

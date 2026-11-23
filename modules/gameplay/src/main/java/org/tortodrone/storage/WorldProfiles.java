@@ -6,138 +6,292 @@ import java.util.*;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.character.WorldProfile.Slot;
-import org.tortodrone.core.character.SlotUpgrades;
-import org.tortodrone.core.character.KnightProgress;
-import org.tortodrone.core.character.DungeonGear;
 
 /** Current character schema and owned starter-kit storage. Called inside the same transaction as its roster mutation. */
 final class WorldProfiles {
-    private WorldProfiles() { }
+    private WorldProfiles() {}
 
-    static void initialize(Connection c) throws SQLException { WorldSchema.initialize(c); }
+    static void initialize(Connection c) throws SQLException {
+        WorldSchema.initialize(c);
+    }
 
     static void ensure(Connection c, int accountId, Knight knight) throws SQLException, IOException {
-        try (PreparedStatement s = c.prepareStatement("SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?")) {
-            s.setInt(1,accountId); s.setInt(2,knight.id());
-            try (ResultSet r = s.executeQuery()) { if (r.next()) return; }
+        try (PreparedStatement s =
+                c.prepareStatement("SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?")) {
+            s.setInt(1, accountId);
+            s.setInt(2, knight.id());
+            try (ResultSet r = s.executeQuery()) {
+                if (r.next()) return;
+            }
         }
-        int worldId = Math.toIntExact(allocate(c,"next-world-id",Integer.MAX_VALUE));
-        try (PreparedStatement s = c.prepareStatement("INSERT INTO world_characters(world_id,account_id,knight_id) VALUES(?,?,?)")) {
-            s.setInt(1,worldId); s.setInt(2,accountId); s.setInt(3,knight.id()); s.executeUpdate();
+        int worldId = Math.toIntExact(allocate(c, "next-world-id", Integer.MAX_VALUE));
+        try (PreparedStatement s =
+                c.prepareStatement("INSERT INTO world_characters(world_id,account_id,knight_id) VALUES(?,?,?)")) {
+            s.setInt(1, worldId);
+            s.setInt(2, accountId);
+            s.setInt(3, knight.id());
+            s.executeUpdate();
         }
-        add(c,worldId,Slot.HELM,knight.helm(),knight.helmAccessory());
-        add(c,worldId,Slot.ARMOR,knight.armor(),knight.armorAccessory());
-        add(c,worldId,Slot.SWORD,"Weapon/Sword/Proto Sword",null);
-        add(c,worldId,Slot.GUN,"Weapon/Handgun/Proto Gun",null);
-        add(c,worldId,Slot.SHIELD,"Gear/Shield/Proto Shield",null);
+        add(c, worldId, Slot.HELM, knight.helm(), knight.helmAccessory());
+        add(c, worldId, Slot.ARMOR, knight.armor(), knight.armorAccessory());
+        add(c, worldId, Slot.SWORD, "Weapon/Sword/Proto Sword", null);
+        add(c, worldId, Slot.GUN, "Weapon/Handgun/Proto Gun", null);
+        add(c, worldId, Slot.SHIELD, "Gear/Shield/Proto Shield", null);
     }
 
     /** Creator edits replace chosen cosmetics, preserving IDs, heat and the rest of the kit. */
-    static void appearance(Connection c,int accountId,Knight knight) throws SQLException {
-        boolean changed=false;
-        try (PreparedStatement s = c.prepareStatement("UPDATE inventory_items SET config=?,accessory=? WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?) AND slot=? AND starter=1 AND (config IS NOT ? OR accessory IS NOT ?)")) {
-            for (Slot slot : List.of(Slot.HELM,Slot.ARMOR)) {
-                s.setString(1,slot==Slot.HELM ? knight.helm() : knight.armor());
-                s.setString(2,slot==Slot.HELM ? knight.helmAccessory() : knight.armorAccessory());
-                s.setInt(3,accountId); s.setInt(4,knight.id()); s.setString(5,slot.name());
-                s.setString(6,slot==Slot.HELM?knight.helm():knight.armor());
-                s.setString(7,slot==Slot.HELM?knight.helmAccessory():knight.armorAccessory());
-                changed|=s.executeUpdate()>0;
+    static void appearance(Connection c, int accountId, Knight knight) throws SQLException {
+        boolean changed = false;
+        try (PreparedStatement s = c.prepareStatement(
+                "UPDATE inventory_items SET config=?,accessory=? WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?) AND slot=? AND starter=1 AND (config IS NOT ? OR accessory IS NOT ?)")) {
+            for (Slot slot : List.of(Slot.HELM, Slot.ARMOR)) {
+                s.setString(1, slot == Slot.HELM ? knight.helm() : knight.armor());
+                s.setString(2, slot == Slot.HELM ? knight.helmAccessory() : knight.armorAccessory());
+                s.setInt(3, accountId);
+                s.setInt(4, knight.id());
+                s.setString(5, slot.name());
+                s.setString(6, slot == Slot.HELM ? knight.helm() : knight.armor());
+                s.setString(7, slot == Slot.HELM ? knight.helmAccessory() : knight.armorAccessory());
+                changed |= s.executeUpdate() > 0;
             }
         }
-        if(changed)try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE account_id=? AND knight_id=?")) {
-            s.setInt(1,accountId);s.setInt(2,knight.id());s.executeUpdate();
+        if (changed)
+            try (var s = c.prepareStatement(
+                    "UPDATE world_characters SET state_revision=state_revision+1 WHERE account_id=? AND knight_id=?")) {
+                s.setInt(1, accountId);
+                s.setInt(2, knight.id());
+                s.executeUpdate();
+            }
+    }
+
+    private static void add(Connection c, int worldId, Slot slot, String config, String accessory)
+            throws SQLException, IOException {
+        long itemId = allocate(c, "next-item-id", Long.MAX_VALUE);
+        try (PreparedStatement s = c.prepareStatement(
+                "INSERT INTO inventory_items(item_id,world_id,slot,config,accessory,equipped_slot,bound,starter) VALUES(?,?,?,?,?,?,1,1)")) {
+            s.setLong(1, itemId);
+            s.setInt(2, worldId);
+            s.setString(3, slot.name());
+            s.setString(4, config);
+            s.setString(5, accessory);
+            s.setInt(6, slot.initialIndex());
+            s.executeUpdate();
         }
     }
 
-    private static void add(Connection c,int worldId,Slot slot,String config,String accessory) throws SQLException, IOException {
-        long itemId = allocate(c,"next-item-id",Long.MAX_VALUE);
-        try (PreparedStatement s = c.prepareStatement("INSERT INTO inventory_items(item_id,world_id,slot,config,accessory,equipped_slot,bound,starter) VALUES(?,?,?,?,?,?,1,1)")) {
-            s.setLong(1,itemId); s.setInt(2,worldId); s.setString(3,slot.name()); s.setString(4,config); s.setString(5,accessory); s.setInt(6,slot.initialIndex()); s.executeUpdate();
-        }
-    }
-
-    static long allocate(Connection c,String key,long limit) throws SQLException, IOException {
+    static long allocate(Connection c, String key, long limit) throws SQLException, IOException {
         long id;
         try (PreparedStatement s = c.prepareStatement("SELECT value FROM metadata WHERE key=?")) {
-            s.setString(1,key); try (ResultSet r = s.executeQuery()) {
-                if (!r.next() || (id = r.getLong(1)) < 1 || id >= limit) throw new IOException("World identity space exhausted or invalid counter");
+            s.setString(1, key);
+            try (ResultSet r = s.executeQuery()) {
+                if (!r.next() || (id = r.getLong(1)) < 1 || id >= limit)
+                    throw new IOException("World identity space exhausted or invalid counter");
             }
         }
-        try (PreparedStatement s = c.prepareStatement("UPDATE metadata SET value=? WHERE key=?")) { s.setLong(1,id+1); s.setString(2,key); s.executeUpdate(); }
+        try (PreparedStatement s = c.prepareStatement("UPDATE metadata SET value=? WHERE key=?")) {
+            s.setLong(1, id + 1);
+            s.setString(2, key);
+            s.executeUpdate();
+        }
         return id;
     }
 
-    static WorldProfile load(Connection c,int accountId,int knightId,long authRevision) throws SQLException, IOException {
-        return load(c,accountId,knightId,authRevision,null);
+    static WorldProfile load(Connection c, int accountId, int knightId, long authRevision)
+            throws SQLException, IOException {
+        return load(c, accountId, knightId, authRevision, null);
     }
-    static WorldProfile load(Connection c,int accountId,int knightId,long authRevision,WorldProfile cached) throws SQLException, IOException {
-        int worldId, crowns, energy; long revision;
-        try (PreparedStatement s = c.prepareStatement("SELECT w.world_id,w.crowns,w.energy,w.state_revision FROM world_characters w JOIN accounts a ON a.id=w.account_id WHERE w.account_id=? AND w.knight_id=?" + (authRevision>=0 ? " AND a.auth_revision=?" : ""))) {
-            s.setInt(1,accountId); s.setInt(2,knightId); if (authRevision>=0) s.setLong(3,authRevision);
-            try (ResultSet r = s.executeQuery()) { if (!r.next()) throw new IOException("No such knight or account changed; reconnect"); worldId=r.getInt(1); crowns=r.getInt(2); energy=r.getInt(3); revision=r.getLong(4); }
+
+    static WorldProfile load(Connection c, int accountId, int knightId, long authRevision, WorldProfile cached)
+            throws SQLException, IOException {
+        int worldId, crowns, energy;
+        long revision;
+        try (PreparedStatement s = c.prepareStatement(
+                "SELECT w.world_id,w.crowns,w.energy,w.state_revision FROM world_characters w JOIN accounts a ON a.id=w.account_id WHERE w.account_id=? AND w.knight_id=?"
+                        + (authRevision >= 0 ? " AND a.auth_revision=?" : ""))) {
+            s.setInt(1, accountId);
+            s.setInt(2, knightId);
+            if (authRevision >= 0) s.setLong(3, authRevision);
+            try (ResultSet r = s.executeQuery()) {
+                if (!r.next()) throw new IOException("No such knight or account changed; reconnect");
+                worldId = r.getInt(1);
+                crowns = r.getInt(2);
+                energy = r.getInt(3);
+                revision = r.getLong(4);
+            }
         }
         // All supported inventory/balance writes increment state_revision in their transaction.
         // Still validate current ownership/authentication before reusing immutable inventory.
-        if(cached!=null&&cached.accountId()==accountId&&cached.knightId()==knightId&&cached.worldId()==worldId&&cached.revision()==revision&&cached.items().stream().noneMatch(i->i.expired(System.currentTimeMillis())))return cached;
+        if (cached != null
+                && cached.accountId() == accountId
+                && cached.knightId() == knightId
+                && cached.worldId() == worldId
+                && cached.revision() == revision
+                && cached.items().stream().noneMatch(i -> i.expired(System.currentTimeMillis()))) return cached;
         List<WorldProfile.Item> items = new ArrayList<>();
-        try (PreparedStatement s = c.prepareStatement("SELECT * FROM inventory_items WHERE world_id=? ORDER BY item_id")) {
-            s.setInt(1,worldId); try (ResultSet r = s.executeQuery()) {
+        try (PreparedStatement s =
+                c.prepareStatement("SELECT * FROM inventory_items WHERE world_id=? ORDER BY item_id")) {
+            s.setInt(1, worldId);
+            try (ResultSet r = s.executeQuery()) {
                 while (r.next()) {
-                    String config=r.getString("config");Slot slot=Slot.valueOf(r.getString("slot"));
-                    if(slot==Slot.OTHER&&org.tortodrone.core.character.DungeonGear.vitapodTier(config)>0)slot=Slot.DUNGEON;
-                    items.add(new WorldProfile.Item(r.getLong("item_id"),slot,config,r.getString("accessory"),r.getInt("heat"),(Integer)r.getObject("equipped_slot"),r.getBoolean("bound"),r.getBoolean("bind_on_equip"),r.getBoolean("starter"),r.getInt("count"),r.getBoolean("permanent"),r.getInt("level"),r.getFloat("heat_progress"),TownStore.variants(r.getString("variants")),TownStore.strings(r.getString("accessories"))));
+                    String config = r.getString("config");
+                    Slot slot = Slot.valueOf(r.getString("slot"));
+                    if (slot == Slot.OTHER && org.tortodrone.core.character.DungeonGear.vitapodTier(config) > 0)
+                        slot = Slot.DUNGEON;
+                    items.add(new WorldProfile.Item(
+                            r.getLong("item_id"),
+                            slot,
+                            config,
+                            r.getString("accessory"),
+                            r.getInt("heat"),
+                            (Integer) r.getObject("equipped_slot"),
+                            r.getBoolean("bound"),
+                            r.getBoolean("bind_on_equip"),
+                            r.getBoolean("starter"),
+                            r.getInt("count"),
+                            r.getBoolean("permanent"),
+                            r.getInt("level"),
+                            r.getFloat("heat_progress"),
+                            TownStore.variants(r.getString("variants")),
+                            TownStore.strings(r.getString("accessories"))));
                 }
             }
         }
-        var expirations=InventoryExpiry.load(c,worldId);
-        items.replaceAll(item->item.withExpiration(expirations.get(item.id())));
-        items.removeIf(item->item.expired(System.currentTimeMillis()));
+        var expirations = InventoryExpiry.load(c, worldId);
+        items.replaceAll(item -> item.withExpiration(expirations.get(item.id())));
+        items.removeIf(item -> item.expired(System.currentTimeMillis()));
         // Bonus weapon slots use metadata so existing schema-15 databases need no migration.
-        var bonusSlots=new HashMap<Long,Integer>();
-        try(var s=c.prepareStatement("SELECT i.item_id,m.value FROM inventory_items i JOIN metadata m ON m.key='item.weapon-slot.'||i.item_id WHERE i.world_id=?")) {
-            s.setInt(1,worldId);try(var r=s.executeQuery()){while(r.next()){int slot=r.getInt(2);if(slot!=8&&slot!=9)throw new IOException("Invalid bonus weapon slot");bonusSlots.put(r.getLong(1),slot);}}
+        var bonusSlots = new HashMap<Long, Integer>();
+        try (var s = c.prepareStatement(
+                "SELECT i.item_id,m.value FROM inventory_items i JOIN metadata m ON m.key='item.weapon-slot.'||i.item_id WHERE i.world_id=?")) {
+            s.setInt(1, worldId);
+            try (var r = s.executeQuery()) {
+                while (r.next()) {
+                    int slot = r.getInt(2);
+                    if (slot != 8 && slot != 9) throw new IOException("Invalid bonus weapon slot");
+                    bonusSlots.put(r.getLong(1), slot);
+                }
+            }
         }
-        items.replaceAll(item->bonusSlots.containsKey(item.id())?item.withEquippedSlot(bonusSlots.get(item.id())):item);
+        items.replaceAll(
+                item -> bonusSlots.containsKey(item.id()) ? item.withEquippedSlot(bonusSlots.get(item.id())) : item);
         // Slot 14 is the client's PvP shield slot; metadata keeps schema 17 unchanged.
-        long pvpShield=0;
-        try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){s.setString(1,"item.pvp-shield."+worldId);try(var r=s.executeQuery()){if(r.next())pvpShield=r.getLong(1);}}
-        if(pvpShield>0){long id=pvpShield;items.replaceAll(item->item.id()==id?item.withEquippedSlot(14):item);}
+        long pvpShield = 0;
+        try (var s = c.prepareStatement("SELECT value FROM metadata WHERE key=?")) {
+            s.setString(1, "item.pvp-shield." + worldId);
+            try (var r = s.executeQuery()) {
+                if (r.next()) pvpShield = r.getLong(1);
+            }
+        }
+        if (pvpShield > 0) {
+            long id = pvpShield;
+            items.replaceAll(item -> item.id() == id ? item.withEquippedSlot(14) : item);
+        }
         // Slot 12 is the client's dungeon gear slot; metadata keeps schema 17 unchanged.
-        long dungeonGear=0;
-        try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){s.setString(1,"item.dungeon."+worldId);try(var r=s.executeQuery()){if(r.next())dungeonGear=r.getLong(1);}}
-        if(dungeonGear>0){long id=dungeonGear;items.replaceAll(item->item.id()==id?item.withEquippedSlot(12):item);}
-        var gifts=GiftStore.load(c,worldId);items.replaceAll(item->gifts.containsKey(item.id())?item.withGift(gifts.get(item.id())):item);
-        int consumed;try(var s=c.prepareStatement("SELECT count(*) FROM town_consumed_starters WHERE world_id=?")){s.setInt(1,worldId);try(var r=s.executeQuery()){r.next();consumed=r.getInt(1);}}
-        if(items.stream().filter(WorldProfile.Item::starter).count()+consumed!=5)throw new IOException("Incomplete starter inventory; restore the saved database");
-        int rank=11,prestige=0;
-        try(var s=c.prepareStatement("SELECT key,value FROM metadata WHERE key IN(?,?)")){
-            s.setString(1,progressKey(worldId,"rank"));s.setString(2,progressKey(worldId,"prestige"));
-            try(var r=s.executeQuery()){while(r.next()){long value=r.getLong(2);if(value<0||value>Integer.MAX_VALUE)throw new IOException("Invalid saved knight progress");if(r.getString(1).endsWith(".rank"))rank=(int)value;else prestige=(int)value;}}
+        long dungeonGear = 0;
+        try (var s = c.prepareStatement("SELECT value FROM metadata WHERE key=?")) {
+            s.setString(1, "item.dungeon." + worldId);
+            try (var r = s.executeQuery()) {
+                if (r.next()) dungeonGear = r.getLong(1);
+            }
         }
-        int opening=-1;
-        try(var s=c.prepareStatement("SELECT value,typeof(value) FROM metadata WHERE key=?")){
-            s.setString(1,"world."+worldId+".opening-stage");try(var r=s.executeQuery()){if(r.next()){
-                long value=r.getLong(1);if(!r.getString(2).equals("integer")||value<0||value>3)throw new IOException("Invalid saved opening checkpoint");opening=(int)value;
-            }}
+        if (dungeonGear > 0) {
+            long id = dungeonGear;
+            items.replaceAll(item -> item.id() == id ? item.withEquippedSlot(12) : item);
         }
-        try{
-            var achievements=AccountAchievements.load(c,accountId);
-            var profile=new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items,new org.tortodrone.core.character.KnightProgress(rank/10,rank%10,prestige,opening),TownStore.load(c,worldId),achievements);
-            var visible=items.stream().map(item->item.equippedSlot()!=null&&!org.tortodrone.core.character.SlotUpgrades.unlocked(profile,item.equippedSlot())?item.withEquippedSlot(null):item).toList();
-            return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,visible,profile.progress(),profile.town(),profile.achievements());
+        var gifts = GiftStore.load(c, worldId);
+        items.replaceAll(item -> gifts.containsKey(item.id()) ? item.withGift(gifts.get(item.id())) : item);
+        int consumed;
+        try (var s = c.prepareStatement("SELECT count(*) FROM town_consumed_starters WHERE world_id=?")) {
+            s.setInt(1, worldId);
+            try (var r = s.executeQuery()) {
+                r.next();
+                consumed = r.getInt(1);
+            }
         }
-        catch(IllegalArgumentException invalid){throw new IOException("Invalid saved knight progress",invalid);}
+        if (items.stream().filter(WorldProfile.Item::starter).count() + consumed != 5)
+            throw new IOException("Incomplete starter inventory; restore the saved database");
+        int rank = 11, prestige = 0;
+        try (var s = c.prepareStatement("SELECT key,value FROM metadata WHERE key IN(?,?)")) {
+            s.setString(1, progressKey(worldId, "rank"));
+            s.setString(2, progressKey(worldId, "prestige"));
+            try (var r = s.executeQuery()) {
+                while (r.next()) {
+                    long value = r.getLong(2);
+                    if (value < 0 || value > Integer.MAX_VALUE) throw new IOException("Invalid saved knight progress");
+                    if (r.getString(1).endsWith(".rank")) rank = (int) value;
+                    else prestige = (int) value;
+                }
+            }
+        }
+        int opening = -1;
+        try (var s = c.prepareStatement("SELECT value,typeof(value) FROM metadata WHERE key=?")) {
+            s.setString(1, "world." + worldId + ".opening-stage");
+            try (var r = s.executeQuery()) {
+                if (r.next()) {
+                    long value = r.getLong(1);
+                    if (!r.getString(2).equals("integer") || value < 0 || value > 3)
+                        throw new IOException("Invalid saved opening checkpoint");
+                    opening = (int) value;
+                }
+            }
+        }
+        try {
+            var achievements = AccountAchievements.load(c, accountId);
+            var profile = new WorldProfile(
+                    worldId,
+                    accountId,
+                    knightId,
+                    crowns,
+                    energy,
+                    revision,
+                    items,
+                    new org.tortodrone.core.character.KnightProgress(rank / 10, rank % 10, prestige, opening),
+                    TownStore.load(c, worldId),
+                    achievements);
+            var visible = items.stream()
+                    .map(item -> item.equippedSlot() != null
+                                    && !org.tortodrone.core.character.SlotUpgrades.unlocked(
+                                            profile, item.equippedSlot())
+                            ? item.withEquippedSlot(null)
+                            : item)
+                    .toList();
+            return new WorldProfile(
+                    worldId,
+                    accountId,
+                    knightId,
+                    crowns,
+                    energy,
+                    revision,
+                    visible,
+                    profile.progress(),
+                    profile.town(),
+                    profile.achievements());
+        } catch (IllegalArgumentException invalid) {
+            throw new IOException("Invalid saved knight progress", invalid);
+        }
     }
-    static String progressKey(int world,String field){return "knight.progress."+world+"."+field;}
-    static void cleanProgress(Connection c)throws SQLException{
+
+    static String progressKey(int world, String field) {
+        return "knight.progress." + world + "." + field;
+    }
+
+    static void cleanProgress(Connection c) throws SQLException {
         KnightObjectives.clean(c);
         OpeningMissionStore.clean(c);
-        try(var s=c.createStatement()){s.executeUpdate("DELETE FROM metadata WHERE key GLOB 'world.*.opening-stage' AND key NOT IN (SELECT 'world.'||world_id||'.opening-stage' FROM world_characters)");}
-        try(var s=c.createStatement()){s.executeUpdate("DELETE FROM metadata WHERE key GLOB 'world.*.last-town-scene' AND key NOT IN (SELECT 'world.'||world_id||'.last-town-scene' FROM world_characters)");}
+        try (var s = c.createStatement()) {
+            s.executeUpdate(
+                    "DELETE FROM metadata WHERE key GLOB 'world.*.opening-stage' AND key NOT IN (SELECT 'world.'||world_id||'.opening-stage' FROM world_characters)");
+        }
+        try (var s = c.createStatement()) {
+            s.executeUpdate(
+                    "DELETE FROM metadata WHERE key GLOB 'world.*.last-town-scene' AND key NOT IN (SELECT 'world.'||world_id||'.last-town-scene' FROM world_characters)");
+        }
         FriendStore.clean(c);
         NamedLoadouts.clean(c);
         AuctionHouse.cleanOutbids(c);
-        try(var s=c.createStatement()){s.executeUpdate("DELETE FROM metadata WHERE key LIKE 'knight.progress.%' AND key NOT IN (SELECT 'knight.progress.'||world_id||'.rank' FROM world_characters UNION ALL SELECT 'knight.progress.'||world_id||'.prestige' FROM world_characters)");}
+        try (var s = c.createStatement()) {
+            s.executeUpdate(
+                    "DELETE FROM metadata WHERE key LIKE 'knight.progress.%' AND key NOT IN (SELECT 'knight.progress.'||world_id||'.rank' FROM world_characters UNION ALL SELECT 'knight.progress.'||world_id||'.prestige' FROM world_characters)");
+        }
     }
 }

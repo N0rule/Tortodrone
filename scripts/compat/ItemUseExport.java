@@ -1,3 +1,10 @@
+import com.threerings.config.ConfigGroup;
+import com.threerings.config.ConfigManager;
+import com.threerings.projectx.dungeon.config.DungeonActionConfig;
+import com.threerings.projectx.dungeon.config.DungeonItemConfig;
+import com.threerings.projectx.item.config.ItemConfig;
+import com.threerings.tudey.config.ActionConfig;
+import com.threerings.tudey.config.TargetConfig;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -9,26 +16,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import com.threerings.config.ConfigGroup;
-import com.threerings.config.ConfigManager;
-import com.threerings.projectx.dungeon.config.DungeonActionConfig;
-import com.threerings.projectx.dungeon.config.DungeonItemConfig;
-import com.threerings.projectx.item.config.ItemConfig;
-import com.threerings.tudey.config.ActionConfig;
-import com.threerings.tudey.config.TargetConfig;
 import org.tortodrone.core.Json;
-import org.tortodrone.core.world.FireCatalog;
 
 /** Exports instant heals, self-damage, spawn-actor props and carryable lifts for owned bag items. */
 public final class ItemUseExport {
-    private ItemUseExport() { }
+    private ItemUseExport() {}
 
     /** Writes the global item-use catalogue consumed by {@code MapYaml.prepare}. */
     public static void main(String[] args) throws Exception {
         Path game = Path.of(args[0]).toRealPath(), out = Path.of(args[1]).toAbsolutePath();
-        if (out.startsWith(game) || Files.exists(out)) throw new IOException("Choose a fresh output outside the client");
-        var manager=NativeConfig.load(game);
+        if (out.startsWith(game) || Files.exists(out))
+            throw new IOException("Choose a fresh output outside the client");
+        var manager = NativeConfig.load(game);
         var uses = new TreeMap<String, Map<String, Object>>();
         for (var config : itemGroup(manager).kR()) {
             var original = config.w(manager);
@@ -44,15 +43,16 @@ public final class ItemUseExport {
             } else if (original instanceof ItemConfig.Lift lift) {
                 if (lift.lift == null) continue;
                 var actor = manager.a(com.threerings.tudey.config.ActorConfig.class, lift.lift);
-                if (actor == null || !(actor.al(manager) instanceof com.threerings.projectx.config.ProjectXActorConfig.Lift nativeLift))
+                if (actor == null
+                        || !(actor.al(manager)
+                                instanceof com.threerings.projectx.config.ProjectXActorConfig.Lift nativeLift))
                     throw new IOException("Unresolved lift actor " + lift.lift.getName());
                 var values = new TreeMap<String, String>();
                 SceneContentExport.writeLift(manager, values, "lift.", lift.lift, nativeLift, true);
                 uses.put(config.getName(), fields("lift", values));
             }
         }
-        Files.writeString(out, Json.stringify(Map.of("format", 1, "items", uses)),
-            StandardOpenOption.CREATE_NEW);
+        Files.writeString(out, Json.stringify(Map.of("format", 1, "items", uses)), StandardOpenOption.CREATE_NEW);
         System.out.println("Exported " + uses.size() + " item-use definitions to " + out);
     }
 
@@ -69,10 +69,14 @@ public final class ItemUseExport {
     }
 
     /** Native InstantAction is usable only when its action targets the activator itself. */
-    private static Map<String, Object> instant(ConfigManager manager, DungeonItemConfig.InstantAction instant) throws Exception {
+    private static Map<String, Object> instant(ConfigManager manager, DungeonItemConfig.InstantAction instant)
+            throws Exception {
         var action = instant.action;
-        if (action instanceof DungeonActionConfig.Heal heal && action.getClass() == DungeonActionConfig.Heal.class
-            && heal.maximum == 0 && heal.current > 0 && heal.target instanceof TargetConfig.Activator) {
+        if (action instanceof DungeonActionConfig.Heal heal
+                && action.getClass() == DungeonActionConfig.Heal.class
+                && heal.maximum == 0
+                && heal.current > 0
+                && heal.target instanceof TargetConfig.Activator) {
             var use = itemUse("heal");
             use.put("heal", heal.current);
             return use;
@@ -85,7 +89,8 @@ public final class ItemUseExport {
     }
 
     private static Object damageTarget(ActionConfig action) throws Exception {
-        if (action instanceof DungeonActionConfig.DamageTarget hit && hit.target instanceof TargetConfig.Activator) return hit.damage;
+        if (action instanceof DungeonActionConfig.DamageTarget hit && hit.target instanceof TargetConfig.Activator)
+            return hit.damage;
         if (action instanceof ActionConfig.Compound compound) {
             Object found = null;
             for (var child : compound.actions) {
@@ -102,9 +107,10 @@ public final class ItemUseExport {
     @SuppressWarnings("unchecked")
     private static ConfigGroup<ItemConfig> itemGroup(ConfigManager cm) throws Exception {
         List<Method> methods = new ArrayList<>(Arrays.stream(cm.getClass().getMethods())
-            .filter(m -> m.getParameterCount() == 1 && m.getParameterTypes()[0] == Class.class)
-            .filter(m -> ConfigGroup.class.isAssignableFrom(m.getReturnType()))
-            .filter(m -> !Modifier.isStatic(m.getModifiers())).toList());
+                .filter(m -> m.getParameterCount() == 1 && m.getParameterTypes()[0] == Class.class)
+                .filter(m -> ConfigGroup.class.isAssignableFrom(m.getReturnType()))
+                .filter(m -> !Modifier.isStatic(m.getModifiers()))
+                .toList());
         if (methods.size() != 1) throw new IOException("Cannot identify native ItemConfig group accessor");
         Object result = methods.getFirst().invoke(cm, ItemConfig.class);
         if (!(result instanceof ConfigGroup<?> group)) throw new IOException("Native item group unavailable");

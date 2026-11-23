@@ -17,28 +17,45 @@ public final class RosterConcurrencyTest {
         org.tortodrone.world.SceneRegistry.install(org.tortodrone.world.SceneRegistry.create(content));
         AccountStore accounts = new AccountStore(directory, false, content.items(), content.town());
         accounts.create("System", "system-password".toCharArray());
-        accounts.create("Alice", "alice-password".toCharArray()); accounts.create("Bob", "bob-password".toCharArray());
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA"); generator.initialize(2048); KeyPair keys = generator.generateKeyPair();
+        accounts.create("Alice", "alice-password".toCharArray());
+        accounts.create("Bob", "bob-password".toCharArray());
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048);
+        KeyPair keys = generator.generateKeyPair();
         ExecutorService workers = Executors.newCachedThreadPool();
         List<Future<?>> sessions = new CopyOnWriteArrayList<>();
         try (ServerSocket listener = new ServerSocket(0, 3, InetAddress.getLoopbackAddress())) {
             Future<?> acceptor = workers.submit(() -> {
                 try {
                     for (int id = 1; id <= 4; id++) {
-                        Socket socket = listener.accept(); int connectionId = id;
+                        Socket socket = listener.accept();
+                        int connectionId = id;
                         sessions.add(workers.submit(() -> {
-                            try (socket) { SecureHandshake.run(socket, keys.getPrivate(), ignored -> {}, true, connectionId,
-                                "127.0.0.1", listener.getLocalPort(), accounts); }
-                            catch (java.net.SocketException expectedDisconnect) { }
-                            catch (Exception error) { throw new RuntimeException(error); }
+                            try (socket) {
+                                SecureHandshake.run(
+                                        socket,
+                                        keys.getPrivate(),
+                                        ignored -> {},
+                                        true,
+                                        connectionId,
+                                        "127.0.0.1",
+                                        listener.getLocalPort(),
+                                        accounts);
+                            } catch (java.net.SocketException expectedDisconnect) {
+                            } catch (Exception error) {
+                                throw new RuntimeException(error);
+                            }
                         }));
                     }
-                } catch (Exception error) { throw new RuntimeException(error); }
+                } catch (Exception error) {
+                    throw new RuntimeException(error);
+                }
             });
             MultiSessionScenario.run(listener.getLocalPort(), keys.getPublic());
             acceptor.get(10, TimeUnit.SECONDS);
             for (Future<?> session : sessions) session.get(10, TimeUnit.SECONDS);
-            System.out.println("PASS: authenticated replacement, private rosters, edits/deletion, subscriptions and abrupt reconnect");
+            System.out.println(
+                    "PASS: authenticated replacement, private rosters, edits/deletion, subscriptions and abrupt reconnect");
         } finally {
             workers.shutdownNow();
             try (var paths = Files.walk(directory)) {

@@ -20,22 +20,30 @@ final class SessionAppearance {
         var scene = session.currentScene();
         var visible = session.visibleProfile();
         var base = scene.map().town()
-            ? StarterCatalog.town(session.selectedKnight(), visible, session.charactersStore().catalog())
-            : StarterCatalog.interior(session.selectedKnight(), visible, session.charactersStore().catalog());
+                ? StarterCatalog.town(
+                        session.selectedKnight(),
+                        visible,
+                        session.charactersStore().catalog())
+                : StarterCatalog.interior(
+                        session.selectedKnight(),
+                        visible,
+                        session.charactersStore().catalog());
         var arguments = new TreeMap<String, Object>(base.arguments());
         long[] slots = visible.equipment();
-        for (var item : visible.items()) if (item.equippedSlot() != null) {
-            int slot = item.equippedSlot();
-            if (slot == 0 && slots[3] != 0 || slot == 1 && slots[4] != 0) continue;
-            for (String accessory : item.additionalAccessories()) {
-                var nativeModel = session.sceneRegistry().town().accessoryModel(accessory);
-                String parameter = session.sceneRegistry().town().accessoryParameter(accessory);
-                if (nativeModel != null && parameter != null) arguments.put(parameter, nativeModel);
+        for (var item : visible.items())
+            if (item.equippedSlot() != null) {
+                int slot = item.equippedSlot();
+                if (slot == 0 && slots[3] != 0 || slot == 1 && slots[4] != 0) continue;
+                for (String accessory : item.additionalAccessories()) {
+                    var nativeModel = session.sceneRegistry().town().accessoryModel(accessory);
+                    String parameter = session.sceneRegistry().town().accessoryParameter(accessory);
+                    if (nativeModel != null && parameter != null) arguments.put(parameter, nativeModel);
+                }
             }
-        }
         base = new StarterCatalog.Model(base.name(), arguments);
-        model = new StarterCatalog.Model(scene.map().town() ? "Character/PC/Default" : "Character/PC/Level",
-            Map.of("Model", base, "Height", base.arguments().get("Height")));
+        model = new StarterCatalog.Model(
+                scene.map().town() ? "Character/PC/Default" : "Character/PC/Level",
+                Map.of("Model", base, "Height", base.arguments().get("Height")));
     }
 
     ActorState actor() {
@@ -43,12 +51,23 @@ final class SessionAppearance {
         var scene = session.currentScene();
         var arrival = runtime.arrival();
         var checkpoint = arrival == null ? scene.simulation().defaultEntrance() : null;
-        return new ActorState(session.currentProfile().worldId(), session.connectionOid(), session.selectedKnight().name(),
-            256 | session.selectedKnight().color(), session.sceneCreated(),
-            arrival == null ? checkpoint == null ? scene.map().spawnX() : checkpoint.x() : arrival.x(),
-            arrival == null ? checkpoint == null ? scene.map().spawnY() : checkpoint.y() : arrival.y(),
-            arrival == null ? checkpoint == null ? scene.map().spawnRotation() : checkpoint.rotation() : arrival.rotation(),
-            0, 0, 0, session.sceneCreated(), model, session.gameMasterFlag());
+        return new ActorState(
+                session.currentProfile().worldId(),
+                session.connectionOid(),
+                session.selectedKnight().name(),
+                256 | session.selectedKnight().color(),
+                session.sceneCreated(),
+                arrival == null ? checkpoint == null ? scene.map().spawnX() : checkpoint.x() : arrival.x(),
+                arrival == null ? checkpoint == null ? scene.map().spawnY() : checkpoint.y() : arrival.y(),
+                arrival == null
+                        ? checkpoint == null ? scene.map().spawnRotation() : checkpoint.rotation()
+                        : arrival.rotation(),
+                0,
+                0,
+                0,
+                session.sceneCreated(),
+                model,
+                session.gameMasterFlag());
     }
 
     void update() {

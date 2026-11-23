@@ -18,21 +18,22 @@ final class SessionProfilePublisher {
         this.responder = session.responder();
     }
 
-    void changed(TownStore.Result result,boolean publishTown)throws IOException {
-        var before=session.visibleProfile();
+    void changed(TownStore.Result result, boolean publishTown) throws IOException {
+        var before = session.visibleProfile();
         session.applyProfile(result.profile());
         session.updateAppearance();
-        var after=session.visibleProfile();
-        if(before.energy()>after.energy()&&session.membership()!=null)
-            session.membership().effect(new StarterCatalog.Model("Energy Spent",Map.of()));
-        responder.send(()->responder.codec().itemChanges(responder.oid(),session.selectedKnight(),before,after));
-        responder.send(()->responder.codec().balances(responder.oid(),after));
-        var achievementChanges=responder.codec().achievementChanges(responder.oid(),before,after);
-        if(achievementChanges!=null)responder.send(()->achievementChanges);
-        if(publishTown)responder.send(()->responder.codec().townState(responder.oid(),after));
-        session.publishOutbids(before,after);
-        if(!before.town().loadouts().equals(after.town().loadouts())||before.town().equippedSprite()!=after.town().equippedSprite()
-                ||!before.town().sprites().equals(after.town().sprites()))
-            responder.send(()->responder.codec().loadoutChanges(responder.oid(),before,after));
+        var after = session.visibleProfile();
+        if (before.energy() > after.energy() && session.membership() != null)
+            session.membership().effect(new StarterCatalog.Model("Energy Spent", Map.of()));
+        responder.send(() -> responder.codec().itemChanges(responder.oid(), session.selectedKnight(), before, after));
+        responder.send(() -> responder.codec().balances(responder.oid(), after));
+        var achievementChanges = responder.codec().achievementChanges(responder.oid(), before, after);
+        if (achievementChanges != null) responder.send(() -> achievementChanges);
+        if (publishTown) responder.send(() -> responder.codec().townState(responder.oid(), after));
+        session.publishOutbids(before, after);
+        if (!before.town().loadouts().equals(after.town().loadouts())
+                || before.town().equippedSprite() != after.town().equippedSprite()
+                || !before.town().sprites().equals(after.town().sprites()))
+            responder.send(() -> responder.codec().loadoutChanges(responder.oid(), before, after));
     }
 }

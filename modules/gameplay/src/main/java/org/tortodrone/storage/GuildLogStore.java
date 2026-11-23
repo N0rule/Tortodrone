@@ -9,11 +9,12 @@ import org.tortodrone.core.guild.Page;
 
 /** Guild record inserts and cursor paging, including the stock category groups. */
 final class GuildLogStore {
-    private GuildLogStore() { }
+    private GuildLogStore() {}
 
-    static void log(Connection c, long guildId, int type, String knightName, long when,
-            List<String> args) throws SQLException, IOException {
-        try (var s = c.prepareStatement("INSERT INTO guild_log(guild_id,type,knight_name,when_ms,args) VALUES(?,?,?,?,?)")) {
+    static void log(Connection c, long guildId, int type, String knightName, long when, List<String> args)
+            throws SQLException, IOException {
+        try (var s =
+                c.prepareStatement("INSERT INTO guild_log(guild_id,type,knight_name,when_ms,args) VALUES(?,?,?,?,?)")) {
             s.setLong(1, guildId);
             s.setInt(2, type);
             s.setString(3, knightName);
@@ -23,13 +24,19 @@ final class GuildLogStore {
         }
     }
 
-    static Page page(Connection c, long guildId, long cursor, int offset, int count,
-            Integer category, String knightName) throws SQLException, IOException {
+    static Page page(
+            Connection c, long guildId, long cursor, int offset, int count, Integer category, String knightName)
+            throws SQLException, IOException {
         var where = new StringBuilder(" FROM guild_log WHERE guild_id=?");
         var args = new ArrayList<Object>();
         args.add(guildId);
-        if (cursor != Long.MAX_VALUE) { where.append(" AND id<=?"); args.add(cursor); }
-        if (category != null) { where.append(" AND type IN (" + typesForCategory(category) + ")"); }
+        if (cursor != Long.MAX_VALUE) {
+            where.append(" AND id<=?");
+            args.add(cursor);
+        }
+        if (category != null) {
+            where.append(" AND type IN (" + typesForCategory(category) + ")");
+        }
         if (knightName != null && !knightName.isBlank()) {
             where.append(" AND knight_name=? COLLATE NOCASE");
             args.add(knightName);
@@ -37,7 +44,10 @@ final class GuildLogStore {
         int total;
         try (var s = c.prepareStatement("SELECT count(*)" + where)) {
             bind(s, args);
-            try (var r = s.executeQuery()) { r.next(); total = r.getInt(1); }
+            try (var r = s.executeQuery()) {
+                r.next();
+                total = r.getInt(1);
+            }
         }
         var entries = new ArrayList<LogEntry>();
         try (var s = c.prepareStatement("SELECT *" + where + " ORDER BY id DESC LIMIT ? OFFSET ?")) {
@@ -47,8 +57,12 @@ final class GuildLogStore {
             try (var r = s.executeQuery()) {
                 while (r.next()) {
                     var raw = (List<?>) Json.parse(r.getString("args"));
-                    entries.add(new LogEntry(r.getLong("id"), r.getInt("type"), r.getString("knight_name"),
-                        r.getLong("when_ms"), raw.stream().map(String::valueOf).toList()));
+                    entries.add(new LogEntry(
+                            r.getLong("id"),
+                            r.getInt("type"),
+                            r.getString("knight_name"),
+                            r.getLong("when_ms"),
+                            raw.stream().map(String::valueOf).toList()));
                 }
             }
         }

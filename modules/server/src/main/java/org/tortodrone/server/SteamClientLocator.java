@@ -10,7 +10,7 @@ public final class SteamClientLocator {
     private static final Pattern LIBRARY = Pattern.compile("\"(?:path|[0-9]+)\"\\s*\"((?:\\\\.|[^\"\\\\])*)\"");
     private static final Pattern INSTALL = Pattern.compile("\"installdir\"\\s*\"((?:\\\\.|[^\"\\\\])*)\"");
 
-    public static List<Path> roots(Path home, String os, Map<String,String> environment) {
+    public static List<Path> roots(Path home, String os, Map<String, String> environment) {
         var roots = new LinkedHashSet<Path>();
         String supplied = environment.get("STEAM_PATH");
         if (supplied != null && !supplied.isBlank()) roots.add(Path.of(supplied));
@@ -40,7 +40,9 @@ public final class SteamClientLocator {
                     try {
                         String value = unescape(matcher.group(1));
                         if (!value.isBlank()) libraries.add(Path.of(value));
-                    } catch (InvalidPathException ignored) { /* A stale Steam library is not a startup failure. */ }
+                    } catch (InvalidPathException ignored) {
+                        /* A stale Steam library is not a startup failure. */
+                    }
                 }
             }
         }
@@ -63,14 +65,21 @@ public final class SteamClientLocator {
     public static Optional<Path> client(Path path) {
         try {
             Path root = path.toRealPath();
-            return Files.isRegularFile(root.resolve("code/projectx-pcode.jar")) && Files.isDirectory(root.resolve("rsrc"))
-                ? Optional.of(root) : Optional.empty();
-        } catch (IOException | SecurityException ignored) { return Optional.empty(); }
+            return Files.isRegularFile(root.resolve("code/projectx-pcode.jar"))
+                            && Files.isDirectory(root.resolve("rsrc"))
+                    ? Optional.of(root)
+                    : Optional.empty();
+        } catch (IOException | SecurityException ignored) {
+            return Optional.empty();
+        }
     }
 
     private static String read(Path path) {
-        try { return Files.isRegularFile(path) && Files.size(path) <= 1_048_576 ? Files.readString(path) : ""; }
-        catch (IOException | SecurityException ignored) { return ""; }
+        try {
+            return Files.isRegularFile(path) && Files.size(path) <= 1_048_576 ? Files.readString(path) : "";
+        } catch (IOException | SecurityException ignored) {
+            return "";
+        }
     }
 
     private static String unescape(String value) {

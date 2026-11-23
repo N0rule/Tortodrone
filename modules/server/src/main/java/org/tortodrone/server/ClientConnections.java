@@ -14,16 +14,25 @@ final class ClientConnections implements AutoCloseable {
         try {
             synchronized (this) {
                 if (closing) throw new IOException("Server is stopping");
-                Thread thread = new Thread(() -> {
-                    try { handler.run(); }
-                    finally {
-                        closeSocket(socket);
-                        synchronized (ClientConnections.this) { clients.remove(socket); }
-                    }
-                }, name);
+                Thread thread = new Thread(
+                        () -> {
+                            try {
+                                handler.run();
+                            } finally {
+                                closeSocket(socket);
+                                synchronized (ClientConnections.this) {
+                                    clients.remove(socket);
+                                }
+                            }
+                        },
+                        name);
                 clients.put(socket, thread);
-                try { thread.start(); }
-                catch (RuntimeException | Error failure) { clients.remove(socket); throw failure; }
+                try {
+                    thread.start();
+                } catch (RuntimeException | Error failure) {
+                    clients.remove(socket);
+                    throw failure;
+                }
             }
         } catch (IOException | RuntimeException | Error failure) {
             closeSocket(socket);
@@ -31,7 +40,8 @@ final class ClientConnections implements AutoCloseable {
         }
     }
 
-    @Override public void close() {
+    @Override
+    public void close() {
         Map<Socket, Thread> active;
         synchronized (this) {
             closing = true;
@@ -54,9 +64,15 @@ final class ClientConnections implements AutoCloseable {
         try {
             while (thread.isAlive()) {
                 long remaining = deadlineNanos - System.nanoTime();
-                if (remaining <= 0) { thread.interrupt(); return; }
-                try { thread.join(Math.max(1, remaining / 1_000_000L)); }
-                catch (InterruptedException interruption) { interrupted = true; }
+                if (remaining <= 0) {
+                    thread.interrupt();
+                    return;
+                }
+                try {
+                    thread.join(Math.max(1, remaining / 1_000_000L));
+                } catch (InterruptedException interruption) {
+                    interrupted = true;
+                }
             }
         } finally {
             if (interrupted) Thread.currentThread().interrupt();
@@ -64,6 +80,9 @@ final class ClientConnections implements AutoCloseable {
     }
 
     private static void closeSocket(Socket socket) {
-        try { socket.close(); } catch (IOException ignored) { }
+        try {
+            socket.close();
+        } catch (IOException ignored) {
+        }
     }
 }

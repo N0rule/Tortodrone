@@ -26,25 +26,55 @@ final class StaffMail {
         for (var gift : gifts) {
             var entry = items.find(gift.config());
             if (entry == null || !entry.grantable()) continue;
-            result.add(new WorldProfile.Item(0, entry.slot(), entry.config(), null, 0, null,
-                gift.bound(), entry.bindOnEquip(), false, gift.count(), entry.permanent(), 0, 0f,
-                List.of(), List.of()));
+            result.add(new WorldProfile.Item(
+                    0,
+                    entry.slot(),
+                    entry.config(),
+                    null,
+                    0,
+                    null,
+                    gift.bound(),
+                    entry.bindOnEquip(),
+                    false,
+                    gift.count(),
+                    entry.permanent(),
+                    0,
+                    0f,
+                    List.of(),
+                    List.of()));
         }
         return result;
     }
 
     /** Insert one staff letter inside the caller's transaction and return its row id. */
-    long deliver(Connection c, int world, long sent, String subject, String body, int crowns,
-            int energy, List<WorldProfile.Item> attachments, int sender, String senderLabel)
+    long deliver(
+            Connection c,
+            int world,
+            long sent,
+            String subject,
+            String body,
+            int crowns,
+            int energy,
+            List<WorldProfile.Item> attachments,
+            int sender,
+            String senderLabel)
             throws SQLException, IOException {
-        try (var s = c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,crowns,energy,attachments,sender,sender_label,mail_type) VALUES(?,?,?,?,?,?,?,?,?,?) RETURNING id")) {
-            s.setInt(1, world); s.setLong(2, sent);
-            s.setString(3, mailText(subject, senderLabel)); s.setString(4, mailText(body, senderLabel));
-            s.setInt(5, crowns); s.setInt(6, energy);
+        try (var s = c.prepareStatement(
+                "INSERT INTO town_mail(world_id,sent,subject,body,crowns,energy,attachments,sender,sender_label,mail_type) VALUES(?,?,?,?,?,?,?,?,?,?) RETURNING id")) {
+            s.setInt(1, world);
+            s.setLong(2, sent);
+            s.setString(3, mailText(subject, senderLabel));
+            s.setString(4, mailText(body, senderLabel));
+            s.setInt(5, crowns);
+            s.setInt(6, energy);
             s.setString(7, attachments.isEmpty() ? null : TownMail.encodeItems(attachments));
-            s.setInt(8, -sender); s.setString(9, senderLabel);
+            s.setInt(8, -sender);
+            s.setString(9, senderLabel);
             s.setInt(10, mailType(senderLabel));
-            try (var r = s.executeQuery()) { r.next(); return r.getLong(1); }
+            try (var r = s.executeQuery()) {
+                r.next();
+                return r.getLong(1);
+            }
         }
     }
 

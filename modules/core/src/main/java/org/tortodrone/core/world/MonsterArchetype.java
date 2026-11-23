@@ -26,6 +26,7 @@ public record MonsterArchetype(
     public static final String DEFAULT_ID = "melee-chaser";
     /** The escape hatch is deliberately capped by the roadmap; six encounters are enough. */
     public static final int MAX_SCRIPTED_BOSSES = 6;
+
     public static final String BOSS_SCRIPTED_ID = "boss-scripted";
     private static final Map<String, MonsterArchetype> ALL;
 
@@ -55,12 +56,16 @@ public record MonsterArchetype(
         if (leashRadius < 0 || leashRadius > 1024)
             throw new IllegalArgumentException("Monster archetype leash radius must be 0..1024");
         if (leashRadius > 0 && leashRadius < activationRadius)
-            throw new IllegalArgumentException("Monster archetype leash radius must not be smaller than its activation radius");
-        if (dormantThinkMinMillis < 100 || dormantThinkMaxMillis > 10_000
+            throw new IllegalArgumentException(
+                    "Monster archetype leash radius must not be smaller than its activation radius");
+        if (dormantThinkMinMillis < 100
+                || dormantThinkMaxMillis > 10_000
                 || dormantThinkMinMillis > dormantThinkMaxMillis)
             throw new IllegalArgumentException("Invalid monster archetype dormant think interval");
-        if (alertThinkMillis < 10 || alertThinkMillis > 10_000
-                || engagedThinkMillis < 10 || engagedThinkMillis > 10_000)
+        if (alertThinkMillis < 10
+                || alertThinkMillis > 10_000
+                || engagedThinkMillis < 10
+                || engagedThinkMillis > 10_000)
             throw new IllegalArgumentException("Invalid monster archetype think interval");
         if (repathMillis < 0 || repathMillis > 10_000)
             throw new IllegalArgumentException("Invalid monster archetype repath interval");
@@ -77,14 +82,18 @@ public record MonsterArchetype(
         return id != null && ALL.containsKey(id);
     }
 
-    public static MonsterArchetype fallback() { return of(DEFAULT_ID); }
+    public static MonsterArchetype fallback() {
+        return of(DEFAULT_ID);
+    }
 
-    public static List<MonsterArchetype> all() { return List.copyOf(ALL.values()); }
+    public static List<MonsterArchetype> all() {
+        return List.copyOf(ALL.values());
+    }
 
     /** Stable millisecond cadence for one entity, derived only from its id. */
     public int dormantThinkInterval(int entityId) {
         return dormantThinkMinMillis
-            + (int) Math.floorMod((long) entityId * 37L, (long) dormantThinkMaxMillis - dormantThinkMinMillis + 1);
+                + (int) Math.floorMod((long) entityId * 37L, (long) dormantThinkMaxMillis - dormantThinkMinMillis + 1);
     }
 
     private static void register(Map<String, MonsterArchetype> all, MonsterArchetype archetype) {
@@ -94,7 +103,6 @@ public record MonsterArchetype(
     }
 
     private static void finite(float value, String name) {
-        if (!Float.isFinite(value))
-            throw new IllegalArgumentException("Monster archetype " + name + " must be finite");
+        if (!Float.isFinite(value)) throw new IllegalArgumentException("Monster archetype " + name + " must be finite");
     }
 }

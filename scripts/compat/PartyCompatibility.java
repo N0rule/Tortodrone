@@ -1,60 +1,153 @@
+import com.threerings.presents.net.*;
+import com.threerings.projectx.dungeon.data.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.character.*;
-import org.tortodrone.protocol.*;
-import org.tortodrone.world.*;
-import com.threerings.projectx.dungeon.data.*;
-import com.threerings.presents.net.*;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.core.party.PartyView;
 import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.SceneStatus;
-import org.tortodrone.core.party.PartyView;
+import org.tortodrone.protocol.*;
 import org.tortodrone.resources.SceneCatalog;
+import org.tortodrone.world.*;
 
 /** Stock reader validates stable party snapshots, notification keys and incremental HUD updates. */
 public class PartyCompatibility {
-    public static void main(String[] args)throws Exception {
-        System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
-        var scenes=new SceneRegistry(SceneCatalog.load(Path.of("content/maps")));
-        var registry=scenes.parties();var alice=knight("Party-Alice");var bob=knight("Party-Bob");
-        var events=new ArrayList<PartyView.Event>();
-        try(var a=registry.join(1001,alice,profile(1),e->{});var b=registry.join(1002,bob,profile(2),events::add)){
-            var before=registry.view(a);registry.invite(a,bob.name());var invite=(PartyView.Invitation)events.stream().filter(e->e instanceof PartyView.Invitation i&&i.add()).findFirst().orElseThrow();
-            var codec=new SessionCodec();var bytes=new ByteArrayOutputStream();
-            Harness.append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));Harness.append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"));
-            Harness.append(bytes,codec.player((short)3,1002,2,"Fixture"));Harness.append(bytes,codec.partyInvitation(1002,invite));
-            Harness.append(bytes,codec.party((short)4,before,scenes.entry()));
-            registry.respond(b,"PARTY_INV:"+before.oid(),1);var joined=registry.view(a);Harness.append(bytes,codec.partyChanges(before,joined));
-            registry.state(b,bob,profile(2),new SceneHealth.State(17,200,0,0),SceneStatus.State.NORMAL,false);var hurt=registry.view(a);Harness.append(bytes,codec.partyChanges(joined,hurt));
-            registry.state(b,bob,profile(2),new SceneHealth.State(17,200,0,0),SceneStatus.State.NORMAL,false,10);var heated=registry.view(a);Harness.append(bytes,codec.partyChanges(hurt,heated));
-            registry.boot(a,alice.name());var remaining=registry.view(b);Harness.append(bytes,codec.partyChanges(heated,remaining));
-            Harness.append(bytes,codec.partyInvitation(1002,new PartyView.Invitation(before.oid(),List.of(),0,false)));
-            var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.ql();input.ql();
-            var player=(com.threerings.projectx.data.PlayerObject)((ObjectResponse<?>)input.ql()).yo();apply(input,player);
-            var nativeInvite=(com.threerings.projectx.social.data.Notification.PartyInvite)player.notifications.iterator().next();
-            if(nativeInvite.key.partyOid!=before.oid()||nativeInvite.key.node!=null||!nativeInvite.getKey().equals("PARTY_INV:"+before.oid())||nativeInvite.members.length!=1||nativeInvite.inviterIndex!=0)throw new AssertionError("Native invite layout/key differs");
-            var party=(LevelPartyObject)((ObjectResponse<?>)input.ql()).yo();
-            heat(party,1001);if(party.heat.size()!=1)throw new AssertionError("Native initial heat membership differs");
-            if(party.members.iterator().next().portrait==null||party.members.iterator().next().weapons.length!=4||party.memberLimit!=8||party.restricted||!party.Pl()||party.members.size()!=1||party.Rv().Rc()!=1001)throw new AssertionError("Native party subtype/capacity/leader/invite controls differ");
-            apply(input,party);if(party.members.size()!=2||party.health.size()!=2||party.status.size()!=2||party.heat.size()!=2)throw new AssertionError("Native join HUD sets differ");
-            heat(party,1002);party.heat.f(1001).amount=17;
-            apply(input,party);if(party.E(new com.threerings.util.Name(bob.name())).current!=17)throw new AssertionError("Native peer health not updated");
-            if(party.heat.f(1001).amount!=17)throw new AssertionError("A health update reset existing native heat");
-            apply(input,party);if(party.heat.f(1002).amount!=10||party.heat.f(1001).amount!=17)throw new AssertionError("Native floor heat updated the wrong owner or reset a peer");
-            apply(input,party);if(party.members.size()!=1||party.health.size()!=1||party.status.size()!=1||party.heat.size()!=1||party.heat.f(1001)!=null||party.Rv().Rc()!=1002)throw new AssertionError("Native leave/leader succession differs");
-            apply(input,player);if(!player.notifications.isEmpty()||input.available()!=0)throw new AssertionError("Native notification removal or framing differs");
+    public static void main(String[] args) throws Exception {
+        System.setProperty("com.threerings.io.enumPolicy", "ORDINAL");
+        var scenes = new SceneRegistry(SceneCatalog.load(Path.of("content/maps")));
+        var registry = scenes.parties();
+        var alice = knight("Party-Alice");
+        var bob = knight("Party-Bob");
+        var events = new ArrayList<PartyView.Event>();
+        try (var a = registry.join(1001, alice, profile(1), e -> {});
+                var b = registry.join(1002, bob, profile(2), events::add)) {
+            var before = registry.view(a);
+            registry.invite(a, bob.name());
+            var invite = (PartyView.Invitation) events.stream()
+                    .filter(e -> e instanceof PartyView.Invitation i && i.add())
+                    .findFirst()
+                    .orElseThrow();
+            var codec = new SessionCodec();
+            var bytes = new ByteArrayOutputStream();
+            Harness.append(bytes, HandshakeCodec.response((short) 1, "0123456789abcdef0123456789abcdef"));
+            Harness.append(bytes, HandshakeCodec.authenticationResponse((short) 2, true, "synthetic", "Fixture"));
+            Harness.append(bytes, codec.player((short) 3, 1002, 2, "Fixture"));
+            Harness.append(bytes, codec.partyInvitation(1002, invite));
+            Harness.append(bytes, codec.party((short) 4, before, scenes.entry()));
+            registry.respond(b, "PARTY_INV:" + before.oid(), 1);
+            var joined = registry.view(a);
+            Harness.append(bytes, codec.partyChanges(before, joined));
+            registry.state(b, bob, profile(2), new SceneHealth.State(17, 200, 0, 0), SceneStatus.State.NORMAL, false);
+            var hurt = registry.view(a);
+            Harness.append(bytes, codec.partyChanges(joined, hurt));
+            registry.state(
+                    b, bob, profile(2), new SceneHealth.State(17, 200, 0, 0), SceneStatus.State.NORMAL, false, 10);
+            var heated = registry.view(a);
+            Harness.append(bytes, codec.partyChanges(hurt, heated));
+            registry.boot(a, alice.name());
+            var remaining = registry.view(b);
+            Harness.append(bytes, codec.partyChanges(heated, remaining));
+            Harness.append(
+                    bytes, codec.partyInvitation(1002, new PartyView.Invitation(before.oid(), List.of(), 0, false)));
+            var input = new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));
+            input.ql();
+            input.ql();
+            var player = (com.threerings.projectx.data.PlayerObject) ((ObjectResponse<?>) input.ql()).yo();
+            apply(input, player);
+            var nativeInvite = (com.threerings.projectx.social.data.Notification.PartyInvite)
+                    player.notifications.iterator().next();
+            if (nativeInvite.key.partyOid != before.oid()
+                    || nativeInvite.key.node != null
+                    || !nativeInvite.getKey().equals("PARTY_INV:" + before.oid())
+                    || nativeInvite.members.length != 1
+                    || nativeInvite.inviterIndex != 0) throw new AssertionError("Native invite layout/key differs");
+            var party = (LevelPartyObject) ((ObjectResponse<?>) input.ql()).yo();
+            heat(party, 1001);
+            if (party.heat.size() != 1) throw new AssertionError("Native initial heat membership differs");
+            if (party.members.iterator().next().portrait == null
+                    || party.members.iterator().next().weapons.length != 4
+                    || party.memberLimit != 8
+                    || party.restricted
+                    || !party.Pl()
+                    || party.members.size() != 1
+                    || party.Rv().Rc() != 1001)
+                throw new AssertionError("Native party subtype/capacity/leader/invite controls differ");
+            apply(input, party);
+            if (party.members.size() != 2
+                    || party.health.size() != 2
+                    || party.status.size() != 2
+                    || party.heat.size() != 2) throw new AssertionError("Native join HUD sets differ");
+            heat(party, 1002);
+            party.heat.f(1001).amount = 17;
+            apply(input, party);
+            if (party.E(new com.threerings.util.Name(bob.name())).current != 17)
+                throw new AssertionError("Native peer health not updated");
+            if (party.heat.f(1001).amount != 17) throw new AssertionError("A health update reset existing native heat");
+            apply(input, party);
+            if (party.heat.f(1002).amount != 10 || party.heat.f(1001).amount != 17)
+                throw new AssertionError("Native floor heat updated the wrong owner or reset a peer");
+            apply(input, party);
+            if (party.members.size() != 1
+                    || party.health.size() != 1
+                    || party.status.size() != 1
+                    || party.heat.size() != 1
+                    || party.heat.f(1001) != null
+                    || party.Rv().Rc() != 1002) throw new AssertionError("Native leave/leader succession differs");
+            apply(input, player);
+            if (!player.notifications.isEmpty() || input.available() != 0)
+                throw new AssertionError("Native notification removal or framing differs");
         }
-        System.out.println("PASS: stock party invitation, LevelPartyObject, capacity/leader, ordered member/vitals/heat join and leave, native positive heat update/peer retention, peer health and notification removal");
+        System.out.println(
+                "PASS: stock party invitation, LevelPartyObject, capacity/leader, ordered member/vitals/heat join and leave, native positive heat update/peer retention, peer health and notification removal");
     }
-    private static Knight knight(String name){return new Knight(1,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
-    private static WorldProfile profile(int id){return new WorldProfile(id,id,1,0,0,1,List.of());}
-    private static void heat(LevelPartyObject party,int player){var heat=party.heat.f(player);if(heat==null||heat.Rc()!=player||heat.amount!=0||heat.promoAmount!=0||heat.lockboxPrizes!=null||heat.superPrize||heat.goldWheel)throw new AssertionError("Native empty Heat entry differs for owner "+player);}
-    private static void apply(com.threerings.io.v input,com.threerings.presents.dobj.DObject object)throws Exception{var event=((EventNotification)input.ql()).yn();if(event instanceof com.threerings.presents.dobj.CompoundEvent compound)for(var child:compound.xI()){
-            if(object instanceof PartyObject party&&child instanceof com.threerings.presents.dobj.EntryAddedEvent<?> added&&added.getName().equals("members")){
-                if(party.health.f((Integer)added.getKey())==null||party.status.f((Integer)added.getKey())==null||((LevelPartyObject)party).heat.f((Integer)added.getKey())==null)throw new AssertionError("Member HUD notified before health/status/heat entries");
+
+    private static Knight knight(String name) {
+        return new Knight(
+                1,
+                name,
+                "Gear/Helm/Spiral Sallet (Blue)",
+                "Gear/Armor/Spiral Culet (Blue)",
+                null,
+                null,
+                "Blue",
+                1,
+                2,
+                0,
+                0);
+    }
+
+    private static WorldProfile profile(int id) {
+        return new WorldProfile(id, id, 1, 0, 0, 1, List.of());
+    }
+
+    private static void heat(LevelPartyObject party, int player) {
+        var heat = party.heat.f(player);
+        if (heat == null
+                || heat.Rc() != player
+                || heat.amount != 0
+                || heat.promoAmount != 0
+                || heat.lockboxPrizes != null
+                || heat.superPrize
+                || heat.goldWheel) throw new AssertionError("Native empty Heat entry differs for owner " + player);
+    }
+
+    private static void apply(com.threerings.io.v input, com.threerings.presents.dobj.DObject object) throws Exception {
+        var event = ((EventNotification) input.ql()).yn();
+        if (event instanceof com.threerings.presents.dobj.CompoundEvent compound)
+            for (var child : compound.xI()) {
+                if (object instanceof PartyObject party
+                        && child instanceof com.threerings.presents.dobj.EntryAddedEvent<?> added
+                        && added.getName().equals("members")) {
+                    if (party.health.f((Integer) added.getKey()) == null
+                            || party.status.f((Integer) added.getKey()) == null
+                            || ((LevelPartyObject) party).heat.f((Integer) added.getKey()) == null)
+                        throw new AssertionError("Member HUD notified before health/status/heat entries");
+                }
+                child.b(object);
             }
-            child.b(object);
-        }else event.b(object);}
+        else event.b(object);
+    }
 }

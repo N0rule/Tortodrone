@@ -8,6 +8,7 @@ import java.nio.file.Files
 plugins {
     java
     id("com.gradleup.shadow") version "9.3.2"
+    id("com.diffplug.spotless") version "8.12.0"
 }
 
 version = providers.fileContents(layout.projectDirectory.file("VERSION")).asText.get().trim()
@@ -278,7 +279,7 @@ tasks.assemble { dependsOn(buildServer) }
 // explicit opt-in tasks, so `build` must not pull in test/check dependencies.
 tasks.named("build") {
     description = "Assemble the server, WebUI and prepared content; no tests."
-    setDependsOn(listOf(tasks.assemble))
+    setDependsOn(listOf(tasks.assemble, "spotlessCheck"))
 }
 fun packagedRun(name: String, jar: TaskProvider<ShadowJar>, entryPoint: String, prerequisite: TaskProvider<Task>, workingDirectory: java.io.File) =
     tasks.register<JavaExec>(name) {
@@ -478,3 +479,14 @@ val integrationPackaging = standalone("integrationPackaging", "org.tortodrone.in
     configure { dependsOn(portableZip) }
 }
 testIntegration.configure { dependsOn(integrationPackaging) }
+
+// One Java style for modules, tests and repository tools; palantir-java-format is javac-based, so
+// it cannot change program meaning. Frontend assets keep their hand-written style.
+spotless {
+    java {
+        target("modules/*/src/main/java/**/*.java", "src/test/java/**/*.java", "scripts/**/*.java")
+        palantirJavaFormat("2.103.0")
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}

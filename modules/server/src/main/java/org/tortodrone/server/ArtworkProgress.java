@@ -10,19 +10,35 @@ final class ArtworkProgress implements IntConsumer, AutoCloseable {
     private final PrintWriter terminal;
     private int previous = -1, milestone = -1;
     private boolean open;
-    ArtworkProgress(Consumer<String> info, PrintWriter terminal) { this.info = info; this.terminal = terminal; }
-    @Override public void accept(int percent) {
+
+    ArtworkProgress(Consumer<String> info, PrintWriter terminal) {
+        this.info = info;
+        this.terminal = terminal;
+    }
+
+    @Override
+    public void accept(int percent) {
         if (percent < 0 || percent > 100 || percent <= previous) return;
         previous = percent;
         if (terminal != null) {
             int filled = percent / 5;
-            terminal.printf("\rWebUI extracting: [%s%s] %3d%% extracted", "=".repeat(filled), " ".repeat(20 - filled), percent);
-            terminal.flush(); open = true;
+            terminal.printf(
+                    "\rWebUI extracting: [%s%s] %3d%% extracted", "=".repeat(filled), " ".repeat(20 - filled), percent);
+            terminal.flush();
+            open = true;
             if (percent == 100) close();
         } else if (percent / 10 > milestone) {
             milestone = percent / 10;
             info.accept("WebUI extracting: " + percent + "% extracted");
         }
     }
-    @Override public void close() { if (open) { terminal.println(); terminal.flush(); open = false; } }
+
+    @Override
+    public void close() {
+        if (open) {
+            terminal.println();
+            terminal.flush();
+            open = false;
+        }
+    }
 }

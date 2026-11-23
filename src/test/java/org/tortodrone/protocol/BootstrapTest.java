@@ -6,10 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import org.tortodrone.protocol.HandshakeCodec;
-import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.support.TestWire;
-import org.tortodrone.core.mission.TutorialRoute;
 
 /** Independent structural checks for the verified session wire subset. */
 public final class BootstrapTest {
@@ -39,79 +36,129 @@ public final class BootstrapTest {
 
         SessionCodec outgoing = new SessionCodec();
         TestWire wire = new TestWire();
-        check(wire.bootstrap(input(outgoing.bootstrap(101, 201, "192.0.2.10", 47624)), 47624) == 201, "bootstrap identity");
+        check(
+                wire.bootstrap(input(outgoing.bootstrap(101, 201, "192.0.2.10", 47624)), 47624) == 201,
+                "bootstrap identity");
         long received = System.currentTimeMillis() - 10;
         DataInputStream pong = input(outgoing.pong((short) 9, received));
         check(wire.type(pong).equals(PREFIX + "PongResponse"), "first pong mapping");
         check(pong.readShort() == 9, "pong correlation");
         long packed = pong.readLong();
-        check(packed >= received && pong.readInt() == packed - received && pong.available() == 0, "pong time and processing delay");
+        check(
+                packed >= received && pong.readInt() == packed - received && pong.available() == 0,
+                "pong time and processing delay");
         pong = input(outgoing.pong((short) 10, received));
         check(wire.type(pong).equals(PREFIX + "PongResponse") && pong.readShort() == 10, "repeated pong mapping");
         DataInputStream failure = input(outgoing.subscriptionFailure((short) 11, 201, "unavailable"));
         check(wire.type(failure).equals(PREFIX + "FailureResponse"), "failure mapping");
-        check(failure.readShort() == 11 && failure.readInt() == 201 && failure.readBoolean()
-            && failure.readUTF().equals("unavailable") && failure.available() == 0, "subscription failure fields");
+        check(
+                failure.readShort() == 11
+                        && failure.readInt() == 201
+                        && failure.readBoolean()
+                        && failure.readUTF().equals("unavailable")
+                        && failure.available() == 0,
+                "subscription failure fields");
         DataInputStream unsub = input(outgoing.unsubscribe((short) 12, 201));
         check(wire.type(unsub).equals(PREFIX + "UnsubscribeResponse"), "unsubscribe response mapping");
-        check(unsub.readShort() == 12 && unsub.readInt() == 201 && unsub.available() == 0, "unsubscribe response fields");
+        check(
+                unsub.readShort() == 12 && unsub.readInt() == 201 && unsub.available() == 0,
+                "unsubscribe response fields");
         var player = wire.snapshot(input(outgoing.player((short) 13, 201, 1, "test-player")), (short) 13, 201);
-        check(player.get("username").equals("test-player") && player.get("playerId").equals(1)
-            && player.get("availableKnights").equals(java.util.List.of()) && player.get("queuePosition").equals(0), "empty player roster");
+        check(
+                player.get("username").equals("test-player")
+                        && player.get("playerId").equals(1)
+                        && player.get("availableKnights").equals(java.util.List.of())
+                        && player.get("queuePosition").equals(0),
+                "empty player roster");
         var server = wire.snapshot(input(outgoing.server((short) 14)), (short) 14, 1);
-        check(server.get("towns").equals(java.util.List.of()) && server.get("spamwords").equals(java.util.List.of()), "server schema");
-        var interiorServer=wire.snapshot(input(outgoing.server((short) 17,true)),(short) 17,1);
-        var gates=(java.util.List<?>)interiorServer.get("gates");
-        var tutorial=org.tortodrone.world.SceneRegistry.system().tutorial();
-        var registry=org.tortodrone.world.SceneRegistry.system();
-        var available=registry.availableGates();
-        check(gates.size()==1+(tutorial==null?0:1)+1+available.size(),"solo interior render transport");
+        check(
+                server.get("towns").equals(java.util.List.of())
+                        && server.get("spamwords").equals(java.util.List.of()),
+                "server schema");
+        var interiorServer = wire.snapshot(input(outgoing.server((short) 17, true)), (short) 17, 1);
+        var gates = (java.util.List<?>) interiorServer.get("gates");
+        var tutorial = org.tortodrone.world.SceneRegistry.system().tutorial();
+        var registry = org.tortodrone.world.SceneRegistry.system();
+        var available = registry.availableGates();
+        check(gates.size() == 1 + (tutorial == null ? 0 : 1) + 1 + available.size(), "solo interior render transport");
         // A dobj DSet is binary-searched, so entries arrive sorted by gate id;
         // assert by id instead of by position.
-        var gate=gateById(gates,0);
-        check(gate!=null&&gate.get("_wheels").equals(java.util.List.of())
-            &&gate.get("_destId").equals(0),"interior transport exposes no dungeon floors or destination");
-        if(tutorial!=null) {
-            var tutorialGate=gateById(gates,org.tortodrone.core.mission.TutorialRoute.GATE);
-            check(tutorialGate!=null
-                &&((java.util.List<?>)tutorialGate.get("_wheels")).size()==1,"tutorial transport gate");
+        var gate = gateById(gates, 0);
+        check(
+                gate != null
+                        && gate.get("_wheels").equals(java.util.List.of())
+                        && gate.get("_destId").equals(0),
+                "interior transport exposes no dungeon floors or destination");
+        if (tutorial != null) {
+            var tutorialGate = gateById(gates, org.tortodrone.core.mission.TutorialRoute.GATE);
+            check(
+                    tutorialGate != null && ((java.util.List<?>) tutorialGate.get("_wheels")).size() == 1,
+                    "tutorial transport gate");
         }
-        if(!available.isEmpty()){
-            var missionGate=gateById(gates,available.getLast().gateId());
-            check(missionGate!=null&&missionGate.get("_name").equals("%mission:m."+available.getLast().missionId())
-                &&((java.util.List<?>)missionGate.get("_wheels")).size()==available.getLast().wedges().size(),
-                "imported mission gate transport");
+        if (!available.isEmpty()) {
+            var missionGate = gateById(gates, available.getLast().gateId());
+            check(
+                    missionGate != null
+                            && missionGate
+                                    .get("_name")
+                                    .equals("%mission:m." + available.getLast().missionId())
+                            && ((java.util.List<?>) missionGate.get("_wheels")).size()
+                                    == available.getLast().wedges().size(),
+                    "imported mission gate transport");
         }
         var config = wire.snapshot(input(outgoing.configuration((short) 15)), (short) 15, 2);
-        check(config.get("dconfigService") == null && config.get("removed").equals(java.util.List.of()), "configuration schema");
-        player = wire.snapshot(input(outgoing.player((short) 16, 201, 1, "test-player", java.util.Map.of("test-receiver", (short) 0))), (short) 16, 201);
-        check(player.get("receivers").equals(java.util.List.of(java.util.Map.of("code", "test-receiver", "id", (short) 0))), "zero-based receiver snapshot");
+        check(
+                config.get("dconfigService") == null && config.get("removed").equals(java.util.List.of()),
+                "configuration schema");
+        player = wire.snapshot(
+                input(outgoing.player((short) 16, 201, 1, "test-player", java.util.Map.of("test-receiver", (short) 0))),
+                (short) 16,
+                201);
+        check(
+                player.get("receivers")
+                        .equals(java.util.List.of(java.util.Map.of("code", "test-receiver", "id", (short) 0))),
+                "zero-based receiver snapshot");
         // Role and inspection changes must keep the native notification HUD usable.
-        for (boolean gm : new boolean[]{true, false}) for (boolean hidden : new boolean[]{true, false}) {
-            DataInputStream flags = input(outgoing.playerFlags(201, gm, hidden));
-            check(wire.type(flags).equals(PREFIX + "EventNotification") && flags.readShort() == -1,
-                "player flags event envelope");
-            check(wire.type(flags).equals(TestWire.DOB + "CompoundEvent") && flags.readInt() == 201
-                && wire.type(flags).equals("com.threerings.util.StreamableArrayList") && flags.readInt() == 2,
-                "atomic flags and token update");
-            check(wire.type(flags).equals(TestWire.DOB + "AttributeChangedEvent") && flags.readInt() == 201
-                && wire.string(flags).equals("flags"), "player flags attribute");
-            check(wire.object(flags).equals(32 | (gm ? 256 : 0) | (hidden ? 1024 : 0)),
-                "notification HUD flag survives role/privacy changes without granting another role");
-            check(wire.type(flags).equals(TestWire.DOB + "AttributeChangedEvent") && flags.readInt() == 201
-                && wire.string(flags).equals("tokens") && wire.object(flags).equals(gm ? 8 : 0)
-                && flags.available() == 0, "support token stays independent of notification HUD");
-        }
+        for (boolean gm : new boolean[] {true, false})
+            for (boolean hidden : new boolean[] {true, false}) {
+                DataInputStream flags = input(outgoing.playerFlags(201, gm, hidden));
+                check(
+                        wire.type(flags).equals(PREFIX + "EventNotification") && flags.readShort() == -1,
+                        "player flags event envelope");
+                check(
+                        wire.type(flags).equals(TestWire.DOB + "CompoundEvent")
+                                && flags.readInt() == 201
+                                && wire.type(flags).equals("com.threerings.util.StreamableArrayList")
+                                && flags.readInt() == 2,
+                        "atomic flags and token update");
+                check(
+                        wire.type(flags).equals(TestWire.DOB + "AttributeChangedEvent")
+                                && flags.readInt() == 201
+                                && wire.string(flags).equals("flags"),
+                        "player flags attribute");
+                check(
+                        wire.object(flags).equals(32 | (gm ? 256 : 0) | (hidden ? 1024 : 0)),
+                        "notification HUD flag survives role/privacy changes without granting another role");
+                check(
+                        wire.type(flags).equals(TestWire.DOB + "AttributeChangedEvent")
+                                && flags.readInt() == 201
+                                && wire.string(flags).equals("tokens")
+                                && wire.object(flags).equals(gm ? 8 : 0)
+                                && flags.available() == 0,
+                        "support token stays independent of notification HUD");
+            }
         expectFailure(() -> new SessionCodec().bootstrap(0, 1, "127.0.0.1", 47624));
-        System.out.println("PASS: bootstrap services, complete player/server/configuration schemas, persistent mappings, ping/pong, malformed messages");
+        System.out.println(
+                "PASS: bootstrap services, complete player/server/configuration schemas, persistent mappings, ping/pong, malformed messages");
     }
 
     private static DataInputStream input(byte[] frame) throws IOException {
         return new DataInputStream(new ByteArrayInputStream(HandshakeCodec.readFrame(new ByteArrayInputStream(frame))));
     }
 
-    private static java.util.Map<?,?> gateById(java.util.List<?> gates,int id) {
-        for(var candidate:gates)if(((java.util.Map<?,?>)candidate).get("_gateId").equals(id))return (java.util.Map<?,?>)candidate;
+    private static java.util.Map<?, ?> gateById(java.util.List<?> gates, int id) {
+        for (var candidate : gates)
+            if (((java.util.Map<?, ?>) candidate).get("_gateId").equals(id)) return (java.util.Map<?, ?>) candidate;
         return null;
     }
 
@@ -125,11 +172,20 @@ public final class BootstrapTest {
         return body.toByteArray();
     }
 
-    @FunctionalInterface private interface Operation { void run() throws Exception; }
+    @FunctionalInterface
+    private interface Operation {
+        void run() throws Exception;
+    }
+
     private static void expectFailure(Operation operation) throws Exception {
-        try { operation.run(); } catch (IOException expected) { return; }
+        try {
+            operation.run();
+        } catch (IOException expected) {
+            return;
+        }
         throw new AssertionError("Expected invalid message rejection");
     }
+
     private static void check(boolean condition, String message) {
         if (!condition) throw new AssertionError(message);
     }

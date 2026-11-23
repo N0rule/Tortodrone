@@ -1,276 +1,768 @@
 package org.tortodrone.world;
 
-import java.nio.file.*;
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
-import java.util.zip.GZIPOutputStream;
 import org.tortodrone.core.character.StarterCatalog;
-import org.tortodrone.core.character.WorldProfile;
-import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.world.CollisionMap;
 import org.tortodrone.core.world.EquipmentCatalog;
+import org.tortodrone.core.world.FireCatalog;
 import org.tortodrone.core.world.KnightCombat;
 import org.tortodrone.core.world.ProjectileState;
-import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneHealth;
 import org.tortodrone.core.world.WeaponCatalog;
-import org.tortodrone.core.world.CollisionMap;
 import org.tortodrone.resources.SceneCatalog;
 
 /** Small scene-clock regression: native emissions, expiry and observer-independent ownership. */
 public final class SceneWeaponsTest {
-    public static void main(String[] args)throws Exception {
+    public static void main(String[] args) throws Exception {
         authoredHeavyAttacks();
         banStickDamageIsAuthored();
         reportedWeaponRegressions();
         chargeTargetDamage();
-        var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).entry();
-        var model=new StarterCatalog.Model("Fixture",Map.of());
-        var effect=new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,model,null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
-        var bullet=new FireCatalog.ActorSpec("BULLET",model,200,2,.1f,0,0,0,1,null);
-        var bombSpawn=new FireCatalog.Action(FireCatalog.Kind.EMIT_PROJECTILE,null,bullet,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
-        var bombDetonation=new FireCatalog.Action(FireCatalog.Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(effect,bombSpawn),"");
-        var bomb=new FireCatalog.ActorSpec("BOMB",new StarterCatalog.Model("Bomb",Map.of()),200,0,0,0,0,0,0,bombDetonation);
-        var gun=attack("Gun",bullet);var grenade=attack("Bomb",bomb);
-        var weapons=new SceneWeapons(map.collision());weapons.catalog(new FireCatalog(List.of(gun,grenade),Map.of()));
-        var owner=new ActorState(10,1001,"Fixture",257,100,map.spawnX(),map.spawnY(),0,0,0,292,100,model);
-        weapons.attack(10,new KnightCombat.AttackStart("Gun",292,100,50,500));
-        weapons.advance(150,List.of(owner));check(weapons.actors().isEmpty(),"stock fire deadline is strict");
-        weapons.advance(151,List.of(owner));check(weapons.actors().size()==1,"one native gun bullet at land deadline");
-        var first=weapons.actors().getFirst();check(first.projectile().faction()==10&&first.clientOid()==1001,"faction and controller derive from owned knight");
-        check(first.projectile().z()==ProjectileState.UNSPECIFIED_Z,
-            "bullet resolves floor Z in the client instead of adding authored height twice");
-        weapons.advance(251,List.of(owner));check(weapons.actors().getFirst().x()>first.x(),"projectile advances once on scene clock");
-        weapons.advance(351,List.of(owner));check(weapons.actors().getFirst().projectile().fizzle(),"fuse expiry marks bullet fizzle");
-        check(weapons.effects().isEmpty(),"expired bullet cannot invent hit rewards or effects");
-        weapons.advance(500,List.of(owner));check(weapons.actors().isEmpty(),"destroyed projectile is removed after publication");
-        weapons.attack(10,new KnightCombat.AttackStart("Bomb",292,500,0,500));
-        var later=new ActorState(10,1001,"Fixture",257,100,map.spawnX(),map.spawnY(),0,0,0,292,500,model);
-        weapons.advance(501,List.of(later));check(weapons.actors().size()==1,"bomb drop is a native bomb actor");
-        check(weapons.actors().getFirst().projectile().z()==ProjectileState.UNSPECIFIED_Z,
-            "bomb preserves the native floor-resolution sentinel");
-        weapons.advance(701,List.of(later));check(weapons.effects().size()==1&&weapons.effects().getFirst().ownerOid()==0,"bomb detonation emits authored native effect");
-        check(weapons.actors().stream().anyMatch(a->a.projectile()!=null&&a.projectile().created()==700),"detonation child projectile is queued without mutating the active iteration");
-        weapons.cancel(10);check(weapons.actors().isEmpty(),"detach clears only owner's ephemeral actors");
-        weapons.attack(10,new KnightCombat.AttackStart("Gun",292,725,50,500));
-        var transitioned=new ActorState(10,1001,"Fixture",257,100,map.spawnX(),map.spawnY(),0,0,0,293,750,model);
-        weapons.advance(776,List.of(transitioned));check(weapons.actors().isEmpty(),"activity transition before land deadline cancels the pending projectile");
-        var orbit=new FireCatalog.OrbitSpec(.1f,0,0,2,100,250,"SOURCE",false,null,null,null);
-        var compoundOrbit=new FireCatalog.OrbitSpec(.1f,0,0,2,100,250,"SOURCE",false,.1f,0f,(float)(Math.PI/2));
-        var disk=new FireCatalog.ActorSpec("ORBITAL_BULLET",model,250,2,0,2,0,0,1,null,orbit);
-        var doubleDisk=new FireCatalog.ActorSpec("COMPOUND_ORBITAL_BULLET",model,250,2,0,2,0,0,1,null,compoundOrbit);
-        weapons.catalog(new FireCatalog(List.of(attack("Disk",disk),attack("Double Disk",doubleDisk)),Map.of()));
-        weapons.attack(10,new KnightCombat.AttackStart("Disk",292,800,0,500));
-        weapons.attack(10,new KnightCombat.AttackStart("Double Disk",292,800,0,500));
-        var home=new ActorState(10,1001,"Fixture",257,100,map.spawnX(),map.spawnY(),0,0,0,292,800,model);
-        weapons.advance(801,List.of(home));
-        weapons.advance(901,List.of(home));
-        var baseAtOutbound=weapons.actors().stream().filter(a->a.projectile().nativeType().equals("ORBITAL_BULLET")).findFirst().orElseThrow();
-        var compoundAtOutbound=weapons.actors().stream().filter(a->a.projectile().nativeType().equals("COMPOUND_ORBITAL_BULLET")).findFirst().orElseThrow();
-        check(Math.abs(baseAtOutbound.projectile().orbit().relativeY())<.001f,"orbital bullet follows its authored single orbit");
-        check(compoundAtOutbound.projectile().orbit().relativeX()>.09f&&compoundAtOutbound.projectile().orbit().relativeY()>.09f,"compound orbital bullet sums both authored orbit vectors");
-        var movedHome=new ActorState(10,1001,"Fixture",257,100,map.spawnX()+1,map.spawnY(),0,0,0,292,1001,model);
-        weapons.advance(1001,List.of(movedHome));
-        var baseHoming=weapons.actors().stream().filter(a->a.projectile().nativeType().equals("ORBITAL_BULLET")).findFirst().orElseThrow();
-        check((baseHoming.flags()&4)!=0&&baseHoming.x()>baseAtOutbound.x(),"orbital bullet enters return flight toward its current owner");
-        weapons.advance(1051,List.of(movedHome));
-        check(weapons.actors().stream().allMatch(a->(a.flags()&8)!=0),"orbital fuse expiry publishes native fizzle flags");
-        var random=new FireCatalog.Action(FireCatalog.Kind.RANDOM_EQUAL,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(effect,effect),"");
-        var randomRef=new FireCatalog.FireRef(model,0,0,true,0,0,0,random,null);
-        weapons.catalog(new FireCatalog(List.of(new FireCatalog.AttackFire("Random",292,model,1,List.of(randomRef))),Map.of()));
-        int before=weapons.effects().size();weapons.attack(10,new KnightCombat.AttackStart("Random",292,1100,0,500));
-        var randomOwner=new ActorState(10,1001,"Fixture",257,100,map.spawnX(),map.spawnY(),0,0,0,292,1100,model);
-        weapons.advance(1101,List.of(randomOwner));check(weapons.effects().size()==before+1,"equal-weight random fires exactly one authored branch");
+        var map = SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps"))
+                .entry();
+        var model = new StarterCatalog.Model("Fixture", Map.of());
+        var effect = new FireCatalog.Action(
+                FireCatalog.Kind.FIRE_EFFECT,
+                model,
+                null,
+                "Source",
+                "",
+                "",
+                0,
+                0,
+                0,
+                0,
+                true,
+                0,
+                0,
+                0,
+                0,
+                false,
+                List.of(),
+                "");
+        var bullet = new FireCatalog.ActorSpec("BULLET", model, 200, 2, .1f, 0, 0, 0, 1, null);
+        var bombSpawn = new FireCatalog.Action(
+                FireCatalog.Kind.EMIT_PROJECTILE,
+                null,
+                bullet,
+                "Source",
+                "",
+                "",
+                0,
+                0,
+                0,
+                0,
+                true,
+                0,
+                0,
+                0,
+                0,
+                false,
+                List.of(),
+                "");
+        var bombDetonation = new FireCatalog.Action(
+                FireCatalog.Kind.COMPOUND,
+                null,
+                null,
+                "",
+                "",
+                "",
+                0,
+                0,
+                0,
+                0,
+                false,
+                0,
+                0,
+                0,
+                0,
+                false,
+                List.of(effect, bombSpawn),
+                "");
+        var bomb = new FireCatalog.ActorSpec(
+                "BOMB", new StarterCatalog.Model("Bomb", Map.of()), 200, 0, 0, 0, 0, 0, 0, bombDetonation);
+        var gun = attack("Gun", bullet);
+        var grenade = attack("Bomb", bomb);
+        var weapons = new SceneWeapons(map.collision());
+        weapons.catalog(new FireCatalog(List.of(gun, grenade), Map.of()));
+        var owner = new ActorState(10, 1001, "Fixture", 257, 100, map.spawnX(), map.spawnY(), 0, 0, 0, 292, 100, model);
+        weapons.attack(10, new KnightCombat.AttackStart("Gun", 292, 100, 50, 500));
+        weapons.advance(150, List.of(owner));
+        check(weapons.actors().isEmpty(), "stock fire deadline is strict");
+        weapons.advance(151, List.of(owner));
+        check(weapons.actors().size() == 1, "one native gun bullet at land deadline");
+        var first = weapons.actors().getFirst();
+        check(
+                first.projectile().faction() == 10 && first.clientOid() == 1001,
+                "faction and controller derive from owned knight");
+        check(
+                first.projectile().z() == ProjectileState.UNSPECIFIED_Z,
+                "bullet resolves floor Z in the client instead of adding authored height twice");
+        weapons.advance(251, List.of(owner));
+        check(weapons.actors().getFirst().x() > first.x(), "projectile advances once on scene clock");
+        weapons.advance(351, List.of(owner));
+        check(weapons.actors().getFirst().projectile().fizzle(), "fuse expiry marks bullet fizzle");
+        check(weapons.effects().isEmpty(), "expired bullet cannot invent hit rewards or effects");
+        weapons.advance(500, List.of(owner));
+        check(weapons.actors().isEmpty(), "destroyed projectile is removed after publication");
+        weapons.attack(10, new KnightCombat.AttackStart("Bomb", 292, 500, 0, 500));
+        var later = new ActorState(10, 1001, "Fixture", 257, 100, map.spawnX(), map.spawnY(), 0, 0, 0, 292, 500, model);
+        weapons.advance(501, List.of(later));
+        check(weapons.actors().size() == 1, "bomb drop is a native bomb actor");
+        check(
+                weapons.actors().getFirst().projectile().z() == ProjectileState.UNSPECIFIED_Z,
+                "bomb preserves the native floor-resolution sentinel");
+        weapons.advance(701, List.of(later));
+        check(
+                weapons.effects().size() == 1 && weapons.effects().getFirst().ownerOid() == 0,
+                "bomb detonation emits authored native effect");
+        check(
+                weapons.actors().stream()
+                        .anyMatch(a -> a.projectile() != null && a.projectile().created() == 700),
+                "detonation child projectile is queued without mutating the active iteration");
         weapons.cancel(10);
-        var modified=new FireCatalog.Action(FireCatalog.Kind.EMIT_PROJECTILE,null,bullet,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"","Pollen Color",List.of("Red","Blue"));
-        var multi=new FireCatalog.Action(FireCatalog.Kind.MULTI_PRESPAWNED,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(modified,modified),"");
-        weapons.catalog(new FireCatalog(List.of(new FireCatalog.AttackFire("Pollen",292,model,1,List.of(new FireCatalog.FireRef(model,0,0,true,0,0,0,multi,null)))),Map.of()));
-        weapons.attack(10,new KnightCombat.AttackStart("Pollen",292,1200,0,500));
-        var pollenOwner=new ActorState(10,1001,"Fixture",257,100,map.spawnX(),map.spawnY(),0,0,0,292,1200,model);
-        weapons.advance(1201,List.of(pollenOwner));
-        check(weapons.actors().get(0).config().arguments().get("Pollen Color").equals("Red")&&weapons.actors().get(1).config().arguments().get("Pollen Color").equals("Blue"),"prespawned arguments use fire timestamp and per-child seed");
+        check(weapons.actors().isEmpty(), "detach clears only owner's ephemeral actors");
+        weapons.attack(10, new KnightCombat.AttackStart("Gun", 292, 725, 50, 500));
+        var transitioned =
+                new ActorState(10, 1001, "Fixture", 257, 100, map.spawnX(), map.spawnY(), 0, 0, 0, 293, 750, model);
+        weapons.advance(776, List.of(transitioned));
+        check(weapons.actors().isEmpty(), "activity transition before land deadline cancels the pending projectile");
+        var orbit = new FireCatalog.OrbitSpec(.1f, 0, 0, 2, 100, 250, "SOURCE", false, null, null, null);
+        var compoundOrbit =
+                new FireCatalog.OrbitSpec(.1f, 0, 0, 2, 100, 250, "SOURCE", false, .1f, 0f, (float) (Math.PI / 2));
+        var disk = new FireCatalog.ActorSpec("ORBITAL_BULLET", model, 250, 2, 0, 2, 0, 0, 1, null, orbit);
+        var doubleDisk =
+                new FireCatalog.ActorSpec("COMPOUND_ORBITAL_BULLET", model, 250, 2, 0, 2, 0, 0, 1, null, compoundOrbit);
+        weapons.catalog(new FireCatalog(List.of(attack("Disk", disk), attack("Double Disk", doubleDisk)), Map.of()));
+        weapons.attack(10, new KnightCombat.AttackStart("Disk", 292, 800, 0, 500));
+        weapons.attack(10, new KnightCombat.AttackStart("Double Disk", 292, 800, 0, 500));
+        var home = new ActorState(10, 1001, "Fixture", 257, 100, map.spawnX(), map.spawnY(), 0, 0, 0, 292, 800, model);
+        weapons.advance(801, List.of(home));
+        weapons.advance(901, List.of(home));
+        var baseAtOutbound = weapons.actors().stream()
+                .filter(a -> a.projectile().nativeType().equals("ORBITAL_BULLET"))
+                .findFirst()
+                .orElseThrow();
+        var compoundAtOutbound = weapons.actors().stream()
+                .filter(a -> a.projectile().nativeType().equals("COMPOUND_ORBITAL_BULLET"))
+                .findFirst()
+                .orElseThrow();
+        check(
+                Math.abs(baseAtOutbound.projectile().orbit().relativeY()) < .001f,
+                "orbital bullet follows its authored single orbit");
+        check(
+                compoundAtOutbound.projectile().orbit().relativeX() > .09f
+                        && compoundAtOutbound.projectile().orbit().relativeY() > .09f,
+                "compound orbital bullet sums both authored orbit vectors");
+        var movedHome = new ActorState(
+                10, 1001, "Fixture", 257, 100, map.spawnX() + 1, map.spawnY(), 0, 0, 0, 292, 1001, model);
+        weapons.advance(1001, List.of(movedHome));
+        var baseHoming = weapons.actors().stream()
+                .filter(a -> a.projectile().nativeType().equals("ORBITAL_BULLET"))
+                .findFirst()
+                .orElseThrow();
+        check(
+                (baseHoming.flags() & 4) != 0 && baseHoming.x() > baseAtOutbound.x(),
+                "orbital bullet enters return flight toward its current owner");
+        weapons.advance(1051, List.of(movedHome));
+        check(
+                weapons.actors().stream().allMatch(a -> (a.flags() & 8) != 0),
+                "orbital fuse expiry publishes native fizzle flags");
+        var random = new FireCatalog.Action(
+                FireCatalog.Kind.RANDOM_EQUAL,
+                null,
+                null,
+                "",
+                "",
+                "",
+                0,
+                0,
+                0,
+                0,
+                false,
+                0,
+                0,
+                0,
+                0,
+                false,
+                List.of(effect, effect),
+                "");
+        var randomRef = new FireCatalog.FireRef(model, 0, 0, true, 0, 0, 0, random, null);
+        weapons.catalog(new FireCatalog(
+                List.of(new FireCatalog.AttackFire("Random", 292, model, 1, List.of(randomRef))), Map.of()));
+        int before = weapons.effects().size();
+        weapons.attack(10, new KnightCombat.AttackStart("Random", 292, 1100, 0, 500));
+        var randomOwner =
+                new ActorState(10, 1001, "Fixture", 257, 100, map.spawnX(), map.spawnY(), 0, 0, 0, 292, 1100, model);
+        weapons.advance(1101, List.of(randomOwner));
+        check(weapons.effects().size() == before + 1, "equal-weight random fires exactly one authored branch");
         weapons.cancel(10);
-        var recursive=new FireCatalog.ActorSpec("BOMB",model,1,0,0,0,0,0,0,null);
-        var spawnAgain=new FireCatalog.Action(FireCatalog.Kind.EMIT_PROJECTILE,null,recursive,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
-        var outer=new FireCatalog.ActorSpec("BOMB",model,1,0,0,0,0,0,0,spawnAgain);
-        weapons.catalog(new FireCatalog(List.of(attack("Recursive",outer)),Map.of()));
-        weapons.attack(10,new KnightCombat.AttackStart("Recursive",292,1300,0,500));
-        var recursiveOwner=new ActorState(10,1001,"Fixture",257,100,map.spawnX(),map.spawnY(),0,0,0,292,1300,model);
-        weapons.advance(1301,List.of(recursiveOwner));weapons.advance(1302,List.of(recursiveOwner));
-        check(weapons.actors().stream().anyMatch(a->a.created()==1302),"recursive detonation resolves matching authored config without infinite catalogue expansion");
-        weapons.fire(effect,recursiveOwner,1400);
-        check(weapons.effects().getLast().ownerOid()==0,"server-triggered effects are not suppressed for their controlling client");
+        var modified = new FireCatalog.Action(
+                FireCatalog.Kind.EMIT_PROJECTILE,
+                null,
+                bullet,
+                "Source",
+                "",
+                "",
+                0,
+                0,
+                0,
+                0,
+                true,
+                0,
+                0,
+                0,
+                0,
+                false,
+                List.of(),
+                "",
+                "Pollen Color",
+                List.of("Red", "Blue"));
+        var multi = new FireCatalog.Action(
+                FireCatalog.Kind.MULTI_PRESPAWNED,
+                null,
+                null,
+                "",
+                "",
+                "",
+                0,
+                0,
+                0,
+                0,
+                false,
+                0,
+                0,
+                0,
+                0,
+                false,
+                List.of(modified, modified),
+                "");
+        weapons.catalog(new FireCatalog(
+                List.of(new FireCatalog.AttackFire(
+                        "Pollen",
+                        292,
+                        model,
+                        1,
+                        List.of(new FireCatalog.FireRef(model, 0, 0, true, 0, 0, 0, multi, null)))),
+                Map.of()));
+        weapons.attack(10, new KnightCombat.AttackStart("Pollen", 292, 1200, 0, 500));
+        var pollenOwner =
+                new ActorState(10, 1001, "Fixture", 257, 100, map.spawnX(), map.spawnY(), 0, 0, 0, 292, 1200, model);
+        weapons.advance(1201, List.of(pollenOwner));
+        check(
+                weapons.actors().get(0).config().arguments().get("Pollen Color").equals("Red")
+                        && weapons.actors()
+                                .get(1)
+                                .config()
+                                .arguments()
+                                .get("Pollen Color")
+                                .equals("Blue"),
+                "prespawned arguments use fire timestamp and per-child seed");
+        weapons.cancel(10);
+        var recursive = new FireCatalog.ActorSpec("BOMB", model, 1, 0, 0, 0, 0, 0, 0, null);
+        var spawnAgain = new FireCatalog.Action(
+                FireCatalog.Kind.EMIT_PROJECTILE,
+                null,
+                recursive,
+                "Source",
+                "",
+                "",
+                0,
+                0,
+                0,
+                0,
+                true,
+                0,
+                0,
+                0,
+                0,
+                false,
+                List.of(),
+                "");
+        var outer = new FireCatalog.ActorSpec("BOMB", model, 1, 0, 0, 0, 0, 0, 0, spawnAgain);
+        weapons.catalog(new FireCatalog(List.of(attack("Recursive", outer)), Map.of()));
+        weapons.attack(10, new KnightCombat.AttackStart("Recursive", 292, 1300, 0, 500));
+        var recursiveOwner =
+                new ActorState(10, 1001, "Fixture", 257, 100, map.spawnX(), map.spawnY(), 0, 0, 0, 292, 1300, model);
+        weapons.advance(1301, List.of(recursiveOwner));
+        weapons.advance(1302, List.of(recursiveOwner));
+        check(
+                weapons.actors().stream().anyMatch(a -> a.created() == 1302),
+                "recursive detonation resolves matching authored config without infinite catalogue expansion");
+        weapons.fire(effect, recursiveOwner, 1400);
+        check(
+                weapons.effects().getLast().ownerOid() == 0,
+                "server-triggered effects are not suppressed for their controlling client");
         fireTracksAttackAnimationSpeed(map.collision());
-        System.out.println("PASS: gun bullet emission/movement/fizzle, bomb fuse/effect, orbital collision and owned cleanup");
+        System.out.println(
+                "PASS: gun bullet emission/movement/fizzle, bomb fuse/effect, orbital collision and owned cleanup");
     }
-    private static void banStickDamageIsAuthored()throws Exception {
-        var catalog=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
-        for(int activity:new int[]{292,293,294,290}){
-            var monster=new SceneContent.Spec(Map.of("native-type","Monster","config","Fixture","health","100","radius",".25","damage-mask","2"));
-            var content=new SceneContent(List.of(new SceneContent.Entry("near",1,0,0,monster),new SceneContent.Entry("far",4,0,0,monster)),Map.of(),Map.of(),Map.of("player.base-health",100f),Map.of(),Map.of(),Map.of());
-            var entities=new SceneEntities(content,openTerrain());var weapons=new SceneWeapons(openTerrain());weapons.targets(entities);
-            var model=new StarterCatalog.Model("Fixture",Map.of());
-            var owner=new ActorState(10,1001,"Owner",0,100,0,0,0,0,0,activity,100,model);
-            var peer=new ActorState(11,1002,"Peer",0,100,1,0,0,0,0,0,100,model);
-            var distant=new ActorState(12,1003,"Distant",0,100,4,0,0,0,0,0,100,model);
-            var health=new HashMap<Integer,SceneHealth>();for(var player:List.of(owner,peer,distant))health.put(player.id(),new SceneHealth(content));
-            entities.playerHits(hit->health.get(hit.actor()).hit(hit.damage(),hit.timestamp()));entities.advance(100,List.of(owner,peer,distant));
-            int near=entities.actors().getFirst().id(),far=entities.actors().get(1).id();
-            for(var fire:catalog.find("Weapon/Sword/The Ban Stick",activity).fireRefs())check(weapons.fire(fire.action(),owner,101),"authored Ban Stick action executes");
-            if(activity==290){
-                check(!health.get(10).alive()&&!health.get(11).alive(),"native mask 3 deliberately kills the wielder and nearby players");
-                check(entities.actor(near)==null,"charged area also kills a nearby enemy");
-            }else check(health.values().stream().allMatch(SceneHealth::alive),"normal swings retain monster-only damage and cannot hit owner or peers");
-            check(health.get(12).alive()&&entities.actor(far)!=null,"authored damage area excludes distant players and enemies");
+
+    private static void banStickDamageIsAuthored() throws Exception {
+        var catalog = FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
+        for (int activity : new int[] {292, 293, 294, 290}) {
+            var monster = new SceneContent.Spec(Map.of(
+                    "native-type",
+                    "Monster",
+                    "config",
+                    "Fixture",
+                    "health",
+                    "100",
+                    "radius",
+                    ".25",
+                    "damage-mask",
+                    "2"));
+            var content = new SceneContent(
+                    List.of(
+                            new SceneContent.Entry("near", 1, 0, 0, monster),
+                            new SceneContent.Entry("far", 4, 0, 0, monster)),
+                    Map.of(),
+                    Map.of(),
+                    Map.of("player.base-health", 100f),
+                    Map.of(),
+                    Map.of(),
+                    Map.of());
+            var entities = new SceneEntities(content, openTerrain());
+            var weapons = new SceneWeapons(openTerrain());
+            weapons.targets(entities);
+            var model = new StarterCatalog.Model("Fixture", Map.of());
+            var owner = new ActorState(10, 1001, "Owner", 0, 100, 0, 0, 0, 0, 0, activity, 100, model);
+            var peer = new ActorState(11, 1002, "Peer", 0, 100, 1, 0, 0, 0, 0, 0, 100, model);
+            var distant = new ActorState(12, 1003, "Distant", 0, 100, 4, 0, 0, 0, 0, 0, 100, model);
+            var health = new HashMap<Integer, SceneHealth>();
+            for (var player : List.of(owner, peer, distant)) health.put(player.id(), new SceneHealth(content));
+            entities.playerHits(hit -> health.get(hit.actor()).hit(hit.damage(), hit.timestamp()));
+            entities.advance(100, List.of(owner, peer, distant));
+            int near = entities.actors().getFirst().id(),
+                    far = entities.actors().get(1).id();
+            for (var fire : catalog.find("Weapon/Sword/The Ban Stick", activity).fireRefs())
+                check(weapons.fire(fire.action(), owner, 101), "authored Ban Stick action executes");
+            if (activity == 290) {
+                check(
+                        !health.get(10).alive() && !health.get(11).alive(),
+                        "native mask 3 deliberately kills the wielder and nearby players");
+                check(entities.actor(near) == null, "charged area also kills a nearby enemy");
+            } else
+                check(
+                        health.values().stream().allMatch(SceneHealth::alive),
+                        "normal swings retain monster-only damage and cannot hit owner or peers");
+            check(
+                    health.get(12).alive() && entities.actor(far) != null,
+                    "authored damage area excludes distant players and enemies");
         }
     }
-    private static void reportedWeaponRegressions()throws Exception {
-        var catalog=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
-        var model=new StarterCatalog.Model("Fixture",Map.of());var hits=new ArrayList<StarterCatalog.Model>();
-        var scene=new SceneWeapons(openTerrain());scene.catalog(catalog);
-        scene.targets(new SceneWeapons.Targets(){public boolean contact(float x,float y,int owner){return x>.3f;}public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){hits.add(region);}});
-        var owner=new ActorState(10,1001,"Fixture",0,1,0,0,0,0,0,292,100,model);
-        scene.attack(10,new KnightCombat.AttackStart("Weapon/Handgun/Autogun",292,100,0,500));scene.advance(101,List.of(owner));
-        check(!hits.isEmpty()&&scene.actors().getFirst().x()<1,"Autogun muzzle sweep damages a target inside its offset");
-        check(scene.actors().getFirst().projectile().ownerOid()==0,"server-spawned Autogun bullets do not receive client prediction ownership");
-        scene.cancel(10);hits.clear();
-        scene.attack(10,new KnightCombat.AttackStart("Weapon/Handgun/Celestial Orbitgun",292,200,0,500));
-        var gunner=new ActorState(10,1001,"Fixture",0,1,0,0,0,0,0,292,200,model);
-        for(int t=201;t<1000;t+=25)scene.advance(t,List.of(gunner));
-        check(!hits.isEmpty(),"orbital collision executes source FIZZLE=false shutdown damage");
-        scene.cancel(10);scene.targets(new SceneWeapons.Targets(){public boolean contact(float x,float y,int owner){return false;}public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){}});
-        var north=new ActorState(10,1001,"Fixture",0,1,0,0,(float)Math.PI/2,0,0,290,1100,model);
-        scene.attack(10,new KnightCombat.AttackStart("Weapon/Sword/Divine Avenger",290,1100,0,2000));
-        for(int t=1101;t<1700;t+=25)scene.advance(t,List.of(north));
-        var blades=scene.actors().stream().filter(a->a.config().name().equals("Bullet/Sword/Avenger")).toList();
-        check(blades.size()==3&&blades.stream().map(a->Math.round(a.rotation()*1000)).distinct().count()==3,"Divine Avenger emits three separated beams relative to the attack direction");
-        scene.cancel(10);
-        var west=new ActorState(10,1001,"Fixture",0,1,0,0,(float)Math.PI,0,0,290,1800,model);
-        scene.attack(10,new KnightCombat.AttackStart("Weapon/Sword/Gran Faust",290,1800,0,2000));
-        for(int t=1801;t<2400;t+=25)scene.advance(t,List.of(west));
-        var faust=scene.actors().stream().filter(a->a.config().name().equals("Bullet/Sword/Gran Faust (Charged)")).toList();
-        check(faust.size()==1&&Math.abs(faust.getFirst().rotation()-(float)Math.PI)<.001f,"Gran Faust releases one beam in the attack direction");
-        var alchemer=catalog.find("Weapon/Handgun/Prismatech Alchemer",290).fireRefs().getFirst().action().actor();
-        var shards=alchemer.detonation().children().stream().filter(a->a.kind()==FireCatalog.Kind.EMIT_PROJECTILE).toList();
-        check(shards.size()==2&&shards.stream().allMatch(FireCatalog.Action::relative)&&Math.abs(shards.get(0).rotation()-(float)(Math.PI*.75))<.001&&Math.abs(shards.get(1).rotation()-(float)(Math.PI*1.25))<.001,"charged Alchemer splits into the two archived backward directions");
-        check(catalog.find("Weapon/Handgun/Tortafist/Grand Tortofist",290).fireRefs().getFirst().action().actor().detonation().count()==6,"Tortofist charge scatters six crystals");
-        scene.cancel(10);
-        var pops=new ArrayList<Float>();var splats=new ArrayList<StarterCatalog.Model>();
-        scene.targets(new SceneWeapons.Targets(){public boolean contact(float x,float y,int owner){return false;}
-            public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){splats.add(region);pops.add(x);}});
-        var bomber=new ActorState(10,1001,"Fixture",0,1,0,0,0,0,0,290,2500,model);
-        scene.attack(10,new KnightCombat.AttackStart("Weapon/Bomb/Rock Salt Bomb",290,2500,0,2000));
-        int burst=2500+catalog.find("Weapon/Bomb/Rock Salt Bomb",290).fireRefs().getFirst().action().actor().timers().getFirst().delay();
-        scene.advance(2501,List.of(bomber));scene.advance(burst+1,List.of(bomber));
-        var spread=scene.actors().stream().filter(a->a.config().name().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")).toList();
-        check(spread.size()==6&&spread.stream().map(a->Math.round(a.rotation()*100)).distinct().count()==6,"Rock Salt Bomb fans all six native delayed shard branches");
-        for(int stamp=burst+26;stamp<burst+400;stamp+=25)scene.advance(stamp,List.of(bomber));
-        var seeds=scene.actors().stream().filter(a->a.config().name().equals("Bomb/Parts/Shard/Shard Base (Timer)")).toList();
-        check(seeds.size()==6&&seeds.stream().map(a->Math.round(a.x()*16)*31+Math.round(a.y()*16)).distinct().count()==6,"each shard plants its seed at its own landing point");
-        check(splats.size()==1,"planted shards wait for their visible lifetime before secondary damage");
-        scene.advance(burst+3000,List.of(bomber));scene.advance(burst+13000,List.of(bomber));
-        check(splats.size()==7&&splats.stream().allMatch(r->r.name().equals("DamageRegionFromPoint")),"each planted shard pops once and the chain terminates");
-    }
-    static CollisionMap openTerrain()throws Exception {
-        return TestCollision.floor(-64,-64,256,256);
-    }
-    private static void chargeTargetDamage()throws Exception {
-        var catalog=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
-        var timings=WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv"));
-        var terrain=openTerrain();var model=new StarterCatalog.Model("Fixture",Map.of());
-        var circle=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",.4f));
-        var fields=new HashMap<>(Map.of("native-type","Monster","config","Monster/Fixture","health","10000","radius",".4","damage-mask","2","collision-flags","8"));
-        fields.put("source-shape",FireCatalog.modelJson(new StarterCatalog.Model("shape",Map.of("value",circle))));
-        for(String name:List.of("Weapon/Handgun/Magnus","Weapon/Handgun/Callahan","Weapon/Sword/Spur","Weapon/Sword/Divine Avenger","Weapon/Sword/Gran Faust","Weapon/Bomb/Graviton Bomb")){
-            var content=new SceneContent(List.of(new SceneContent.Entry("first",1.6f,0,0,new SceneContent.Spec(fields)),new SceneContent.Entry("second",3.6f,0,0,new SceneContent.Spec(fields))),Map.of());
-            var targets=new SceneEntities(content,terrain);var scene=new SceneWeapons(terrain);scene.catalog(catalog);scene.targets(targets);
-            var owner=new ActorState(10,1001,"Fixture",0,100,0,0,0,0,0,290,100,model);
-            var timing=timings.find(name).charged();scene.attack(10,new KnightCombat.AttackStart(name,290,100,timing.land(),timing.clear()));
-            for(int stamp=101;stamp<6500;stamp+=20)scene.advance(stamp,List.of(owner));
-            check(targets.actors().getFirst().entity().health()<1,name+" charge reduces real monster HP");
-            if(name.endsWith("Magnus")||name.endsWith("Callahan")||name.endsWith("Avenger")||name.endsWith("Faust"))check(targets.actors().get(1).entity().health()<1,name+" charge projectile damages a monster outside melee reach");
-        }
-        var target=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("impact",0,3,0,new SceneContent.Spec(fields))),Map.of()),terrain);
-        var scene=new SceneWeapons(terrain);scene.catalog(catalog);scene.targets(target);
-        var owner=new ActorState(10,1001,"Fixture",0,100,0,0,(float)Math.PI/2,0,0,290,100,model);
-        scene.attack(10,new KnightCombat.AttackStart("Weapon/Handgun/Nova Driver",290,100,0,1000));
-        List<ActorState> shards=List.of();
-        for(int stamp=101;stamp<600;stamp+=10){scene.advance(stamp,List.of(owner));shards=scene.actors().stream().filter(a->!a.config().name().contains("/Charged")&&a.projectile().destroyed()==Integer.MAX_VALUE).toList();if(shards.size()==4)break;}
-        check(shards.size()==4,"Nova Driver impact releases four live shards instead of exhausting them inside its victim");
-        check(shards.stream().map(a->Math.round(a.rotation()*100)).distinct().count()==4,"Driver shards preserve four directions relative to a north-facing shot");
-        check(target.actors().getFirst().entity().health()<1,"Driver impact reduces real target HP");
-    }
-    private static void authoredHeavyAttacks()throws Exception {
-        var catalog=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
-        var charge=catalog.find("Weapon/Sword/Combuster",290);
-        var carrier=charge.fireRefs().getLast().action().actor();
-        var trail=carrier.timers().getFirst().action().actor();
-        check(carrier.config().arguments().get("Color").equals(charge.attack().arguments().get("Burst Color"))
-            &&carrier.config().arguments().get("Damage").equals(charge.attack().arguments().get("Burst Damage"))
-            &&trail.config().arguments().get("Color").equals(carrier.config().arguments().get("Color"))
-            &&trail.config().arguments().get("Damage").equals(carrier.config().arguments().get("Damage"))
-            &&trail.config().arguments().get("Scale").equals(carrier.config().arguments().get("Burst Scale")),
-            "burst trails retain the weapon's color, player damage and explosion size");
-        var model=new StarterCatalog.Model("Fixture",Map.of());
-        var owner=new ActorState(10,1001,"Fixture",257,100,0,0,0,0,0,290,100,model);
-        var hits=new ArrayList<StarterCatalog.Model>();
-        var scene=new SceneWeapons(openTerrain());scene.catalog(catalog);
-        scene.targets(new SceneWeapons.Targets(){
-            public boolean contact(float x,float y,int owner){return false;}
-            public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){hits.add(region);}
+
+    private static void reportedWeaponRegressions() throws Exception {
+        var catalog = FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
+        var model = new StarterCatalog.Model("Fixture", Map.of());
+        var hits = new ArrayList<StarterCatalog.Model>();
+        var scene = new SceneWeapons(openTerrain());
+        scene.catalog(catalog);
+        scene.targets(new SceneWeapons.Targets() {
+            public boolean contact(float x, float y, int owner) {
+                return x > .3f;
+            }
+
+            public void damage(StarterCatalog.Model region, float x, float y, float rotation, int stamp, int owner) {
+                hits.add(region);
+            }
         });
-        scene.attack(10,new KnightCombat.AttackStart("Weapon/Sword/Combuster",290,100,0,2000));
-        int trails=0;var ids=new HashSet<Integer>();
-        for(int time=101;time<1000;time+=25){scene.advance(time,List.of(owner));for(var actor:scene.actors())
-            if(actor.config().name().equals("Bullet/Sword/Parts/Burst Trail")&&ids.add(actor.id())){
-                trails++;check(actor.clientOid()==0&&actor.projectile().faction()==10,"server-created trails preserve faction without client prediction ownership");
-            }}
-        check(trails==5,"Combuster's authored charge emits exactly five burst bombs");
-        check(hits.size()>=5,"burst bombs execute their damage actions");
-        scene.cancel(10);hits.clear();
-        scene.attack(10,new KnightCombat.AttackStart("Weapon/Handgun/Tortafist/Grand Tortofist",290,1100,0,2000));
-        var later=new ActorState(10,1001,"Fixture",257,100,0,0,0,0,0,290,1100,model);
-        boolean missile=false;
-        for(int time=1101;time<4100;time+=25){scene.advance(time,List.of(later));missile|=scene.actors().stream().anyMatch(a->a.config().name().endsWith("Tortodrone Missile"));}
-        check(missile&&!hits.isEmpty(),"Tortofist carrier expiry emits a missile that detonates with damage");
+        var owner = new ActorState(10, 1001, "Fixture", 0, 1, 0, 0, 0, 0, 0, 292, 100, model);
+        scene.attack(10, new KnightCombat.AttackStart("Weapon/Handgun/Autogun", 292, 100, 0, 500));
+        scene.advance(101, List.of(owner));
+        check(
+                !hits.isEmpty() && scene.actors().getFirst().x() < 1,
+                "Autogun muzzle sweep damages a target inside its offset");
+        check(
+                scene.actors().getFirst().projectile().ownerOid() == 0,
+                "server-spawned Autogun bullets do not receive client prediction ownership");
         scene.cancel(10);
-        scene.attack(10,new KnightCombat.AttackStart("Weapon/Handgun/Pulsar",292,4200,0,2000));
-        var gunner=new ActorState(10,1001,"Fixture",257,100,0,0,0,0,0,292,4200,model);
-        for(int time=4201;time<5400;time+=25)scene.advance(time,List.of(gunner));
-        check(scene.actors().stream().filter(a->a.config().name().equals("Bullet/Handgun/Pulsar/Parts/Base Stage2")).count()==1,
-            "Pulsar matures into one explosive second stage");
-        scene.cancel(10);scene.advance(6000,List.of());check(scene.actors().isEmpty(),"travel cancels pending lifecycle actions and child actors");
-        var alchemer=catalog.find("Weapon/Handgun/Voltech Alchemer Mk II",292).fireRefs().getFirst().action().actor();
-        var split=alchemer.detonation().children().stream().filter(a->a.kind()==FireCatalog.Kind.EMIT_PROJECTILE).findFirst().orElseThrow();
-        check(split.relative()&&split.rotationVariance()>0,"secondary Alchemer bounce uses a fan relative to its parent");
+        hits.clear();
+        scene.attack(10, new KnightCombat.AttackStart("Weapon/Handgun/Celestial Orbitgun", 292, 200, 0, 500));
+        var gunner = new ActorState(10, 1001, "Fixture", 0, 1, 0, 0, 0, 0, 0, 292, 200, model);
+        for (int t = 201; t < 1000; t += 25) scene.advance(t, List.of(gunner));
+        check(!hits.isEmpty(), "orbital collision executes source FIZZLE=false shutdown damage");
+        scene.cancel(10);
+        scene.targets(new SceneWeapons.Targets() {
+            public boolean contact(float x, float y, int owner) {
+                return false;
+            }
+
+            public void damage(StarterCatalog.Model region, float x, float y, float rotation, int stamp, int owner) {}
+        });
+        var north = new ActorState(10, 1001, "Fixture", 0, 1, 0, 0, (float) Math.PI / 2, 0, 0, 290, 1100, model);
+        scene.attack(10, new KnightCombat.AttackStart("Weapon/Sword/Divine Avenger", 290, 1100, 0, 2000));
+        for (int t = 1101; t < 1700; t += 25) scene.advance(t, List.of(north));
+        var blades = scene.actors().stream()
+                .filter(a -> a.config().name().equals("Bullet/Sword/Avenger"))
+                .toList();
+        check(
+                blades.size() == 3
+                        && blades.stream()
+                                        .map(a -> Math.round(a.rotation() * 1000))
+                                        .distinct()
+                                        .count()
+                                == 3,
+                "Divine Avenger emits three separated beams relative to the attack direction");
+        scene.cancel(10);
+        var west = new ActorState(10, 1001, "Fixture", 0, 1, 0, 0, (float) Math.PI, 0, 0, 290, 1800, model);
+        scene.attack(10, new KnightCombat.AttackStart("Weapon/Sword/Gran Faust", 290, 1800, 0, 2000));
+        for (int t = 1801; t < 2400; t += 25) scene.advance(t, List.of(west));
+        var faust = scene.actors().stream()
+                .filter(a -> a.config().name().equals("Bullet/Sword/Gran Faust (Charged)"))
+                .toList();
+        check(
+                faust.size() == 1 && Math.abs(faust.getFirst().rotation() - (float) Math.PI) < .001f,
+                "Gran Faust releases one beam in the attack direction");
+        var alchemer = catalog.find("Weapon/Handgun/Prismatech Alchemer", 290)
+                .fireRefs()
+                .getFirst()
+                .action()
+                .actor();
+        var shards = alchemer.detonation().children().stream()
+                .filter(a -> a.kind() == FireCatalog.Kind.EMIT_PROJECTILE)
+                .toList();
+        check(
+                shards.size() == 2
+                        && shards.stream().allMatch(FireCatalog.Action::relative)
+                        && Math.abs(shards.get(0).rotation() - (float) (Math.PI * .75)) < .001
+                        && Math.abs(shards.get(1).rotation() - (float) (Math.PI * 1.25)) < .001,
+                "charged Alchemer splits into the two archived backward directions");
+        check(
+                catalog.find("Weapon/Handgun/Tortafist/Grand Tortofist", 290)
+                                .fireRefs()
+                                .getFirst()
+                                .action()
+                                .actor()
+                                .detonation()
+                                .count()
+                        == 6,
+                "Tortofist charge scatters six crystals");
+        scene.cancel(10);
+        var pops = new ArrayList<Float>();
+        var splats = new ArrayList<StarterCatalog.Model>();
+        scene.targets(new SceneWeapons.Targets() {
+            public boolean contact(float x, float y, int owner) {
+                return false;
+            }
+
+            public void damage(StarterCatalog.Model region, float x, float y, float rotation, int stamp, int owner) {
+                splats.add(region);
+                pops.add(x);
+            }
+        });
+        var bomber = new ActorState(10, 1001, "Fixture", 0, 1, 0, 0, 0, 0, 0, 290, 2500, model);
+        scene.attack(10, new KnightCombat.AttackStart("Weapon/Bomb/Rock Salt Bomb", 290, 2500, 0, 2000));
+        int burst = 2500
+                + catalog.find("Weapon/Bomb/Rock Salt Bomb", 290)
+                        .fireRefs()
+                        .getFirst()
+                        .action()
+                        .actor()
+                        .timers()
+                        .getFirst()
+                        .delay();
+        scene.advance(2501, List.of(bomber));
+        scene.advance(burst + 1, List.of(bomber));
+        var spread = scene.actors().stream()
+                .filter(a -> a.config().name().equals("Bomb/Parts/Shard/Shard Base (Distance Check)"))
+                .toList();
+        check(
+                spread.size() == 6
+                        && spread.stream()
+                                        .map(a -> Math.round(a.rotation() * 100))
+                                        .distinct()
+                                        .count()
+                                == 6,
+                "Rock Salt Bomb fans all six native delayed shard branches");
+        for (int stamp = burst + 26; stamp < burst + 400; stamp += 25) scene.advance(stamp, List.of(bomber));
+        var seeds = scene.actors().stream()
+                .filter(a -> a.config().name().equals("Bomb/Parts/Shard/Shard Base (Timer)"))
+                .toList();
+        check(
+                seeds.size() == 6
+                        && seeds.stream()
+                                        .map(a -> Math.round(a.x() * 16) * 31 + Math.round(a.y() * 16))
+                                        .distinct()
+                                        .count()
+                                == 6,
+                "each shard plants its seed at its own landing point");
+        check(splats.size() == 1, "planted shards wait for their visible lifetime before secondary damage");
+        scene.advance(burst + 3000, List.of(bomber));
+        scene.advance(burst + 13000, List.of(bomber));
+        check(
+                splats.size() == 7 && splats.stream().allMatch(r -> r.name().equals("DamageRegionFromPoint")),
+                "each planted shard pops once and the chain terminates");
     }
+
+    static CollisionMap openTerrain() throws Exception {
+        return TestCollision.floor(-64, -64, 256, 256);
+    }
+
+    private static void chargeTargetDamage() throws Exception {
+        var catalog = FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
+        var timings = WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv"));
+        var terrain = openTerrain();
+        var model = new StarterCatalog.Model("Fixture", Map.of());
+        var circle = new FireCatalog.DataValue(
+                "com.threerings.tudey.shape.config.ShapeConfig$Circle", Map.of("radius", .4f));
+        var fields = new HashMap<>(Map.of(
+                "native-type",
+                "Monster",
+                "config",
+                "Monster/Fixture",
+                "health",
+                "10000",
+                "radius",
+                ".4",
+                "damage-mask",
+                "2",
+                "collision-flags",
+                "8"));
+        fields.put("source-shape", FireCatalog.modelJson(new StarterCatalog.Model("shape", Map.of("value", circle))));
+        for (String name : List.of(
+                "Weapon/Handgun/Magnus",
+                "Weapon/Handgun/Callahan",
+                "Weapon/Sword/Spur",
+                "Weapon/Sword/Divine Avenger",
+                "Weapon/Sword/Gran Faust",
+                "Weapon/Bomb/Graviton Bomb")) {
+            var content = new SceneContent(
+                    List.of(
+                            new SceneContent.Entry("first", 1.6f, 0, 0, new SceneContent.Spec(fields)),
+                            new SceneContent.Entry("second", 3.6f, 0, 0, new SceneContent.Spec(fields))),
+                    Map.of());
+            var targets = new SceneEntities(content, terrain);
+            var scene = new SceneWeapons(terrain);
+            scene.catalog(catalog);
+            scene.targets(targets);
+            var owner = new ActorState(10, 1001, "Fixture", 0, 100, 0, 0, 0, 0, 0, 290, 100, model);
+            var timing = timings.find(name).charged();
+            scene.attack(10, new KnightCombat.AttackStart(name, 290, 100, timing.land(), timing.clear()));
+            for (int stamp = 101; stamp < 6500; stamp += 20) scene.advance(stamp, List.of(owner));
+            check(targets.actors().getFirst().entity().health() < 1, name + " charge reduces real monster HP");
+            if (name.endsWith("Magnus")
+                    || name.endsWith("Callahan")
+                    || name.endsWith("Avenger")
+                    || name.endsWith("Faust"))
+                check(
+                        targets.actors().get(1).entity().health() < 1,
+                        name + " charge projectile damages a monster outside melee reach");
+        }
+        var target = new SceneEntities(
+                new SceneContent(
+                        List.of(new SceneContent.Entry("impact", 0, 3, 0, new SceneContent.Spec(fields))), Map.of()),
+                terrain);
+        var scene = new SceneWeapons(terrain);
+        scene.catalog(catalog);
+        scene.targets(target);
+        var owner = new ActorState(10, 1001, "Fixture", 0, 100, 0, 0, (float) Math.PI / 2, 0, 0, 290, 100, model);
+        scene.attack(10, new KnightCombat.AttackStart("Weapon/Handgun/Nova Driver", 290, 100, 0, 1000));
+        List<ActorState> shards = List.of();
+        for (int stamp = 101; stamp < 600; stamp += 10) {
+            scene.advance(stamp, List.of(owner));
+            shards = scene.actors().stream()
+                    .filter(a -> !a.config().name().contains("/Charged")
+                            && a.projectile().destroyed() == Integer.MAX_VALUE)
+                    .toList();
+            if (shards.size() == 4) break;
+        }
+        check(
+                shards.size() == 4,
+                "Nova Driver impact releases four live shards instead of exhausting them inside its victim");
+        check(
+                shards.stream()
+                                .map(a -> Math.round(a.rotation() * 100))
+                                .distinct()
+                                .count()
+                        == 4,
+                "Driver shards preserve four directions relative to a north-facing shot");
+        check(target.actors().getFirst().entity().health() < 1, "Driver impact reduces real target HP");
+    }
+
+    private static void authoredHeavyAttacks() throws Exception {
+        var catalog = FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
+        var charge = catalog.find("Weapon/Sword/Combuster", 290);
+        var carrier = charge.fireRefs().getLast().action().actor();
+        var trail = carrier.timers().getFirst().action().actor();
+        check(
+                carrier.config()
+                                .arguments()
+                                .get("Color")
+                                .equals(charge.attack().arguments().get("Burst Color"))
+                        && carrier.config()
+                                .arguments()
+                                .get("Damage")
+                                .equals(charge.attack().arguments().get("Burst Damage"))
+                        && trail.config()
+                                .arguments()
+                                .get("Color")
+                                .equals(carrier.config().arguments().get("Color"))
+                        && trail.config()
+                                .arguments()
+                                .get("Damage")
+                                .equals(carrier.config().arguments().get("Damage"))
+                        && trail.config()
+                                .arguments()
+                                .get("Scale")
+                                .equals(carrier.config().arguments().get("Burst Scale")),
+                "burst trails retain the weapon's color, player damage and explosion size");
+        var model = new StarterCatalog.Model("Fixture", Map.of());
+        var owner = new ActorState(10, 1001, "Fixture", 257, 100, 0, 0, 0, 0, 0, 290, 100, model);
+        var hits = new ArrayList<StarterCatalog.Model>();
+        var scene = new SceneWeapons(openTerrain());
+        scene.catalog(catalog);
+        scene.targets(new SceneWeapons.Targets() {
+            public boolean contact(float x, float y, int owner) {
+                return false;
+            }
+
+            public void damage(StarterCatalog.Model region, float x, float y, float rotation, int stamp, int owner) {
+                hits.add(region);
+            }
+        });
+        scene.attack(10, new KnightCombat.AttackStart("Weapon/Sword/Combuster", 290, 100, 0, 2000));
+        int trails = 0;
+        var ids = new HashSet<Integer>();
+        for (int time = 101; time < 1000; time += 25) {
+            scene.advance(time, List.of(owner));
+            for (var actor : scene.actors())
+                if (actor.config().name().equals("Bullet/Sword/Parts/Burst Trail") && ids.add(actor.id())) {
+                    trails++;
+                    check(
+                            actor.clientOid() == 0 && actor.projectile().faction() == 10,
+                            "server-created trails preserve faction without client prediction ownership");
+                }
+        }
+        check(trails == 5, "Combuster's authored charge emits exactly five burst bombs");
+        check(hits.size() >= 5, "burst bombs execute their damage actions");
+        scene.cancel(10);
+        hits.clear();
+        scene.attack(10, new KnightCombat.AttackStart("Weapon/Handgun/Tortafist/Grand Tortofist", 290, 1100, 0, 2000));
+        var later = new ActorState(10, 1001, "Fixture", 257, 100, 0, 0, 0, 0, 0, 290, 1100, model);
+        boolean missile = false;
+        for (int time = 1101; time < 4100; time += 25) {
+            scene.advance(time, List.of(later));
+            missile |= scene.actors().stream().anyMatch(a -> a.config().name().endsWith("Tortodrone Missile"));
+        }
+        check(missile && !hits.isEmpty(), "Tortofist carrier expiry emits a missile that detonates with damage");
+        scene.cancel(10);
+        scene.attack(10, new KnightCombat.AttackStart("Weapon/Handgun/Pulsar", 292, 4200, 0, 2000));
+        var gunner = new ActorState(10, 1001, "Fixture", 257, 100, 0, 0, 0, 0, 0, 292, 4200, model);
+        for (int time = 4201; time < 5400; time += 25) scene.advance(time, List.of(gunner));
+        check(
+                scene.actors().stream()
+                                .filter(a -> a.config().name().equals("Bullet/Handgun/Pulsar/Parts/Base Stage2"))
+                                .count()
+                        == 1,
+                "Pulsar matures into one explosive second stage");
+        scene.cancel(10);
+        scene.advance(6000, List.of());
+        check(scene.actors().isEmpty(), "travel cancels pending lifecycle actions and child actors");
+        var alchemer = catalog.find("Weapon/Handgun/Voltech Alchemer Mk II", 292)
+                .fireRefs()
+                .getFirst()
+                .action()
+                .actor();
+        var split = alchemer.detonation().children().stream()
+                .filter(a -> a.kind() == FireCatalog.Kind.EMIT_PROJECTILE)
+                .findFirst()
+                .orElseThrow();
+        check(
+                split.relative() && split.rotationVariance() > 0,
+                "secondary Alchemer bounce uses a fan relative to its parent");
+    }
+
     private static void fireTracksAttackAnimationSpeed(CollisionMap terrain) {
-        var model=new StarterCatalog.Model("Fixture",Map.of());
-        var bullet=new FireCatalog.ActorSpec("BULLET",model,1000,0,.1f,0,0,0,1,null);
-        var action=new FireCatalog.Action(FireCatalog.Kind.EMIT_PROJECTILE,null,bullet,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
-        var fire=new FireCatalog.AttackFire("Gun",292,model,2,List.of(new FireCatalog.FireRef(model,135,90,true,0,0,0,action,null)));
-        var weapons=new SceneWeapons(terrain);weapons.catalog(new FireCatalog(List.of(fire),Map.of()));
-        var hit=new WeaponCatalog.Attack(135,270,900,true,-1,-1,0,0);
-        var gun=new WeaponCatalog.Weapon("Gun",1200,0,0,false,true,1,1,List.of(hit),null,null,null);
-        var byClass=new EnumMap<EquipmentCatalog.WeaponClass,EquipmentCatalog.Modifiers>(EquipmentCatalog.WeaponClass.class);
-        for(var type:EquipmentCatalog.WeaponClass.values())byClass.put(type,new EquipmentCatalog.Modifiers(0,0,.125f,0));
-        var gear=new EquipmentCatalog(List.of(new EquipmentCatalog.Entry("Gun",org.tortodrone.core.character.WorldProfile.Slot.GUN,byClass)));
-        var combat=new KnightCombat(new WeaponCatalog(List.of(gun),List.of(),2000),gear);
-        combat.equipment(new org.tortodrone.core.character.WorldProfile(10,1,1,0,0,1,List.of(
-            new org.tortodrone.core.character.WorldProfile.Item(1,org.tortodrone.core.character.WorldProfile.Slot.GUN,"Gun",null,0,6,true))));
-        combat.attacks(start->weapons.attack(10,start));combat.reset(100);combat.input(4,100,100,0,0,true);
-        var owner=new ActorState(10,1001,"Fixture",257,100,0,0,0,0,0,292,100,model);
+        var model = new StarterCatalog.Model("Fixture", Map.of());
+        var bullet = new FireCatalog.ActorSpec("BULLET", model, 1000, 0, .1f, 0, 0, 0, 1, null);
+        var action = new FireCatalog.Action(
+                FireCatalog.Kind.EMIT_PROJECTILE,
+                null,
+                bullet,
+                "Source",
+                "",
+                "",
+                0,
+                0,
+                0,
+                0,
+                true,
+                0,
+                0,
+                0,
+                0,
+                false,
+                List.of(),
+                "");
+        var fire = new FireCatalog.AttackFire(
+                "Gun", 292, model, 2, List.of(new FireCatalog.FireRef(model, 135, 90, true, 0, 0, 0, action, null)));
+        var weapons = new SceneWeapons(terrain);
+        weapons.catalog(new FireCatalog(List.of(fire), Map.of()));
+        var hit = new WeaponCatalog.Attack(135, 270, 900, true, -1, -1, 0, 0);
+        var gun = new WeaponCatalog.Weapon("Gun", 1200, 0, 0, false, true, 1, 1, List.of(hit), null, null, null);
+        var byClass = new EnumMap<EquipmentCatalog.WeaponClass, EquipmentCatalog.Modifiers>(
+                EquipmentCatalog.WeaponClass.class);
+        for (var type : EquipmentCatalog.WeaponClass.values())
+            byClass.put(type, new EquipmentCatalog.Modifiers(0, 0, .125f, 0));
+        var gear = new EquipmentCatalog(List.of(
+                new EquipmentCatalog.Entry("Gun", org.tortodrone.core.character.WorldProfile.Slot.GUN, byClass)));
+        var combat = new KnightCombat(new WeaponCatalog(List.of(gun), List.of(), 2000), gear);
+        combat.equipment(new org.tortodrone.core.character.WorldProfile(
+                10,
+                1,
+                1,
+                0,
+                0,
+                1,
+                List.of(new org.tortodrone.core.character.WorldProfile.Item(
+                        1, org.tortodrone.core.character.WorldProfile.Slot.GUN, "Gun", null, 0, 6, true))));
+        combat.attacks(start -> weapons.attack(10, start));
+        combat.reset(100);
+        combat.input(4, 100, 100, 0, 0, true);
+        var owner = new ActorState(10, 1001, "Fixture", 257, 100, 0, 0, 0, 0, 0, 292, 100, model);
         // Native fire animation speed is fireSpeed * attackSpeed: land=120,
         // delay=60 and refractory=40 after the 1.125 equipment multiplier.
-        weapons.advance(280,List.of(owner));check(weapons.actors().isEmpty(),"scaled native fire deadline remains strict");
-        weapons.advance(281,List.of(owner));check(weapons.actors().size()==1,"fire follows the equipment-scaled animation delay");
-        weapons.advance(320,List.of(owner));check(weapons.actors().size()==1,"scaled native refractory deadline remains strict");
-        weapons.advance(321,List.of(owner));check(weapons.actors().size()==2,"repeat fire follows the equipment-scaled animation rate");
+        weapons.advance(280, List.of(owner));
+        check(weapons.actors().isEmpty(), "scaled native fire deadline remains strict");
+        weapons.advance(281, List.of(owner));
+        check(weapons.actors().size() == 1, "fire follows the equipment-scaled animation delay");
+        weapons.advance(320, List.of(owner));
+        check(weapons.actors().size() == 1, "scaled native refractory deadline remains strict");
+        weapons.advance(321, List.of(owner));
+        check(weapons.actors().size() == 2, "repeat fire follows the equipment-scaled animation rate");
     }
-    private static FireCatalog.AttackFire attack(String weapon,FireCatalog.ActorSpec actor){
-        var model=new StarterCatalog.Model("Fixture",Map.of());
-        var action=new FireCatalog.Action(FireCatalog.Kind.EMIT_PROJECTILE,null,actor,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
-        return new FireCatalog.AttackFire(weapon,292,model,1,List.of(new FireCatalog.FireRef(model,0,0,true,0,0,0,action,null)));
+
+    private static FireCatalog.AttackFire attack(String weapon, FireCatalog.ActorSpec actor) {
+        var model = new StarterCatalog.Model("Fixture", Map.of());
+        var action = new FireCatalog.Action(
+                FireCatalog.Kind.EMIT_PROJECTILE,
+                null,
+                actor,
+                "Source",
+                "",
+                "",
+                0,
+                0,
+                0,
+                0,
+                true,
+                0,
+                0,
+                0,
+                0,
+                false,
+                List.of(),
+                "");
+        return new FireCatalog.AttackFire(
+                weapon, 292, model, 1, List.of(new FireCatalog.FireRef(model, 0, 0, true, 0, 0, 0, action, null)));
     }
-    private static void check(boolean condition,String label){if(!condition)throw new AssertionError(label);}
+
+    private static void check(boolean condition, String label) {
+        if (!condition) throw new AssertionError(label);
+    }
 }

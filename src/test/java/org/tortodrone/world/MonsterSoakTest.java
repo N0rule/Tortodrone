@@ -1,12 +1,13 @@
 package org.tortodrone.world;
 
+import static org.tortodrone.support.TestWire.check;
+
 import java.util.*;
 import org.tortodrone.core.character.StarterCatalog;
-import static org.tortodrone.support.TestWire.check;
 import org.tortodrone.core.world.ActorState;
-import org.tortodrone.core.world.SceneContent;
-import org.tortodrone.core.world.SceneCollision;
 import org.tortodrone.core.world.MonsterCatalog;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.SceneContent;
 
 /**
  * Phase 10 soak: keep a full wave population and eight observers running for thirty
@@ -16,14 +17,14 @@ import org.tortodrone.core.world.MonsterCatalog;
 public final class MonsterSoakTest {
     private static final int TICKS = 36_000;
 
-    private MonsterSoakTest() { }
+    private MonsterSoakTest() {}
 
     public static void main(String[] args) throws Exception {
         var world = scene();
         var anchors = new ArrayList<ScenePathing.Point>();
         for (int index = 0; index < 8; index++)
-            anchors.add(new ScenePathing.Point(12 * (float) Math.cos(index * Math.PI / 4),
-                12 * (float) Math.sin(index * Math.PI / 4)));
+            anchors.add(new ScenePathing.Point(
+                    12 * (float) Math.cos(index * Math.PI / 4), 12 * (float) Math.sin(index * Math.PI / 4)));
         world.addWave(new MonsterGroup("soak", "fixture_soak", anchors, 64, 64, 0, 0, 1));
         var players = players();
 
@@ -33,7 +34,9 @@ public final class MonsterSoakTest {
             world.advance(stamp += 50, players);
             var metrics = world.metrics();
             check(metrics.total() <= SceneEntities.MAX_ALIVE_MONSTERS, "the live population stays inside its cap");
-            check(metrics.engaged() <= SceneEntities.MAX_ENGAGED_MONSTERS, "the engaged population stays inside its cap");
+            check(
+                    metrics.engaged() <= SceneEntities.MAX_ENGAGED_MONSTERS,
+                    "the engaged population stays inside its cap");
             check(world.pathSearches() <= ScenePathBudget.PER_TICK, "no tick exceeds the path budget");
             peakAwake = Math.max(peakAwake, metrics.awake());
             peakEngaged = Math.max(peakEngaged, metrics.engaged());
@@ -43,40 +46,65 @@ public final class MonsterSoakTest {
 
         var metrics = world.metrics();
         check(metrics.total() == SceneEntities.MAX_ALIVE_MONSTERS, "all sixty-four wave slots stayed live");
-        check(metrics.spawned() == SceneEntities.MAX_ALIVE_MONSTERS && metrics.despawned() == 0,
-            "no wave actor was silently replaced during the run");
+        check(
+                metrics.spawned() == SceneEntities.MAX_ALIVE_MONSTERS && metrics.despawned() == 0,
+                "no wave actor was silently replaced during the run");
         check(peakAwake > 0 && peakEngaged > 0, "observers kept the population awake and engaged");
         check(metrics.byType().equals(Map.of("fixture_soak", 64)), "every live actor still reports its owning type");
-        check(metrics.pathDropped() == 0 && metrics.pathFailures() == 0,
-            "open terrain needed neither deferred admissions nor failed searches");
+        check(
+                metrics.pathDropped() == 0 && metrics.pathFailures() == 0,
+                "open terrain needed neither deferred admissions nor failed searches");
 
         world.generation(2);
         var drained = world.metrics();
-        check(drained.total() == 0 && drained.awake() == 0 && drained.engaged() == 0,
-            "a generation change clears every live monster");
-        check(drained.spawned() == 64 && drained.despawned() == 64,
-            "spawn and despawn counters balance after the drain");
-        check(world.actors().stream().noneMatch(a -> a.entity().kind().equals("Monster")),
-            "no monster actor survives the drain");
+        check(
+                drained.total() == 0 && drained.awake() == 0 && drained.engaged() == 0,
+                "a generation change clears every live monster");
+        check(
+                drained.spawned() == 64 && drained.despawned() == 64,
+                "spawn and despawn counters balance after the drain");
+        check(
+                world.actors().stream().noneMatch(a -> a.entity().kind().equals("Monster")),
+                "no monster actor survives the drain");
 
         double ticksPerSecond = TICKS / Math.max(1e-9, elapsed / 1_000_000_000d);
-        System.out.printf(java.util.Locale.ROOT,
-            "PASS: 30-minute %.1fs soak, %d peak awake, %d peak engaged, %d peak path/tick, %.0f ticks/s%n",
-            elapsed / 1_000_000_000d, peakAwake, peakEngaged, peakPath, ticksPerSecond);
+        System.out.printf(
+                java.util.Locale.ROOT,
+                "PASS: 30-minute %.1fs soak, %d peak awake, %d peak engaged, %d peak path/tick, %.0f ticks/s%n",
+                elapsed / 1_000_000_000d,
+                peakAwake,
+                peakEngaged,
+                peakPath,
+                ticksPerSecond);
     }
 
     private static SceneEntities scene() throws Exception {
-        return new SceneEntities(SceneContent.empty(), TestCollision.floor(-64, -64, 128, 128),
-            SceneCollision.empty(), new Random(7), true, 1000, catalog());
+        return new SceneEntities(
+                SceneContent.empty(),
+                TestCollision.floor(-64, -64, 128, 128),
+                SceneCollision.empty(),
+                new Random(7),
+                true,
+                1000,
+                catalog());
     }
 
     private static List<ActorState> players() {
         var players = new ArrayList<ActorState>();
         for (int index = 0; index < 8; index++) {
             float angle = (float) (index * Math.PI / 4);
-            players.add(new ActorState(1000 + index, 2000 + index, "Soak " + index, 256, 1,
-                8 * (float) Math.cos(angle), 8 * (float) Math.sin(angle), 0, 0, 0,
-                new StarterCatalog.Model("Fixture", Map.of())));
+            players.add(new ActorState(
+                    1000 + index,
+                    2000 + index,
+                    "Soak " + index,
+                    256,
+                    1,
+                    8 * (float) Math.cos(angle),
+                    8 * (float) Math.sin(angle),
+                    0,
+                    0,
+                    0,
+                    new StarterCatalog.Model("Fixture", Map.of())));
         }
         return players;
     }

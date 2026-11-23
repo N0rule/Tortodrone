@@ -1,8 +1,6 @@
 package org.tortodrone.core.world;
 
 import java.util.*;
-import org.tortodrone.core.character.StarterCatalog;
-import org.tortodrone.core.world.SceneActions;
 
 /**
  * Immutable behaviour parsed once from a prepared actor spec and shared by every instance.
@@ -25,8 +23,7 @@ public record PreparedActor(
         SceneElevator elevator,
         SceneActions.Action shutdown,
         Map<String, SceneActions.Action> sceneFireActions) {
-    private static final Map<SceneContent.Spec, PreparedActor> CACHE =
-        Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<SceneContent.Spec, PreparedActor> CACHE = Collections.synchronizedMap(new WeakHashMap<>());
 
     public PreparedActor {
         attackMotion = Map.copyOf(attackMotion);
@@ -65,40 +62,57 @@ public record PreparedActor(
         var config = spec.config();
         String nativeType = spec.text("native-type", "");
         String kind = nativeType.substring(nativeType.lastIndexOf('.') + 1);
-        return new PreparedActor(kind, config, script, program, targeting, wander, follow,
-            attackMotion, meleeRangeCaps, platform, elevator, shutdown, sceneFireActions);
+        return new PreparedActor(
+                kind,
+                config,
+                script,
+                program,
+                targeting,
+                wander,
+                follow,
+                attackMotion,
+                meleeRangeCaps,
+                platform,
+                elevator,
+                shutdown,
+                sceneFireActions);
     }
 
     /** Damage-circle caps for native melee slots, read from prepared attack metadata. */
-    private static Map<Integer,Float> meleeRangeCaps(SceneContent.Spec spec){
-        var caps=new HashMap<Integer,Float>();
-        for(String key:spec.fields().keySet()){
-            if(!key.startsWith("attack.")||!key.endsWith(".fire.0.action"))continue;
-            String slot=key.substring("attack.".length(),key.length()-".fire.0.action".length());
-            if(slot.isEmpty()||slot.length()>3||!slot.chars().allMatch(Character::isDigit))continue;
-            int index=Integer.parseInt(slot);float radius=meleeDamageRadius(spec,index);
-            if(radius!=Float.MAX_VALUE)caps.put(index,radius);
+    private static Map<Integer, Float> meleeRangeCaps(SceneContent.Spec spec) {
+        var caps = new HashMap<Integer, Float>();
+        for (String key : spec.fields().keySet()) {
+            if (!key.startsWith("attack.") || !key.endsWith(".fire.0.action")) continue;
+            String slot = key.substring("attack.".length(), key.length() - ".fire.0.action".length());
+            if (slot.isEmpty() || slot.length() > 3 || !slot.chars().allMatch(Character::isDigit)) continue;
+            int index = Integer.parseInt(slot);
+            float radius = meleeDamageRadius(spec, index);
+            if (radius != Float.MAX_VALUE) caps.put(index, radius);
         }
         return Map.copyOf(caps);
     }
-    private static float meleeDamageRadius(SceneContent.Spec spec,int slot){
-        try{
-            String json=spec.text("attack."+slot+".fire.0.action","");
-            if(json.isEmpty())return Float.MAX_VALUE;
-            var action=FireCatalog.actionJson(json);
-            if(action.kind()!=FireCatalog.Kind.DAMAGE_REGION)return Float.MAX_VALUE;
-            Object shape=action.config().arguments().get("shape");
-            if(shape instanceof FireCatalog.DataValue dv&&dv.type().endsWith("$TransformedShape")){
-                Object inner=SceneDamage.field(shape,"shape");
-                if(inner instanceof FireCatalog.DataValue idv&&idv.type().endsWith("$Circle")){
-                    float radius=SceneDamage.number(inner,"radius",0);
-                    if(radius==1f&&ROUNDHOUSE_MEDIUM_CONFIG.equals(spec.config().name()))radius=ROUNDHOUSE_MEDIUM_RADIUS;
+
+    private static float meleeDamageRadius(SceneContent.Spec spec, int slot) {
+        try {
+            String json = spec.text("attack." + slot + ".fire.0.action", "");
+            if (json.isEmpty()) return Float.MAX_VALUE;
+            var action = FireCatalog.actionJson(json);
+            if (action.kind() != FireCatalog.Kind.DAMAGE_REGION) return Float.MAX_VALUE;
+            Object shape = action.config().arguments().get("shape");
+            if (shape instanceof FireCatalog.DataValue dv && dv.type().endsWith("$TransformedShape")) {
+                Object inner = SceneDamage.field(shape, "shape");
+                if (inner instanceof FireCatalog.DataValue idv && idv.type().endsWith("$Circle")) {
+                    float radius = SceneDamage.number(inner, "radius", 0);
+                    if (radius == 1f
+                            && ROUNDHOUSE_MEDIUM_CONFIG.equals(spec.config().name())) radius = ROUNDHOUSE_MEDIUM_RADIUS;
                     return radius;
                 }
             }
-        }catch(java.io.IOException ignored){}
+        } catch (java.io.IOException ignored) {
+        }
         return Float.MAX_VALUE;
     }
-    private static final String ROUNDHOUSE_MEDIUM_CONFIG="Character/NPC/Monster/Slime/Jelly Cube (Intro)";
-    private static final float ROUNDHOUSE_MEDIUM_RADIUS=1.5f;
+
+    private static final String ROUNDHOUSE_MEDIUM_CONFIG = "Character/NPC/Monster/Slime/Jelly Cube (Intro)";
+    private static final float ROUNDHOUSE_MEDIUM_RADIUS = 1.5f;
 }

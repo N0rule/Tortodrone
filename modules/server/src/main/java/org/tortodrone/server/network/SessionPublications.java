@@ -16,65 +16,87 @@ import org.tortodrone.world.SceneSnapshot;
  * worker before it can grow without bound.
  */
 final class SessionPublications {
-    @FunctionalInterface interface SceneSink { void publish(Publication publication) throws IOException; }
-    @FunctionalInterface interface PartySink { void deliver(PartyView.Event event) throws IOException; }
-    @FunctionalInterface interface FailureSink { void failed(Throwable failure); }
+    @FunctionalInterface
+    interface SceneSink {
+        void publish(Publication publication) throws IOException;
+    }
 
-    record Publication(SceneRegistry.Instance scene,int generation,SceneSnapshot snapshot) { }
+    @FunctionalInterface
+    interface PartySink {
+        void deliver(PartyView.Event event) throws IOException;
+    }
 
-    private final Object monitor=new Object();
-    private Publication pending,lastOffered;
-    private final ArrayDeque<Publication> activityPublications=new ArrayDeque<>();
-    private boolean publicationOverflow,deliveryStopped;
+    @FunctionalInterface
+    interface FailureSink {
+        void failed(Throwable failure);
+    }
+
+    record Publication(SceneRegistry.Instance scene, int generation, SceneSnapshot snapshot) {}
+
+    private final Object monitor = new Object();
+    private Publication pending, lastOffered;
+    private final ArrayDeque<Publication> activityPublications = new ArrayDeque<>();
+    private boolean publicationOverflow, deliveryStopped;
     private Thread worker;
-    private final ArrayDeque<PartyView.Event> partyEvents=new ArrayDeque<>();
-    private boolean partyRefreshQueued,partyOverflow;
+    private final ArrayDeque<PartyView.Event> partyEvents = new ArrayDeque<>();
+    private boolean partyRefreshQueued, partyOverflow;
 
     /** The single delivery worker for diagnostics and focused lifecycle tests. */
-    synchronized Thread worker(){return worker;}
+    synchronized Thread worker() {
+        return worker;
+    }
 
     /** Start the delivery worker once per session; a later call keeps the existing worker. */
-    void start(String name,SceneSink scenes,PartySink parties,FailureSink failure) {
-        synchronized(monitor) {
-            if(worker!=null||deliveryStopped)return;
-            worker=Thread.ofVirtual().name(name).start(()->deliver(scenes,parties,failure));
+    void start(String name, SceneSink scenes, PartySink parties, FailureSink failure) {
+        synchronized (monitor) {
+            if (worker != null || deliveryStopped) return;
+            worker = Thread.ofVirtual().name(name).start(() -> deliver(scenes, parties, failure));
         }
     }
 
     /** Coalesce ordinary frames while retaining native data-dependent activity boundaries. */
-    void offer(int currentGeneration,SceneRegistry.Instance place,int generation,
-            SceneSnapshot snapshot) {
-        synchronized(monitor) {
-            if(deliveryStopped||generation!=currentGeneration)return;
-            if(lastOffered!=null&&lastOffered.generation()!=generation){lastOffered=pending=null;activityPublications.clear();}
-            if(lastOffered!=null&&snapshot.timestamp()-lastOffered.snapshot().timestamp()<=0)return;
-            var next=new Publication(place,generation,snapshot);
-            if(lastOffered!=null&&snapshot.startsDataActivity(lastOffered.snapshot())){
+    void offer(int currentGeneration, SceneRegistry.Instance place, int generation, SceneSnapshot snapshot) {
+        synchronized (monitor) {
+            if (deliveryStopped || generation != currentGeneration) return;
+            if (lastOffered != null && lastOffered.generation() != generation) {
+                lastOffered = pending = null;
+                activityPublications.clear();
+            }
+            if (lastOffered != null
+                    && snapshot.timestamp() - lastOffered.snapshot().timestamp() <= 0) return;
+            var next = new Publication(place, generation, snapshot);
+            if (lastOffered != null && snapshot.startsDataActivity(lastOffered.snapshot())) {
                 // Native interpolation requires the first data-bearing record, even if
                 // the delivery thread is busy while later movement records arrive.
-                if(activityPublications.size()>=16)publicationOverflow=true;else activityPublications.addLast(next);
-                pending=null;
-            }else pending=next;
-            lastOffered=next;monitor.notifyAll();
+                if (activityPublications.size() >= 16) publicationOverflow = true;
+                else activityPublications.addLast(next);
+                pending = null;
+            } else pending = next;
+            lastOffered = next;
+            monitor.notifyAll();
         }
     }
 
     void offerParty(PartyView.Event event) {
-        synchronized(monitor) {
-            if(deliveryStopped)return;
-            if(event instanceof PartyView.Refresh) {
-                if(partyRefreshQueued)return;
-                partyRefreshQueued=true;
+        synchronized (monitor) {
+            if (deliveryStopped) return;
+            if (event instanceof PartyView.Refresh) {
+                if (partyRefreshQueued) return;
+                partyRefreshQueued = true;
             }
-            if(partyEvents.size()>=64)partyOverflow=true;else partyEvents.addLast(event);
+            if (partyEvents.size() >= 64) partyOverflow = true;
+            else partyEvents.addLast(event);
             monitor.notifyAll();
         }
     }
 
     /** Stop accepting frames and wake the worker so it can exit after its current delivery. */
     void stop() {
-        synchronized(monitor) {
-            deliveryStopped=true;pending=lastOffered=null;activityPublications.clear();monitor.notifyAll();
+        synchronized (monitor) {
+            deliveryStopped = true;
+            pending = lastOffered = null;
+            activityPublications.clear();
+            monitor.notifyAll();
         }
     }
 
@@ -82,36 +104,56 @@ final class SessionPublications {
      *  Call outside the session monitor: publishing takes that monitor itself. */
     void awaitStop() {
         Thread delivery;
-        synchronized(monitor) { delivery=worker; }
-        if(delivery==null||delivery==Thread.currentThread())return;
-        boolean interrupted=false;
-        long deadline=System.nanoTime()+1_000_000_000L;
-        while(true) {
-            long remaining=deadline-System.nanoTime();
-            if(remaining<=0)break;
-            try{delivery.join(Math.max(1,remaining/1_000_000L));break;}
-            catch(InterruptedException interruption){interrupted=true;}
+        synchronized (monitor) {
+            delivery = worker;
         }
-        if(interrupted)Thread.currentThread().interrupt();
+        if (delivery == null || delivery == Thread.currentThread()) return;
+        boolean interrupted = false;
+        long deadline = System.nanoTime() + 1_000_000_000L;
+        while (true) {
+            long remaining = deadline - System.nanoTime();
+            if (remaining <= 0) break;
+            try {
+                delivery.join(Math.max(1, remaining / 1_000_000L));
+                break;
+            } catch (InterruptedException interruption) {
+                interrupted = true;
+            }
+        }
+        if (interrupted) Thread.currentThread().interrupt();
     }
 
-    private void deliver(SceneSink scenes,PartySink parties,FailureSink failure) {
+    private void deliver(SceneSink scenes, PartySink parties, FailureSink failure) {
         try {
-            while(true) {
-                Publication publication;List<PartyView.Event> events;
-                synchronized(monitor) {
-                    while(pending==null&&activityPublications.isEmpty()&&partyEvents.isEmpty()
-                            &&!partyOverflow&&!publicationOverflow&&!deliveryStopped)monitor.wait();
-                    if(deliveryStopped)return;
-                    if(partyOverflow||publicationOverflow)throw new IOException("Scene/party publication queue full");
-                    events=List.copyOf(partyEvents);partyEvents.clear();partyRefreshQueued=false;
-                    publication=activityPublications.pollFirst();
-                    if(publication==null){publication=pending;pending=null;}
+            while (true) {
+                Publication publication;
+                List<PartyView.Event> events;
+                synchronized (monitor) {
+                    while (pending == null
+                            && activityPublications.isEmpty()
+                            && partyEvents.isEmpty()
+                            && !partyOverflow
+                            && !publicationOverflow
+                            && !deliveryStopped) monitor.wait();
+                    if (deliveryStopped) return;
+                    if (partyOverflow || publicationOverflow)
+                        throw new IOException("Scene/party publication queue full");
+                    events = List.copyOf(partyEvents);
+                    partyEvents.clear();
+                    partyRefreshQueued = false;
+                    publication = activityPublications.pollFirst();
+                    if (publication == null) {
+                        publication = pending;
+                        pending = null;
+                    }
                 }
-                for(var event:events)parties.deliver(event);
-                if(publication!=null)scenes.publish(publication);
+                for (var event : events) parties.deliver(event);
+                if (publication != null) scenes.publish(publication);
             }
-        }catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
-        catch(IOException|RuntimeException problem){failure.failed(problem);}
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+        } catch (IOException | RuntimeException problem) {
+            failure.failed(problem);
+        }
     }
 }

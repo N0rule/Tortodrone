@@ -43,22 +43,43 @@ public record MonsterGroup(
         onCleared = onCleared == null ? "" : onCleared;
         if (!onCleared.isEmpty() && (onCleared.length() > 128 || onCleared.isBlank()))
             throw new IllegalArgumentException("Invalid monster group cleared signal");
-        if (generation < 1)
-            throw new IllegalArgumentException("Invalid monster group generation");
+        if (generation < 1) throw new IllegalArgumentException("Invalid monster group generation");
     }
 
-    public MonsterGroup(String id, String typeId, List<ScenePathing.Point> anchors,
-            int total, int maxAlive, int intervalMs, int respawnDelayMs, long generation) {
+    public MonsterGroup(
+            String id,
+            String typeId,
+            List<ScenePathing.Point> anchors,
+            int total,
+            int maxAlive,
+            int intervalMs,
+            int respawnDelayMs,
+            long generation) {
         this(id, typeId, anchors, total, maxAlive, intervalMs, respawnDelayMs, "", generation);
     }
 
-    public MonsterGroup(String id, String typeId, ScenePathing.Point anchor,
-            int total, int maxAlive, int intervalMs, int respawnDelayMs, long generation) {
+    public MonsterGroup(
+            String id,
+            String typeId,
+            ScenePathing.Point anchor,
+            int total,
+            int maxAlive,
+            int intervalMs,
+            int respawnDelayMs,
+            long generation) {
         this(id, typeId, List.of(anchor), total, maxAlive, intervalMs, respawnDelayMs, "", generation);
     }
 
-    public MonsterGroup(String id, String typeId, ScenePathing.Point anchor,
-            int total, int maxAlive, int intervalMs, int respawnDelayMs, String onCleared, long generation) {
+    public MonsterGroup(
+            String id,
+            String typeId,
+            ScenePathing.Point anchor,
+            int total,
+            int maxAlive,
+            int intervalMs,
+            int respawnDelayMs,
+            String onCleared,
+            long generation) {
         this(id, typeId, List.of(anchor), total, maxAlive, intervalMs, respawnDelayMs, onCleared, generation);
     }
 }

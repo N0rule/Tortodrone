@@ -1,80 +1,124 @@
 package org.tortodrone.world;
 
+import static org.tortodrone.support.TestWire.check;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.*;
 import org.tortodrone.core.Json;
-import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.core.world.SceneContent;
 import org.tortodrone.core.world.MonsterCatalog;
 import org.tortodrone.core.world.MonsterType;
+import org.tortodrone.core.world.SceneContent;
 
 /** Generated catalogue contract: format, fingerprints, fail-closed refusals and overlay limits. */
 public final class MonsterCatalogTest {
-    private MonsterCatalogTest() { }
+    private MonsterCatalogTest() {}
 
     public static void main(String[] args) throws Exception {
         var shipped = MonsterCatalog.load(Path.of("content/monsters"));
         check(shipped.size() == 253, "the stock roster catalogues all 253 spawnable descriptions");
-        long supported = shipped.types().values().stream().filter(MonsterType::supported).count();
+        long supported =
+                shipped.types().values().stream().filter(MonsterType::supported).count();
         check(supported >= 152, "exporter coverage clears the 60% Phase 0 gate: " + supported);
         for (var type : shipped.types().values()) {
             check(type.id().matches("[a-z0-9][a-z0-9_]{0,95}"), "stable type id: " + type.id());
             check(!type.display().isBlank() && !type.family().isBlank(), "identity is complete: " + type.id());
             if (type.supported()) {
                 check(type.unsupported().isEmpty(), "supported types carry no refusal: " + type.id());
-                check("Monster".equals(type.spec().get("kind")), "supported type carries a prepared monster spec: " + type.id());
+                check(
+                        "Monster".equals(type.spec().get("kind")),
+                        "supported type carries a prepared monster spec: " + type.id());
                 check(type.actor() != null, "supported type resolves a native actor: " + type.id());
                 type.requireSpawnable();
             } else {
                 check(!type.unsupported().isEmpty(), "unsupported types state the failing kinds: " + type.id());
-                try { type.requireSpawnable(); throw new AssertionError("Unsupported spawn accepted: " + type.id()); }
-                catch (IOException expected) { }
+                try {
+                    type.requireSpawnable();
+                    throw new AssertionError("Unsupported spawn accepted: " + type.id());
+                } catch (IOException expected) {
+                }
             }
         }
-        check(shipped.type("darkfang_demo").family().equals("Gremlin"), "family comes from the native description path");
-        check(shipped.type("royal_jelly").display().equals("Royal Jelly"), "display name comes from monster.properties");
-        check(shipped.type("golden_dream_wisp").display().equals("Golden Dream Wisp"), "composite display keys resolve");
+        check(
+                shipped.type("darkfang_demo").family().equals("Gremlin"),
+                "family comes from the native description path");
+        check(
+                shipped.type("royal_jelly").display().equals("Royal Jelly"),
+                "display name comes from monster.properties");
+        check(
+                shipped.type("golden_dream_wisp").display().equals("Golden Dream Wisp"),
+                "composite display keys resolve");
 
         Path temporary = Files.createTempDirectory("tortodrone-monster-catalog-");
         try {
             var document = fixture("1", supportedType("fixture_melee"), unsupportedType());
             write(temporary, document, null);
             var catalog = MonsterCatalog.load(temporary);
-            check(catalog.type("fixture_melee").display().equals("Fixture Melee"), "catalogue round-trips generated identity");
+            check(
+                    catalog.type("fixture_melee").display().equals("Fixture Melee"),
+                    "catalogue round-trips generated identity");
             check(catalog.type("fixture_melee").spec().get("health").equals("120"), "prepared fields round-trip");
-            check(catalog.spawnable("fixture_melee").id().equals("fixture_melee"), "supported type resolves for spawning");
-            try { catalog.spawnable("fixture_broken"); throw new AssertionError("Unsupported type resolved for spawning"); }
-            catch (IOException refused) { check(refused.getMessage().contains("DamageTarget"), "refusal names the unsupported action kind"); }
-            try { catalog.spawnable("missing_type"); throw new AssertionError("Unknown type resolved"); }
-            catch (IOException expected) { }
+            check(
+                    catalog.spawnable("fixture_melee").id().equals("fixture_melee"),
+                    "supported type resolves for spawning");
+            try {
+                catalog.spawnable("fixture_broken");
+                throw new AssertionError("Unsupported type resolved for spawning");
+            } catch (IOException refused) {
+                check(refused.getMessage().contains("DamageTarget"), "refusal names the unsupported action kind");
+            }
+            try {
+                catalog.spawnable("missing_type");
+                throw new AssertionError("Unknown type resolved");
+            } catch (IOException expected) {
+            }
 
             var overrides = temporary.resolve("overrides.yml");
-            Files.writeString(overrides, "monsters:\n  fixture_melee:\n    activation-radius: 12\n    leash-radius: 20\n    think: alert\n    archetype: ranged-kiter\n");
+            Files.writeString(
+                    overrides,
+                    "monsters:\n  fixture_melee:\n    activation-radius: 12\n    leash-radius: 20\n    think: alert\n    archetype: ranged-kiter\n");
             var tuned = MonsterCatalog.load(temporary);
             check(tuned.override("fixture_melee").activationRadius() == 12f, "overlay activation radius loads");
             check(tuned.override("fixture_melee").leashRadius() == 20f, "overlay leash radius loads");
             check(tuned.override("fixture_melee").think().equals("alert"), "overlay think band loads");
-            check(tuned.archetype(tuned.type("fixture_melee")).id().equals("ranged-kiter"),
-                "overlay archetype overrides the generated role");
+            check(
+                    tuned.archetype(tuned.type("fixture_melee")).id().equals("ranged-kiter"),
+                    "overlay archetype overrides the generated role");
             var tunedPlacement = new TreeMap<>(tuned.type("fixture_melee").spec());
             tunedPlacement.put("monster-type", "fixture_melee");
-            var tunedExpanded = tuned.expand(new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0,
-                new SceneContent.Spec(tunedPlacement))), Map.of())).entries().getFirst().spec();
-            check(tunedExpanded.text("archetype", "").equals("ranged-kiter"), "overlay archetype reaches the prepared spec");
-            check(Float.parseFloat(tunedExpanded.text("activation-radius", "")) == 12f, "overlay activation radius reaches the prepared spec");
-            check(Float.parseFloat(tunedExpanded.text("leash-radius", "")) == 20f, "overlay leash radius reaches the prepared spec");
+            var tunedExpanded = tuned.expand(new SceneContent(
+                            List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(tunedPlacement))),
+                            Map.of()))
+                    .entries()
+                    .getFirst()
+                    .spec();
+            check(
+                    tunedExpanded.text("archetype", "").equals("ranged-kiter"),
+                    "overlay archetype reaches the prepared spec");
+            check(
+                    Float.parseFloat(tunedExpanded.text("activation-radius", "")) == 12f,
+                    "overlay activation radius reaches the prepared spec");
+            check(
+                    Float.parseFloat(tunedExpanded.text("leash-radius", "")) == 20f,
+                    "overlay leash radius reaches the prepared spec");
             tunedPlacement.put("activation-radius", "7");
-            var placementWins = tuned.expand(new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0,
-                new SceneContent.Spec(tunedPlacement))), Map.of())).entries().getFirst().spec();
-            check(placementWins.text("activation-radius", "").equals("7"), "explicit placement activation radius wins over the overlay");
+            var placementWins = tuned.expand(new SceneContent(
+                            List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(tunedPlacement))),
+                            Map.of()))
+                    .entries()
+                    .getFirst()
+                    .spec();
+            check(
+                    placementWins.text("activation-radius", "").equals("7"),
+                    "explicit placement activation radius wins over the overlay");
             Files.writeString(overrides, "monsters:\n  missing_type:\n    activation-radius: 12\n");
             refuse(temporary, "unknown override type");
             Files.writeString(overrides, "monsters:\n  fixture_melee:\n    health: 999\n");
             refuse(temporary, "override may not carry native stats");
-            Files.writeString(overrides, "monsters:\n  fixture_melee:\n    activation-radius: 9\n    leash-radius: 4\n");
+            Files.writeString(
+                    overrides, "monsters:\n  fixture_melee:\n    activation-radius: 9\n    leash-radius: 4\n");
             refuse(temporary, "leash smaller than activation");
             Files.writeString(overrides, "monsters:\n  fixture_melee:\n    activation-radius: 0\n");
             refuse(temporary, "out of range activation");
@@ -93,24 +137,37 @@ public final class MonsterCatalogTest {
             refuse(temporary, fixture("1", supportedConflict, unsupportedType()), null, "supported type with refusals");
             var unsupportedEmpty = unsupportedType();
             unsupportedEmpty.put("unsupported", List.of());
-            refuse(temporary, fixture("1", supportedType("fixture_melee"), unsupportedEmpty), null, "unsupported type without a reason");
+            refuse(
+                    temporary,
+                    fixture("1", supportedType("fixture_melee"), unsupportedEmpty),
+                    null,
+                    "unsupported type without a reason");
             var badId = supportedType("Bad Id");
             refuse(temporary, fixture("1", badId, unsupportedType()), null, "invalid type id");
             var foreignActor = supportedType("fixture_melee");
             @SuppressWarnings("unchecked")
             var foreignFields = (Map<String, Object>) foreignActor.get("fixture_melee");
             foreignFields.put("actor", "Character/Other");
-            refuse(temporary, fixture("1", foreignActor, unsupportedType()), null, "supported actor outside its configs");
+            refuse(
+                    temporary,
+                    fixture("1", foreignActor, unsupportedType()),
+                    null,
+                    "supported actor outside its configs");
 
             write(temporary, fixture("1", supportedType("fixture_melee"), unsupportedType()), null);
             catalog = MonsterCatalog.load(temporary);
             var fields = new TreeMap<>(catalog.type("fixture_melee").spec());
             fields.put("monster-type", "fixture_melee");
-            var content = new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(fields))), Map.of());
+            var content = new SceneContent(
+                    List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(fields))), Map.of());
             catalog.validateScene("fixture", content);
             var alternative = new TreeMap<>(fields);
             alternative.put("config", "Character/NPC/Monster/Fixture/Melee Alt");
-            catalog.validateScene("fixture", new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(alternative))), Map.of()));
+            catalog.validateScene(
+                    "fixture",
+                    new SceneContent(
+                            List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(alternative))),
+                            Map.of()));
             var missing = new TreeMap<>(fields);
             missing.put("monster-type", "missing_type");
             expectSceneRefusal(catalog, new SceneContent.Spec(missing), "unknown placement type");
@@ -126,25 +183,37 @@ public final class MonsterCatalogTest {
 
             var placement = new TreeMap<>(fields);
             placement.put("health", "999");
-            var expanded = catalog.expand(new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(placement))), Map.of()));
+            var expanded = catalog.expand(new SceneContent(
+                    List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(placement))), Map.of()));
             var expandedSpec = expanded.entries().getFirst().spec();
             check(!expandedSpec.fields().containsKey("monster-type"), "type reference is consumed during expansion");
             check(expandedSpec.text("health", "").equals("999"), "per-placement tuning overrides the catalogue spec");
-            check(expandedSpec.text("attack.0.land", "").equals("777"), "the catalogue contributes prepared attack fields");
-            try { catalog.expand(new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(missing))), Map.of())); throw new AssertionError("Unknown type expanded"); }
-            catch (IOException expected) { }
+            check(
+                    expandedSpec.text("attack.0.land", "").equals("777"),
+                    "the catalogue contributes prepared attack fields");
+            try {
+                catalog.expand(new SceneContent(
+                        List.of(new SceneContent.Entry("1", 0, 0, 0, new SceneContent.Spec(missing))), Map.of()));
+                throw new AssertionError("Unknown type expanded");
+            } catch (IOException expected) {
+            }
         } finally {
             try (var paths = Files.walk(temporary)) {
                 for (var path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
             }
         }
-        System.out.println("PASS: stock roster, generated format/fingerprint validation, fail-closed unsupported/unknown types, immutable prepared specs, overlay limits and type-backed placement validation");
+        System.out.println(
+                "PASS: stock roster, generated format/fingerprint validation, fail-closed unsupported/unknown types, immutable prepared specs, overlay limits and type-backed placement validation");
     }
 
-    private static void expectSceneRefusal(MonsterCatalog catalog, SceneContent.Spec spec, String message) throws IOException {
+    private static void expectSceneRefusal(MonsterCatalog catalog, SceneContent.Spec spec, String message)
+            throws IOException {
         var content = new SceneContent(List.of(new SceneContent.Entry("1", 0, 0, 0, spec)), Map.of());
-        try { catalog.validateScene("fixture", content); throw new AssertionError("Scene placement accepted: " + message); }
-        catch (IOException expected) { }
+        try {
+            catalog.validateScene("fixture", content);
+            throw new AssertionError("Scene placement accepted: " + message);
+        } catch (IOException expected) {
+        }
     }
 
     private static Map<String, Object> supportedType(String id) {
@@ -206,10 +275,14 @@ public final class MonsterCatalogTest {
         refuse(folder, null, null, message);
     }
 
-    private static void refuse(Path folder, Map<String, Object> document, String hash, String message) throws Exception {
+    private static void refuse(Path folder, Map<String, Object> document, String hash, String message)
+            throws Exception {
         if (document != null) write(folder, document, hash);
-        try { MonsterCatalog.load(folder); throw new AssertionError("Catalogue accepted: " + message); }
-        catch (IOException expected) { }
+        try {
+            MonsterCatalog.load(folder);
+            throw new AssertionError("Catalogue accepted: " + message);
+        } catch (IOException expected) {
+        }
     }
 
     private static String digest(Path file) throws Exception {

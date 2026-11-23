@@ -1,16 +1,17 @@
 package org.tortodrone.resources;
 
+import static org.tortodrone.core.Yaml.*;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.core.ContentFiles;
-import static org.tortodrone.core.Yaml.*;
 
 /** Content-layout policy for the mission catalogue: the format marker, the v1 flat
  *  directory, the v2 per-mission folders and the exact refusal rules for mixed or
  *  unknown trees. Parsing and cross-reference validation stay in {@link MissionYaml}. */
 final class MissionLayout {
-    private MissionLayout() { }
+    private MissionLayout() {}
 
     /** Layout marker: absent or "1" is the flat v1 tree, "2" is per-mission folders. */
     static int format(Path content) throws IOException {
@@ -19,8 +20,9 @@ final class MissionLayout {
         ContentFiles.regular(marker);
         if (Files.size(marker) > 3) throw new IOException("Invalid content format marker: " + marker);
         String text = Files.readString(marker);
-        String value = text.endsWith("\r\n") ? text.substring(0, text.length() - 2)
-            : text.endsWith("\n") ? text.substring(0, text.length() - 1) : null;
+        String value = text.endsWith("\r\n")
+                ? text.substring(0, text.length() - 2)
+                : text.endsWith("\n") ? text.substring(0, text.length() - 1) : null;
         if (!"1".equals(value) && !"2".equals(value))
             throw new IOException(marker + ": expected exactly one line containing 1 or 2");
         return value.equals("1") ? 1 : 2;
@@ -41,7 +43,8 @@ final class MissionLayout {
             var files = new ArrayList<Path>();
             for (Path entry : paths.sorted().toList()) {
                 if (Files.isDirectory(entry, LinkOption.NOFOLLOW_LINKS))
-                    throw new IOException(directory + ": v2 mission folders require content/format.txt 2: " + entry.getFileName());
+                    throw new IOException(
+                            directory + ": v2 mission folders require content/format.txt 2: " + entry.getFileName());
                 files.add(entry);
             }
             if (files.size() > 16) throw new IOException("Too many mission files: " + directory);
@@ -51,7 +54,8 @@ final class MissionLayout {
                 var root = read(file);
                 var sections = root.keySet();
                 if (sections.size() != 1)
-                    throw new IOException(file + ": expected one of missions, groups, properties, grants, comlinks or routes");
+                    throw new IOException(
+                            file + ": expected one of missions, groups, properties, grants, comlinks or routes");
                 MissionYaml.merge(b, sections.iterator().next(), root, file);
             }
         }
@@ -79,7 +83,8 @@ final class MissionLayout {
         try (var paths = Files.list(directory)) {
             for (Path entry : paths.sorted().toList()) {
                 if (Files.isRegularFile(entry, LinkOption.NOFOLLOW_LINKS))
-                    throw new IOException(directory + ": mixed v1 flat mission files and v2 mission folders: " + entry.getFileName());
+                    throw new IOException(
+                            directory + ": mixed v1 flat mission files and v2 mission folders: " + entry.getFileName());
                 if (!Files.isDirectory(entry, LinkOption.NOFOLLOW_LINKS))
                     throw new IOException(directory + ": invalid mission entry: " + entry.getFileName());
                 String id = entry.getFileName().toString();
@@ -103,7 +108,9 @@ final class MissionLayout {
                     case "grants.yml" -> grantsFile = entry;
                     case "comlink.yml" -> comlinkFile = entry;
                     case "route.yml" -> routeFile = entry;
-                    case "objectives.yml" -> throw new IOException(folder + ": objectives.yml is not supported until the objective subsystem exists");
+                    case "objectives.yml" ->
+                        throw new IOException(
+                                folder + ": objectives.yml is not supported until the objective subsystem exists");
                     default -> throw new IOException(folder + ": unknown mission file " + name);
                 }
             }
@@ -116,7 +123,7 @@ final class MissionLayout {
     }
 
     /** One section holding exactly one row, whose key is the folder's mission id. */
-    private static Map<String,Object> single(Path file, String section, String id) throws IOException {
+    private static Map<String, Object> single(Path file, String section, String id) throws IOException {
         var root = read(file);
         var sections = root.keySet();
         if (sections.size() != 1 || !sections.contains(section))

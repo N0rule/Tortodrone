@@ -7,7 +7,8 @@ import org.jline.reader.impl.history.DefaultHistory;
 final class CommandHistory extends DefaultHistory {
     static final int LIMIT = 100;
 
-    @Override public void add(Instant time, String line) {
+    @Override
+    public void add(Instant time, String line) {
         if (allowed(line)) super.add(time, line.trim());
     }
 

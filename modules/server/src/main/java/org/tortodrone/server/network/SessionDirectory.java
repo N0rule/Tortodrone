@@ -9,47 +9,77 @@ import java.util.Map;
  *  revision a direct auction refund must re-check. Only this class owns the live-session map;
  *  every read acquires its monitor and never acquires a peer session monitor. */
 final class SessionDirectory {
-    private static final Map<Integer,WorldSession> ACTIVE=new HashMap<>();
+    private static final Map<Integer, WorldSession> ACTIVE = new HashMap<>();
 
     /** Install a newly selected knight while the directory monitor is held. */
-    @FunctionalInterface interface Registration { void install()throws java.io.IOException; }
-
-    private SessionDirectory() { }
-
-    static void register(int world,WorldSession session,Registration install)throws java.io.IOException {
-        synchronized(ACTIVE){
-            if(ACTIVE.containsKey(world))throw new java.io.IOException("This knight is already online");
-            install.install();
-            ACTIVE.put(world,session);
-        }
+    @FunctionalInterface
+    interface Registration {
+        void install() throws java.io.IOException;
     }
 
-    static void leave(int world,WorldSession session){synchronized(ACTIVE){ACTIVE.remove(world,session);}}
+    private SessionDirectory() {}
 
-    static WorldSession activeSession(int world){synchronized(ACTIVE){return ACTIVE.get(world);}}
-
-    static List<WorldSession> activeSessions(){synchronized(ACTIVE){return List.copyOf(ACTIVE.values());}}
-
-    static boolean active(int accountId,int knightId){
+    static void register(int world, WorldSession session, Registration install) throws java.io.IOException {
         synchronized (ACTIVE) {
-            return ACTIVE.values().stream().anyMatch(session ->
-                session.charactersStore().accountId() == accountId && session.currentProfile().knightId() == knightId);
+            if (ACTIVE.containsKey(world)) throw new java.io.IOException("This knight is already online");
+            install.install();
+            ACTIVE.put(world, session);
         }
     }
 
-    static Map<Integer,SessionPresence.FriendPresence> friendPresence(Path storage) {
-        var result=new HashMap<Integer,SessionPresence.FriendPresence>();
-        synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();
-            if(session.presenceState.online()&&session.responder().open()&&session.charactersStore().hasWorldStorage()
-                    &&session.charactersStore().worldStorageFile().equals(storage))result.put(entry.getKey(),session.presenceState.location());}}
+    static void leave(int world, WorldSession session) {
+        synchronized (ACTIVE) {
+            ACTIVE.remove(world, session);
+        }
+    }
+
+    static WorldSession activeSession(int world) {
+        synchronized (ACTIVE) {
+            return ACTIVE.get(world);
+        }
+    }
+
+    static List<WorldSession> activeSessions() {
+        synchronized (ACTIVE) {
+            return List.copyOf(ACTIVE.values());
+        }
+    }
+
+    static boolean active(int accountId, int knightId) {
+        synchronized (ACTIVE) {
+            return ACTIVE.values().stream()
+                    .anyMatch(session -> session.charactersStore().accountId() == accountId
+                            && session.currentProfile().knightId() == knightId);
+        }
+    }
+
+    static Map<Integer, SessionPresence.FriendPresence> friendPresence(Path storage) {
+        var result = new HashMap<Integer, SessionPresence.FriendPresence>();
+        synchronized (ACTIVE) {
+            for (var entry : ACTIVE.entrySet()) {
+                var session = entry.getValue();
+                if (session.presenceState.online()
+                        && session.responder().open()
+                        && session.charactersStore().hasWorldStorage()
+                        && session.charactersStore().worldStorageFile().equals(storage))
+                    result.put(entry.getKey(), session.presenceState.location());
+            }
+        }
         return Map.copyOf(result);
     }
 
-    static Map<Integer,Long> auctionPresence(Path storage) {
-        var result=new HashMap<Integer,Long>();
-        synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();
-            if(session.presenceState.online()&&session.responder().open()&&session.charactersStore().hasWorldStorage()
-                    &&session.charactersStore().worldStorageFile().equals(storage))result.put(entry.getKey(),session.authRevision());}}
+    static Map<Integer, Long> auctionPresence(Path storage) {
+        var result = new HashMap<Integer, Long>();
+        synchronized (ACTIVE) {
+            for (var entry : ACTIVE.entrySet()) {
+                var session = entry.getValue();
+                if (session.presenceState.online()
+                        && session.responder().open()
+                        && session.charactersStore().hasWorldStorage()
+                        && session.charactersStore().worldStorageFile().equals(storage))
+                    result.put(entry.getKey(), session.authRevision());
+            }
+        }
         return Map.copyOf(result);
     }
 }

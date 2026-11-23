@@ -4,22 +4,27 @@ import java.io.*;
 import java.net.Socket;
 import java.util.*;
 import org.tortodrone.core.WireTypes;
-import org.tortodrone.core.character.Knight;
 
 /** Creation, saved roster, and failure callback checks reusable across server restarts. */
 public final class CharacterScenario {
     public static void session(Socket peer, TestWire wire, int oid, boolean create) throws Exception {
-        TestWire.Writer writer = new TestWire.Writer(TestWire.NET + "SecureRequest", TestWire.NET + "PublicKeyCredentials",
-            "[Ljava.lang.String;", TestWire.NET + "AESAuthRequest");
+        TestWire.Writer writer = new TestWire.Writer(
+                TestWire.NET + "SecureRequest",
+                TestWire.NET + "PublicKeyCredentials",
+                "[Ljava.lang.String;",
+                TestWire.NET + "AESAuthRequest");
         if (create) {
             creation(peer, writer, "Saved-Knight", null, (short) 41, true);
             DataInputStream update = event(peer, wire, oid, "AttributeChangedEvent");
             TestWire.check(TestWire.string(update).equals("availableKnights"), "roster update field");
-            roster(wire.object(update)); TestWire.end(update);
-            confirmation(peer, wire, oid, (short) 41,
-                "Knight saved. World entry requires a scene receiver.");
+            roster(wire.object(update));
+            TestWire.end(update);
+            confirmation(peer, wire, oid, (short) 41, "Knight saved. World entry requires a scene receiver.");
         }
-        writer.send(peer.getOutputStream(), out -> { writer.message(out, "SubscribeRequest", 42); out.writeInt(oid); });
+        writer.send(peer.getOutputStream(), out -> {
+            writer.message(out, "SubscribeRequest", 42);
+            out.writeInt(oid);
+        });
         var player = wire.snapshot(wire.frame(peer.getInputStream()), (short) 42, oid);
         roster(player.get("availableKnights"));
         creation(peer, writer, "saved-knight", null, (short) 43);
@@ -27,24 +32,38 @@ public final class CharacterScenario {
         creation(peer, writer, "Bad-Request", "old-knight", (short) 44);
         confirmation(peer, wire, oid, (short) 44, "No such knight");
         writer.send(peer.getOutputStream(), out -> {
-            invocation(writer, out, 3, 2); writer.type(out, "com.threerings.util.Name"); string(out, "saved-knight");
-            writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(45);
+            invocation(writer, out, 3, 2);
+            writer.type(out, "com.threerings.util.Name");
+            string(out, "saved-knight");
+            writer.type(out, TestWire.INV + "ConfirmMarshaller");
+            out.writeShort(45);
         });
         confirmation(peer, wire, oid, (short) 45, "That knight name is already in use");
         // World selection remains an honest failure, rather than a false entry acknowledgement.
         writer.send(peer.getOutputStream(), out -> {
-            invocation(writer, out, 4, 3); writer.type(out, "com.threerings.util.Name"); string(out, "Saved-Knight");
-            out.writeShort(0); writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(46);
+            invocation(writer, out, 4, 3);
+            writer.type(out, "com.threerings.util.Name");
+            string(out, "Saved-Knight");
+            out.writeShort(0);
+            writer.type(out, TestWire.INV + "ConfirmMarshaller");
+            out.writeShort(46);
         });
         confirmation(peer, wire, oid, (short) 46, "World entry requires a scene receiver");
         writer.send(peer.getOutputStream(), out -> {
-            invocation(writer, out, 4, 3); writer.type(out, "com.threerings.util.Name"); string(out, "Missing-Knight");
-            out.writeShort(0); writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(48);
+            invocation(writer, out, 4, 3);
+            writer.type(out, "com.threerings.util.Name");
+            string(out, "Missing-Knight");
+            out.writeShort(0);
+            writer.type(out, TestWire.INV + "ConfirmMarshaller");
+            out.writeShort(48);
         });
         confirmation(peer, wire, oid, (short) 48, "No such knight");
         writer.send(peer.getOutputStream(), out -> {
-            invocation(writer, out, 4, 2); writer.type(out, "java.lang.Integer"); out.writeInt(1);
-            writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(49);
+            invocation(writer, out, 4, 2);
+            writer.type(out, "java.lang.Integer");
+            out.writeInt(1);
+            writer.type(out, TestWire.INV + "ConfirmMarshaller");
+            out.writeShort(49);
         });
         confirmation(peer, wire, oid, (short) 49, "Invalid character selection request");
         writer.send(peer.getOutputStream(), out -> writer.message(out, "LogoffRequest", 47));
@@ -52,8 +71,11 @@ public final class CharacterScenario {
 
     /** Full slots, edits, deletion, slot reuse and restoration through real wire messages. */
     public static void management(Socket peer, TestWire wire, int oid, boolean create) throws Exception {
-        TestWire.Writer writer = new TestWire.Writer(TestWire.NET + "SecureRequest", TestWire.NET + "PublicKeyCredentials",
-            "[Ljava.lang.String;", TestWire.NET + "AESAuthRequest");
+        TestWire.Writer writer = new TestWire.Writer(
+                TestWire.NET + "SecureRequest",
+                TestWire.NET + "PublicKeyCredentials",
+                "[Ljava.lang.String;",
+                TestWire.NET + "AESAuthRequest");
         if (create) {
             String[] names = {"Saved-Knight", "Other-Knight", "Third-Knight"};
             for (int i = 0; i < names.length; i++) {
@@ -76,8 +98,11 @@ public final class CharacterScenario {
             deletion(peer, writer, "Missing-Knight", (short) 68);
             confirmation(peer, wire, oid, (short) 68, "No such knight");
             writer.send(peer.getOutputStream(), out -> {
-                invocation(writer, out, 6, 2); writer.type(out, "java.lang.Integer"); out.writeInt(1);
-                writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(69);
+                invocation(writer, out, 6, 2);
+                writer.type(out, "java.lang.Integer");
+                out.writeInt(1);
+                writer.type(out, TestWire.INV + "ConfirmMarshaller");
+                out.writeShort(69);
             });
             confirmation(peer, wire, oid, (short) 69, "Invalid character deletion request");
             deletion(peer, writer, "other-knight", (short) 70);
@@ -89,11 +114,17 @@ public final class CharacterScenario {
             changedRoster(peer, wire, oid, List.of("Renamed-Knight", "Third-Knight", "Next-Knight"));
             confirmation(peer, wire, oid, (short) 72, "Knight saved. World entry requires a scene receiver.");
         }
-        writer.send(peer.getOutputStream(), out -> { writer.message(out, "SubscribeRequest", 73); out.writeInt(oid); });
+        writer.send(peer.getOutputStream(), out -> {
+            writer.message(out, "SubscribeRequest", 73);
+            out.writeInt(oid);
+        });
         var player = wire.snapshot(wire.frame(peer.getInputStream()), (short) 73, oid);
-        List<?> roster = checkRoster(player.get("availableKnights"), List.of("Renamed-Knight", "Third-Knight", "Next-Knight"));
+        List<?> roster =
+                checkRoster(player.get("availableKnights"), List.of("Renamed-Knight", "Third-Knight", "Next-Knight"));
         for (int i = 0; i < roster.size(); i++) {
-            TestWire.check(((Map<?, ?>) roster.get(i)).get("id").equals(new int[] {1, 3, 4}[i]), "edits preserve IDs and deleted IDs are not reused");
+            TestWire.check(
+                    ((Map<?, ?>) roster.get(i)).get("id").equals(new int[] {1, 3, 4}[i]),
+                    "edits preserve IDs and deleted IDs are not reused");
         }
         if (!create) {
             String[] names = {"Renamed-Knight", "Third-Knight", "Next-Knight"};
@@ -109,14 +140,19 @@ public final class CharacterScenario {
 
     private static void deletion(Socket peer, TestWire.Writer writer, String name, short callback) throws IOException {
         writer.send(peer.getOutputStream(), out -> {
-            invocation(writer, out, 6, 2); writer.type(out, "com.threerings.util.Name"); string(out, name);
-            writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(callback);
+            invocation(writer, out, 6, 2);
+            writer.type(out, "com.threerings.util.Name");
+            string(out, name);
+            writer.type(out, TestWire.INV + "ConfirmMarshaller");
+            out.writeShort(callback);
         });
     }
 
     private static void changedRoster(Socket peer, TestWire wire, int oid, List<String> names) throws IOException {
         DataInputStream update = event(peer, wire, oid, "AttributeChangedEvent");
-        TestWire.check(TestWire.string(update).equals("availableKnights"), "management updates the roster before its callback");
+        TestWire.check(
+                TestWire.string(update).equals("availableKnights"),
+                "management updates the roster before its callback");
         checkRoster(wire.object(update), names);
         TestWire.end(update);
     }
@@ -130,69 +166,122 @@ public final class CharacterScenario {
         return knights;
     }
 
-    private static void creation(Socket peer, TestWire.Writer writer, String name, String oldName, short callback) throws IOException {
+    private static void creation(Socket peer, TestWire.Writer writer, String name, String oldName, short callback)
+            throws IOException {
         creation(peer, writer, name, oldName, callback, false);
     }
 
-    private static void creation(Socket peer, TestWire.Writer writer, String name, String oldName, short callback,
-            boolean steam) throws IOException {
+    private static void creation(
+            Socket peer, TestWire.Writer writer, String name, String oldName, short callback, boolean steam)
+            throws IOException {
         writer.send(peer.getOutputStream(), out -> {
             invocation(writer, out, 5, 14);
-            if (oldName == null) out.writeShort(0); else { writer.type(out, "com.threerings.util.Name"); string(out, oldName); }
-            writer.type(out, "com.threerings.util.Name"); string(out, name);
-            for (String asset : List.of("Gear/Helm/Spiral Sallet (Blue)", "Gear/Armor/Spiral Culet (Blue)")) { writer.type(out, "java.lang.String"); out.writeUTF(asset); }
-            out.writeShort(0); out.writeShort(0); writer.type(out, "java.lang.String"); out.writeUTF("Blue");
-            writer.type(out, "java.lang.Integer"); out.writeInt(1);
-            writer.type(out, "com.threerings.projectx.data.ProjectXCodes$KnightHeight"); out.writeByte(2);
-            writer.type(out, "com.threerings.projectx.data.ProjectXCodes$EyeType"); out.writeByte(0);
-            if (steam) { writer.type(out, "java.lang.String"); out.writeUTF("SteamPersona"); } else out.writeShort(0);
-            writer.type(out, "java.util.List"); out.writeInt(steam ? 1 : 0);
+            if (oldName == null) out.writeShort(0);
+            else {
+                writer.type(out, "com.threerings.util.Name");
+                string(out, oldName);
+            }
+            writer.type(out, "com.threerings.util.Name");
+            string(out, name);
+            for (String asset : List.of("Gear/Helm/Spiral Sallet (Blue)", "Gear/Armor/Spiral Culet (Blue)")) {
+                writer.type(out, "java.lang.String");
+                out.writeUTF(asset);
+            }
+            out.writeShort(0);
+            out.writeShort(0);
+            writer.type(out, "java.lang.String");
+            out.writeUTF("Blue");
+            writer.type(out, "java.lang.Integer");
+            out.writeInt(1);
+            writer.type(out, "com.threerings.projectx.data.ProjectXCodes$KnightHeight");
+            out.writeByte(2);
+            writer.type(out, "com.threerings.projectx.data.ProjectXCodes$EyeType");
+            out.writeByte(0);
+            if (steam) {
+                writer.type(out, "java.lang.String");
+                out.writeUTF("SteamPersona");
+            } else out.writeShort(0);
+            writer.type(out, "java.util.List");
+            out.writeInt(steam ? 1 : 0);
             if (steam) {
                 // The native Steam-enabled creator streams its friend hints as
                 // List<Tuple<Long,String>>; each tuple field carries its own class record.
                 writer.type(out, WireTypes.STREAMABLE_TUPLE);
-                writer.type(out, "java.lang.Long"); out.writeLong(76561198000000000L);
-                writer.type(out, "java.lang.String"); out.writeUTF("SteamFriend");
+                writer.type(out, "java.lang.Long");
+                out.writeLong(76561198000000000L);
+                writer.type(out, "java.lang.String");
+                out.writeUTF("SteamFriend");
             }
-            if (steam) { writer.type(out, "java.lang.String"); out.writeUTF("76561198000000000"); } else out.writeShort(0);
-            writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(callback);
+            if (steam) {
+                writer.type(out, "java.lang.String");
+                out.writeUTF("76561198000000000");
+            } else out.writeShort(0);
+            writer.type(out, TestWire.INV + "ConfirmMarshaller");
+            out.writeShort(callback);
         });
     }
-    private static void invocation(TestWire.Writer writer, DataOutputStream out, int method, int count) throws IOException {
+
+    private static void invocation(TestWire.Writer writer, DataOutputStream out, int method, int count)
+            throws IOException {
         writer.message(out, "ForwardEventRequest", 40);
-        writer.type(out, TestWire.DOB + "InvocationRequestEvent"); out.writeInt(3); out.writeInt(1); out.writeByte(method);
-        out.writeBoolean(true); out.writeInt(count);
+        writer.type(out, TestWire.DOB + "InvocationRequestEvent");
+        out.writeInt(3);
+        out.writeInt(1);
+        out.writeByte(method);
+        out.writeBoolean(true);
+        out.writeInt(count);
     }
+
     private static DataInputStream event(Socket peer, TestWire wire, int oid, String type) throws IOException {
         DataInputStream in = wire.frame(peer.getInputStream());
-        TestWire.check(wire.type(in).equals(TestWire.NET + "EventNotification") && in.readShort() == -1, "unsolicited event");
-        String actual = wire.type(in); int eventOid = in.readInt();
+        TestWire.check(
+                wire.type(in).equals(TestWire.NET + "EventNotification") && in.readShort() == -1, "unsolicited event");
+        String actual = wire.type(in);
+        int eventOid = in.readInt();
         if (!actual.equals(TestWire.DOB + type) || eventOid != oid) {
             String detail = "";
             if (actual.equals(TestWire.DOB + "InvocationResponseEvent")) {
-                short callback = in.readShort(); byte method = in.readByte();
+                short callback = in.readShort();
+                byte method = in.readByte();
                 detail = " callback=" + callback + " method=" + method;
-                if (in.readBoolean()) { in.readInt(); detail += " value=" + wire.object(in); }
+                if (in.readBoolean()) {
+                    in.readInt();
+                    detail += " value=" + wire.object(in);
+                }
             }
-            throw new AssertionError("event identity and type: expected " + type + "@" + oid
-                + ", got " + actual + "@" + eventOid + detail);
+            throw new AssertionError("event identity and type: expected " + type + "@" + oid + ", got " + actual + "@"
+                    + eventOid + detail);
         }
         return in;
     }
-    private static void confirmation(Socket peer, TestWire wire, int oid, short callback, String failure) throws IOException {
+
+    private static void confirmation(Socket peer, TestWire wire, int oid, short callback, String failure)
+            throws IOException {
         DataInputStream in = event(peer, wire, oid, "InvocationResponseEvent");
-        TestWire.check(in.readShort() == callback && in.readByte() == (failure == null ? 1 : 0), "callback correlation and method");
+        TestWire.check(
+                in.readShort() == callback && in.readByte() == (failure == null ? 1 : 0),
+                "callback correlation and method");
         if (failure == null) TestWire.check(!in.readBoolean(), "confirmation has null arguments");
-        else TestWire.check(in.readBoolean() && in.readInt() == 1 && wire.object(in).equals("~" + failure), "literal display reason");
+        else
+            TestWire.check(
+                    in.readBoolean() && in.readInt() == 1 && wire.object(in).equals("~" + failure),
+                    "literal display reason");
         TestWire.end(in);
     }
+
     private static void roster(Object value) {
         TestWire.check(value instanceof List<?> knights && knights.size() == 1, "one saved knight");
         var knight = (Map<?, ?>) ((List<?>) value).get(0);
         TestWire.check(knight.get("id").equals(1) && knight.get("name").equals("Saved-Knight"), "saved identity");
         var model = (Map<?, ?>) knight.get("model");
-        TestWire.check(model.get("_name").equals("character/pc/model_level.dat") && model.get("_arguments") instanceof Map<?, ?>,
-            "nonnull preview configuration");
+        TestWire.check(
+                model.get("_name").equals("character/pc/model_level.dat")
+                        && model.get("_arguments") instanceof Map<?, ?>,
+                "nonnull preview configuration");
     }
-    private static void string(DataOutputStream out, String value) throws IOException { out.writeBoolean(true); out.writeUTF(value); }
+
+    private static void string(DataOutputStream out, String value) throws IOException {
+        out.writeBoolean(true);
+        out.writeUTF(value);
+    }
 }

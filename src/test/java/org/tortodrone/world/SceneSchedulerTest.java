@@ -1,109 +1,127 @@
 package org.tortodrone.world;
 
+import static org.tortodrone.support.TestWire.check;
+
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import static org.tortodrone.support.TestWire.check;
 
 /** One serial lane per scene, a bounded active-scene cap, no overlap and a bounded shutdown. */
 public final class SceneSchedulerTest {
-    public static void main(String[] args)throws Exception {
+    public static void main(String[] args) throws Exception {
         serialLaneNeverOverlaps();
         activeSceneCapRefuses();
         concurrentStartRespectsCap();
         failureStopsOnlyItsLane();
         closeStopsLanes();
-        System.out.println("PASS: serial scene lanes, active-scene cap (including concurrent admission), failure isolation and shutdown");
+        System.out.println(
+                "PASS: serial scene lanes, active-scene cap (including concurrent admission), failure isolation and shutdown");
     }
 
-    private static void serialLaneNeverOverlaps()throws Exception {
-        try(var scheduler=new SceneScheduler(2,8)) {
-            var inside=new AtomicInteger();
-            var overlap=new AtomicBoolean();
-            var ticks=new AtomicInteger();
-            scheduler.start(1,()->{
-                if(inside.incrementAndGet()>1)overlap.set(true);
+    private static void serialLaneNeverOverlaps() throws Exception {
+        try (var scheduler = new SceneScheduler(2, 8)) {
+            var inside = new AtomicInteger();
+            var overlap = new AtomicBoolean();
+            var ticks = new AtomicInteger();
+            scheduler.start(1, () -> {
+                if (inside.incrementAndGet() > 1) overlap.set(true);
                 ticks.incrementAndGet();
-                try{Thread.sleep(5);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                }
                 inside.decrementAndGet();
             });
-            await(()->ticks.get()>=3,2000);
-            check(!overlap.get(),"one lane is never ticked concurrently");
-            check(scheduler.activeScenes()==1,"one active lane is tracked");
+            await(() -> ticks.get() >= 3, 2000);
+            check(!overlap.get(), "one lane is never ticked concurrently");
+            check(scheduler.activeScenes() == 1, "one active lane is tracked");
             scheduler.stop(1);
-            int settled=ticks.get();
+            int settled = ticks.get();
             Thread.sleep(150);
-            check(ticks.get()<=settled+1,"a stopped lane stops ticking");
+            check(ticks.get() <= settled + 1, "a stopped lane stops ticking");
         }
     }
 
-    private static void activeSceneCapRefuses()throws Exception {
-        try(var scheduler=new SceneScheduler(1,2)) {
-            scheduler.start(1,()->{});
-            scheduler.start(2,()->{});
-            boolean refused=false;
-            try{scheduler.start(3,()->{});}catch(IllegalStateException expected){refused=true;}
-            check(refused,"the active-scene cap refuses a new lane");
-            check(scheduler.activeScenes()==2,"the cap keeps the admitted lanes");
+    private static void activeSceneCapRefuses() throws Exception {
+        try (var scheduler = new SceneScheduler(1, 2)) {
+            scheduler.start(1, () -> {});
+            scheduler.start(2, () -> {});
+            boolean refused = false;
+            try {
+                scheduler.start(3, () -> {});
+            } catch (IllegalStateException expected) {
+                refused = true;
+            }
+            check(refused, "the active-scene cap refuses a new lane");
+            check(scheduler.activeScenes() == 2, "the cap keeps the admitted lanes");
         }
     }
 
-    private static void concurrentStartRespectsCap()throws Exception {
-        try(var scheduler=new SceneScheduler(2,4)) {
-            int callers=32;
-            var ready=new CountDownLatch(callers);
-            var go=new CountDownLatch(1);
-            var admitted=new AtomicInteger();
-            var refused=new AtomicInteger();
-            var threads=new Thread[callers];
-            for(int i=0;i<callers;i++){
-                int oid=i+1;
-                threads[i]=new Thread(()->{
+    private static void concurrentStartRespectsCap() throws Exception {
+        try (var scheduler = new SceneScheduler(2, 4)) {
+            int callers = 32;
+            var ready = new CountDownLatch(callers);
+            var go = new CountDownLatch(1);
+            var admitted = new AtomicInteger();
+            var refused = new AtomicInteger();
+            var threads = new Thread[callers];
+            for (int i = 0; i < callers; i++) {
+                int oid = i + 1;
+                threads[i] = new Thread(() -> {
                     ready.countDown();
-                    try{go.await();scheduler.start(oid,()->{});admitted.incrementAndGet();}
-                    catch(IllegalStateException expected){refused.incrementAndGet();}
-                    catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
+                    try {
+                        go.await();
+                        scheduler.start(oid, () -> {});
+                        admitted.incrementAndGet();
+                    } catch (IllegalStateException expected) {
+                        refused.incrementAndGet();
+                    } catch (InterruptedException interrupted) {
+                        Thread.currentThread().interrupt();
+                    }
                 });
                 threads[i].start();
             }
             ready.await();
             go.countDown();
-            for(var thread:threads)thread.join(5000);
-            check(scheduler.activeScenes()<=4,"concurrent starts never exceed the active-scene cap");
-            check(admitted.get()==4&&scheduler.activeScenes()==4,"exactly the cap is admitted");
-            check(refused.get()==callers-4,"every other caller is refused");
+            for (var thread : threads) thread.join(5000);
+            check(scheduler.activeScenes() <= 4, "concurrent starts never exceed the active-scene cap");
+            check(admitted.get() == 4 && scheduler.activeScenes() == 4, "exactly the cap is admitted");
+            check(refused.get() == callers - 4, "every other caller is refused");
         }
     }
 
-    private static void failureStopsOnlyItsLane()throws Exception {
-        try(var scheduler=new SceneScheduler(2,8)) {
-            var healthy=new AtomicInteger();
-            scheduler.start(1,()->{throw new IllegalStateException("boom");});
-            scheduler.start(2,healthy::incrementAndGet);
-            await(()->!scheduler.running(1),2000);
-            await(()->healthy.get()>=2,2000);
-            check(scheduler.activeScenes()==1,"a failed lane is removed");
-            check(scheduler.running(2),"other lanes keep running after one failure");
+    private static void failureStopsOnlyItsLane() throws Exception {
+        try (var scheduler = new SceneScheduler(2, 8)) {
+            var healthy = new AtomicInteger();
+            scheduler.start(1, () -> {
+                throw new IllegalStateException("boom");
+            });
+            scheduler.start(2, healthy::incrementAndGet);
+            await(() -> !scheduler.running(1), 2000);
+            await(() -> healthy.get() >= 2, 2000);
+            check(scheduler.activeScenes() == 1, "a failed lane is removed");
+            check(scheduler.running(2), "other lanes keep running after one failure");
         }
     }
 
-    private static void closeStopsLanes()throws Exception {
-        var scheduler=new SceneScheduler(1,8);
-        var ticks=new AtomicInteger();
-        scheduler.start(1,ticks::incrementAndGet);
-        await(()->ticks.get()>=1,2000);
+    private static void closeStopsLanes() throws Exception {
+        var scheduler = new SceneScheduler(1, 8);
+        var ticks = new AtomicInteger();
+        scheduler.start(1, ticks::incrementAndGet);
+        await(() -> ticks.get() >= 1, 2000);
         scheduler.close();
-        int settled=ticks.get();
+        int settled = ticks.get();
         Thread.sleep(150);
-        check(ticks.get()<=settled+1,"close stops all lanes within the drain deadline");
-        check(scheduler.activeScenes()==0,"close clears the lane table");
+        check(ticks.get() <= settled + 1, "close stops all lanes within the drain deadline");
+        check(scheduler.activeScenes() == 0, "close clears the lane table");
     }
 
-    private static void await(java.util.function.BooleanSupplier condition,long millis)throws Exception {
-        long deadline=System.nanoTime()+millis*1_000_000L;
-        while(System.nanoTime()<deadline) {
-            if(condition.getAsBoolean())return;
+    private static void await(java.util.function.BooleanSupplier condition, long millis) throws Exception {
+        long deadline = System.nanoTime() + millis * 1_000_000L;
+        while (System.nanoTime() < deadline) {
+            if (condition.getAsBoolean()) return;
             Thread.sleep(5);
         }
-        throw new AssertionError("condition not met within "+millis+" ms");
+        throw new AssertionError("condition not met within " + millis + " ms");
     }
 }

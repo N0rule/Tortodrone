@@ -2,24 +2,33 @@ package org.tortodrone.world;
 
 import java.util.*;
 import org.tortodrone.core.world.FireCatalog;
-import org.tortodrone.core.world.SceneStatus;
-import org.tortodrone.core.world.SceneContent;
-import org.tortodrone.core.world.SceneCollision;
 import org.tortodrone.core.world.MonsterCatalog;
+import org.tortodrone.core.world.SceneCollision;
+import org.tortodrone.core.world.SceneContent;
+import org.tortodrone.core.world.SceneStatus;
 
 /** Shared synthetic monster scene and catalogue fixtures; never official data. */
 final class MonsterFixture {
-    private MonsterFixture() { }
+    private MonsterFixture() {}
 
     static SceneEntities scene(MonsterCatalog catalog) throws Exception {
-        return new SceneEntities(SceneContent.empty(), TestCollision.floor(-32, -32, 64, 64),
-            SceneCollision.empty(), new Random(7), true, 1000, catalog);
+        return new SceneEntities(
+                SceneContent.empty(),
+                TestCollision.floor(-32, -32, 64, 64),
+                SceneCollision.empty(),
+                new Random(7),
+                true,
+                1000,
+                catalog);
     }
 
     static void kill(SceneEntities world, int stamp) {
-        var pulse = new SceneStatus.Pulse(new FireCatalog.DataValue(
-            "com.threerings.projectx.dungeon.config.DamageConfig$Normal",
-            Map.of("flags", 2, "amount", 1000f)), 100f, 128);
+        var pulse = new SceneStatus.Pulse(
+                new FireCatalog.DataValue(
+                        "com.threerings.projectx.dungeon.config.DamageConfig$Normal",
+                        Map.of("flags", 2, "amount", 1000f)),
+                100f,
+                128);
         world.statusPulse(0, pulse, 0, 0, stamp);
     }
 

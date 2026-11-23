@@ -14,7 +14,8 @@ import org.tortodrone.core.WireTypes;
  */
 final class HandshakeWire {
     private static final String PREFIX = WireTypes.NET_PREFIX;
-    private HandshakeWire() { }
+
+    private HandshakeWire() {}
 
     /** First downstream object on a fresh connection; its mapping space is independent. */
     public static byte[] response(short messageId, String maskedSecret) throws IOException {
@@ -37,11 +38,14 @@ final class HandshakeWire {
     }
 
     /** Second downstream frame, after response(): preserve mappings 1 and 2. */
-    public static byte[] authenticationResponse(short messageId, boolean accepted, String sessionId, String username) throws IOException {
-        return authenticationResponse(messageId,accepted ? "success" : "m.invalid_password",sessionId,username);
+    public static byte[] authenticationResponse(short messageId, boolean accepted, String sessionId, String username)
+            throws IOException {
+        return authenticationResponse(messageId, accepted ? "success" : "m.invalid_password", sessionId, username);
     }
-    public static byte[] authenticationResponse(short messageId, String result, String sessionId, String username) throws IOException {
-        boolean accepted="success".equals(result);
+
+    public static byte[] authenticationResponse(short messageId, String result, String sessionId, String username)
+            throws IOException {
+        boolean accepted = "success".equals(result);
         ByteArrayOutputStream body = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(body);
         out.writeShort(-3);
@@ -59,8 +63,10 @@ final class HandshakeWire {
         if (accepted) out.writeUTF(sessionId);
         if (username == null) out.writeShort(0);
         else {
-            out.writeShort(-5); out.writeUTF(WireTypes.NAME);
-            out.writeBoolean(true); out.writeUTF(username);
+            out.writeShort(-5);
+            out.writeUTF(WireTypes.NAME);
+            out.writeBoolean(true);
+            out.writeUTF(username);
         }
         ByteArrayOutputStream frame = new ByteArrayOutputStream();
         DataOutputStream framed = new DataOutputStream(frame);
@@ -68,5 +74,4 @@ final class HandshakeWire {
         body.writeTo(framed);
         return frame.toByteArray();
     }
-
 }

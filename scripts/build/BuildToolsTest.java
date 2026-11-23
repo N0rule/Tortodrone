@@ -12,16 +12,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class BuildToolsTest {
     public static void main(String[] args) throws Exception {
         Path home = Files.createTempDirectory("tortodrone-build-inputs-");
-        check(BuildTools.inferDeploymentRoot(home.resolve("content/packs/vanilla/maps")).equals(home),
-            "canonical vanilla map output resolves its deployment root");
-        check(BuildTools.inferDeploymentRoot(home.resolve("content/packs/vanilla")).equals(home),
-            "canonical vanilla output resolves its deployment root");
-        check(BuildTools.inferDeploymentRoot(home.resolve("defaults/maps")).equals(home),
-            "legacy defaults/maps output resolves its deployment root");
+        check(
+                BuildTools.inferDeploymentRoot(home.resolve("content/packs/vanilla/maps"))
+                        .equals(home),
+                "canonical vanilla map output resolves its deployment root");
+        check(
+                BuildTools.inferDeploymentRoot(home.resolve("content/packs/vanilla"))
+                        .equals(home),
+                "canonical vanilla output resolves its deployment root");
+        check(
+                BuildTools.inferDeploymentRoot(home.resolve("defaults/maps")).equals(home),
+                "legacy defaults/maps output resolves its deployment root");
         var requests = new AtomicInteger();
         var release = new CountDownLatch(1);
         byte[] content = "synthetic dependency".getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        String digest = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(content));
+        String digest =
+                HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(content));
         var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             server.setExecutor(executor);
@@ -39,8 +45,11 @@ public final class BuildToolsTest {
                     exchange.sendResponseHeaders(200, 100);
                     exchange.getResponseBody().write(1);
                     exchange.getResponseBody().flush();
-                    try { release.await(); }
-                    catch (InterruptedException stopped) { Thread.currentThread().interrupt(); }
+                    try {
+                        release.await();
+                    } catch (InterruptedException stopped) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
             });
             server.start();
@@ -60,7 +69,9 @@ public final class BuildToolsTest {
                 requests.set(0);
                 Path retried = home.resolve("deps/retried.jar");
                 BuildTools.fetch(retried, root + "/download?retry", digest);
-                check(requests.get() == 2 && Arrays.equals(content, Files.readAllBytes(retried)), "failed HTTP attempt retried");
+                check(
+                        requests.get() == 2 && Arrays.equals(content, Files.readAllBytes(retried)),
+                        "failed HTTP attempt retried");
 
                 requests.set(0);
                 Path invalid = home.resolve("deps/invalid.jar");
@@ -71,24 +82,37 @@ public final class BuildToolsTest {
                 Path stalled = home.resolve("deps/stalled.jar");
                 long start = System.nanoTime();
                 expectFailure(() -> BuildTools.fetch(stalled, root + "/stalled", digest, Duration.ofMillis(400)));
-                check(TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start) < 5, "response-body stalls obey the full download deadline");
-                check(requests.get() == 3 && !Files.exists(stalled), "stalled downloads have bounded retries and no installed partial file");
+                check(
+                        TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start) < 5,
+                        "response-body stalls obey the full download deadline");
+                check(
+                        requests.get() == 3 && !Files.exists(stalled),
+                        "stalled downloads have bounded retries and no installed partial file");
                 try (var files = Files.list(home.resolve("deps"))) {
-                    check(files.noneMatch(p -> p.getFileName().toString().contains(".download-")), "temporary downloads cleaned up");
+                    check(
+                            files.noneMatch(p -> p.getFileName().toString().contains(".download-")),
+                            "temporary downloads cleaned up");
                 }
-                Path oldMap=home.resolve("maps/haven/scene.dat");Files.createDirectories(oldMap.getParent());
-                byte[] oldBytes="previous archive map".getBytes(java.nio.charset.StandardCharsets.UTF_8);
-                Files.write(oldMap,oldBytes);
-                String oldMapDigest=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(oldBytes));
-                var ownership=new Properties();ownership.setProperty("owned.haven/scene.dat",oldMapDigest);
-                check(BuildTools.sourceOwns(ownership,Path.of("haven/scene.dat"),oldMap),
-                    "previous generated archive map is a replacement baseline");
-                ownership.setProperty("owned.haven/scene.dat","0".repeat(64));
-                check(!BuildTools.sourceOwns(ownership,Path.of("haven/scene.dat"),oldMap),
-                    "archive replacement ownership does not permit unrelated deployment edits");
-                System.out.println("PASS: dependency cache, HTTP retries, checksum refusal, stalled-body deadlines and cleanup");
+                Path oldMap = home.resolve("maps/haven/scene.dat");
+                Files.createDirectories(oldMap.getParent());
+                byte[] oldBytes = "previous archive map".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                Files.write(oldMap, oldBytes);
+                String oldMapDigest = HexFormat.of()
+                        .formatHex(MessageDigest.getInstance("SHA-256").digest(oldBytes));
+                var ownership = new Properties();
+                ownership.setProperty("owned.haven/scene.dat", oldMapDigest);
+                check(
+                        BuildTools.sourceOwns(ownership, Path.of("haven/scene.dat"), oldMap),
+                        "previous generated archive map is a replacement baseline");
+                ownership.setProperty("owned.haven/scene.dat", "0".repeat(64));
+                check(
+                        !BuildTools.sourceOwns(ownership, Path.of("haven/scene.dat"), oldMap),
+                        "archive replacement ownership does not permit unrelated deployment edits");
+                System.out.println(
+                        "PASS: dependency cache, HTTP retries, checksum refusal, stalled-body deadlines and cleanup");
             } finally {
-                release.countDown(); server.stop(0);
+                release.countDown();
+                server.stop(0);
             }
         } finally {
             try (var files = Files.walk(home)) {
@@ -96,12 +120,20 @@ public final class BuildToolsTest {
             }
         }
     }
+
     private static void check(boolean condition, String message) {
         if (!condition) throw new AssertionError(message);
     }
+
     private static void expectFailure(Action action) throws Exception {
-        try { action.run(); throw new AssertionError("Expected dependency preparation failure"); }
-        catch (IOException expected) { }
+        try {
+            action.run();
+            throw new AssertionError("Expected dependency preparation failure");
+        } catch (IOException expected) {
+        }
     }
-    private interface Action { void run() throws Exception; }
+
+    private interface Action {
+        void run() throws Exception;
+    }
 }

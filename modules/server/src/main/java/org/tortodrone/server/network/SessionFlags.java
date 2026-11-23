@@ -30,7 +30,7 @@ final class SessionFlags {
         inspectionHidden = value;
     }
 
-    void apply(boolean gm,boolean hidden) {
+    void apply(boolean gm, boolean hidden) {
         gameMaster = gm;
         inspectionHidden = hidden;
     }

@@ -12,25 +12,35 @@ import org.tortodrone.core.character.WorldProfile;
  *  under the session monitor. */
 final class SessionCarriedItems {
     private final WorldSession session;
-    private final Map<Long,WorldProfile.Item> items=new LinkedHashMap<>();
-    private final long[] quickbar=new long[4];
-    private long nextItem=-1;
+    private final Map<Long, WorldProfile.Item> items = new LinkedHashMap<>();
+    private final long[] quickbar = new long[4];
+    private long nextItem = -1;
 
     SessionCarriedItems(WorldSession session) {
         this.session = session;
     }
 
-    Map<Long,WorldProfile.Item> items() {
+    Map<Long, WorldProfile.Item> items() {
         return items;
     }
 
     /** The durable profile with this session's temporary pickups and curse flags applied. */
-    WorldProfile visibleProfile(WorldProfile profile,Set<Long> cursed){
-        if(items.isEmpty()&&cursed.isEmpty())return profile;
-        var combined=new ArrayList<>(profile.items());combined.addAll(items.values());
-        combined.replaceAll(item->item.curse(cursed.contains(item.id())));
-        return new WorldProfile(profile.worldId(),profile.accountId(),profile.knightId(),profile.crowns(),profile.energy(),
-            profile.revision(),combined,profile.progress(),profile.town(),profile.achievements());
+    WorldProfile visibleProfile(WorldProfile profile, Set<Long> cursed) {
+        if (items.isEmpty() && cursed.isEmpty()) return profile;
+        var combined = new ArrayList<>(profile.items());
+        combined.addAll(items.values());
+        combined.replaceAll(item -> item.curse(cursed.contains(item.id())));
+        return new WorldProfile(
+                profile.worldId(),
+                profile.accountId(),
+                profile.knightId(),
+                profile.crowns(),
+                profile.energy(),
+                profile.revision(),
+                combined,
+                profile.progress(),
+                profile.town(),
+                profile.achievements());
     }
 
     long nextId() {
@@ -49,7 +59,7 @@ final class SessionCarriedItems {
         for (int index = 0; index < quickbar.length; index++) if (quickbar[index] == item) quickbar[index] = 0;
     }
 
-    void quickbarSlot(int slot,long item) {
+    void quickbarSlot(int slot, long item) {
         quickbar[slot] = item;
     }
 
@@ -59,7 +69,11 @@ final class SessionCarriedItems {
     }
 
     void addToQuickbar(long id) {
-        for (int slot = 0; slot < quickbar.length; slot++) if (quickbar[slot] == 0) { quickbar[slot] = id; break; }
+        for (int slot = 0; slot < quickbar.length; slot++)
+            if (quickbar[slot] == 0) {
+                quickbar[slot] = id;
+                break;
+            }
     }
 
     long[] snapshot() {
@@ -69,7 +83,8 @@ final class SessionCarriedItems {
     void publish() throws IOException {
         synchronized (session) {
             if (session.membership() != null) session.membership().inventory(session.visibleProfile());
-            for (int slot = 0; slot < quickbar.length; slot++) if (!items.containsKey(quickbar[slot])) quickbar[slot] = 0;
+            for (int slot = 0; slot < quickbar.length; slot++)
+                if (!items.containsKey(quickbar[slot])) quickbar[slot] = 0;
             var slots = quickbar.clone();
             session.responder().send(() -> session.responder().codec().quickbar(session.connectionOid(), slots));
         }
@@ -84,8 +99,10 @@ final class SessionCarriedItems {
             var before = session.visibleProfile();
             items.remove(id);
             var after = session.visibleProfile();
-            session.responder().send(() -> session.responder().codec().itemChanges(session.connectionOid(),
-                session.selectedKnight(), before, after));
+            session.responder()
+                    .send(() -> session.responder()
+                            .codec()
+                            .itemChanges(session.connectionOid(), session.selectedKnight(), before, after));
             publish();
             return true;
         }

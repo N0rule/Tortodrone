@@ -1,10 +1,11 @@
 package org.tortodrone.server.network;
 
+import static org.tortodrone.support.TestWire.check;
+
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.tortodrone.core.party.PartyView;
-import static org.tortodrone.support.TestWire.check;
 
 /** The delivery worker stops on request and the shutdown wait is bounded even mid-frame. */
 public final class SessionPublicationsTest {
@@ -16,7 +17,7 @@ public final class SessionPublicationsTest {
 
     private static void idleWorkerStops() throws Exception {
         var publications = new SessionPublications();
-        publications.start("idle-delivery-test", publication -> { }, event -> { }, failure -> { });
+        publications.start("idle-delivery-test", publication -> {}, event -> {}, failure -> {});
         publications.stop();
         publications.awaitStop();
         check(!publications.worker().isAlive(), "idle delivery worker exited");
@@ -26,14 +27,19 @@ public final class SessionPublicationsTest {
         var publications = new SessionPublications();
         var entered = new CountDownLatch(1);
         var release = new CountDownLatch(1);
-        publications.start("busy-delivery-test", publication -> { }, event -> {
-            entered.countDown();
-            try { release.await(); }
-            catch (InterruptedException interrupted) {
-                Thread.currentThread().interrupt();
-                throw new IOException("Delivery interrupted", interrupted);
-            }
-        }, failure -> { });
+        publications.start(
+                "busy-delivery-test",
+                publication -> {},
+                event -> {
+                    entered.countDown();
+                    try {
+                        release.await();
+                    } catch (InterruptedException interrupted) {
+                        Thread.currentThread().interrupt();
+                        throw new IOException("Delivery interrupted", interrupted);
+                    }
+                },
+                failure -> {});
         publications.offerParty(new PartyView.Refresh());
         check(entered.await(5, TimeUnit.SECONDS), "delivery worker entered the frame");
         publications.stop();

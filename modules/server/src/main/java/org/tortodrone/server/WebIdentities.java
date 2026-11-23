@@ -13,23 +13,33 @@ import java.util.List;
  */
 public interface WebIdentities {
     enum Role {
-        VIEWER(1), MODERATOR(2), ADMINISTRATOR(3);
+        VIEWER(1),
+        MODERATOR(2),
+        ADMINISTRATOR(3);
         /** Explicit rank: adding or reordering constants cannot silently change authorization. */
         private final int rank;
-        Role(int rank) { this.rank = rank; }
-        public boolean permits(Role required) { return rank >= required.rank; }
-    }
-    record Identity(String username,Role role,long revision) { }
 
-    List<Identity> list()throws IOException;
-    Identity find(String username)throws IOException;
+        Role(int rank) {
+            this.rank = rank;
+        }
+
+        public boolean permits(Role required) {
+            return rank >= required.rank;
+        }
+    }
+
+    record Identity(String username, Role role, long revision) {}
+
+    List<Identity> list() throws IOException;
+
+    Identity find(String username) throws IOException;
 
     /** Privileged local-console replacement; previous sessions are revoked. */
-    void put(String username,char[] password,Role role)throws IOException;
+    void put(String username, char[] password, Role role) throws IOException;
 
     /** Privileged local-console password reset; previous sessions are revoked. */
-    void password(String username,char[] password,long revision)throws IOException;
+    void password(String username, char[] password, long revision) throws IOException;
 
     /** Local access can recover even after intentionally revoking the last administrator. */
-    void revoke(String username)throws IOException;
+    void revoke(String username) throws IOException;
 }

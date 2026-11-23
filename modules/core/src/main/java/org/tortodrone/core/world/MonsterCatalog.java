@@ -26,21 +26,39 @@ public final class MonsterCatalog {
     private final Map<String, Override> overrides;
     private final Map<String, String> generatedFrom;
 
-    MonsterCatalog(Map<String, MonsterType> types, Map<String, Override> overrides,
-                           Map<String, String> generatedFrom) {
+    MonsterCatalog(Map<String, MonsterType> types, Map<String, Override> overrides, Map<String, String> generatedFrom) {
         this.types = Map.copyOf(types);
         this.overrides = Map.copyOf(overrides);
         this.generatedFrom = Map.copyOf(generatedFrom);
     }
 
-    public static MonsterCatalog empty() { return EMPTY; }
+    public static MonsterCatalog empty() {
+        return EMPTY;
+    }
 
-    public Map<String, MonsterType> types() { return types; }
-    public Map<String, Override> overrides() { return overrides; }
-    public Map<String, String> generatedFrom() { return generatedFrom; }
-    public int size() { return types.size(); }
-    public MonsterType type(String id) { return id == null ? null : types.get(id); }
-    public Override override(String id) { return id == null ? null : overrides.get(id); }
+    public Map<String, MonsterType> types() {
+        return types;
+    }
+
+    public Map<String, Override> overrides() {
+        return overrides;
+    }
+
+    public Map<String, String> generatedFrom() {
+        return generatedFrom;
+    }
+
+    public int size() {
+        return types.size();
+    }
+
+    public MonsterType type(String id) {
+        return id == null ? null : types.get(id);
+    }
+
+    public Override override(String id) {
+        return id == null ? null : overrides.get(id);
+    }
 
     /** Effective policy: the generated assignment unless the overlay names another one. */
     public MonsterArchetype archetype(MonsterType type) {
@@ -60,8 +78,7 @@ public final class MonsterCatalog {
         if (tuning != null) {
             if (tuning.activationRadius() != null)
                 fields.put("activation-radius", Float.toString(tuning.activationRadius()));
-            if (tuning.leashRadius() != null)
-                fields.put("leash-radius", Float.toString(tuning.leashRadius()));
+            if (tuning.leashRadius() != null) fields.put("leash-radius", Float.toString(tuning.leashRadius()));
             if (tuning.think() != null) fields.put("think", tuning.think());
         }
         return fields;
@@ -90,13 +107,13 @@ public final class MonsterCatalog {
         }
         var matches = new ArrayList<MonsterType>();
         for (var type : types.values())
-            if (type.config().equals(reference) || reference.equals(type.actor())
-                    || type.configs().contains(reference))
-                matches.add(type);
+            if (type.config().equals(reference)
+                    || reference.equals(type.actor())
+                    || type.configs().contains(reference)) matches.add(type);
         if (matches.isEmpty()) throw new IOException("Unknown monster type: " + reference);
         if (matches.size() > 1)
             throw new IOException("Ambiguous monster type reference " + reference + ": "
-                + String.join(", ", matches.stream().map(MonsterType::id).toList()));
+                    + String.join(", ", matches.stream().map(MonsterType::id).toList()));
         MonsterType resolved = matches.getFirst();
         resolved.requireSpawnable();
         return resolved;
@@ -126,7 +143,8 @@ public final class MonsterCatalog {
             if (!"Monster".equals(entry.spec().text("kind", "")))
                 throw new IOException(mapName + " / " + entry.key() + ": monster-type requires a Monster actor");
             if (!type.configs().contains(entry.spec().text("config", "")))
-                throw new IOException(mapName + " / " + entry.key() + ": actor config differs from catalogue type " + id);
+                throw new IOException(
+                        mapName + " / " + entry.key() + ": actor config differs from catalogue type " + id);
         }
     }
 
@@ -141,7 +159,10 @@ public final class MonsterCatalog {
         var entries = new ArrayList<SceneContent.Entry>(content.entries().size());
         for (var entry : content.entries()) {
             String id = entry.spec().text("monster-type", "");
-            if (id.isEmpty()) { entries.add(entry); continue; }
+            if (id.isEmpty()) {
+                entries.add(entry);
+                continue;
+            }
             MonsterType type = spawnable(id);
             if (!"Monster".equals(entry.spec().text("kind", "")))
                 throw new IOException("monster-type requires a Monster actor: " + entry.key());
@@ -151,8 +172,8 @@ public final class MonsterCatalog {
             var fields = fields(type);
             fields.putAll(entry.spec().fields());
             fields.remove("monster-type");
-            entries.add(new SceneContent.Entry(entry.key(), entry.x(), entry.y(), entry.rotation(),
-                new SceneContent.Spec(fields)));
+            entries.add(new SceneContent.Entry(
+                    entry.key(), entry.x(), entry.y(), entry.rotation(), new SceneContent.Spec(fields)));
         }
         return content.withEntries(entries);
     }

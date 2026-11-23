@@ -19,10 +19,13 @@ public final class SceneScheduler implements AutoCloseable {
     public static final long CADENCE_MILLIS = 50;
     /** Hard bound on concurrently scheduled scene lanes; one per scene with an entered player. */
     public static final int DEFAULT_MAX_ACTIVE_SCENES = 256;
+
     private static final int MEASUREMENT_WINDOW = 256;
     private static volatile SceneScheduler shared = new SceneScheduler();
 
-    public static SceneScheduler shared() { return shared; }
+    public static SceneScheduler shared() {
+        return shared;
+    }
 
     /** Test hook: the standalone suite shares one JVM, so a shutdown-drain measurement replaces
      *  the closed instance before later programs use the shared lane pool again. */
@@ -30,7 +33,7 @@ public final class SceneScheduler implements AutoCloseable {
         if (shared.closed) shared = new SceneScheduler();
     }
 
-    private record Lane(int oid, ScheduledFuture<?> future, Runnable tick) { }
+    private record Lane(int oid, ScheduledFuture<?> future, Runnable tick) {}
 
     private final ScheduledThreadPoolExecutor timer;
     private final int maxActiveScenes;
@@ -42,8 +45,7 @@ public final class SceneScheduler implements AutoCloseable {
     private volatile boolean closed;
 
     public SceneScheduler() {
-        this(Math.max(2, Math.min(Runtime.getRuntime().availableProcessors(), 8)),
-            DEFAULT_MAX_ACTIVE_SCENES);
+        this(Math.max(2, Math.min(Runtime.getRuntime().availableProcessors(), 8)), DEFAULT_MAX_ACTIVE_SCENES);
     }
 
     public SceneScheduler(int carriers, int maxActiveScenes) {
@@ -67,8 +69,8 @@ public final class SceneScheduler implements AutoCloseable {
         if (lanes.containsKey(oid)) return;
         if (lanes.size() >= maxActiveScenes)
             throw new IllegalStateException("Active scene cap reached (" + maxActiveScenes + ")");
-        ScheduledFuture<?> future = timer.scheduleWithFixedDelay(() -> run(oid, tick),
-            CADENCE_MILLIS, CADENCE_MILLIS, TimeUnit.MILLISECONDS);
+        ScheduledFuture<?> future = timer.scheduleWithFixedDelay(
+                () -> run(oid, tick), CADENCE_MILLIS, CADENCE_MILLIS, TimeUnit.MILLISECONDS);
         lanes.put(oid, new Lane(oid, future, tick));
     }
 
@@ -77,11 +79,25 @@ public final class SceneScheduler implements AutoCloseable {
         if (lane != null) lane.future().cancel(false);
     }
 
-    public boolean running(int oid) { return lanes.containsKey(oid); }
-    public int activeScenes() { return lanes.size(); }
-    public int maxActiveScenes() { return maxActiveScenes; }
-    public long overruns() { return overruns.get(); }
-    public long lateTicks() { return lateTicks.get(); }
+    public boolean running(int oid) {
+        return lanes.containsKey(oid);
+    }
+
+    public int activeScenes() {
+        return lanes.size();
+    }
+
+    public int maxActiveScenes() {
+        return maxActiveScenes;
+    }
+
+    public long overruns() {
+        return overruns.get();
+    }
+
+    public long lateTicks() {
+        return lateTicks.get();
+    }
 
     /** p50/p99/max of the observed cadence lateness in milliseconds, sampled outside scene locks. */
     public Lateness lateness() {
@@ -92,12 +108,13 @@ public final class SceneScheduler implements AutoCloseable {
         }
         if (samples.length == 0) return new Lateness(0, 0, 0);
         java.util.Arrays.sort(samples);
-        return new Lateness(samples[(int) ((samples.length - 1) * .50)] / 1_000_000.0,
-            samples[(int) ((samples.length - 1) * .99)] / 1_000_000.0,
-            samples[samples.length - 1] / 1_000_000.0);
+        return new Lateness(
+                samples[(int) ((samples.length - 1) * .50)] / 1_000_000.0,
+                samples[(int) ((samples.length - 1) * .99)] / 1_000_000.0,
+                samples[samples.length - 1] / 1_000_000.0);
     }
 
-    public record Lateness(double p50Millis, double p99Millis, double maxMillis) { }
+    public record Lateness(double p50Millis, double p99Millis, double maxMillis) {}
 
     private void run(int oid, Runnable tick) {
         if (closed || !lanes.containsKey(oid)) return;
@@ -125,7 +142,8 @@ public final class SceneScheduler implements AutoCloseable {
     }
 
     /** Stop scheduling, then wait for in-flight ticks up to the deadline before forcing shutdown. */
-    @Override public void close() {
+    @Override
+    public void close() {
         synchronized (this) {
             if (closed) return;
             closed = true;

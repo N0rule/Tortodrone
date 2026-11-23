@@ -3,14 +3,15 @@ package org.tortodrone.storage;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import org.tortodrone.core.character.WorldProfile;
-import org.tortodrone.core.guild.Guild;
 import org.tortodrone.core.guild.Member;
 
 /** Guild formation, invitations and roster commands, each in one authenticated write. */
 final class GuildMembershipStore {
     private final Database database;
-    GuildMembershipStore(Database database){this.database=Objects.requireNonNull(database);}
+
+    GuildMembershipStore(Database database) {
+        this.database = Objects.requireNonNull(database);
+    }
 
     /** {@code GuildMarshaller} id 8: form a guild and make the founder its master. */
     TownStore.Result form(int account, int knight, long auth, String name) throws IOException {
@@ -25,7 +26,8 @@ final class GuildMembershipStore {
             TownLedger.pay(c, profile, GuildStore.FORMATION_CROWNS, GuildStore.FORMATION_ENERGY);
             long now = System.currentTimeMillis();
             long id;
-            try (var s = c.prepareStatement("INSERT INTO guilds(name,name_key,formed,member_limit) VALUES(?,?,?,?)",
+            try (var s = c.prepareStatement(
+                    "INSERT INTO guilds(name,name_key,formed,member_limit) VALUES(?,?,?,?)",
                     Statement.RETURN_GENERATED_KEYS)) {
                 s.setString(1, name);
                 s.setString(2, name.toLowerCase(Locale.ROOT));
@@ -37,7 +39,8 @@ final class GuildMembershipStore {
                     id = keys.getLong(1);
                 }
             }
-            try (var s = c.prepareStatement("INSERT INTO guild_members(world_id,guild_id,rank,command_order,joined) VALUES(?,?,0,0,?)")) {
+            try (var s = c.prepareStatement(
+                    "INSERT INTO guild_members(world_id,guild_id,rank,command_order,joined) VALUES(?,?,0,0,?)")) {
                 s.setInt(1, profile.worldId());
                 s.setLong(2, id);
                 s.setLong(3, now);
@@ -50,8 +53,8 @@ final class GuildMembershipStore {
     }
 
     /** {@code GuildMarshaller} id 10: deliver an invitation letter to a knight by name. */
-    TownStore.Result invite(int account, int knight, long auth, String target, String subject,
-            String message) throws IOException {
+    TownStore.Result invite(int account, int knight, long auth, String target, String subject, String message)
+            throws IOException {
         if (subject == null) subject = "";
         if (message == null) message = "";
         if (subject.length() > 50 || message.length() > 8096) throw new IOException("Invalid mail text");
@@ -64,7 +67,8 @@ final class GuildMembershipStore {
             if (member == null || member.rank() > 1) throw new IOException("m.access_denied");
             int targetWorld = worldId(c, target);
             if (GuildStore.guildOf(c, targetWorld) != null) throw new IOException("m.already_in_guild");
-            try (var s = c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,sender,mail_type,guild_invite_id,guild_invite_name) VALUES(?,?,?,?,?,2,?,?)")) {
+            try (var s = c.prepareStatement(
+                    "INSERT INTO town_mail(world_id,sent,subject,body,sender,mail_type,guild_invite_id,guild_invite_name) VALUES(?,?,?,?,?,2,?,?)")) {
                 s.setInt(1, targetWorld);
                 s.setLong(2, System.currentTimeMillis());
                 s.setString(3, finalSubject);
@@ -80,8 +84,8 @@ final class GuildMembershipStore {
     }
 
     /** Accept the invitation carried by a guild-letter mail. Called inside the mailbox write. */
-    static void acceptInvite(Connection c, int worldId, long guildId, String guildName,
-            String knightName) throws SQLException, IOException {
+    static void acceptInvite(Connection c, int worldId, long guildId, String guildName, String knightName)
+            throws SQLException, IOException {
         if (guildId <= 0) throw new IOException("m.internal_error");
         if (GuildStore.guildOf(c, worldId) != null) throw new IOException("m.already_in_guild");
         var guild = GuildStore.guildRow(c, guildId);
@@ -89,11 +93,15 @@ final class GuildMembershipStore {
         int members;
         try (var s = c.prepareStatement("SELECT count(*) FROM guild_members WHERE guild_id=?")) {
             s.setInt(1, (int) guildId);
-            try (var r = s.executeQuery()) { r.next(); members = r.getInt(1); }
+            try (var r = s.executeQuery()) {
+                r.next();
+                members = r.getInt(1);
+            }
         }
         if (members >= guild.memberLimit()) throw new IOException("m.too_many_members");
         long now = System.currentTimeMillis();
-        try (var s = c.prepareStatement("INSERT INTO guild_members(world_id,guild_id,rank,command_order,joined) VALUES(?,?,4,0,?)")) {
+        try (var s = c.prepareStatement(
+                "INSERT INTO guild_members(world_id,guild_id,rank,command_order,joined) VALUES(?,?,4,0,?)")) {
             s.setInt(1, worldId);
             s.setLong(2, guildId);
             s.setLong(3, now);
@@ -132,27 +140,35 @@ final class GuildMembershipStore {
     }
 
     /** {@code GuildMarshaller} id 3. Ranks are a byte where a smaller value is higher. */
-    TownStore.Result changeRank(int account, int knight, long auth, String target, byte rank)
-            throws IOException {
+    TownStore.Result changeRank(int account, int knight, long auth, String target, byte rank) throws IOException {
         if (rank < 0 || rank >= GuildStore.RANK_COUNT) throw new IOException("m.internal_error");
         return database.write(c -> {
             var profile = WorldProfiles.load(c, account, knight, auth);
             var guild = GuildStore.requireMember(c, GuildStore.guildOf(c, profile.worldId()));
             var changer = GuildStore.membership(c, guild.id(), profile.worldId());
             var changee = byName(c, guild.id(), target);
-            if (changer == null || changee == null || !canChangeStatus(changee, changer)
-                    || rank < changer.rank()) throw new IOException("m.internal_error");
+            if (changer == null || changee == null || !canChangeStatus(changee, changer) || rank < changer.rank())
+                throw new IOException("m.internal_error");
             if (changee.rank() == rank) return new TownStore.Result(profile, GuildStore.view(c, guild.id()));
             int order = rank <= 1 ? highestOrder(c, guild.id(), rank) + 1 : -2147483647;
-            try (var s = c.prepareStatement("UPDATE guild_members SET rank=?,command_order=? WHERE world_id=? AND guild_id=?")) {
+            try (var s = c.prepareStatement(
+                    "UPDATE guild_members SET rank=?,command_order=? WHERE world_id=? AND guild_id=?")) {
                 s.setInt(1, rank);
                 s.setInt(2, order);
                 s.setInt(3, changee.worldId());
                 s.setLong(4, guild.id());
                 s.executeUpdate();
             }
-            GuildLogStore.log(c, guild.id(), 3, changer.name(), System.currentTimeMillis(),
-                List.of(rank < changee.rank() ? "m.gl_promoted" : "m.gl_demoted", "~" + changee.name(), "m.rank." + rank));
+            GuildLogStore.log(
+                    c,
+                    guild.id(),
+                    3,
+                    changer.name(),
+                    System.currentTimeMillis(),
+                    List.of(
+                            rank < changee.rank() ? "m.gl_promoted" : "m.gl_demoted",
+                            "~" + changee.name(),
+                            "m.rank." + rank));
             TownLedger.touch(c, changee.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), GuildStore.view(c, guild.id()));
         });
@@ -160,21 +176,27 @@ final class GuildMembershipStore {
 
     private static Member byName(Connection c, long guildId, String name) throws SQLException, IOException {
         if (name == null) return null;
-        for (var member : GuildStore.view(c, guildId).members()) if (member.name().equalsIgnoreCase(name)) return member;
+        for (var member : GuildStore.view(c, guildId).members())
+            if (member.name().equalsIgnoreCase(name)) return member;
         return null;
     }
 
     private static boolean canChangeStatus(Member changee, Member changer) {
-        return changee.worldId() != changer.worldId() && changer.rank() <= 1
-            && (changer.rank() < changee.rank()
-                || changer.rank() == changee.rank() && changer.commandOrder() < changee.commandOrder());
+        return changee.worldId() != changer.worldId()
+                && changer.rank() <= 1
+                && (changer.rank() < changee.rank()
+                        || changer.rank() == changee.rank() && changer.commandOrder() < changee.commandOrder());
     }
 
     private static int highestOrder(Connection c, long guildId, int rank) throws SQLException {
-        try (var s = c.prepareStatement("SELECT COALESCE(MAX(command_order),-2147483648) FROM guild_members WHERE guild_id=? AND rank=?")) {
+        try (var s = c.prepareStatement(
+                "SELECT COALESCE(MAX(command_order),-2147483648) FROM guild_members WHERE guild_id=? AND rank=?")) {
             s.setLong(1, guildId);
             s.setInt(2, rank);
-            try (var r = s.executeQuery()) { r.next(); return r.getInt(1); }
+            try (var r = s.executeQuery()) {
+                r.next();
+                return r.getInt(1);
+            }
         }
     }
 
@@ -195,18 +217,23 @@ final class GuildMembershipStore {
             if (s.executeUpdate() != 1) throw new IOException("m.internal_error");
         }
         String name;
-        try (var s = c.prepareStatement("SELECT k.name FROM world_characters w JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id WHERE w.world_id=?")) {
+        try (var s = c.prepareStatement(
+                "SELECT k.name FROM world_characters w JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id WHERE w.world_id=?")) {
             s.setInt(1, worldId);
-            try (var r = s.executeQuery()) { name = r.next() ? r.getString(1) : null; }
+            try (var r = s.executeQuery()) {
+                name = r.next() ? r.getString(1) : null;
+            }
         }
-        GuildLogStore.log(c, guildId, type, actor, System.currentTimeMillis(), name == null ? null : List.of("~" + name));
+        GuildLogStore.log(
+                c, guildId, type, actor, System.currentTimeMillis(), name == null ? null : List.of("~" + name));
         if (master) promoteSuccessor(c, guildId);
     }
 
     /** A guild cannot be left masterless: the senior remaining member becomes master. */
     private static void promoteSuccessor(Connection c, long guildId) throws SQLException, IOException {
         int next;
-        try (var s = c.prepareStatement("SELECT world_id FROM guild_members WHERE guild_id=? ORDER BY rank,command_order,joined,world_id LIMIT 1")) {
+        try (var s = c.prepareStatement(
+                "SELECT world_id FROM guild_members WHERE guild_id=? ORDER BY rank,command_order,joined,world_id LIMIT 1")) {
             s.setLong(1, guildId);
             try (var r = s.executeQuery()) {
                 if (!r.next()) {
@@ -220,7 +247,8 @@ final class GuildMembershipStore {
                 next = r.getInt(1);
             }
         }
-        try (var s = c.prepareStatement("UPDATE guild_members SET rank=0,command_order=0 WHERE world_id=? AND guild_id=?")) {
+        try (var s =
+                c.prepareStatement("UPDATE guild_members SET rank=0,command_order=0 WHERE world_id=? AND guild_id=?")) {
             s.setInt(1, next);
             s.setLong(2, guildId);
             s.executeUpdate();

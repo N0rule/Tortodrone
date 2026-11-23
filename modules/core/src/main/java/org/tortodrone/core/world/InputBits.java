@@ -23,6 +23,7 @@ public final class InputBits {
     public static final int SPRITE_SKILL_MASK = 384, SPRITE_SKILL_SHIFT = 7;
     /** Auto-targeting toggle (client preference; also forced on by a pref). */
     public static final int AUTO_TARGET = 512;
+
     public static final int DODGE = 1024;
     public static final int SHIELD_BASH = 2048;
     /** Bits 0-11: the complete defined input layout. */
