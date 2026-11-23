@@ -310,7 +310,9 @@ public final class OpeningComlinkSessionTest {
 
     private static void enterScene(WorldSession world, SceneRegistry registry, int sceneId) throws Exception {
         var map = registry.catalog().scene(sceneId);
-        world.invocation(new SessionDecoder.Invocation(3, 1, 11, List.of()));
+        // KnightMarshaller 11 is the Ready Room return request; outside it the same call is
+        // the live-scene /haven command and would install a forced move before the zone move.
+        if (world.inReadyRoom()) world.invocation(new SessionDecoder.Invocation(3, 1, 11, List.of()));
         world.invocation(new SessionDecoder.Invocation(
                 3,
                 5,
@@ -333,7 +335,7 @@ public final class OpeningComlinkSessionTest {
 
     private static void enter(WorldSession world, SceneRegistry registry, OpeningMission mission) throws Exception {
         var map = registry.catalog().scene(OpeningComlinks.scene(mission));
-        world.invocation(new SessionDecoder.Invocation(3, 1, 11, List.of()));
+        if (world.inReadyRoom()) world.invocation(new SessionDecoder.Invocation(3, 1, 11, List.of()));
         world.invocation(new SessionDecoder.Invocation(
                 3,
                 5,
