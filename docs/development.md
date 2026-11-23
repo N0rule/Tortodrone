@@ -101,6 +101,17 @@ java scripts/build/StockTools.java previews "/path/to/Spiral Knights"
 
 `scripts/compat/` also contains narrower handshake, account, scene, portal, inspection, trade, item, emote, weapon, fire and protocol fixtures. Read each tool's source/usage before running it: some launch temporary servers and clients; some only inspect installed classes/configs. Probes in the unnamed package share `Harness.java` (assertions and native frame appends) and `NativeConfig.java` (installed-client config bootstrap); `java scripts/compat/SomeProbe.java` resolves those sibling sources automatically, and `StockTools` adds them to its explicit `javac` run. The exporter `scripts/build/StockTools.java` handles `scene`, `items`, `weapons`, `fires`, `fire-compact`, `equipment` and current source-maintainer scene/capture subcommands in read-only game input mode with a fresh output directory. `previews`/`items` require a built server JAR.
 
+No Gradle task compiles `scripts/compat/`: a probe is compiled when it is run, so one that stopped
+matching the code is indistinguishable from a working one until someone needs it. Run
+`java --class-path dist/tortodrone.jar scripts/build/StockTools.java probes-compile "/path/to/Spiral Knights"`
+before trusting a probe in a report; it compiles each file on its own (they share simple names and
+cannot be compiled together), prints the first errors of every stale file and exits non-zero.
+Against the current installed client, 57 of the 92 probes compile. The other 35 call obfuscated
+members that moved in the client build rather than server behaviour that regressed -- for example
+`com.threerings.io.v.qe()` is now `ql()` and `com.threerings.presents.net.EventNotification.yj()` is
+now `yn()` -- and some also call our own older API (`WorldSession.field`, `openingMissions(TownCatalog)`,
+`SceneClock`). Re-mapping them is a per-client-update job; a probe file's presence is not evidence.
+
 There is **no stock-client guild probe yet**. Guild state is covered at frame level (`GuildWireTest` pins the record and roster encoders) and through the WebUI service adapter, but nothing logs on as a knight, forms a guild and reads the record back through the stock `GuildObject` marshaller the way `HavenConnectionCheck` does for travel. Writing one needs the installed client's obfuscated guild service and object classes mapped first; do not add a probe that asserts against our own encoder and call it stock-client coverage.
 
 **Stock reader/network acceptance ≠ graphical acceptance.** For a change to rendering, attachment composition, animation or transition readiness, one isolated unchanged-client graphical scenario may be necessary; for altered shared-instance behavior, test with two clients. This is **not** a default validation step for unrelated tasks. Use disposable endpoints, public keys, home/prefs/cache/temp/native extraction and test accounts; never patch the production launcher/client. Save and review screenshots or logs where the fixture provides them. Keep the game window focused; platform window-manager and input behaviors can invalidate short action captures.

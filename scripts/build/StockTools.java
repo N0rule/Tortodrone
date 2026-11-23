@@ -14,7 +14,7 @@ public final class StockTools {
     public static void main(String[] args) throws Exception {
         if (args.length < 2)
             throw new IllegalArgumentException(
-                    "Usage: java scripts/build/StockTools.java previews|items|weapons|fires|fire-compact|equipment|item-use|scene|monster-roster|monster-catalog|haven|town|town-check|recipes|craft-check game-directory [arguments]");
+                    "Usage: java scripts/build/StockTools.java previews|items|weapons|fires|fire-compact|equipment|item-use|scene|monster-roster|monster-catalog|haven|town|town-check|recipes|craft-check|probes-compile game-directory [arguments]");
         Path project = Path.of("").toAbsolutePath();
         if (args[0].equals("fire-compact")) {
             if (args.length != 3)
@@ -39,6 +39,57 @@ public final class StockTools {
         var sources = new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "probes-compile" -> {
+                if (args.length != 2) throw new IllegalArgumentException("probes-compile expects game-directory");
+                String cp = game.resolve("code/projectx-pcode.jar")
+                        + File.pathSeparator
+                        + game.resolve("code")
+                        + File.separator
+                        + "*"
+                        + File.pathSeparator
+                        + deploymentJar();
+                Path compat = project.resolve("scripts/compat");
+                Path scratch = Files.createTempDirectory("tortodrone-probes-compile-");
+                var probes = new ArrayList<Path>();
+                try (var listed = Files.list(compat)) {
+                    listed.filter(path -> path.getFileName().toString().endsWith(".java"))
+                            .forEach(probes::add);
+                }
+                probes.sort(null);
+                var stale = new ArrayList<String>();
+                for (Path probe : probes) {
+                    Process child = new ProcessBuilder(
+                                    executable("javac"),
+                                    "--release",
+                                    "25",
+                                    "-sourcepath",
+                                    compat.toString(),
+                                    "-cp",
+                                    cp,
+                                    "-d",
+                                    scratch.toString(),
+                                    probe.toString())
+                            .redirectErrorStream(true)
+                            .start();
+                    String output = new String(child.getInputStream().readAllBytes());
+                    if (child.waitFor() == 0) continue;
+                    var first = new ArrayList<String>();
+                    output.lines()
+                            .filter(line -> line.contains(": error:"))
+                            .limit(3)
+                            .forEach(line -> first.add(line.replace(compat + File.separator, "")));
+                    stale.add(probe.getFileName().toString());
+                    System.out.println("STALE " + probe.getFileName());
+                    first.forEach(line -> System.out.println("  " + line));
+                }
+                System.out.println((stale.isEmpty() ? "PASS: " : "FAIL: ")
+                        + (probes.size() - stale.size())
+                        + " of "
+                        + probes.size()
+                        + " compat probes compile against the installed client");
+                if (!stale.isEmpty()) System.exit(1);
+                return;
+            }
             case "entry-state-check" -> {
                 fixture = "EntryStateCompatibility";
                 for (String source : List.of("EntryStateCompatibility", "FireCompatibility"))
