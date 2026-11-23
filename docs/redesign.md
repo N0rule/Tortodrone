@@ -373,7 +373,7 @@ owners that compose named collaborators instead of mixing responsibilities:
 | --- | --- | --- |
 | `WorldSession` | 601 | protocol facade over `SessionRuntime`, the feature handlers, `SessionResponder`, `SessionPresence`, `SessionLog`, `SessionPublications`, `SessionRefresh`, `SessionProfilePublisher` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
 | `SceneEntities` | 516 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
-| `SceneSimulation` | 427 | process-wide `SceneClock`, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
+| `SceneSimulation` | 399 | process-wide `SceneClock`, membership map and publications; the entity/weapon callback contract is wired once in its constructor; per-tick observations live in `SceneTickMetrics` |
 | `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |
 | `Database` | 505 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models; process counters live in `StorageTelemetry` |
 | `CharacterStore` | 351 | roster facade returning core character models; the storage-service facade is `CharacterServices`, per-knight storage reads/writes are in `KnightStorage`, knight identity policy is in `KnightIdentity`, and the roster monitor enters the `CHARACTER` rank at every synchronized entry point |

@@ -313,40 +313,14 @@ public final class SceneSimulation {
         previous=null;
     }
     /** Per-tick observations sampled without holding the scene monitor. */
-    private long tickLockWaitNanos,tickWorkNanos,tickMaxWorkNanos,tickMaxLockWaitNanos,tickMaxPublicationNanos;
-    private static final int MEASUREMENT_WINDOW=256;
-    private final long[] lockWaitSamples=new long[MEASUREMENT_WINDOW],workSamples=new long[MEASUREMENT_WINDOW],
-        publicationSamples=new long[MEASUREMENT_WINDOW],deliverySamples=new long[MEASUREMENT_WINDOW];
-    private int sampleCount,sampleNext;
-    private long maxDeliveryNanos;
-    public record TickMetrics(long ticks,long lockWaitNanos,long workNanos,long maxWorkNanos,
-            long lockWaitP50Nanos,long lockWaitP99Nanos,long workP50Nanos,long workP99Nanos,
-            long publicationP50Nanos,long publicationP99Nanos,long deliveryP50Nanos,long deliveryP99Nanos,
-            long maxLockWaitNanos,long maxPublicationNanos,long maxDeliveryNanos){ }
-    public synchronized TickMetrics tickMetrics(){
-        return new TickMetrics(tickCount,tickLockWaitNanos,tickWorkNanos,tickMaxWorkNanos,
-            percentile(lockWaitSamples,.50),percentile(lockWaitSamples,.99),
-            percentile(workSamples,.50),percentile(workSamples,.99),
-            percentile(publicationSamples,.50),percentile(publicationSamples,.99),
-            percentile(deliverySamples,.50),percentile(deliverySamples,.99),
-            tickMaxLockWaitNanos,tickMaxPublicationNanos,maxDeliveryNanos);
-    }
-    private void sample(long lockWait,long work,long publication,long delivery) {
-        lockWaitSamples[sampleNext]=lockWait;workSamples[sampleNext]=work;
-        publicationSamples[sampleNext]=publication;deliverySamples[sampleNext]=delivery;
-        sampleNext=(sampleNext+1)%MEASUREMENT_WINDOW;
-        if(sampleCount<MEASUREMENT_WINDOW)sampleCount++;
-        if(delivery>maxDeliveryNanos)maxDeliveryNanos=delivery;
-    }
-    private long percentile(long[] samples,double quantile) {
-        if(sampleCount==0)return 0;
-        long[] copy=java.util.Arrays.copyOf(samples,sampleCount);java.util.Arrays.sort(copy);
-        return copy[Math.min(copy.length-1,(int)Math.ceil(copy.length*quantile)-1)];
+    private final SceneTickMetrics metrics=new SceneTickMetrics();
+    public synchronized SceneTickMetrics.Snapshot tickMetrics(){
+        return metrics.snapshot(tickCount);
     }
     private void tick() {
         long entered=System.nanoTime();
         SceneSnapshot publication;List<Consumer<SceneSnapshot>> recipients;
-        long publicationNanos=0,lockWaitSample=0;
+        long publicationNanos=0,workNanos=0,lockWaitSample=0;
         synchronized(this) {
             long lockWait=System.nanoTime()-entered;
             lockWaitSample=lockWait;
@@ -399,12 +373,10 @@ public final class SceneSimulation {
             long publicationStarted=System.nanoTime();
             publication=capture(stamp,previous);previous=publication;tickCount++;
             publicationNanos=System.nanoTime()-publicationStarted;
-            tickWorkNanos=System.nanoTime()-tickStarted;
-            tickLockWaitNanos=lockWait;
-            if(tickWorkNanos>tickMaxWorkNanos)tickMaxWorkNanos=tickWorkNanos;
-            if(lockWait>tickMaxLockWaitNanos)tickMaxLockWaitNanos=lockWait;
-            if(publicationNanos>tickMaxPublicationNanos)tickMaxPublicationNanos=publicationNanos;
-            entities.tickDuration(tickWorkNanos);
+            long workNanosSample=System.nanoTime()-tickStarted;
+            workNanos=workNanosSample;
+            metrics.record(lockWait,workNanosSample,publicationNanos);
+            entities.tickDuration(workNanosSample);
             if(stamp-lastMetricLog>=30_000){
                 lastMetricLog=stamp;
                 var m=entities.metrics();
@@ -422,6 +394,6 @@ public final class SceneSimulation {
         long deliveryStarted=System.nanoTime();
         for(var recipient:recipients)recipient.accept(publication);
         long deliveryNanos=System.nanoTime()-deliveryStarted;
-        synchronized(this){sample(lockWaitSample,tickWorkNanos,publicationNanos,deliveryNanos);}
+        synchronized(this){metrics.sample(lockWaitSample,workNanos,publicationNanos,deliveryNanos);}
     }
 }
