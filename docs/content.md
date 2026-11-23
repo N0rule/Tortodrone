@@ -62,7 +62,7 @@ Mission Lobby (351) and the three Shadow Wildwoods floors (380, 382, 384); see
 There are 9,355 indexed original item definitions, 386 weapon controls and 123
 shields. Indexed content does not establish gameplay support. The implementation
 still has the limits described in [Architecture](architecture.md) and the
-[stock support index](item-support.csv); mission definitions are catalogued below and one
+[stock support index](data/item-support.csv); mission definitions are catalogued below and one
 verified gate route runs, but general dungeon mission runs, objective progress, reward
 granting, random vendor stock and many original actions remain incomplete.
 
@@ -503,7 +503,7 @@ They stay in the pinned item, combat, progression and fire catalogs so the
 existing catalog hash and migration history remain stable. Treat them as legacy
 reference data, not supported content, and do not grant them to players. The
 machine-readable record with stock IDs, live keys and fire activities is
-`docs/orphaned-items.json`.
+`docs/data/orphaned-items.json`.
 
 The reverse gap also exists: 99 client item definitions, mostly recolored
 accessories and costumes plus a few upgrades, are not in the server catalog yet.
@@ -1095,13 +1095,13 @@ enabling them would either consume an item for nothing or invent behavior the
 client does not supply. Guild bonds, hall/theme/environment tickets, member and
 storage upgrades, and furniture items remain unusable: guild halls, guild
 storage and design rooms are not served, and the native upgrade tickets are
-guild-hall props. The [item support matrix](item-support.csv) records each
+guild-hall props. The [item support matrix](data/item-support.csv) records each
 remaining group and its evidence.
 
 ## Lockboxes and Prize Boxes
 
 The current content set enables **243 explicitly labeled approximation pools**,
-covering all indexed non-template stock boxes. The [support matrix](box-support.csv) audits
+covering all indexed non-template stock boxes. The [support matrix](data/box-support.csv) audits
 all 250 native definitions. Six internal base/parameter templates and the empty
 Mystery placeholder remain disabled because they have no playable reward pool.
 Every edition has a separate definition, using existing readable item IDs.

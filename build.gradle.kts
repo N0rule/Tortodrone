@@ -251,7 +251,7 @@ val buildWebui = tasks.register<Sync>("buildWebui") {
     // Locally extracted artwork is not a build input and must survive frontend updates.
     preserve { include("assets/game/**", "client-artwork.skipped") }
     val installedManifest = publicOutput.file("webui/assets/game/manifest.json").asFile
-    from("src/webui") {
+    from("frontend") {
         eachFile {
             if (path.startsWith("assets/game/") && installedManifest.isFile) exclude()
         }
@@ -438,7 +438,7 @@ val portableZip = tasks.register<Zip>("portableZip") {
     archiveFileName.set("Tortodrone-v${project.version}.zip")
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
     from(serverJar.flatMap { it.archiveFile })
-    from("src/webui") { into("webui") }
+    from("frontend") { into("webui") }
     from("config") { into("config") }
     from("content") { into("content") }
     from("plugins") { into("plugins") }

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.png" alt="Tortodrone" width="100%">
+  <img src="docs/images/banner.png" alt="Tortodrone" width="100%">
 </p>
 
 <h1 align="center">Tortodrone</h1>
@@ -330,7 +330,7 @@ This validates the pinned scenes, entrances, and route prerequisites. It does **
 | **Missions** | Partial: the stock catalogue, native mission bar and gate map are served, and the Shadow Beast route runs floor-by-floor with room progress and one settlement. The other four bundled routes are blocked on missing authored lobbies or floors. |
 | **Guilds, PvP, Arcade** | Not implemented. |
 
-Imported definitions and passing serialization tests do not establish full gameplay or visual parity. See [Content](docs/content.md), the [item support inventory](docs/item-support.csv), and the [box support inventory](docs/box-support.csv) for current limits.
+Imported definitions and passing serialization tests do not establish full gameplay or visual parity. See [Content](docs/content.md), the [item support inventory](docs/data/item-support.csv), and the [box support inventory](docs/data/box-support.csv) for current limits.
 
 ## Troubleshooting
 
@@ -375,15 +375,16 @@ More diagnostic guidance is in [Operations](docs/operations.md#diagnosis). Logs 
 ## Project layout
 
 ```text
-src/main/java/    server implementation
-src/test/         regression programs and fixtures
-src/webui/        administration frontend
-config/           default configuration
-content/          maintained server definitions and bundled maps
-scripts/          import, inspection, and compatibility tools
-docs/             operator guides and technical references
-gradle/           pinned wrapper and dependency verification
-licenses/         third-party notices used by releases
+modules/              server implementation, six dependency-checked projects
+frontend/             administration frontend, copied beside the JAR
+content/              maintained server definitions and bundled maps
+config/               default configuration template
+scripts/              import, inspection, and compatibility tools
+map-sources/          local map exports; only the guide and template are tracked
+src/main/resources/   runtime seeds and redistribution notices
+src/test/             standalone regression programs and fixtures
+docs/                 operator guides and technical references
+gradle/               pinned wrapper and dependency verification
 ```
 
 ## AI assistance

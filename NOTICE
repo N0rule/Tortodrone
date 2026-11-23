@@ -5,7 +5,7 @@ Noncommercial License 1.0.0 in LICENSE. Preserve the Required Notice above and
 the license terms or their URL when redistributing any part of that software.
 
 Third-party dependencies retain their own licenses; see
-src/main/resources/THIRD-PARTY.md and licenses/. Original Spiral Knights content,
+src/main/resources/THIRD-PARTY.md and src/main/resources/licenses/. Original Spiral Knights content,
 including captured scene data and locally extracted artwork, is not licensed
 by N0rule under these terms. Its inclusion or local availability is not a grant
 of redistribution rights. Tortodrone is an independent, unofficial project.

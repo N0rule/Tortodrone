@@ -48,7 +48,7 @@ public final class PackagingIntegrationTest {
             }
             var manifest=(Map<?,?>)Json.parse(Files.readString(root.resolve("webui/assets/game/manifest.json")));
             check(((Map<?,?>)manifest.get("items")).isEmpty(),"Portable release has source-owned fallback artwork");
-            check(Files.mismatch(Path.of("src/webui/assets/game/manifest.json"),root.resolve("webui/assets/game/manifest.json"))==-1,"Fallback manifest matches source");
+            check(Files.mismatch(Path.of("frontend/assets/game/manifest.json"),root.resolve("webui/assets/game/manifest.json"))==-1,"Fallback manifest matches source");
             ContentManager.load(root);
             System.out.println("PASS: portable ZIP contains complete validated source defaults/licenses, no duplicate entries, runtime data or client artwork");
         } finally { ContentFixture.delete(root); }

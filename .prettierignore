@@ -11,7 +11,7 @@ licenses/
 src/main/resources/
 
 # Generated client artwork and its manifest (prepared outside Git).
-src/webui/assets/game/
+frontend/assets/game/
 
 # Java sources are not JavaScript; the server keeps its own compact style.
 src/main/java/
