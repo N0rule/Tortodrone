@@ -12,6 +12,8 @@ import org.tortodrone.core.world.SceneConversation;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.core.world.ActorState;
+import org.tortodrone.core.character.WorldProfile;
+import org.tortodrone.storage.OpeningMissionStore;
 import org.tortodrone.world.OpeningComlinks;
 
 /** Native conversation dialogs for one connection: owned nodes, responses and terminal settlement.
@@ -157,10 +159,10 @@ final class ConversationHandler {
             try{
                 var expectedTerminal=new SceneActions.Sequence(List.of(new SceneActions.Memory(new KnightMemory("talkto_rhendon_icon",false)),new SceneActions.Objective(new KnightObjective("findRhendon",null))),false);
                 if(securing?!expectedTerminal.equals(response.action()):response.action()!=null)throw new IOException("Unsupported mission terminal action graph");
-                var prepared=session.prepareConversationSettlement(terminalId);
+                var prepared=prepareSettlement(terminalId);
                 close();
                 long dialog=prepared.settled().first()?touch():created;
-                session.applyConversationSettlement(prepared,terminalId,own,dialog);
+                applySettlement(prepared,terminalId,own,dialog);
                 remember(listener.requestId());responder.confirmed(listener.requestId());
             }catch(IOException failure){responder.failure(listener.requestId(),failure.getMessage());}
             return true;
@@ -183,6 +185,36 @@ final class ConversationHandler {
         }
         remember(listener.requestId());
         responder.confirmed(listener.requestId());return true;
+    }
+
+    /** The saved half of one conversation terminal: the pre-write profile and what committed. */
+    private record PreparedSettlement(WorldProfile before,OpeningMissionStore.Settlement settled,boolean firstEver) { }
+
+    private PreparedSettlement prepareSettlement(String terminalId)throws IOException {
+        session.applyProfile(session.loadProfile(session.currentProfile()));
+        var before=session.currentProfile();boolean firstEver=session.completedOpeningEmpty();
+        var store=session.charactersStore();
+        var settled=store.services().openingMissions(session.sceneRegistry().town(),session.sceneRegistry().missions())
+            .complete(store.accountId(),session.selectedKnight().id(),session.authRevision(),before,terminalId,null);
+        return new PreparedSettlement(before,settled,firstEver);
+    }
+
+    /** Publish the committed settlement in the native order; the dialog stays open on failure. */
+    private void applySettlement(PreparedSettlement prepared,String terminalId,ActorState own,long dialog)throws IOException {
+        var settled=prepared.settled();var before=prepared.before();
+        session.applyProfile(settled.profile());
+        session.applySettlementStory(settled.memories(),settled.objectives());
+        session.recordOpeningCompletion(terminalId,settled.completion());
+        if(settled.first()){
+            session.membership().equipment(session.visibleProfileNow());session.missionDialogCreated(dialog);
+            var entry=session.sceneRegistry().missions().mission(terminalId);
+            boolean immediate=entry==null||!entry.requirement().type().equals("gate");
+            responder.send(()->responder.codec().missionSettlement(responder.oid(),before,session.currentProfile(),settled.completion(),
+                session.sceneRegistry().missions().grants(terminalId),session.sceneRegistry().missions().prestige(terminalId),immediate,dialog));
+            responder.send(()->responder.codec().itemChanges(responder.oid(),session.selectedKnight(),before,session.currentProfile()));
+            if(prepared.firstEver())responder.send(()->responder.codec().controllerAction(responder.oid(),"new_mission",own));
+            session.publishPartyState();
+        }
     }
 
     private void remember(short id) {

@@ -340,6 +340,7 @@ final class WorldSession implements AutoCloseable {
         story.applySettlementStory(freshMemories,freshObjectives);
     }
     void recordOpeningCompletion(String mission,OpeningCompletion completion){story.recordCompletion(mission,completion);}
+    void missionDialogCreated(long value){story.missionDialogCreated(value);}
     long noteMissionDialog(){return story.noteMissionDialog();}
     /** Install a forced destination before the client acknowledges its move. */
     void beginForcedTravel(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException {
@@ -470,27 +471,6 @@ final class WorldSession implements AutoCloseable {
     synchronized void adminFeedback(String reason)throws IOException{chatFeedback(runtime.scene().oid(),runtime.sceneGeneration(),reason);}
     ActorState selfActor(){return runtime.scene().simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);}
     SceneMembership membership(){return runtime.membership();}
-    /** The saved half of one conversation terminal: the pre-write profile and what committed. */
-    record PreparedSettlement(WorldProfile before,org.tortodrone.storage.OpeningMissionStore.Settlement settled,boolean firstEver) { }
-    PreparedSettlement prepareConversationSettlement(String terminalId)throws IOException {
-        profile=loadProfile(profile);var before=profile;boolean firstEver=story.completedEmpty();
-        var settled=characters.services().openingMissions(scenes.town(),scenes.missions()).complete(characters.accountId(),knight.id(),authRevision,profile,terminalId,null);
-        return new PreparedSettlement(before,settled,firstEver);
-    }
-    void applyConversationSettlement(PreparedSettlement prepared,String terminalId,ActorState own,long dialog)throws IOException {
-        var settled=prepared.settled();var before=prepared.before();profile=settled.profile();
-        story.applyMemories(settled.memories());
-        story.applyObjectives(settled.objectives());
-        story.recordCompletion(terminalId,settled.completion());
-        if(settled.first()){
-            runtime.membership().equipment(visibleProfile());story.missionDialogCreated(dialog);
-            var entry=scenes.missions().mission(terminalId);
-            boolean immediate=entry==null||!entry.requirement().type().equals("gate");
-            output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),scenes.missions().grants(terminalId),scenes.missions().prestige(terminalId),immediate,dialog));
-            output.send(()->codec.itemChanges(oid,knight,before,profile));
-            if(prepared.firstEver())output.send(()->codec.controllerAction(oid,"new_mission",own));partyState();
-        }
-    }
     SceneChat.RateLimit chatRate(){return chats.rate();}
     int sceneGenerationValue(){return runtime.sceneGeneration();}
     PartyRegistry.Member partyMember(){return partyMember;}
