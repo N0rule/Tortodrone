@@ -1,33 +1,4 @@
 # Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
 # Weights are relative within each group; bundles grant every selected reward.
 boxes:
-  a12:
-    kind: keyed
-    acceptedKeys:
-    - slime_key
-    - silver_key
-    status: approximate
-    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
-      not verified against current live server; see docs/content.md
-    groups:
-      main: {shared: a12_main}
-      choices_peridot_1: {shared: choices_peridot}
-      choices_node_slime_heavy_s3624907302_3bd380_2: {shared: choices_node_slime_heavy_s3624907302_3bd380_2}
-      choices_node_slime_heavy_s3624907302_3bd380_3: {shared: choices_node_slime_heavy_s3624907302_3bd380_3}
-      choices_node_slime_heavy_s3624907302_3bd380_4: {shared: choices_node_slime_heavy_s3624907302_3bd380}
-      choices_node_slime_heavy_s4264220483_bf581c_5: {shared: choices_node_slime_heavy_s4264220483_bf581c}
-      choices_node_heavy_s3147963159_402e4161319f_6: {shared: choices_node_heavy_s3147963159_402e4161319f}
-      choices_node_slime_heavy_s2398871881_066969_7: {shared: choices_node_slime_heavy_s2398871881_066969}
-      choices_node_slime_heavy_s1737681418_8689a1_8: {shared: choices_node_slime_heavy_s1737681418_8689a1}
-      choices_slimed_aura_heavy_9: {shared: choices_slimed_aura_heavy}
-      choices_somnambulist_s_totem_10: {shared: choices_somnambulist_s_totem}
-      choices_node_slime_blue_s1502234395_c482643_11: {shared: choices_node_slime_blue_s1502234395_c482643_2}
-      choices_node_slime_blue_s1502234395_c482643_12: {shared: choices_node_slime_blue_s1502234395_c482643}
-      choices_node_slime_blue_s2769783390_4d3dc22_13: {shared: choices_node_slime_blue_s2769783390_4d3dc22}
-      choices_node_blue_s3565059082_81555683296b_14: {shared: choices_node_blue_s3565059082_81555683296b}
-      choices_node_slime_blue_s77211544_a23ce188c_15: {shared: choices_node_slime_blue_s77211544_a23ce188c}
-      choices_node_slime_blue_s3935208119_4f114f3_16: {shared: choices_node_slime_blue_s3935208119_4f114f3}
-      choices_slimed_aura_blue_17: {shared: choices_slimed_aura_blue}
-      choices_confetti_slime_18: {shared: choices_confetti_slime_2}
-      choices_confetti_slime_19: {shared: choices_confetti_slime}
-      choices_small_fireworks_slime_20: {shared: choices_small_fireworks_slime}
+  a12: {shared: a12}

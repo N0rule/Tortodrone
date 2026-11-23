@@ -29,7 +29,7 @@ public final class BoxCatalog {
         var root=map(Json.parseCatalog(Files.readString(file)),file.toString());fields(root,file.toString(),"format","version","boxes");
         if(!"tortodrone-box-bindings".equals(root.get("format"))||integer(root.get("version"),"box bindings version")!=1)throw new IOException("Unsupported box bindings");
         var nativeBoxes=map(root.get("boxes"),"box bindings");var definitions=new HashMap<String,BoxDefinition>();var tables=new HashMap<String,String>();
-        var sharedLibrary=sharedLibrary(content,items);
+        var sharedLibrary=sharedLibrary(content,items);var sharedBoxes=sharedBoxes(content,items,sharedLibrary);
         for(Path yaml:yamlFiles(content.resolve("loot/boxes"))) {
             var data=read(yaml);fields(data,yaml.toString(),"boxes");
             for(var row:map(data.get("boxes"),"boxes").entrySet()) {
@@ -38,24 +38,33 @@ public final class BoxCatalog {
                 var binding=map(nativeBoxes.get(id),"Missing native box binding: "+id);fields(binding,id,"keyOptions","spawnTable");
                 if(binding.containsKey("spawnTable"))tables.put(config,text(binding.get("spawnTable"),id+" spawn table"));
                 var nativeKeys=keys(binding.get("keyOptions"),items);
-                var value=map(row.getValue(),id);fields(value,id,"kind","acceptedKeys","status","evidence","groups","guaranteed");
-                Kind kind=enumeration(Kind.class,value.get("kind"),id);Status status=enumeration(Status.class,value.get("status"),id);
-                var keys=keys(value.get("acceptedKeys"),items);
-                if(!keys.equals(nativeKeys)||(kind==Kind.KEYLESS)!=keys.isEmpty())throw new IOException("Key options must match the stock client: "+id);
-                String evidence=text(value.get("evidence"),id);if(evidence.isBlank()||evidence.length()>2048)throw new IOException("Box evidence is required: "+id);
-                var groups=new LinkedHashMap<String,Group>();
-                for(var g:map(value.getOrDefault("groups",Map.of()),id).entrySet()) {
-                    String name=g.getKey();if(!name.matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid reward group: "+name);
-                    var m=map(g.getValue(),name);Group group;
-                    if(m.containsKey("shared")) {
-                        fields(m,name,"shared");
-                        String reference=text(m.get("shared"),name+" shared group");
-                        group=sharedLibrary.get(reference);
-                        if(group==null)throw new IOException("Unknown shared loot group: "+reference);
-                    } else group=group(name,m,items);
-                    groups.put(name,group);
+                var value=map(row.getValue(),id);Kind kind;List<String> keys;Status status;String evidence;Map<String,Group> groups;List<Reward> guaranteed;
+                if(value.containsKey("shared")) {
+                    fields(value,id,"shared");
+                    String reference=text(value.get("shared"),id+" shared box");
+                    var shared=sharedBoxes.get(reference);if(shared==null)throw new IOException("Unknown shared loot box: "+reference);
+                    if(!shared.keys().equals(nativeKeys)||(shared.kind()==Kind.KEYLESS)!=shared.keys().isEmpty())throw new IOException("Key options must match the stock client: "+id);
+                    kind=shared.kind();keys=shared.keys();status=shared.status();evidence=shared.evidence();groups=shared.groups();guaranteed=shared.guaranteed();
+                } else {
+                    fields(value,id,"kind","acceptedKeys","status","evidence","groups","guaranteed");
+                    kind=enumeration(Kind.class,value.get("kind"),id);status=enumeration(Status.class,value.get("status"),id);
+                    keys=keys(value.get("acceptedKeys"),items);
+                    if(!keys.equals(nativeKeys)||(kind==Kind.KEYLESS)!=keys.isEmpty())throw new IOException("Key options must match the stock client: "+id);
+                    evidence=text(value.get("evidence"),id);if(evidence.isBlank()||evidence.length()>2048)throw new IOException("Box evidence is required: "+id);
+                    var local=new LinkedHashMap<String,Group>();
+                    for(var g:map(value.getOrDefault("groups",Map.of()),id).entrySet()) {
+                        String name=g.getKey();if(!name.matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid reward group: "+name);
+                        var m=map(g.getValue(),name);Group group;
+                        if(m.containsKey("shared")) {
+                            fields(m,name,"shared");
+                            String reference=text(m.get("shared"),name+" shared group");
+                            group=sharedLibrary.get(reference);
+                            if(group==null)throw new IOException("Unknown shared loot group: "+reference);
+                        } else group=group(name,m,items);
+                        local.put(name,group);
+                    }
+                    groups=local;guaranteed=rewards(value.getOrDefault("guaranteed",List.of()),items);
                 }
-                var guaranteed=rewards(value.getOrDefault("guaranteed",List.of()),items);
                 var box=new BoxDefinition(id,config,kind,keys,status,evidence,groups,guaranteed);
                 if(box.enabled()&&!items.inspect(config).grantable())throw new IOException("Box is not grantable: "+id);
                 if(box.enabled()&&(!groups.containsKey("main")||groups.get("main").chance()!=1_000_000))throw new IOException("Enabled box needs a guaranteed main roll: "+id);
@@ -84,6 +93,39 @@ public final class BoxCatalog {
             groups.put(name,group(name,map(row.getValue(),name),items));
         }
         return Map.copyOf(groups);
+    }
+    /** Whole box bodies shared by stock IDs that differ only by their readable item ID. */
+    private record Template(Kind kind,List<String> keys,Status status,String evidence,Map<String,Group> groups,List<Reward> guaranteed) { }
+    private static Map<String,Template> sharedBoxes(Path content,ItemCatalog items,Map<String,Group> sharedLibrary)throws IOException {
+        Path file=content.resolve("shared/loot/boxes.yml");
+        if(!Files.exists(file))return Map.of();
+        var data=read(file);fields(data,"shared loot boxes","boxes");
+        var boxes=new LinkedHashMap<String,Template>();
+        for(var row:map(data.get("boxes"),"shared loot boxes").entrySet()) {
+            String name=row.getKey();
+            if(!name.matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid shared loot box: "+name);
+            var value=map(row.getValue(),name);
+            fields(value,"shared loot box "+name,"kind","acceptedKeys","status","evidence","groups","guaranteed");
+            Kind kind=enumeration(Kind.class,value.get("kind"),name);Status status=enumeration(Status.class,value.get("status"),name);
+            var keys=keys(value.get("acceptedKeys"),items);
+            if((kind==Kind.KEYLESS)!=keys.isEmpty())throw new IOException("Key options must match the stock client: "+name);
+            String evidence=text(value.get("evidence"),name);if(evidence.isBlank()||evidence.length()>2048)throw new IOException("Box evidence is required: "+name);
+            var groups=new LinkedHashMap<String,Group>();
+            for(var g:map(value.getOrDefault("groups",Map.of()),name).entrySet()) {
+                String groupName=g.getKey();if(!groupName.matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid reward group: "+groupName);
+                var m=map(g.getValue(),groupName);Group group;
+                if(m.containsKey("shared")) {
+                    fields(m,groupName,"shared");
+                    String reference=text(m.get("shared"),groupName+" shared group");
+                    group=sharedLibrary.get(reference);
+                    if(group==null)throw new IOException("Unknown shared loot group: "+reference);
+                } else group=group(groupName,m,items);
+                groups.put(groupName,group);
+            }
+            if(boxes.put(name,new Template(kind,keys,status,evidence,groups,rewards(value.getOrDefault("guaranteed",List.of()),items)))!=null)
+                throw new IOException("Duplicate shared loot box: "+name);
+        }
+        return Map.copyOf(boxes);
     }
     private static Group group(String name,Map<String,Object> value,ItemCatalog items)throws IOException {
         fields(value,name,"chance","rolls","entries");

@@ -1,17 +1,4 @@
 # Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
 # Weights are relative within each group; bundles grant every selected reward.
 boxes:
-  spring_equinox_prize_box_2019:
-    kind: keyless
-    acceptedKeys: []
-    status: approximate
-    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
-      not verified against current live server; see docs/content.md
-    groups:
-      main: {shared: equinox_prize_box_complete_main}
-      choices_variants_1_1: {shared: choices_variants_1_2}
-      choices_stellar_sentinel_helm_2: {shared: choices_stellar_sentinel_helm}
-      choices_plasma_wings_gold_3: {shared: choices_plasma_wings_gold}
-      choices_celestial_saber_4: {shared: choices_celestial_saber_2}
-      choices_confetti_equinox_5: {shared: choices_confetti_equinox}
-      choices_confetti_equinox_6: {shared: choices_confetti_equinox_2}
+  spring_equinox_prize_box_2019: {shared: spring_equinox_prize_box_2017}

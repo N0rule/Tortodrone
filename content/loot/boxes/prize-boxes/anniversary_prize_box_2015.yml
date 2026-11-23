@@ -1,19 +1,4 @@
 # Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
 # Weights are relative within each group; bundles grant every selected reward.
 boxes:
-  anniversary_prize_box_2015:
-    kind: keyless
-    acceptedKeys: []
-    status: approximate
-    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
-      not verified against current live server; see docs/content.md
-    groups:
-      main: {shared: anniversary_prize_main}
-      choices_confetti_1: {shared: choices_confetti}
-      choices_confetti_2: {shared: choices_confetti_3}
-      choices_confetti_3: {shared: choices_confetti_2}
-      choices_grand_topper_blue_4: {shared: choices_grand_topper_blue_3}
-      choices_grand_topper_blue_5: {shared: choices_grand_topper_blue}
-      choices_field_cap_blue_6: {shared: choices_field_cap_blue}
-      choices_field_cap_plumed_blue_7: {shared: choices_field_cap_plumed_blue}
-      choices_grand_topper_prismatic_8: {shared: choices_grand_topper_prismatic}
+  anniversary_prize_box_2015: {shared: anniversary_prize_box_2015}

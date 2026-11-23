@@ -1284,6 +1284,15 @@ startup. Add a shared body only when at least two boxes genuinely need the same
 one; new loot must reference an existing body rather than copy it. Use a local
 body when the values differ, even slightly.
 
+Stock boxes that are identical apart from their readable item ID share a whole body
+in `content/shared/loot/boxes.yml`. The local row is only
+`{shared: <name>}`, and the shared body supplies `kind`, `acceptedKeys`, `status`,
+`evidence`, `groups` and `guaranteed`. Each referencing box still keeps its own
+ID and native config/key checks, so the shared `acceptedKeys` must match every
+referencing box's `_internal/box-bindings.json` entry. Unknown names, mixed
+local/shared rows, malformed shared bodies or key mismatches fail startup. Use
+distinct rows when any field differs.
+
 The following is an **illustrative custom test distribution, not an official Iron
 Lockbox pool**. It must never be labeled `verified` on the strength of this example.
 
