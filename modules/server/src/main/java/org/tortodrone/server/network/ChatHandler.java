@@ -220,8 +220,10 @@ final class ChatHandler {
     /** Native chat feedback only for a scene that is still current. */
     void feedback(int place,int generation,String reason)throws IOException { synchronized (session) {
         if(!session.isClosed()&&session.sceneSubscribed()&&session.sceneEntered()
-                &&session.currentScene().oid()==place&&session.sceneGenerationValue()==generation)
-            responder.send(()->responder.codec().chatFeedback(session.currentScene().map().town()?place:session.partyOid(),reason));
+                &&session.currentScene().oid()==place&&session.sceneGenerationValue()==generation){
+            int channel=session.currentScene().map().town()?place:session.partyOid();
+            responder.send(()->responder.codec().chatFeedback(channel,reason));
+        }
     }}
 
     void unavailable(String reason)throws IOException { synchronized (session) {

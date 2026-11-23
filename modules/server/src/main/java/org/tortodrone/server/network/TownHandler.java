@@ -40,7 +40,10 @@ final class TownHandler {
 
     void close()throws IOException {
         if(dialog==null)return;dialog=null;source=null;service++;
-        responder.send(()->responder.codec().townDialog(responder.oid(),session.currentScene().oid(),null,null,created,service));
+        // Read the scene under the session monitor before the output queue encodes the frame:
+        // an encoder that acquires this monitor inverts the session/output lock order.
+        int place=session.currentScene().oid();
+        responder.send(()->responder.codec().townDialog(responder.oid(),place,null,null,created,service));
     }
 
     /** Drop dialog state without a callback, for a scene replacement. */
@@ -69,7 +72,8 @@ final class TownHandler {
         if(station.kind().equals("OpenShop")||station.kind().equals("OpenHarnessInstaller")){
             shopCycle=session.sceneRegistry().town().shopCycle(station.shop());publishShop();
         }
-        responder.send(()->responder.codec().townDialog(responder.oid(),session.currentScene().oid(),station,source,created,service));
+        int place=session.currentScene().oid();
+        responder.send(()->responder.codec().townDialog(responder.oid(),place,station,source,created,service));
     }
 
     private void publishShop()throws IOException {
@@ -114,7 +118,8 @@ final class TownHandler {
                     var result=store.services().town(session.sceneRegistry().town()).rename(store.accountId(),knight.id(),session.authRevision(),(String)a.getFirst());
                     store.refresh();session.refreshKnight();
                     session.conversations().close();close();session.leaveChatForTown();session.townChanged(result);session.publishPartyState();
-                    responder.send(()->responder.codec().knightName(responder.oid(),session.selectedKnight().name()));
+                    String name=session.selectedKnight().name();
+                    responder.send(()->responder.codec().knightName(responder.oid(),name));
                     responder.confirmed(listener.requestId());
                     // Official dV companion dY ends the session after a rename and returns to the
                     // login window carrying the new name, so the server closes it here.

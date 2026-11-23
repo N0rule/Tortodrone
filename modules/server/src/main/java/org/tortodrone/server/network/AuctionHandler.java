@@ -37,7 +37,8 @@ final class AuctionHandler {
     void publishOutbids(WorldProfile before,WorldProfile after)throws IOException { synchronized (session) {
         for(var notice:after.town().outbids())if(!before.town().outbids().contains(notice)){
             var item=store.catalog().require(notice.item());
-            responder.send(()->responder.codec().auctionOutbid(session.currentScene().oid(),"%item:"+item.nameKey(),notice.crowns()));
+            int place=session.currentScene().oid();
+            responder.send(()->responder.codec().auctionOutbid(place,"%item:"+item.nameKey(),notice.crowns()));
         }
     }}
 

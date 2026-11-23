@@ -77,7 +77,8 @@ final class ConversationHandler {
         close();
         this.mission=missionId;this.conversation=definition;this.source=source;this.node=initialNode;
         touch();x=own.x();y=own.y();
-        responder.send(()->responder.codec().conversationDialog(responder.oid(),session.currentScene().oid(),
+        int place=session.currentScene().oid();
+        responder.send(()->responder.codec().conversationDialog(responder.oid(),place,
             conversation,node,source,created));
     }
 
@@ -113,7 +114,8 @@ final class ConversationHandler {
     void close()throws IOException {
         if(conversation==null)return;
         conversation=null;source=null;node=null;mission=null;
-        responder.send(()->responder.codec().conversationDialog(responder.oid(),session.currentScene().oid(),
+        int place=session.currentScene().oid();
+        responder.send(()->responder.codec().conversationDialog(responder.oid(),place,
             null,null,null,created));
     }
 
@@ -180,7 +182,8 @@ final class ConversationHandler {
             responder.send(()->responder.codec().controllerAction(responder.oid(),response.command(),origin));
         }else if(destination.isEmpty())close();else{
             node=destination;
-            responder.send(()->responder.codec().conversationDialog(responder.oid(),session.currentScene().oid(),
+            int place=session.currentScene().oid();
+            responder.send(()->responder.codec().conversationDialog(responder.oid(),place,
                 conversation,node,source,created));
         }
         remember(listener.requestId());
