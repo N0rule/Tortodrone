@@ -35,8 +35,8 @@ marker keeps a pre-`0.42.0` database from being mistaken for the new one.
 7. Scene instances own simulation state. Client input is intent, not position.
 8. No new network or database I/O inside a scene tick or a scene/storage lock. The
    commit-under-lock paths that exist today are named below; Phase 4 bounds or
-   refactors them. They are neither bounded nor tested yet, and this plan does not
-   claim otherwise.
+   refactors them. The storage-reaching paths are bounded and tested; the landed
+   outcome is recorded under Known commit-under-lock paths.
 9. The runtime reads only project-owned formats. Installed client data, extracted
    assets and decompiled material never ship.
 10. Verification stays focused: targeted `testUnit` programs and one graphical
