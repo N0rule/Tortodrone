@@ -382,8 +382,9 @@ The line counts are the size of each facade, not a target: a facade gains a line
 whenever a protocol entry point or a new collaborator is added. The two largest
 remaining stores were split the same way: `TownStore` composes `SpriteStore`,
 `TownLedger`, `TownSchema`, `CraftStore` and `GearStore`, and `GuildStore` composes
-`GuildHallStore` for the treasury well, hall state and expansion tickets and
-`GuildLogStore` for the guild record. Phase 9
+`GuildHallStore` for the treasury well, hall state and expansion tickets,
+`GuildLogStore` for the guild record and `GuildMembershipStore` for formation,
+invitations and roster commands. Phase 9
 stays evidence-gated and is not part of this table; it needs the per-epic stock
 evidence listed in `docs/baseline.md`.
 
