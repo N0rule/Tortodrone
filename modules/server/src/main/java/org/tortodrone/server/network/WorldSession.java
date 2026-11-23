@@ -587,24 +587,7 @@ final class WorldSession implements AutoCloseable {
      *  directly instead of first entering the saved town. */
     void enterScene(SceneRegistry.Instance next,ScenePortals.Entrance entrance)throws IOException { runtime.enterScene(next,entrance); }
 
-    synchronized void requireAdminReady()throws IOException { requireAdminReady(false); }
-    synchronized void requireAdminReady(boolean roomTravel)throws IOException {
-        if(closed||socket.isClosed()||!selected()||(!(roomTravel&&runtime.readyRoom())&&(!runtime.subscribed()||!runtime.entered()))||refreshState.forcedReceiver()==null||runtime.portalMove()!=null||deferredMovePending())throw new IOException("Finish entering this scene first");
-        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
-        if(!roles.gameMaster())throw new IOException("Game Master permission required");
-    }
-    WorldSession adminTarget(String name)throws IOException {
-        if(name.length()<3||name.length()>16||!name.matches("[A-Za-z]+(?:-[A-Za-z]+)*"))throw new IOException("Enter a valid knight name");
-        synchronized(ACTIVE){return ACTIVE.values().stream().filter(w->w.knight.name().equalsIgnoreCase(name)
-            &&w.scenes==scenes&&w.characters.worldStorageFile().equals(characters.worldStorageFile())).findFirst().orElseThrow(()->new IOException("That knight is not online"));}
-    }
-    /** The game-master travel tail; location validation lives in AdminHandler. */
-    synchronized void beginAdminTravel(SceneRegistry.Instance next,AdminHandler.AdminLocation location)throws IOException {
-        runtime.beginPortal(next,new ScenePortals.Entrance(1,location.x(),location.y(),location.rotation()));
-        runtime.retireScene(runtime.readyRoom()?0:runtime.scene().oid());
-        short receiver=refreshState.forcedReceiver();
-        output.send(()->codec.forceScene(oid,receiver,next));
-    }
+    /** The admin handler owns readiness and travel; this lookup stays for its peer tools. */
     AdminHandler adminHandler(){return adminTools;}
 
     /** Cross-session tools deliberately acquire only one session monitor at a time. */

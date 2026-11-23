@@ -359,7 +359,7 @@ owners that compose named collaborators instead of mixing responsibilities:
 
 | Class | Lines | Composition |
 | --- | --- | --- |
-| `WorldSession` | 684 | protocol facade over `SessionRuntime`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
+| `WorldSession` | 667 | protocol facade over `SessionRuntime`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
 | `SceneEntities` | 528 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
 | `SceneSimulation` | 427 | per-instance clock, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
 | `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |

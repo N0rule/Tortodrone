@@ -11,8 +11,8 @@ import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.world.SceneRegistry;
 
 /** Stock admin service for one connection: item, gear, progress and sprite tools, plus the
- *  cross-session player tools. Every call is re-authorized here and every travel readiness
- *  check stays in the session, which owns the scene and queue transitions. */
+ *  cross-session player tools. Every call is re-authorized here, including travel readiness,
+ *  peer lookup and the forced admin move; the session only lends state and transitions. */
 final class AdminHandler {
     private final WorldSession session;
     private final SessionResponder responder;
@@ -69,7 +69,37 @@ final class AdminHandler {
             session.closeConversation();session.closeTownDialog();return;
         }
         session.closeConversation();session.closeTownDialog();
-        session.beginAdminTravel(next,location);
+        beginTravel(next,location);
+    }}
+
+    /** The same readiness gate for every admin action that touches the live scene. */
+    private synchronized void requireReady()throws IOException { requireReady(false); }
+    private synchronized void requireReady(boolean roomTravel)throws IOException {
+        if(session.isClosed()||!responder.open()||!session.selected()
+                ||(!(roomTravel&&session.inReadyRoom())&&(!session.sceneSubscribed()||!session.sceneEntered()))
+                ||session.forcedReceiverValue()==null||session.sceneTravelPending()||session.deferredMovePending())
+            throw new IOException("Finish entering this scene first");
+        try{store.worldProfile(session.selectedKnight().name(),session.authRevision());}
+        catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+        if(!session.gameMasterRole())throw new IOException("Game Master permission required");
+    }
+
+    /** Resolve one online knight of the same deployment; never acquires a peer monitor. */
+    private WorldSession target(String name)throws IOException {
+        if(name.length()<3||name.length()>16||!name.matches("[A-Za-z]+(?:-[A-Za-z]+)*"))throw new IOException("Enter a valid knight name");
+        synchronized(WorldSession.ACTIVE){
+            return WorldSession.ACTIVE.values().stream().filter(w->name.equalsIgnoreCase(w.selectedKnightName())
+                &&session.sameWorld(w)).findFirst().orElseThrow(()->new IOException("That knight is not online"));
+        }
+    }
+
+    /** Install the destination before the client acknowledges its move. */
+    private void beginTravel(SceneRegistry.Instance next,AdminLocation location)throws IOException { synchronized(session) {
+        var runtime=session.runtime();
+        runtime.beginPortal(next,new ScenePortals.Entrance(1,location.x(),location.y(),location.rotation()));
+        runtime.retireScene(session.inReadyRoom()?0:runtime.scene().oid());
+        short receiver=session.forcedReceiverValue();
+        responder.send(()->responder.codec().forceScene(responder.oid(),receiver,next));
     }}
 
     /** Cross-session tools deliberately acquire only one session monitor at a time. */
@@ -82,7 +112,7 @@ final class AdminHandler {
                 ||(method==24?!(args.get(0) instanceof Integer)||!(args.get(1) instanceof Integer):!(args.getFirst() instanceof String)))throw new SessionDecoder.Rejected("Invalid player admin request");
         String name=method==24?null:(String)args.getFirst();
         try {
-            session.requireAdminReady(method==28||method==30);
+            requireReady(method==28||method==30);
             if(!session.chatRate().allow(System.nanoTime()))throw new IOException("Please slow down before sending another command");
             if(method==24) {
                 var own=location();
@@ -98,14 +128,14 @@ final class AdminHandler {
                 if(map==null)throw new IOException("No deployed scene or zone matches that name or ID");
                 AdminLocation location;
                 synchronized(session){
-                    session.requireAdminReady(true);
+                    requireReady(true);
                     var next=session.destination(map.id());
                     if(next==session.currentScene()&&!session.inReadyRoom())throw new IOException("You are already in that scene");
                     location=new AdminLocation(next,session.currentProfile().worldId(),session.selectedKnight().name(),map.spawnX(),map.spawnY(),map.spawnRotation());
                 }
                 travel(location);
             }else {
-                var target=session.adminTarget(name);var location=target.adminHandler().location();
+                var target=target(name);var location=target.adminHandler().location();
                 if(method==13) {
                     session.adminFeedback(location.name()+"; knight="+location.world()+"; scene="+location.scene().map().name()+" ("+location.scene().map().id()+"); instance="+location.scene().oid());
                 }else if(method==21) {
@@ -114,13 +144,13 @@ final class AdminHandler {
                     synchronized(target){target.adminHandler().location();target.close();}
                     target.responder().disconnect();
                 }else if(method==27){
-                    session.requireAdminReady();
+                    requireReady();
                     if(location.scene()==session.currentScene())throw new IOException("That knight is already in this scene");
                     travel(location);
                 }
                 else {
                     if(target==session)throw new IOException("You are already here");
-                    var own=location();session.requireAdminReady();
+                    var own=location();requireReady();
                     if(location.scene()==own.scene())throw new IOException("That knight is already in this scene");
                     target.adminHandler().travel(own);
                 }
@@ -148,7 +178,7 @@ final class AdminHandler {
         if(method==1||method==5) {
             if(args.size()!=(method==1?3:2)||!(args.getFirst() instanceof Integer slot)||method==1&&!(args.get(1) instanceof String))throw new SessionDecoder.Rejected("Invalid accessory admin request");
             try {
-                session.requireAdminReady();
+                requireReady();
                 if(session.tradeHandler().active())throw new IOException("Finish the trade first");
                 var knight=session.selectedKnight();
                 var result=store.services().town(session.sceneRegistry().town()).adminAccessory(store.accountId(),knight.id(),session.authRevision(),slot,method==1?(String)args.get(1):null,knight.costume());
@@ -188,7 +218,7 @@ final class AdminHandler {
             // callback), id 49 in the installed build. The argument is a config reference only.
             if(args.size()!=2||!(args.getFirst() instanceof org.tortodrone.core.wire.ConfigReference reference))throw new SessionDecoder.Rejected("Invalid monster spawn request");
             try{
-                session.requireAdminReady();
+                requireReady();
                 store.services().town(session.sceneRegistry().town()).requireGameMaster(store.accountId(),session.authRevision());
                 var location=location();
                 if(location.scene().map().town())throw new IOException("Monsters can only be spawned in a level scene");
