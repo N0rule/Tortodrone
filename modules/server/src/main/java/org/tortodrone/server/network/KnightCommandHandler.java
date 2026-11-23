@@ -17,8 +17,9 @@ final class KnightCommandHandler {
         this.responder = session.responder();
     }
 
-    /** KnightMarshaller 11 is the stock return-to-last request (used by Ready Room return);
-     *  method 13 is the inspect-privacy toggle. */
+    /** KnightMarshaller 11 is the stock return-to-town request: Ready Room return while
+     *  client-local, otherwise the /haven command from a live scene; method 13 is the
+     *  inspect-privacy toggle. */
     boolean invocation(SessionDecoder.Invocation request) throws IOException {
         synchronized (session) {
             int service = request.service(), method = request.method();
@@ -36,6 +37,7 @@ final class KnightCommandHandler {
                     throw new IOException("Knight changed; reconnect", refused);
                 }
                 if (session.inReadyRoom()) session.requestReturnToLast();
+                else session.destinationsHandler().returnToTown();
                 return true;
             }
             if (method == 13) {

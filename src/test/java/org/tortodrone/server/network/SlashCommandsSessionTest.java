@@ -320,6 +320,11 @@ public final class SlashCommandsSessionTest {
                 check(
                         gm.world.invocation(new SessionDecoder.Invocation(3, 1, 11, List.of())),
                         "native /haven command dispatched");
+                check(
+                        gm.world.sceneTravelPending()
+                                && gm.world.pendingPortalMap()
+                                        == scenes.catalog().entry().id(),
+                        "native /haven queues the entry-town travel");
                 move(gm, scenes.catalog().entry());
                 check(gm.world.ownsScene(scenes.entry().oid()), "native /haven travel returns the knight to Haven");
                 var result = new SessionDecoder.Listener(

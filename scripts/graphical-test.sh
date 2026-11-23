@@ -2,8 +2,9 @@
 # Isolated stock-client graphical acceptance, for AI agents and the owner.
 #
 # Every run creates a disposable account, server, home/prefs and temporary
-# directory and launches the unmodified installed client fullscreen. Nothing
-# touches the owner's deployment, saves or preferences.
+# directory and launches the unmodified installed client in a window. Only the
+# interactive manual scenario starts fullscreen. Nothing touches the owner's
+# deployment, saves or preferences.
 #
 # Usage: scripts/graphical-test.sh <scenario> [scene-id] [game-dir] [output-dir] [--flags]
 #
@@ -23,9 +24,9 @@
 #   playability     fast single-client smoke: Haven -> /training native actors,
 #                   movement, conversation, vial use, sword/gun/bomb -> /haven
 #   explore <id>    load a scene by native scene id, drive free stock movement
-#   manual          disposable server + interactive client, auto-logged in with
-#                   the owner's Steam launch wrapper (sk-nopad); only for the
-#                   owner, close the game window to end the session
+#   manual          disposable server + fullscreen interactive client, auto-logged
+#                   in with the owner's Steam launch wrapper (sk-nopad); only for
+#                   the owner, close the game window to end the session
 #   list            print the scenarios
 #
 # game-dir defaults to $SPIRAL_KNIGHTS_DIR or the Linux Steam library path.
@@ -120,7 +121,7 @@ if [ -z "$game" ]; then
     game="${HOME:-/root}/.local/share/Steam/steamapps/common/Spiral Knights"
 fi
 if [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; then
-    echo "graphical-test: a display is required; the fixture runs the stock client fullscreen" >&2
+    echo "graphical-test: a display is required; the fixture runs the stock client windowed" >&2
     exit 2
 fi
 for required in full.dat code/projectx-pcode.jar; do

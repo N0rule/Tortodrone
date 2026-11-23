@@ -112,14 +112,13 @@ public final class CombatRenderingCheck {
     private Confirm equip;
     private String lastAnimation = "";
     private Throwable failure;
-    private boolean fullscreenApplied;
     /** Free-movement acceptance in one scene: load it, drive the stock controller, verify motion. */
     private boolean exploreOnly;
 
     private int exploreScene;
     private boolean exploreWorldRequested, exploreTravelRequested;
     private long exploreTravelAt, exploreStepAt;
-    private long exploreDriftAt, lastProbeTickAt;
+    private long exploreDriftAt, lastProbeTickAt, focusLostAt, focusRequestedAt;
     private final boolean exploreTrace = System.getenv("TORTODRONE_GFX_TRACE") != null;
     // Perf runs skip screenshot encoding; the rendered-pixel assertion is then unavailable.
     private final boolean noCapture = System.getenv("TORTODRONE_GFX_NO_CAPTURE") != null;
@@ -408,6 +407,16 @@ public final class CombatRenderingCheck {
         // One action per weapon class keeps the playability smoke under three minutes.
         if (probe.playabilityOnly) probe.actions = List.of(ACTIONS.get(0), ACTIONS.get(2), ACTIONS.get(4));
         if (manual) {
+            // The owner's interactive session is the only fullscreen run. Persist the
+            // stock display preference before startup so the client creates a real
+            // fullscreen window instead of being resized after login.
+            var screen = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment()
+                    .getDefaultScreenDevice()
+                    .getDisplayMode();
+            int refresh = screen.getRefreshRate() > 0 ? screen.getRefreshRate() : 60;
+            com.threerings.projectx.client.ProjectXPrefs.b(new com.threerings.projectx.client.ProjectXPrefs.d(
+                    new com.threerings.opengl.util.DisplayMode(screen.getWidth(), screen.getHeight(), refresh), true));
+            System.out.println("MANUAL: fullscreen " + screen.getWidth() + "x" + screen.getHeight() + "@" + refresh);
             System.out.println(
                     "MANUAL: disposable client logged in as LanPlayer; close the game window to end the session");
             app.startup();
@@ -2216,14 +2225,8 @@ public final class CombatRenderingCheck {
                         authoritative.size(),
                         java.time.LocalTime.now().withNano(0));
             lastProbeTickAt = now;
-            if (!fullscreenApplied && !peer && !multiplayerOnly && !equipmentGroups && app.getWindow() != 0) {
-                long monitor = GLFW.glfwGetPrimaryMonitor();
-                var mode = GLFW.glfwGetVideoMode(monitor);
-                if (mode == null) throw new AssertionError("No video mode for the isolated test client's monitor");
-                GLFW.glfwSetWindowMonitor(
-                        app.getWindow(), monitor, 0, 0, mode.width(), mode.height(), mode.refreshRate());
-                fullscreenApplied = true;
-            }
+            // Automated scenarios keep the stock client's default windowed display:
+            // fullscreen is reserved for the owner's interactive --manual session.
             if (now > deadline) throw new AssertionError("Timed out at stage " + stage + ", action " + index);
             if (!app.GI().isLoggedOn()) return;
             if (freshOpening && app.CZ() != null && app.CZ().bagId == 0) {
@@ -2377,9 +2380,21 @@ public final class CombatRenderingCheck {
                 hazardsTick(view, now);
                 return;
             }
-            if (stage >= 3 && stage <= 6 && GLFW.glfwGetWindowAttrib(app.getWindow(), GLFW.GLFW_FOCUSED) == 0)
-                throw new AssertionError(
-                        "Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
+            if (stage >= 3 && stage <= 6 && GLFW.glfwGetWindowAttrib(app.getWindow(), GLFW.GLFW_FOCUSED) == 0) {
+                // A windowed test client can lose focus to the owner's desktop. Request it
+                // again; the stock client stops animation/input sampling in the background,
+                // so give up only if the window stays unfocused for ten seconds.
+                if (focusLostAt == 0) focusLostAt = now;
+                if (now - focusRequestedAt > 1_000_000_000L) {
+                    GLFW.glfwFocusWindow(app.getWindow());
+                    focusRequestedAt = now;
+                }
+                if (now - focusLostAt > 10_000_000_000L)
+                    throw new AssertionError(
+                            "Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
+            } else {
+                focusLostAt = 0;
+            }
             if (stage == 0) {
                 if (arsenalBlinkOnly || healthOnly) {
                     GLFW.glfwSetWindowSizeLimits(app.getWindow(), 1280, 800, GLFW.GLFW_DONT_CARE, GLFW.GLFW_DONT_CARE);
@@ -2900,6 +2915,10 @@ public final class CombatRenderingCheck {
                     capture("training-complete");
                     if (playabilityOnly) {
                         System.out.println("CHECK: native /haven command after Training combat");
+                        // The stock client asks before abandoning the party; the disposable probe
+                        // answers as the dialog's own "don't ask again" checkbox would.
+                        com.threerings.projectx.client.ProjectXPrefs.a(
+                                com.threerings.projectx.client.ProjectXPrefs.ConfirmPrompt.ABANDON_PARTY, false);
                         app.GJ().a(null, "/haven", false);
                         started = now;
                         stage = 40;

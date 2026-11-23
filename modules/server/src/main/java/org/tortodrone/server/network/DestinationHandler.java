@@ -147,6 +147,42 @@ final class DestinationHandler {
         }
     }
 
+    /** KnightMarshaller 11 outside the Ready Room: the stock /haven return to town. The
+     *  client confirms any party abandon locally and sends the request without a listener,
+     *  so the only native answer is the forced scene load. */
+    boolean returnToTown() throws IOException {
+        synchronized (session) {
+            if (session.inReadyRoom()
+                    || session.forcedReceiverValue() == null
+                    || session.sceneTravelPending()
+                    || session.deferredMovePending()) return false;
+            try {
+                session.charactersStore()
+                        .worldProfile(
+                                session.selectedKnight().name(), session.authRevision(), session.currentProfile());
+                var map = session.sceneRegistry().catalog().entry();
+                var next = session.destination(map.id());
+                var entrance = new ScenePortals.Entrance(1, map.spawnX(), map.spawnY(), map.spawnRotation());
+                if (!next.simulation().placement(entrance.x(), entrance.y()))
+                    throw new IOException("Destination is blocked");
+                session.closeConversation();
+                session.closeTownDialog();
+                if (next == session.currentScene()) {
+                    if (!session.membership().teleport(entrance.x(), entrance.y(), entrance.rotation()))
+                        throw new IOException("Destination is blocked or the knight is busy");
+                    return true;
+                }
+                session.beginForcedTravel(next, entrance);
+                short receiver = session.forcedReceiverValue();
+                responder.send(() -> responder.codec().forceScene(responder.oid(), receiver, next));
+            } catch (CharacterStore.Refused | IOException refused) {
+                responder.send(() ->
+                        responder.codec().systemNotice(session.currentScene().oid(), refused.getMessage()));
+            }
+            return true;
+        }
+    }
+
     /** Replay a town destination command that arrived before the scene was ready. */
     void flush() throws IOException {
         synchronized (session) {
