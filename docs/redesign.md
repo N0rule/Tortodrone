@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,188,222 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,189,021 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -449,6 +449,9 @@ remaining stores were split the same way:
 - `ScenePortals` keeps the immutable entrance/trigger tables, polygon
   intersection and pawn radius; `ScenePortalCodec` owns the exported properties
   format, entrance clearance, trigger-shape parsing and convex-polygon rules.
+- `BoxCatalog` keeps the immutable key bindings, lookup and spawn tables;
+  `BoxCatalogReader` owns the exported binding document, the readable loot YAML,
+  key/type/evidence checks and the reward-graph validation.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.
