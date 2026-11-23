@@ -460,30 +460,19 @@ def build(source, content):
             if restriction["type"] == "mission" and restriction["missionId"] not in missions:
                 fail(where, f"unknown restricted mission {restriction['missionId']!r}")
 
-    layout = mission_layout.format_of(content)
     outputs = []
-    if layout == 2:
-        for mission_id, row in sorted(missions.items()):
-            outputs.append(dump(content / "missions" / mission_id / "mission.yml",
-                                {"missions": {mission_id: row}},
-                                "# Imported mission row; regenerate with scripts/content/import_missions.py."))
-        if groups:
-            outputs.append(dump(content / "shared" / "missions" / "groups.yml",
-                                {"groups": dict(sorted(groups.items()))},
-                                "# Imported mission groups; regenerate with scripts/content/import_missions.py."))
-        if properties:
-            outputs.append(dump(content / "shared" / "missions" / "properties.yml",
-                                {"properties": dict(sorted(properties.items()))},
-                                "# Imported mission prestige/crown properties; regenerate with scripts/content/import_missions.py."))
-        return missions, groups, properties, outputs
-    for kind in ("rank", "prestige", "expansion", "hidden"):
-        rows = {key: row for key, row in sorted(missions.items()) if row["type"] == kind}
-        outputs.append(dump(content / "missions" / f"{kind}.yml", {"missions": rows},
-                            f"# Imported {kind} missions; regenerate with scripts/content/import_missions.py."))
-    outputs.append(dump(content / "missions" / "groups.yml", {"groups": dict(sorted(groups.items()))},
-                        "# Imported mission groups; regenerate with scripts/content/import_missions.py."))
-    outputs.append(dump(content / "missions" / "properties.yml", {"properties": dict(sorted(properties.items()))},
-                        "# Imported mission prestige/crown properties; regenerate with scripts/content/import_missions.py."))
+    for mission_id, row in sorted(missions.items()):
+        outputs.append(dump(content / "missions" / mission_id / "mission.yml",
+                            {"missions": {mission_id: row}},
+                            "# Imported mission row; regenerate with scripts/content/import_missions.py."))
+    if groups:
+        outputs.append(dump(content / "shared" / "missions" / "groups.yml",
+                            {"groups": dict(sorted(groups.items()))},
+                            "# Imported mission groups; regenerate with scripts/content/import_missions.py."))
+    if properties:
+        outputs.append(dump(content / "shared" / "missions" / "properties.yml",
+                            {"properties": dict(sorted(properties.items()))},
+                            "# Imported mission prestige/crown properties; regenerate with scripts/content/import_missions.py."))
     return missions, groups, properties, outputs
 
 

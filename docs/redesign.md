@@ -514,7 +514,6 @@ For missions, the redesign adds:
 
 ```text
 content/
-  format.txt
   items/
   loot/
   maps/{level,town,training}/<scene>/
@@ -583,41 +582,24 @@ Rules:
   above (the last optional and only when supported). Reserved `systems/` folders
   contain a `README.md`, not empty YAML with invented fields.
 - Rank, prestige, expansion and hidden remain mission families in `mission.yml`.
-- **v1 stays readable for one release.** `0.42.0` ships and validates v2, but the v1
-  reader remains so an existing tree still boots; it is deleted in `0.43.0`. The v2
-  reader is recursive, removes the 16-file cap and reads
-  `content/shared/missions/groups.yml` and `properties.yml`.
+- **One layout only.** Mission folders are the final layout; there is no layout
+  marker and no flat-file reader. The reader is recursive, removes the 16-file cap
+  and reads `content/shared/missions/groups.yml` and `properties.yml`.
 - `_internal/` does not move. It holds loader inputs and provenance metadata. Only
   `default-source.properties` and `provenance/` are touched, and only for path
   regeneration.
 
-### `format.txt`
+### Layout refusal
 
-`content/format.txt` is a one-line layout marker:
-
-```text
-2
-```
-
-Truth table:
-
-| `format.txt` | Meaning |
-| --- | --- |
-| absent | v1 (current split-file layout) |
-| `1` | v1 |
-| `2` | v2 (per-mission folders) |
-| anything else | refuse startup |
-
-Encoding is UTF-8, exactly one line, trailing newline, no trimming beyond the line
-ending. A tree containing both flat mission files and `missions/<id>/` folders is
-refused even if `format.txt` is valid. The converter writes the marker; startup only
-reads it. A missing marker means v1, not “unknown”, so existing deployments keep
-working.
+A tree containing flat `.yml` files directly under `content/missions/` beside mission
+folders, an unknown file, an unknown folder entry or a mission id that differs from
+its folder name is refused at startup. There is no format marker to select an older
+layout: the folder layout is the only one the reader accepts.
 
 ### Converter, importers and manifest
 
-- Add a deterministic, idempotent offline v1→v2 converter. It reads only the
-  checked-in v1 tree, writes a temporary v2 tree, validates it, then swaps
+- Add a deterministic, idempotent offline converter for legacy flat trees. It reads
+  the flat files, writes a temporary folder tree, validates it, then swaps
   atomically. It does not depend on external captures.
 - Add `--check` to all four mission importers, not just `import_missions.py`, and
   give all four temporary-file/directory writes with atomic replacement. The four
@@ -636,7 +618,7 @@ working.
 
 ### Equivalence gate
 
-“Catalogues identical” is too narrow. The v1/v2 gate requires:
+“Catalogues identical” is too narrow. The layout conversion gate requires:
 
 - per-domain semantic dumps (missions, groups, properties, grants, comlinks, gates);
 - unchanged asset domains (items, maps, monsters, town, presentation, shared news);
@@ -753,7 +735,7 @@ covers trigger and sequence preservation.
 | Phase | Work | Exit gate |
 | --- | --- | --- |
 | 0. Baseline | Record the `sha256` of `content/` and of `dist/tortodrone.jar`, the JAR size, and tick/DB/queue baselines using existing tools; write the current thread/lock inventory; list the required wire evidence with its evidence source; add synthetic fixture scaffolding | `build` and selected tests green; the baseline file and evidence list exist and are committed |
-| 1. Content v2 | Mission folders, `shared/missions/`, `format.txt`, recursive v2 reader, converter, per-file manifest, `--check` and atomic writes on all four importers; create reserved `systems/` folders and `package-info.java` skeletons | v1/v2 mission domains identical and `_internal` equal excluding the manifest; converted deployment boots; mixed/unknown trees refused; reserved paths exist |
+| 1. Content v2 | Mission folders, `shared/missions/`, recursive reader, legacy converter, per-file manifest, `--check` and atomic writes on all four importers; create reserved `systems/` folders and `package-info.java` skeletons | mission domains equal to the flat import and `_internal` equal excluding the manifest; converted deployment boots; flat/unknown trees refused; reserved paths exist |
 | 2. Mission runtime | Wire evidence for MissionObject/objectives, mission bar, gate map, party config, reward wheel and lobby; objective model and `objectives.yml`; room progress; exchange draw; settle-once; add a `mission` graphical scenario | `shadow_beast` runs floor-by-floor with live objectives, bar and room progress; the four other bundled routes are either playable or recorded as blocked with the exact missing wedge/floor; no invented layouts |
 | 3. Cycle breaking | Move shared models, settings/news types and `WireTypes` to `:core`; replace protocol→world/storage/town with view contracts; remove storage→protocol, resources→world, resources/world→config/news, world→protocol, server↔web | No forbidden **package** edge under the Phase 3 rules, checked with `jdeps`/bytecode; no behaviour change. Gradle enforcement is Phase 6 |
 | 4. Concurrency contract | Split current/target lock order and add `CharacterStore`, `SessionOutput`, `ServerControl` and the registry; add the eight measurements; bound or refactor every commit-under-lock path; platform-thread storage executor and single writer service; byte-based output budget and overflow policy; scene scheduler with active-scene cap, town sharding, failure/recycle and shutdown contracts; clock fix | The eight measurements exist on the recorded load; budgets defined; lock-order, commit-path, overflow, active-scene/town-sharding, scene-failure and shutdown tests green |

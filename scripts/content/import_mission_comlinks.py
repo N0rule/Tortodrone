@@ -306,7 +306,7 @@ def main():
     header = "# Imported mission comlink dialogue; regenerate with scripts/content/import_mission_comlinks.py."
     if args.output is not None:
         outputs = [(args.output, mission_layout.yaml_text("comlinks", output, header, sort_keys=True, allow_unicode=True))]
-    elif mission_layout.format_of(args.content) == 2:
+    else:
         outputs = [(args.content / "missions" / mission_id / "comlink.yml",
                     mission_layout.yaml_text("comlinks", {mission_id: row}, header, sort_keys=True, allow_unicode=True))
                    for mission_id, row in sorted(output.items())]
@@ -316,9 +316,6 @@ def main():
             fail("stale comlink files: " + ", ".join(str(path) for path in stale))
         for path in stale:
             path.unlink()
-    else:
-        outputs = [(args.content / "missions" / "comlinks.yml",
-                    mission_layout.yaml_text("comlinks", output, header, sort_keys=True, allow_unicode=True))]
     if not mission_layout.compare(outputs, args.check):
         mission_layout.write_all(outputs)
     print(f"Wrote {len(output)} comlinks, {sum(len(row['nodes']) for row in output.values())} nodes")

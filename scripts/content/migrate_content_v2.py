@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Convert a v1 flat mission catalogue to the v2 per-mission folder layout.
+"""Convert a legacy flat mission catalogue to the per-mission folder layout.
 
-The converter is offline and deterministic: it reads only the checked-in v1 tree,
-writes and validates a staging tree, then swaps it into place. Running it on an
-already-v2 tree validates that tree and changes nothing. It never invents content;
-every mission row, grant, comlink and route is copied from the v1 files.
+The converter is offline and deterministic: it reads the flat mission files,
+writes and validates a staging tree, then swaps it into place. Running it on a
+tree that already uses mission folders validates it and changes nothing. It never
+invents content; every mission row, grant, comlink and route is copied.
 """
 import argparse, hashlib, pathlib, shutil, sys, tempfile, yaml
 
@@ -60,36 +60,33 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def read_v1_v2(content):
-    """Read either layout and return the five domain payloads as plain dicts."""
-    marker = content / "format.txt"
-    format_value = 1
-    if marker.exists():
-        text = marker.read_text(encoding="utf-8")
-        if text == "2\n":
-            format_value = 2
-        elif text != "1\n":
-            fail(f"{marker}: expected exactly one line containing 1 or 2")
+def read_content(content):
+    """Read either layout and return the domain payloads as plain dicts.
+
+    The first value is True for the legacy flat files and False for the final
+    per-mission folders; the layout is detected from the tree, not from a marker.
+    """
     missions = {}
     groups, properties, grants, comlinks, routes = {}, {}, {}, {}, {}
-    if format_value == 1:
-        directory = content / "missions"
-        if directory.is_dir():
-            for family in FAMILIES:
-                path = directory / f"{family}.yml"
-                if not path.is_file():
-                    continue
-                for mission_id, row in section(path, "missions").items():
-                    if mission_id in missions:
-                        fail(f"{path}: duplicate mission id {mission_id}")
-                    missions[mission_id] = row
-            groups = section(directory / "groups.yml", "groups", required=False)
-            properties = section(directory / "properties.yml", "properties", required=False)
-            grants = section(directory / "grants.yml", "grants", required=False)
-            comlinks = section(directory / "comlinks.yml", "comlinks", required=False)
-            routes = section(directory / "routes.yml", "routes", required=False)
-        return format_value, missions, groups, properties, grants, comlinks, routes
     directory = content / "missions"
+    entries = list(directory.iterdir()) if directory.is_dir() else []
+    if any(entry.is_file() for entry in entries) and any(entry.is_dir() for entry in entries):
+        fail(f"{directory}: mixed flat mission files and mission folders")
+    if any(entry.is_file() for entry in entries):
+        for family in FAMILIES:
+            path = directory / f"{family}.yml"
+            if not path.is_file():
+                continue
+            for mission_id, row in section(path, "missions").items():
+                if mission_id in missions:
+                    fail(f"{path}: duplicate mission id {mission_id}")
+                missions[mission_id] = row
+        groups = section(directory / "groups.yml", "groups", required=False)
+        properties = section(directory / "properties.yml", "properties", required=False)
+        grants = section(directory / "grants.yml", "grants", required=False)
+        comlinks = section(directory / "comlinks.yml", "comlinks", required=False)
+        routes = section(directory / "routes.yml", "routes", required=False)
+        return True, missions, groups, properties, grants, comlinks, routes
     shared = content / "shared" / "missions"
     for name, (kind, _) in SHARED.items():
         if name == "groups.yml":
@@ -121,7 +118,7 @@ def read_v1_v2(content):
                 comlinks[mission_id] = section(folder / "comlink.yml", "comlinks")[mission_id]
             if (folder / "route.yml").is_file():
                 routes[mission_id] = section(folder / "route.yml", "routes")[mission_id]
-    return format_value, missions, groups, properties, grants, comlinks, routes
+    return False, missions, groups, properties, grants, comlinks, routes
 
 
 def copy_tree(source, target):
@@ -129,8 +126,6 @@ def copy_tree(source, target):
     for path in sorted(source.rglob("*")):
         relative = path.relative_to(source)
         if relative == pathlib.Path("missions") or relative.parts[0] == "missions":
-            continue
-        if relative == pathlib.Path("format.txt"):
             continue
         if path.is_symlink():
             fail(f"symlink in content: {path}")
@@ -143,7 +138,6 @@ def copy_tree(source, target):
 
 
 def write_v2(staging, missions, groups, properties, grants, comlinks, routes):
-    (staging / "format.txt").write_text("2\n", encoding="utf-8")
     for name, (kind, header) in SHARED.items():
         rows = groups if kind == "groups" else properties
         if rows:
@@ -179,7 +173,7 @@ def regenerate_manifest(staging):
             continue
         if key.startswith("owned."):
             relative = key[len("owned."):]
-            if relative == "missions" or relative.startswith("shared/missions/") or relative == "format.txt":
+            if relative == "missions" or relative.startswith("shared/missions/"):
                 continue
             if relative.startswith("missions/"):
                 # Keep v1 flat files as removal pins so a previously prepared output
@@ -191,7 +185,7 @@ def regenerate_manifest(staging):
             owned[key] = value
         elif key.startswith("source."):
             relative = key[len("source."):]
-            if relative == "missions" or relative.startswith("missions/") or relative.startswith("shared/missions/") or relative == "format.txt":
+            if relative == "missions" or relative.startswith("missions/") or relative.startswith("shared/missions/"):
                 continue
             source[key] = value
         else:
@@ -209,9 +203,9 @@ def regenerate_manifest(staging):
 
 
 def verify(staging, expected):
-    actual = read_v1_v2(staging)
-    if actual[0] != 2:
-        fail(f"{staging}: staged tree is not format 2")
+    actual = read_content(staging)
+    if actual[0]:
+        fail(f"{staging}: staged tree is not the per-mission folder layout")
     for index, name in enumerate(("missions", "groups", "properties", "grants", "comlinks", "routes"), start=1):
         if actual[index] != expected[index]:
             fail(f"{staging}: converted {name} differ from v1")
@@ -246,13 +240,13 @@ def main():
     content = args.content.resolve()
     if not content.is_dir():
         fail(f"content directory is missing: {content}")
-    format_value, missions, groups, properties, grants, comlinks, routes = read_v1_v2(content)
-    if format_value == 2:
-        verify(content, (2, missions, groups, properties, grants, comlinks, routes))
-        print(f"PASS: content is already format 2; {len(missions)} missions unchanged")
+    flat, missions, groups, properties, grants, comlinks, routes = read_content(content)
+    if not flat:
+        verify(content, (False, missions, groups, properties, grants, comlinks, routes))
+        print(f"PASS: content already uses mission folders; {len(missions)} missions unchanged")
         return
     if not missions:
-        fail(f"{content / 'missions'}: no v1 missions to convert")
+        fail(f"{content / 'missions'}: no flat missions to convert")
     for kind, rows in (("grants", grants), ("comlinks", comlinks), ("routes", routes)):
         unknown = set(rows) - set(missions)
         if unknown:
@@ -262,12 +256,12 @@ def main():
         copy_tree(content, staging)
         write_v2(staging, missions, groups, properties, grants, comlinks, routes)
         regenerate_manifest(staging)
-        verify(staging, (1, missions, groups, properties, grants, comlinks, routes))
+        verify(staging, (False, missions, groups, properties, grants, comlinks, routes))
         swap(content, staging)
     except Exception:
         shutil.rmtree(staging, ignore_errors=True)
         raise
-    print(f"PASS: converted {len(missions)} missions to {content} (format 2)")
+    print(f"PASS: converted {len(missions)} missions to {content}")
 
 
 if __name__ == "__main__":

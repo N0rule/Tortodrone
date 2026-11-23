@@ -1,9 +1,9 @@
-"""Shared offline helpers for the v1 and v2 mission layouts.
+"""Shared offline helpers for the mission folder layout.
 
-The mission importers write either the flat v1 split files or, when
-`content/format.txt` selects layout 2, one folder per mission. This module keeps
-layout detection, mission discovery and atomic writes in one place so no importer
-can silently produce a mixed tree.
+The mission importers write one folder per mission under `content/missions/` and
+the shared rows under `content/shared/missions/`. This module keeps mission
+discovery, layout refusal and atomic writes in one place so no importer can
+silently produce a mixed tree.
 """
 import os
 import pathlib
@@ -11,25 +11,11 @@ import tempfile
 
 import yaml
 
-FAMILIES = ("rank", "prestige", "expansion", "hidden")
 SHARED = {"groups.yml": "groups", "properties.yml": "properties"}
 
 
 def fail(message):
     raise SystemExit(message)
-
-
-def format_of(content):
-    """Return 1 or 2 using the same strict marker rules as the server reader."""
-    marker = content / "format.txt"
-    if not marker.exists():
-        return 1
-    text = marker.read_text(encoding="utf-8")
-    if text == "2\n":
-        return 2
-    if text == "1\n":
-        return 1
-    fail(f"{marker}: expected exactly one line containing 1 or 2")
 
 
 def section(path, name):
@@ -46,34 +32,14 @@ def section(path, name):
 
 
 def mission_documents(content):
-    """One mapping per mission: id -> {section: row} from either layout."""
+    """One mapping per mission: id -> {section: row}."""
     missions = {}
-    layout = format_of(content)
     directory = content / "missions"
-    if layout == 1:
-        if not directory.is_dir():
-            return missions
-        for family in FAMILIES:
-            path = directory / f"{family}.yml"
-            if not path.is_file():
-                continue
-            for mission_id, row in section(path, "missions").items():
-                if mission_id in missions:
-                    fail(f"{path}: duplicate mission id {mission_id}")
-                missions[mission_id] = {"missions": row}
-        for name, kind in (("grants.yml", "grants"), ("comlinks.yml", "comlinks"), ("routes.yml", "routes")):
-            path = directory / name
-            if path.is_file():
-                for mission_id, row in section(path, kind).items():
-                    if mission_id not in missions:
-                        fail(f"{path}: {kind} reference missing mission {mission_id}")
-                    missions[mission_id][kind] = row
-        return missions
     if not directory.is_dir():
         return missions
     for folder in sorted(directory.iterdir()):
         if folder.is_file():
-            fail(f"{directory}: mixed v1 flat mission files and v2 mission folders: {folder.name}")
+            fail(f"{directory}: flat mission files are not supported; expected one folder per mission: {folder.name}")
         if not folder.is_dir():
             fail(f"{directory}: invalid mission entry: {folder.name}")
         mission_id = folder.name
@@ -96,7 +62,7 @@ def mission_documents(content):
 
 
 def mission_rows(content):
-    """The merged `missions` section from either layout."""
+    """The merged `missions` section."""
     return {mission_id: record["missions"]
             for mission_id, record in mission_documents(content).items()}
 

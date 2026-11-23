@@ -199,7 +199,7 @@ public final class MissionCatalogTest {
 
         Path dir = Files.createTempDirectory("tortodrone-mission-test-");
         try {
-            write(dir, "rank.yml", """
+            write(dir, "missions/first/mission.yml", """
                 missions:
                   first:
                     name: Rank/01/1.1/First
@@ -207,13 +207,16 @@ public final class MissionCatalogTest {
                     rank: 1
                     subrank: 1
                     needMission: second
+                """);
+            write(dir, "missions/second/mission.yml", """
+                missions:
                   second:
                     name: Rank/01/1.1/Second
                     type: rank
                     rank: 1
                     subrank: 1
                 """);
-            var small = MissionYaml.load(dir);
+            var small = MissionYaml.definitions(dir).missions();
             check(
                     small.size() == 2
                             && small.availableRankCards(1, 1, Set.of()).stream()
@@ -226,19 +229,9 @@ public final class MissionCatalogTest {
                                     .equals(List.of("first")),
                     "needMission gates cards until its prerequisite is complete");
             check(
-                    MissionYaml.load(dir.resolve("absent")).size() == 0,
+                    MissionYaml.definitions(dir.resolve("absent")).missions().size() == 0,
                     "a deployment without missions keeps an empty catalogue");
-            write(dir, "duplicate.yml", """
-                missions:
-                  first:
-                    name: Rank/01/1.1/Again
-                    type: rank
-                    rank: 1
-                    subrank: 1
-                """);
-            fails(() -> MissionYaml.load(dir), "duplicate mission id");
-            Files.delete(dir.resolve("duplicate.yml"));
-            write(dir, "properties.yml", """
+            write(dir, "shared/missions/properties.yml", """
                 properties:
                   Rank/Rank 1:
                     name: Rank/Rank 1
@@ -247,43 +240,40 @@ public final class MissionCatalogTest {
                     prestigeHigh: 15
                     prestigeMax: 20
                 """);
-            fails(() -> MissionYaml.load(dir), "Invalid mission property range");
-            Files.delete(dir.resolve("properties.yml"));
-            write(dir, "broken.yml", """
+            fails(() -> MissionYaml.definitions(dir), "Invalid mission property range");
+            Files.delete(dir.resolve("shared/missions/properties.yml"));
+            write(dir, "missions/broken/mission.yml", """
                 missions:
-                  third:
+                  broken:
                     name: Rank/01/1.1/Third
                     type: rank
                     rank: 1
                     subrank: 1
                     needMission: missing
                 """);
-            fails(() -> MissionYaml.load(dir), "missing mission");
-            Files.delete(dir.resolve("broken.yml"));
-            write(dir, "broken.yml", """
+            fails(() -> MissionYaml.definitions(dir), "missing mission");
+            write(dir, "missions/broken/mission.yml", """
                 missions:
-                  third:
+                  broken:
                     name: Rank/01/1.1/Third
                     type: rank
                     rank: 11
                     subrank: 1
                 """);
-            fails(() -> MissionYaml.load(dir), "invalid rank pair");
-            Files.delete(dir.resolve("broken.yml"));
-            write(dir, "broken.yml", """
+            fails(() -> MissionYaml.definitions(dir), "invalid rank pair");
+            write(dir, "missions/broken/mission.yml", """
                 missions:
-                  third:
+                  broken:
                     name: Rank/01/1.1/Third
                     type: rank
                     rank: 1
                     subrank: 1
                     invented: true
                 """);
-            fails(() -> MissionYaml.load(dir), "unknown field");
-            Files.delete(dir.resolve("broken.yml"));
-            write(dir, "broken.yml", """
+            fails(() -> MissionYaml.definitions(dir), "unknown field");
+            write(dir, "missions/broken/mission.yml", """
                 missions:
-                  third:
+                  broken:
                     name: Rank/01/1.1/Third
                     type: prestige
                     restrictions:
@@ -292,15 +282,7 @@ public final class MissionCatalogTest {
                           refTime: 1
                           interval: every day
                 """);
-            fails(() -> MissionYaml.load(dir), "invalid schedule interval");
-            Files.delete(dir.resolve("broken.yml"));
-            write(dir, "broken.yml", """
-                groups:
-                  wrong:
-                    name: Wrong
-                    id: other
-                """);
-            fails(() -> MissionYaml.load(dir), "key/id mismatch");
+            fails(() -> MissionYaml.definitions(dir), "invalid schedule interval");
         } finally {
             delete(dir);
         }
@@ -309,7 +291,9 @@ public final class MissionCatalogTest {
     }
 
     private static void write(Path dir, String name, String text) throws Exception {
-        Files.writeString(dir.resolve(name), text);
+        Path file = dir.resolve(name);
+        Files.createDirectories(file.getParent());
+        Files.writeString(file, text);
     }
 
     private static void fails(Action action, String message) throws Exception {

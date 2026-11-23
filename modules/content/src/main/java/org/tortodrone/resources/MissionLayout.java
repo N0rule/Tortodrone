@@ -7,62 +7,14 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.core.ContentFiles;
 
-/** Content-layout policy for the mission catalogue: the format marker, the v1 flat
- *  directory, the v2 per-mission folders and the exact refusal rules for mixed or
- *  unknown trees. Parsing and cross-reference validation stay in {@link MissionYaml}. */
+/** Content-layout policy for the mission catalogue: one folder per mission under
+ *  {@code content/missions/}, shared rows under {@code content/shared/missions/}, and the exact
+ *  refusal rules for anything else. Parsing and cross-reference validation stay in
+ *  {@link MissionYaml}. */
 final class MissionLayout {
     private MissionLayout() {}
 
-    /** Layout marker: absent or "1" is the flat v1 tree, "2" is per-mission folders. */
-    static int format(Path content) throws IOException {
-        Path marker = content.resolve("format.txt");
-        if (Files.notExists(marker)) return 1;
-        ContentFiles.regular(marker);
-        if (Files.size(marker) > 3) throw new IOException("Invalid content format marker: " + marker);
-        String text = Files.readString(marker);
-        String value = text.endsWith("\r\n")
-                ? text.substring(0, text.length() - 2)
-                : text.endsWith("\n") ? text.substring(0, text.length() - 1) : null;
-        if (!"1".equals(value) && !"2".equals(value))
-            throw new IOException(marker + ": expected exactly one line containing 1 or 2");
-        return value.equals("1") ? 1 : 2;
-    }
-
-    /** Read the layout the marker selects; a missing marker stays v1 for existing deployments. */
     static MissionYaml.Definitions definitions(Path content) throws IOException {
-        ContentFiles.safe(content);
-        return format(content) == 2 ? readV2(content) : readV1(content.resolve("missions"));
-    }
-
-    static MissionYaml.Definitions readV1(Path directory) throws IOException {
-        if (!Files.exists(directory)) return MissionYaml.empty();
-        ContentFiles.safe(directory);
-        if (!Files.isDirectory(directory)) throw new IOException("Mission catalogue is not a directory: " + directory);
-        var b = new MissionYaml.Building();
-        try (var paths = Files.list(directory)) {
-            var files = new ArrayList<Path>();
-            for (Path entry : paths.sorted().toList()) {
-                if (Files.isDirectory(entry, LinkOption.NOFOLLOW_LINKS))
-                    throw new IOException(
-                            directory + ": v2 mission folders require content/format.txt 2: " + entry.getFileName());
-                files.add(entry);
-            }
-            if (files.size() > 16) throw new IOException("Too many mission files: " + directory);
-            for (Path file : files) {
-                if (!file.getFileName().toString().matches("[a-z][a-z0-9_-]*\\.yml"))
-                    throw new IOException("Invalid mission file name: " + file);
-                var root = read(file);
-                var sections = root.keySet();
-                if (sections.size() != 1)
-                    throw new IOException(
-                            file + ": expected one of missions, groups, properties, grants, comlinks or routes");
-                MissionYaml.merge(b, sections.iterator().next(), root, file);
-            }
-        }
-        return MissionYaml.finish(directory, b);
-    }
-
-    private static MissionYaml.Definitions readV2(Path content) throws IOException {
         var b = new MissionYaml.Building();
         Path shared = content.resolve("shared/missions");
         for (String name : List.of("groups.yml", "properties.yml")) {
@@ -84,7 +36,8 @@ final class MissionLayout {
             for (Path entry : paths.sorted().toList()) {
                 if (Files.isRegularFile(entry, LinkOption.NOFOLLOW_LINKS))
                     throw new IOException(
-                            directory + ": mixed v1 flat mission files and v2 mission folders: " + entry.getFileName());
+                            directory + ": flat mission files are not supported; expected one folder per mission: "
+                                    + entry.getFileName());
                 if (!Files.isDirectory(entry, LinkOption.NOFOLLOW_LINKS))
                     throw new IOException(directory + ": invalid mission entry: " + entry.getFileName());
                 String id = entry.getFileName().toString();

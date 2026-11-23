@@ -514,12 +514,11 @@ The same manifest records that list for future import work.
 `content/missions/` holds the complete stock mission catalogue as one folder per
 mission: `<mission-id>/mission.yml` is required and `grants.yml`, `comlink.yml` and
 `route.yml` are optional. Shared mission groups and prestige/crown properties live in
-`content/shared/missions/`. `content/format.txt` contains `2` and selects this folder
-layout; a tree without the marker (or with `1`) keeps the readable v1 split layout for
-one release. It is generated from the client's exported `mission.xml`,
+`content/shared/missions/`. This is the only mission layout: flat `.yml` files directly
+under `content/missions/` are refused. It is generated from the client's exported `mission.xml`,
 `mission_group.xml` and `mission_property.xml`; every id, rank pair, reward reference,
 restriction and prestige range is retained. Startup checks cross-file references and
-rejects unknown fields, unknown files and mixed v1/v2 trees.
+rejects unknown fields and unknown files.
 
 `content/systems/` reserves six post-0.42.0 gameplay systems: `arcade`, `events`,
 `guildhall`, `lairs`, `mission` and `pvp`. Each folder is README-only until the stock
@@ -562,14 +561,13 @@ The checked-in import contains 273 missions (108 rank, 147 prestige, 3 expansion
 the pinned opening gate). Refresh it deterministically with:
 
 ```sh
-python3 scripts/content/migrate_content_v2.py --content content
 python3 scripts/content/import_missions.py --source /path/to/exported/config
 python3 scripts/content/import_mission_rewards.py --source /path/to/exported/config
 python3 scripts/content/import_mission_comlinks.py --source /path/to/exported/config
 python3 scripts/content/import_mission_routes.py --gates /path/to/live-MissionGateSummary.json \
   --levels /path/to/deployed-levels.tsv
-# Add --check to any importer to verify without writing. In format 2 each
-# importer writes its per-mission file atomically; the converter is idempotent.
+# Add --check to any importer to verify without writing. Each importer writes its
+# per-mission file atomically.
 ```
 
 ## Map identity, actors, portals and traps

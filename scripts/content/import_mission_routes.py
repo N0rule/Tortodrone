@@ -201,7 +201,7 @@ def main():
     header = "# Imported mission gate route; regenerate with scripts/content/import_mission_routes.py."
     if args.output is not None:
         outputs = [(args.output, mission_layout.yaml_text("routes", routes, header, sort_keys=True, allow_unicode=True))]
-    elif mission_layout.format_of(args.content) == 2:
+    else:
         outputs = [(args.content / "missions" / mission_id / "route.yml",
                     mission_layout.yaml_text("routes", {mission_id: route}, header, sort_keys=True, allow_unicode=True))
                    for mission_id, route in sorted(routes.items())]
@@ -211,13 +211,6 @@ def main():
             fail("stale route files: " + ", ".join(str(path) for path in stale))
         for path in stale:
             path.unlink()
-    else:
-        outputs = [(args.content / "missions" / "routes.yml",
-                    mission_layout.yaml_text(
-                        "routes", routes,
-                        "# Imported mission gate routes; regenerate with scripts/content/import_mission_routes.py.\n"
-                        "# A scene of 0 means the level has no bundled canonical scene and the route is unavailable.",
-                        sort_keys=True, allow_unicode=True))]
     if not mission_layout.compare(outputs, args.check):
         mission_layout.write_all(outputs)
     print(f"Wrote {len(routes)} routes, {len(skipped)} without a live gate, "

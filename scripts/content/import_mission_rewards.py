@@ -221,7 +221,7 @@ def main():
     header = "# Imported concrete mission rewards; regenerate with scripts/content/import_mission_rewards.py."
     if args.output is not None:
         outputs = [(args.output, mission_layout.yaml_text("grants", output, header, sort_keys=True, allow_unicode=True))]
-    elif mission_layout.format_of(args.content) == 2:
+    else:
         outputs = [(args.content / "missions" / mission_id / "grants.yml",
                     mission_layout.yaml_text("grants", {mission_id: rows}, header, sort_keys=True, allow_unicode=True))
                    for mission_id, rows in sorted(output.items())]
@@ -231,9 +231,6 @@ def main():
             fail("stale grant files: " + ", ".join(str(path) for path in stale))
         for path in stale:
             path.unlink()
-    else:
-        outputs = [(args.content / "missions" / "grants.yml",
-                    mission_layout.yaml_text("grants", output, header, sort_keys=True, allow_unicode=True))]
     if not mission_layout.compare(outputs, args.check):
         mission_layout.write_all(outputs)
     print(f"Wrote {len(output)} missions, {sum(len(rows) for rows in output.values())} grants")

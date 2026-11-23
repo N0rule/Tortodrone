@@ -45,16 +45,7 @@ public final class MissionYaml {
 
     public record Definitions(MissionCatalog missions, MissionComlinks comlinks, MissionGates gates) {}
 
-    /** Layout marker: absent or "1" is the flat v1 tree, "2" is per-mission folders. */
-    public static int format(Path content) throws IOException {
-        return MissionLayout.format(content);
-    }
-
-    public static MissionCatalog load(Path directory) throws IOException {
-        return MissionLayout.readV1(directory).missions();
-    }
-
-    /** Read the layout the marker selects; a missing marker stays v1 for existing deployments. */
+    /** Read one folder per mission plus the shared rows; see {@link MissionLayout}. */
     public static Definitions definitions(Path content) throws IOException {
         return MissionLayout.definitions(content);
     }
@@ -75,10 +66,6 @@ public final class MissionYaml {
                     new LinkedHashMap<>(),
                     new LinkedHashMap<>());
         }
-    }
-
-    static Definitions empty() {
-        return new Definitions(MissionCatalog.empty(), MissionComlinks.empty(), MissionGates.empty());
     }
 
     static void merge(Building b, String section, Map<String, Object> root, Path file) throws IOException {
