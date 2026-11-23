@@ -28,9 +28,23 @@ public final class AccountStore implements AutoCloseable {
     private final org.tortodrone.core.town.TownCatalog town;
     private final Map<String,Stored> memory = new TreeMap<>();
     private final Map<Integer,CharacterStore> rosters = new ConcurrentHashMap<>();
-    private final Map<Integer,Attached> sessions = new ConcurrentHashMap<>();
-    private final Map<Integer,Object> attachmentLocks = new ConcurrentHashMap<>();
-    private ScheduledExecutorService watcher;
+    private final AccountAttachments attachments = new AccountAttachments();
+    private final AccountAttachments.Host attachmentHost = new AccountAttachments.Host() {
+        @Override public boolean current(Account account) throws IOException { return AccountStore.this.current(account); }
+        @Override public boolean gameMaster(Account account) throws IOException {
+            synchronized(AccountStore.this) {
+                if(database!=null) {
+                    var identity=database.identity(account.username());
+                    if(identity==null||identity.id()!=account.id()||identity.authRevision()!=account.authRevision())
+                        throw new IOException("Account changed; reconnect");
+                    return identity.gameMaster();
+                }
+                var stored=require(account.username(),account.id());
+                if(stored.revision()!=account.authRevision())throw new IOException("Account changed; reconnect");
+                return stored.gameMaster();
+            }
+        }
+    };
     private ScheduledExecutorService maintenance;
     private int nextId = 1;
 
@@ -59,8 +73,8 @@ public final class AccountStore implements AutoCloseable {
     public WorldProfile administrativeEquipment(String username,String knight,int account,int world,long revision,long itemId,Integer slot,String grant)throws IOException {
         validateUsername(username);
         if(database==null||revision<0||account<=0||world<=0)throw new IOException("A current knight revision is required");
-        synchronized(attachmentLocks.computeIfAbsent(account,id->new Object())) {
-            if(sessions.containsKey(account))throw new IOException("Sign out of the game before changing equipment");
+        synchronized(attachments.lock(account)) {
+            if(attachments.attached(account))throw new IOException("Sign out of the game before changing equipment");
             return database.administrativeEquipment(username,knight,account,world,revision,itemId,slot,grant,catalog,town);
         }
     }
@@ -73,7 +87,7 @@ public final class AccountStore implements AutoCloseable {
     public Database.StorageMetrics storageMetrics()throws IOException {if(database==null)throw new IOException("Storage metrics require SQLite storage");return database.storageMetrics();}
     /** Reclaim expired inventory; the scheduled owner runs outside every session monitor. */
     public void sweepExpiredItems()throws IOException {if(database!=null)database.sweepExpired();}
-    public boolean gameAttached(int account){return sessions.containsKey(account);}
+    public boolean gameAttached(int account){return attachments.attached(account);}
     public WorldProfile progress(String username,String knight,Integer rank,Integer subrank,Integer prestige,int expectedAccount,int expectedWorld)throws IOException{
         return progress(username,knight,rank,subrank,prestige,expectedAccount,expectedWorld,null);
     }
@@ -263,74 +277,20 @@ public final class AccountStore implements AutoCloseable {
         default void onInvalidated(Runnable cleanup) { }
     }
     public Session attach(Account account,Socket socket) throws IOException {
-        synchronized(attachmentLocks.computeIfAbsent(account.id(),id->new Object())) {
-            Attached next=new Attached(account,socket),previous;
-            synchronized(this) {
-                if(!current(account)||socket.isClosed()) { socket.close();throw new IOException("Account changed during login"); }
-                previous=sessions.put(account.id(),next);
-            }
-            // Serialize takeovers per account; a third login cannot overtake old cleanup.
-            if(previous!=null)previous.close();
-            return next;
-        }
-    }
-    private final class Attached implements Session {
-        final Account account;
-        final Socket socket;
-        private volatile boolean live=true;
-        private Runnable cleanup;
-        private final CompletableFuture<Void> finished=new CompletableFuture<>();
-        Attached(Account account,Socket socket){this.account=account;this.socket=socket;}
-        @Override public boolean current(){return live&&!socket.isClosed()&&sessions.get(account.id())==this;}
-        @Override public boolean gameMaster() throws IOException {
-            if(!current())throw new IOException("Session replaced");
-            synchronized(AccountStore.this) {
-                if(database!=null) {
-                    var identity=database.identity(account.username());
-                    if(identity==null||identity.id()!=account.id()||identity.authRevision()!=account.authRevision())
-                        throw new IOException("Account changed; reconnect");
-                    return identity.gameMaster();
-                }
-                var stored=require(account.username(),account.id());
-                if(stored.revision()!=account.authRevision())throw new IOException("Account changed; reconnect");
-                return stored.gameMaster();
-            }
-        }
-        @Override public void onInvalidated(Runnable action) {
-            synchronized(this) { if(live) { cleanup=action;return; } }
-            action.run();
-        }
-        @Override public void close() {
-            Runnable action;
-            boolean owner;
-            synchronized(this) { owner=live;live=false;action=cleanup;cleanup=null; }
-            if(!owner){finished.join();return;}
-            try {
-                try{socket.close();}catch(IOException ignored) { }
-                if(action!=null)action.run();
-            }finally {
-                sessions.remove(account.id(),this);
-                finished.complete(null);
-            }
-        }
+        return attachments.attach(account,socket,attachmentHost);
     }
     /** The server owns this watcher. The desktop tool opens no networking endpoint. */
     public synchronized void watchSessions() {
-        if (watcher != null) return;
-        watcher = Executors.newSingleThreadScheduledExecutor(task -> { Thread t = new Thread(task,"AccountSessions"); t.setDaemon(true); return t; });
-        watcher.scheduleWithFixedDelay(() -> sessions.forEach((id,session) -> {
-            try { if (!current(session.account)||!session.current()) session.close(); }
-            catch (IOException failure) { session.close(); }
-        }),250,250,TimeUnit.MILLISECONDS);
+        attachments.watch(attachmentHost);
     }
     @Override public void close() {
         synchronized(this){
             if (closed) return;
             closed = true;
-            if (watcher != null) watcher.shutdownNow();
             if (maintenance != null) maintenance.shutdownNow();
         }
-        List.copyOf(sessions.values()).forEach(Attached::close);
+        attachments.shutdownWatcher();
+        attachments.closeSessions();
         if (database != null) { database.checkpoint(); database.close(); }
     }
     public static char[] transform(char[] password) throws IOException { return Passwords.transform(password); }
