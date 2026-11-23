@@ -119,6 +119,21 @@ final class ConversationHandler {
             null,null,null,created));
     }
 
+    /** Acknowledge a close for a mission dialog this connection already replaced.
+     *  The client can still hold the previous stamp; answer idempotently instead of
+     *  disconnecting or dismissing the current dialog. */
+    boolean dismissStaleClose(SessionDecoder.Invocation request)throws IOException {
+        var args=request.arguments();
+        if(conversation!=null||session.townDialogOpen()||!session.ownsScene(request.oid())
+                ||request.service()!=6||request.method()!=1||args.size()!=1
+                ||!(args.getFirst() instanceof Long stamp))return false;
+        if(session.story.missionDialogCreated()!=0&&stamp!=session.story.missionDialogCreated())return true;
+        session.story.missionDialogCreated(0);
+        int place=session.currentScene().oid();
+        responder.send(()->responder.codec().conversationDialog(responder.oid(),place,null,null,null,0));
+        return true;
+    }
+
     boolean invocation(SessionDecoder.Invocation request)throws IOException {
         if(conversation!=null&&session.ownsScene(request.oid())&&request.service()==6&&request.method()==1){
             if(request.arguments().size()!=1||!(request.arguments().getFirst() instanceof Long stamp))

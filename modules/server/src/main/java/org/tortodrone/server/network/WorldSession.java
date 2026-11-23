@@ -51,8 +51,6 @@ final class WorldSession implements AutoCloseable {
     final TradeHandler trade;
     private final Socket socket;
     private final CharacterStore characters;
-    private final SessionOutput output;
-    private final SessionCodec codec;
     private final int oid;
     private final SessionRuntime runtime;
     private final long authRevision;
@@ -203,14 +201,7 @@ final class WorldSession implements AutoCloseable {
         if(boxes.invocation(request))return true;
         if(depotInvocation(request))return true;
         if(billingInvocation(request))return true;
-        var a=request.arguments();
-        if(!town.dialogOpen()&&!conversations.active()&&ownsScene(request.oid())&&request.service()==6&&request.method()==1
-                &&a.size()==1&&a.getFirst() instanceof Long created){
-            if(story.missionDialogCreated()!=0&&created!=story.missionDialogCreated())return true;
-            story.missionDialogCreated(0);
-            // A stale close from a client still holding a replaced dialog: acknowledge idempotently.
-            output.send(()->codec.conversationDialog(oid,runtime.scene().oid(),null,null,null,0));return true;
-        }
+        if(conversations.dismissStaleClose(request))return true;
         return town.invocation(request);
     }
 
@@ -240,8 +231,6 @@ final class WorldSession implements AutoCloseable {
             SessionCodec codec, int oid, long revision, SessionLog log, SceneRegistry scenes,RoleSource roles,String welcomeMessage) {
         this.socket = socket;
         this.characters = characters;
-        this.output = output;
-        this.codec = codec;
         this.oid = oid;
         this.runtime = new SessionRuntime(this);
         appearance = new SessionAppearance(this);
@@ -357,12 +346,12 @@ final class WorldSession implements AutoCloseable {
     /** The stock Ready Room return request; the client answers with its zone move. */
     void requestReturnToLast()throws IOException {
         runtime.returnRequested(true);short receiver=refreshState.forcedReceiver();
-        output.send(()->codec.forceScene(oid,receiver,runtime.scene()));
+        responder.send(()->responder.codec().forceScene(responder.oid(),receiver,runtime.scene()));
     }
     void setInspectionHidden(boolean hidden)throws IOException {
         characters.inspectionHidden(authRevision,hidden);flags.inspectionHidden(hidden);
         flags.gameMaster(roles.gameMaster());if(runtime.membership()!=null)runtime.membership().appearance(appearance.actor());
-        output.send(()->codec.playerFlags(oid,flags.gameMaster(),flags.inspectionHidden(),profile.progress().tutorialComplete()));
+        responder.send(()->responder.codec().playerFlags(responder.oid(),flags.gameMaster(),flags.inspectionHidden(),profile.progress().tutorialComplete()));
     }
     int pendingPortalMap(){var move=runtime.portalMove();return move==null?-1:move.destination().map().id();}
     SceneRegistry.Instance pendingPortalDestination(){var move=runtime.portalMove();return move==null?null:move.destination();}
@@ -463,7 +452,7 @@ final class WorldSession implements AutoCloseable {
     /** Publish the current equip policy on the ordered stream before an arsenal window opens. */
     void publishArsenalPolicy()throws IOException {
         boolean inZone=runtime.membership()!=null&&runtime.membership().arsenalZone();
-        output.send(()->codec.equipPolicy(oid,inZone));sceneState.arsenal(inZone);
+        responder.send(()->responder.codec().equipPolicy(responder.oid(),inZone));sceneState.arsenal(inZone);
     }
     FloorReport floorReport(){return floors.report();}
     boolean finishTutorialFloor(int stamp)throws IOException{return floors.finishTutorial(stamp);}
