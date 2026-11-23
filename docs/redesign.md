@@ -403,6 +403,9 @@ remaining stores were split the same way:
   validation; `SceneActionRunner` owns the tick-budgeted execution engine,
   timer queue, ordering counter and signal-lifetime latches. All action
   ordering and timing are unchanged.
+- `MonsterCatalog` keeps the immutable type/overlay maps and runtime
+  resolution; `MonsterCatalogReader` owns file/fingerprint ingestion, parsing,
+  overlay validation and the bounded scripted-boss check.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.
