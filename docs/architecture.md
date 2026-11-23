@@ -7,7 +7,7 @@ Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights 
 | Responsibility | Current source |
 | --- | --- |
 | Listener, lifecycle, terminal console, metrics/logging | `server/{Server,ServerControl,ServerConsole,ServerOptions,ServerLog,ConsoleInput,ConsoleHelp}` |
-| Login/session orchestration | `server/network/{SecureHandshake,ClientSession,WorldSession,SessionRuntime,SessionDirectory,SessionInvocationRouter,SessionResponder,SessionOutput,SessionPresence,SessionPublications,SessionRefresh,SessionProfilePublisher,SessionLog,WorldStatePoller}` and the per-feature handlers |
+| Login/session orchestration | `server/network/{SecureHandshake,ClientSession,CharacterHandler,WorldSession,SessionRuntime,SessionDirectory,SessionInvocationRouter,SessionResponder,SessionOutput,SessionPresence,SessionPublications,SessionRefresh,SessionProfilePublisher,SessionLog,WorldStatePoller}` and the per-feature handlers |
 | Client framing, class tables and serialization | `protocol/{HandshakeCodec,SessionDecoder,WireContext,WireWriter,SceneActorWire,SessionCodec}` and per-feature codecs (`BootstrapCodec`, `SocialCodec`, `MissionCodec`, `KnightCodec`, `TradeCodec`, `TownCodec`, `PartyCodec`, `SceneCodec`, `GuildCodec`) |
 | Authentication and account/knight services | `account/`, `character/` |
 | Transactions, persisted identity, items, town services and trades | `storage/` (`Database`, `SchemaMigrations`, the `Account`/`Roster`/`World`/`Administration`/`Preference` repositories, `WorldProfiles`, `TradeTransfer` and the town domain stores) |
