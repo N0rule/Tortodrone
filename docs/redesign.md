@@ -412,8 +412,9 @@ remaining stores were split the same way:
   one-off sends inside the caller's transaction.
 - `WireWriter` keeps shared framing, symbol and event primitives; `ItemWire`
   owns the item-instance, gift and loadout records (`KnightCodec`,
-  `TradeCodec` and `SceneActorWire` compose it). Byte layout is unchanged and
-  the cross-feature golden still matches.
+  `TradeCodec` and `SceneActorWire` compose it) and `GateWire` owns the
+  bootstrap-only gate summaries, including the fixed tutorial/opening capture
+  data. Byte layout is unchanged and the cross-feature golden still matches.
 - `SessionCodec` keeps the protocol constants, shared view records and facade
   delegations; `SceneDeltaTemplate` owns the reusable scene-delta fan-out
   frame, its recorded offsets and the +4 shift. Recipients still materialise

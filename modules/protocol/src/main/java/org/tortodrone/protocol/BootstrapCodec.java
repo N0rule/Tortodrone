@@ -55,7 +55,8 @@ import org.tortodrone.core.party.PartyView;
 /** Bootstrap-owned downstream frames; shares the connection symbol tables. */
 public final class BootstrapCodec extends WireWriter {
     @FunctionalInterface private interface GateWriter { void write(DataOutputStream out)throws IOException; }
-    public BootstrapCodec(WireContext context, ItemCatalog catalog){super(context,catalog);}
+    private final GateWire gates;
+    public BootstrapCodec(WireContext context, ItemCatalog catalog){super(context,catalog);gates=new GateWire(context,catalog);}
     public byte[] bootstrap(int connectionId, int clientOid, String host, int port) throws IOException {
         if (connectionId <= 0 || clientOid <= 0 || port < 1 || port > 65535 || host == null || host.isBlank()) {
             throw new IOException("Invalid bootstrap endpoint or identity");
@@ -189,9 +190,9 @@ public final class BootstrapCodec extends WireWriter {
                     for(int i=0;i<5;i++)o.writeInt(0);
                     emptyObjectArray(o,"com.threerings.projectx.dungeon.data.GateSummary$Wheel",false);
                 });
-                if(tutorial)gateWriters.put(org.tortodrone.core.mission.TutorialRoute.GATE,this::tutorialGate);
-                if(openingGate!=0)gateWriters.put(openingGate,o->openingGate(o,openingGate));
-                for(var gate:missionGates)gateWriters.put(gate.gateId(),o->missionGate(o,gate));
+                if(tutorial)gateWriters.put(org.tortodrone.core.mission.TutorialRoute.GATE,gates::tutorialGate);
+                if(openingGate!=0)gateWriters.put(openingGate,o->gates.openingGate(o,openingGate));
+                for(var gate:missionGates)gateWriters.put(gate.gateId(),o->gates.missionGate(o,gate));
                 type(out,WireTypes.DSET);out.writeInt(gateWriters.size());
                 for(var writer:gateWriters.values())writer.write(out);
             } else emptyDSet(out);
