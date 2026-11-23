@@ -33,6 +33,21 @@ public final class LockOrderTest {
         LockOrder.enter(LockOrder.OUTPUT);
         check(LockOrder.depth()==2,"the same rank may nest");
         LockOrder.exit();LockOrder.exit();
+
+        // CharacterStore's monitor enters CHARACTER, so an output-held call is a real
+        // inversion rather than a documentation-only rule.
+        var store=new org.tortodrone.character.CharacterStore();
+        LockOrder.enter(LockOrder.SCENE);
+        store.roster();
+        LockOrder.exit();
+        boolean characterInverted=false;
+        LockOrder.enter(LockOrder.OUTPUT);
+        try { store.roster(); }
+        catch(IllegalStateException expected){characterInverted=expected.getMessage().contains("output -> character");}
+        finally { LockOrder.exit(); }
+        check(characterInverted,"the roster monitor participates in the written order");
+        check(LockOrder.depth()==0,"the rejected character acquisition leaves no stale entry");
+
         System.out.println("PASS: lock order is documented, increasing and inversion-checked");
     }
 }

@@ -199,8 +199,8 @@ session registry -> party -> scene -> entity collections
 
 This is a target, not a description of every current call path. The party-to-scene
 nesting on the input path and the commit-under-lock paths are known exceptions with
-owners. `LockOrder` currently enforces the order for the control, registry and output
-monitors; the scene, character and storage acquisitions follow it by review and are
+owners. `LockOrder` currently enforces the order for the control, registry, character
+and output monitors; the scene and storage acquisitions follow it by review and are
 not instrumented. Storage is acquired outside all of them except the named commit
 paths.
 
@@ -679,8 +679,8 @@ regressions. Phase 9 is explicitly outside the 0.42.0 definition of done.
   separately pinned yet.
 - Wire layouts are byte-verified with synthetic fixtures.
 - Scene ownership, written lock order, commit-before-publish and one-writer storage
-  hold; the control, registry and output monitors are instrumented and the named
-  commit-under-lock paths are bounded and tested.
+  hold; the control, registry, character and output monitors are instrumented and the
+  named commit-under-lock paths are bounded and tested.
 - Tick, queue, storage and shutdown budgets are measured and reported.
 - Headless startup, console, WebUI, News and single-JAR deployment still work.
 - No pre-`0.42.0` user data is migrated or silently changed.

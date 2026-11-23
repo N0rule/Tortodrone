@@ -63,7 +63,7 @@ Monitor acquisition follows one written order:
 
 `ServerControl` (control) → `SceneRegistry` (registry) → scene simulation → `CharacterStore` (character) → `SessionOutput` (output) → storage.
 
-`LockOrder` enforces it at runtime for the control, registry and output monitors. The scene, character and storage acquisitions follow the order by review: they are not wrapped in `LockOrder`, so a new inversion there is a review finding, not a development-build failure.
+`LockOrder` enforces it at runtime for the control, registry, character and output monitors. The scene and storage acquisitions follow the order by review: they are not wrapped in `LockOrder`, so a new inversion there is a review finding, not a development-build failure.
 
 Storage is acquired outside every runtime monitor except the named scene commit paths below, which intentionally hold the scene through the durable commit so departure and competing mutations cannot race the payment. No other path may add storage work under the scene or party monitor.
 

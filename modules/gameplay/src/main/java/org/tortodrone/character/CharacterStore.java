@@ -1,5 +1,6 @@
 package org.tortodrone.character;
 
+import org.tortodrone.core.LockOrder;
 import org.tortodrone.core.character.RosterEntry;
 
 import java.io.*;
@@ -44,10 +45,13 @@ public final class CharacterStore {
 
     /** Snapshot and registration share the mutation lock, so an update cannot overtake its snapshot. */
     public synchronized Subscription subscribe(RosterListener initial, RosterListener updates) throws IOException {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         refresh();
         initial.receive(available());
         listeners.add(updates);
-        return () -> { synchronized (CharacterStore.this) { listeners.remove(updates); } };
+        return () -> { LockOrder.enter(LockOrder.CHARACTER); try { synchronized (CharacterStore.this) { listeners.remove(updates); } } finally { LockOrder.exit(); } };
+        } finally { LockOrder.exit(); }
     }
 
     /** Listeners enqueue bounded downstream frames; they must not block on network I/O. */
@@ -90,15 +94,21 @@ public final class CharacterStore {
     }
 
     public synchronized void refresh()throws IOException {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         if(database==null)return;
         var state=database.rosterState(accountId);
         if(storageRevision==state.revision())return;
         boolean changed=!knights.equals(state.knights());
         knights=state.knights();nextId=state.next();storageRevision=state.revision();
         if(changed)notifyListeners();
+        } finally { LockOrder.exit(); }
     }
 
-    public synchronized int nextId() { return nextId; }
+    public synchronized int nextId() {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try { return nextId; } finally { LockOrder.exit(); }
+    }
 
     public boolean hasWorldStorage(){return database!=null;}
     public Path worldStorageFile(){return database.file();}
@@ -110,7 +120,10 @@ public final class CharacterStore {
     public String username() { return username; }
     public int accountId() { return accountId; }
 
-    public synchronized List<Knight> roster() { return knights; }
+    public synchronized List<Knight> roster() {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try { return knights; } finally { LockOrder.exit(); }
+    }
 
     /**
      * Available knights for the character picker. Each preview composes the knight's currently
@@ -119,6 +132,8 @@ public final class CharacterStore {
      * creation outfit instead of failing the roster publication.
      */
     public synchronized List<RosterEntry> available() throws IOException {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         refresh();
         var result = new ArrayList<RosterEntry>();
         for (Knight knight : knights) {
@@ -126,6 +141,7 @@ public final class CharacterStore {
             result.add(new RosterEntry(knight,profile==null?preview(knight):StarterCatalog.equipped(knight,profile,catalog),profile==null?1:profile.progress().rank()));
         }
         return List.copyOf(result);
+        } finally { LockOrder.exit(); }
     }
 
     private StarterCatalog.Model preview(Knight knight) {
@@ -135,24 +151,36 @@ public final class CharacterStore {
     }
 
     public synchronized String nameFailure(String name) throws IOException {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         String error = nameError(name);
         if (error != null) return error;
         return (database!=null ? database.knightNameInUse(name,-1,-1)
             : knights.stream().anyMatch(knight -> canonical(knight.name()).equals(canonical(name))))
             ? "That knight name is already in use" : null;
+        } finally { LockOrder.exit(); }
     }
 
     public synchronized Knight create(Knight choices) throws IOException, Refused {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         return create(choices, -1);
+        } finally { LockOrder.exit(); }
     }
 
     public synchronized Knight create(Knight choices, long authRevision) throws IOException, Refused {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         return create(choices,authRevision,false);
+        } finally { LockOrder.exit(); }
     }
     /** Native creator: first-run state and the starter inventory share one roster transaction. */
     public synchronized Knight createForOpening(Knight choices,long authRevision)throws IOException,Refused {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         if(database==null||authRevision<0)throw new IOException("Authenticated opening owner required");
         return create(choices,authRevision,true);
+        } finally { LockOrder.exit(); }
     }
     private Knight create(Knight choices,long authRevision,boolean opening)throws IOException,Refused {
         refresh();
@@ -172,10 +200,15 @@ public final class CharacterStore {
     }
 
     public synchronized Knight update(String oldName, Knight choices) throws IOException, Refused {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         return update(oldName, choices, -1);
+        } finally { LockOrder.exit(); }
     }
 
     public synchronized Knight update(String oldName, Knight choices, long authRevision) throws IOException, Refused {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         refresh();
         int index = indexOf(oldName);
         if (index < 0) throw new Refused("No such knight");
@@ -200,13 +233,19 @@ public final class CharacterStore {
         knights = List.copyOf(roster);
         notifyListeners();
         return updated;
+        } finally { LockOrder.exit(); }
     }
 
     public synchronized void delete(String name) throws IOException, Refused {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         delete(name, -1);
+        } finally { LockOrder.exit(); }
     }
 
     public synchronized void delete(String name, long authRevision) throws IOException, Refused {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         refresh();
         int index = indexOf(name);
         if (index < 0) throw new Refused("No such knight");
@@ -215,24 +254,34 @@ public final class CharacterStore {
         save(roster, nextId, authRevision);
         knights = List.copyOf(roster);
         notifyListeners();
+        } finally { LockOrder.exit(); }
     }
 
     /** Resolves only an owned character. The network layer publishes selection separately. */
     public synchronized WorldProfile worldProfile(String name,long authRevision) throws IOException, Refused {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         return worldProfile(name,authRevision,null);
+        } finally { LockOrder.exit(); }
     }
     /** Reuse unchanged inventory after a current ownership/authenticated revision check. */
     public synchronized WorldProfile worldProfile(String name,long authRevision,WorldProfile cached) throws IOException, Refused {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         refresh();
         int index = indexOf(name);
         if (index < 0) throw new Refused("No such knight");
         if (database == null) throw new IOException("World profiles require SQLite storage");
         return database.worldProfile(accountId,knights.get(index).id(),authRevision,cached);
+        } finally { LockOrder.exit(); }
     }
 
     public synchronized WorldProfile equip(int knightId,long revision,long itemId,Integer slot)throws IOException {
+        LockOrder.enter(LockOrder.CHARACTER);
+        try {
         if(database==null)throw new IOException("Equipment requires SQLite storage");
         return database.equip(accountId,knightId,revision,itemId,slot);
+        } finally { LockOrder.exit(); }
     }
 
     /** Trade coordinator never takes an account's roster lock while holding its own lock. */
