@@ -8,12 +8,7 @@ boxes:
     evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
       not verified against current live server; see docs/content.md
     groups:
-      main:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{group: choices_variants_1_1}, {item: confetti_summer, quantity: 1, binding: catalog}, {item: confetti_winter,
-              quantity: 1, binding: catalog}, {group: choices_confetti_summer_2}, {group: choices_bloon_bucket_3}]}
+      main: {shared: solstice_prize_box_2014_main}
       choices_variants_1_1: {shared: choices_variants_1}
       choices_confetti_summer_2: {shared: choices_confetti_summer}
       choices_bloon_bucket_3:

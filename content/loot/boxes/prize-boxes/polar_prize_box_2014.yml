@@ -8,13 +8,7 @@ boxes:
     evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
       not verified against current live server; see docs/content.md
     groups:
-      main:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{group: choices_side_blade_polar_1}, {group: choices_snow_bucket_5}, {item: confetti_winter, quantity: 1, binding: catalog},
-            {item: flawed_snowball, quantity: 1, binding: catalog}, {group: choices_confetti_winter_6}, {group: choices_flawed_snowball_7}, {
-              group: choices_confetti_winter_8}, {group: choices_flawed_snowball_9}]}
+      main: {shared: polar_prize_box_main}
       choices_side_blade_polar_1:
         chance: 100%
         rolls: 1

@@ -10,12 +10,7 @@ boxes:
     evidence: 'https://wiki.spiralknights.com/Lockbox; box-specific candidate list; ALL rates estimated: Shadow Key 1%, aura category 1% if present,
       Iron modifiers 5%; remaining accessories; equal families; standard/divine/volcanic/prismatic colors 90/4/4/2'
     groups:
-      main:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 9900, rewards: [{group: accessories}]}
-        - {weight: 100, rewards: [{item: shadow_key, quantity: 1, binding: unbound}]}
+      main: {shared: gold_main}
       giga_shades:
         chance: 100%
         rolls: 1

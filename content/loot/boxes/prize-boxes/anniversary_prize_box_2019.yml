@@ -8,11 +8,7 @@ boxes:
     evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
       not verified against current live server; see docs/content.md
     groups:
-      main:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{group: choices_confetti_1}, {group: choices_grand_topper_blue_2}]}
+      main: {shared: anniversary_prize_box_2018_main}
       choices_confetti_1: {shared: choices_confetti_4}
       choices_grand_topper_blue_2: {shared: choices_grand_topper_blue_2}
       choices_grand_topper_blue_3: {shared: choices_grand_topper_blue}

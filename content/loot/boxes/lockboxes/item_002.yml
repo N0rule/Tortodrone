@@ -10,11 +10,7 @@ boxes:
     evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
       not verified against current live server; see docs/content.md
     groups:
-      main:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{group: choices_node_slime_blue_s1502234395_c482643_1}, {group: choices_confetti_slime_8}]}
+      main: {shared: item_001_main}
       choices_node_slime_blue_s1502234395_c482643_1: {shared: choices_node_slime_blue_s1502234395_c482643_4}
       choices_node_slime_blue_s1502234395_c482643_2:
         chance: 100%

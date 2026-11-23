@@ -6,6 +6,11 @@ groups:
     rolls: 1
     entries:
     - {weight: 1, rewards: [{group: choices_peridot_1}, {group: choices_confetti_slime_18}]}
+  anniversary_prize_box_2018_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_confetti_1}, {group: choices_grand_topper_blue_2}]}
   anniversary_prize_main:
     chance: 100%
     rolls: 1
@@ -1648,6 +1653,13 @@ groups:
     - {weight: 280, rewards: [{item: com_unit_divine, quantity: 1, binding: unbound}]}
     - {weight: 280, rewards: [{item: com_unit_volcanic, quantity: 1, binding: unbound}]}
     - {weight: 140, rewards: [{item: com_unit_prismatic, quantity: 1, binding: unbound}]}
+  copper_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 9800, rewards: [{group: accessories}]}
+    - {weight: 100, rewards: [{item: shadow_key, quantity: 1, binding: unbound}]}
+    - {weight: 100, rewards: [{group: auras}]}
   dapper_combo:
     chance: 100%
     rolls: 1
@@ -1662,6 +1674,31 @@ groups:
     - {weight: 280, rewards: [{item: pipe_and_mustache_divine, quantity: 1, binding: unbound}]}
     - {weight: 280, rewards: [{item: pipe_and_mustache_volcanic, quantity: 1, binding: unbound}]}
     - {weight: 140, rewards: [{item: pipe_and_mustache_prismatic, quantity: 1, binding: unbound}]}
+  dark_harvest_prize_box_2017_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{item: confetti_dark_harvest, quantity: 1, binding: catalog}, {item: confetti_dark_harvest, quantity: 1, binding: catalog},
+        {group: choices_confetti_dark_harvest_1}, {group: choices_confetti_dark_harvest_1}, {group: choices_confetti_dark_harvest_2}, {group: choices_crest_nova_3},
+        {group: choices_trinket_slot_11}]}
+  equinox_prize_box_complete_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_variants_1_1}, {item: confetti_equinox, quantity: 1, binding: catalog}, {group: choices_confetti_equinox_5},
+        {group: choices_confetti_equinox_6}]}
+  fall_equinox_prize_box_2014_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_variants_1_1}, {item: confetti_fall_equinox, quantity: 1, binding: catalog}, {group: choices_confetti_fall_equinox_4},
+        {group: choices_confetti_fall_equinox_5}]}
+  fall_equinox_prize_box_2016_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_variants_1_1}, {item: confetti_fall_equinox, quantity: 1, binding: catalog}, {group: choices_confetti_fall_equinox_5},
+        {group: choices_confetti_fall_equinox_6}]}
   flower:
     chance: 100%
     rolls: 1
@@ -1690,6 +1727,11 @@ groups:
     - {weight: 280, rewards: [{item: game_face_divine, quantity: 1, binding: unbound}]}
     - {weight: 280, rewards: [{item: game_face_vol, quantity: 1, binding: unbound}]}
     - {weight: 140, rewards: [{item: game_face_prismatic, quantity: 1, binding: unbound}]}
+  glacial_prize_box_2016_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_permafrost_aura_1}]}
   glasses:
     chance: 100%
     rolls: 1
@@ -1723,6 +1765,12 @@ groups:
     - {weight: 280, rewards: [{item: goggles_divine, quantity: 1, binding: unbound}]}
     - {weight: 280, rewards: [{item: goggles_volcanic, quantity: 1, binding: unbound}]}
     - {weight: 140, rewards: [{item: goggles_prismatic, quantity: 1, binding: unbound}]}
+  gold_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 9900, rewards: [{group: accessories}]}
+    - {weight: 100, rewards: [{item: shadow_key, quantity: 1, binding: unbound}]}
   halo:
     chance: 100%
     rolls: 1
@@ -1779,6 +1827,21 @@ groups:
     - {weight: 280, rewards: [{item: power_scanner_divine, quantity: 1, binding: unbound}]}
     - {weight: 280, rewards: [{item: power_scanner_volcanic, quantity: 1, binding: unbound}]}
     - {weight: 140, rewards: [{item: power_scanner_prismatic, quantity: 1, binding: unbound}]}
+  item_001_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_node_slime_blue_s1502234395_c482643_1}, {group: choices_confetti_slime_8}]}
+  item_00a_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_fox_slime_cool_1}]}
+  katastrophe_prize_box_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_fur_coat_shadow_1}]}
   knight_vision_goggles:
     chance: 100%
     rolls: 1
@@ -1961,6 +2024,13 @@ groups:
     - {weight: 280, rewards: [{item: plume_divine, quantity: 1, binding: unbound}]}
     - {weight: 280, rewards: [{item: plume_volcanic, quantity: 1, binding: unbound}]}
     - {weight: 140, rewards: [{item: plume_prismatic, quantity: 1, binding: unbound}]}
+  polar_prize_box_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_side_blade_polar_1}, {group: choices_snow_bucket_5}, {item: confetti_winter, quantity: 1, binding: catalog},
+        {item: flawed_snowball, quantity: 1, binding: catalog}, {group: choices_confetti_winter_6}, {group: choices_flawed_snowball_7}, {
+          group: choices_confetti_winter_8}, {group: choices_flawed_snowball_9}]}
   ribbon:
     chance: 100%
     rolls: 1
@@ -2017,6 +2087,18 @@ groups:
     - {weight: 280, rewards: [{item: side_blade_divine, quantity: 1, binding: unbound}]}
     - {weight: 280, rewards: [{item: side_blade_volcanic, quantity: 1, binding: unbound}]}
     - {weight: 140, rewards: [{item: side_blade_prismatic, quantity: 1, binding: unbound}]}
+  solstice_prize_box_2013_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_variants_1_1}, {item: confetti_summer, quantity: 1, binding: catalog}, {item: confetti_winter,
+          quantity: 1, binding: catalog}, {group: choices_confetti_summer_2}, {group: choices_snow_bucket_3}]}
+  solstice_prize_box_2014_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_variants_1_1}, {item: confetti_summer, quantity: 1, binding: catalog}, {item: confetti_winter,
+          quantity: 1, binding: catalog}, {group: choices_confetti_summer_2}, {group: choices_bloon_bucket_3}]}
   spike_mohawk:
     chance: 100%
     rolls: 1
@@ -2031,6 +2113,12 @@ groups:
     - {weight: 280, rewards: [{item: spike_mohawk_divine, quantity: 1, binding: unbound}]}
     - {weight: 280, rewards: [{item: spike_mohawk_volcanic, quantity: 1, binding: unbound}]}
     - {weight: 140, rewards: [{item: spike_mohawk_prismatic, quantity: 1, binding: unbound}]}
+  spring_equinox_prize_box_2015_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_variants_1_1}, {item: confetti_equinox, quantity: 1, binding: catalog}, {group: choices_confetti_equinox_4},
+        {group: choices_confetti_equinox_5}]}
   toupee:
     chance: 100%
     rolls: 1
@@ -2087,6 +2175,11 @@ groups:
     - {weight: 280, rewards: [{item: vitakit_divine, quantity: 1, binding: unbound}]}
     - {weight: 280, rewards: [{item: vitakit_volcanic, quantity: 1, binding: unbound}]}
     - {weight: 140, rewards: [{item: vitakit_prismatic, quantity: 1, binding: unbound}]}
+  wicked_prize_box_main:
+    chance: 100%
+    rolls: 1
+    entries:
+    - {weight: 1, rewards: [{group: choices_brigandine_curse_1}]}
   wide_vee:
     chance: 100%
     rolls: 1

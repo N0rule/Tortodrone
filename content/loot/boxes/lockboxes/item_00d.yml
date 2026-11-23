@@ -10,11 +10,7 @@ boxes:
     evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
       not verified against current live server; see docs/content.md
     groups:
-      main:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{group: choices_fox_slime_cool_1}]}
+      main: {shared: item_00a_main}
       choices_fox_slime_cool_1:
         chance: 100%
         rolls: 1
