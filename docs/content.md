@@ -1457,8 +1457,8 @@ estimate. The wiki does not verify these rates or inherited extras.
 `BoxPoolsTest` opens every enabled definition on disposable SQLite, checks key
 consumption and reloads after reconnect/database reopen. `InventoryExpiryTest`
 covers deadlines, transfers, gifts, escrow encoding, expiry rollback and revision
-publication. Schema 16 is unchanged by box opening: absolute deadlines use the existing integer
-metadata namespace `item.expires.<id>`. No owner database is migrated. Native
+publication. Box opening adds no table or column: absolute deadlines use the existing
+integer metadata namespace `item.expires.<id>`. No owner database is migrated. Native
 reader checks cover furniture's undeployed count, common item `Long` expiry and
 custom color triplets. All 5,918 distinct candidate reward configurations match
 the installed native item factory subtype, including all 244 furniture bindings.
