@@ -297,7 +297,8 @@ public final class WebUiTest {
                     check(
                             get("metrics").status == 200
                                     && get("catalogue").status == 403
-                                    && get("knights-all").status == 403,
+                                    && get("knights-all").status == 403
+                                    && get("guilds").status == 403,
                             "new reads preserve role boundaries");
                     check(
                             post(
@@ -321,7 +322,9 @@ public final class WebUiTest {
                     check(get("accounts").status == 200 && get("depot").status == 403, "moderator scope");
                     check(post("account-create", create).status == 403, "moderator cannot create account");
                     check(
-                            get("catalogue").status == 200 && get("knights-all").status == 200,
+                            get("catalogue").status == 200
+                                    && get("knights-all").status == 200
+                                    && get("guilds").status == 200,
                             "moderator read-only inspection");
                     clock.addAndGet(31 * 60_000);
                     check(get("status").status == 401, "idle session expires");

@@ -78,6 +78,21 @@ public final class GuildStore {
         });
     }
 
+    /**
+     * One page of a guild's record for a local operator.
+     *
+     * <p>{@link #log} refuses a caller who is not a member of the guild because it answers a knight
+     * inside the town service. The WebUI and console are local trusted surfaces with no knight to
+     * authenticate as, so they read the same ordered pages without that gate. Nothing here mints a
+     * record entry: the guild log is still written only by the game paths.
+     */
+    public Page operatorLog(long guildId, long cursor, int offset, int count, Integer category, String knightName)
+            throws IOException {
+        if (guildId <= 0) throw new IOException("Invalid guild id");
+        if (count < 1 || count > 100 || offset < 0) throw new IOException("Invalid log page");
+        return database.read(c -> GuildLogStore.page(c, guildId, cursor, offset, count, category, knightName));
+    }
+
     /** {@code GuildMarshaller} id 4, the same gates {@code formGuild} applies to a name. */
     public void checkName(String name) throws IOException {
         settings.checkName(name);

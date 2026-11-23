@@ -8,6 +8,7 @@ import * as overview from './pages/overview.js';
 import * as players from './pages/players.js';
 import * as accounts from './pages/accounts.js';
 import * as knights from './pages/knights.js';
+import * as guilds from './pages/guilds.js';
 import * as depot from './pages/depot.js';
 import * as auctions from './pages/auctions.js';
 import * as news from './pages/news.js';
@@ -23,6 +24,7 @@ const pages = [
     ['players', 'Online Players', null, 0, players],
     ['accounts', 'Accounts', null, 1, accounts],
     ['knights', 'Knights', null, 1, knights],
+    ['guilds', 'Guilds', null, 1, guilds],
     ['depot', 'Supply Depot', null, 2, depot],
     ['auctions', 'Auction House', null, 2, auctions],
     ['news', 'Uplink News', null, 2, news],

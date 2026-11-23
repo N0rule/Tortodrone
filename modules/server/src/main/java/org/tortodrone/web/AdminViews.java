@@ -506,4 +506,88 @@ final class AdminViews {
             for (Object label : values) out.add(Map.of("label", label, "source", "Equipment bonus"));
         return List.copyOf(out);
     }
+
+    /** One formed guild, as the console {@code guild list} reports it. */
+    public record GuildRow(
+            long id,
+            String name,
+            int members,
+            int memberLimit,
+            int energy,
+            int upkeep,
+            long formed,
+            boolean hallOpen,
+            String theme,
+            String environment,
+            String motd) {}
+
+    /** A roster row with the stock rank name and the recorded last session. */
+    public record GuildMemberRow(
+            String name, String rank, byte rankByte, long joined, long lastSession, long lastWithdrawal) {}
+
+    /** Guild detail: the same record the client requests, plus the operator-visible log page. */
+    public record GuildDetail(GuildRow guild, List<GuildMemberRow> roster, org.tortodrone.core.guild.Page log) {}
+
+    List<GuildRow> guilds() throws IOException {
+        var out = new ArrayList<GuildRow>();
+        var store = accounts.guilds();
+        for (var guild : store.list()) out.add(guildRow(store, guild));
+        return List.copyOf(out);
+    }
+
+    GuildDetail guild(String name, String logKnight, int logCount) throws IOException {
+        var store = accounts.guilds();
+        var guild = name.isBlank() ? null : store.named(name);
+        if (guild == null) throw new IllegalArgumentException("No such guild");
+        var view = store.view(guild.id());
+        var roster = new ArrayList<GuildMemberRow>();
+        for (var member : view.members())
+            roster.add(new GuildMemberRow(
+                    member.name(),
+                    rankName(member.rank()),
+                    member.rank(),
+                    member.joined(),
+                    member.lastSession(),
+                    member.lastWithdrawal()));
+        roster.sort(java.util.Comparator.comparingInt(m -> m.rankByte()));
+        return new GuildDetail(
+                guildRow(store, guild),
+                List.copyOf(roster),
+                store.operatorLog(
+                        guild.id(),
+                        Long.MAX_VALUE,
+                        0,
+                        Math.clamp(logCount, 1, 100),
+                        null,
+                        logKnight.isBlank() ? null : logKnight));
+    }
+
+    private GuildRow guildRow(org.tortodrone.storage.GuildStore store, org.tortodrone.core.guild.Guild guild)
+            throws IOException {
+        var view = store.view(guild.id());
+        return new GuildRow(
+                guild.id(),
+                guild.name(),
+                view.members().size(),
+                guild.memberLimit(),
+                guild.energy(),
+                guild.upkeepCost(),
+                guild.formed(),
+                guild.hallOpen(),
+                guild.theme(),
+                guild.environment(),
+                guild.motd());
+    }
+
+    /** Stock rank bytes: 0 master, 1 officer, 2 member, 3 veteran, 4 recruit. */
+    private static String rankName(byte rank) {
+        return switch (rank) {
+            case 0 -> "Master";
+            case 1 -> "Officer";
+            case 2 -> "Member";
+            case 3 -> "Veteran";
+            case 4 -> "Recruit";
+            default -> "Rank-" + rank;
+        };
+    }
 }

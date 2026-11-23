@@ -82,6 +82,35 @@ public final class GuildAdministrationTest {
                 usage = refused.getMessage().startsWith("Usage:");
             }
             check(usage, "a bare command prints its usage");
+
+            // The operator page reads the same stored record without a member to authenticate as.
+            var page = guilds.operatorLog(id, Long.MAX_VALUE, 0, 25, null, null);
+            check(page.entryCount() >= 0, "the operator log reports a filter total");
+            check(
+                    page.entries().stream().allMatch(entry -> entry.type() >= 0),
+                    "every operator log entry carries its stored type byte");
+            for (int i = 0; i < 3; i++)
+                check(
+                        guilds.operatorLog(id, Long.MAX_VALUE, 0, 25, null, null)
+                                        .entryCount()
+                                == page.entryCount(),
+                        "the operator log is stable across reads");
+
+            boolean badPage = false;
+            try {
+                guilds.operatorLog(id, Long.MAX_VALUE, 0, 0, null, null);
+            } catch (java.io.IOException refused) {
+                badPage = refused.getMessage().startsWith("Invalid log page");
+            }
+            check(badPage, "an out-of-range operator page is refused");
+
+            boolean badId = false;
+            try {
+                guilds.operatorLog(0, Long.MAX_VALUE, 0, 25, null, null);
+            } catch (java.io.IOException refused) {
+                badId = refused.getMessage().startsWith("Invalid guild id");
+            }
+            check(badId, "an operator log read without a guild is refused");
         } finally {
             try (var paths = Files.walk(home)) {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path);

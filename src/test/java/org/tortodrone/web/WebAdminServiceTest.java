@@ -97,6 +97,43 @@ public final class WebAdminServiceTest {
                                 .equals(accounts.worldProfile("Alice", "Alice-Knight")
                                         .items()),
                         "inspection preserves owned and equipped distinctions");
+                // Guild administration reads the same stored record the console reports.
+                db.setCurrency(
+                        "Alice", "Alice-Knight", account, -1, org.tortodrone.core.character.Currency.CROWNS, 5_000);
+                db.setCurrency(
+                        "Alice", "Alice-Knight", account, -1, org.tortodrone.core.character.Currency.ENERGY, 500);
+                var guilds = accounts.guilds();
+                check(guilds.form(account, 1, 1, "Oracion").profile() != null, "the WebUI fixture formed a guild");
+                var guildRows = (List<?>) service.read("guilds", new AdminService.Input(Map.of()));
+                var guildRow = (AdminViews.GuildRow) guildRows.getFirst();
+                check(
+                        guildRows.size() == 1
+                                && guildRow.name().equals("Oracion")
+                                && guildRow.members() == 1
+                                && guildRow.memberLimit() == GuildStore.MAX_MEMBERS,
+                        "the guild listing reports the formed guild and its limit");
+                var guildDetail = (AdminViews.GuildDetail)
+                        service.read("guild", new AdminService.Input(Map.of("name", "oracion", "count", "25")));
+                check(
+                        guildDetail.guild().id() == guildRow.id()
+                                && guildDetail.roster().size() == 1
+                                && guildDetail.roster().getFirst().rank().equals("Master")
+                                && guildDetail.roster().getFirst().name().equals("Alice-Knight"),
+                        "the guild record names the roster through the stored rank byte");
+                check(
+                        guildDetail.log().entryCount() >= 1
+                                && !guildDetail.log().entries().isEmpty(),
+                        "the operator log page carries the recorded entries");
+                try {
+                    service.read("guild", new AdminService.Input(Map.of("name", "Nobody")));
+                    throw new AssertionError("an unknown guild was accepted");
+                } catch (IllegalArgumentException expected) {
+                }
+                try {
+                    service.read("guild", new AdminService.Input(Map.of("name", "", "count", "25")));
+                    throw new AssertionError("a blank guild name was accepted");
+                } catch (IllegalArgumentException expected) {
+                }
                 var page = (AdminViews.ItemPage) service.read(
                         "catalogue", new AdminService.Input(Map.of("search", "Gel Drop", "size", "1", "page", "1")));
                 check(

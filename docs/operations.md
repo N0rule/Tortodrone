@@ -181,7 +181,7 @@ Run `help` or `help account create` in the server terminal for exact current syn
 
 Account create/password and destructive deletion require interactive password/confirmation input. Knight names are globally unique without case; different IDs identify sessions, accounts, roster slots, world actors and inventory instances. Never treat them as interchangeable.
 
-The WebUI supports account/knight browsing and searchable inventory, item grants, quantity/removal confirmation and balance changes; equipped, starter and permanent item protections apply. For headless administration, enter `help` or `help account create` in the running server console. Game accounts remain separate from WebUI accounts.
+The WebUI supports account/knight browsing and searchable inventory, item grants, quantity/removal confirmation and balance changes; equipped, starter and permanent item protections apply. **Guilds** lists every formed guild with its well, upkeep and hall access, and opens one guild's record, roster and log pages. That page is read-only: membership, ranks, the well and the record are written by the game client against the caller's stored auth revision, and there is no operator write path to invent. For headless administration, enter `help` or `help account create` in the running server console. Game accounts remain separate from WebUI accounts.
 
 A saved GM can use the original client's F3 dashboard **ItemCreator** and **Actor Spawner** (other tools unsupported); server-side role checks still apply. Tortodrone adds no GM chat commands, so ordinary players' leading `!` stays normal chat. Do not assume local admin commands also work inside the game; item grants run through the WebUI or the server console.
 
