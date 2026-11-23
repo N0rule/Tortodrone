@@ -199,9 +199,10 @@ session registry -> party -> scene -> entity collections
 
 This is a target, not a description of every current call path. The party-to-scene
 nesting on the input path and the commit-under-lock paths are known exceptions with
-owners. `CharacterStore`, `SessionOutput`, `ServerControl` and the scene registry
-must be added to the written order before the scheduler rewrite. Storage is acquired
-outside all of them except the named commit paths.
+owners. `LockOrder` currently enforces the order for the control, registry and output
+monitors; the scene, character and storage acquisitions follow it by review and are
+not instrumented. Storage is acquired outside all of them except the named commit
+paths.
 
 ### Metrics required before the scheduler rewrite
 
@@ -232,10 +233,11 @@ At the time of writing:
 - 53 imported gate routes; one fully playable route beyond the pinned opening gate:
   `shadow_beast` (scenes 351, 380, 382, 384).
 - 17 scene definitions under `content/maps`.
-- 268 `*Test.java` programs; `testUnit` selects 262 of them (six integration tests are
-  excluded). Three further files declare `main()` as benchmarks or the harness rather
-  than tests: `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,085,871 bytes in the current build); the
+- 269 `*Test.java` programs under `src/test`; `testUnit` selects 263 of them (six
+  integration tests are excluded). Two further programs live under `scripts`. Three
+  files declare `main()` as benchmarks or the harness rather than tests:
+  `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
+- `build/tortodrone.jar` is about 16 MB (16,102,002 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -369,7 +371,7 @@ owners that compose named collaborators instead of mixing responsibilities:
 | --- | --- | --- |
 | `WorldSession` | 600 | protocol facade over `SessionRuntime`, `SessionDirectory`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
 | `SceneEntities` | 516 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
-| `SceneSimulation` | 427 | per-instance clock, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
+| `SceneSimulation` | 427 | process-wide `SceneClock`, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
 | `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |
 | `Database` | 517 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models |
 | `CharacterStore` | 308 | roster facade returning core character models; knight identity policy is in `KnightIdentity` |
@@ -381,11 +383,12 @@ listed in `docs/baseline.md`.
 
 Reserved packages and their content folders are created in Phase 1, each with a
 `package-info.java` (and a `README.md` under the matching content folder) describing
-the contract and the evidence it still needs. Phase 9 fills them; it does not create
+the contract and the evidence it still needs. Phase 9 fills these; it does not create
 them:
 `gameplay/mission/{objective,prestige,gateconversation,missiontest}`,
 `world/arcade`, `gameplay/guildhall`, `gameplay/pvp`, `gameplay/events`,
-`gameplay/lairs`, `gameplay/achievements`.
+`gameplay/lairs`. `gameplay/achievements` already implements the predicates the
+client verifies; its content README records which types remain evidence-gated.
 
 ## Target content architecture
 
@@ -441,7 +444,7 @@ content/
     pvp/                 README only
     events/              README only
     lairs/               README only
-    achievements/        README only
+    achievements/        README (verified predicates; counters blocked)
   _internal/
     default-source.properties
     fires.json
@@ -513,8 +516,10 @@ working.
   checked-in v1 tree, writes a temporary v2 tree, validates it, then swaps
   atomically. It does not depend on external captures.
 - Add `--check` to all four mission importers, not just `import_missions.py`, and
-  give all four temporary-file/directory writes with atomic replacement. Today all
-  four call `Path.write_text` directly, so a partial run can produce a mixed tree.
+  give all four temporary-file/directory writes with atomic replacement. The four
+  importers now share `scripts/content/mission_layout.py` (`write_all`/`atomic_write`)
+  and expose `--check`; the converter still writes directly, so a partial run remains
+  a converter risk.
 - The manifest is already per-file: 1011 `owned.*` and 847 `source.*` keys in
   `_internal/default-source.properties`. Keep per-file keys and regenerate mission
   paths from the converted tree. A folder digest may exist as an optional summary,
@@ -649,7 +654,7 @@ covers trigger and sequence preservation.
 | 6. Module extraction | Create the seven Gradle projects and enforcement; keep one shaded JAR; preserve `testUnit`/packaging paths | Exactly one JAR; dependency check green; packaging integration green |
 | 7. Session and codec split | `WireContext`, cross-feature synthetic goldens, router and feature handlers, `WorldSession` facade, per-feature codecs | Per-feature session and wire tests green |
 | 8. Cutover | Ship v2 content; delete the compatibility paths that the new modules supersede, keeping the v1 mission reader; update `docs/architecture.md`, `docs/content.md`, `docs/operations.md`; tag `0.42.0` | Release build uses v2 content and the new baseline; no canonical doc still describes schema 18 or the pre-`0.42.0` mission layout except the one-release compatibility note; v1 still boots read-only |
-| 9. Post-0.42.0 systems | Arcade, guild hall, PvP, events, Shadow Lairs, achievements — each its own epic filling the reserved packages and folders | Per-epic acceptance; no shared abstraction invented ahead of two real users |
+| 9. Post-0.42.0 systems | Arcade, guild hall, PvP, events and Shadow Lairs — each its own epic filling the reserved packages and folders; achievements already covers the verified predicates and keeps the remaining counters evidence-gated | Per-epic acceptance; no shared abstraction invented ahead of two real users |
 
 Phases 3–7 are separate changes. Combining them hides correctness and performance
 regressions. Phase 9 is explicitly outside the 0.42.0 definition of done.
@@ -663,14 +668,19 @@ regressions. Phase 9 is explicitly outside the 0.42.0 definition of done.
 - Every route that is startable from shipped content is playable with objectives,
   mission bar, room progress and one settlement — at minimum `shadow_beast`. The other
   four bundled routes are either playable or recorded as blocked with the exact
-  missing wedge or floor. “108 playable” is not claimed.
+  missing wedge or floor. “108 playable” is not claimed. Live objective progress and
+  `objectives.yml` remain blocked on the stock progress/completion packets: the bar
+  and room progress are live, the objective line is static.
 - Database uses the new baseline marker, schema 1, no pre-`0.42.0` upgrade, and a
   versioned migration runner for future releases.
 - Seven modules with no forbidden dependency edge.
-- `WorldSession` is a facade; feature handlers and codecs are independently tested.
+- `WorldSession` is a facade; feature handlers have their own session tests and the
+  facade has a byte-for-byte cross-feature golden, but each per-feature codec is not
+  separately pinned yet.
 - Wire layouts are byte-verified with synthetic fixtures.
 - Scene ownership, written lock order, commit-before-publish and one-writer storage
-  hold; the named commit-under-lock paths are bounded and tested.
+  hold; the control, registry and output monitors are instrumented and the named
+  commit-under-lock paths are bounded and tested.
 - Tick, queue, storage and shutdown budgets are measured and reported.
 - Headless startup, console, WebUI, News and single-JAR deployment still work.
 - No pre-`0.42.0` user data is migrated or silently changed.

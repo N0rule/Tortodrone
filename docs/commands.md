@@ -302,7 +302,7 @@ The server terminal accepts these forms with an optional leading `/`. These are 
 | `restart` | Restart the game listener and disconnect its clients. | `restart` |
 | `shutdown` | Shut down the process after the exact confirmation prompt. | `shutdown` |
 | `webui list` | List separate WebUI accounts and roles. | `webui list` |
-| `webui user <username> <role>` | Create or recover a WebUI account; its password is prompted. | `webui user operator ADMINISTRATOR` |
+| `webui user <username> <VIEWER\|MODERATOR\|ADMINISTRATOR>` | Create or recover a WebUI account; its password is prompted. | `webui user operator ADMINISTRATOR` |
 | `webui password <username>` | Reset a WebUI password and revoke its sessions. | `webui password operator` |
 | `webui revoke <username>` | Revoke WebUI access after exact-username confirmation. | `webui revoke operator` |
 

@@ -59,9 +59,11 @@ The database uses the **0.42.0 baseline**: `PRAGMA application_id` carries the f
 
 ## Lock order and concurrency
 
-Monitor acquisition follows one written order, checked in development builds:
+Monitor acquisition follows one written order:
 
 `ServerControl` (control) → `SceneRegistry` (registry) → scene simulation → `CharacterStore` (character) → `SessionOutput` (output) → storage.
+
+`LockOrder` enforces it at runtime for the control, registry and output monitors. The scene, character and storage acquisitions follow the order by review: they are not wrapped in `LockOrder`, so a new inversion there is a review finding, not a development-build failure.
 
 Storage is acquired outside every runtime monitor except the named scene commit paths below, which intentionally hold the scene through the durable commit so departure and competing mutations cannot race the payment. No other path may add storage work under the scene or party monitor.
 
@@ -81,11 +83,11 @@ abandon a transaction that has started. This bounds the monitor window without
 weakening commit-before-publish; the other settlements listed above pass in-memory
 callbacks and perform no storage under the lock.
 
-`SceneSimulation` never runs a scene tick concurrently with itself. A bounded platform carrier pool drives one serial lane per scene at a fixed 50 ms cadence with no burst catch-up; a scene that overruns is counted and skipped, not restarted back-to-back. The active-scene count is capped, and a tick failure stops only that lane, recycles a private interior, and returns affected sessions through a safe close. Towns use the template's authored `instances` count as their shard policy: a world is assigned by `worldId` across those instances, so increasing the count shards Haven without changing isolated interiors.
+`SceneSimulation` never runs a scene tick concurrently with itself. A bounded platform carrier pool drives one serial lane per scene at a fixed 50 ms cadence with no burst catch-up; a scene that overruns is counted and skipped, not restarted back-to-back. Admission is atomic, so concurrent starts cannot exceed the active-scene cap; a tick failure stops only that lane, recycles a private interior, and returns affected sessions through a safe close. Towns use the template's authored `instances` count as their shard policy: a world is assigned by `worldId` across those instances, so increasing the count shards Haven without changing isolated interiors.
 
 `SessionOutput` is bounded by both frames and bytes. Reliable state changes are never dropped; optional scene/effect frames are skipped before encoding when a reader is behind, and a reader that stays over budget for the sustained window is disconnected. Encoding and socket writes stay off the scene thread.
 
-SQLite runs on a single dedicated platform writer and a small platform reader pool; a session virtual thread never runs JDBC. Shutdown stops accept, stops scene lanes, drains delivery, shuts the storage pools down, checkpoints the WAL, and only then closes the database and logger.
+SQLite runs on a single dedicated platform writer and a small platform reader pool; no session or delivery thread runs JDBC, which only enters through the storage repositories. Shutdown stops accept, stops scene lanes, waits for connection handlers and the delivery worker against deadlines, checkpoints the WAL, shuts the storage pools down and closes the database, and only then closes the logger.
 
 ## Wire correctness
 

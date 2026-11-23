@@ -503,10 +503,12 @@ one release. It is generated from the client's exported `mission.xml`,
 restriction and prestige range is retained. Startup checks cross-file references and
 rejects unknown fields, unknown files and mixed v1/v2 trees.
 
-`content/systems/` reserves six post-0.42.0 gameplay systems: `achievements`, `arcade`,
-`events`, `guildhall`, `lairs` and `pvp`. Each folder is README-only until the stock
-packets, scenes and ownership rules for that system are verified; the matching
-reserved Java packages live under `modules/world` and `modules/gameplay`.
+`content/systems/` reserves five post-0.42.0 gameplay systems: `arcade`, `events`,
+`guildhall`, `lairs` and `pvp`. Each folder is README-only until the stock packets,
+scenes and ownership rules for that system are verified; the matching reserved Java
+packages live under `modules/world` and `modules/gameplay`. The sixth folder,
+`achievements`, is implemented for the predicates the client verifies and records
+the remaining evidence-gated counters in its README.
 
 The catalogue exposes definition data, the rank-board helpers (descending priority
 with a stable id tie break, completed-card removal and `needMission` prerequisite
