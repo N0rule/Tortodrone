@@ -48,14 +48,16 @@ public final class DatabaseSchemaTest {
                  Statement statement = c.createStatement()) {
                 for (String index : List.of("inventory_items_world","town_mail_world","town_mail_auction",
                         "town_sprites_world","town_harnesses_world","currency_events_world","item_events_world",
-                        "account_events_account","town_auction_bids_world"))
+                        "account_events_account","town_auction_bids_world","town_auctions_seller",
+                        "town_auctions_bidder","mail_campaign_deliveries_world"))
                     statement.execute("DROP INDEX " + index);
                 statement.execute("DELETE FROM schema_migrations WHERE version>" + SchemaMigrations.BASELINE);
                 statement.execute("PRAGMA user_version=1");
             }
             var upgraded = new Database(upgrade, false);
             check(version(upgraded) == Database.SCHEMA_VERSION, "a schema-1 file upgrades to the latest schema");
-            check(upgraded.read(c -> indexes(c).containsAll(List.of("inventory_items_world","town_auctions_seller"))),
+            check(upgraded.read(c -> indexes(c).containsAll(List.of("inventory_items_world","town_auctions_seller",
+                    "town_auctions_bidder","mail_campaign_deliveries_world"))),
                 "the upgrade creates the lookup and foreign-key indexes");
             check(upgraded.read(DatabaseSchemaTest::allStrict), "the upgrade leaves every game table STRICT");
             try (var backups = Files.list(upgrade.resolve("backups"))) {
@@ -71,6 +73,12 @@ public final class DatabaseSchemaTest {
             var legacyCharacters = new CharacterStore(legacyDb, 1, "Bob");
             var legacyKnight = legacyCharacters.create(new Knight(0,"Legacy-Knight","Gear/Helm/Spiral Sallet (Blue)",
                 "Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
+            legacyDb.write(c -> {
+                try (var s = c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body) VALUES(1,1700000000000,'legacy mail','body text')")) {
+                    s.executeUpdate();
+                }
+                return null;
+            });
             var legacyProfile = legacyCharacters.worldProfile(legacyKnight.name(), 1);
             legacyDb.close();
             try (Connection c = DriverManager.getConnection("jdbc:sqlite:" + rebuild.resolve("tortodrone.db"));
@@ -78,6 +86,9 @@ public final class DatabaseSchemaTest {
                 statement.execute("PRAGMA writable_schema=ON");
                 statement.execute("UPDATE sqlite_master SET sql=replace(sql,' STRICT','') WHERE type='table' AND sql LIKE '% STRICT'");
                 statement.execute("PRAGMA writable_schema=OFF");
+                // Real receipts and objectives are text in the shared metadata value column.
+                statement.execute("INSERT INTO metadata(key,value) VALUES('world.1.mission.securing_camp','1700000000000:LOW')");
+                statement.execute("INSERT INTO metadata(key,value) VALUES('world.1.objective.findRhendon','5:m.find_rhendon')");
                 statement.execute("DELETE FROM schema_migrations WHERE version>" + (SchemaMigrations.BASELINE + 1));
                 statement.execute("PRAGMA user_version=" + (SchemaMigrations.BASELINE + 1));
                 check(!allStrict(c), "the fixture starts without STRICT tables");
@@ -86,6 +97,23 @@ public final class DatabaseSchemaTest {
             check(version(rebuilt) == Database.SCHEMA_VERSION, "a schema-2 file upgrades to the latest schema");
             check(rebuilt.read(DatabaseSchemaTest::allStrict), "the strict-table step rebuilds the real schema");
             check(rebuilt.worldProfile(1,1,1).equals(legacyProfile), "the strict-table rebuild keeps live rows");
+            check(rebuilt.read(c -> {
+                try (var s = c.prepareStatement("SELECT key,value FROM metadata WHERE key IN(?,?)")) {
+                    s.setString(1, "world.1.mission.securing_camp");
+                    s.setString(2, "world.1.objective.findRhendon");
+                    var values = new HashMap<String,String>();
+                    try (var r = s.executeQuery()) { while (r.next()) values.put(r.getString(1), r.getString(2)); }
+                    return "1700000000000:LOW".equals(values.get("world.1.mission.securing_camp"))
+                        && "5:m.find_rhendon".equals(values.get("world.1.objective.findRhendon"));
+                }
+            }), "the strict-table rebuild keeps text mission receipts and objectives");
+            check(rebuilt.read(c -> {
+                try (var s = c.prepareStatement("SELECT subject,body FROM town_mail WHERE world_id=1")) {
+                    try (var r = s.executeQuery()) {
+                        return r.next() && "legacy mail".equals(r.getString(1)) && "body text".equals(r.getString(2));
+                    }
+                }
+            }), "the strict-table rebuild keeps rows in a child table");
             check(rebuilt.read(c -> indexes(c).containsAll(List.of("inventory_items_world","town_mail_world",
                     "equipped_items","starter_items","global_knight_names"))),
                 "the strict-table rebuild keeps explicit and partial indexes");

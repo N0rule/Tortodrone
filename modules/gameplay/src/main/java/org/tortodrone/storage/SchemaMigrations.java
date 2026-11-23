@@ -72,6 +72,12 @@ final class SchemaMigrations {
                 if(sql!=null&&!strict(sql)){names.add(name);tables.put(name,sql);}
             }
         }
+        if(!names.isEmpty()){
+            try(var statement=connection.createStatement();var rows=statement.executeQuery("PRAGMA foreign_keys")){
+                if(!rows.next()||rows.getInt(1)!=0)
+                    throw new SQLException("STRICT table rebuild requires foreign_keys=OFF");
+            }
+        }
         for(var name:names){
             indexes.put(name,objects(connection,"index",name));
             triggers.put(name,objects(connection,"trigger",name));
@@ -84,7 +90,11 @@ final class SchemaMigrations {
         }
         for(var table:tables.entrySet()){
             var name=table.getKey();var temporary=name+"__strict";
-            var create=replaceTableName(table.getValue(),name,temporary)+" STRICT";
+            // The metadata value column must accept both integer progress counters and the text
+            // mission receipts and objective payloads written by existing stores.
+            var create="metadata".equals(name)
+                ?"CREATE TABLE "+temporary+"(key TEXT PRIMARY KEY, value ANY NOT NULL) STRICT"
+                :replaceTableName(table.getValue(),name,temporary)+" STRICT";
             try(var statement=connection.createStatement()){
                 statement.execute(create);
                 statement.execute("INSERT INTO "+temporary+" SELECT * FROM "+name);
@@ -145,7 +155,7 @@ final class SchemaMigrations {
     static void baseline(Connection connection) throws SQLException, IOException {
         try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE schema_migrations(version INTEGER PRIMARY KEY, description TEXT NOT NULL, applied_at INTEGER NOT NULL) STRICT");
-            statement.execute("CREATE TABLE metadata(key TEXT PRIMARY KEY, value INTEGER NOT NULL) STRICT");
+            statement.execute("CREATE TABLE metadata(key TEXT PRIMARY KEY, value ANY NOT NULL) STRICT");
             statement.execute("INSERT INTO metadata VALUES('next-account-id',1)");
             statement.execute("CREATE TABLE accounts(id INTEGER PRIMARY KEY CHECK(id>0), username TEXT NOT NULL, name_key TEXT NOT NULL UNIQUE, salt BLOB NOT NULL CHECK(length(salt)=16), verifier BLOB NOT NULL CHECK(length(verifier)=32), game_master INTEGER NOT NULL DEFAULT 0 CHECK(game_master IN(0,1)), auth_revision INTEGER NOT NULL DEFAULT 1, revision INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL, next_knight_id INTEGER NOT NULL DEFAULT 1 CHECK(next_knight_id>0)) STRICT");
             statement.execute("CREATE TABLE knights(account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, id INTEGER NOT NULL CHECK(id>0), name TEXT NOT NULL, name_key TEXT NOT NULL, helm TEXT NOT NULL, armor TEXT NOT NULL, helm_accessory TEXT, armor_accessory TEXT, costume TEXT NOT NULL, color INTEGER NOT NULL CHECK(color BETWEEN 0 AND 255), height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4), eye INTEGER NOT NULL CHECK(eye BETWEEN 0 AND 46), created_at INTEGER NOT NULL, PRIMARY KEY(account_id,id), UNIQUE(account_id,name_key)) STRICT");

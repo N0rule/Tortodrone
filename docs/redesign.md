@@ -583,7 +583,8 @@ version exists instead of a bare `user_version` stamp.
 
 ### Schema targets
 
-- Tables are `STRICT`, so a wrong type fails instead of being silently coerced.
+- Game tables are `STRICT`, so a wrong type fails instead of being silently coerced.
+  The separate `data/webui.sqlite` identity store keeps its own schema.
 - Foreign keys are declared and enforced (`PRAGMA foreign_keys=ON` per connection).
 - Item instances are one row per instance; no relational state is stored as JSON.
 - Every foreign-key column and every lookup a store performs has an index.
@@ -592,13 +593,16 @@ version exists instead of a bare `user_version` stamp.
 
 **Landed:** the baseline creates every game table `STRICT`. Step 3 rebuilds a
 non-`STRICT` file with SQLite's table-replacement procedure, preserving rows,
-explicit and partial indexes, triggers and the AUTOINCREMENT high-water mark, and
-the caller still runs `foreign_key_check` before commit. Step 4 adds the remaining
+explicit and partial indexes and the AUTOINCREMENT high-water mark; `metadata.value`
+is `ANY` because mission receipts and objective payloads are text alongside integer
+counters. The caller still runs `foreign_key_check` before commit and the step
+refuses to run unless foreign keys are disabled. Step 4 adds the remaining
 child-side foreign-key indexes. `inventory_items` is one row per instance; the JSON
 columns that remain carry value lists or message payloads, not relational rows.
 Inventory expiry already runs on its own 30 s daemon outside the write path.
-`DatabaseSchemaTest` upgrades a real non-`STRICT` schema-2 fixture and checks the
-rebuilt schema, rows, indexes, triggers and sequence.
+`DatabaseSchemaTest` upgrades a real non-`STRICT` schema-2 fixture with text
+metadata and checks the rebuilt schema, rows and indexes, while a synthetic fixture
+covers trigger and sequence preservation.
 
 ### SQLite operations
 
