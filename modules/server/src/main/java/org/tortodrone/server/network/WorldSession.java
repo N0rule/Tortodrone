@@ -120,21 +120,7 @@ final class WorldSession implements AutoCloseable {
         return new SessionPresence.FriendPresence(runtime.scene().map().name(),runtime.scene().map().zone(),joinable?runtime.scene().oid():0);
     }
     void partyPresence(PartyView.View view)throws IOException{presenceState.location(presence(view));}
-    void forcePartyExit()throws IOException {
-        if(runtime.readyRoom())return;
-        if(runtime.scene().map().town()&&runtime.portalMove()==null)return;
-        if(runtime.portalMove()!=null&&runtime.portalMove().destination().map().town())return;
-        if(runtime.portalMove()!=null&&runtime.portalMove().destination()!=runtime.scene())scenes.release(runtime.portalMove().destination(),profile.worldId());
-        var run=runtime.scene().run()!=null?runtime.scene().run():runtime.portalMove()==null?null:runtime.portalMove().destination().run();
-        if(run!=null)profile=loadProfile(profile);
-        int safeTown=run==null?scenes.catalog().entry().id()
-            :profile.progress().openingStage()>=2||!org.tortodrone.core.character.OpeningMission.ANCIENT_GENERATOR.id().equals(run.missionId())
-                ?run.destination().id():217;
-        var next=destination(safeTown);
-        runtime.beginPortal(next,new ScenePortals.Entrance(1,next.map().spawnX(),next.map().spawnY(),next.map().spawnRotation()));
-        moves.clearDeferred();runtime.retireScene(runtime.scene().oid());
-        var receiver=refreshState.forcedReceiver();if(receiver!=null)output.send(()->codec.forceScene(oid,receiver,next));
-    }
+    void forcePartyExit()throws IOException { parties.forceExit(); }
     /** Verified stock SteamMarshaller: 2[int] and 5[boolean] are unacknowledged client reports;
      * purchase, profile and friend-invite requests carry listeners and receive native failure. */
     boolean steamInvocation(SessionDecoder.Invocation request)throws IOException{return steam.invocation(request);}
@@ -184,20 +170,7 @@ final class WorldSession implements AutoCloseable {
     void subscribeExchange(short message)throws IOException{exchangeHandler.subscribe(message);}
     void unsubscribeExchange(){exchangeHandler.unsubscribe();}
     void refreshExchange(org.tortodrone.core.town.ExchangeState.Book book)throws IOException{exchangeHandler.refresh(book);}
-    synchronized boolean exchangeInvocation(SessionDecoder.Invocation request)throws IOException{
-        if(request.oid()!=SessionCodec.EXCHANGE_OID||request.service()!=SessionCodec.EXCHANGE_SERVICE)return false;
-        var a=request.arguments();int method=request.method();
-        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals(org.tortodrone.core.WireTypes.LISTENER_PREFIX+(method==1?"ConfirmMarshaller":"ResultMarshaller")))throw new SessionDecoder.Rejected("Invalid Energy Exchange listener");
-        boolean valid=switch(method){case 1->a.size()==2&&a.getFirst() instanceof Integer;case 2->a.size()==1;case 3->a.size()==5&&a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Boolean&&a.get(3) instanceof Boolean;default->false;};
-        if(!valid)throw new SessionDecoder.Rejected("Invalid Energy Exchange request");
-        try{
-            if(closed||!selected()||!runtime.entered()||!runtime.subscribed()||!exchangeHandler.subscribed()||!runtime.scene().map().town()&&!runtime.scene().map().kind().equals("training"))throw new IOException("Open the Energy Exchange in town first");
-            if(trade.active())throw new IOException("Finish the trade first");
-            var exchange=characters.services().exchange();var result=switch(method){case 1->exchange.cancel(characters.accountId(),knight.id(),authRevision,(Integer)a.getFirst());case 2->exchange.offers(characters.accountId(),knight.id(),authRevision);default->exchange.trade(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),(Integer)a.get(1),(Boolean)a.get(2),(Boolean)a.get(3));};
-            townChanged(result);refreshExchange(exchange.book());
-            if(method==1)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));else output.send(()->codec.townResult(oid,listener.requestId(),result.result(),profile));
-        }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}return true;
-    }
+    boolean exchangeInvocation(SessionDecoder.Invocation request)throws IOException{return exchangeHandler.invocation(request);}
     private boolean depotInvocation(SessionDecoder.Invocation request)throws IOException{
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.MISSION_SERVICE)return false;
         if(!Set.of(4,5,6,10).contains(request.method()))return opening.invocation(request);
@@ -474,6 +447,7 @@ final class WorldSession implements AutoCloseable {
     void refreshOutbids(WorldProfile before,WorldProfile after)throws IOException{auction.publishOutbids(before,after);}
 
 
+    void clearDeferredMoves(){moves.clearDeferred();}
     SessionDecoder.Invocation queuedTravel(){return destinations.queued();}
     boolean auctionAfterArrivalPending(){return destinations.auctionAfterArrivalPending();}
     boolean canOpenBox(){return runtime.membership()!=null&&runtime.membership().canOpenBox();}

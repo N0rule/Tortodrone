@@ -9,6 +9,7 @@ import org.tortodrone.core.world.SceneClock;
 import org.tortodrone.core.world.SceneInstanceView;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
+import org.tortodrone.core.world.ScenePortals;
 import org.tortodrone.world.PartyRegistry;
 
 /** Native party services and the party object publication for one connection. The party
@@ -55,6 +56,30 @@ final class PartyHandler {
                 session.currentScene().map().town()&&!session.sceneTravelPending(),membership.floorHeat());
         }
     }
+
+    /** Leave to a safe non-party destination; the stock client answers with its zone move. */
+    void forceExit()throws IOException { synchronized(session) {
+        var runtime=session.runtime();
+        if(runtime.readyRoom())return;
+        var scene=runtime.scene();
+        var move=runtime.portalMove();
+        if(scene.map().town()&&move==null)return;
+        if(move!=null&&move.destination().map().town())return;
+        if(move!=null&&move.destination()!=scene)
+            session.sceneRegistry().release(move.destination(),session.currentProfile().worldId());
+        var run=scene.run()!=null?scene.run():move==null?null:move.destination().run();
+        if(run!=null)session.applyProfile(session.loadProfile(session.currentProfile()));
+        var profile=session.currentProfile();
+        int safeTown=run==null?session.sceneRegistry().catalog().entry().id()
+            :profile.progress().openingStage()>=2
+                ||!org.tortodrone.core.character.OpeningMission.ANCIENT_GENERATOR.id().equals(run.missionId())
+                ?run.destination().id():217;
+        var next=session.destination(safeTown);
+        runtime.beginPortal(next,new ScenePortals.Entrance(1,next.map().spawnX(),next.map().spawnY(),next.map().spawnRotation()));
+        session.clearDeferredMoves();runtime.retireScene(scene.oid());
+        var receiver=session.forcedReceiverValue();
+        if(receiver!=null)responder.send(()->responder.codec().forceScene(responder.oid(),receiver,next));
+    }}
 
     void offer(PartyView.Event event){session.offerPartyEvent(event);}
 

@@ -346,8 +346,8 @@ class table, intern table and connection-local state. Before splitting:
   `MovementSystem`, `CombatSystem`, `StatusSystem`, `PortalSystem`,
   `ElevatorSystem`, `SnapshotBuilder` and an explicit callback contract. The
   current eleven callback fields are part of that contract, not incidental wiring.
-- `Database` → transaction/schema owner plus repositories. Every write currently
-  runs an expiry sweep; the split must preserve or deliberately replace it.
+- `Database` → transaction/schema owner plus repositories. The split must preserve
+  or deliberately replace the write-path expiry sweep.
 - `CharacterStore` is a storage facade returning `storage.*` types. Split the model
   from the store before claiming a `character`/`storage` boundary.
 
@@ -359,11 +359,11 @@ owners that compose named collaborators instead of mixing responsibilities:
 
 | Class | Lines | Composition |
 | --- | --- | --- |
-| `WorldSession` | 719 | protocol facade over `SessionRuntime`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
+| `WorldSession` | 693 | protocol facade over `SessionRuntime`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
 | `SceneEntities` | 528 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
 | `SceneSimulation` | 427 | per-instance clock, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
 | `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |
-| `Database` | 470 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models |
+| `Database` | 479 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models |
 | `CharacterStore` | 308 | roster facade returning core character models; knight identity policy is in `KnightIdentity` |
 
 The line counts are the size of each facade, not a target: a facade gains a line
