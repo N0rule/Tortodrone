@@ -82,7 +82,7 @@ public final class SceneElevatorTest {
     }
     private static void deterministic(SceneContent content)throws Exception {
         var world=new SceneEntities(content,SceneWeaponsTest.openTerrain());int[] offers={0},cancels={0};SceneEntities.ElevatorTrip[] trip={null};boolean[] allowed={true};
-        world.elevators(new SceneEntities.ElevatorControl(){
+        world.elevators(new SceneCallbacks.ElevatorControl(){
             public boolean begin(SceneEntities.ElevatorTrip value,int stamp){trip[0]=value;return allowed[0];}
             public boolean valid(SceneEntities.ElevatorTrip value){return allowed[0]&&trip[0]==value;}
             public boolean advance(SceneEntities.ElevatorTrip value,int stamp){offers[0]++;return valid(value);}

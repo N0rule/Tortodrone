@@ -46,14 +46,6 @@ public final class SceneEntities implements SceneWeapons.Targets {
         ElevatorTrip(ActorState source,List<Integer> members,SceneElevator configuration,int started){this.source=source;this.members=List.copyOf(members);this.configuration=configuration;this.started=started;}
         public ActorState source(){return source;}public List<Integer> members(){return members;}public SceneElevator configuration(){return configuration;}public int started(){return started;}
     }
-    /** Pure scene-lock callbacks: authorize/freeze, revalidate, offer owned work, release.
-     * Socket and storage work must remain on the session thread. */
-    public interface ElevatorControl {
-        default boolean begin(ElevatorTrip trip,int stamp){return false;}
-        default boolean valid(ElevatorTrip trip){return false;}
-        default boolean advance(ElevatorTrip trip,int stamp){return false;}
-        default void cancel(ElevatorTrip trip,int stamp) { }
-    }
     private final ElevatorSystem elevatorSystem=new ElevatorSystem(this);
     private final SceneCollisions collisions=new SceneCollisions(this);
     private final WaveSystem waveSystem=new WaveSystem(this);
@@ -65,7 +57,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final LiftSystem lifts=new LiftSystem(this);
     private final SceneSpawns spawns=new SceneSpawns(this);
     private final SceneTick tick=new SceneTick(this);
-    public void elevators(ElevatorControl control){elevatorSystem.control(control);}
+    public void elevators(SceneCallbacks.ElevatorControl control){elevatorSystem.control(control);}
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
     }

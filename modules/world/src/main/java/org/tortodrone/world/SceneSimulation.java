@@ -172,7 +172,7 @@ public final class SceneSimulation {
             }
             return true;
         });
-        entities.elevators(new SceneEntities.ElevatorControl(){
+        entities.elevators(new SceneCallbacks.ElevatorControl(){
             private boolean allowed(SceneMembership member,SceneEntities.ElevatorTrip trip){
                 return member!=null&&!member.detached&&member.entered&&member.health.alive()&&member.portalOpen()
                     &&member.movement.activity()!=TownMovement.RESURRECT&&(member.elevatorSettled&&member.elevatorTrip==trip||member.elevatorEntry.equals(trip.source().entity().key())&&member.elevatorMembers.equals(new HashSet<>(trip.members())));

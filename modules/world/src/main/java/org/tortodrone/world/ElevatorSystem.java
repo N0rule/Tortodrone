@@ -11,11 +11,11 @@ import org.tortodrone.core.world.ScenePortals;
  *  socket publication stay on the session thread through the control callback. */
 final class ElevatorSystem {
     private final SceneEntities scene;
-    private SceneEntities.ElevatorControl control=new SceneEntities.ElevatorControl(){};
+    private SceneCallbacks.ElevatorControl control=new SceneCallbacks.ElevatorControl(){};
 
     ElevatorSystem(SceneEntities scene) { this.scene=scene; }
 
-    void control(SceneEntities.ElevatorControl value) { control=Objects.requireNonNull(value); }
+    void control(SceneCallbacks.ElevatorControl value) { control=Objects.requireNonNull(value); }
 
     /** A pawn body of radius r can reach a platform whose edge is up to 2r away, so
      *  movement treats that bridged footprint as supported across the authored gap. */

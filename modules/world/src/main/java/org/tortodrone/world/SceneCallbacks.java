@@ -30,6 +30,14 @@ public final class SceneCallbacks {
     @FunctionalInterface public interface FloorAdvanceSink { boolean request(ActorState player,ActorState source,int stamp); }
     @FunctionalInterface public interface MemorySink {boolean apply(ActorState player,KnightMemory operation,ActorState source,int stamp);}
     @FunctionalInterface public interface ObjectiveSink {boolean apply(ActorState player,KnightObjective operation,ActorState source,int stamp);}
+    /** Elevator authority: authorize/freeze, revalidate, offer owned work, release.
+     *  Part of this scene-lock contract; no callback may perform socket or storage work. */
+    public interface ElevatorControl {
+        default boolean begin(SceneEntities.ElevatorTrip trip,int stamp){return false;}
+        default boolean valid(SceneEntities.ElevatorTrip trip){return false;}
+        default boolean advance(SceneEntities.ElevatorTrip trip,int stamp){return false;}
+        default void cancel(SceneEntities.ElevatorTrip trip,int stamp) { }
+    }
 
     private Consumer<SceneEntities.PlayerHit> playerDamage=hit->{};
     private Consumer<SceneCombatEvent> feedback=event->{};
