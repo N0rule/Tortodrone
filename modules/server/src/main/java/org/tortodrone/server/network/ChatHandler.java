@@ -55,6 +55,7 @@ final class ChatHandler {
 
     /** ProjectXSceneMarshaller.emote(String, Name, ConfirmListener), stock method three. */
     void emote(SessionDecoder.Invocation request) throws IOException {
+        if (!ServerPolicy.chatEnabled()) throw new IOException("Chat is disabled on this server.");
         var args = request.arguments();
         if (request.service() != 6
                 || request.method() != 3

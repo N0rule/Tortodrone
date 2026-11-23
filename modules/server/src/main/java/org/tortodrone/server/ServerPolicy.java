@@ -22,7 +22,7 @@ public final class ServerPolicy {
         return trades;
     }
 
-    /** False refuses player chat; party and guild membership still work. */
+    /** False refuses player-authored text: scene, party, guild, private and emote lines. */
     public static boolean chatEnabled() {
         return chat;
     }

@@ -17,8 +17,10 @@ startup-map: haven
 welcome-message: Welcome to Tortodrone!
 
 # --- Features ---
-# false refuses new trade invitations and player chat. Other systems are unaffected.
+# false refuses new trade invitations. Open trades and everything else keep working.
 trades-enabled: true
+# false refuses player-authored text: scene, party, guild, private and emote lines.
+# Server notices, commands and NPC dialogue still work.
 chat-enabled: true
 
 # --- Logging ---

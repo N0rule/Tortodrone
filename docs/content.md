@@ -91,8 +91,9 @@ as described in the [README](../README.md#step-5-connect-the-game-client).
 `party-max-players` bounds party admission (1-8, shipped as 4). It is policy, not a
 client constant: `LevelPartyObject.memberLimit` is server-supplied, and the client both
 renders the members it receives and only compares the limit with 1 to decide whether
-party controls are offered. `trades-enabled` and `chat-enabled` refuse new trade invitations and player
-chat without changing any other system. The knight dodge cooldown is the verified
+party controls are offered. `trades-enabled` refuses new trade invitations (an open trade still completes).
+`chat-enabled` refuses player-authored text — scene, party, guild, private and emote
+lines — while server notices, commands and NPC dialogue keep working. The knight dodge cooldown is the verified
 stock value (`8000` ms in `WeaponCatalog`), not a deployment setting: `config/` holds
 server policy only.
 Static merchant rules belong to Town YAML. Depot offers/promotions and auctions
