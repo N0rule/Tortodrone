@@ -1,4 +1,4 @@
-package org.tortodrone.character;
+package org.tortodrone.core.character;
 
 /** Consistent per-knight metadata published to active world observers.
  *

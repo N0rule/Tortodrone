@@ -1,4 +1,4 @@
-package org.tortodrone.character;
+package org.tortodrone.core.character;
 
 import java.util.Set;
 import org.tortodrone.core.character.WorldProfile;

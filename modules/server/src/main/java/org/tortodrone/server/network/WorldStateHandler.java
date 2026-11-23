@@ -1,7 +1,7 @@
 package org.tortodrone.server.network;
 
 import java.io.IOException;
-import org.tortodrone.character.WorldSummary;
+import org.tortodrone.core.character.WorldSummary;
 import org.tortodrone.core.character.WorldProfile;
 
 /** Applies one batched world-state read to a session: identity validation, permission changes

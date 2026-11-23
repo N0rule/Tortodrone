@@ -44,7 +44,7 @@ final class TradeHandler {
         }
     }
 
-    void changed(org.tortodrone.character.WorldSummary state) throws IOException {
+    void changed(org.tortodrone.core.character.WorldSummary state) throws IOException {
         synchronized (session) {
             if (member != null) trades.changed(member, state);
         }

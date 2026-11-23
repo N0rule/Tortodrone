@@ -91,7 +91,7 @@ final class PlayerTrades {
     }
     synchronized void unsubscribe(Member member,int oid){if(owns(member,oid))cancel(trades.get(member));}
     synchronized void close(Member member,long created){var trade=trades.get(member);if(trade!=null&&trade.created==created)cancel(trade);}
-    synchronized void changed(Member member,org.tortodrone.character.WorldSummary state){
+    synchronized void changed(Member member,org.tortodrone.core.character.WorldSummary state){
         expire();var trade=trades.get(member);if(trade==null||trade.completed)return;
         try {int side=trade.side(member);if(state==null||state.authRevision()!=member.auth||state.worldId()!=member.worldId||state.revision()!=trade.owners[side].revision())cancel(trade);}
         catch(IOException invalid){cancel(trade);}

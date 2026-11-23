@@ -704,7 +704,7 @@ final class WorldSession implements AutoCloseable {
         try{return characters.worldProfile(knight.name(),authRevision,cached);}
         catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
     }
-    void refreshState(WorldStatePoller.Registration registration,org.tortodrone.character.WorldSummary state)throws IOException {
+    void refreshState(WorldStatePoller.Registration registration,org.tortodrone.core.character.WorldSummary state)throws IOException {
         worldState.refresh(registration,state);
     }
     synchronized void refreshFailed(WorldStatePoller.Registration registration,Exception failure) {
