@@ -83,6 +83,33 @@ public final class GuildAdministrationTest {
             }
             check(usage, "a bare command prints its usage");
 
+            String record = GuildCommands.execute("guild log ORACION", guilds);
+            check(record.startsWith("Guild Oracion | record entries="), "the console reads the record page");
+            check(record.contains("newest first, showing "), "the record page states how much it shows");
+            check(record.contains("type="), "a record entry keeps its stored type byte");
+            check(
+                    record.contains("the game client localizes them"),
+                    "the console does not invent localized entry-type names");
+            check(
+                    !GuildCommands.execute("guild log oracion", guilds).isEmpty(),
+                    "the record page is found case-insensitively");
+
+            boolean logUsage = false;
+            try {
+                GuildCommands.execute("guild log", guilds);
+            } catch (java.io.IOException refused) {
+                logUsage = refused.getMessage().equals("Usage: guild log <guild-name>");
+            }
+            check(logUsage, "the record page without a guild name prints its usage");
+
+            boolean logUnknown = false;
+            try {
+                GuildCommands.execute("guild log Nobody", guilds);
+            } catch (java.io.IOException refused) {
+                logUnknown = refused.getMessage().startsWith("No such guild:");
+            }
+            check(logUnknown, "the record page refuses an unknown guild by name");
+
             // The operator page reads the same stored record without a member to authenticate as.
             var page = guilds.operatorLog(id, Long.MAX_VALUE, 0, 25, null, null);
             check(page.entryCount() >= 0, "the operator log reports a filter total");

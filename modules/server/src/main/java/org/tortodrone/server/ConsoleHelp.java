@@ -168,8 +168,8 @@ final class ConsoleHelp {
             new Entry(
                     "guild",
                     "",
-                    "guild list | guild info <guild-name>",
-                    "Inspect formed guilds, their well and their roster. Guild writes stay with the game client.",
+                    "guild list | guild info <guild-name> | guild log <guild-name>",
+                    "Inspect formed guilds, their well, their roster and their record. Guild writes stay with the game client.",
                     "guild list"),
             new Entry(
                     "guild",
@@ -182,7 +182,13 @@ final class ConsoleHelp {
                     "info",
                     "guild info <guild-name>",
                     "Show one guild's record and roster, including last session stamps.",
-                    "guild info Oracion"));
+                    "guild info Oracion"),
+            new Entry(
+                    "guild",
+                    "log",
+                    "guild log <guild-name>",
+                    "Show the newest twenty record entries with their stored type bytes and arguments.",
+                    "guild log Oracion"));
 
     static String canonical(String command) {
         command = command.toLowerCase(Locale.ROOT);

@@ -579,15 +579,8 @@ final class AdminViews {
                 guild.motd());
     }
 
-    /** Stock rank bytes: 0 master, 1 officer, 2 member, 3 veteran, 4 recruit. */
+    /** Stock rank bytes: 0 master, 1 officer, 2 member, 3 veteran, 4 recruit; one definition. */
     private static String rankName(byte rank) {
-        return switch (rank) {
-            case 0 -> "Master";
-            case 1 -> "Officer";
-            case 2 -> "Member";
-            case 3 -> "Veteran";
-            case 4 -> "Recruit";
-            default -> "Rank-" + rank;
-        };
+        return org.tortodrone.server.GuildCommands.rank(rank);
     }
 }

@@ -291,6 +291,7 @@ The server terminal accepts these forms with an optional leading `/`. These are 
 | `inspect <knight-name>` | Inspect persistent identity, balances and inventory count. | `inspect Jane` |
 | `guild list` | List every formed guild with member count and well balance. | `guild list` |
 | `guild info <guild-name>` | Show one guild's record and roster, including last session stamps. | `guild info Oracion` |
+| `guild log <guild-name>` | Show the newest twenty record entries with their stored type bytes and arguments. | `guild log Oracion` |
 | `account list` | List accounts and Game Master roles. | `ac list` |
 | `account create <username> [gm]` | Create an account; enter its password at the prompts. | `account create Alice` |
 | `account password <username>` | Change a password; existing sessions disconnect. | `ac password Alice` |

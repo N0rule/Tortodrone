@@ -63,11 +63,38 @@ public final class GuildCommands {
                         .append(member.lastSession() == 0 ? "never" : stamp(member.lastSession()));
             return text.toString();
         }
-        throw new IOException("Usage: guild list | guild info <guild-name>");
+        if (head.length >= 2 && head[1].equalsIgnoreCase("log")) {
+            if (head.length != 3) throw new IOException("Usage: guild log <guild-name>");
+            var guild = guilds.named(head[2]);
+            if (guild == null) throw new IOException("No such guild: " + head[2]);
+            var page = guilds.operatorLog(guild.id(), Long.MAX_VALUE, 0, LOG_PAGE, null, null);
+            var text = new StringBuilder("Guild " + guild.name() + " | record entries=" + page.entryCount()
+                    + " | newest first, showing " + page.entries().size());
+            for (var entry : page.entries())
+                text.append('\n')
+                        .append("  ")
+                        .append(stamp(entry.when()))
+                        .append(" | type=")
+                        .append(entry.type())
+                        .append(" | ")
+                        .append(dash(entry.knightName()))
+                        .append(" | ")
+                        .append(
+                                entry.args() == null || entry.args().isEmpty()
+                                        ? "-"
+                                        : String.join(" · ", entry.args()));
+            // The client localizes entry types; printing the stored byte keeps this report honest.
+            text.append('\n').append("Entry types are the stored client bytes; the game client localizes them.");
+            return text.toString();
+        }
+        throw new IOException("Usage: guild list | guild info <guild-name> | guild log <guild-name>");
     }
 
+    /** One console page of the record; the WebUI pages the same store reads. */
+    private static final int LOG_PAGE = 20;
+
     /** Stock rank bytes: 0 master, 1 officer, 2 member, 3 veteran, 4 recruit. */
-    private static String rank(byte rank) {
+    public static String rank(byte rank) {
         return switch (rank) {
             case 0 -> "Master";
             case 1 -> "Officer";
