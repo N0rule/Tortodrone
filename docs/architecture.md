@@ -12,7 +12,7 @@ Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights 
 | Authentication and account/knight services | `account/`, `character/` |
 | Transactions, persisted identity, items, town services and trades | `storage/` (`Database`, `SchemaMigrations`, the `Account`/`Roster`/`World`/`Administration`/`Preference` repositories, `WorldProfiles`, `TradeTransfer` and the town domain stores) |
 | Scene templates, instances, movement and tick | `world/{SceneRegistry,SceneSimulation,TownMovement,SceneEntities}`, `content/resources/SceneCatalog` and `core/world/{CollisionMap,SceneContent,SceneCollision}` |
-| Player combat / effects | `world/SceneWeapons` and `core/world/{KnightCombat,WeaponCatalog,EquipmentCatalog,FireCatalog}` |
+| Player combat / effects | `world/{SceneWeapons,SceneShots,Pose}` and `core/world/{KnightCombat,WeaponCatalog,EquipmentCatalog,FireCatalog}` |
 | Atomic unified YAML resolution | `resources/{ContentManager,ContentRegistry}` |
 | Browser administration | `web/{AdminHandler,AdminService,WebIdentityStore}` |
 
