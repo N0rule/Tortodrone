@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,178,568 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,179,612 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -428,6 +428,10 @@ remaining stores were split the same way:
   tagged JSON graph/value shape and every size and depth limit applied to
   imported graphs. Prepared scene metadata and the catalogue share the same
   codec rather than duplicating graph policy.
+- `WeaponCatalog` keeps the immutable weapon/shield lookups and chain policy;
+  `WeaponCatalogCodec` owns the exported TSV format, row assembly and the
+  duplicate, contiguity and field-count rules. An unused private builder that
+  no code referenced was removed with the split.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.
