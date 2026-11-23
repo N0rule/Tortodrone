@@ -6,8 +6,9 @@
 # and other content must not copy an existing file verbatim; share the definition instead
 # (for maps, content/shared/mechanics.yml plus an opt-in "mechanics" shared section).
 #
-# Intentional: one Rescue Camp character is authored once per camp state, and the camp
-# states are separate scenes without cross-map NPC includes.
+# Intentional: the Rescue Camp and its powered state place the same native NPCs.
+# Their dialogue bodies are shared in content/shared/dialogues.yml; only the
+# one-line wrapper is identical because both scenes use the same NPC id.
 maps/town/rescue_camp/npcs/greta.yml
 maps/town/rescue_camp_state_2/npcs/greta.yml
 maps/town/rescue_camp/npcs/rhendon.yml

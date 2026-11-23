@@ -43,3 +43,46 @@ dialogues:
           close: true
         text: Energy can only be obtained by purchase with a real money transaction or for trade via the Exchange. To purchase or trade for energy, simply open the Supply Depot and click the 'Get Energy' button.
     initial: part 1a
+  camp_greta:
+    initial: part 1a
+    nodes:
+      part 1a:
+        responses:
+        - text: What's the problem, Greta?
+          next: part 2a
+        text: Greetings, I'm Squad Leader Greta.  You must be {0}. Rhendon said we should be expecting you, and not a moment too soon.  This Rescue Camp is facing a crisis.
+      part 2a:
+        responses:
+        - text: How can I help channel power to the camp?
+          next: part 3a
+        text: "In short, this camp has no power and the sun is setting soon. Last night all manners of horrible monsters came after us in the dark.  We couldn't see and had no power for our defensive turrets. \n\n...we lost a lot of recruits. \n\nWe need to channel power to the Rescue Camp so that we can set up a defensive perimeter before night falls!"
+      part 3a:
+        responses:
+        - text: I'll meet up with Rhendon before I investigate the generator.
+          close: true
+          action: 0
+        text: "Our scans have located an ancient generator below this camp.  It should be sending power to the surface, but something seems to be diverting it. \n\nWe need you to go investigate the ancient generator and divert power back to the surface.  But you'll need to be ready- it's completely uncharted territory and teeming with monsters. \n\nRhendon said he wanted to meet up with you before you take on this mission.  Why don't you see him first?"
+  camp_rhendon:
+    initial: part 1a
+    nodes:
+      part 1a:
+        responses:
+        - text: Missions?
+          next: part 2a
+        text: Well, looks like we're in quite a bind here, {0}. There's plenty of work to be done to get this camp up and running, so you've now been authorized to receive missions! You can find any available missions in the Activities bar.
+      part 2a:
+        responses:
+        - text: Yes, that's right.
+          next: part 3a
+        text: Missions range from dangerous combat engagements to talking to certain people, such as myself.  By completing missions, you'll earn progress towards new ranks, which will in turn give you access to increasingly powerful gear.  Greta informed me that you'll be tackling our power supply problem in the Ancient Generator?
+      part 3a:
+        responses:
+        - text: Thanks, Rhendon.  I'll be careful.
+          close: true
+          action: 0
+        text: Well, keep your wits about you. If the surface of this world is crawling with monsters, who knows what you'll find down there in the dark!
+      part 4a:
+        responses:
+        - text: End conversation
+          close: true
+        text: Remember to accept that mission and be careful down there!
