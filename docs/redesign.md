@@ -259,11 +259,11 @@ edges between them.
 
 The earlier `protocol → world/storage/town`, `storage → protocol`,
 `resources → world` and `world → protocol` edges are gone, and `MapYaml` no longer
-calls into `SceneEntities`. One in-module package cycle remains: `server ↔ web`.
-The `web` package imports `ServerControl`, `ServerLog`, `SessionRegistry` and
-`RuntimeMetrics` from `org.tortodrone.server`, while `Server` constructs
-`web.AdminService`, `web.WebIdentityStore`, `web.WebSecurity` and
-`web.AdminHandler`. Phase 3 still has to remove one direction.
+calls into `SceneEntities`. The former `server ↔ web` package cycle is gone too:
+`web` still reads `ServerControl`, `ServerLog` and the other server types, but the
+server no longer imports `web`. It composes the optional WebUI through the
+server-owned `WebFrontend` seam registered in `META-INF/services`, and reaches
+identity recovery through `WebIdentities`.
 
 ### Target modules
 
@@ -314,9 +314,10 @@ are expected: a package is assigned by extracted type, not by its current name.
    handling them in `:gameplay`.
 5. Remove the `MapYaml` call into `SceneEntities.validateItemUse`. Validation stays in
    `:world`; the loader receives a validator function. (Landed: the loader no longer
-   calls the entity model.)
+   calls the entity model, and the now-unused entity static is gone.)
 6. Break `server ↔ web` by making the WebUI depend on server-owned interfaces, or by
-   moving `AdminService` construction behind a server boundary.
+   moving `AdminService` construction behind a server boundary. (Landed: the server
+   owns `WebFrontend`/`WebIdentities`; `web.AdminFrontend` is the single provider.)
 7. Only then create Gradle projects and the dependency check. Use `jdeps`/bytecode as
    well as imports; fully qualified references hide edges.
 
@@ -352,7 +353,7 @@ owners that compose named collaborators instead of mixing responsibilities:
 | Class | Lines | Composition |
 | --- | --- | --- |
 | `WorldSession` | 611 | protocol facade over `SessionRuntime`, `SessionDirectory`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
-| `SceneEntities` | 528 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
+| `SceneEntities` | 524 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
 | `SceneSimulation` | 427 | per-instance clock, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
 | `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |
 | `Database` | 479 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models |

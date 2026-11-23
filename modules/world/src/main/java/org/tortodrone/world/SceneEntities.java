@@ -82,10 +82,6 @@ public final class SceneEntities implements SceneWeapons.Targets {
     static final int MAX_WAVE_SPAWNS_PER_TICK=4;
     /** Administrative spawns use the same ring policy as a wave, never an unbounded radius. */
     static final float MAX_ADMIN_SPAWN_RADIUS=128;
-    /** Validate one prepared item-use definition before a scene exposes it to play. */
-    public static void validateItemUse(SceneContent.Spec spec)throws java.io.IOException{
-        org.tortodrone.core.world.ItemUseRules.validate(spec);
-    }
     /** Spawn the static prop authored by a native actor-item use. */
     public int spawnItemActor(ActorState player,SceneContent.Spec actor,int stamp){return spawns.itemActor(player,actor,stamp);}
     public int liftItem(ActorState player,SceneContent.Spec lift,int stamp){return spawns.liftItem(player,lift,stamp);}
