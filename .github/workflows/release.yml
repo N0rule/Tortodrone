@@ -102,7 +102,7 @@ jobs:
           - No Java runtime, game client, accounts, private keys or extracted client artwork. With the WebUI enabled, missing artwork can be prepared locally from your installed client.
 
           ### Updating an existing server
-          Stop the server and back up `data/`, `config/` and customized `content/`. Preserve those files and `webui/assets/game/`; do not overwrite your configuration/content blindly with fresh defaults. Older database schemas may require the explicit offline upgrade described in `docs/operations.md`.
+          Stop the server and back up `data/`, `config/` and customized `content/`. Preserve those files and `webui/assets/game/`; do not overwrite your configuration/content blindly with fresh defaults. The 0.42.0 baseline uses schema 1; later builds apply ordered migrations after taking their own backup. A pre-0.42.0 or unknown database is refused untouched — keep it as a backup and start the new baseline. See `docs/operations.md`.
 
           Licensed under PolyForm Noncommercial 1.0.0. Retain the N0rule/Tortodrone attribution notice; see `docs/LICENSE`, `docs/NOTICE` and `docs/provenance.md`.
           NOTES
