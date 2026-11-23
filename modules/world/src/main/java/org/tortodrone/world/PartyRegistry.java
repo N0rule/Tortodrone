@@ -23,8 +23,8 @@ public final class PartyRegistry {
 
     /** Bound one player party to the configured maximum; the client renders whoever joins. */
     public synchronized void capacity(int value) {
-        if (value < 1 || value > PartyView.CAPACITY)
-            throw new IllegalArgumentException("Party capacity must be from 1 to " + PartyView.CAPACITY);
+        if (value < 1 || value > PartyView.MAX_CAPACITY)
+            throw new IllegalArgumentException("Party capacity must be from 1 to " + PartyView.MAX_CAPACITY);
         capacity = value;
     }
 

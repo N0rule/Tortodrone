@@ -265,8 +265,8 @@ public class PartyRegistryTest {
         }
         var outOfRange = new PartyRegistry();
         try {
-            outOfRange.capacity(9);
-            throw new AssertionError("Party capacity above the client slot count accepted");
+            outOfRange.capacity(org.tortodrone.core.party.PartyView.MAX_CAPACITY + 1);
+            throw new AssertionError("Party capacity above the server ceiling accepted");
         } catch (IllegalArgumentException expected) {
         }
         System.out.println(

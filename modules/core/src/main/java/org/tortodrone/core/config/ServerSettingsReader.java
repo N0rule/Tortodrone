@@ -106,7 +106,8 @@ final class ServerSettingsReader {
             throw new IOException("max-clients must be an integer from 1 to 1024");
         }
         if (maxClients < 1 || maxClients > 1024) throw new IOException("max-clients must be from 1 to 1024");
-        int partyMaxPlayers = number(settings, "party-max-players", 1, org.tortodrone.core.party.PartyView.CAPACITY);
+        int partyMaxPlayers =
+                number(settings, "party-max-players", 1, org.tortodrone.core.party.PartyView.MAX_CAPACITY);
         String packs = value(settings, "content-packs"), legacy = value(settings, "legacy-content");
         if (packs.isEmpty()) throw new IOException("content-packs must list at least one pack");
         if (!java.util.Set.of("auto", "disabled").contains(legacy))

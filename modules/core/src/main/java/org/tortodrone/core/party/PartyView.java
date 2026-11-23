@@ -9,7 +9,11 @@ import org.tortodrone.core.world.SceneStatus;
 
 /** Party events and read views shared by the live registry and the wire codec. */
 public final class PartyView {
+    /** Slot count the party encoders advertise; the stock client has no size of its own. */
     public static final int CAPACITY = 8;
+
+    /** Highest admission cap the server will accept; above {@link #CAPACITY} is unverified. */
+    public static final int MAX_CAPACITY = 16;
 
     public sealed interface Event permits Refresh, Invitation, Chat {}
 

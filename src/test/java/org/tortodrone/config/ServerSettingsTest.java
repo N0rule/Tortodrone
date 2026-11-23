@@ -248,10 +248,10 @@ public final class ServerSettingsTest {
             Path policy = home.resolve("party.yml");
             Files.writeString(policy, "party-max-players: 2\n");
             check(ServerSettings.read(policy).partyMaxPlayers() == 2, "the party cap is configurable");
-            Files.writeString(policy, "party-max-players: 9\n");
+            Files.writeString(policy, "party-max-players: 17\n");
             try {
                 ServerSettings.read(policy);
-                throw new AssertionError("Party size beyond the encoder ceiling accepted");
+                throw new AssertionError("Party size above the server ceiling accepted");
             } catch (IOException expected) {
                 check(expected.getMessage().startsWith("party-max-players"), "bounded party size");
             }

@@ -31,7 +31,7 @@ startup-map: haven
 welcome-message: Welcome to Tortodrone!
 ```
 
-`max-clients` accepts 1–1024; `party-max-players` accepts 1–8; `log-mode` accepts `normal` or `debug`; `log-max-mib` accepts 1–1024; `log-retention` accepts 1–100 rotated files; `welcome-message` accepts up to 256 characters without control characters and is shown once in chat after a knight enters the world (set `""` to disable). Config file options not recognized by the current server are refused. Runtime logs are in `data/logs/latest.log` with size-based rotation.
+`max-clients` accepts 1–1024; `party-max-players` accepts 1–16; `log-mode` accepts `normal` or `debug`; `log-max-mib` accepts 1–1024; `log-retention` accepts 1–100 rotated files; `welcome-message` accepts up to 256 characters without control characters and is shown once in chat after a knight enters the world (set `""` to disable). Config file options not recognized by the current server are refused. Runtime logs are in `data/logs/latest.log` with size-based rotation.
 
 ## First-start WebUI images
 

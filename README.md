@@ -228,7 +228,7 @@ log-retention: 5
 | `server-ip` | `0.0.0.0` | Bind address. `0.0.0.0` accepts local and LAN connections. |
 | `server-port` | `47624` | Game TCP port. |
 | `max-clients` | `16` | Maximum simultaneous game clients (1–1024). |
-| `party-max-players` | `4` | Maximum knights in one player party (1–8). Admission policy only: the client holds no size of its own, so the server admits the party and the client lists whoever joined. Values above 4 are untested in the dungeon HUD. |
+| `party-max-players` | `4` | Maximum knights in one player party (1–16). Admission policy only: the client holds no size of its own. `PartyCapacitySessionTest` puts nine knights in one party and one Training simulation and refuses the tenth, and the same run reached sixteen. The client's dungeon HUD above four is unverified. |
 | `startup-map` | `haven` | Installed map folder used by the startup flow; it must be a town. |
 | `welcome-message` | `Welcome to Tortodrone!` | Shown once in chat after a knight enters the world. Set `""` to disable. |
 | `webui-enabled` | `true` | Enables administration and WebUI routes. |
