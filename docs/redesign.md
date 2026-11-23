@@ -419,6 +419,10 @@ remaining stores were split the same way:
   delegations; `SceneDeltaTemplate` owns the reusable scene-delta fan-out
   frame, its recorded offsets and the +4 shift. Recipients still materialise
   their own symbols from the same `WireContext`.
+- `MapCollision` keeps the immutable compiled tiles/shapes, bounds and query
+  kernel; `MapCollisionCodec` owns the build-time properties parser and the
+  versioned gzip read/write, including sorted tile keys, derived bounds and
+  stable shape order. The runtime value carries no file-format policy.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.
