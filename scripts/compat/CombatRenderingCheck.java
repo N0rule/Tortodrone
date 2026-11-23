@@ -52,6 +52,36 @@ public final class CombatRenderingCheck {
             new Action("pulsar-charge", "Weapon/Handgun/Pulsar", 4, 4000, 290, true),
             new Action("alchemer-charge", "Weapon/Handgun/Voltech Alchemer Mk II", 4, 4000, 290, true),
             new Action("tortofist-charge", "Weapon/Handgun/Tortafist/Grand Tortofist", 4, 4000, 290, true));
+    /**
+     * Broad but shallow client smoke: one fast press per weapon family picks up equipment
+     * convergence, authoritative activity, native animation and projectiles. Only the three
+     * base classes pay the four-second charge hold; every other family fires normally.
+     */
+    private static final List<Action> RAPID_ACTIONS = List.of(
+            new Action("sword", SWORD, 4, 120, 292, false),
+            new Action("sword-charge", SWORD, 4, 4000, 290, false),
+            new Action("gun", GUN, 4, 120, 292, true),
+            new Action("gun-charge", GUN, 4, 4000, 290, true),
+            new Action("bomb", BOMB, 4, 120, 289, false),
+            new Action("bomb-charge", BOMB, 4, 4000, 290, true),
+            new Action("defense", SWORD, 64, 700, 284, false),
+            new Action("bash", SWORD, 2048, 120, 287, false),
+            new Action("dodge", SWORD, 1024, 120, 286, false),
+            new Action("troika", "Weapon/Sword/Troika", 4, 120, 292, false),
+            new Action("cutter", "Weapon/Sword/Cutter", 4, 120, 292, false),
+            new Action("flourish", "Weapon/Sword/Flourish", 4, 120, 292, false),
+            new Action("rocket-hammer", "Weapon/Sword/Rocket Hammer 3", 4, 120, 292, false),
+            new Action("combuster", "Weapon/Sword/Combuster", 4, 120, 292, false),
+            new Action("magnus", "Weapon/Handgun/Magnus", 4, 120, 292, true),
+            new Action("needle", NEEDLE, 4, 120, 292, true),
+            new Action("pulsar", "Weapon/Handgun/Pulsar", 4, 120, 292, true),
+            new Action("alchemer", "Weapon/Handgun/Voltech Alchemer Mk II", 4, 120, 292, true),
+            new Action("tortofist", "Weapon/Handgun/Tortafist/Grand Tortofist", 4, 120, 292, false),
+            new Action("crystal-bomb", "Weapon/Bomb/Crystal Bomb", 4, 120, 289, false),
+            new Action("vaporizer", "Weapon/Bomb/Fiery Vaporizer", 4, 120, 289, false),
+            new Action("electron-bomb", "Weapon/Bomb/Electron Bomb", 4, 120, 289, false),
+            new Action("vortex", "Weapon/Bomb/Graviton Vortex", 4, 120, 289, false));
+
     private final ProjectXApp app;
     private final Path output;
     private final boolean peer;
@@ -73,6 +103,12 @@ public final class CombatRenderingCheck {
     private boolean healthOnly, arsenalBlinkOnly, arsenalStationOnly;
     private boolean movementOnly;
     private boolean playabilityOnly;
+    private boolean rapidOnly;
+    private int rapidEquipmentIndex, rapidSpriteIndex;
+    private boolean rapidEquipmentRequested, rapidSpriteRequested, rapidSpritePressed;
+    private float rapidBumpFromX, rapidBumpFromY;
+    private boolean rapidBumpBackedOff, rapidBumpHeld, rapidBumpReached, rapidFinalCaptured;
+    private int rapidBumpFrames;
     private boolean vortexShieldOnly;
     private boolean equipmentGroups;
     private List<Action> actions = ACTIONS;
@@ -94,6 +130,7 @@ public final class CombatRenderingCheck {
     private float moveX, moveY;
     private long deadline, started, nextFrame, lastStatus;
     private boolean listening, released, projectile, aftermath, done, passed;
+    private boolean windowPrepared;
     private boolean needleFacingReady, needleNormalSeen, needleChargedSeen;
     private float needleNormalFacing;
     private long trainingSince;
@@ -241,10 +278,11 @@ public final class CombatRenderingCheck {
                         || args[0].equals("--seed-multiplayer")
                         || args[0].equals("--seed-boxes")
                         || args[0].equals("--seed")
+                        || args[0].equals("--seed-rapid")
                         || args[0].equals("--seed-depot")
                         || args[0].equals("--seed-forge"))) {
             seed(Path.of(args[1]));
-            if (args[0].equals("--seed-equipment")) seedEquipment(Path.of(args[1]));
+            if (args[0].equals("--seed-equipment") || args[0].equals("--seed-rapid")) seedEquipment(Path.of(args[1]));
             if (args[0].equals("--seed-items"))
                 try (var store = new AccountStore(Path.of(args[1]))) {
                     for (String config : ITEM_ACTIONS) store.grantItems("LanPlayer", "Town-Knight", config, 2, -1, -1);
@@ -319,6 +357,7 @@ public final class CombatRenderingCheck {
                                 || args[3].equals("--health-only")
                                 || args[3].equals("--movement-only")
                                 || args[3].equals("--playability-only")
+                                || args[3].equals("--rapid-only")
                                 || args[3].equals("--depot-only")
                                 || args[3].equals("--hazards-only")
                                 || args[3].equals("--vortex-shield-only")
@@ -400,6 +439,11 @@ public final class CombatRenderingCheck {
         probe.healthOnly = Arrays.asList(args).contains("--health-only");
         probe.movementOnly = Arrays.asList(args).contains("--movement-only");
         probe.playabilityOnly = Arrays.asList(args).contains("--playability-only");
+        probe.rapidOnly = Arrays.asList(args).contains("--rapid-only");
+        if (probe.rapidOnly) {
+            probe.deadline = System.nanoTime() + 180_000_000_000L;
+            probe.actions = RAPID_ACTIONS;
+        }
         if (probe.playabilityOnly) probe.deadline = System.nanoTime() + 240_000_000_000L;
         probe.vortexShieldOnly = Arrays.asList(args).contains("--vortex-shield-only");
         probe.equipmentGroups = Arrays.asList(args).contains("--equipment-groups");
@@ -414,14 +458,29 @@ public final class CombatRenderingCheck {
                     .getDefaultScreenDevice()
                     .getDisplayMode();
             int refresh = screen.getRefreshRate() > 0 ? screen.getRefreshRate() : 60;
-            com.threerings.projectx.client.ProjectXPrefs.b(new com.threerings.projectx.client.ProjectXPrefs.d(
-                    new com.threerings.opengl.util.DisplayMode(screen.getWidth(), screen.getHeight(), refresh), true));
+            var mode = new com.threerings.opengl.util.DisplayMode(screen.getWidth(), screen.getHeight(), refresh);
+            com.threerings.projectx.client.ProjectXPrefs.b(
+                    new com.threerings.projectx.client.ProjectXPrefs.d(mode, true));
+            // The constructor already read the old preference and queued its display mode,
+            // so apply the interactive mode explicitly before the window exists.
+            app.setDisplayMode(mode);
             System.out.println("MANUAL: fullscreen " + screen.getWidth() + "x" + screen.getHeight() + "@" + refresh);
             System.out.println(
                     "MANUAL: disposable client logged in as LanPlayer; close the game window to end the session");
             app.startup();
             return;
         }
+        // Automated acceptance runs create a windowed client. Without a disposable
+        // preference the stock client opens fullscreen at the desktop mode, and a
+        // scenario resize then leaves the smaller game viewport surrounded by black
+        // bars. A windowed screen_mode keeps every automated capture a real window.
+        var windowedMode = new com.threerings.opengl.util.DisplayMode(1280, 900);
+        com.threerings.projectx.client.ProjectXPrefs.b(
+                new com.threerings.projectx.client.ProjectXPrefs.d(windowedMode, false));
+        // ProjectXApp's constructor reads the preference and queues that display mode
+        // before this process can write it, so replace the queued mode explicitly. This
+        // makes the client create a 1280x900 windowed window from its first frame.
+        app.setDisplayMode(windowedMode);
         var timer = new Timer(true);
         var pending = new AtomicBoolean();
         timer.scheduleAtFixedRate(
@@ -542,6 +601,21 @@ public final class CombatRenderingCheck {
             new EquipmentGroup("bomb-chemical", "Weapon/Bomb/Fiery Vaporizer", 6, 4, 4000, 290, true),
             new EquipmentGroup("bomb-relic", "Weapon/Bomb/Electron Bomb", 6, 4, 4000, 290, true),
             new EquipmentGroup("bomb-vortex", "Weapon/Bomb/Graviton Vortex", 6, 4, 4000, 290, true),
+            new EquipmentGroup("sprite-drakon", "Drakon", -1, 128, 120, 288, true),
+            new EquipmentGroup("sprite-maskeraith", "Maskeraith", -1, 128, 120, 288, true),
+            new EquipmentGroup("sprite-seraphynx-aura", "Seraphynx", -1, 384, 120, 288, false));
+
+    /** Armor and shield slots the rapid smoke equips without an action press. */
+    private static final List<EquipmentGroup> RAPID_EQUIPMENT = List.of(
+            new EquipmentGroup("armor-normal", "Gear/Armor/Spiral Culet (Blue)", 1, 0, 0, 0, false),
+            new EquipmentGroup("armor-dual", "Gear/Armor/Wolver Coat", 1, 0, 0, 0, false),
+            new EquipmentGroup("armor-status", "Gear/Armor/Vog Cub Coat", 1, 0, 0, 0, false),
+            new EquipmentGroup("shield-proto", "Gear/Shield/Proto Shield", 2, 0, 0, 0, false),
+            new EquipmentGroup("shield-defender", "Gear/Shield/Defender", 2, 0, 0, 0, false),
+            new EquipmentGroup("shield-buckler", "Gear/Shield/Swiftstrike Buckler", 2, 0, 0, 0, false));
+
+    /** Battle sprites and the native skill flags that trigger each one. */
+    private static final List<EquipmentGroup> RAPID_SPRITES = List.of(
             new EquipmentGroup("sprite-drakon", "Drakon", -1, 128, 120, 288, true),
             new EquipmentGroup("sprite-maskeraith", "Maskeraith", -1, 128, 120, 288, true),
             new EquipmentGroup("sprite-seraphynx-aura", "Seraphynx", -1, 384, 120, 288, false));
@@ -2215,6 +2289,27 @@ public final class CombatRenderingCheck {
         if (done) return;
         try {
             long now = System.nanoTime();
+            if (!windowPrepared) {
+                windowPrepared = true;
+                // The launcher applied a windowed display mode before the window existed,
+                // so an automated run must never be fullscreen: a fullscreen surface with
+                // a smaller game viewport is letterboxed with black bars. Tiling window
+                // managers may still pick their own tile, so request the capture size once
+                // the window exists and report what the first frame actually uses.
+                long window = app.getWindow();
+                if (window != 0L) {
+                    if (GLFW.glfwGetWindowMonitor(window) != 0L)
+                        GLFW.glfwSetWindowMonitor(window, 0L, 0, 0, 1280, 900, GLFW.GLFW_DONT_CARE);
+                    GLFW.glfwSetWindowSize(window, 1280, 900);
+                    GLFW.glfwFocusWindow(window);
+                    var windowWidth = BufferUtils.createIntBuffer(1);
+                    var windowHeight = BufferUtils.createIntBuffer(1);
+                    GLFW.glfwGetWindowSize(window, windowWidth, windowHeight);
+                    System.out.println("WINDOW: windowed=" + (GLFW.glfwGetWindowMonitor(window) == 0L)
+                            + " window=" + windowWidth.get(0) + "x" + windowHeight.get(0) + " framebuffer="
+                            + app.getWindowWidth() + "x" + app.getWindowHeight());
+                }
+            }
             // Opt-in client stall trace: a run-queue gap means the stock client stopped servicing ticks.
             if (exploreTrace && lastProbeTickAt != 0 && now - lastProbeTickAt > 300_000_000L)
                 System.out.printf(
@@ -2347,6 +2442,7 @@ public final class CombatRenderingCheck {
                     || (app.GK().mN() || app.GB())) return;
             var view = new View(app.Gx());
             if (view.PO() == null) return;
+            if (rapidOnly && rapidTick(view, now)) return;
             if (equipmentGroups) {
                 equipmentGroupsTick(view, now);
                 return;
@@ -2913,6 +3009,14 @@ public final class CombatRenderingCheck {
             if (stage == 4) {
                 if (index == actions.size()) {
                     capture("training-complete");
+                    if (rapidOnly) {
+                        System.out.println(
+                                "CHECK: rapid weapon/shield action sweep completed " + RAPID_ACTIONS.size() + " cases");
+                        index = 0;
+                        started = now;
+                        stage = 60;
+                        return;
+                    }
                     if (playabilityOnly) {
                         System.out.println("CHECK: native /haven command after Training combat");
                         // The stock client asks before abandoning the party; the disposable probe
@@ -3021,13 +3125,18 @@ public final class CombatRenderingCheck {
                     System.out.println("ANIMATION: " + action.name + " " + elapsed + "ms " + state);
                     lastAnimation = state;
                 }
-                if (activity != 0 && activityPlaying(own, activity)) {
-                    if (renderedActivities.add(activity)) capture(action.name + "-activity-" + activity);
+                if (activity != 0) {
+                    // The action animation may live on a held-weapon attachment rather than the
+                    // base actor model, so the rapid sweep also accepts any playing non-idle
+                    // animation as render evidence before the stricter activity-registry probe.
                     animations.addAll(names);
+                    boolean rendered = activityPlaying(own, activity)
+                            || rapidOnly && names.stream().anyMatch(name -> !idleAnimation(name));
+                    if (rendered && renderedActivities.add(activity)) capture(action.name + "-activity-" + activity);
                 }
                 // Activity/animation assertions still run on every sample. Bound
                 // retained full-resolution frames per press/release phase too.
-                if (now >= nextFrame && frames < 3) {
+                if (!rapidOnly && now >= nextFrame && frames < 3) {
                     capture(action.name
                             + (released ? "-release-" : "-")
                             + String.format(Locale.ROOT, "%02d", frames++));
@@ -3091,12 +3200,26 @@ public final class CombatRenderingCheck {
                             // Validate every projectile, but retain representative
                             // pixels so Needle pellets cannot fill the image-encoding
                             // queue with a full frame for every projectile.
-                            if (capturedProjectiles.size() <= 2)
+                            if (capturedProjectiles.size() <= (rapidOnly ? 1 : 2))
                                 capture(action.name + "-projectile-" + capturedProjectiles.size());
                         }
                     }
                 var server = authoritative.get(app.CZ().pawnId);
-                if (elapsed > action.held + 2500 && server instanceof Dungeoneer knight && knight.aeM() == 0) {
+                if (elapsed > action.held + (rapidOnly ? 200 : 2500)
+                        && server instanceof Dungeoneer knight
+                        && knight.aeM() == 0) {
+                    // The rapid sweep moves on as soon as the server finished the action and the
+                    // client has shown every required signal; it never idles for seconds per case.
+                    if (rapidOnly
+                            && (!activities.contains(action.required)
+                                    || !renderedActivities.contains(action.required)
+                                    || action.projectile && !projectile)) {
+                        if (elapsed > action.held + (action.projectile ? 6000 : 4000))
+                            throw new AssertionError(action.name + " missed authoritative/rendered activity "
+                                    + action.required + " or its rendered projectile: " + activities + " / "
+                                    + renderedActivities + " / " + projectile);
+                        return;
+                    }
                     if (!activities.contains(action.required) || !renderedActivities.contains(action.required))
                         throw new AssertionError(action.name + " missed authoritative/rendered activity "
                                 + action.required + ": " + activities + " / " + renderedActivities);
@@ -3171,6 +3294,292 @@ public final class CombatRenderingCheck {
             images.shutdownNow();
             app.shutdown();
         }
+    }
+
+    private boolean rapidTick(View view, long now) throws Exception {
+        if (stage == 0) {
+            long window = app.getWindow();
+            // Tiling window managers otherwise keep their own tile size and the
+            // disposable window changes size between scenes. A fixed-size hint makes
+            // them keep the requested capture size for the whole run.
+            GLFW.glfwSetWindowSizeLimits(window, 1280, 900, 1280, 900);
+            GLFW.glfwSetWindowSize(window, 1280, 900);
+            GLFW.glfwFocusWindow(window);
+            // A direct native scene jump, not a command or a walk: the smoke starts in Haven and
+            // immediately requests its training instance.
+            app.GK().bn(294);
+            System.out.println("CHECK: rapid smoke jumps directly from Haven into Advanced Training");
+            started = now;
+            stage = 2;
+            return true;
+        }
+        if (stage == 2) {
+            if (view.sceneId() != 294
+                    || !(view.PO().acU() instanceof Dungeoneer)
+                    || app.GK().mN()
+                    || app.GB()) {
+                if (now - started > 25_000_000_000L)
+                    throw new AssertionError(
+                            "Direct scene jump did not reach Advanced Training: scene=" + view.sceneId());
+                return true;
+            }
+            if (!view.PO().acL().isVisible() || view.PO().acL().getConfig() == null) {
+                if (now - started > 15_000_000_000L)
+                    throw new AssertionError("Rapid smoke knight sprite did not initialize");
+                return true;
+            }
+            if (rapidCube() == null) {
+                if (now - started > 15_000_000_000L)
+                    throw new AssertionError("Rapid fixture Training Cube did not spawn north of the entrance");
+                return true;
+            }
+            capture("rapid-training-entry");
+            System.out.println("CHECK: direct scene jump renders the Training Hall and the rapid fixture cube");
+            rapidEquipmentIndex = 0;
+            rapidSpriteIndex = 0;
+            started = now;
+            stage = 50;
+            return true;
+        }
+        if (stage == 50) {
+            if (rapidEquipmentIndex == RAPID_EQUIPMENT.size()) {
+                System.out.println("CHECK: rapid arm/" + RAPID_EQUIPMENT.size()
+                        + " armor/shield equips applied through the native item service");
+                // The authored entrance faces the south exit drop. Face the corridor before the
+                // sweep so the dodge action rolls north instead of off the entrance ledge.
+                moveNorth(view, false);
+                rapidEquipmentIndex = 0;
+                index = 0;
+                started = now;
+                stage = 4;
+                return true;
+            }
+            var group = RAPID_EQUIPMENT.get(rapidEquipmentIndex);
+            long id = findItemId(group.item);
+            if (id == 0) throw new AssertionError("Missing seeded " + group.item);
+            if (!rapidEquipmentRequested) {
+                equip = new Confirm();
+                app.GI().bU(com.threerings.projectx.item.client.L.class).a(id, group.slot, equip);
+                rapidEquipmentRequested = true;
+                started = now;
+                return true;
+            }
+            if (equip.reason != null) throw new AssertionError(group.name + ": " + equip.reason);
+            if (equip.done && equipped(group.slot, id)) {
+                rapidEquipmentIndex++;
+                rapidEquipmentRequested = false;
+                started = now;
+                return true;
+            }
+            if (now - started > 3_000_000_000L)
+                throw new AssertionError("Native equipment slot " + group.slot + " did not accept " + group.item
+                        + " (have " + equippedId(group.slot) + ")");
+            return true;
+        }
+        if (stage == 60) {
+            if (rapidSpriteIndex == RAPID_SPRITES.size()) {
+                System.out.println("CHECK: rapid battle-sprite skill sweep applied and animated");
+                flags(view, 0);
+                rapidSpriteRequested = rapidSpritePressed = false;
+                rapidBumpReached = rapidBumpHeld = rapidBumpBackedOff = false;
+                // Require a fresh bump for the final check even if an earlier action grazed it.
+                sawShieldBump = false;
+                started = now;
+                stage = 61;
+                return true;
+            }
+            var group = RAPID_SPRITES.get(rapidSpriteIndex);
+            int id = 0;
+            for (var sprite : app.CZ().sprites) if (sprite.MX().getName().equals(group.item)) id = sprite.vD();
+            if (id == 0) throw new AssertionError("Missing seeded sprite " + group.item);
+            if (!rapidSpriteRequested) {
+                equip = new Confirm();
+                app.GI().bU(com.threerings.projectx.sprites.a.a.class).o(id, equip);
+                rapidSpriteRequested = true;
+                started = now;
+                return true;
+            }
+            if (equip.reason != null) throw new AssertionError(group.name + ": " + equip.reason);
+            if (!equip.done || app.CZ().equippedSprite != id) {
+                if (now - started > 3_000_000_000L)
+                    throw new AssertionError("Native sprite equip did not converge to " + group.item);
+                return true;
+            }
+            var pet = authoritative.values().stream()
+                    .filter(a -> a instanceof com.threerings.projectx.dungeon.data.actor.SpriteActor)
+                    .findFirst()
+                    .orElse(null);
+            if (pet == null) {
+                if (now - started > 5_000_000_000L)
+                    throw new AssertionError("Equipped battle sprite has no native SpriteActor");
+                return true;
+            }
+            if (!rapidSpritePressed && rapidSpriteIndex > 0) {
+                // Later sprites share the member's skill recharge, so the rapid smoke only
+                // proves each model equips and renders instead of paying another cooldown.
+                var rendered = view.gk(pet.vD());
+                if (rendered == null
+                        || !rendered.acL().isVisible()
+                        || rendered.acL().getConfig() == null) {
+                    if (now - started > 5_000_000_000L)
+                        throw new AssertionError("Equipped sprite never rendered: " + group.item);
+                    return true;
+                }
+                capture("rapid-sprite-" + group.name);
+                System.out.println("CHECK: rapid sprite " + group.name + " equipped and rendered");
+                rapidSpriteIndex++;
+                rapidSpriteRequested = false;
+                started = now;
+                return true;
+            }
+            if (!rapidSpritePressed) {
+                int[] cooldown = (int[]) field(pet, "_nextSkill").get(pet);
+                if (cooldown[0] > lastStamp) {
+                    if (now - started > 6_000_000_000L)
+                        throw new AssertionError("Battle sprite cooldown never became ready: " + group.name + " next="
+                                + java.util.Arrays.toString(cooldown) + " stamp=" + lastStamp);
+                    return true;
+                }
+                flags(view, group.flags);
+                rapidSpritePressed = true;
+                started = now;
+                return true;
+            }
+            int elapsed = (int) ((now - started) / 1_000_000L);
+            if (elapsed >= 120) flags(view, 0);
+            int activity = group.flags >>> 7;
+            boolean applied = false;
+            for (var actor : authoritative.values())
+                if (actor instanceof com.threerings.projectx.dungeon.data.actor.SpriteActor p && p.aeM() == activity) {
+                    var sprite = view.gk(p.vD());
+                    if (sprite != null && sprite.acL().isVisible() && activityPlaying(sprite, activity)) applied = true;
+                }
+            if (applied) {
+                capture("rapid-sprite-" + group.name);
+                System.out.println("CHECK: rapid sprite " + group.name + " activity=" + activity + " rendered");
+                rapidSpriteIndex++;
+                rapidSpriteRequested = rapidSpritePressed = false;
+                flags(view, 0);
+                started = now;
+                return true;
+            }
+            if (now - started > 5_000_000_000L)
+                throw new AssertionError("Sprite " + group.name + " never reached rendered activity " + activity);
+            return true;
+        }
+        if (stage == 61) {
+            var own = authoritative.get(app.CZ().pawnId);
+            var cube = rapidCube();
+            if (own == null || cube == null) {
+                if (now - started > 5_000_000_000L)
+                    throw new AssertionError("Rapid fixture cube disappeared before the shield bump");
+                return true;
+            }
+            if (!rapidBumpReached) {
+                float fromX = own.tG().x, fromY = own.tG().y;
+                float dx = cube.tG().x - own.tG().x, dy = cube.tG().y - own.tG().y;
+                float distance = (float) Math.hypot(dx, dy);
+                if (!rapidBumpBackedOff) {
+                    // The dodge action rolls the knight north toward the fixture cube, so back
+                    // away until the approach again covers a real distance. The back-off stays
+                    // north of the entrance ledge and its south exit drop.
+                    if (distance < 3.5) {
+                        moveToward(view, -dx, -dy, true);
+                        if (now - started > 8_000_000_000L)
+                            throw new AssertionError("Rapid smoke could not back away from the shield-bump cube");
+                        return true;
+                    }
+                    moveToward(view, 0, 0, false);
+                    rapidBumpBackedOff = true;
+                    rapidBumpFromX = fromX;
+                    rapidBumpFromY = fromY;
+                    started = now;
+                    return true;
+                }
+                if (distance > 1.15) {
+                    moveToward(view, dx, dy, true);
+                    if (now - started > 12_000_000_000L)
+                        throw new AssertionError("Rapid smoke could not reach the shield-bump cube");
+                    return true;
+                }
+                moveToward(view, 0, 0, false);
+                if (Math.hypot(own.tG().x - rapidBumpFromX, own.tG().y - rapidBumpFromY) < 2)
+                    throw new AssertionError("Native movement did not advance toward the rapid fixture cube");
+                rapidBumpReached = true;
+                started = now;
+                capture("rapid-shield-bump-before");
+                return true;
+            }
+            if (!rapidBumpHeld) {
+                long shield = findItemId("Gear/Shield/Grey Owlite Shield");
+                if (shield == 0) throw new AssertionError("Missing seeded Grey Owlite Shield");
+                if (!equipped(2, shield)) {
+                    equip = new Confirm();
+                    app.GI().bU(com.threerings.projectx.item.client.L.class).a(shield, 2, equip);
+                    if (now - started > 3_000_000_000L)
+                        throw new AssertionError("Native shield did not equip for the rapid bump");
+                    return true;
+                }
+                flags(view, 64);
+                rapidBumpHeld = true;
+                started = now;
+                return true;
+            }
+            if (sawShieldBump && rapidBumpFrames < 3 && now - started > 150_000_000L * rapidBumpFrames)
+                capture("rapid-shield-bump-vfx-" + rapidBumpFrames++);
+            if (sawShieldBump && (rapidBumpFrames >= 3 || now - started > 700_000_000L)) {
+                flags(view, 0);
+                System.out.println("CHECK: rapid smoke received the native shield bump VFX");
+                stage = 62;
+                started = now;
+                return true;
+            }
+            if (now - started > 5_000_000_000L)
+                throw new AssertionError("Rapid smoke did not receive a shield bump from the fixture cube");
+            return true;
+        }
+        if (stage == 62) {
+            flags(view, 0);
+            if (!rapidFinalCaptured) {
+                capture("rapid-final");
+                rapidFinalCaptured = true;
+            }
+            finishImages();
+            Files.writeString(output.resolve("primary-complete"), "");
+            passed = done = true;
+            System.out.println("PASS: stock client rapid combat sweep: direct scene jump, "
+                    + RAPID_EQUIPMENT.size() + " armor/shield equips, " + RAPID_ACTIONS.size()
+                    + " weapon/shield/sprite action cases with authoritative and rendered activities"
+                    + " and projectiles, movement, and a native shield bump VFX");
+            app.shutdown();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean equipped(int slot, long id) {
+        return app.CZ().equipment != null
+                && slot >= 0
+                && slot < app.CZ().equipment.length
+                && app.CZ().equipment[slot] == id;
+    }
+
+    private long equippedId(int slot) {
+        return app.CZ().equipment != null && slot >= 0 && slot < app.CZ().equipment.length
+                ? app.CZ().equipment[slot]
+                : 0;
+    }
+
+    /** The relocated fixture cube is the only Training Cube close to the entrance. */
+    private Actor rapidCube() {
+        var own = authoritative.get(app.CZ().pawnId);
+        if (own == null) return null;
+        return authoritative.values().stream()
+                .filter(a -> a.getClass().getSimpleName().equals("Monster"))
+                .filter(a -> a.MX().getName().equals("Character/NPC/Advanced Training Gym/Training Cube"))
+                .filter(a -> a.tG().y > own.tG().y)
+                .min(Comparator.comparingDouble(a -> Math.hypot(a.tG().x - own.tG().x, a.tG().y - own.tG().y)))
+                .orElse(null);
     }
 
     private boolean ownedProjectile(Actor actor, Action action) throws Exception {
@@ -4368,7 +4777,7 @@ public final class CombatRenderingCheck {
                 String ref = effect.MX().toString();
                 if (ref.contains("fx_fire.dat") || ref.contains("Player/Release Fireflies")) itemEffectSeen = true;
             }
-        if (vortexShieldOnly && event.afg() != null)
+        if ((vortexShieldOnly || rapidOnly) && event.afg() != null)
             for (var effect : event.afg())
                 if (effect.MX().toString().contains("fx_shieldpush.dat")) {
                     try {
@@ -4740,6 +5149,15 @@ public final class CombatRenderingCheck {
                     fieldType.getName() + " on " + target.getClass().getName());
         found.setAccessible(true);
         return found;
+    }
+
+    /** Idle/equip poses that stay playing even when no action activity is running. */
+    private static boolean idleAnimation(String name) {
+        String base = name.contains("@") ? name.substring(0, name.indexOf('@')) : name;
+        return base.equals("character/pc/hands_closed.dat")
+                || base.equals("character/pc/draw_weapon.dat")
+                || base.equals("character/pc/draw_shield.dat")
+                || base.startsWith("character/pc/ready_");
     }
 
     private static boolean activityPlaying(Sprite sprite, int activity) throws Exception {

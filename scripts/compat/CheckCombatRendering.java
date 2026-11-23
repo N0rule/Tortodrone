@@ -23,7 +23,7 @@ public final class CheckCombatRendering {
     public static void main(String[] args) throws Exception {
         if (args.length < 1) {
             throw new IllegalArgumentException(
-                    "Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--opening-tutorial-only|--tutorial-entry-only|--tutorial-only|--ready-room-only|--ready-room-mail-only|--mail-campaign-only|--ready-room-forge-only|--equipment-groups|--items-only|--arsenal-blink-only|--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--playability-only|--depot-only|--hazards-only|--vortex-shield-only|--multiplayer-only|--multiplayer-world-only|--explore-only --scene=<id>|--mission-only|--manual]");
+                    "Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--opening-tutorial-only|--tutorial-entry-only|--tutorial-only|--ready-room-only|--ready-room-mail-only|--mail-campaign-only|--ready-room-forge-only|--equipment-groups|--items-only|--arsenal-blink-only|--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--playability-only|--rapid-only|--depot-only|--hazards-only|--vortex-shield-only|--multiplayer-only|--multiplayer-world-only|--explore-only --scene=<id>|--mission-only|--manual]");
         }
         boolean campProgression = Arrays.asList(args).contains("--camp-progression-only");
         boolean campStory = campProgression || Arrays.asList(args).contains("--camp-story-only");
@@ -52,6 +52,7 @@ public final class CheckCombatRendering {
         boolean healthOnly = Arrays.asList(args).contains("--health-only");
         boolean movementOnly = Arrays.asList(args).contains("--movement-only");
         boolean playabilityOnly = Arrays.asList(args).contains("--playability-only");
+        boolean rapidOnly = Arrays.asList(args).contains("--rapid-only");
         boolean equipmentGroups = Arrays.asList(args).contains("--equipment-groups");
         boolean exploreOnly = Arrays.asList(args).contains("--explore-only");
         boolean missionOnly = Arrays.asList(args).contains("--mission-only");
@@ -66,6 +67,7 @@ public final class CheckCombatRendering {
                 }
         if (exploreOnly && exploreScene <= 0) throw new IllegalArgumentException("--explore-only needs --scene=<id>");
         boolean trainingOnly = playabilityOnly
+                || rapidOnly
                 || exploreOnly
                 || missionOnly
                 || manual
@@ -135,6 +137,7 @@ public final class CheckCombatRendering {
             requireMaps(maps);
             if (arsenalBlinkOnly) arsenalBlinkFixture(maps);
             if (healthOnly) healthFixture(maps);
+            if (rapidOnly) rapidFixture(maps);
             if (sharedWorldOnly) vortexShieldFixture(maps, true);
             if (hazardsOnly) hazardFixture(maps);
             if (vortexShieldOnly) vortexShieldFixture(maps);
@@ -208,7 +211,9 @@ public final class CheckCombatRendering {
                                                                                             ? "--seed-forge"
                                                                                             : missionOnly
                                                                                                     ? "--seed-mission"
-                                                                                                    : "--seed",
+                                                                                                    : rapidOnly
+                                                                                                            ? "--seed-rapid"
+                                                                                                            : "--seed",
                     scratch.resolve("data").toString()));
             if (manual) seed.set(seed.size() - 2, "--seed-manual");
             ClientCheckHarness.runQuiet(scratch, seed, "seed", manual ? 120 : 45, scratch);
@@ -274,6 +279,7 @@ public final class CheckCombatRendering {
                             || healthOnly
                             || movementOnly
                             || playabilityOnly
+                            || rapidOnly
                             || exploreOnly
                             || missionOnly
                             || manual
@@ -303,6 +309,7 @@ public final class CheckCombatRendering {
             }
             if (exploreOnly) graphical.addAll(List.of("--explore-only", "--scene=" + exploreScene));
             else if (manual) graphical.add("--manual");
+            else if (rapidOnly) graphical.add("--rapid-only");
             else if (trainingOnly)
                 graphical.add(
                         campProgression
@@ -382,15 +389,19 @@ public final class CheckCombatRendering {
                             ? 120
                             : playabilityOnly
                                     ? 240
-                                    : tutorialOnly
-                                            ? 1500
-                                            : tutorialEntryOnly || readyRoomOnly ? 100 : trainingOnly ? 440 : 400,
+                                    : rapidOnly
+                                            ? 180
+                                            : tutorialOnly
+                                                    ? 1500
+                                                    : tutorialEntryOnly || readyRoomOnly
+                                                            ? 100
+                                                            : trainingOnly ? 440 : 400,
                     TimeUnit.SECONDS)) {
                 throw new IOException("Graphical combat probe timed out:\n" + ClientCheckHarness.tail(clientLog)
                         + "\nServer:\n" + ClientCheckHarness.tail(serverLog));
             }
             String log = Files.readString(clientLog);
-            if ((itemsOnly || readyRoomOnly || playabilityOnly)
+            if ((itemsOnly || readyRoomOnly || playabilityOnly || rapidOnly)
                     && (log.contains("NullPointerException") || log.contains("ClassCastException")))
                 throw new IOException("Native controller error: " + ClientCheckHarness.tail(clientLog));
             if (client.exitValue() != 0 || !log.lines().anyMatch(line -> line.startsWith("PASS:"))) {
@@ -398,7 +409,7 @@ public final class CheckCombatRendering {
                         + ClientCheckHarness.tail(clientLog) + "\nServer:\n" + ClientCheckHarness.tail(serverLog));
             }
             // A playability run also proves the server survives the whole loop, not just login.
-            if (playabilityOnly && !server.isAlive())
+            if ((playabilityOnly || rapidOnly) && !server.isAlive())
                 throw new IOException(
                         "Disposable server exited during the playability run:\n" + ClientCheckHarness.tail(serverLog));
             if (readyRoomMailOnly
@@ -548,6 +559,80 @@ public final class CheckCombatRendering {
 
     private static void healthFixture(Path content) throws Exception {
         relocate(content, "health");
+    }
+
+    /**
+     * The rapid smoke needs one native Training Cube a short walk north of the spawn, so it can
+     * provoke a real shield bump without the long scenario routes. The entrance stays authored.
+     */
+    private static void rapidFixture(Path content) throws Exception {
+        Path map = content.resolve("maps/training/advanced_training"),
+                actorsFile = map.resolve("actors.yml"),
+                bindingsFile = map.resolve("native/bindings.json");
+        var prepared = MapYaml.prepare(map, content.resolve("shared"));
+        var props = prepared.content();
+        String prefix = Arrays.stream(props.getProperty("entries").split(","))
+                .map(id -> "entry." + id + ".child.")
+                .filter(key -> props.getProperty(key + "kind", "").equals("Monster"))
+                .findFirst()
+                .orElseThrow();
+        var yaml = Yaml.read(actorsFile);
+        var actors = Yaml.map(yaml.get("actors"), "actors");
+        var bindings = Yaml.map(Json.parseCatalog(Files.readString(bindingsFile)), "bindings");
+        inheritFixtureActors(bindings, actors);
+        bindings.remove("actorDefaults");
+        bindings.remove("actorOrder");
+        bindings.remove("actorAliases");
+        var fixedActors = Yaml.map(bindings.get("actors"), "actors");
+        var fields = Yaml.map(bindings.get("actorFields"), "actor fields");
+        var types = Yaml.map(bindings.get("actorTypes"), "actor types");
+        float x = Float.parseFloat(prepared.descriptor().getProperty("spawn-x"));
+        float y = Float.parseFloat(prepared.descriptor().getProperty("spawn-y")) + 4.5f;
+        String id = "rapid_cube";
+        var fixed = new LinkedHashMap<String, Object>();
+        var editable = new LinkedHashMap<String, Object>();
+        var schema = new LinkedHashMap<String, Object>();
+        for (String key : props.stringPropertyNames())
+            if (key.startsWith(prefix)) {
+                String name = key.substring(prefix.length()), value = props.getProperty(key);
+                if (name.equals("config")
+                        || name.equals("kind")
+                        || name.equals("native-type")
+                        || name.startsWith("config.")
+                        || value.startsWith("{")
+                        || value.startsWith("[")) fixed.put(name, value);
+                else if (name.equals("rotation")) editable.put("facing", Math.toDegrees(Float.parseFloat(value)));
+                else {
+                    Object scalar = value;
+                    if (value.equals("true") || value.equals("false")) scalar = Boolean.parseBoolean(value);
+                    else
+                        try {
+                            scalar = new java.math.BigDecimal(value);
+                        } catch (NumberFormatException text) {
+                        }
+                    editable.put(name, scalar);
+                }
+            }
+        fixed.put("source-key", id);
+        editable.put("x", x);
+        editable.put("y", y);
+        editable.put("facing", 180);
+        editable.put("health", 10000);
+        editable.put("acquire-distance", 0);
+        editable.forEach((key, value) ->
+                schema.put(key, value instanceof Number ? "number" : value instanceof Boolean ? "boolean" : "text"));
+        fixedActors.put(id, fixed);
+        actors.put(id, editable);
+        fields.put(id, new ArrayList<>(editable.keySet()));
+        types.put(id, schema);
+        Files.delete(actorsFile);
+        Yaml.write(actorsFile, yaml);
+        Files.writeString(bindingsFile, Json.stringify(bindings));
+        Path metadata = map.resolve("native/metadata.properties");
+        var descriptor = new Properties();
+        descriptor.putAll(properties(metadata));
+        descriptor.setProperty("sha256.bindings.json", ContentFiles.digest(bindingsFile));
+        save(metadata, descriptor);
     }
 
     private static void relocate(Path content, String kind) throws Exception {
