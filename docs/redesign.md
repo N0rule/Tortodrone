@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,194,779 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,195,752 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -422,7 +422,9 @@ remaining stores were split the same way:
 - `MapCollision` keeps the immutable compiled tiles/shapes, bounds and query
   kernel; `MapCollisionCodec` owns the build-time properties parser and the
   versioned gzip read/write, including sorted tile keys, derived bounds and
-  stable shape order. The runtime value carries no file-format policy.
+  stable shape order. The runtime value carries no file-format policy, and its
+  broadphase dedupe marks are per-thread so one template is safe to query from
+  scene instances that tick on parallel workers.
 - `FireCatalog` keeps the immutable attack/detonation indexes and runtime
   lookup; `FireCatalogCodec` owns the prepared catalogue file format, the
   tagged JSON graph/value shape and every size and depth limit applied to

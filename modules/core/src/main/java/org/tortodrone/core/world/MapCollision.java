@@ -279,12 +279,28 @@ public final class MapCollision {
 
     // ---- grid
 
+    /**
+     * Broadphase dedupe marks are per-thread, not per-template. One compiled {@code MapCollision}
+     * is shared by every scene instance loaded from the same map, and those instances may tick on
+     * different workers; instance-level marks would race and could skip blocking shapes.
+     */
+    private static final ThreadLocal<QueryMarks> QUERY_MARKS = ThreadLocal.withInitial(QueryMarks::new);
+
+    private static final class QueryMarks {
+        private int[] stamps = new int[0];
+        private int generation;
+
+        int next(int size) {
+            if (stamps.length < size) stamps = Arrays.copyOf(stamps, size);
+            if (++generation <= 1) { Arrays.fill(stamps, 0); generation = 1; }
+            return generation;
+        }
+    }
+
     private static final class Grid {
         private final float originX, originY;
         private final int width, height;
         private final int[][] buckets;
-        private final int[] stamps;
-        private int stamp;
 
         Grid(Bounds bounds, List<Shape> shapes) {
             originX = bounds.minX - GRID; originY = bounds.minY - GRID;
@@ -303,7 +319,6 @@ public final class MapCollision {
             }
             buckets = new int[lists.size()][];
             for (int i = 0; i < lists.size(); i++) buckets[i] = lists.get(i).stream().mapToInt(Integer::intValue).toArray();
-            stamps = new int[shapes.size()];
             // Shape ids are positions in the source list; keep the mapping stable.
             this.shapes = shapes.toArray(Shape[]::new);
         }
@@ -320,13 +335,13 @@ public final class MapCollision {
             int y0 = Math.max(0, (int) Math.floor((minY - originY) / GRID));
             int y1 = Math.min(height - 1, (int) Math.floor((maxY - originY) / GRID));
             if (x1 < x0 || y1 < y0) return List.of();
-            int mark = ++stamp;
-            if (mark == Integer.MAX_VALUE) { Arrays.fill(stamps, 0); mark = stamp = 1; }
+            var marks = QUERY_MARKS.get();
+            int mark = marks.next(shapes.length);
             var result = new ArrayList<Shape>();
             for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) {
                 for (int id : buckets[y * width + x]) {
-                    if (stamps[id] == mark) continue;
-                    stamps[id] = mark;
+                    if (marks.stamps[id] == mark) continue;
+                    marks.stamps[id] = mark;
                     var shape = shapes[id];
                     if (shape.bounds.intersects(new Bounds(minX, minY, maxX, maxY)))
                         result.add(shape);

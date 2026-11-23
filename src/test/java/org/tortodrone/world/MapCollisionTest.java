@@ -73,6 +73,26 @@ public final class MapCollisionTest {
             for (int i = 0; i < 20_000; i++) wide.clear(1, .5f, .5f, .33f);
             long millis = (System.nanoTime() - start) / 1_000_000;
             check(millis < 2_000, "8000-shape broadphase stays fast (" + millis + " ms for 20000 queries)");
+
+            // One compiled template is shared by scene instances that tick on parallel workers;
+            // broadphase dedupe state must not be instance state.
+            try (var workers = java.util.concurrent.Executors.newFixedThreadPool(8)) {
+                var go = new java.util.concurrent.CountDownLatch(1);
+                var tasks = new ArrayList<java.util.concurrent.Callable<Void>>();
+                for (int t = 0; t < 8; t++) tasks.add(() -> {
+                    go.await();
+                    for (int i = 0; i < 20_000; i++) {
+                        int shape = i & 511;
+                        float x = (shape % 200) * 2f, y = (shape / 200) * .5f;
+                        check(!wide.clear(1, x, y, .33f), "parallel broadphase finds every blocking shape");
+                    }
+                    return null;
+                });
+                var running = new ArrayList<java.util.concurrent.Future<Void>>();
+                for (var task : tasks) running.add(workers.submit(task));
+                go.countDown();
+                for (var future : running) future.get();
+            }
             System.out.println("MapCollisionTest PASS (" + millis + " ms for 20000 queries over 8000 shapes)");
         } finally {
             try (var paths = Files.walk(home)) {
