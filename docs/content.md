@@ -7,7 +7,7 @@ progression remain in SQLite. Back up a stopped deployment before upgrading.
 
 ```text
 config/
-  server.yml                 listener, limits, party/trade/chat switches, logs, startup-map
+  server.yml                 listener, limits, party cap, logs, startup-map
 content/
   maps/<type>/<map>/         type is town, training or level and must match map.yml
     map.yml                  readable identity, default entrance, instance count
@@ -75,8 +75,6 @@ server-port: 47624
 webui/content_url-port: 8080
 max-clients: 16
 party-max-players: 4
-trades-enabled: true
-chat-enabled: true
 log-mode: normal
 log-max-mib: 10
 log-retention: 5
@@ -91,9 +89,7 @@ as described in the [README](../README.md#step-5-connect-the-game-client).
 `party-max-players` bounds party admission (1-8, shipped as 4). It is policy, not a
 client constant: `LevelPartyObject.memberLimit` is server-supplied, and the client both
 renders the members it receives and only compares the limit with 1 to decide whether
-party controls are offered. `trades-enabled` refuses new trade invitations (an open trade still completes).
-`chat-enabled` refuses player-authored text — scene, party, guild, private and emote
-lines — while server notices, commands and NPC dialogue keep working. The knight dodge cooldown is the verified
+party controls are offered. Only the party cap is player-facing policy; chat and trade have no switch. The knight dodge cooldown is the verified
 stock value (`8000` ms in `WeaponCatalog`), not a deployment setting: `config/` holds
 server policy only.
 Static merchant rules belong to Town YAML. Depot offers/promotions and auctions

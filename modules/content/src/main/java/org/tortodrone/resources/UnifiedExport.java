@@ -119,8 +119,6 @@ final class UnifiedExport {
         config.put("server-port", settings.port());
         config.put("max-clients", settings.maxClients());
         config.put("party-max-players", settings.partyMaxPlayers());
-        config.put("trades-enabled", settings.tradesEnabled());
-        config.put("chat-enabled", settings.chatEnabled());
         config.put("log-mode", settings.logMode().name().toLowerCase(Locale.ROOT));
         config.put("log-max-mib", settings.logMaxMiB());
         config.put("log-retention", settings.logRetention());

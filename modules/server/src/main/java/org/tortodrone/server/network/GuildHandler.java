@@ -116,8 +116,6 @@ final class GuildHandler {
                         || request.oid()
                                 != org.tortodrone.protocol.SessionCodec.guildOid(
                                         view.guild().id())) return false;
-                if (!org.tortodrone.server.ServerPolicy.chatEnabled())
-                    throw new IOException("Chat is disabled on this server.");
                 if (request.method() != 1
                         || a.size() != 2
                         || !(a.get(0) instanceof String text)

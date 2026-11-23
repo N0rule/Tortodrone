@@ -24,8 +24,6 @@ webui-public-url: 0.0.0.0
 webui-tls-mode: http
 max-clients: 16
 party-max-players: 4
-trades-enabled: true
-chat-enabled: true
 log-mode: normal
 log-max-mib: 10
 log-retention: 5
@@ -33,7 +31,7 @@ startup-map: haven
 welcome-message: Welcome to Tortodrone!
 ```
 
-`max-clients` accepts 1–1024; `party-max-players` accepts 1–8; `trades-enabled` and `chat-enabled` accept `true` or `false`; `log-mode` accepts `normal` or `debug`; `log-max-mib` accepts 1–1024; `log-retention` accepts 1–100 rotated files; `welcome-message` accepts up to 256 characters without control characters and is shown once in chat after a knight enters the world (set `""` to disable). Config file options not recognized by the current server are refused. Runtime logs are in `data/logs/latest.log` with size-based rotation.
+`max-clients` accepts 1–1024; `party-max-players` accepts 1–8; `log-mode` accepts `normal` or `debug`; `log-max-mib` accepts 1–1024; `log-retention` accepts 1–100 rotated files; `welcome-message` accepts up to 256 characters without control characters and is shown once in chat after a knight enters the world (set `""` to disable). Config file options not recognized by the current server are refused. Runtime logs are in `data/logs/latest.log` with size-based rotation.
 
 ## First-start WebUI images
 

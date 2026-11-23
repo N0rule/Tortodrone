@@ -8,7 +8,6 @@ import org.tortodrone.character.*;
 import org.tortodrone.core.character.Knight;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.protocol.SessionCodec;
-import org.tortodrone.server.ServerPolicy;
 
 /** Deployment-local trade ownership. No callback acquires a world or account lock. */
 final class PlayerTrades {
@@ -156,7 +155,6 @@ final class PlayerTrades {
     }
 
     synchronized void invite(Member sender, String name) throws IOException {
-        if (!ServerPolicy.tradesEnabled()) throw new IOException("Trading is disabled on this server.");
         expire();
         sender.current();
         var recipient = members.get(key(name));

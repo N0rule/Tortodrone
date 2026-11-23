@@ -244,32 +244,19 @@ public final class ServerSettingsTest {
             } catch (IOException expected) {
             }
             Path fresh = home.resolve("fresh-defaults.yml");
-            var stockPolicy = ServerSettings.read(fresh);
-            check(
-                    stockPolicy.partyMaxPlayers() == 4 && stockPolicy.tradesEnabled() && stockPolicy.chatEnabled(),
-                    "player policy defaults keep the stock party size and both features on");
-            Path policy = home.resolve("policy.yml");
-            Files.writeString(policy, "party-max-players: 4\ntrades-enabled: false\nchat-enabled: false\n");
-            var narrowed = ServerSettings.read(policy);
-            check(
-                    narrowed.partyMaxPlayers() == 4 && !narrowed.tradesEnabled() && !narrowed.chatEnabled(),
-                    "broad player policy is configurable");
+            check(ServerSettings.read(fresh).partyMaxPlayers() == 4, "the shipped party cap is four knights");
+            Path policy = home.resolve("party.yml");
+            Files.writeString(policy, "party-max-players: 2\n");
+            check(ServerSettings.read(policy).partyMaxPlayers() == 2, "the party cap is configurable");
             Files.writeString(policy, "party-max-players: 9\n");
             try {
                 ServerSettings.read(policy);
-                throw new AssertionError("Party size beyond the client slot count accepted");
+                throw new AssertionError("Party size beyond the encoder ceiling accepted");
             } catch (IOException expected) {
                 check(expected.getMessage().startsWith("party-max-players"), "bounded party size");
             }
-            Files.writeString(policy, "chat-enabled: 2\n");
-            try {
-                ServerSettings.read(policy);
-                throw new AssertionError("Non-boolean feature switch accepted");
-            } catch (IOException expected) {
-                check(expected.getMessage().startsWith("chat-enabled"), "strict feature switch");
-            }
             System.out.println(
-                    "PASS: bounded settings, one shared HTTP port, legacy compatibility, automatic host origins, proxy defaults and broad player policy");
+                    "PASS: bounded settings, one shared HTTP port, legacy compatibility, automatic host origins, proxy defaults and the party cap");
         } finally {
             try (var paths = Files.walk(home)) {
                 for (var path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);

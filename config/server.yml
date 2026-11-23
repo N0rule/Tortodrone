@@ -16,13 +16,6 @@ startup-map: haven
 # Shown once in chat after a knight enters the world. Set to "" to disable.
 welcome-message: Welcome to Tortodrone!
 
-# --- Features ---
-# false refuses new trade invitations. Open trades and everything else keep working.
-trades-enabled: true
-# false refuses player-authored text: scene, party, guild, private and emote lines.
-# Server notices, commands and NPC dialogue still work.
-chat-enabled: true
-
 # --- Logging ---
 log-mode: normal
 log-max-mib: 10

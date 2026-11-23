@@ -213,9 +213,6 @@ party-max-players: 4
 startup-map: haven
 welcome-message: Welcome to Tortodrone!
 
-trades-enabled: true
-chat-enabled: true
-
 webui-enabled: true
 webui-public-url: 0.0.0.0
 webui/content_url-port: 8080
@@ -232,8 +229,6 @@ log-retention: 5
 | `server-port` | `47624` | Game TCP port. |
 | `max-clients` | `16` | Maximum simultaneous game clients (1–1024). |
 | `party-max-players` | `4` | Maximum knights in one player party (1–8). Admission policy only: the client renders whoever joins and holds no size of its own. |
-| `trades-enabled` | `true` | `false` refuses new trade invitations. An already-open trade still completes. |
-| `chat-enabled` | `true` | `false` refuses player-authored text: scene, party, guild, private and emote lines. Server notices, commands and NPC dialogue still work. |
 | `startup-map` | `haven` | Installed map folder used by the startup flow; it must be a town. |
 | `welcome-message` | `Welcome to Tortodrone!` | Shown once in chat after a knight enters the world. Set `""` to disable. |
 | `webui-enabled` | `true` | Enables administration and WebUI routes. |

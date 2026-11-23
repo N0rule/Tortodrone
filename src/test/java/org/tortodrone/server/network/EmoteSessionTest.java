@@ -119,17 +119,6 @@ public final class EmoteSessionTest {
                 invocation(alice, request(sharedScene, "Wave", "Bob-Knight"));
                 aliceSocket.awaitText("not in this scene");
                 check(activity(registry, 1) == beforeOffline, "offline target refusal leaves activity unchanged");
-                org.tortodrone.server.ServerPolicy.install(true, false);
-                try {
-                    invocation(alice, request(10, "Wave", "Bob-Knight"));
-                    throw new AssertionError("Emote chat accepted while chat is disabled");
-                } catch (IOException expected) {
-                    check(
-                            expected.getMessage().contains("disabled"),
-                            "chat-enabled false refuses emote text, which is chat");
-                } finally {
-                    org.tortodrone.server.ServerPolicy.install(true, true);
-                }
                 aliceSocket.assertNoText("m.wave_format_targeted|~Alice-Knight|~Bob-Knight");
                 bobSocket.assertNoText("m.wave_format_targeted|~Alice-Knight|~Bob-Knight");
 
@@ -187,7 +176,7 @@ public final class EmoteSessionTest {
                     registry.instance(1, 0).simulation().playerCount() == 0,
                     "closing sessions releases current scene memberships");
             System.out.println(
-                    "PASS: authenticated two-player emotes, localized chat-only event, canonical target resolution, animation, self/offline guards, Sit target ignore, map isolation, readiness, revocation and the disabled-chat refusal");
+                    "PASS: authenticated two-player emotes, localized chat-only event, canonical target resolution, animation, self/offline guards, Sit target ignore, map isolation, readiness and revocation");
         } finally {
             try (var paths = Files.walk(home)) {
                 for (var path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
