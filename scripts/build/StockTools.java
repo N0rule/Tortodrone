@@ -269,9 +269,15 @@ public final class StockTools {
                     throw new IllegalArgumentException("pets expects game-directory fresh-output-directory");
                 fixture = "PetCatalogExport";
                 fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
-                sources.add(project.resolve("scripts/compat/PetCatalogExport.java"));
-                sources.add(project.resolve("scripts/compat/SceneStatusExport.java"));
-                sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));
+                for (String source : List.of(
+                        "PetCatalogExport",
+                        "SceneStatusExport",
+                        "FireCatalogExport",
+                        "SceneContentExport",
+                        "SceneMonsterExport",
+                        "SceneItemExport",
+                        "ScenePlayerStatsExport",
+                        "SceneCollisionExport")) sources.add(project.resolve("scripts/compat/" + source + ".java"));
             }
             case "pet-timings" -> {
                 if (args.length != 4)
@@ -280,8 +286,15 @@ public final class StockTools {
                 fixture = "PetCatalogExport";
                 fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
                 fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
-                for (String source : List.of("PetCatalogExport", "SceneStatusExport", "FireCatalogExport"))
-                    sources.add(project.resolve("scripts/compat/" + source + ".java"));
+                for (String source : List.of(
+                        "PetCatalogExport",
+                        "SceneStatusExport",
+                        "FireCatalogExport",
+                        "SceneContentExport",
+                        "SceneMonsterExport",
+                        "SceneItemExport",
+                        "ScenePlayerStatsExport",
+                        "SceneCollisionExport")) sources.add(project.resolve("scripts/compat/" + source + ".java"));
             }
             case "fragmentation-fires", "vortex-fires", "status-bombs", "sealed-fires" -> {
                 if (args.length != 4)
