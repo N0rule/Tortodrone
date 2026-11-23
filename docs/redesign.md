@@ -220,11 +220,12 @@ At the time of writing:
 - 273 catalogue missions: 108 rank, 147 prestige, 3 expansion, 15 hidden.
 - 53 imported gate routes; one fully playable route beyond the pinned opening gate:
   `shadow_beast` (scenes 351, 380, 382, 384).
-- 17 map folders under `content/maps`.
-- 251 `*Test.java` programs; `testUnit` selects 245 of them (six integration tests are
+- 17 scene definitions under `content/maps`.
+- 268 `*Test.java` programs; `testUnit` selects 262 of them (six integration tests are
   excluded). Three further files declare `main()` as benchmarks or the harness rather
   than tests: `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is 15,780,467 bytes (about 15 MiB).
+- `build/tortodrone.jar` is about 16 MB (16,077,786 bytes in the current build); the
+  exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
 every floor present under `content/maps`, and only one of those also has a complete
@@ -251,33 +252,23 @@ Evidence rules:
 
 ### Current graph
 
-The current code is not a module graph at all. The package graph contains a strongly
-connected component spanning:
+The source is a module graph under `modules/`. The root packaging/composition
+project is named `tortodrone`; `core`, `content`, `protocol`, `world`, `gameplay`
+and `server` are included projects, and `checkModuleGraph` enforces the allowed
+edges between them.
 
-```text
-account, character, loot, protocol, resources, storage, town, world
-```
-
-Known concrete cycles:
-
-- `protocol` imports `world`, `storage`, `town` and `character` — 11 `world` import
-  lines and 49 fully-qualified references in `SessionCodec` alone;
-- `storage` imports `protocol` (`AuctionHouse`, `BoxOpeningService`);
-- `resources` imports `world` (`MissionComlinks`, `MissionGates`, `SceneConversation`,
-  `FireCatalog`), and also `news` and `config` (`NewsYaml`, `ContentMigration`);
-- `world` imports `config` and `news` (`SceneRegistry`, `SceneCatalog`), and
-  `protocol` (`TownMovement`, `SceneActions`, `SceneWeapons`, `SceneEntities`,
-  `SceneEntityState`);
-- `server` imports `web`, while the WebUI is wired back into `Server`;
-- `resources` calls `SceneEntities.validateItemUse` from `MapYaml`.
-
-Therefore **module extraction is not the first step**. Phase 3 breaks these edges
-in-package; Phases 0–2 must not add new ones. Only after Phase 3 can Gradle enforce
-them.
+The earlier `protocol → world/storage/town`, `storage → protocol`,
+`resources → world` and `world → protocol` edges are gone, and `MapYaml` no longer
+calls into `SceneEntities`. One in-module package cycle remains: `server ↔ web`.
+The `web` package imports `ServerControl`, `ServerLog`, `SessionRegistry` and
+`RuntimeMetrics` from `org.tortodrone.server`, while `Server` constructs
+`web.AdminService`, `web.WebIdentityStore`, `web.WebSecurity` and
+`web.AdminHandler`. Phase 3 still has to remove one direction.
 
 ### Target modules
 
-Seven modules, shaded into the existing single JAR:
+Seven Gradle projects, shaded into the existing single JAR (the root project is
+named `tortodrone` and carries the `:app` role):
 
 ```text
 :app          packaging, composition root, release tasks
@@ -322,7 +313,8 @@ are expected: a package is assigned by extracted type, not by its current name.
 4. Remove `storage → protocol` by moving request/decoder-owned types to `:core` or
    handling them in `:gameplay`.
 5. Remove the `MapYaml` call into `SceneEntities.validateItemUse`. Validation stays in
-   `:world`; the loader receives a validator function.
+   `:world`; the loader receives a validator function. (Landed: the loader no longer
+   calls the entity model.)
 6. Break `server ↔ web` by making the WebUI depend on server-owned interfaces, or by
    moving `AdminService` construction behind a server boundary.
 7. Only then create Gradle projects and the dependency check. Use `jdeps`/bytecode as
@@ -330,22 +322,22 @@ are expected: a package is assigned by extracted type, not by its current name.
 
 ### Codec split
 
-`SessionCodec` is 1,980 lines with connection-global class and string interning.
-Per-feature codecs cannot be independent without a shared `WireContext` holding the
-class table, intern table and connection-local state. Before splitting:
-
-- define `WireContext`;
-- capture a synthetic cross-feature golden stream (no client captures);
-- prove identical bytes for the combined stream, not only per-feature frames.
+`SessionCodec` was 1,980 lines with connection-global class and string interning.
+It is now a 459-line facade over per-feature codecs that share one `WireContext`
+holding the class table, intern table and connection-local state. The split proved
+identical bytes for a synthetic cross-feature stream (no client captures), not only
+for per-feature frames; `SessionWireGoldenTest` pins that stream.
 
 ### God-class splits
 
-- `WorldSession` → `SessionRuntime`, `InvocationRouter`, `SessionResponder` and
-  feature handlers. Handlers receive a narrow context and never write sockets.
+- `WorldSession` → `SessionRuntime`, `SessionInvocationRouter`, `SessionResponder`,
+  `SessionDirectory` and feature handlers. Handlers send only through the responder;
+  they no longer reach the session's output queue, codec or socket.
 - `SceneSimulation`/`SceneEntities` → one shared mutable entity model plus
   `MovementSystem`, `CombatSystem`, `StatusSystem`, `PortalSystem`,
   `ElevatorSystem`, `SnapshotBuilder` and an explicit callback contract. The
-  current eleven callback fields are part of that contract, not incidental wiring.
+  callback sinks in `SceneCallbacks` are part of that contract, not incidental
+  wiring.
 - `Database` → transaction/schema owner plus repositories. The split must preserve
   or deliberately replace the write-path expiry sweep.
 - `CharacterStore` is a storage facade returning `storage.*` types. Split the model
@@ -359,7 +351,7 @@ owners that compose named collaborators instead of mixing responsibilities:
 
 | Class | Lines | Composition |
 | --- | --- | --- |
-| `WorldSession` | 611 | protocol facade over `SessionRuntime`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
+| `WorldSession` | 611 | protocol facade over `SessionRuntime`, `SessionDirectory`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
 | `SceneEntities` | 528 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
 | `SceneSimulation` | 427 | per-instance clock, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
 | `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |
@@ -507,7 +499,7 @@ working.
 - Add `--check` to all four mission importers, not just `import_missions.py`, and
   give all four temporary-file/directory writes with atomic replacement. Today all
   four call `Path.write_text` directly, so a partial run can produce a mixed tree.
-- The manifest is already per-file: 549 `owned.*` and 394 `source.*` keys in
+- The manifest is already per-file: 1011 `owned.*` and 847 `source.*` keys in
   `_internal/default-source.properties`. Keep per-file keys and regenerate mission
   paths from the converted tree. A folder digest may exist as an optional summary,
   but it is not the conflict unit; one edited mission must yield one file conflict.
@@ -598,7 +590,7 @@ version exists instead of a bare `user_version` stamp.
 ## Verification
 
 - Unit programs stay standalone `main` programs under the existing runner. Do not
-  migrate the 245 programs selected by `testUnit` to JUnit as part of this work.
+  migrate the 262 programs selected by `testUnit` to JUnit as part of this work.
 - Selected runs: `./gradlew testUnit -PunitTests=A,B`.
 - Compile/package check: `./gradlew build`.
 - Wire changes: structural decoding plus **synthetic** cross-feature golden fixtures.
