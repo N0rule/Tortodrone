@@ -1,16 +1,13 @@
 package org.tortodrone.core.world;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
-import java.security.*;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import org.tortodrone.core.world.FireCatalog;
 
 /** Immutable native static-collision metadata for projectile profiles. */
 public final class SceneCollision {
     private static final SceneCollision EMPTY = new SceneCollision(Map.of(), Set.of(), List.of(),false);
-    private static final int MAX_BYTES = 4 * 1024 * 1024, MAX_TILES = 1_000_000, MAX_FLOORS=1_000_000, MAX_SHAPES = 100_000;
     private final Map<Long,Integer> tiles;
     private final Set<Long> floorCells;
     private final List<Obstacle> floorShapes;
@@ -21,7 +18,7 @@ public final class SceneCollision {
     private SceneCollision(Map<Long,Integer> tiles, Set<Long> floorCells, List<Obstacle> obstacles,boolean present) {
         this(tiles,floorCells,List.of(),obstacles,present);
     }
-    private SceneCollision(Map<Long,Integer> tiles,Set<Long> floorCells,List<Obstacle> floorShapes,List<Obstacle> obstacles,boolean present){
+    SceneCollision(Map<Long,Integer> tiles,Set<Long> floorCells,List<Obstacle> floorShapes,List<Obstacle> obstacles,boolean present){
         // Long.hashCode collapses every cell on the x==y diagonal to one bucket. ImmutableCollections
         // resolves that bucket by linear probing, so a legitimate tile/floor query there cost tens
         // of microseconds; a monster path search performs thousands of them and stalled the scene
@@ -207,39 +204,7 @@ public final class SceneCollision {
 
     /** Loads an optional prepared collision file and verifies it belongs to this scene layout. */
     public static SceneCollision load(Path folder, String layoutHash) throws IOException {
-        Path file = folder.resolve("static-collision.properties");
-        if (!Files.exists(file)) return EMPTY;
-        long size = Files.size(file);
-        if (size <= 0 || size > MAX_BYTES) throw new IOException("Static collision file is too large or empty");
-        Properties p = new Properties();
-        try (var in = Files.newInputStream(file)) { p.load(in); }
-        if (!"1".equals(p.getProperty("format"))) throw new IOException("Unsupported static collision format");
-        if (!Objects.equals(layoutHash, p.getProperty("layout-sha256"))) throw new IOException("Static collision layout hash mismatch");
-        int tileCount = count(p, "tile-count", MAX_TILES), floorCount=count(p,"floor-count",MAX_FLOORS), shapeCount = count(p, "shape-count", MAX_SHAPES);
-        var floorCells=new HashSet<Long>(Math.max(16,floorCount*4/3));
-        for(int i=0;i<floorCount;i++){
-            String prefix="floor."+i+".";int x=integer(p,prefix+"x"),y=integer(p,prefix+"y");
-            if(Math.abs((long)x)>1_000_000||Math.abs((long)y)>1_000_000||!floorCells.add(key(x,y)))throw new IOException("Invalid static collision floor cell");
-        }
-        var tiles = new HashMap<Long,Integer>(Math.max(16, tileCount * 4 / 3));
-        for (int i=0;i<tileCount;i++) {
-            String prefix="tile."+i+".";
-            int x=integer(p,prefix+"x"), y=integer(p,prefix+"y"), mask=integer(p,prefix+"mask");
-            if (mask==0 || Math.abs((long)x)>1_000_000 || Math.abs((long)y)>1_000_000
-                    || tiles.put(key(x,y),mask)!=null) throw new IOException("Invalid static collision tile");
-        }
-        var shapes = new ArrayList<Obstacle>(shapeCount);
-        for (int i=0;i<shapeCount;i++) {
-            String prefix="shape."+i+".";
-            int mask=integer(p,prefix+"mask");
-            if(mask==0)throw new IOException("Invalid static collision shape mask");
-            int source=p.containsKey(prefix+"source")?integer(p,prefix+"source"):0;
-            var geometry=parseGeometry(required(p,prefix+"geometry"));shapes.add(new Obstacle(mask,source,geometry,bounds(geometry)));
-        }
-        int floorShapeCount=p.containsKey("floor-shape-count")?count(p,"floor-shape-count",MAX_SHAPES):0;
-        var surfaces=new ArrayList<Obstacle>(floorShapeCount);
-        for(int i=0;i<floorShapeCount;i++)surfaces.add(new Obstacle(0,parseGeometry(required(p,"floor-shape."+i+".geometry"))));
-        return new SceneCollision(tiles,floorCells,surfaces,shapes,true);
+        return SceneCollisionCodec.load(folder,layoutHash);
     }
 
     /** Returns true when this actor-local shape clears native static geometry at the pose. */
@@ -330,7 +295,7 @@ public final class SceneCollision {
     }
 
     private static float number(Object value,String field){Object raw=SceneDamage.field(value,field);if(!(raw instanceof Number n)||!Float.isFinite(n.floatValue()))throw new IllegalArgumentException("Invalid shape number "+field);return n.floatValue();}
-    private static float positive(float value){if(value<0)throw new IllegalArgumentException("Negative shape dimension");return value;}
+    static float positive(float value){if(value<0)throw new IllegalArgumentException("Negative shape dimension");return value;}
 
     private static Geom transform(Geom g,float x,float y,float c,float s,float scale){
         if(!Float.isFinite(scale))throw new IllegalArgumentException("Invalid shape scale");
@@ -340,24 +305,10 @@ public final class SceneCollision {
     }
     private static Point point(Point p,float x,float y,float c,float s,float scale){float px=p.x*scale,py=p.y*scale;return new Point(x+px*c-py*s,y+px*s+py*c);}
 
-    private static Geom parseGeometry(String text)throws IOException{
-        try{
-            String[] f=text.split(";",-1);String kind=f[0];
-            if(kind.equals("D")&&f.length==9)return new Rail(new Point(num(f[1]),num(f[2])),new Point(num(f[3]),num(f[4])),new Bounds(num(f[5]),num(f[6]),num(f[7]),num(f[8])));
-            if(kind.equals("C")&&f.length==4)return new Circle(new Point(num(f[1]),num(f[2])),positive(num(f[3])));
-            if(kind.equals("K")&&f.length==6)return new Capsule(new Point(num(f[1]),num(f[2])),new Point(num(f[3]),num(f[4])),positive(num(f[5])));
-            if(kind.equals("P")&&f.length>=7&&f.length%2==1){var points=new ArrayList<Point>();for(int i=1;i<f.length;i+=2)points.add(new Point(num(f[i]),num(f[i+1])));return new Polygon(points);}
-            throw new IllegalArgumentException();
-        }catch(RuntimeException e){throw new IOException("Invalid static collision geometry",e);}
-    }
-    private static float num(String s){float f=Float.parseFloat(s);if(!Float.isFinite(f))throw new IllegalArgumentException();return f;}
-    private static int count(Properties p,String key,int max)throws IOException{int n=integer(p,key);if(n<0||n>max)throw new IOException("Invalid "+key);return n;}
-    private static int integer(Properties p,String key)throws IOException{try{return Integer.parseInt(required(p,key));}catch(NumberFormatException e){throw new IOException("Invalid "+key,e);}}
-    private static String required(Properties p,String key)throws IOException{String v=p.getProperty(key);if(v==null)throw new IOException("Missing "+key);return v;}
     private static int floor(float value){if(value<Integer.MIN_VALUE||value>Integer.MAX_VALUE)throw new IllegalArgumentException("Collision coordinates out of range");return (int)Math.floor(value);}
-    private static long key(int x,int y){return ((long)x<<32)^(y&0xffffffffL);}
+    static long key(int x,int y){return ((long)x<<32)^(y&0xffffffffL);}
 
-    private static Bounds bounds(Geom g){
+    static Bounds bounds(Geom g){
         if(g instanceof Rail r)return r.gate;
         if(g instanceof Circle c)return new Bounds(c.center.x-c.radius,c.center.y-c.radius,c.center.x+c.radius,c.center.y+c.radius);
         if(g instanceof Capsule c)return new Bounds(Math.min(c.a.x,c.b.x)-c.radius,Math.min(c.a.y,c.b.y)-c.radius,Math.max(c.a.x,c.b.x)+c.radius,Math.max(c.a.y,c.b.y)+c.radius);
@@ -418,14 +369,14 @@ public final class SceneCollision {
     private static double distance2(Point a,Point b){return sq(a.x-b.x)+sq(a.y-b.y);}
     private static double sq(double x){return x*x;}
 
-    private interface Geom { }
-    private record Point(float x,float y) { Point { if(!Float.isFinite(x)||!Float.isFinite(y))throw new IllegalArgumentException("Non-finite point"); } }
-    private record Rail(Point a,Point b,Bounds gate) implements Geom {
+    interface Geom { }
+    record Point(float x,float y) { Point { if(!Float.isFinite(x)||!Float.isFinite(y))throw new IllegalArgumentException("Non-finite point"); } }
+    record Rail(Point a,Point b,Bounds gate) implements Geom {
         Rail {if(a.x==b.x&&a.y==b.y||gate.minX>gate.maxX||gate.minY>gate.maxY||a.x<gate.minX||a.x>gate.maxX||a.y<gate.minY||a.y>gate.maxY||b.x<gate.minX||b.x>gate.maxX||b.y<gate.minY||b.y>gate.maxY)throw new IllegalArgumentException("Invalid native rail polygon");}
     }
-    private record Circle(Point center,float radius) implements Geom { Circle { if(!Float.isFinite(radius)||radius<0)throw new IllegalArgumentException("Invalid circle"); } }
-    private record Capsule(Point a,Point b,float radius) implements Geom { Capsule { if(!Float.isFinite(radius)||radius<0)throw new IllegalArgumentException("Invalid capsule"); } }
-    private static final class Polygon implements Geom {
+    record Circle(Point center,float radius) implements Geom { Circle { if(!Float.isFinite(radius)||radius<0)throw new IllegalArgumentException("Invalid circle"); } }
+    record Capsule(Point a,Point b,float radius) implements Geom { Capsule { if(!Float.isFinite(radius)||radius<0)throw new IllegalArgumentException("Invalid capsule"); } }
+    static final class Polygon implements Geom {
         final List<Point> points;final float winding;final float[] edgeLengths;
         Polygon(List<Point> points){
             this.points=List.copyOf(points);if(points.size()<2||points.size()>4096)throw new IllegalArgumentException("Invalid polygon");
@@ -437,12 +388,12 @@ public final class SceneCollision {
             winding=area>=0?1:-1;
         }
     }
-    private record Bounds(float minX,float minY,float maxX,float maxY) {
+    record Bounds(float minX,float minY,float maxX,float maxY) {
         boolean intersects(Bounds other){return maxX>=other.minX&&minX<=other.maxX&&maxY>=other.minY&&minY<=other.maxY;}
         boolean near(float x,float y,float radius){return x+radius>=minX&&x-radius<=maxX&&y+radius>=minY&&y-radius<=maxY;}
     }
-    private record Obstacle(int mask,int source,Geom geometry,Bounds bounds) {
-        private Obstacle(int mask,Geom geometry){this(mask,0,geometry,SceneCollision.bounds(geometry));}
+    record Obstacle(int mask,int source,Geom geometry,Bounds bounds) {
+        Obstacle(int mask,Geom geometry){this(mask,0,geometry,SceneCollision.bounds(geometry));}
     }
     /** Uniform 4-unit broadphase; a scene query touches only nearby placeables. */
     private static final class Grid {
