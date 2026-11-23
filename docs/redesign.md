@@ -108,11 +108,11 @@ real inventory that Phase 0 must baseline:
 | Path | Today |
 | --- | --- |
 | Client accept | Main thread accepts; one platform thread per connection; a semaphore bounds connections. |
-| Session output | One writer platform thread per session; bounded queue of 64 **frames**; frames may be up to 1 MiB. |
+| Session output | One writer platform thread per session; 64-frame queue with a 4 MiB byte budget and a 5 s sustained-overflow disconnect; a single frame may be up to 1 MiB. |
 | Session delivery | Per-session `SceneDelivery` virtual thread plus two additional queues. |
-| Scene tick | A scheduled task on the shared `ForkJoinPool`, re-armed per idle transition; fixed 50 ms delay; the whole tick and snapshot capture run under the scene monitor. |
+| Scene tick | A per-scene task on the platform `SceneScheduler` (cap 256 active scenes), re-armed per idle transition; fixed 50 ms delay; the whole tick and snapshot capture run under the scene monitor. |
 | Parallelism | Across scenes only. A single scene is never ticked concurrently. |
-| Storage | A fresh SQLite connection per transaction; WAL; `busy_timeout=5000`; game and admin paths use **two `Database` instances on the same file**. |
+| Storage | A fresh SQLite connection per transaction; WAL; `busy_timeout=5000`; one `Database` with a platform writer and four readers is shared by game and admin paths. |
 | Account watcher | A database read per session every 250 ms. |
 | World-state poller | Batched reads every 250 ms. |
 | Auction expiry | A write every 30 s. |
@@ -174,9 +174,8 @@ No new commit-under-lock path may be added.
 - **Scene failure:** a tick failure logs template/instance, marks the instance
   failed, evicts members with a safe return and recycles the instance. A frozen
   scene is not an acceptable end state.
-- **Clock:** `SceneClock` is currently an `int` millisecond counter that wraps after
-  roughly 24.8 days. Replace it with a 64-bit or wrap-safe clock before any soak or
-  “measured” claim.
+- **Clock:** `SceneClock` is a 64-bit millisecond counter with wrap-safe helpers, so
+  long soaks do not reuse a stale stamp.
 
 ### Lock order
 
@@ -224,7 +223,7 @@ At the time of writing:
 - 268 `*Test.java` programs; `testUnit` selects 262 of them (six integration tests are
   excluded). Three further files declare `main()` as benchmarks or the harness rather
   than tests: `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,077,786 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,085,871 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -319,7 +318,8 @@ are expected: a package is assigned by extracted type, not by its current name.
    moving `AdminService` construction behind a server boundary. (Landed: the server
    owns `WebFrontend`/`WebIdentities`; `web.AdminFrontend` is the single provider.)
 7. Only then create Gradle projects and the dependency check. Use `jdeps`/bytecode as
-   well as imports; fully qualified references hide edges.
+   well as imports; fully qualified references hide edges. (Landed: `checkModuleGraph`
+   also rejects a direct `org.tortodrone.server` → `org.tortodrone.web` reference.)
 
 ### Codec split
 
@@ -332,13 +332,14 @@ for per-feature frames; `SessionWireGoldenTest` pins that stream.
 ### God-class splits
 
 - `WorldSession` → `SessionRuntime`, `SessionInvocationRouter`, `SessionResponder`,
-  `SessionDirectory` and feature handlers. Handlers send only through the responder;
-  they no longer reach the session's output queue, codec or socket.
+  `SessionDirectory` and feature handlers. Handlers send only through the responder
+  and never reach the session's output queue or socket; they encode through the
+  responder's codec.
 - `SceneSimulation`/`SceneEntities` → one shared mutable entity model plus
   `MovementSystem`, `CombatSystem`, `StatusSystem`, `PortalSystem`,
   `ElevatorSystem`, `SnapshotBuilder` and an explicit callback contract. The
-  callback sinks in `SceneCallbacks` are part of that contract, not incidental
-  wiring.
+  callback sinks, including elevator authority, live in `SceneCallbacks` and are
+  part of that contract, not incidental wiring.
 - `Database` → transaction/schema owner plus repositories. The split must preserve
   or deliberately replace the write-path expiry sweep.
 - `CharacterStore` is a storage facade returning `storage.*` types. Split the model
@@ -352,8 +353,8 @@ owners that compose named collaborators instead of mixing responsibilities:
 
 | Class | Lines | Composition |
 | --- | --- | --- |
-| `WorldSession` | 611 | protocol facade over `SessionRuntime`, `SessionDirectory`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
-| `SceneEntities` | 524 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
+| `WorldSession` | 600 | protocol facade over `SessionRuntime`, `SessionDirectory`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
+| `SceneEntities` | 516 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
 | `SceneSimulation` | 427 | per-instance clock, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
 | `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |
 | `Database` | 479 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models |

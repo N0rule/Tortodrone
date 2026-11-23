@@ -26,7 +26,23 @@ val declaredProjectDependencies: Set<String> =
         .map { it.path }.toSet()
 if (declaredProjectDependencies != expectedProjectDependencies)
     throw GradleException(":server declares $declaredProjectDependencies; expected $expectedProjectDependencies")
+val checkServerWebBoundary = tasks.register("checkServerWebBoundary") {
+    group = "verification"
+    description = "Verify the server package depends on the WebUI only through its server-owned seam."
+    val sources = layout.projectDirectory.dir("src/main/java/org/tortodrone/server")
+    inputs.dir(sources)
+    doLast {
+        val offenders = sources.asFile.walkTopDown()
+            .filter { it.isFile && it.extension == "java" }
+            .filter { it.readText().contains("org.tortodrone.web") }
+            .map { it.relativeTo(sources.asFile).path }
+            .sorted().toList()
+        if (offenders.isNotEmpty())
+            throw GradleException(":server must not reference org.tortodrone.web directly: $offenders")
+    }
+}
 tasks.register("checkModuleGraph") {
     group = "verification"
     description = "Verify this project declares only its documented project dependencies."
+    dependsOn(checkServerWebBoundary)
 }
