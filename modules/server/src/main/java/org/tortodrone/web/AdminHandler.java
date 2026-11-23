@@ -128,7 +128,7 @@ public final class AdminHandler implements HttpHandler {
     }
     private static long positiveRevision(AdminService.Input p){long revision=p.number("revision");if(revision<1)throw new IllegalArgumentException("Invalid revision");return revision;}
     private static Object session(WebSecurity.Session s){return Map.of("username",s.identity().username(),"role",s.identity().role(),"csrf",s.csrf(),"expires",s.expires());}
-    /** Stable throttle bucket per peer address; never a shared bucket for all clients. */
+    /** Stable throttle bucket per peer address; behind the TLS proxy every client shares the loopback peer's bucket. */
     private static String remoteAddress(HttpExchange e) {
         var address=e.getRemoteAddress();
         return address==null||address.getAddress()==null?"unknown":address.getAddress().getHostAddress();

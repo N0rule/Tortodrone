@@ -7,7 +7,7 @@ import java.util.Map;
 public final class NetworkMetrics {
     private NetworkMetrics() { }
 
-    /** Process-wide counters since startup; values are monotonic except the peak gauges. */
+    /** Process-wide counters since startup, including running maxima for the peak gauges. */
     public static Map<String,Long> snapshot() {
         var value=SessionOutput.Metrics.snapshot();
         var result=new LinkedHashMap<String,Long>();

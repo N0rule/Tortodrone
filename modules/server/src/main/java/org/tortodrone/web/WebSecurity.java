@@ -68,7 +68,10 @@ public final class WebSecurity {
     }
     private static String single(HttpExchange e,String name){var values=e.getRequestHeaders().get(name);return values==null||values.size()!=1?null:values.getFirst();}
     public static boolean equal(String a,String b){return a!=null&&b!=null&&MessageDigest.isEqual(a.getBytes(StandardCharsets.UTF_8),b.getBytes(StandardCharsets.UTF_8));}
-    /** Throttle by remote address: one noisy or hostile client cannot lock every administrator out. */
+    /**
+     * Throttle by remote address. Direct HTTP gets one bucket per client; behind the TLS proxy every
+     * client shares the loopback peer's bucket, so a proxy deployment must rate-limit there as well.
+     */
     public synchronized boolean allowLogin(String remoteAddress){
         long now=clock.getAsLong();
         long[] window=loginWindows.get(remoteAddress);

@@ -37,7 +37,7 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 
 Tortodrone's unit tests are standalone `main` programs, **not JUnit**. `./gradlew testUnit --tests ...` is not supported. Prefer `-PunitTests=SceneSimulationTest,MovementCollisionTest`; fully qualified names also work. Unknown, empty or ambiguous names fail instead of silently running zero tests. Without the property, `testUnit` still runs every unit program. Programs run sequentially, report elapsed time and list the five slowest programs; authentication, storage and rollback coverage is retained.
 
-CI runs `testUnit` on pull requests and pushes to `main`, and `testIntegration` on version tags (`.github/workflows/tests.yml`); the Gradle `build` task itself stays test-free.
+CI runs `testUnit` on pull requests, pushes to `main` and version tags, and also `testIntegration` on version tags (`.github/workflows/tests.yml`); the Gradle `build` task itself stays test-free.
 
 `build` packages the single server JAR, WebUI and prepared content. Unit and packaged WebUI/console integration tests use that same executable. `checkModuleGraph` runs inside `buildServer` and validates every extracted project's declared edges, including that `org.tortodrone.server` does not reference `org.tortodrone.web` directly; `checkBytecodeDependencies` then runs `jdeps` over the packaged JAR and rejects any package dependency outside the documented module graph, so a fully-qualified reference cannot hide an undeclared edge. Map preparation integration reuses compiled `BuildTools` instead of invoking Java's source compiler for each fixture operation.
 
