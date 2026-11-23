@@ -191,7 +191,11 @@ The graphical harness can also inject reproducible transport lag for spike inves
   group, and a repeated whole box body from `content/shared/loot/boxes.yml` when
   two IDs differ only by their readable item ID. `checkContentDuplication` fails
   unlisted copies; treat stale allowlist entries as removal work, not as
-  permission for new duplication.
+  permission for new duplication. Mission rows stay one row per imported native
+  mission; their repeated sub-blocks (the standard `gate` requirement, empty reward
+  lists, common grants) are import structure, not copied definitions. Do not factor
+  them into shared bodies without updating all four mission importers, because a
+  regeneration would reintroduce the copies.
 - Do not commit installed game assets, third-party material without appropriate rights, private captures, secrets, `data/`, `build/` or `.build/`.
 - Review `git status`, `git diff` and `git diff --check`; report **only tests actually run**, with failures and what remains unverified. Avoid repeated runs after passing checks without relevant changes.
 - Bump `VERSION` only for deliberate behavioral releases. Release workflow tags must match `v<VERSION>`; CI tests/builds do not substitute for native graphical verification. See [Operations](operations.md).
