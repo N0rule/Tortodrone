@@ -60,7 +60,7 @@ final class ClientSession {
         CharacterStore.Subscription subscription = null;
         WorldSession world=new WorldSession(socket,characters,output,outgoing,clientOid,authRevision,log,
             org.tortodrone.world.SceneRegistry.system(),session::gameMaster,welcomeMessage);
-        SessionInvocationRouter router=new SessionInvocationRouter(world,output,outgoing,log,clientOid);
+        SessionInvocationRouter router=new SessionInvocationRouter(world,world.responder(),log);
         session.onInvalidated(world::close);
         try {
             byte[] body;

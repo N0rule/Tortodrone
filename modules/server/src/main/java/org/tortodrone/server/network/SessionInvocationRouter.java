@@ -15,18 +15,13 @@ final class SessionInvocationRouter {
     }
 
     private final WorldSession world;
-    private final SessionOutput output;
-    private final SessionCodec codec;
+    private final SessionResponder responder;
     private final SessionLog log;
-    private final int oid;
 
-    SessionInvocationRouter(WorldSession world, SessionOutput output, SessionCodec codec,
-            SessionLog log, int oid) {
+    SessionInvocationRouter(WorldSession world, SessionResponder responder, SessionLog log) {
         this.world = world;
-        this.output = output;
-        this.codec = codec;
+        this.responder = responder;
         this.log = log;
-        this.oid = oid;
     }
 
     void route(SessionDecoder.Invocation invocation, CharacterRequests characterRequests) throws IOException {
@@ -50,7 +45,7 @@ final class SessionInvocationRouter {
         if (world.guildInvocation(invocation)) return;
         if (world.auctionInvocation(invocation)) return;
         if (world.townInvocation(invocation)) {
-            if (world.takeRenameDisconnect()) { world.close(); output.disconnect(); }
+            if (world.takeRenameDisconnect()) { world.close(); responder.disconnect(); }
             return;
         }
         if (world.conversationInvocation(invocation)) return;
@@ -72,7 +67,7 @@ final class SessionInvocationRouter {
             }
             for (Object arg : invocation.arguments())
                 if (arg instanceof SessionDecoder.Listener listener)
-                    output.send(() -> codec.invocationFailure(oid, listener.requestId(), "Town operation is not available yet"));
+                    responder.send(() -> responder.codec().invocationFailure(responder.oid(), listener.requestId(), "Town operation is not available yet"));
             return;
         }
         if (invocation.oid() != SessionCodec.INVOCATION_OID || invocation.service() > SessionCodec.SERVICES.size())
@@ -101,8 +96,7 @@ final class SessionInvocationRouter {
         for (Object argument : invocation.arguments()) {
             if (argument instanceof SessionDecoder.Listener listener) {
                 answered = true;
-                String reason = "Placeholder: this server operation is not implemented yet";
-                output.send(() -> codec.invocationFailure(oid, listener.requestId(), reason));
+                responder.failure(listener.requestId(), "Placeholder: this server operation is not implemented yet");
             }
         }
         if (!answered) world.unavailable("Placeholder: this server operation is not implemented yet");

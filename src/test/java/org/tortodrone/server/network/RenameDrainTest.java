@@ -33,7 +33,7 @@ public final class RenameDrainTest {
                     world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();
                     socket.block=true;check(socket.blocked.await(3,TimeUnit.SECONDS),"live writer reached slow peer");
                     var handler=ClientSession.class.getDeclaredMethod("handleEvent",SessionOutput.class,SessionCodec.class,SessionDecoder.Event.class,int.class,Map.class,SessionLog.class,CharacterStore.class,boolean.class,long.class,WorldSession.class,SessionInvocationRouter.class);handler.setAccessible(true);
-                    var router=new SessionInvocationRouter(world,output,codec,(SessionLog)m->{},1001);
+                    var router=new SessionInvocationRouter(world,world.responder(),(SessionLog)m->{});
                     var request=new SessionDecoder.Invocation(3,1,8,List.of("Renamed-Knight",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)7)));
                     var renamed=worker.submit(()->{handler.invoke(null,output,codec,request,1001,new HashMap<String,Short>(),(SessionLog)m->{},characters,true,1L,world,router);return null;});
                     var closed=SessionOutput.class.getDeclaredField("closed");closed.setAccessible(true);long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(3);boolean draining=false;
