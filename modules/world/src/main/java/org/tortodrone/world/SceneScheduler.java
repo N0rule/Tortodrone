@@ -11,7 +11,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * overruns the cadence is counted and logged rather than run again immediately: the next slot is
  * simply the next fixed delay. This keeps a slow scene from starving the other lanes.
  *
- * <p>All state is guarded by the scheduler monitor; tick bodies run outside it.
+ * <p>Admission, the lane table and close are guarded by the scheduler monitor; tick bodies and
+ * lateness sampling run outside it.
  */
 public final class SceneScheduler implements AutoCloseable {
     /** Native-ish scene publication cadence used by the existing simulation. */
@@ -61,12 +62,11 @@ public final class SceneScheduler implements AutoCloseable {
      * Schedule one scene lane. The runtime cap is enforced here; callers translate a refusal into
      * a safe travel failure rather than an untracked scene.
      */
-    public void start(int oid, Runnable tick) {
+    public synchronized void start(int oid, Runnable tick) {
         if (closed) throw new IllegalStateException("Scene scheduler is closed");
         if (lanes.containsKey(oid)) return;
         if (lanes.size() >= maxActiveScenes)
             throw new IllegalStateException("Active scene cap reached (" + maxActiveScenes + ")");
-        if (lanes.size() >= maxActiveScenes) return;
         ScheduledFuture<?> future = timer.scheduleWithFixedDelay(() -> run(oid, tick),
             CADENCE_MILLIS, CADENCE_MILLIS, TimeUnit.MILLISECONDS);
         lanes.put(oid, new Lane(oid, future, tick));
@@ -126,9 +126,12 @@ public final class SceneScheduler implements AutoCloseable {
 
     /** Stop scheduling, then wait for in-flight ticks up to the deadline before forcing shutdown. */
     @Override public void close() {
-        closed = true;
-        for (Lane lane : lanes.values()) lane.future().cancel(false);
-        lanes.clear();
+        synchronized (this) {
+            if (closed) return;
+            closed = true;
+            for (Lane lane : lanes.values()) lane.future().cancel(false);
+            lanes.clear();
+        }
         timer.shutdown();
         try {
             if (!timer.awaitTermination(5, TimeUnit.SECONDS)) timer.shutdownNow();

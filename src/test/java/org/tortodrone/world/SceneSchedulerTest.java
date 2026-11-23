@@ -9,9 +9,10 @@ public final class SceneSchedulerTest {
     public static void main(String[] args)throws Exception {
         serialLaneNeverOverlaps();
         activeSceneCapRefuses();
+        concurrentStartRespectsCap();
         failureStopsOnlyItsLane();
         closeStopsLanes();
-        System.out.println("PASS: serial scene lanes, active-scene cap, failure isolation and shutdown");
+        System.out.println("PASS: serial scene lanes, active-scene cap (including concurrent admission), failure isolation and shutdown");
     }
 
     private static void serialLaneNeverOverlaps()throws Exception {
@@ -43,6 +44,33 @@ public final class SceneSchedulerTest {
             try{scheduler.start(3,()->{});}catch(IllegalStateException expected){refused=true;}
             check(refused,"the active-scene cap refuses a new lane");
             check(scheduler.activeScenes()==2,"the cap keeps the admitted lanes");
+        }
+    }
+
+    private static void concurrentStartRespectsCap()throws Exception {
+        try(var scheduler=new SceneScheduler(2,4)) {
+            int callers=32;
+            var ready=new CountDownLatch(callers);
+            var go=new CountDownLatch(1);
+            var admitted=new AtomicInteger();
+            var refused=new AtomicInteger();
+            var threads=new Thread[callers];
+            for(int i=0;i<callers;i++){
+                int oid=i+1;
+                threads[i]=new Thread(()->{
+                    ready.countDown();
+                    try{go.await();scheduler.start(oid,()->{});admitted.incrementAndGet();}
+                    catch(IllegalStateException expected){refused.incrementAndGet();}
+                    catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
+                });
+                threads[i].start();
+            }
+            ready.await();
+            go.countDown();
+            for(var thread:threads)thread.join(5000);
+            check(scheduler.activeScenes()<=4,"concurrent starts never exceed the active-scene cap");
+            check(admitted.get()==4&&scheduler.activeScenes()==4,"exactly the cap is admitted");
+            check(refused.get()==callers-4,"every other caller is refused");
         }
     }
 

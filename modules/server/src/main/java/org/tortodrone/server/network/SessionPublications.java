@@ -78,6 +78,23 @@ final class SessionPublications {
         }
     }
 
+    /** Wait up to one second for the delivery worker to leave its current frame.
+     *  Call outside the session monitor: publishing takes that monitor itself. */
+    void awaitStop() {
+        Thread delivery;
+        synchronized(monitor) { delivery=worker; }
+        if(delivery==null||delivery==Thread.currentThread())return;
+        boolean interrupted=false;
+        long deadline=System.nanoTime()+1_000_000_000L;
+        while(true) {
+            long remaining=deadline-System.nanoTime();
+            if(remaining<=0)break;
+            try{delivery.join(Math.max(1,remaining/1_000_000L));break;}
+            catch(InterruptedException interruption){interrupted=true;}
+        }
+        if(interrupted)Thread.currentThread().interrupt();
+    }
+
     private void deliver(SceneSink scenes,PartySink parties,FailureSink failure) {
         try {
             while(true) {

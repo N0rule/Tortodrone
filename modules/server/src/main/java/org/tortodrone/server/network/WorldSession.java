@@ -311,6 +311,7 @@ final class WorldSession implements AutoCloseable {
     SessionRuntime runtime(){return runtime;}
     void markClosed(){closed=true;}
     void stopPublications(){publications.stop();}
+    void awaitPublications(){publications.awaitStop();}
     int sceneCreated(){return flags.created();}
     void setSelectedKnight(Knight value){knight=value;}
     void setPartyMember(PartyRegistry.Member value){partyMember=value;}
@@ -596,5 +597,5 @@ final class WorldSession implements AutoCloseable {
     private boolean renameDisconnect;
     synchronized boolean takeRenameDisconnect(){boolean requested=renameDisconnect;renameDisconnect=false;return requested;}
 
-    @Override public synchronized void close() { runtime.closeSession(); }
+    @Override public void close() { runtime.closeSession(); }
 }

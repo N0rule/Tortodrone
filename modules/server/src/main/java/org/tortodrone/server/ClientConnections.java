@@ -40,14 +40,22 @@ final class ClientConnections implements AutoCloseable {
         // Closing every socket first unblocks reads/writes before joining any handler.
         // No registry or log monitor is held while handlers finish their cleanup.
         active.keySet().forEach(ClientConnections::closeSocket);
-        active.values().forEach(ClientConnections::await);
+        long deadline = System.nanoTime() + 5_000_000_000L;
+        active.values().forEach(thread -> await(thread, deadline));
     }
 
     static void await(Thread thread) {
+        await(thread, System.nanoTime() + 5_000_000_000L);
+    }
+
+    /** Wait for a handler until the shared deadline, then interrupt it so shutdown cannot hang. */
+    static void await(Thread thread, long deadlineNanos) {
         boolean interrupted = false;
         try {
             while (true) {
-                try { thread.join(); return; }
+                long remaining = deadlineNanos - System.nanoTime();
+                if (remaining <= 0) { thread.interrupt(); return; }
+                try { thread.join(Math.max(1, remaining / 1_000_000L)); return; }
                 catch (InterruptedException interruption) { interrupted = true; }
             }
         } finally {

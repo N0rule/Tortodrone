@@ -23,6 +23,7 @@ public final class AccountStore implements AutoCloseable {
     public record Summary(int id, String username, boolean gameMaster, int knights, long createdAt) { }
     private record Stored(int id,String username,Passwords.Protection password,boolean gameMaster,long revision,CharacterStore characters) { }
     private final Database database;
+    private boolean closed;
     private final ItemCatalog catalog;
     private final org.tortodrone.core.town.TownCatalog town;
     private final Map<String,Stored> memory = new TreeMap<>();
@@ -323,9 +324,14 @@ public final class AccountStore implements AutoCloseable {
         }),250,250,TimeUnit.MILLISECONDS);
     }
     @Override public void close() {
-        synchronized(this){if (watcher != null) watcher.shutdownNow(); if (maintenance != null) maintenance.shutdownNow();}
+        synchronized(this){
+            if (closed) return;
+            closed = true;
+            if (watcher != null) watcher.shutdownNow();
+            if (maintenance != null) maintenance.shutdownNow();
+        }
         List.copyOf(sessions.values()).forEach(Attached::close);
-        if (database != null) { database.close(); database.checkpoint(); }
+        if (database != null) { database.checkpoint(); database.close(); }
     }
     public static char[] transform(char[] password) throws IOException { return Passwords.transform(password); }
     private Stored require(String username,int expectedId) throws IOException { Stored stored = memory.get(canonical(username)); if (stored == null) throw new IOException("No such account"); if (expectedId >= 0 && stored.id() != expectedId) throw new IOException("Account changed; refresh the account list"); return stored; }

@@ -326,25 +326,30 @@ final class SessionRuntime {
         session.sessionLog().info("Scene entered; scene="+scene.map().name()+" (#"+scene.map().id()+"); instanceId="+scene.oid());
     }
 
-    /** Release every party, scene and delivery resource this connection owns. */
-    void closeSession(){ synchronized(session){
-        session.setFriendOnline(false);
-        session.chatHandler().leave();
-        session.leaveChat();
-        session.markClosed();
-        session.floorsHandler().clearReport();
-        subscribed=false;
-        if(membership!=null)membership.close();
-        var member=session.partyMember();
-        if(member!=null){member.close();session.setPartyMember(null);}
-        var profile=session.currentProfile();
-        if(profile!=null){
-            session.sceneRegistry().release(scene,profile.worldId());
-            if(portalMove!=null)session.sceneRegistry().release(portalMove.destination(),profile.worldId());
+    /** Release every party, scene and delivery resource this connection owns. The bounded
+     *  publication wait runs after the session monitor so a publishing worker can finish. */
+    void closeSession(){
+        synchronized(session){
+            if(session.isClosed())return;
+            session.setFriendOnline(false);
+            session.chatHandler().leave();
+            session.leaveChat();
+            session.markClosed();
+            session.floorsHandler().clearReport();
+            subscribed=false;
+            if(membership!=null)membership.close();
+            var member=session.partyMember();
+            if(member!=null){member.close();session.setPartyMember(null);}
+            var profile=session.currentProfile();
+            if(profile!=null){
+                session.sceneRegistry().release(scene,profile.worldId());
+                if(portalMove!=null)session.sceneRegistry().release(portalMove.destination(),profile.worldId());
+            }
+            session.stopPublications();
+            if(profile!=null)SessionDirectory.leave(profile.worldId(),session);
         }
-        session.stopPublications();
-        if(profile!=null)SessionDirectory.leave(profile.worldId(),session);
-    }}
+        session.awaitPublications();
+    }
 
     /** Detach the client subscription while keeping the installed instance and membership. */
     void unsubscribe(){ synchronized(session){
