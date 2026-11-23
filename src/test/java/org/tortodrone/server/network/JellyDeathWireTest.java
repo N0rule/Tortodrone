@@ -48,48 +48,18 @@ public final class JellyDeathWireTest {
                 world.select(knight.name(),RECEIVERS,true);move(world,route.source());world.subscribeInteriorParty((short)2);world.subscribe((short)3);world.entered();
                 var member=world.membership();
                 var simulation=world.currentScene().simulation();
-                check(member.teleport(-1.5f,-69f,0),"knight enters the wave sensor");
-                long waveEnd=System.nanoTime()+10_000_000_000L;boolean jellySeen=false;
-                while(System.nanoTime()<waveEnd&&!jellySeen) {
-                    Thread.sleep(250);
-                    var failure=simulation.failure();
-                    if(failure!=null){failure.printStackTrace();throw new AssertionError("Scene simulation crashed before jelly contact: "+failure);}
-                    SceneSnapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
-                    for(var actor:snapshot.actors())
-                        if(actor.entity()!=null&&"Monster".equals(actor.entity().kind())&&actor.entity().destroyed()==Integer.MAX_VALUE)jellySeen=true;
-                }
-                check(jellySeen,"the jelly wave spawned");
-                boolean placed=false;
-                for(float[] spot:new float[][]{{-2f,-55f},{-6f,-55f},{0f,-52f},{-4f,-57f},{-1f,-50f}})
-                    if(member.teleport(spot[0],spot[1],0)){placed=true;break;}
-                check(placed,"knight moved into the jelly wave arena");
+                JellySceneFixture.armWave(member,simulation);
                 // Fight like a live client until a jelly dies through the whole
                 // pipeline: the wave monster's destroyed stamp carries the death.
-                long end=System.nanoTime()+150_000_000_000L;
-                int deathStamp=0;int killed=0;
-                long lastFrame=0;
-                while(System.nanoTime()<end) {
-                    Thread.sleep(20);
-                    var failure=simulation.failure();
-                    if(failure!=null){failure.printStackTrace();throw new AssertionError("Scene simulation crashed during the jelly fight: "+failure);}
-                    SceneSnapshot snapshot;synchronized(simulation){snapshot=simulation.snapshot();}
-                    if(System.nanoTime()-lastFrame>100_000_000L) {
-                        lastFrame=System.nanoTime();
-                        var pawn=snapshot.players().stream().filter(p->p.entity()==null&&p.pet()==null).findFirst().orElse(null);
-                        var target=snapshot.actors().stream()
-                            .filter(a->a.entity()!=null&&"Monster".equals(a.entity().kind())&&a.entity().destroyed()==Integer.MAX_VALUE)
-                            .min(Comparator.comparingDouble(a->pawn==null?0:Math.hypot(a.x()-pawn.x(),a.y()-pawn.y()))).orElse(null);
-                        if(pawn!=null&&target!=null) {
-                            float heading=(float)Math.atan2(target.y()-pawn.y(),target.x()-pawn.x());
-                            member.input(SceneClock.now(),heading,heading,InputBits.MOVING|InputBits.ACTION,SceneClock.now(),SceneClock.now(),System.nanoTime()/1_000_000L);
-                        }
-                    }
+                int[] death={0,0};
+                JellySceneFixture.fight(member,simulation,150_000_000_000L,"during the jelly fight",snapshot->{
                     for(var actor:snapshot.actors())
                         if(actor.entity()!=null&&"Monster".equals(actor.entity().kind())&&actor.entity().destroyed()!=Integer.MAX_VALUE) {
-                            deathStamp=actor.entity().destroyed();killed=actor.activityStarted();break;
+                            death[0]=actor.entity().destroyed();death[1]=actor.activityStarted();return true;
                         }
-                    if(deathStamp!=0)break;
-                }
+                    return false;
+                });
+                int deathStamp=death[0],killed=death[1];
                 check(deathStamp!=0,"the knight's sword killed a jelly through the session pipeline");
                 check(deathStamp-killed==100,"the jelly's destruction waits its authored Instant death time ("+(deathStamp-killed)+" ms)");
                 // Let the imminent removal and the remaining dying publications flush.
