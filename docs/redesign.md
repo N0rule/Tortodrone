@@ -233,11 +233,11 @@ At the time of writing:
 - 53 imported gate routes; one fully playable route beyond the pinned opening gate:
   `shadow_beast` (scenes 351, 380, 382, 384).
 - 17 scene definitions under `content/maps`.
-- 271 `*Test.java` programs under `src/test`; `testUnit` selects 265 of them (six
+- 275 `*Test.java` programs under `src/test`; `testUnit` selects 269 of them (six
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,198,794 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,203,958 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have

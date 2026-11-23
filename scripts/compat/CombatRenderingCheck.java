@@ -73,6 +73,7 @@ public final class CombatRenderingCheck {
     private boolean hazardsOnly;
     private boolean healthOnly,arsenalBlinkOnly,arsenalStationOnly;
     private boolean movementOnly;
+    private boolean playabilityOnly;
     private boolean vortexShieldOnly;
     private boolean equipmentGroups;
     private List<Action> actions=ACTIONS;
@@ -206,7 +207,7 @@ public final class CombatRenderingCheck {
         int exploreScene=0;
         for(String arg:args)if(arg.startsWith("--scene="))try{exploreScene=Integer.parseInt(arg.substring("--scene=".length()));}catch(NumberFormatException invalid){throw new IllegalArgumentException("Invalid --scene value: "+arg);}
         if(exploreOnly&&exploreScene<=0)throw new IllegalArgumentException("--explore-only needs --scene=<id>");
-        boolean trainingOnly=exploreOnly||manual||mailCampaign||Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only")||args[3].equals("--mission-only"));
+        boolean trainingOnly=exploreOnly||manual||mailCampaign||Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--ready-room-mail-only")||Arrays.asList(args).contains("--ready-room-forge-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--playability-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only")||args[3].equals("--mission-only"));
         if(exploreOnly||manual||missionOnly){if(args.length<4)throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");}
         else if(args.length!=((trainingOnly||missionOnly)?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
@@ -245,9 +246,13 @@ public final class CombatRenderingCheck {
         probe.arsenalBlinkOnly=probe.arsenalStationOnly||Arrays.asList(args).contains("--arsenal-blink-only");
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
         probe.movementOnly=Arrays.asList(args).contains("--movement-only");
+        probe.playabilityOnly=Arrays.asList(args).contains("--playability-only");
+        if(probe.playabilityOnly)probe.deadline=System.nanoTime()+240_000_000_000L;
         probe.vortexShieldOnly=Arrays.asList(args).contains("--vortex-shield-only");
         probe.equipmentGroups=Arrays.asList(args).contains("--equipment-groups");
         if(probe.movementOnly)probe.actions=List.of(ACTIONS.getFirst(),ACTIONS.get(8));
+        // One action per weapon class keeps the playability smoke under three minutes.
+        if(probe.playabilityOnly)probe.actions=List.of(ACTIONS.get(0),ACTIONS.get(2),ACTIONS.get(4));
         if(manual){System.out.println("MANUAL: disposable client logged in as LanPlayer; close the game window to end the session");app.startup();return;}
         var timer=new Timer(true);
         var pending=new AtomicBoolean();
@@ -1176,7 +1181,7 @@ public final class CombatRenderingCheck {
             if(hazardsOnly){hazardsTick(view,now);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
-            if(stage==0){if(arsenalBlinkOnly||healthOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GV().Qg())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());started=now;if(arsenalBlinkOnly||dialogueOnly||vortexShieldOnly||healthOnly||movementOnly){app.GK().bn(294);stage=2;}else stage=1;return;}
+            if(stage==0){if(arsenalBlinkOnly||healthOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GV().Qg())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());started=now;if(playabilityOnly){app.GJ().a(null,"/training",false);System.out.println("CHECK: native /training command from Haven");stage=2;}else if(arsenalBlinkOnly||dialogueOnly||vortexShieldOnly||healthOnly||movementOnly){app.GK().bn(294);stage=2;}else stage=1;return;}
             if(arsenalBlinkOnly&&stage==43&&view.sceneId()==1){
                 if(!app.GV().Qg())throw new AssertionError("Returning to Haven retained a solo mission party");
                 app.GJ().a(null,"/training",false);blinkHidden=blinkVisible=false;started=now;stage=45;return;
@@ -1219,6 +1224,8 @@ public final class CombatRenderingCheck {
                 else{app.GK().bn(294);stage=2;}
                 return;
             }
+            if(playabilityOnly&&stage==2&&view.sceneId()!=294&&now-started>30_000_000_000L)
+                throw new AssertionError("Native /training did not enter Advanced Training; scene="+view.sceneId()+" zone="+app.CZ().zoneId);
             if(stage==2&&view.sceneId()==294&&view.PO().acU() instanceof Dungeoneer){
                 var kinds=new HashSet<String>();for(var actor:authoritative.values())if(actor.vD()!=app.CZ().pawnId)kinds.add(actor.getClass().getSimpleName());
                 if(trainingSince==0)trainingSince=now;
@@ -1412,7 +1419,9 @@ public final class CombatRenderingCheck {
             if(stage==17&&now-started>700_000_000L){moveEast(view,false);started=now;needleFacingReady=true;stage=18;return;}
             if(stage==18&&now-started>500_000_000L){stage=4;return;}
             if(stage==4){
-                if(index==actions.size()){capture("training-complete");if(trainingOnly){finishImages();Files.writeString(output.resolve("primary-complete"),"");passed=done=true;System.out.println(movementOnly?"PASS: stock graphical Training movement, sword lunge and dodge with native impulse guards and settled prediction":"PASS: two stock graphical clients, focused Training Hall actors and native combat actions including Blitz Needle normal/charged projectiles");app.shutdown();}else{app.GK().bn(1);stage=7;}return;}
+                if(index==actions.size()){capture("training-complete");
+                    if(playabilityOnly){System.out.println("CHECK: native /haven command after Training combat");app.GJ().a(null,"/haven",false);started=now;stage=40;return;}
+                    if(trainingOnly){finishImages();Files.writeString(output.resolve("primary-complete"),"");passed=done=true;System.out.println(movementOnly?"PASS: stock graphical Training movement, sword lunge and dodge with native impulse guards and settled prediction":"PASS: two stock graphical clients, focused Training Hall actors and native combat actions including Blitz Needle normal/charged projectiles");app.shutdown();}else{app.GK().bn(1);stage=7;}return;}
                 var action=actions.get(index);
                 if(action.name.equals("blitz-needle-charge")&&!needleFacingReady){moveEast(view,true);started=now;stage=17;return;}
                 equip=new Confirm();long id=0;
@@ -1480,7 +1489,7 @@ public final class CombatRenderingCheck {
                 if(elapsed>action.held+2500&&server instanceof Dungeoneer knight&&knight.aeM()==0){
                     if(!activities.contains(action.required)||!renderedActivities.contains(action.required))throw new AssertionError(action.name+" missed authoritative/rendered activity "+action.required+": "+activities+" / "+renderedActivities);
                     if(action.projectile&&!projectile)throw new AssertionError(action.name+" has no rendered server projectile");
-                    if(movementOnly){
+                    if(movementOnly||playabilityOnly){
                         double drift=Math.hypot(own.acU().tG().x-server.tG().x,own.acU().tG().y-server.tG().y);
                         if(drift>.05)throw new AssertionError(action.name+" settled prediction differs from the server by "+drift);
                         System.out.println("CHECK: "+action.name+" settled prediction drift="+drift);
@@ -1489,6 +1498,19 @@ public final class CombatRenderingCheck {
                     index++;stage=4;return;
                 }
                 if(elapsed>action.held+10000)throw new AssertionError(action.name+" failed to return to idle");
+            }
+            // The playability smoke returns through the real player command, not a GM scene jump.
+            if(stage==40){
+                if(view.sceneId()!=1){
+                    if(now-started>30_000_000_000L)throw new AssertionError("Native /haven did not return to Haven; current scene="+view.sceneId());
+                    return;
+                }
+                if(view.PO()==null||!(view.PO().acU() instanceof com.threerings.projectx.data.actor.Knight))return;
+                if(now-started<2_000_000_000L)return;
+                capture("playability-haven-return");finishImages();Files.writeString(output.resolve("primary-complete"),"");
+                passed=done=true;
+                System.out.println("PASS: stock client plays Haven -> /training -> native actors, movement, conversation, vial pickup/use and sword/gun/bomb combat -> /haven return");
+                app.shutdown();return;
             }
             // Scene identity changes before its first rendered frame. Let Haven
             // settle before saving the return image and reporting completion.

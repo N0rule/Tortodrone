@@ -107,6 +107,16 @@ the native move callback and cleared world/channel location; neither test proves
 
 `CheckCombatRendering` uses a fresh output path, records logs/screenshots and exercises sword/gun/bomb controls and Haven↔Training travel. It does not verify every weapon, moving-target hits, full parties or general dungeon mechanics. Source-client binary/current wire observations matter more than an old 2011 marshaller ID table.
 
+For a fast smoke of the paths unit tests cannot cover, run
+`scripts/graphical-test.sh playability`. One disposable client logs in, enters Haven,
+travels with the native `/training` command, renders the Training Hall actor kinds,
+moves under server reconciliation, holds a native conversation, picks up and throws a
+Vial, fires sword/gun/bomb once each with authoritative activity and projectile
+checks, then returns with `/haven`. It fails on missing actor sprites, prediction
+drift, native controller exceptions, a dead disposable server, or an incomplete
+PASS. It takes a few minutes and is not a substitute for the focused scenarios when
+a change touches one feature in depth.
+
 ## WebUI verification
 
 For client-artwork startup changes, run

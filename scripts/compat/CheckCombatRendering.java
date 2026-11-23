@@ -18,7 +18,7 @@ public final class CheckCombatRendering {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1) {
-            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--opening-tutorial-only|--tutorial-entry-only|--tutorial-only|--ready-room-only|--ready-room-mail-only|--mail-campaign-only|--ready-room-forge-only|--equipment-groups|--items-only|--arsenal-blink-only|--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--depot-only|--hazards-only|--vortex-shield-only|--multiplayer-only|--multiplayer-world-only|--explore-only --scene=<id>|--mission-only|--manual]");
+            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--opening-tutorial-only|--tutorial-entry-only|--tutorial-only|--ready-room-only|--ready-room-mail-only|--mail-campaign-only|--ready-room-forge-only|--equipment-groups|--items-only|--arsenal-blink-only|--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--playability-only|--depot-only|--hazards-only|--vortex-shield-only|--multiplayer-only|--multiplayer-world-only|--explore-only --scene=<id>|--mission-only|--manual]");
         }
         boolean campProgression=Arrays.asList(args).contains("--camp-progression-only");
         boolean campStory=campProgression||Arrays.asList(args).contains("--camp-story-only");
@@ -42,6 +42,7 @@ public final class CheckCombatRendering {
         boolean depotOnly=Arrays.asList(args).contains("--depot-only");
         boolean healthOnly=Arrays.asList(args).contains("--health-only");
         boolean movementOnly=Arrays.asList(args).contains("--movement-only");
+        boolean playabilityOnly=Arrays.asList(args).contains("--playability-only");
         boolean equipmentGroups=Arrays.asList(args).contains("--equipment-groups");
         boolean exploreOnly=Arrays.asList(args).contains("--explore-only");
         boolean missionOnly=Arrays.asList(args).contains("--mission-only");
@@ -49,7 +50,7 @@ public final class CheckCombatRendering {
         int exploreScene=0;
         for(String arg:args)if(arg.startsWith("--scene="))try{exploreScene=Integer.parseInt(arg.substring("--scene=".length()));}catch(NumberFormatException invalid){throw new IllegalArgumentException("Invalid --scene value: "+arg);}
         if(exploreOnly&&exploreScene<=0)throw new IllegalArgumentException("--explore-only needs --scene=<id>");
-        boolean trainingOnly=exploreOnly||missionOnly||manual||tutorialEntryOnly||readyRoomOnly||equipmentGroups||itemsOnly||multiplayerOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
+        boolean trainingOnly=playabilityOnly||exploreOnly||missionOnly||manual||tutorialEntryOnly||readyRoomOnly||equipmentGroups||itemsOnly||multiplayerOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
         String outputArgument=Arrays.stream(args).skip(1).filter(arg->!arg.startsWith("--")).findFirst().orElse(null);
         Path project = Path.of("").toRealPath();
         Path game = Path.of(args[0]).toRealPath();
@@ -156,7 +157,7 @@ public final class CheckCombatRendering {
             peerCommand.addAll(List.of("CombatRenderingCheck","--peer",endpoint,publicKey.toString(),peerOutput.toString()));
             if(multiplayerOnly)peerCommand.add(sharedWorldOnly?"--multiplayer-world-only":"--multiplayer-only");
             if(equipmentGroups)peerCommand.add("--equipment-groups");
-            Path peerLog=output.resolve("peer-client.log");Process peer=tutorialEntryOnly||readyRoomOnly||itemsOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||exploreOnly||missionOnly||manual?null:ClientCheckHarness.start(scratch, peerCommand,peerLog,scratch);
+            Path peerLog=output.resolve("peer-client.log");Process peer=tutorialEntryOnly||readyRoomOnly||itemsOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||playabilityOnly||exploreOnly||missionOnly||manual?null:ClientCheckHarness.start(scratch, peerCommand,peerLog,scratch);
             long peerDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);
             while(peer!=null&&peer.isAlive()&&!Files.isRegularFile(peerOutput.resolve("peer-ready"))&&System.nanoTime()<peerDeadline)Thread.sleep(50);
             if(peer!=null&&(!peer.isAlive()||!Files.isRegularFile(peerOutput.resolve("peer-ready"))))
@@ -173,7 +174,7 @@ public final class CheckCombatRendering {
             }
             if(exploreOnly)graphical.addAll(List.of("--explore-only","--scene="+exploreScene));
             else if(manual)graphical.add("--manual");
-            else if(trainingOnly)graphical.add(campProgression?"--camp-progression-only":campStory?"--camp-story-only":freshOpening?"--opening-tutorial-only":tutorialOnly?"--tutorial-only":tutorialEntryOnly?"--tutorial-entry-only":mailCampaignOnly?"--mail-campaign-only":readyRoomMailOnly?"--ready-room-mail-only":readyRoomForgeOnly?"--ready-room-forge-only":readyRoomOnly?"--ready-room-only":equipmentGroups?"--equipment-groups":itemsOnly?"--items-only":sharedWorldOnly?"--multiplayer-world-only":multiplayerOnly?"--multiplayer-only":arsenalBlinkOnly?(arsenalStationOnly?"--arsenal-station-only":"--arsenal-blink-only"):boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":missionOnly?"--mission-only":"--training-only");
+            else if(trainingOnly)graphical.add(campProgression?"--camp-progression-only":campStory?"--camp-story-only":freshOpening?"--opening-tutorial-only":tutorialOnly?"--tutorial-only":tutorialEntryOnly?"--tutorial-entry-only":mailCampaignOnly?"--mail-campaign-only":readyRoomMailOnly?"--ready-room-mail-only":readyRoomForgeOnly?"--ready-room-forge-only":readyRoomOnly?"--ready-room-only":equipmentGroups?"--equipment-groups":itemsOnly?"--items-only":sharedWorldOnly?"--multiplayer-world-only":multiplayerOnly?"--multiplayer-only":arsenalBlinkOnly?(arsenalStationOnly?"--arsenal-station-only":"--arsenal-blink-only"):boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":playabilityOnly?"--playability-only":movementOnly?"--movement-only":missionOnly?"--mission-only":"--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = ClientCheckHarness.start(scratch, graphical, clientLog, scratch);
             if(multiplayerOnly&&!sharedWorldOnly){
@@ -189,14 +190,16 @@ public final class CheckCombatRendering {
                 System.out.println("MANUAL: session ended; logs and screenshots retained at " + output);
                 return;
             }
-            if (!client.waitFor(exploreOnly?120:tutorialOnly?1500:tutorialEntryOnly||readyRoomOnly?100:trainingOnly?440:400, TimeUnit.SECONDS)) {
+            if (!client.waitFor(exploreOnly?120:playabilityOnly?240:tutorialOnly?1500:tutorialEntryOnly||readyRoomOnly?100:trainingOnly?440:400, TimeUnit.SECONDS)) {
                 throw new IOException("Graphical combat probe timed out:\n" + ClientCheckHarness.tail(clientLog) + "\nServer:\n" + ClientCheckHarness.tail(serverLog));
             }
             String log = Files.readString(clientLog);
-            if((itemsOnly||readyRoomOnly)&&(log.contains("NullPointerException")||log.contains("ClassCastException")))throw new IOException("Native controller error: "+ClientCheckHarness.tail(clientLog));
+            if((itemsOnly||readyRoomOnly||playabilityOnly)&&(log.contains("NullPointerException")||log.contains("ClassCastException")))throw new IOException("Native controller error: "+ClientCheckHarness.tail(clientLog));
             if (client.exitValue() != 0 || !log.lines().anyMatch(line -> line.startsWith("PASS:"))) {
                 throw new IOException("Graphical combat probe did not pass (exit " + client.exitValue() + "):\n" + ClientCheckHarness.tail(clientLog) + "\nServer:\n" + ClientCheckHarness.tail(serverLog));
             }
+            // A playability run also proves the server survives the whole loop, not just login.
+            if(playabilityOnly&&!server.isAlive())throw new IOException("Disposable server exited during the playability run:\n"+ClientCheckHarness.tail(serverLog));
             if(readyRoomMailOnly&&Files.readString(serverLog).lines().noneMatch(line -> line.contains("service=UplinkMarshaller; method=6;")))
                 throw new IOException("Ready Room mail window passed without the stock mail headers request reaching the server:\n" + ClientCheckHarness.tail(serverLog));
             if(readyRoomForgeOnly&&Files.readString(serverLog).lines().noneMatch(line -> line.contains("service=ItemMarshaller; method=8;")))
@@ -237,7 +240,7 @@ public final class CheckCombatRendering {
         System.out.println("MANUAL: control scheme WASD_MOVE");
     }
     private static List<String> graphicsBase(Path game, Path app, Path sandbox) {
-        return new ArrayList<>(List.of(ClientCheckHarness.executable("java"), "--enable-native-access=ALL-UNNAMED",
+        var base = new ArrayList<>(List.of(ClientCheckHarness.executable("java"), "--enable-native-access=ALL-UNNAMED",
             "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED",
             "-Ddisable_sound=true", "-Dno_unpack_resources=true", "-Dresource_dir=" + game.resolve("rsrc/"),
             "-Duser.home=" + sandbox.resolve("home"),
