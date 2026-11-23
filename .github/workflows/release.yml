@@ -52,13 +52,14 @@ jobs:
           java-version: '25'
           cache: gradle
 
-      # One Gradle invocation runs both gates and builds the release archive, so
-      # the tag does not pay for a separate checkout and build in another run.
-      - name: Run release gates and build portable release
+      # The unit suite already gates every main push; the tag runs the packaged
+      # integration gates (including the archive check) once while building the
+      # release, so the tag does not repeat the unit suite in a second run.
+      - name: Run packaged release gates and build portable release
         shell: bash
         run: |
           chmod +x ./gradlew
-          ./gradlew --no-daemon testUnit testIntegration
+          ./gradlew --no-daemon testIntegration
 
       - name: Package one portable ZIP
         shell: bash

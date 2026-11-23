@@ -2,7 +2,7 @@ name: Standalone tests
 
 # The Gradle build stays test-free by design; this workflow is the CI gate that
 # runs the standalone unit programs. Version tags are handled once by
-# release.yml, which runs the unit and integration gates while packaging the
+# release.yml, which runs the packaged integration gates while packaging the
 # release, so a tag does not start a second, duplicate suite here.
 on:
   pull_request:
