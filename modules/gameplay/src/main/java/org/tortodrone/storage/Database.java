@@ -60,7 +60,7 @@ public final class Database {
         roster = new RosterRepository(this);
         worlds = new WorldRepository(this);
         preferences = new PreferenceRepository(this);
-        DepotStore.alignDefaults(this);
+        DepotSchema.alignDefaults(this);
     }
     /**
      * Open the 0.42.0 baseline. A database without the project marker is a pre-0.42.0 or

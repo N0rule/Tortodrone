@@ -164,7 +164,7 @@ final class SchemaMigrations {
         WorldProfiles.initialize(connection);
         TownSchema.initialize(connection);
         GuildStore.initialize(connection);
-        DepotStore.upgrade(connection, DepotSeed.bundled());
+        DepotSchema.upgrade(connection, DepotSeed.bundled());
         try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE UNIQUE INDEX global_knight_names ON knights(name_key)");
             statement.execute("INSERT INTO schema_migrations(version,description,applied_at) VALUES("

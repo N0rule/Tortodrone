@@ -9,7 +9,7 @@ final class TownSchema {
 
     static void initialize(Connection c) throws SQLException {
         GiftStore.initialize(c);
-        DepotStore.initialize(c);
+        DepotSchema.initialize(c);
         EnergyExchange.initialize(c);
         try (var s = c.createStatement()) {
             s.execute("ALTER TABLE inventory_items ADD COLUMN level INTEGER NOT NULL DEFAULT 0 CHECK(level BETWEEN 0 AND 99)");

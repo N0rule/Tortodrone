@@ -35,7 +35,7 @@ public final class DepotSeed {
             String item=text(r.get("item"),"seed item"),support=text(r.get("support"),"grant support");
             if(id!=expected++||stockId==0||item.isBlank()||source< -1||support.isBlank())throw new IOException("Invalid seed identity/provenance at offer #"+id);
             var good=new TownCatalog.Good(item,integer(r.get("count"),"count"),integer(r.get("crowns"),"crowns"),integer(r.get("energy"),"energy"),integer(r.get("limit"),"limit"),"",0);
-            DepotStore.values(good);boolean enabled=flag(r.get("enabled"),"enabled");
+            DepotSchema.values(good);boolean enabled=flag(r.get("enabled"),"enabled");
             if(enabled!=support.equals("Available"))throw new IOException("Seed support mismatch #"+id);
             if(!enabled)unsupported.put(id,item+": "+support);
             offers.add(new DepotStore.Offer(id,good,flag(r.get("featured"),"featured"),enabled));

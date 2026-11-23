@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,195,953 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,197,991 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -395,6 +395,9 @@ remaining stores were split the same way:
   commands, and `GuildSettingsStore` for name checks, the rename window and the
   message of the day. It delegates to the static `GuildLogStore` for the guild
   record and `GuildSchema` for the guild tables.
+- `DepotStore` keeps the revision-guarded offer and promotion resolution, quotes and
+  purchases; `DepotSchema` owns the managed tables, legacy seed import, default
+  alignment and the revision metadata those paths share.
 - `AuctionHouse` keeps auction listings, bids, fees, escrow and settlement;
   `TownMail` owns the inbox, uplink letters, attachments, retention and the
   shared escrow item envelope. Settlement writes a letter through `TownMail`
