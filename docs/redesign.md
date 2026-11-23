@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,129,589 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,132,098 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -380,13 +380,22 @@ owners that compose named collaborators instead of mixing responsibilities:
 
 The line counts are the size of each facade, not a target: a facade gains a line
 whenever a protocol entry point or a new collaborator is added. The two largest
-remaining stores were split the same way: `TownStore` composes `SpriteStore`,
-`TownLedger`, `TownSchema`, `CraftStore`, `GearStore`, `ShopStore`, `GiftWrapStore`, `CustomizeStore`, `UpgradeStore`, `UseStore` and `AdminStore`, and `GuildStore` composes
-`GuildHallStore` for the treasury well, hall state and expansion tickets,
-`GuildLogStore` for the guild record and `GuildMembershipStore` for formation,
-invitations and roster commands. Phase 9
-stays evidence-gated and is not part of this table; it needs the per-epic stock
-evidence listed in `docs/baseline.md`.
+remaining stores were split the same way:
+
+- `TownStore` keeps the authenticated mutation entry points and composes
+  `SpriteStore` for sprites and harnesses, `TownLedger` for inventory and currency
+  primitives, `TownSchema` for the town tables, `CraftStore` for recipes and
+  crafting, `GearStore` for forge and heat, `ShopStore` for storefront and Depot
+  purchases, `GiftWrapStore` for gift boxes, `CustomizeStore` for variants,
+  unbinding and accessories, `UpgradeStore` for Arsenal upgrades, `UseStore` for
+  scene item use and revive payment, and `AdminStore` for the GM setters.
+- `GuildStore` composes `GuildHallStore` for the treasury well, hall state and
+  expansion tickets, `GuildLogStore` for the guild record, `GuildMembershipStore`
+  for formation, invitations and roster commands, and `GuildSchema` for the guild
+  tables.
+
+Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
+stock evidence listed in `docs/baseline.md`.
 
 Reserved packages and their content folders are created in Phase 1, each with a
 `package-info.java` (and a `README.md` under the matching content folder) describing
