@@ -1,8 +1,10 @@
 package org.tortodrone.server.network;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import org.tortodrone.core.character.WorldProfile;
 
 /** Session-scoped pickups and the native four-slot quickbar. These items are not written to
@@ -20,6 +22,15 @@ final class SessionCarriedItems {
 
     Map<Long,WorldProfile.Item> items() {
         return items;
+    }
+
+    /** The durable profile with this session's temporary pickups and curse flags applied. */
+    WorldProfile visibleProfile(WorldProfile profile,Set<Long> cursed){
+        if(items.isEmpty()&&cursed.isEmpty())return profile;
+        var combined=new ArrayList<>(profile.items());combined.addAll(items.values());
+        combined.replaceAll(item->item.curse(cursed.contains(item.id())));
+        return new WorldProfile(profile.worldId(),profile.accountId(),profile.knightId(),profile.crowns(),profile.energy(),
+            profile.revision(),combined,profile.progress(),profile.town(),profile.achievements());
     }
 
     long nextId() {

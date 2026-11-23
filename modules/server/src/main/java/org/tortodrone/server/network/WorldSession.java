@@ -68,6 +68,7 @@ final class WorldSession implements AutoCloseable {
     private WorldProfile profile;
     private boolean closed;
     private final SessionRefresh refreshState;
+    private final SessionProfilePublisher profilePublisher;
     /** Stock town commands may arrive from the loading screen or Ready Room; replay the
      *  native destination request once the scene has subscribed and accepted enteredPlace. */
     private PartyRegistry.Member partyMember;
@@ -131,33 +132,18 @@ final class WorldSession implements AutoCloseable {
     void publishQuickbar()throws IOException { carried.publish(); }
     void publishObjectives()throws IOException { story.publishObjectives(); }
     WorldProfile visibleProfile(){
-        return visibleProfile(runtime.membership()==null?Set.of():runtime.membership().status().cursedItems());
+        return carried.visibleProfile(profile,runtime.membership()==null?Set.of():runtime.membership().status().cursedItems());
     }
-    WorldProfile visibleProfile(Set<Long> cursed){
-        if(carried.items().isEmpty()&&cursed.isEmpty())return profile;
-        var items=new ArrayList<>(profile.items());items.addAll(carried.items().values());
-        items.replaceAll(item->item.curse(cursed.contains(item.id())));
-        return new WorldProfile(profile.worldId(),profile.accountId(),profile.knightId(),profile.crowns(),profile.energy(),profile.revision(),items,profile.progress(),profile.town(),profile.achievements());
-    }
+    WorldProfile visibleProfile(Set<Long> cursed){return carried.visibleProfile(profile,cursed);}
     void closeTownDialog()throws IOException { town.close(); }
     long townDialogCreated(){return town.created();}
     boolean townDialogOpen(){return town.dialogOpen();}
     void openTownDialog(org.tortodrone.core.town.TownCatalog.Station station,ActorState source)throws IOException { town.open(station,source); }
     void townChanged(org.tortodrone.storage.TownStore.Result result)throws IOException {
-        townChanged(result,true);
+        profilePublisher.changed(result,true);
     }
     void townChanged(org.tortodrone.storage.TownStore.Result result,boolean publishTown)throws IOException {
-        var before=visibleProfile();profile=result.profile();updateAppearance();var after=visibleProfile();
-        // The durable operation already committed. A failed buyer connection must
-        // not suppress its shared scene effect for remaining observers.
-        if(before.energy()>after.energy()&&runtime.membership()!=null)runtime.membership().effect(new StarterCatalog.Model("Energy Spent",Map.of()));
-        output.send(()->codec.itemChanges(oid,knight,before,after));output.send(()->codec.balances(oid,after));
-        var achievementChanges=codec.achievementChanges(oid,before,after);
-        if(achievementChanges!=null)output.send(()->achievementChanges);
-        if(publishTown)output.send(()->codec.townState(oid,after));
-        publishOutbids(before,after);
-        if(!before.town().loadouts().equals(after.town().loadouts())||before.town().equippedSprite()!=after.town().equippedSprite()
-                ||!before.town().sprites().equals(after.town().sprites()))output.send(()->codec.loadoutChanges(oid,before,after));
+        profilePublisher.changed(result,publishTown);
     }
     boolean ownsGuild(int object)throws IOException{return guilds.ownsGuild(object);}
     void subscribeGuild(short message)throws IOException{guilds.subscribeGuild(message);}
@@ -268,6 +254,7 @@ final class WorldSession implements AutoCloseable {
         this.roles=roles;
         responder=new SessionResponder(output,codec,oid);
         refreshState=new SessionRefresh(this);
+        profilePublisher=new SessionProfilePublisher(this);
         carried=new SessionCarriedItems(this);
         sceneState=new SessionSceneState();
         story=new SessionStory(this);
