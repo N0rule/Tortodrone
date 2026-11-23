@@ -20,16 +20,12 @@ public final class SceneActions {
     @FunctionalInterface public interface TargetResolution {List<String> resolve(LogicTarget target,int stamp,String source,String activator);}
     @FunctionalInterface public interface SourceSignals {boolean signal(String name,int stamp,String source);}
     @FunctionalInterface public interface Entrances {boolean set(LogicTarget target,int stamp,String source,String activator);}
-    private TargetResolution targetResolution=(target,stamp,source,activator)->List.of();
-    private SourceSignals sourceSignals=(name,stamp,source)->false;
-    private Entrances entrances=(target,stamp,source,activator)->false;
-    public void targets(TargetResolution sink){targetResolution=Objects.requireNonNull(sink);}
-    public void sourceSignals(SourceSignals sink){sourceSignals=Objects.requireNonNull(sink);}
-    public void entrances(Entrances sink){entrances=Objects.requireNonNull(sink);}
+    public void targets(TargetResolution sink){runner.targets(sink);}
+    public void sourceSignals(SourceSignals sink){runner.sourceSignals(sink);}
+    public void entrances(Entrances sink){runner.entrances(sink);}
     public record DestroySource() implements Action { }
     @FunctionalInterface public interface SourceDestruction {boolean destroy(int stamp,String source);}
-    private SourceDestruction sourceDestruction=(stamp,source)->false;
-    public void sourceDestruction(SourceDestruction sink){sourceDestruction=Objects.requireNonNull(sink);}
+    public void sourceDestruction(SourceDestruction sink){runner.sourceDestruction(sink);}
     /** Native logic variables belong to Source, Activator or resolved Tagged logics, never a client object. */
     public record LogicTarget(String mode,String tag) {
         public LogicTarget {if(!Set.of("source","activator","tagged").contains(mode)||tag==null||mode.equals("tagged")==tag.isEmpty())throw new IllegalArgumentException("Invalid logic target");if(!tag.isEmpty())text(tag);}
@@ -48,11 +44,8 @@ public final class SceneActions {
     @FunctionalInterface public interface Variables {boolean set(SetVariable operation,int stamp,String source,String activator);}
     @FunctionalInterface public interface VariableReads {boolean get(String name,LogicTarget target,int stamp,String source,String activator);}
     @FunctionalInterface public interface DialogClears {boolean clear(boolean activatorOnly,int stamp,String source,String activator);}
-    private Variables variables=(operation,stamp,source,activator)->false;
-    private VariableReads variableReads=(name,target,stamp,source,activator)->false;
-    private DialogClears dialogClears=(only,stamp,source,activator)->false;
-    public void variables(Variables writes,VariableReads reads){variables=Objects.requireNonNull(writes);variableReads=Objects.requireNonNull(reads);}
-    public void dialogClears(DialogClears sink){dialogClears=Objects.requireNonNull(sink);}
+    public void variables(Variables writes,VariableReads reads){runner.variables(writes,reads);}
+    public void dialogClears(DialogClears sink){runner.dialogClears(sink);}
     /** A native effect's server action has a distinct, frozen source logic at its fire location. */
     public record GameplayEffect(StarterCatalog.Model config,Action action,String locationTag) implements Action {
         public GameplayEffect{Objects.requireNonNull(config);text(config.name());Objects.requireNonNull(action);Objects.requireNonNull(locationTag);if(!locationTag.isEmpty())text(locationTag);}
@@ -78,20 +71,16 @@ public final class SceneActions {
     }
     @FunctionalInterface public interface GameplayEffects {boolean apply(GameplayEffect effect,int stamp,String source);}
     @FunctionalInterface public interface Impulses {boolean apply(Impulse impulse,int stamp,String source);}
-    private GameplayEffects gameplayEffects=(effect,stamp,source)->false;
-    private Impulses impulses=(impulse,stamp,source)->false;
-    public void gameplayEffects(GameplayEffects sink){gameplayEffects=Objects.requireNonNull(sink);}
-    public void impulses(Impulses sink){impulses=Objects.requireNonNull(sink);}
+    public void gameplayEffects(GameplayEffects sink){runner.gameplayEffects(sink);}
+    public void impulses(Impulses sink){runner.impulses(sink);}
     public record NearestSignal(String tag,String name,int count,boolean excludeSource) implements Action {
         public NearestSignal{text(tag);text(name);if(count<0||count>256)throw new IllegalArgumentException("Invalid signal subset size");}
     }
     @FunctionalInterface public interface NearestSignals {boolean apply(NearestSignal signal,int stamp,String source);}
-    private NearestSignals nearestSignals=(signal,stamp,source)->false;
-    public void nearestSignals(NearestSignals sink){nearestSignals=Objects.requireNonNull(sink);}
+    public void nearestSignals(NearestSignals sink){runner.nearestSignals(sink);}
     public record Objective(org.tortodrone.core.character.KnightObjective mutation) implements Action {public Objective{Objects.requireNonNull(mutation);}}
     @FunctionalInterface public interface Objectives {boolean apply(org.tortodrone.core.character.KnightObjective operation,int stamp,String source,String activator);}
-    private Objectives objectives=(operation,stamp,source,activator)->false;
-    public void objectives(Objectives sink){objectives=Objects.requireNonNull(sink);}
+    public void objectives(Objectives sink){runner.objectives(sink);}
     public record Choice(List<Action> actions,List<Float> weights) implements Action {
         public Choice {
             actions=List.copyOf(actions);weights=List.copyOf(weights);
@@ -220,58 +209,17 @@ public final class SceneActions {
     @FunctionalInterface public interface Signals { boolean apply(String tag,String name,int stamp); }
     @FunctionalInterface public interface SourcedSignals { boolean apply(String tag,String name,int stamp,String source); }
     private static SourcedSpawnActors sourced(SpawnActors spawn){Objects.requireNonNull(spawn);return (actor,stamp,source,activator)->spawn.apply(actor,stamp,source);}
-    private static final class Node {
-        final Action action;final List<Node> children;int remaining;boolean started;
-        Node(Action action){
-            this.action=action;
-            children=switch(action){
-                case Delay delay->List.of(new Node(delay.action()));
-                case Sequence sequence->sequence.actions().stream().map(Node::new).toList();
-                case Choice choice->choice.actions().stream().map(Node::new).toList();
-                case Limited limited->{remaining=limited.limit();yield List.of(new Node(limited.action()),new Node(limited.otherwise()));}
-                case Count counter->{remaining=counter.threshold();yield List.of(new Node(counter.action()));}
-                case VariableCondition condition->List.of(new Node(condition.action()),new Node(condition.otherwise()));
-                case Timer timer->{remaining=timer.limit();yield List.of(new Node(timer.action()));}
-                case Targeted targeted->List.of(new Node(targeted.action()));
-                default->List.of();
-            };
-        }
-    }
     /** A native script step retains its action's condition counters across Goto loops. */
     public final class Prepared {
-        private final Node root;
-        private Prepared(Action action){root=new Node(action);}
+        private final SceneActionRunner.Node root;
+        private Prepared(Action action){root=new SceneActionRunner.Node(action);}
         private SceneActions owner(){return SceneActions.this;}
     }
     public Prepared prepare(Action action){validate(action,0,new int[]{0});return new Prepared(action);}
     public boolean perform(Prepared prepared,int stamp,String source,String activator){
-        text(source);text(activator);if(prepared.owner()!=this)throw new IllegalArgumentException("Foreign scene action");return enqueue(prepared.root,stamp,source,activator);
+        text(source);text(activator);if(prepared.owner()!=this)throw new IllegalArgumentException("Foreign scene action");return runner.perform(prepared.root,stamp,source,activator);
     }
-    private static final class State {
-        final Rule definition;final Node root;
-        final Map<String,Boolean> active=new LinkedHashMap<>();
-        final Set<String> removed=new HashSet<>();
-        State(Rule rule){definition=rule;root=new Node(rule.action());}
-    }
-    private record Compiled(Rule rule,State state) { }
-    private record Pending(long due,long order,Node node,String source,String activator) { }
-    private static final int MAX_PENDING=4096,MAX_PER_TICK=1024;
-    private final List<Compiled> rules;
-    private final List<State> states;
-    private final SourcedSignals signals;
-    private final DestroyActors destroy;
-    private final SourcedSpawnActors spawn;
-    private final PawnStatuses pawnStatuses;
-    private final Conversations conversations;
-    private final Effects effects;
-    private final FloorAdvances floorAdvances;
-    private final Memories memories;
-    private final java.util.random.RandomGenerator random;
-    private final PriorityQueue<Pending> pending=new PriorityQueue<>(Comparator.comparingLong(Pending::due).thenComparingLong(Pending::order));
-    private long order,rejected;
-    private int activeSources;
-    private boolean closed,advanced;
-    private int lastAdvanced;
+    private final SceneActionRunner runner;
     public SceneActions(List<Rule> rules,Signals signals){
         this(rules,adapt(signals));
     }
@@ -294,174 +242,23 @@ public final class SceneActions {
         this(rules,signals,random,destroy,spawn,pawnStatuses,conversations,effects,floorAdvances,(operation,stamp,source,activator)->false);
     }
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SourcedSpawnActors spawn,PawnStatuses pawnStatuses,Conversations conversations,Effects effects,FloorAdvances floorAdvances,Memories memories){
-        this.memories=Objects.requireNonNull(memories);
-        this.floorAdvances=Objects.requireNonNull(floorAdvances);
-        this.effects=Objects.requireNonNull(effects);
-        this.conversations=Objects.requireNonNull(conversations);
-        this.pawnStatuses=Objects.requireNonNull(pawnStatuses);
-        this.spawn=Objects.requireNonNull(spawn);
-        this.destroy=Objects.requireNonNull(destroy);
-        this.random=Objects.requireNonNull(random);
-        this.signals=Objects.requireNonNull(signals);
-        if(rules.size()>2048)throw new IllegalArgumentException("Too many scene handlers");
-        var keys=new HashSet<String>();for(var rule:rules){if(!keys.add(rule.key()))throw new IllegalArgumentException("Duplicate scene handler");validate(rule.action(),0,new int[]{0});}
-        var shared=new LinkedHashMap<String,State>();var compiled=new ArrayList<Compiled>();
-        for(var rule:rules){
-            var state=shared.computeIfAbsent(rule.stateKey(),key->new State(rule));var original=state.definition;
-            if(!original.event().equals(rule.event())||!original.name().equals(rule.name())||original.all()!=rule.all()
-                    ||!original.source().equals(rule.source())||!original.action().equals(rule.action())||!original.removedGroup().equals(rule.removedGroup()))throw new IllegalArgumentException("Conflicting scene handler aliases");
-            compiled.add(new Compiled(rule,state));
-        }
-        this.rules=List.copyOf(compiled);states=List.copyOf(shared.values());
+        runner=new SceneActionRunner(rules,signals,random,destroy,spawn,pawnStatuses,conversations,effects,floorAdvances,memories);
     }
-    public void removed(Set<String> tags,java.util.function.Predicate<String> remaining,int stamp){removed(tags,remaining,stamp,"removed");}
-    public void removed(Set<String> tags,java.util.function.Predicate<String> remaining,int stamp,String activator){
-        if(closed)return;
-        for(var compiled:rules){
-            var rule=compiled.rule();if(!rule.event().equals("removed")||!tags.contains(rule.tag())||rule.all()&&remaining.test(rule.tag()))continue;
-            // Native two-tag marker: each ActorRemoved(Limit(1)) increments its
-            // shared counter once; VariableChanged runs the action at counter=2.
-            // A cleared wave stays latched even if that tag is spawned again.
-            var state=compiled.state();
-            if(!rule.removedGroup().isEmpty()&&(!state.removed.add(rule.tag())||!state.removed.containsAll(rule.removedGroup())))continue;
-            enqueue(state.root,stamp,rule.source(),activator);
-        }
-    }
-    public void signal(String tag,String name,int stamp){
-        signal(tag,name,stamp,"external");
-    }
-    public void signal(String tag,String name,int stamp,String source){
-        signalTo(tag,name,stamp,source,null);
-    }
+    public void removed(Set<String> tags,java.util.function.Predicate<String> remaining,int stamp){runner.removed(tags,remaining,stamp,"removed");}
+    public void removed(Set<String> tags,java.util.function.Predicate<String> remaining,int stamp,String activator){runner.removed(tags,remaining,stamp,activator);}
+    public void signal(String tag,String name,int stamp){runner.signal(tag,name,stamp);}
+    public void signal(String tag,String name,int stamp,String source){runner.signal(tag,name,stamp,source);}
     /** Native subset selection addresses a receiver logic, not every logic sharing its tag. */
-    public void signalTo(String tag,String name,int stamp,String source,String receiver){
-        if(closed)return;
-        text(source);
-        for(var compiled:rules){var rule=compiled.rule();var state=compiled.state();
-            if(rule.event().equals("removed")||!rule.tag().equals(tag)||!rule.name().equals(name)||receiver!=null&&!rule.source().equals(receiver))continue;
-            if(rule.event().equals("signal")){enqueue(state.root,stamp,rule.source(),source);continue;}
-            boolean already=state.active.containsKey(source);
-            if(!already&&activeSources>=MAX_PENDING){rejected++;continue;}
-            if(!already)activeSources++;
-            state.active.put(source,true);
-            if(!already&&rule.event().equals("signal-start"))enqueue(state.root,stamp,rule.source(),source);
-        }
-    }
+    public void signalTo(String tag,String name,int stamp,String source,String receiver){runner.signalTo(tag,name,stamp,source,receiver);}
     /** Signal(Source) addresses each of the receiver's handlers once, regardless of tag aliases. */
-    public void signalSource(String receiver,String name,int stamp,String source){
-        if(closed)return;text(receiver);text(name);text(source);
-        for(var state:states){var rule=state.definition;
-            if(rule.event().equals("removed")||!rule.source().equals(receiver)||!rule.name().equals(name))continue;
-            if(rule.event().equals("signal")){enqueue(state.root,stamp,rule.source(),source);continue;}
-            boolean already=state.active.containsKey(source);
-            if(!already&&activeSources>=MAX_PENDING){rejected++;continue;}
-            if(!already)activeSources++;state.active.put(source,true);
-            if(!already&&rule.event().equals("signal-start"))enqueue(state.root,stamp,rule.source(),source);
-        }
-    }
+    public void signalSource(String receiver,String name,int stamp,String source){runner.signalSource(receiver,name,stamp,source);}
     /** Equal-time actions retain authored order; overdue work executes on the current scene tick. */
-    public void advance(int stamp){
-        if(closed)return;
-        if(advanced&&SceneClock.before(stamp,lastAdvanced))throw new IllegalArgumentException("Scene action clock moved backwards");
-        int[] budget={MAX_PER_TICK};
-        drain(stamp,budget);
-        if(!advanced||stamp!=lastAdvanced){
-            for(var state:states)for(var iterator=state.active.entrySet().iterator();iterator.hasNext();){
-                var entry=iterator.next();
-                if(entry.getValue())entry.setValue(false);
-                else{iterator.remove();activeSources--;if(state.definition.event().equals("signal-stop"))enqueue(state.root,stamp,state.definition.source(),entry.getKey());}
-            }
-            advanced=true;lastAdvanced=stamp;
-            drain(stamp,budget);
-        }
-    }
-    private void drain(int stamp,int[] budget){
-        while(!pending.isEmpty()&&pending.peek().due()<=stamp&&budget[0]>0){
-            var task=pending.remove();execute(task.node(),stamp,task.source(),task.activator(),budget);
-        }
-    }
-    private boolean execute(Node node,long due,String source,String activator,int[] budget){
-        if(--budget[0]<0){rejected++;return false;}
-        return switch(node.action){
-            case Signal signal -> signals.apply(signal.tag(),signal.name(),Math.toIntExact(due),source);
-            case SourceSignal signal -> sourceSignals.signal(signal.name(),Math.toIntExact(due),source);
-            case Failure ignored -> false;
-            case Count ignored -> {
-                // Saturate after crossing the threshold; only equality runs the child.
-                // Native false Conditional succeeds, and a failed child does not undo Increment.
-                if(node.remaining<0)yield true;
-                yield --node.remaining==0?execute(node.children.getFirst(),due,source,activator,budget):true;
-            }
-            case DefaultEntrance entrance -> entrances.set(entrance.target(),Math.toIntExact(due),source,activator);
-            case Targeted targeted -> {
-                var targets=targetResolution.resolve(targeted.target(),Math.toIntExact(due),source,activator);
-                if(targets.size()>256){rejected++;yield false;}
-                // TargetedAction executes in target order, ignores each child's result
-                // and succeeds even when its target set is empty (native ActionLogic).
-                for(String target:targets){text(target);execute(node.children.getFirst(),due,source,target,budget);}
-                yield true;
-            }
-            case NearestSignal signal -> nearestSignals.apply(signal,Math.toIntExact(due),source);
-            case Conversation conversation -> conversations.apply(conversation,Math.toIntExact(due),source,activator);
-            case ClearDialog clear -> dialogClears.clear(clear.activatorOnly(),Math.toIntExact(due),source,activator);
-            case SetVariable variable -> variables.set(variable,Math.toIntExact(due),source,activator);
-            case VariableCondition condition -> execute(node.children.get(variableReads.get(condition.name(),condition.target(),Math.toIntExact(due),source,activator)?0:1),due,source,activator,budget);
-            case Timer timer -> {
-                if(!node.started){node.started=true;yield enqueue(node,Math.addExact(due,Math.max(0,timer.interval()+timer.offset())),source,activator);}
-                boolean success=execute(node.children.getFirst(),due,source,activator,budget);
-                if(timer.limit()==0||--node.remaining>0)success=enqueue(node,Math.addExact(due,timer.interval()),source,activator)&&success;
-                yield success;
-            }
-            case SourceEffect effect -> effects.apply(effect,Math.toIntExact(due),source);
-            case GameplayEffect effect -> gameplayEffects.apply(effect,Math.toIntExact(due),source);
-            case Impulse impulse -> impulses.apply(impulse,Math.toIntExact(due),source);
-            case PawnStatus status -> pawnStatuses.apply(status,Math.toIntExact(due),source);
-            case Spawn actor -> spawn.apply(actor,Math.toIntExact(due),source,activator);
-            case ProgressEvent event -> {
-                System.getLogger(SceneActions.class.getName()).log(System.Logger.Level.DEBUG,"Scene analytics: level={0}, progress={1}, stamp={2}, source={3}",event.level(),event.progress(),due,source);
-                yield true;
-            }
-            case NextFloor ignored -> floorAdvances.apply(Math.toIntExact(due),source,activator);
-            case Memory memory -> memories.apply(memory.mutation(),Math.toIntExact(due),source,activator);
-            case Objective objective -> objectives.apply(objective.mutation(),Math.toIntExact(due),source,activator);
-            case Destroy destruction -> destroy.apply(destruction.tag(),Math.toIntExact(due),source);
-            case DestroySource ignored -> sourceDestruction.destroy(Math.toIntExact(due),source);
-            case DestroyMany destruction -> {
-                boolean found=false;for(String tag:destruction.tags())found=destroy.apply(tag,Math.toIntExact(due),source)|found;
-                yield found;
-            }
-            case Delay delay -> enqueue(node.children.getFirst(),Math.addExact(due,delay.variance()==0?delay.millis():Math.max(0,delay.millis()+random.nextInt(delay.variance()*2)-delay.variance())),source,activator);
-            case Sequence sequence -> {
-                boolean success=true;
-                for(var child:node.children)if(!execute(child,due,source,activator,budget)){success=false;if(sequence.stopOnFailure())break;}
-                yield success;
-            }
-            case Limited limited -> {
-                boolean allowed=node.remaining>0;
-                if(allowed)node.remaining--;
-                yield execute(node.children.get(allowed?0:1),due,source,activator,budget);
-            }
-            case Choice choice -> {
-                double total=choice.weights().stream().mapToDouble(Float::doubleValue).sum(),draw=random.nextDouble(total);
-                int selected=-1;for(int i=0;i<choice.weights().size();i++)if(choice.weights().get(i)>0){selected=i;draw-=choice.weights().get(i);if(draw<0)break;}
-                yield execute(node.children.get(selected),due,source,activator,budget);
-            }
-        };
-    }
-    private boolean enqueue(Node node,long due,String source,String activator){
-        if(closed||pending.size()>=MAX_PENDING||due>Integer.MAX_VALUE){rejected++;return false;}
-        pending.add(new Pending(due,order++,node,source,activator));return true;
-    }
+    public void advance(int stamp){runner.advance(stamp);}
     /** Only server-authored conversation responses enqueue standalone graphs. */
     public boolean perform(Action action,int stamp,String source){return perform(action,stamp,source,source);}
-    public boolean perform(Action action,int stamp,String source,String activator){
-        text(source);text(activator);validate(action,0,new int[]{0});return enqueue(new Node(action),stamp,source,activator);
-    }
-    public int pending(){return pending.size();}
-    public void cancelSource(String source){
-        text(source);pending.removeIf(task->task.source().equals(source));
-        for(var state:states)if(state.active.remove(source)!=null)activeSources--;
-    }
+    public boolean perform(Action action,int stamp,String source,String activator){text(source);text(activator);validate(action,0,new int[]{0});return runner.perform(action,stamp,source,activator);}
+    public int pending(){return runner.pending();}
+    public void cancelSource(String source){runner.cancelSource(source);}
     public static Set<String> conversationIds(Action action){
         validate(action,0,new int[]{0});var ids=new LinkedHashSet<String>();conversationIds(action,ids);return Set.copyOf(ids);
     }
@@ -481,14 +278,11 @@ public final class SceneActions {
             default->{}
         }
     }
-    public long rejected(){return rejected;}
-    public Set<String> workSources(){
-        var result=new HashSet<String>();if(closed)return result;
-        for(var p:pending){result.add(p.source());result.add(p.activator());}for(var state:states)result.addAll(state.active.keySet());return result;
-    }
-    public void close(){closed=true;pending.clear();for(var state:states){state.active.clear();state.removed.clear();}activeSources=0;}
-    private static void text(String value){if(value==null||value.isBlank()||value.length()>256||value.chars().anyMatch(Character::isISOControl))throw new IllegalArgumentException("Invalid scene action name");}
-    private static void validate(Action action,int depth,int[] count){
+    public long rejected(){return runner.rejected();}
+    public Set<String> workSources(){return runner.workSources();}
+    public void close(){runner.close();}
+    static void text(String value){if(value==null||value.isBlank()||value.length()>256||value.chars().anyMatch(Character::isISOControl))throw new IllegalArgumentException("Invalid scene action name");}
+    static void validate(Action action,int depth,int[] count){
         if(depth>16||++count[0]>1024)throw new IllegalArgumentException("Scene action graph exceeds limit");
         switch(action){case Count counter->validate(counter.action(),depth+1,count);case Targeted targeted->validate(targeted.action(),depth+1,count);case Timer timer->validate(timer.action(),depth+1,count);case VariableCondition condition->{validate(condition.action(),depth+1,count);validate(condition.otherwise(),depth+1,count);}case Delay delay->validate(delay.action(),depth+1,count);case GameplayEffect effect->validate(effect.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Choice choice->{for(var child:choice.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
     }

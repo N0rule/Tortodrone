@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,160,109 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,164,679 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -399,6 +399,10 @@ remaining stores were split the same way:
   `TownMail` owns the inbox, uplink letters, attachments, retention and the
   shared escrow item envelope. Settlement writes a letter through `TownMail`
   inside the same auction transaction, preserving refund/claim ordering.
+- `SceneActions` keeps the sealed action vocabulary, JSON/wire decoding and
+  validation; `SceneActionRunner` owns the tick-budgeted execution engine,
+  timer queue, ordering counter and signal-lifetime latches. All action
+  ordering and timing are unchanged.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.
