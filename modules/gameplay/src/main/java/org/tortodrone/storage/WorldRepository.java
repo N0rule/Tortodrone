@@ -28,13 +28,13 @@ final class WorldRepository {
     }
 
     /** Lightweight consistent metadata for active world observers; inventories load only on change. */
-    Map<Integer,Database.WorldState> worldStates()throws IOException {
+    Map<Integer,org.tortodrone.core.character.WorldSummary> worldStates()throws IOException {
         if(database.read(c->InventoryExpiry.due(c,System.currentTimeMillis())))database.write(c->null);
         return database.read(c->{
-            var states=new HashMap<Integer,Database.WorldState>();
+            var states=new HashMap<Integer,org.tortodrone.core.character.WorldSummary>();
             try(var s=c.createStatement();var rows=s.executeQuery("SELECT w.account_id,w.knight_id,w.world_id,k.name,w.state_revision,a.auth_revision,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id")) {
                 while(rows.next()) {
-                    var state=new Database.WorldState(rows.getInt(1),rows.getInt(2),rows.getInt(3),rows.getString(4),rows.getLong(5),rows.getLong(6),rows.getBoolean(7));
+                    var state=new org.tortodrone.core.character.WorldSummary(rows.getInt(1),rows.getInt(2),rows.getInt(3),rows.getString(4),rows.getLong(5),rows.getLong(6),rows.getBoolean(7));
                     states.put(state.worldId(),state);
                 }
             }
@@ -43,11 +43,11 @@ final class WorldRepository {
     }
 
     /** Indexed revision probe; does not materialize inventory or town state. */
-    Database.WorldState knightState(String username,String knight)throws IOException {
+    org.tortodrone.core.character.WorldSummary knightState(String username,String knight)throws IOException {
         if(database.read(c->InventoryExpiry.due(c,System.currentTimeMillis())))database.write(c->null);
         return database.read(c->{try(var statement=c.prepareStatement("SELECT w.account_id,w.knight_id,w.world_id,k.name,w.state_revision,a.auth_revision,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id WHERE a.name_key=? AND k.name_key=?")){
             statement.setString(1,username.toLowerCase(Locale.ROOT));statement.setString(2,knight.toLowerCase(Locale.ROOT));
-            try(var r=statement.executeQuery()){if(!r.next())throw new IOException("No such knight");return new Database.WorldState(r.getInt(1),r.getInt(2),r.getInt(3),r.getString(4),r.getLong(5),r.getLong(6),r.getBoolean(7));}
+            try(var r=statement.executeQuery()){if(!r.next())throw new IOException("No such knight");return new org.tortodrone.core.character.WorldSummary(r.getInt(1),r.getInt(2),r.getInt(3),r.getString(4),r.getLong(5),r.getLong(6),r.getBoolean(7));}
         }});
     }
 
@@ -110,15 +110,15 @@ final class WorldRepository {
             var result=KnightMemories.load(c,profile.worldId());c.commit();return result;});
     }
 
-    Database.MemoryState knightMemories(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations)throws IOException {
-        var result=knightStory(accountId,knightId,authRevision,worldId,revision,operations,List.of());return new Database.MemoryState(result.profile(),result.memories());
+    org.tortodrone.core.character.KnightMemoryState knightMemories(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations)throws IOException {
+        var result=knightStory(accountId,knightId,authRevision,worldId,revision,operations,List.of());return new org.tortodrone.core.character.KnightMemoryState(result.profile(),result.memories());
     }
 
     Map<String,org.tortodrone.core.character.KnightObjective.State> knightObjectives(int accountId,int knightId,long authRevision)throws IOException {
         return database.read(c->{c.setAutoCommit(false);requirePreferenceOwner(c,accountId,authRevision);var profile=WorldProfiles.load(c,accountId,knightId,authRevision);var result=KnightObjectives.load(c,profile.worldId());c.commit();return result;});
     }
 
-    Database.StoryState knightStory(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations,List<org.tortodrone.core.character.KnightObjective> objectives)throws IOException {
+    org.tortodrone.core.character.KnightStory knightStory(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations,List<org.tortodrone.core.character.KnightObjective> objectives)throws IOException {
         var changes=List.copyOf(operations);if(changes.size()>256)throw new IOException("Too many knight memory operations");
         var objectiveChanges=List.copyOf(objectives);if(objectiveChanges.size()>256)throw new IOException("Too many objective operations");
         return database.write(c->{
@@ -131,7 +131,7 @@ final class WorldRepository {
                 s.setInt(1,worldId);s.setInt(2,accountId);s.setInt(3,knightId);s.setLong(4,revision);
                 if(s.executeUpdate()!=1)throw new IOException("Knight memory revision changed");
             }
-            return new Database.StoryState(WorldProfiles.load(c,accountId,knightId,authRevision),after,newObjectives);
+            return new org.tortodrone.core.character.KnightStory(WorldProfiles.load(c,accountId,knightId,authRevision),after,newObjectives);
         });
     }
 

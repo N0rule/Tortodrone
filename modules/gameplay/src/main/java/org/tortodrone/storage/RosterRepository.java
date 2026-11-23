@@ -32,7 +32,7 @@ final class RosterRepository {
     }
 
     /** One SQLite snapshot for the roster, allocation counter and compare-and-swap revision. */
-    Database.RosterState rosterState(int id)throws IOException {
+    RosterState rosterState(int id)throws IOException {
         return database.read(c->{
             c.setAutoCommit(false);
             int next;long revision;
@@ -43,7 +43,7 @@ final class RosterRepository {
             try(var s=c.prepareStatement("SELECT * FROM knights WHERE account_id=? ORDER BY id")) {
                 s.setInt(1,id);try(var r=s.executeQuery()){while(r.next())knights.add(knight(r));}
             }
-            return new Database.RosterState(List.copyOf(knights),next,revision);
+            return new RosterState(List.copyOf(knights),next,revision);
         });
     }
 

@@ -104,12 +104,7 @@ public final class CharacterStore {
     public Path worldStorageFile(){return database.file();}
     /** Domain view of the poller's batch metadata; storage records stay inside the facade. */
     public Map<Integer,WorldSummary> worldStates()throws IOException{
-        var result=new java.util.LinkedHashMap<Integer,WorldSummary>();
-        for(var entry:database.worldStates().entrySet()){
-            var state=entry.getValue();
-            result.put(entry.getKey(),new WorldSummary(state.accountId(),state.knightId(),state.worldId(),state.name(),state.revision(),state.authRevision(),state.gameMaster()));
-        }
-        return Map.copyOf(result);
+        return Map.copyOf(database.worldStates());
     }
 
     public String username() { return username; }
@@ -270,13 +265,11 @@ public final class CharacterStore {
     }
     public KnightStory knightStory(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> memories,List<KnightObjective> objectives)throws IOException {
         if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid story owner");
-        var result=database.knightStory(accountId,knightId,authRevision,expected.worldId(),expected.revision(),memories,objectives);
-        return new KnightStory(result.profile(),result.memories(),result.objectives());
+        return database.knightStory(accountId,knightId,authRevision,expected.worldId(),expected.revision(),memories,objectives);
     }
     public KnightMemoryState knightMemories(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> operations)throws IOException {
         if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid knight memory owner");
-        var result=database.knightMemories(accountId,knightId,authRevision,expected.worldId(),expected.revision(),operations);
-        return new KnightMemoryState(result.profile(),result.memories());
+        return database.knightMemories(accountId,knightId,authRevision,expected.worldId(),expected.revision(),operations);
     }
     public void inspectionHidden(long authRevision,boolean hidden)throws IOException {
         if(database==null)throw new IOException("Preferences require SQLite storage");

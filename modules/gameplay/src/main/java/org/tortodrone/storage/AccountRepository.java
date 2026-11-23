@@ -17,7 +17,7 @@ final class AccountRepository {
 
     AccountRepository(Database database) { this.database = database; }
 
-    Database.Identity identity(String username) throws IOException {
+    AccountIdentity identity(String username) throws IOException {
         return database.read(c -> { try (PreparedStatement s = c.prepareStatement("SELECT * FROM accounts WHERE name_key=?")) {
             s.setString(1, username.toLowerCase(Locale.ROOT)); try (ResultSet r = s.executeQuery()) { return r.next() ? identity(r) : null; }
         } });
@@ -29,10 +29,10 @@ final class AccountRepository {
         } });
     }
 
-    List<Database.Summary> list() throws IOException {
-        return database.read(c -> { List<Database.Summary> result = new ArrayList<>();
+    List<AccountSummary> list() throws IOException {
+        return database.read(c -> { List<AccountSummary> result = new ArrayList<>();
             try (Statement s = c.createStatement(); ResultSet r = s.executeQuery("SELECT a.id,a.username,a.game_master,a.created_at,count(k.id) AS knights FROM accounts a LEFT JOIN knights k ON k.account_id=a.id GROUP BY a.id ORDER BY a.id")) {
-                while (r.next()) result.add(new Database.Summary(r.getInt("id"),r.getString("username"),r.getBoolean("game_master"),r.getInt("knights"),r.getLong("created_at")));
+                while (r.next()) result.add(new AccountSummary(r.getInt("id"),r.getString("username"),r.getBoolean("game_master"),r.getInt("knights"),r.getLong("created_at")));
             } return List.copyOf(result);
         });
     }
@@ -105,8 +105,8 @@ final class AccountRepository {
         }
     }
 
-    private static Database.Identity identity(ResultSet r) throws SQLException {
-        return new Database.Identity(r.getInt("id"), r.getString("username"), r.getBoolean("game_master"), r.getLong("auth_revision"), r.getBytes("salt"), r.getBytes("verifier"));
+    private static AccountIdentity identity(ResultSet r) throws SQLException {
+        return new AccountIdentity(r.getInt("id"), r.getString("username"), r.getBoolean("game_master"), r.getLong("auth_revision"), r.getBytes("salt"), r.getBytes("verifier"));
     }
 
     static int requireId(Connection c, String username) throws IOException, SQLException {

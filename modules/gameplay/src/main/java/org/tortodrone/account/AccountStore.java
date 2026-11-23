@@ -67,7 +67,7 @@ public final class AccountStore implements AutoCloseable {
     public org.tortodrone.core.character.WorldSummary knightState(String username,String knight)throws IOException {
         validateUsername(username);if(database==null)throw new IOException("Knight inspection requires SQLite storage");
         var state=database.knightState(username,knight);
-        return new org.tortodrone.core.character.WorldSummary(state.accountId(),state.knightId(),state.worldId(),state.name(),state.revision(),state.authRevision(),state.gameMaster());
+        return state;
     }
     /** Process-wide storage counters for the admin status view; observation only. */
     public Database.StorageMetrics storageMetrics()throws IOException {if(database==null)throw new IOException("Storage metrics require SQLite storage");return database.storageMetrics();}

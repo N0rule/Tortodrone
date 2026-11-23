@@ -28,12 +28,6 @@ public final class Database {
     public static final class KnightNameInUse extends IOException {
         private KnightNameInUse(SQLException cause) { super("That knight name is already in use",cause); }
     }
-    public record Identity(int id, String username, boolean gameMaster, long authRevision, byte[] salt, byte[] verifier) {
-        @Override public String toString() { return "Identity[redacted]"; }
-    }
-    public record Summary(int id, String username, boolean gameMaster, int knights, long createdAt) { }
-    public record RosterState(List<Knight> knights,int next,long revision) { }
-    public record WorldState(int accountId,int knightId,int worldId,String name,long revision,long authRevision,boolean gameMaster) { }
     public record Diagnostics(long operations,long slowOperations,long failures,long rollbacks,long maximumMillis) { }
     /** Storage series required by the Phase 4 contract; counters never change write behaviour. */
     public record StorageMetrics(long busyErrors,long expiryRuns,long expiryNanos,long checkpoints,long checkpointNanos,long walBytes,
@@ -312,7 +306,7 @@ public final class Database {
     public boolean knightNameInUse(String name,int accountId,int knightId)throws IOException {
         return roster.knightNameInUse(name,accountId,knightId);
     }
-    public Identity identity(String username) throws IOException { return accounts.identity(username); }
+    public AccountIdentity identity(String username) throws IOException { return accounts.identity(username); }
     public boolean current(int id, long revision) throws IOException { return accounts.current(id,revision); }
     /** Ordinary account preference rows in the existing integer metadata table; schema stays unchanged. */
     public boolean inspectionHidden(int accountId,long authRevision)throws IOException {
@@ -342,21 +336,19 @@ public final class Database {
     public WorldProfile completeTutorial(int accountId,int knightId,long authRevision,int worldId,long revision,float heat,org.tortodrone.core.town.TownCatalog rules)throws IOException {
         return worlds.completeTutorial(accountId,knightId,authRevision,worldId,revision,heat,rules);
     }
-    public record MemoryState(WorldProfile profile,Set<String> memories){public MemoryState{memories=Set.copyOf(memories);}}
     public Set<String> knightMemories(int accountId,int knightId,long authRevision)throws IOException {
         return worlds.knightMemories(accountId,knightId,authRevision);
     }
-    public MemoryState knightMemories(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations)throws IOException {
+    public org.tortodrone.core.character.KnightMemoryState knightMemories(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations)throws IOException {
         return worlds.knightMemories(accountId,knightId,authRevision,worldId,revision,operations);
     }
     public Map<String,org.tortodrone.core.character.KnightObjective.State> knightObjectives(int accountId,int knightId,long authRevision)throws IOException {
         return worlds.knightObjectives(accountId,knightId,authRevision);
     }
-    public record StoryState(WorldProfile profile,Set<String> memories,Map<String,org.tortodrone.core.character.KnightObjective.State> objectives){public StoryState{memories=Set.copyOf(memories);objectives=Map.copyOf(objectives);}}
-    public StoryState knightStory(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations,List<org.tortodrone.core.character.KnightObjective> objectives)throws IOException {
+    public org.tortodrone.core.character.KnightStory knightStory(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.core.character.KnightMemory> operations,List<org.tortodrone.core.character.KnightObjective> objectives)throws IOException {
         return worlds.knightStory(accountId,knightId,authRevision,worldId,revision,operations,objectives);
     }
-    public List<Summary> list() throws IOException { return accounts.list(); }
+    public List<AccountSummary> list() throws IOException { return accounts.list(); }
     public int create(String username, Passwords.Protection protection, boolean gameMaster) throws IOException {
         return accounts.create(username,protection,gameMaster);
     }
@@ -383,9 +375,9 @@ public final class Database {
         return worlds.worldProfile(accountId,knightId,authRevision,cached);
     }
     /** Lightweight consistent metadata for active world observers; inventories load only on change. */
-    public Map<Integer,WorldState> worldStates()throws IOException { return worlds.worldStates(); }
+    public Map<Integer,org.tortodrone.core.character.WorldSummary> worldStates()throws IOException { return worlds.worldStates(); }
     /** Indexed revision probe; does not materialize inventory or town state. */
-    public WorldState knightState(String username,String knight)throws IOException { return worlds.knightState(username,knight); }
+    public org.tortodrone.core.character.WorldSummary knightState(String username,String knight)throws IOException { return worlds.knightState(username,knight); }
     /** Current world state without an authentication-revision check, for read-only publications. */
     public WorldProfile profile(int accountId,int knightId) throws IOException { return worlds.profile(accountId,knightId); }
 
