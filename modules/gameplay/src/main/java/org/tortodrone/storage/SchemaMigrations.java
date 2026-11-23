@@ -162,7 +162,7 @@ final class SchemaMigrations {
             statement.execute("CREATE TABLE account_events(id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL, action TEXT NOT NULL, created_at INTEGER NOT NULL) STRICT");
         }
         WorldProfiles.initialize(connection);
-        TownStore.initialize(connection);
+        TownSchema.initialize(connection);
         GuildStore.initialize(connection);
         DepotStore.upgrade(connection, DepotSeed.bundled());
         try (Statement statement = connection.createStatement()) {
