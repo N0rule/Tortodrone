@@ -133,6 +133,7 @@ public final class CombatRenderingCheck {
     private long deadline, started, nextFrame, lastStatus;
     private boolean listening, released, projectile, aftermath, done, passed;
     private boolean windowPrepared;
+    private int windowRequestWidth = 1024, windowRequestHeight = 600;
     private boolean needleFacingReady, needleNormalSeen, needleChargedSeen;
     private float needleNormalFacing;
     private long trainingSince;
@@ -472,16 +473,23 @@ public final class CombatRenderingCheck {
             app.startup();
             return;
         }
-        // Automated acceptance runs create a windowed client. Without a disposable
-        // preference the stock client opens fullscreen at the desktop mode, and a
-        // scenario resize then leaves the smaller game viewport surrounded by black
-        // bars. A windowed screen_mode keeps every automated capture a real window.
-        var windowedMode = new com.threerings.opengl.util.DisplayMode(1280, 900);
+        // Automated acceptance runs create a small windowed client. Without a disposable
+        // preference the stock client picks its largest available mode and opens
+        // fullscreen, where a smaller game viewport is letterboxed with black bars.
+        // Half the desktop keeps the whole viewport visible without filling the screen;
+        // the stock 1024x600 minimum keeps the HUD readable on smaller displays.
+        var desktopMode = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice()
+                .getDisplayMode();
+        var windowedMode = new com.threerings.opengl.util.DisplayMode(
+                Math.max(1024, desktopMode.getWidth() / 2), Math.max(600, desktopMode.getHeight() / 2));
+        probe.windowRequestWidth = windowedMode.width;
+        probe.windowRequestHeight = windowedMode.height;
         com.threerings.projectx.client.ProjectXPrefs.b(
                 new com.threerings.projectx.client.ProjectXPrefs.d(windowedMode, false));
         // ProjectXApp's constructor reads the preference and queues that display mode
         // before this process can write it, so replace the queued mode explicitly. This
-        // makes the client create a 1280x900 windowed window from its first frame.
+        // makes the client create the windowed window from its first frame.
         app.setDisplayMode(windowedMode);
         var timer = new Timer(true);
         var pending = new AtomicBoolean();
@@ -2293,19 +2301,18 @@ public final class CombatRenderingCheck {
             long now = System.nanoTime();
             if (!windowPrepared) {
                 windowPrepared = true;
-                // The launcher applied a windowed display mode before the window existed,
-                // so an automated run must never be fullscreen: a fullscreen surface with
-                // a smaller game viewport is letterboxed with black bars. Tiling window
-                // managers may still pick their own tile, so request the capture size once
-                // the window exists and report what the first frame actually uses.
+                // The launcher applied the half-screen windowed display mode before the
+                // window existed. Pin that exact size once: tiling window managers otherwise
+                // stretch it to their own tile, and the run then reports a different capture
+                // size than the one it asked for.
                 long window = app.getWindow();
                 if (window != 0L) {
                     if (GLFW.glfwGetWindowMonitor(window) != 0L)
-                        GLFW.glfwSetWindowMonitor(window, 0L, 0, 0, 1280, 900, GLFW.GLFW_DONT_CARE);
-                    // The rapid sweep pins its size once, at login, so the direct scene
-                    // jump never has to resize the window on the way into Training.
-                    if (rapidOnly) GLFW.glfwSetWindowSizeLimits(window, 1280, 900, 1280, 900);
-                    GLFW.glfwSetWindowSize(window, 1280, 900);
+                        GLFW.glfwSetWindowMonitor(
+                                window, 0L, 0, 0, windowRequestWidth, windowRequestHeight, GLFW.GLFW_DONT_CARE);
+                    GLFW.glfwSetWindowSizeLimits(
+                            window, windowRequestWidth, windowRequestHeight, windowRequestWidth, windowRequestHeight);
+                    GLFW.glfwSetWindowSize(window, windowRequestWidth, windowRequestHeight);
                     GLFW.glfwFocusWindow(window);
                     var windowWidth = BufferUtils.createIntBuffer(1);
                     var windowHeight = BufferUtils.createIntBuffer(1);
@@ -2440,6 +2447,24 @@ public final class CombatRenderingCheck {
                     // action "town" == the stock aU.EQ() enter-world call.
                     app.GI().bU(com.threerings.projectx.client.aU.class).EQ();
                     initialWorldReturnRequested = true;
+                }
+                return;
+            }
+            if (rapidOnly && stage == 0) {
+                // The login handshake always places a knight in a town first, but the rapid
+                // smoke does not play there. Request Training as soon as the initial place
+                // move settles, before the Haven pawn is created, so the window goes from
+                // login straight to the Training Hall.
+                var player = app.CZ();
+                if (player != null
+                        && player.knight != null
+                        && player.zoneId != 0
+                        && !app.GK().mN()
+                        && !app.GB()) {
+                    app.GK().bn(294);
+                    System.out.println("CHECK: rapid smoke requests Advanced Training as its login scene");
+                    started = now;
+                    stage = 2;
                 }
                 return;
             }
@@ -3302,16 +3327,6 @@ public final class CombatRenderingCheck {
     }
 
     private boolean rapidTick(View view, long now) throws Exception {
-        if (stage == 0) {
-            // A direct native scene jump, not a command or a walk: the smoke starts in Haven and
-            // immediately requests its training instance. The window was already sized and
-            // pinned at login, so nothing here resizes it as the scene changes.
-            app.GK().bn(294);
-            System.out.println("CHECK: rapid smoke jumps directly from Haven into Advanced Training");
-            started = now;
-            stage = 2;
-            return true;
-        }
         if (stage == 2) {
             if (view.sceneId() != 294
                     || !(view.PO().acU() instanceof Dungeoneer)

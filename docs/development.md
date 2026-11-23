@@ -121,8 +121,9 @@ a change touches one feature in depth.
 
 `scripts/graphical-test.sh rapid` is the fastest single-client combat burst. It
 starts from a `--seed-rapid` GM knight with every weapon family at maximum level,
-requests Advanced Training scene 294 directly with the native move call (no command
-or walk), equips six armor/shield pieces through the native item service, and sweeps
+requests Advanced Training scene 294 with the native move call as soon as the
+login handshake settles (before the Haven pawn renders, with no command or walk),
+equips six armor/shield pieces through the native item service, and sweeps
 23 short sword/gun/bomb/shield/sprite actions with authoritative and rendered
 activity checks. Quick sword/gun presses stay fast, while sword, gun and every bomb
 family hold a real charge: an early bomb release only emits the stock invisible Dud,
@@ -133,12 +134,13 @@ vial phases. Its scene time is about a minute, but it shares login/build cost wi
 every scenario, so use it as the broad first check and follow up with a focused
 scenario for depth.
 
-Automated scenarios open a windowed client and request a 1280x900 window on their
-first tick; only `--manual` applies the desktop fullscreen mode. `rapid` also pins
-the window size, because a tiling window manager can otherwise resize it between
-scenes and split one run across several capture sizes. A scenario window that is
-fullscreen letterboxes its smaller game viewport with black bars, so treat that as a
-fixture failure rather than a rendering result.
+Automated scenarios open a windowed client at half the desktop resolution (never
+smaller than the stock 1024x600 minimum). The probe pins that size once on the
+first tick so a tiling window manager cannot stretch the game across a full-height
+tile; only `--manual` applies the desktop fullscreen mode. The first `WINDOW:` line
+reports the size actually captured. A scenario window that is fullscreen letterboxes
+its smaller game viewport with black bars, so treat that as a fixture failure rather
+than a rendering result.
 
 ## WebUI verification
 

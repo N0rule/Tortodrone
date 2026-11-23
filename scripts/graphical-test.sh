@@ -23,7 +23,7 @@
 #                   MissionPartyObject gate/floor and the o.shadow_beast mission bar
 #   playability     fast single-client smoke: Haven -> /training native actors,
 #                   movement, conversation, vial use, sword/gun/bomb -> /haven
-#   rapid           fastest single-client combat burst: direct scene jump, seeded
+#   rapid           fastest single-client combat burst: login-scene jump, seeded
 #                   GM knight, every weapon family, shield/bash/dodge, sprites,
 #                   armor/shield equips and a real shield bump
 #   explore <id>    load a scene by native scene id, drive free stock movement
