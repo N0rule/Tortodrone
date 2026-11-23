@@ -1,7 +1,5 @@
 package org.tortodrone.core.character;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /** Small server-owned catalog of verified references; the client supplies its own game assets. */
@@ -14,8 +12,8 @@ public final class StarterCatalog {
     public record CustomColorization(int clazz,float hue,float saturation,float value) {
         public CustomColorization { if(!Float.isFinite(hue)||!Float.isFinite(saturation)||!Float.isFinite(value))throw new IllegalArgumentException("Nonfinite color offsets"); }
     }
-    private record Entry(String category, String parameter, String model, Map<String, String> arguments) { }
-    private static final Map<String, Entry> ENTRIES = load();
+    record Entry(String category, String parameter, String model, Map<String, String> arguments) { }
+    private static final Map<String, Entry> ENTRIES = StarterCatalogReader.load();
     private static final Set<String> COSTUMES = Set.of("Blue", "Gold", "Green", "Heavy", "Pink", "Purple", "Red");
     private static final String[] EYES = ("default almond cheeky closed determined dot eks happy jolly pill plus rage sad shifty sleepy spiral sultry squint wat blank lash star club diamond heart spade snow clover skull circuit flower_round flower_sharp sparkle cheer flower_tri lotus propeller square triangle hexagon sun moon bug bee gear joy bright").split(" ");
 
@@ -132,26 +130,5 @@ public final class StarterCatalog {
             : value.startsWith("C:") ? new Colorization(Integer.parseInt(value.substring(2)))
             : value.substring(2)));
         args.put(entry.parameter(), new Model(entry.model(), values));
-    }
-
-    private static Map<String, Entry> load() {
-        Map<String, Entry> result = new HashMap<>();
-        try (InputStream stream = StarterCatalog.class.getResourceAsStream("/starter-models.txt")) {
-            if (stream == null) throw new IOException("Missing starter catalog");
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-                for (String line; (line = reader.readLine()) != null;) {
-                    if (line.isBlank() || line.startsWith("#")) continue;
-                    String[] fields = line.split("\\|", -1);
-                    if (fields.length != 5) throw new IOException("Malformed starter catalog");
-                    Map<String, String> values = new HashMap<>();
-                    for (String pair : fields[4].split(";")) {
-                        String[] parts = pair.split("=", 2);
-                        if (parts.length != 2 || values.put(parts[0], parts[1]) != null) throw new IOException("Malformed starter arguments");
-                    }
-                    if (result.put(fields[1], new Entry(fields[0], fields[2], fields[3], Map.copyOf(values))) != null) throw new IOException("Duplicate starter reference");
-                }
-            }
-            return Map.copyOf(result);
-        } catch (IOException failure) { throw new ExceptionInInitializerError(failure); }
     }
 }

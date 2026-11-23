@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,194,081 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,194,779 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -466,6 +466,10 @@ remaining stores were split the same way:
   `ServerSettingsReader` owns bundled defaults, YAML/properties overrides, the
   legacy `news-port` reconciliation, typed range checks and welcome/startup-map
   validation.
+- `StarterCatalog` keeps the verified reference table and the creator/preview
+  model assembly; `StarterCatalogReader` owns the bundled pipe-delimited
+  `starter-models.txt` resource, its field/argument grammar, duplicate rejection
+  and startup failure.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.
