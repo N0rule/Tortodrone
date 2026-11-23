@@ -19,8 +19,9 @@ import org.tortodrone.core.character.ItemCatalog;
 public final class ReadyRoomMailSessionTest {
     public static void main(String[] args)throws Exception {
         Path root=Files.createTempDirectory("tortodrone-ready-room-mail-");
+        var previous=org.tortodrone.world.SceneRegistry.system();
         try{
-            var content=ContentManager.load(Path.of("."));var scenes=org.tortodrone.world.SceneRegistry.create(content);var db=new Database(root,false);
+            var content=ContentManager.load(Path.of("."));var scenes=org.tortodrone.world.SceneRegistry.create(content);org.tortodrone.world.SceneRegistry.install(scenes);var db=new Database(root,false);
             try(var alice=ready(db,content.items(),scenes,"Alice");var bob=person(db,content.items(),scenes,"Bobby")){
                 // The panel's opening request (null ids) against an empty mailbox.
                 alice.world.auctionInvocation(new SessionDecoder.Invocation(3,SessionCodec.UPLINK_SERVICE,6,Arrays.asList((Object)null,result())));
@@ -61,7 +62,7 @@ public final class ReadyRoomMailSessionTest {
                 }
             }
             System.out.println("PASS: Ready Room mail load/ownership, friend request/unfriend, auction scene gate and unselected guard");
-        }finally{org.tortodrone.support.ContentFixture.delete(root);}
+        }finally{org.tortodrone.world.SceneRegistry.install(previous);org.tortodrone.support.ContentFixture.delete(root);}
     }
     private static SessionDecoder.Listener confirm(){return new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)5);}
     private static SessionDecoder.Listener result(){return new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)6);}
