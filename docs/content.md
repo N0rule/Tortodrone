@@ -662,12 +662,18 @@ Existing sparse base values remain the fallback for deployments without a level
 table; omitted values default to zero.
 
 The sprite/harness tables and all 27 base/ultimate attacks (1,728 power/damage
-combinations) are retained from the native reader. A successful skill
+combinations) are retained from the native reader. `SpriteCoverageTest` pins the
+whole matrix: for each of the three sprite families it resolves every declared
+skill, base and ultimate attack, all sixteen power pairs and all four harness
+damage types against the captured catalogue, so a skill can no longer be
+silently inert because a row is missing. A successful skill
 uses native knight activity 288 for 750 ms and writes the **used skill's**
 harness-adjusted, minimum-clamped recharge to all three pet cooldown slots,
 matching observed live behavior. Selected sprite resistance
 and family-damage perks now contribute to combat, alongside existing health,
-charge and speed perks.
+charge and speed perks. Defense-type sprite perks are the exception: their
+presentation entry carries a category, rank and strength but no captured
+defense value, so they are retained as data and add no defense.
 
 Reproduce the native portion of the numeric table with a separate read-only
 stock installation:
