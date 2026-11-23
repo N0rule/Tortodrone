@@ -10,7 +10,7 @@ import org.tortodrone.core.Json;
 final class GiftStore {
     private GiftStore() { }
     static void initialize(Connection c)throws SQLException {
-        try(var s=c.createStatement()){s.execute("CREATE TABLE town_gifts(item_id INTEGER PRIMARY KEY REFERENCES inventory_items(item_id) ON DELETE CASCADE,record TEXT NOT NULL)");}
+        try(var s=c.createStatement()){s.execute("CREATE TABLE town_gifts(item_id INTEGER PRIMARY KEY REFERENCES inventory_items(item_id) ON DELETE CASCADE,record TEXT NOT NULL) STRICT");}
     }
     static Map<Long,WorldProfile.Gift> load(Connection c,int world)throws SQLException,IOException {
         var gifts=new HashMap<Long,WorldProfile.Gift>();

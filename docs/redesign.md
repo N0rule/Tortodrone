@@ -590,6 +590,16 @@ version exists instead of a bare `user_version` stamp.
 - The write path does not run a global expiry sweep on every transaction; expiry
   runs on its own schedule and its cost is measured.
 
+**Landed:** the baseline creates every game table `STRICT`. Step 3 rebuilds a
+non-`STRICT` file with SQLite's table-replacement procedure, preserving rows,
+explicit and partial indexes, triggers and the AUTOINCREMENT high-water mark, and
+the caller still runs `foreign_key_check` before commit. Step 4 adds the remaining
+child-side foreign-key indexes. `inventory_items` is one row per instance; the JSON
+columns that remain carry value lists or message payloads, not relational rows.
+Inventory expiry already runs on its own 30 s daemon outside the write path.
+`DatabaseSchemaTest` upgrades a real non-`STRICT` schema-2 fixture and checks the
+rebuilt schema, rows, indexes, triggers and sequence.
+
 ### SQLite operations
 
 - Choose and document `synchronous`, `wal_autocheckpoint`, `journal_size_limit`,

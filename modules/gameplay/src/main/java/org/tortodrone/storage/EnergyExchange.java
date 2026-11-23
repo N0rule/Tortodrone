@@ -12,7 +12,7 @@ public final class EnergyExchange {
     public EnergyExchange(Database database){this.database=database;}
     static void initialize(Connection c)throws SQLException{
         try(var s=c.createStatement()){
-            s.execute("CREATE TABLE town_energy_offers(id INTEGER PRIMARY KEY AUTOINCREMENT CHECK(id BETWEEN 1 AND 2147483647),world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,buy INTEGER NOT NULL CHECK(buy IN(0,1)),price INTEGER NOT NULL CHECK(price>0),volume INTEGER NOT NULL CHECK(volume BETWEEN 0 AND 999),created INTEGER NOT NULL)");
+            s.execute("CREATE TABLE town_energy_offers(id INTEGER PRIMARY KEY AUTOINCREMENT CHECK(id BETWEEN 1 AND 2147483647),world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,buy INTEGER NOT NULL CHECK(buy IN(0,1)),price INTEGER NOT NULL CHECK(price>0),volume INTEGER NOT NULL CHECK(volume BETWEEN 0 AND 999),created INTEGER NOT NULL) STRICT");
             s.execute("CREATE INDEX town_energy_book ON town_energy_offers(buy,price,id) WHERE volume>0");
             s.execute("CREATE INDEX town_energy_owner ON town_energy_offers(world_id) WHERE volume>0");
         }

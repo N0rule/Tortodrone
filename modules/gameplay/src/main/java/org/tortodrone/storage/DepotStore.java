@@ -24,13 +24,13 @@ public final class DepotStore {
     public DepotStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;}
     // Managed Depot base table; the baseline adds promotions in the same transaction.
     static void initialize(Connection c)throws SQLException {
-        try(var s=c.createStatement()){s.execute("CREATE TABLE town_depot_offers(id INTEGER PRIMARY KEY AUTOINCREMENT,item TEXT NOT NULL,count INTEGER NOT NULL CHECK(count BETWEEN 1 AND 9999),crowns INTEGER NOT NULL CHECK(crowns>=0),energy INTEGER NOT NULL CHECK(energy>=0),purchase_limit INTEGER NOT NULL CHECK(purchase_limit>=0),featured INTEGER NOT NULL CHECK(featured IN(0,1)),enabled INTEGER NOT NULL CHECK(enabled IN(0,1)))");}
+        try(var s=c.createStatement()){s.execute("CREATE TABLE town_depot_offers(id INTEGER PRIMARY KEY AUTOINCREMENT,item TEXT NOT NULL,count INTEGER NOT NULL CHECK(count BETWEEN 1 AND 9999),crowns INTEGER NOT NULL CHECK(crowns>=0),energy INTEGER NOT NULL CHECK(energy>=0),purchase_limit INTEGER NOT NULL CHECK(purchase_limit>=0),featured INTEGER NOT NULL CHECK(featured IN(0,1)),enabled INTEGER NOT NULL CHECK(enabled IN(0,1))) STRICT");}
     }
     /** Caller owns BEGIN IMMEDIATE. Never infer initialization from the number of offers. */
     static void upgrade(Connection c,DepotSeed.Data legacy)throws SQLException,IOException {
         try(var s=c.createStatement()) {
             s.execute("ALTER TABLE town_depot_offers ADD COLUMN promotion_only INTEGER NOT NULL DEFAULT 0 CHECK(promotion_only IN(0,1))");
-            s.execute("CREATE TABLE town_depot_promotions(id INTEGER PRIMARY KEY AUTOINCREMENT,offer_id INTEGER NOT NULL REFERENCES town_depot_offers(id),starts INTEGER NOT NULL CHECK(starts>=0),ends INTEGER NOT NULL CHECK(ends>starts),crowns INTEGER NOT NULL CHECK(crowns>=0),energy INTEGER NOT NULL CHECK(energy>=0),reference_price INTEGER CHECK(reference_price>0),featured INTEGER NOT NULL CHECK(featured IN(0,1)),cancelled INTEGER NOT NULL DEFAULT 0 CHECK(cancelled IN(0,1)),CHECK(crowns=0 OR energy=0))");
+            s.execute("CREATE TABLE town_depot_promotions(id INTEGER PRIMARY KEY AUTOINCREMENT,offer_id INTEGER NOT NULL REFERENCES town_depot_offers(id),starts INTEGER NOT NULL CHECK(starts>=0),ends INTEGER NOT NULL CHECK(ends>starts),crowns INTEGER NOT NULL CHECK(crowns>=0),energy INTEGER NOT NULL CHECK(energy>=0),reference_price INTEGER CHECK(reference_price>0),featured INTEGER NOT NULL CHECK(featured IN(0,1)),cancelled INTEGER NOT NULL DEFAULT 0 CHECK(cancelled IN(0,1)),CHECK(crowns=0 OR energy=0)) STRICT");
             s.execute("CREATE INDEX town_depot_windows ON town_depot_promotions(offer_id,cancelled,starts,ends)");
         }
         AuctionSchema.economyUpgrade(c);

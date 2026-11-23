@@ -63,11 +63,11 @@ public final class MailCampaignStore {
                 + "sender INTEGER NOT NULL,sender_label TEXT,subject TEXT NOT NULL,body TEXT NOT NULL,"
                 + "crowns INTEGER NOT NULL DEFAULT 0 CHECK(crowns>=0),"
                 + "energy INTEGER NOT NULL DEFAULT 0 CHECK(energy>=0),"
-                + "gifts TEXT NOT NULL,CHECK(ends>starts))");
+                + "gifts TEXT NOT NULL,CHECK(ends>starts)) STRICT");
             s.execute("CREATE TABLE IF NOT EXISTS mail_campaign_deliveries("
                 + "campaign INTEGER NOT NULL REFERENCES mail_campaigns(id) ON DELETE CASCADE,"
                 + "world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,"
-                + "sent INTEGER NOT NULL,PRIMARY KEY(campaign,world_id))");
+                + "sent INTEGER NOT NULL,PRIMARY KEY(campaign,world_id)) STRICT");
             s.execute("CREATE TABLE IF NOT EXISTS mail_welcome("
                 + "id INTEGER PRIMARY KEY CHECK(id=1),"
                 + "enabled INTEGER NOT NULL DEFAULT 0 CHECK(enabled IN(0,1)),"
@@ -76,10 +76,10 @@ public final class MailCampaignStore {
                 + "sender INTEGER NOT NULL DEFAULT 6,sender_label TEXT,"
                 + "subject TEXT NOT NULL DEFAULT '',body TEXT NOT NULL DEFAULT '',"
                 + "crowns INTEGER NOT NULL DEFAULT 0,energy INTEGER NOT NULL DEFAULT 0,"
-                + "gifts TEXT NOT NULL DEFAULT '[]',updated INTEGER NOT NULL DEFAULT 0)");
+                + "gifts TEXT NOT NULL DEFAULT '[]',updated INTEGER NOT NULL DEFAULT 0) STRICT");
             s.execute("CREATE TABLE IF NOT EXISTS mail_welcome_deliveries("
                 + "world_id INTEGER PRIMARY KEY REFERENCES world_characters(world_id) ON DELETE CASCADE,"
-                + "sent INTEGER NOT NULL)");
+                + "sent INTEGER NOT NULL) STRICT");
         }
         boolean townMail;
         try (var r = c.createStatement().executeQuery("SELECT 1 FROM sqlite_master WHERE type='table' AND name='town_mail'")) {
