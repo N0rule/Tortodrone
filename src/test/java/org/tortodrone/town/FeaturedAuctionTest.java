@@ -36,7 +36,7 @@ public final class FeaturedAuctionTest {
             var filtered=(AuctionState.Page)house.operate(bob,1,1,5,List.of(new org.tortodrone.core.wire.AuctionSearch(true,null,null,0,true,false),0),false).result();
             check(filtered.listings().stream().anyMatch(a->a.id()==featured.id()),"featured tab returns the system listing");
             expire(db,featured.id());house.settleExpired();house.settleExpired();
-            var deliveries=house.deliveries(featured.id());check(deliveries.size()==2&&deliveries.stream().filter(AuctionHouse.Delivery::item).count()==1,"featured settlement delivers once and never pays a nonexistent seller");
+            var deliveries=house.deliveries(featured.id());check(deliveries.size()==2&&deliveries.stream().filter(TownMail.Delivery::item).count()==1,"featured settlement delivers once and never pays a nonexistent seller");
             var stock=house.createFeatured("Material/Gel Drop",2,50,50,0,2);
             var crowns=db.worldProfile(bob,1,1).crowns();house.operate(bob,1,1,1,List.of(stock.id(),50),false);
             var bought=(AuctionState.Update)house.operate(alice,1,1,1,List.of(stock.id(),50),false).result();

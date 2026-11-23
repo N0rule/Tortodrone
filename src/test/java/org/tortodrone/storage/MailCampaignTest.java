@@ -149,7 +149,7 @@ public final class MailCampaignTest {
         return new Knight(0, name, "Gear/Helm/Spiral Sallet (Blue)", "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 0);
     }
     private static List<org.tortodrone.core.town.AuctionState.Mail> inbox(Database db, int world) throws Exception {
-        return db.read(c -> AuctionHouse.loadMail(c, world));
+        return db.read(c -> TownMail.loadMail(c, world));
     }
     private static int version(Database db) throws Exception {
         return db.read(c -> { try (var s = c.createStatement(); var r = s.executeQuery("PRAGMA user_version")) { r.next(); return r.getInt(1); } });

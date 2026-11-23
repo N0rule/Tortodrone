@@ -169,7 +169,7 @@ public final class MailCampaignStore {
                 s.setString(3, mailText(campaign.subject(), campaign.senderLabel()));
                 s.setString(4, mailText(campaign.body(), campaign.senderLabel()));
                 s.setInt(5, campaign.crowns()); s.setInt(6, campaign.energy());
-                s.setString(7, gifts.isEmpty() ? null : AuctionHouse.encodeItems(gifts));
+                s.setString(7, gifts.isEmpty() ? null : TownMail.encodeItems(gifts));
                 s.setInt(8, -campaign.sender()); s.setString(9, campaign.senderLabel());
                 s.setInt(10, mailType(campaign.senderLabel()));
                 s.executeUpdate();
@@ -236,7 +236,7 @@ public final class MailCampaignStore {
                 s.setString(3, mailText(cleanSubject, cleanSender));
                 s.setString(4, mailText(cleanBody, cleanSender));
                 s.setInt(5, crowns); s.setInt(6, energy);
-                s.setString(7, mail.isEmpty() ? null : AuctionHouse.encodeItems(mail));
+                s.setString(7, mail.isEmpty() ? null : TownMail.encodeItems(mail));
                 s.setInt(8, -sender); s.setString(9, cleanSender);
                 s.setInt(10, mailType(cleanSender));
                 try (var r = s.executeQuery()) { r.next(); return r.getLong(1); }
@@ -272,7 +272,7 @@ public final class MailCampaignStore {
             s.setString(3, mailText(letter.subject(), letter.senderLabel()));
             s.setString(4, mailText(letter.body(), letter.senderLabel()));
             s.setInt(5, letter.crowns()); s.setInt(6, letter.energy());
-            s.setString(7, gifts.isEmpty() ? null : AuctionHouse.encodeItems(gifts));
+            s.setString(7, gifts.isEmpty() ? null : TownMail.encodeItems(gifts));
             s.setInt(8, -letter.sender()); s.setString(9, letter.senderLabel());
             s.setInt(10, mailType(letter.senderLabel()));
             s.executeUpdate();

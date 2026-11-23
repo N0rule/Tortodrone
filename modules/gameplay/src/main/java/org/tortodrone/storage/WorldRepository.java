@@ -90,7 +90,7 @@ final class WorldRepository {
                     s.setInt(1,accountId);s.setInt(2,knightId);try(var r=s.executeQuery()){if(!r.next())throw new IOException("Tutorial knight missing");knight=r.getString(1);}
                 }
                 var bomb=new WorldProfile.Item(0,WorldProfile.Slot.BOMB,Database.SKIPPED_CAMP_ATTACHMENT,null,0,null,false,true,false,1,false,0,0,List.of(),List.of(),false);
-                AuctionHouse.systemMail(c,worldId,Database.ORIENTATION_SENDER,"s.skipped_rescue_camp",AuctionHouse.composeMessage("m.skipped_rescue_camp","~"+knight),List.of(bomb));
+                TownMail.systemMail(c,worldId,Database.ORIENTATION_SENDER,"s.skipped_rescue_camp",TownMail.composeMessage("m.skipped_rescue_camp","~"+knight),List.of(bomb));
             }
             try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
                 s.setString(1,receipt);s.setInt(2,1);s.executeUpdate();

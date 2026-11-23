@@ -24,7 +24,7 @@ final class GiftStore {
         try(var s=c.prepareStatement("INSERT INTO town_gifts(item_id,record) VALUES(?,?)")){s.setLong(1,id);s.setString(2,encode(gift));s.executeUpdate();}
     }
     static String encode(WorldProfile.Gift gift)throws IOException {
-        var contents=new ArrayList<String>();for(var item:gift.contents()){if(item.gift()!=null)throw new IOException("Nested gifts are not allowed");contents.add(AuctionHouse.encode(item));}
+        var contents=new ArrayList<String>();for(var item:gift.contents()){if(item.gift()!=null)throw new IOException("Nested gifts are not allowed");contents.add(TownMail.encode(item));}
         var row=new LinkedHashMap<String,Object>();row.put("wrapperId",gift.wrapperId());row.put("wrapperName",gift.wrapperName());row.put("message",gift.message());row.put("contents",contents);return Json.stringify(row);
     }
     static WorldProfile.Gift decode(String json)throws IOException {
@@ -34,7 +34,7 @@ final class GiftStore {
             int total=0;
             for(var raw:(List<?>)row.get("contents")){
                 if(contents.size()>=256)throw new IOException("Gift contents exceed limit");
-                var item=AuctionHouse.decode((String)raw);
+                var item=TownMail.decode((String)raw);
                 if(item.gift()!=null||item.count()<1||(total+=item.count())>9999||item.slot()!=WorldProfile.Slot.OTHER&&item.count()!=1)throw new IOException("Invalid saved gift contents");
                 contents.add(item);
             }

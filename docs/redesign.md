@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,142,335 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,160,109 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -395,6 +395,10 @@ remaining stores were split the same way:
   commands, and `GuildSettingsStore` for name checks, the rename window and the
   message of the day. It delegates to the static `GuildLogStore` for the guild
   record and `GuildSchema` for the guild tables.
+- `AuctionHouse` keeps auction listings, bids, fees, escrow and settlement;
+  `TownMail` owns the inbox, uplink letters, attachments, retention and the
+  shared escrow item envelope. Settlement writes a letter through `TownMail`
+  inside the same auction transaction, preserving refund/claim ordering.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.

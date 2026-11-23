@@ -39,7 +39,7 @@ public final class InventoryExpiryTest {
             check(new Database(home,true).worldProfile(a,1,1).equals(first),"deadline survives database reopen");
             db.trade(first,1,Map.of(costume.id(),1),0,0,db.worldProfile(b,1,1),1,Map.of(),0,0,items);
             var received=db.worldProfile(b,1,1);check(find(received,d.config()).expiresAt().equals(deadline),"trade preserves exact deadline and instance");
-            check(AuctionHouse.decode(AuctionHouse.encode(costume)).expiresAt().equals(deadline),"escrow/mail encoding retains deadline");
+            check(TownMail.decode(TownMail.encode(costume)).expiresAt().equals(deadline),"escrow/mail encoding retains deadline");
             String paper="Upgrade/Wrapping Paper/Checker Wrapping (Blue)";db.grantItems("ExpireBob","Expire-Bob",-1,-1,items.require(paper),1,-1,-1);
             var town=new TownStore(db,items,TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
             var p=db.worldProfile(b,1,1);var wrapped=town.wrap(b,1,1,find(p,paper).id(),Map.of(costume.id(),1),"Timed prize","Blue").profile();
