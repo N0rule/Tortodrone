@@ -71,7 +71,7 @@ final class NamedLoadouts {
         var used=new HashSet<Long>();
         for(int slot=0;slot<16;slot++) {
             long id=saved.equipment().get(slot);if(id==0)continue;
-            var item=TownStore.owned(p,id);
+            var item=TownLedger.owned(p,id);
             if(!used.add(id)||!item.slot().accepts(slot)||!SlotUpgrades.unlocked(p,slot))throw new IOException("A saved item or equipment slot is no longer available");
         }
         var sprite=p.town().sprites().stream().filter(s->s.id()==saved.sprite()).findFirst().orElse(null);

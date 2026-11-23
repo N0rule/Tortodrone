@@ -27,7 +27,7 @@ public final class EnergyExchange {
     public TownStore.Result cancel(int account,int knight,long auth,int offerId)throws IOException{
         return database.write(c->{var p=WorldProfiles.load(c,account,knight,auth);boolean buy;int price,volume;
             try(var s=c.prepareStatement("SELECT buy,price,volume FROM town_energy_offers WHERE id=? AND world_id=? AND volume>0")){s.setInt(1,offerId);s.setInt(2,p.worldId());try(var r=s.executeQuery()){if(!r.next())throw new IOException("This Energy offer is no longer available");buy=r.getBoolean(1);price=r.getInt(2);volume=r.getInt(3);}}
-            TownStore.credit(c,p.worldId(),buy?Math.multiplyExact(price,volume):0,buy?0:volume*LOT);
+            TownLedger.credit(c,p.worldId(),buy?Math.multiplyExact(price,volume):0,buy?0:volume*LOT);
             try(var s=c.prepareStatement("UPDATE town_energy_offers SET volume=0 WHERE id=? AND world_id=?")){s.setInt(1,offerId);s.setInt(2,p.worldId());s.executeUpdate();}
             changed(c);return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),null);
         });
@@ -42,12 +42,12 @@ public final class EnergyExchange {
             }
             if(immediate&&matches.stream().mapToLong(Maker::volume).sum()<volume)throw new IOException("The Energy price changed or there are not enough matching offers");
             if(!immediate){try(var s=c.prepareStatement("SELECT count(*) FROM town_energy_offers WHERE world_id=? AND volume>0")){s.setInt(1,p.worldId());try(var r=s.executeQuery()){r.next();if(r.getInt(1)>=64)throw new IOException("Cancel an existing Energy offer before posting another");}}}
-            TownStore.pay(c,p,buy?price*volume:0,buy?0:volume*LOT);
+            TownLedger.pay(c,p,buy?price*volume:0,buy?0:volume*LOT);
             int remaining=volume;
             for(var maker:matches){
                 if(remaining==0)break;int filled=Math.min(remaining,maker.volume()),crowns=maker.price()*filled,energy=filled*LOT;
-                if(buy){TownStore.credit(c,p.worldId(),(price-maker.price())*filled,energy);TownStore.credit(c,maker.world(),crowns,0);}
-                else{TownStore.credit(c,p.worldId(),crowns,0);TownStore.credit(c,maker.world(),0,energy);}
+                if(buy){TownLedger.credit(c,p.worldId(),(price-maker.price())*filled,energy);TownLedger.credit(c,maker.world(),crowns,0);}
+                else{TownLedger.credit(c,p.worldId(),crowns,0);TownLedger.credit(c,maker.world(),0,energy);}
                 try(var s=c.prepareStatement("UPDATE town_energy_offers SET volume=volume-? WHERE id=? AND volume=?")){s.setInt(1,filled);s.setInt(2,maker.id());s.setInt(3,maker.volume());if(s.executeUpdate()!=1)throw new IOException("Energy offer changed; retry");}
                 put(c,"energy-exchange-last-price",maker.price());remaining-=filled;
             }

@@ -59,7 +59,7 @@ public final class StyleStore {
             if(p.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
             Style style=requested;
             if(item!=null){
-                var held=TownStore.owned(p,item);style=kit(held.config());
+                var held=TownLedger.owned(p,item);style=kit(held.config());
                 if(style==null||!items.require(held.config()).type().equals(style.kind().name())||held.gift()!=null||held.expired(System.currentTimeMillis()))throw new IOException("m.internal_error");
             }
             if(style==null)throw new IOException("m.internal_error");
@@ -70,11 +70,11 @@ public final class StyleStore {
             int stored=style.kind()==Kind.Color?style.value()-256:style.value();
             if(current==stored)throw new IOException("m.internal_error");
             var saved=values(c,p.worldId(),style.kind());
-            if(item==null){if(!saved.contains(style.value()))throw new IOException("m.internal_error");TownStore.pay(c,p,1000,0);}
+            if(item==null){if(!saved.contains(style.value()))throw new IOException("m.internal_error");TownLedger.pay(c,p,1000,0);}
             else {
                 // A previously unlocked style is reapplied through the style kit, not another consumable.
                 if(saved.contains(style.value()))throw new IOException("m.internal_error");
-                TownStore.consume(c,p,item,1);
+                TownLedger.consume(c,p,item,1);
                 try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?)")){
                     s.setString(1,prefix(p.worldId(),style.kind())+style.value());s.setInt(2,style.value());s.executeUpdate();
                 }
@@ -83,7 +83,7 @@ public final class StyleStore {
                 s.setInt(1,stored);s.setInt(2,account);s.setInt(3,knight);if(s.executeUpdate()!=1)throw new IOException("Knight changed");
             }
             try(var s=c.prepareStatement("UPDATE accounts SET revision=revision+1 WHERE id=?")){s.setInt(1,account);s.executeUpdate();}
-            TownStore.touch(c,p.worldId());return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),null);
+            TownLedger.touch(c,p.worldId());return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),null);
         });
     }
 }

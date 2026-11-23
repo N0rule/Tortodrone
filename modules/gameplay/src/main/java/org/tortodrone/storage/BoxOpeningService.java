@@ -34,7 +34,7 @@ public final class BoxOpeningService {
     }
     public StarterCatalog.Model spawnTable(int account,int knight,long auth,long boxId)throws IOException {
         return database.read(c->{var profile=WorldProfiles.load(c,account,knight,auth);TownStore.requireGameMaster(c,account,auth);
-            String table=boxes.spawnTable(TownStore.owned(profile,boxId).config());if(table==null||table.isBlank())throw new IOException("No native spawn table for this box");return new StarterCatalog.Model(table,Map.of());});
+            String table=boxes.spawnTable(TownLedger.owned(profile,boxId).config());if(table==null||table.isBlank())throw new IOException("No native spawn table for this box");return new StarterCatalog.Model(table,Map.of());});
     }
     private TownStore.Result open(int account,int knight,long auth,long revision,long boxId,int keyOption,boolean all)throws IOException {
         if(auth<0||revision<1||boxId<1)throw new IOException("m.internal_error");
@@ -42,7 +42,7 @@ public final class BoxOpeningService {
             var profile=WorldProfiles.load(c,account,knight,auth);
             if(all)TownStore.requireGameMaster(c,account,auth);
             if(profile.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
-            var held=TownStore.owned(profile,boxId);var box=boxes.find(held.config());
+            var held=TownLedger.owned(profile,boxId);var box=boxes.find(held.config());
             if(box==null||!box.enabled())throw new IOException("This box has no complete supported reward distribution.");
             if(held.equippedSlot()!=null||held.permanent()||held.gift()!=null||!Set.of("Lockbox","Pack").contains(items.require(held.config()).type()))throw new IOException("m.internal_error");
             WorldProfile.Item key=null;
@@ -58,8 +58,8 @@ public final class BoxOpeningService {
             var prizes=all?BoxRewardSelector.all(box):BoxRewardSelector.select(box,random);
             if(prizes.isEmpty())throw new IOException("m.internal_error");
             var delivery=plan(profile,all?null:held,key,prizes);
-            if(!all)TownStore.consume(c,profile,boxId,1);
-            if(key!=null)TownStore.consume(c,profile,key.id(),1);
+            if(!all)TownLedger.consume(c,profile,boxId,1);
+            if(key!=null)TownLedger.consume(c,profile,key.id(),1);
             var inventory=new TownStore(database,items,org.tortodrone.core.town.TownCatalog.empty());
             var result=new LinkedHashMap<Object,Integer>();
             for(var grant:delivery) {
@@ -81,7 +81,7 @@ public final class BoxOpeningService {
                     }
                 }
             }
-            TownStore.touch(c,profile.worldId());
+            TownLedger.touch(c,profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),new org.tortodrone.core.wire.Multiset(result));
         });
     }

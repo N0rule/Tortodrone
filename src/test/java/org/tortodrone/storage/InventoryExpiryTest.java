@@ -48,7 +48,7 @@ public final class InventoryExpiryTest {
             var unwrapped=town.unwrap(b,1,1,gift.id()).profile();var restored=find(unwrapped,d.config());
             check(restored.expiresAt().equals(deadline),"unwrap does not restart timer");
             long expired=System.currentTimeMillis()-1;
-            db.write(c->{InventoryExpiry.save(c,restored.id(),expired);TownStore.touch(c,unwrapped.worldId());return null;});
+            db.write(c->{InventoryExpiry.save(c,restored.id(),expired);TownLedger.touch(c,unwrapped.worldId());return null;});
             try {db.write(c->{InventoryExpiry.prune(c,System.currentTimeMillis());throw new IOException("injected rollback");});throw new AssertionError("rollback expected");}catch(IOException expected){ }
             check(itemRows(db,restored.id())==1,"failed transaction rolls back expiration deletion");
             db.write(c->null);

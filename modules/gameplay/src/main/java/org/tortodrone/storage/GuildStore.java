@@ -112,7 +112,7 @@ public final class GuildStore {
             if (nameTaken(c, name)) throw new IOException("m.name_in_use");
             if (profile.crowns() < FORMATION_CROWNS) throw new IOException("m.nsf_crowns");
             if (profile.energy() < FORMATION_ENERGY) throw new IOException("m.nsf_energy");
-            TownStore.pay(c, profile, FORMATION_CROWNS, FORMATION_ENERGY);
+            TownLedger.pay(c, profile, FORMATION_CROWNS, FORMATION_ENERGY);
             long now = System.currentTimeMillis();
             long id;
             try (var s = c.prepareStatement("INSERT INTO guilds(name,name_key,formed,member_limit) VALUES(?,?,?,?)",
@@ -134,7 +134,7 @@ public final class GuildStore {
                 s.executeUpdate();
             }
             log(c, id, 0, null, now, null);
-            TownStore.touch(c, profile.worldId());
+            TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, id));
         });
     }
@@ -164,7 +164,7 @@ public final class GuildStore {
                 s.setString(7, guild.name());
                 s.executeUpdate();
             }
-            TownStore.touch(c, targetWorld);
+            TownLedger.touch(c, targetWorld);
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
     }
@@ -190,7 +190,7 @@ public final class GuildStore {
             s.executeUpdate();
         }
         log(c, guildId, 0, knightName, now, null);
-        TownStore.touch(c, worldId);
+        TownLedger.touch(c, worldId);
     }
 
     /** {@code GuildMarshaller} id 11. A master leaving hands the guild to the senior officer. */
@@ -201,7 +201,7 @@ public final class GuildStore {
             var member = membership(c, guild.id(), profile.worldId());
             if (member == null) throw new IOException("m.internal_error");
             remove(c, guild.id(), profile.worldId(), 2, null);
-            TownStore.touch(c, profile.worldId());
+            TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), null);
         });
     }
@@ -216,7 +216,7 @@ public final class GuildStore {
             if (changer == null || changee == null || !canChangeStatus(changee, changer))
                 throw new IOException("m.internal_error");
             remove(c, guild.id(), changee.worldId(), 1, changer.name());
-            TownStore.touch(c, changee.worldId());
+            TownLedger.touch(c, changee.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
     }
@@ -243,7 +243,7 @@ public final class GuildStore {
             }
             log(c, guild.id(), 3, changer.name(), System.currentTimeMillis(),
                 List.of(rank < changee.rank() ? "m.gl_promoted" : "m.gl_demoted", "~" + changee.name(), "m.rank." + rank));
-            TownStore.touch(c, changee.worldId());
+            TownLedger.touch(c, changee.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
     }
@@ -284,9 +284,9 @@ public final class GuildStore {
                 s.setLong(4, guild.id());
                 s.executeUpdate();
             }
-            TownStore.consume(c, profile, ticket.id(), 1);
+            TownLedger.consume(c, profile, ticket.id(), 1);
             log(c, guild.id(), 31, member.name(), System.currentTimeMillis(), List.of("~" + name));
-            TownStore.touch(c, profile.worldId());
+            TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
     }
@@ -309,7 +309,7 @@ public final class GuildStore {
                 s.executeUpdate();
             }
             log(c, guild.id(), 28, member.name(), System.currentTimeMillis(), null);
-            TownStore.touch(c, profile.worldId());
+            TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
     }
@@ -330,7 +330,7 @@ public final class GuildStore {
                 s.executeUpdate();
             }
             log(c, guild.id(), open ? 32 : 33, member.name(), System.currentTimeMillis(), null);
-            TownStore.touch(c, profile.worldId());
+            TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
     }
@@ -350,9 +350,9 @@ public final class GuildStore {
                 s.setLong(2, guild.id());
                 s.executeUpdate();
             }
-            TownStore.pay(c, profile, 0, amount);
+            TownLedger.pay(c, profile, 0, amount);
             log(c, guild.id(), 9, null, System.currentTimeMillis(), List.of("~" + amount));
-            TownStore.touch(c, profile.worldId());
+            TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
     }
@@ -381,9 +381,9 @@ public final class GuildStore {
                 s.setInt(2, profile.worldId());
                 s.executeUpdate();
             }
-            TownStore.credit(c, profile.worldId(), 0, amount);
+            TownLedger.credit(c, profile.worldId(), 0, amount);
             log(c, guild.id(), 10, member.name(), now, List.of("~" + amount));
-            TownStore.touch(c, profile.worldId());
+            TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
     }
@@ -405,7 +405,7 @@ public final class GuildStore {
                 try (var r = s.executeQuery()) { if (r.next()) throw new IOException("m.internal_error"); }
             }
             if (profile.crowns() < price) throw new IOException("m.nsf_crowns");
-            TownStore.pay(c, profile, price, 0);
+            TownLedger.pay(c, profile, price, 0);
             try (var s = c.prepareStatement("INSERT INTO guild_expansions(guild_id,expansion) VALUES(?,?)")) {
                 s.setLong(1, guild.id());
                 s.setInt(2, expansion);
@@ -417,7 +417,7 @@ public final class GuildStore {
                 s.executeUpdate();
             }
             log(c, guild.id(), 21, member.name(), System.currentTimeMillis(), List.of("m.exp." + expansion));
-            TownStore.touch(c, profile.worldId());
+            TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
     }
@@ -442,7 +442,7 @@ public final class GuildStore {
                 s.executeUpdate();
             }
             log(c, guild.id(), 22, member.name(), System.currentTimeMillis(), List.of("m.exp." + expansion));
-            TownStore.touch(c, profile.worldId());
+            TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
     }
@@ -463,7 +463,7 @@ public final class GuildStore {
             }
             log(c, guild.id(), type == 0 ? 23 : 24, member.name(), System.currentTimeMillis(),
                 ticket == null ? null : List.of(ticket));
-            TownStore.touch(c, profile.worldId());
+            TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
     }

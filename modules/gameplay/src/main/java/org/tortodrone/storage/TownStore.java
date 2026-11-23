@@ -48,7 +48,7 @@ public final class TownStore {
                 st.setString(1,name);st.setString(2,name.toLowerCase(Locale.ROOT));st.setLong(3,System.currentTimeMillis());st.setInt(4,account);st.setInt(5,knight);st.setString(6,name.toLowerCase(Locale.ROOT));
                 if(st.executeUpdate()!=1)throw new IOException("Choose a different knight name");
             }
-            consume(c,p,ticket.id(),1);
+            TownLedger.consume(c,p,ticket.id(),1);
             try(var st=c.prepareStatement("UPDATE accounts SET revision=revision+1 WHERE id=?")){st.setInt(1,account);st.executeUpdate();}
             return name;
         });
@@ -83,23 +83,23 @@ public final class TownStore {
                 case "Instant/Crown/Silver Crown"->10;case "Instant/Crown/Silver-Gold Crown"->25;
                 case "Instant/Crown/Gold Crown"->50;default->0;
             };
-            if(crowns>0)credit(c,profile.worldId(),crowns,0);
+            if(crowns>0)TownLedger.credit(c,profile.worldId(),crowns,0);
             else{
                 var definition=items.require(config);
                 if(!definition.grantable()||definition.permanent()||definition.type().equals("InstantAction"))throw new IOException("Unsupported persistent scene reward");
                 create(c,profile,config,1,false,0,0,List.of());
             }
             try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?)")){st.setString(1,key);st.setInt(2,profile.worldId());st.executeUpdate();}
-            touch(c,profile.worldId());return new Result(WorldProfiles.load(c,account,knight,auth),null);
+            TownLedger.touch(c,profile.worldId());return new Result(WorldProfiles.load(c,account,knight,auth),null);
         });
     }
     public static final int SPARK_COST=org.tortodrone.core.economy.Fees.SPARK_COST;
     /** Official ItemMarshaller.deleteItem: one owned, non-permanent, unequipped item goes whole. */
     public Result trash(int account,int knight,long auth,long item)throws IOException {
         return change(account,knight,auth,(c,p)->{
-            var held=owned(p,item);
+            var held=TownLedger.owned(p,item);
             if(held.permanent()||held.equippedSlot()!=null)throw new IOException("m.internal_error");
-            consume(c,p,item,held.count());
+            TownLedger.consume(c,p,item,held.count());
             return null;
         });
     }
@@ -113,10 +113,10 @@ public final class TownStore {
     private Result animatedItem(int account,int knight,long auth,long revision,long item,boolean confetti)throws IOException {
         return change(account,knight,auth,(c,p)->{
             if(p.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
-            var held=owned(p,item);
+            var held=TownLedger.owned(p,item);
             if(!(confetti?Confetti.supports(held.config()):AnimatedItems.supports(held.config()))||!items.require(held.config()).type().equals("AnimatedAction")
                     ||held.gift()!=null||held.expired(System.currentTimeMillis()))throw new IOException("m.internal_error");
-            consume(c,p,item,1);return held.config();
+            TownLedger.consume(c,p,item,1);return held.config();
         });
     }
     /** Consume one owned scene-usable item; the scene applies its prepared effect under
@@ -124,11 +124,11 @@ public final class TownStore {
     public Result useItem(int account,int knight,long auth,long revision,long item)throws IOException{
         return changeBounded(account,knight,auth,(c,p)->{
             if(p.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
-            var held=owned(p,item);
+            var held=TownLedger.owned(p,item);
             var definition=items.find(held.config());
             if(definition==null||!Set.of("InstantAction","SpawnActor","Lift").contains(definition.type())
                     ||held.gift()!=null||held.expired(System.currentTimeMillis()))throw new IOException("m.internal_error");
-            consume(c,p,item,1);return held.config();
+            TownLedger.consume(c,p,item,1);return held.config();
         });
     }
     /**
@@ -159,10 +159,10 @@ public final class TownStore {
         return changeBounded(account,knight,auth,(c,p)->{
             if(approvedCost<0){
                 var spark=p.items().stream().filter(i->i.config().equals("Rarity/Spark of Life")&&i.count()>0).findFirst().orElseThrow(()->new IOException("m.costupdate"));
-                consume(c,p,spark.id(),1);
+                TownLedger.consume(c,p,spark.id(),1);
             }else{
                 if(approvedCost<SPARK_COST)throw new IOException("m.costupdate");
-                pay(c,p,0,SPARK_COST);
+                TownLedger.pay(c,p,0,SPARK_COST);
             }
             return null;
         });
@@ -179,62 +179,13 @@ public final class TownStore {
             work->database.writeBounded(Database.LOCKED_WRITE_TIMEOUT_MILLIS,work));
     }
     private Result change(int account,int knight,long auth,Mutation mutation,Transaction transaction)throws IOException{
-        return transaction.run(c->{var profile=WorldProfiles.load(c,account,knight,auth);Object result=mutation.run(c,profile);InventoryExpiry.reconcile(c,profile.worldId(),System.currentTimeMillis());touch(c,profile.worldId());
+        return transaction.run(c->{var profile=WorldProfiles.load(c,account,knight,auth);Object result=mutation.run(c,profile);InventoryExpiry.reconcile(c,profile.worldId(),System.currentTimeMillis());TownLedger.touch(c,profile.worldId());
             var updated=WorldProfiles.load(c,account,knight,auth);
             updated=AccountAchievements.reconcile(c,updated,items,updated.progress().tutorialComplete()?32:0,System.currentTimeMillis());
             return new Result(updated,result);});
     }
-    static void touch(Connection c,int world)throws SQLException{try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,world);if(s.executeUpdate()!=1)throw new SQLException("Missing Town owner");}}
-    static WorldProfile.Item owned(WorldProfile p,long id)throws IOException{return p.items().stream().filter(i->i.id()==id).findFirst().orElseThrow(()->new IOException("m.internal_error"));}
-    static void consume(Connection c,WorldProfile p,long id,int count)throws SQLException,IOException{
-        var i=owned(p,id);if(count<1||count>i.count()||i.equippedSlot()!=null||i.permanent())throw new IOException("m.internal_error");
-        if(i.starter())try(var s=c.prepareStatement("INSERT INTO town_consumed_starters(world_id,slot) VALUES(?,?)")){s.setInt(1,p.worldId());s.setString(2,i.slot().name());s.executeUpdate();}
-        try(var s=c.prepareStatement(count==i.count()?"DELETE FROM inventory_items WHERE world_id=? AND item_id=?":"UPDATE inventory_items SET count=count-"+count+" WHERE world_id=? AND item_id=?")){s.setInt(1,p.worldId());s.setLong(2,id);if(s.executeUpdate()!=1)throw new IOException("Item changed");}
-    }
-    static void pay(Connection c,WorldProfile p,int crowns,int energy)throws SQLException,IOException{
-        if(crowns<0||energy<0)throw new IOException("Invalid purchase price");
-        if(p.crowns()<crowns)throw new Database.Refused("m.nsf_crowns");
-        if(p.energy()<energy)throw new Database.Refused("m.nsf_energy");
-        credit(c,p.worldId(),-crowns,-energy);
-    }
-    static void credit(Connection c,int world,int crowns,int energy)throws SQLException,IOException{
-        try(var s=c.prepareStatement("UPDATE world_characters SET crowns=crowns+?,energy=energy+?,state_revision=state_revision+1 WHERE world_id=? AND crowns+? BETWEEN 0 AND 2147483647 AND energy+? BETWEEN 0 AND 2147483647")){
-            s.setInt(1,crowns);s.setInt(2,energy);s.setInt(3,world);s.setInt(4,crowns);s.setInt(5,energy);if(s.executeUpdate()!=1)throw new IOException("Currency balance exceeds supported limits");
-        }
-        for(var delta:Map.of("crowns",crowns,"energy",energy).entrySet())if(delta.getValue()!=0)try(var s=c.prepareStatement("INSERT INTO currency_events(world_id,currency,delta,balance,created_at) SELECT world_id,?,?,"+delta.getKey()+",? FROM world_characters WHERE world_id=?")){s.setString(1,delta.getKey());s.setInt(2,delta.getValue());s.setLong(3,System.currentTimeMillis());s.setInt(4,world);s.executeUpdate();}
-    }
     long create(Connection c,WorldProfile p,String config,int count,boolean locked,int level,float heat,List<StarterCatalog.Model> variants)throws SQLException,IOException{
-        return create(c,p,config,count,locked,level,heat,variants,true);
-    }
-    private long create(Connection c,WorldProfile p,String config,int count,boolean locked,int level,float heat,List<StarterCatalog.Model> variants,boolean merge)throws SQLException,IOException{
-        var def=items.require(config);if(count<1||count>9999)throw new IOException("Invalid item count");
-        Long stack=null;
-        if(merge&&def.stackable()&&def.expireDays()==0&&def.slot()==WorldProfile.Slot.OTHER&&level==0&&heat==0&&variants.isEmpty()){
-            var current=WorldProfiles.load(c,p.accountId(),p.knightId(),-1);
-            stack=current.items().stream().filter(i->i.config().equals(config)&&i.slot()==def.slot()&&i.bound()==(locked||def.locked())
-                &&i.bindOnEquip()==def.bindOnEquip()&&i.permanent()==def.permanent()&&!i.starter()&&!i.cursed()&&i.equippedSlot()==null
-                &&i.expiresAt()==null&&i.gift()==null&&i.heat()==0&&i.level()==0&&i.heatProgress()==0&&i.variants().isEmpty()
-                &&i.accessory()==null&&i.additionalAccessories().isEmpty()&&i.count()+count<=9999).map(WorldProfile.Item::id).findFirst().orElse(null);
-        }
-        if(stack!=null){
-            try(var s=c.prepareStatement("UPDATE inventory_items SET count=count+? WHERE world_id=? AND item_id=?")){
-                s.setInt(1,count);s.setInt(2,p.worldId());s.setLong(3,stack);if(s.executeUpdate()!=1)throw new IOException("Item changed");
-            }
-            try(var s=c.prepareStatement("INSERT INTO item_events(world_id,config,quantity,first_item_id,created_at) VALUES(?,?,?,?,?)")){
-                s.setInt(1,p.worldId());s.setString(2,config);s.setInt(3,count);s.setLong(4,stack);s.setLong(5,System.currentTimeMillis());s.executeUpdate();
-            }
-            return stack;
-        }
-        long first=0;
-        for(int n=0;n<(def.stackable()?1:count);n++){
-            long id=WorldProfiles.allocate(c,"next-item-id",Long.MAX_VALUE);if(first==0)first=id;
-            try(var s=c.prepareStatement("INSERT INTO inventory_items(item_id,world_id,slot,config,count,bound,bind_on_equip,permanent,level,heat_progress,variants) VALUES(?,?,?,?,?,?,?,?,?,?,?)")){
-                s.setLong(1,id);s.setInt(2,p.worldId());s.setString(3,def.slot().persistedName());s.setString(4,config);s.setInt(5,def.stackable()?count:1);s.setBoolean(6,locked||def.locked());s.setBoolean(7,def.bindOnEquip());s.setBoolean(8,def.permanent());s.setInt(9,level);s.setFloat(10,heat);s.setString(11,Json.stringify(variants.stream().map(StarterCatalog.Model::name).toList()));s.executeUpdate();
-            }
-            InventoryExpiry.save(c,id,InventoryExpiry.deadline(def.expireDays()));
-            try(var s=c.prepareStatement("INSERT INTO item_events(world_id,config,quantity,first_item_id,created_at) VALUES(?,?,?,?,?)")){s.setInt(1,p.worldId());s.setString(2,config);s.setInt(3,def.stackable()?count:1);s.setLong(4,id);s.setLong(5,System.currentTimeMillis());s.executeUpdate();}
-        }
-        return first;
+        return TownLedger.create(c,p,items,config,count,locked,level,heat,variants);
     }
     public List<Integer> availability(int account,int knight,long auth,TownCatalog.Station station,long cycle)throws IOException{
         return database.read(c->{c.setAutoCommit(false);var p=WorldProfiles.load(c,account,knight,auth);var result=availability(c,p,station,cycle);c.commit();return result;});
@@ -250,7 +201,7 @@ public final class TownStore {
             var goods=rules.goods(station,cycle,p.worldId());var available=availability(c,p,station,cycle);var consume=new HashMap<Long,Integer>(sells);var tokens=new HashMap<String,Integer>();
             var purchased=new HashMap<String,Integer>();var limits=new HashMap<String,Integer>();for(int i=0;i<goods.size();i++)if(available.get(i)>=0)limits.merge(goods.get(i).item(),available.get(i),Math::min);
             long crowns=0,energy=0;
-            for(var sale:sells.entrySet()){var item=owned(p,sale.getKey());var def=items.require(item.config());int price=rules.price(item.config(),def.rarity(),false);if(sale.getValue()<1||sale.getValue()>item.count()||item.equippedSlot()!=null||item.permanent()||price<=0)throw new IOException("Item cannot be sold");crowns+=(long)price*sale.getValue();}
+            for(var sale:sells.entrySet()){var item=TownLedger.owned(p,sale.getKey());var def=items.require(item.config());int price=rules.price(item.config(),def.rarity(),false);if(sale.getValue()<1||sale.getValue()>item.count()||item.equippedSlot()!=null||item.permanent()||price<=0)throw new IOException("Item cannot be sold");crowns+=(long)price*sale.getValue();}
             for(var buy:buys.entrySet()){
                 int index=buy.getKey(),count=buy.getValue();if(index<0||index>=goods.size()||count<1||count>9999||available.get(index)>=0&&count>available.get(index))throw new IOException("This good is not available");
                 var good=goods.get(index);var def=items.require(good.item());int price=good.price()>=0?good.price():rules.price(good.item(),def.rarity(),true);
@@ -264,7 +215,7 @@ public final class TownStore {
             if(crowns+p.crowns()<0)throw new Database.Refused("m.nsf_crowns");
             if(crowns+p.crowns()>Integer.MAX_VALUE)throw new IOException("Currency balance exceeds supported limits");
             if(energy<0||energy>p.energy())throw new Database.Refused("m.nsf_energy");
-            credit(c,p.worldId(),Math.toIntExact(crowns),-(int)energy);for(var use:consume.entrySet())consume(c,p,use.getKey(),use.getValue());
+            TownLedger.credit(c,p.worldId(),Math.toIntExact(crowns),-(int)energy);for(var use:consume.entrySet())TownLedger.consume(c,p,use.getKey(),use.getValue());
             for(var buy:buys.entrySet()){var good=goods.get(buy.getKey());long quantity=(long)good.count()*buy.getValue();if(quantity>9999)throw new IOException("Purchase count exceeds limit");var d=items.require(good.item());boolean locked=station.shop().preparer().equals("LOCKED")||station.shop().preparer().equals("LOCK_NON_STACKABLE")&&!d.stackable();create(c,p,good.item(),(int)quantity,locked,0,0,List.of());
                 if(limits.containsKey(good.item()))try(var s=c.prepareStatement("INSERT INTO town_purchases(world_id,catalog,item,cycle,purchased) VALUES(?,?,?,?,?) ON CONFLICT(world_id,catalog,item,cycle) DO UPDATE SET purchased=purchased+excluded.purchased")){s.setInt(1,p.worldId());s.setString(2,station.shop().catalog());s.setString(3,good.item());s.setLong(4,cycle);s.setInt(5,buy.getValue());s.executeUpdate();}
             }return null;
@@ -281,7 +232,7 @@ public final class TownStore {
             int cost=good.energy()>0?good.energy():good.price();
             if(cost<0||quotedPrice!=cost||!def.grantable())throw new IOException("e.good_unavailable");
             if(good.limit()>0){try(var st=c.prepareStatement("SELECT purchased FROM town_purchases WHERE world_id=? AND catalog='Supply Depot' AND item=? AND cycle=0")){st.setInt(1,p.worldId());st.setString(2,good.item());try(var r=st.executeQuery()){if(r.next()&&r.getInt(1)>=good.limit())throw new IOException("e.good_unavailable");}}}
-            pay(c,p,good.energy()>0?0:cost,good.energy()>0?cost:0);
+            TownLedger.pay(c,p,good.energy()>0?0:cost,good.energy()>0?cost:0);
             boolean locked=def.variant()==ItemCatalog.Variant.LEVEL_ITEM&&!def.type().endsWith("Costume");create(c,p,good.item(),good.count(),locked,0,0,List.of());
             try(var st=c.prepareStatement("INSERT INTO town_purchases(world_id,catalog,item,cycle,purchased) VALUES(?,'Supply Depot',?,0,1) ON CONFLICT(world_id,catalog,item,cycle) DO UPDATE SET purchased=purchased+1")){st.setInt(1,p.worldId());st.setString(2,good.item());st.executeUpdate();}return null;
         });
@@ -289,7 +240,7 @@ public final class TownStore {
     private static final String[] FIRE_CRYSTALS={"Cracked","Dim","Warm","Glowing","Shining","Radiant"};
     public Result forge(int account,int knight,long auth,long itemId,int crystals,int expectedLevel)throws IOException{
         return change(account,knight,auth,(c,p)->{
-            var item=owned(p,itemId);var definition=items.require(item.config());var gear=rules.gear().gear(item.config());
+            var item=TownLedger.owned(p,itemId);var definition=items.require(item.config());var gear=rules.gear().gear(item.config());
             if(gear==null||gear.maximum(item.level()))throw new IOException("m.forge_already");
             if(item.level()!=expectedLevel)throw new IOException("m.costupdate");
             if(item.heatProgress()!=1)throw new IOException("m.forge_locked");
@@ -298,7 +249,7 @@ public final class TownStore {
             int remaining=crystals;var consumes=new LinkedHashMap<Long,Integer>();String config="Rarity/Fire Crystal/"+FIRE_CRYSTALS[rarity];
             for(var held:p.items())if(held.config().equals(config)&&held.equippedSlot()==null&&!held.permanent()&&remaining>0){int take=Math.min(held.count(),remaining);consumes.put(held.id(),take);remaining-=take;}
             if(remaining!=0)throw new Database.Refused("m.insufficient_crystals");
-            for(var consume:consumes.entrySet())consume(c,p,consume.getKey(),consume.getValue());
+            for(var consume:consumes.entrySet())TownLedger.consume(c,p,consume.getKey(),consume.getValue());
             // Like the archive, failed attempts spend crystals but preserve the full heat bar.
             if(java.util.concurrent.ThreadLocalRandom.current().nextFloat()>=chance)return null;
             // Live ForgeAnswerProbe: a qualified localization key followed by a tainted
@@ -371,7 +322,7 @@ public final class TownStore {
             if(method==17) {
                 int amount=(Integer)args.getFirst();
                 if(amount<0)throw new IOException("Crown grant must be nonnegative");
-                credit(c,p.worldId(),amount,0);
+                TownLedger.credit(c,p.worldId(),amount,0);
             }else if(method==44) {
                 org.tortodrone.core.character.KnightProgress progress;
                 try{progress=new org.tortodrone.core.character.KnightProgress((Integer)args.get(0),(Integer)args.get(1),p.progress().prestige());}
@@ -413,18 +364,18 @@ public final class TownStore {
     /** Native extendUpgrade(active item, unused item), ItemMarshaller method five. */
     public Result extendUpgrade(int account,int knight,long auth,long active,long unused)throws IOException {
         return change(account,knight,auth,(c,p)->{
-            var target=owned(p,active);var source=owned(p,unused);var a=SlotUpgrades.find(target.config());var b=SlotUpgrades.find(source.config());
+            var target=TownLedger.owned(p,active);var source=TownLedger.owned(p,unused);var a=SlotUpgrades.find(target.config());var b=SlotUpgrades.find(source.config());
             if(active==unused||a==null||b==null||a.weapons()!=b.weapons()||a.trinkets()!=b.trinkets()
                     ||a.heatBonus()!=b.heatBonus()||a.pvpTokens()!=b.pvpTokens()||target.expiresAt()==null||source.expiresAt()!=null||source.count()!=1)throw new IOException("These upgrades cannot be combined");
             long deadline;
             try{deadline=Math.addExact(target.expiresAt(),Math.multiplyExact((long)b.days(),86_400_000L));}
             catch(ArithmeticException overflow){throw new IOException("Upgrade duration exceeds supported limits");}
-            consume(c,p,unused,1);InventoryExpiry.save(c,active,deadline);return null;
+            TownLedger.consume(c,p,unused,1);InventoryExpiry.save(c,active,deadline);return null;
         });
     }
     public Result activateUpgrade(int account,int knight,long auth,long id)throws IOException {
         return change(account,knight,auth,(c,p)->{
-            var item=owned(p,id);var def=SlotUpgrades.find(item.config());
+            var item=TownLedger.owned(p,id);var def=SlotUpgrades.find(item.config());
             if(def==null||item.expiresAt()!=null||item.count()!=1||item.equippedSlot()!=null||item.gift()!=null)throw new IOException("This upgrade cannot be activated");
             if(def.weapons()>0&&SlotUpgrades.weapons(p)-2>=2||def.trinkets()>0&&SlotUpgrades.trinkets(p)>=2)throw new IOException("All slots of this type are already unlocked");
             if(def.heatBonus()&&SlotUpgrades.heatBonusActive(p))throw new IOException("A Heat Bonus is already active");
@@ -435,37 +386,37 @@ public final class TownStore {
         });
     }
     public Result learn(int account,int knight,long auth,long item)throws IOException{
-        return change(account,knight,auth,(c,p)->{var held=owned(p,item);String config=rules.item(held.config()).get("recipe");if(config==null||rules.recipe(config)==null)throw new IOException("m.internal_error");
+        return change(account,knight,auth,(c,p)->{var held=TownLedger.owned(p,item);String config=rules.item(held.config()).get("recipe");if(config==null||rules.recipe(config)==null)throw new IOException("m.internal_error");
             var prior=p.town().recipes().stream().filter(r->r.config().equals(config)).findFirst().orElse(null);
             long now=System.currentTimeMillis();if(prior!=null&&(prior.expires()==0||prior.expires()>now))throw new IOException("Recipe already learned");
-            consume(c,p,item,1);learn(c,p,config,now);return null;});
+            TownLedger.consume(c,p,item,1);learn(c,p,config,now);return null;});
     }
     public Result wrap(int account,int knight,long auth,long paperId,Map<Long,Integer> contents,String message,String costume)throws IOException {
         if(message==null||message.length()>300||message.chars().anyMatch(ch->ch==0)||contents.isEmpty()||contents.size()>256)throw new IOException("e.not_wrapable");
         var selected=Map.copyOf(contents);
         return change(account,knight,auth,(c,p)->{
-            var paper=owned(p,paperId);String box=rules.item(paper.config()).get("giftBox");
+            var paper=TownLedger.owned(p,paperId);String box=rules.item(paper.config()).get("giftBox");
             if(box==null||!items.require(paper.config()).type().equals("WrappingPaper")||!items.require(box).type().equals("GiftBox"))throw new IOException("e.not_wrapable");
             var gifts=new ArrayList<WorldProfile.Item>();int total=0;
             for(var entry:selected.entrySet()){
-                var item=owned(p,entry.getKey());var def=items.require(item.config());int count=entry.getValue();
+                var item=TownLedger.owned(p,entry.getKey());var def=items.require(item.config());int count=entry.getValue();
                 if(item.id()==paperId||item.bound()||def.locked()||item.permanent()||item.starter()||item.cursed()||item.expired(System.currentTimeMillis())||item.equippedSlot()!=null||def.type().equals("GiftBox")||count<1||count>item.count()||(total+=count)>9999)throw new IOException("e.not_wrapable");
                 gifts.add(new WorldProfile.Item(0,item.slot(),item.config(),null,item.heat(),null,false,item.bindOnEquip(),false,count,false,item.level(),item.heatProgress(),item.variants(),item.nativeAccessories(costume)).withExpiration(item.expiresAt()));
             }
             String name;try(var st=c.prepareStatement("SELECT name FROM knights WHERE account_id=? AND id=?")){st.setInt(1,account);st.setInt(2,knight);try(var row=st.executeQuery()){if(!row.next())throw new IOException("m.internal_error");name=row.getString(1);}}
-            consume(c,p,paperId,1);for(var entry:selected.entrySet())consume(c,p,entry.getKey(),entry.getValue());
+            TownLedger.consume(c,p,paperId,1);for(var entry:selected.entrySet())TownLedger.consume(c,p,entry.getKey(),entry.getValue());
             long id=create(c,p,box,1,false,0,0,List.of());GiftStore.save(c,id,new WorldProfile.Gift(p.worldId(),name,message,gifts));return null;
         });
     }
     public Result unwrap(int account,int knight,long auth,long boxId)throws IOException {
         return change(account,knight,auth,(c,p)->{
-            var box=owned(p,boxId);if(!items.require(box.config()).type().equals("GiftBox")||box.gift()==null)throw new IOException("m.internal_error");
-            var contents=box.gift().contents();consume(c,p,boxId,1);var result=new LinkedHashMap<Object,Integer>();
+            var box=TownLedger.owned(p,boxId);if(!items.require(box.config()).type().equals("GiftBox")||box.gift()==null)throw new IOException("m.internal_error");
+            var contents=box.gift().contents();TownLedger.consume(c,p,boxId,1);var result=new LinkedHashMap<Object,Integer>();
             for(var item:contents){
                 if(item.expired(System.currentTimeMillis()))continue;
                 boolean plain=item.expiresAt()==null&&item.heat()==0&&item.accessory()==null&&item.additionalAccessories().isEmpty()
                     &&item.bindOnEquip()==items.require(item.config()).bindOnEquip();
-                long id=create(c,p,item.config(),item.count(),item.bound(),item.level(),item.heatProgress(),item.variants(),plain);
+                long id=TownLedger.create(c,p,items,item.config(),item.count(),item.bound(),item.level(),item.heatProgress(),item.variants(),plain);
                 InventoryExpiry.save(c,id,item.expiresAt());
                 try(var st=c.prepareStatement("UPDATE inventory_items SET heat=?,accessory=?,accessories=?,bind_on_equip=? WHERE world_id=? AND item_id=?")){st.setInt(1,item.heat());st.setString(2,item.accessory());st.setString(3,Json.stringify(item.additionalAccessories()));st.setBoolean(4,item.bindOnEquip());st.setInt(5,p.worldId());st.setLong(6,id);st.executeUpdate();}
                 result.merge(id,item.count(),Math::addExact);
@@ -490,10 +441,10 @@ public final class TownStore {
             // Specific items first, then groups, so a generic food material cannot steal an exact ingredient.
             ingredients.sort(Comparator.comparingInt(i->i.item().isEmpty()?1:0));
             var ids=new LinkedHashSet<Long>();for(long id:selected)if(!ids.add(id))throw new IOException("Duplicate ingredient");
-            var remaining=new LinkedHashMap<Long,Integer>();for(long id:ids){var i=owned(p,id);if(i.equippedSlot()!=null||i.permanent()||i.gift()!=null||i.expired(now))throw new IOException("Ingredient must be available and unequipped");remaining.put(id,i.count());}
+            var remaining=new LinkedHashMap<Long,Integer>();for(long id:ids){var i=TownLedger.owned(p,id);if(i.equippedSlot()!=null||i.permanent()||i.gift()!=null||i.expired(now))throw new IOException("Ingredient must be available and unequipped");remaining.put(id,i.count());}
             var used=new LinkedHashMap<Long,Integer>();int level=0;float heat=0;List<StarterCatalog.Model> variants=List.of();boolean retainVariants=false,bound=r.locked();
             var accessories=new ArrayList<String>();
-            for(var ingredient:ingredients){int needed=ingredient.count();for(long id:ids){var item=owned(p,id);int available=remaining.get(id);if(available==0||!matches(ingredient,item))continue;int n=Math.min(needed,available);remaining.put(id,available-n);used.merge(id,n,Integer::sum);needed-=n;
+            for(var ingredient:ingredients){int needed=ingredient.count();for(long id:ids){var item=TownLedger.owned(p,id);int available=remaining.get(id);if(available==0||!matches(ingredient,item))continue;int n=Math.min(needed,available);remaining.put(id,available-n);used.merge(id,n,Integer::sum);needed-=n;
                     if(ingredient.kind().endsWith("LevelItem")){
                         bound|=item.bound();
                         if(ingredient.keepHeat()){level=item.level();heat=item.heatProgress();}
@@ -515,7 +466,7 @@ public final class TownStore {
                     if(needed==0)break;}
                 if(needed!=0)throw new IOException("Missing recipe ingredients");}
             if(used.size()!=ids.size())throw new IOException("Unexpected recipe ingredient");
-            pay(c,p,r.cost(output.rarity()),0);for(var use:used.entrySet())consume(c,p,use.getKey(),use.getValue());
+            TownLedger.pay(c,p,r.cost(output.rarity()),0);for(var use:used.entrySet())TownLedger.consume(c,p,use.getKey(),use.getValue());
             if(!retainVariants)variants=rules.roll(r.variantTable(),group(output));
             var progression=rules.gear().gear(output.config());
             if(progression==null||progression.levels()<1){level=0;heat=0;}
@@ -542,19 +493,19 @@ public final class TownStore {
     /** Native VariantMarshaller: custom ticket, or a selected random-variant count. */
     public Result variant(int account,int knight,long auth,int count,long gearId,long ticketId,int keepMask,boolean custom)throws IOException{
         return change(account,knight,auth,(c,p)->{
-            var gear=owned(p,gearId);var def=items.require(gear.config());String group=group(def);
+            var gear=TownLedger.owned(p,gearId);var def=items.require(gear.config());String group=group(def);
             if(!Set.of("SWORD","HANDGUN","BOMB","HELM","ARMOR","SHIELD","TRINKET").contains(group)||gear.variants().size()>3||keepMask<0||(keepMask>>>gear.variants().size())!=0)throw new IOException("e.wrong_item_group");
             var kept=new ArrayList<StarterCatalog.Model>();for(int i=0;i<gear.variants().size();i++)if((keepMask&(1<<i))!=0)kept.add(gear.variants().get(i));
             if(custom){
-                var ticket=owned(p,ticketId);var metadata=rules.item(ticket.config());String variant=metadata.get("variant");
+                var ticket=TownLedger.owned(p,ticketId);var metadata=rules.item(ticket.config());String variant=metadata.get("variant");
                 if(variant==null||!Arrays.asList(metadata.getOrDefault("variantGroups","").split(",")).contains(group))throw new IOException("e.wrong_item_group");
                 if(gear.variants().stream().anyMatch(v->v.name().equals(variant)))throw new IOException("e.already_have_variant");
                 if(gear.variants().size()<3&&kept.size()!=gear.variants().size()||kept.size()>2)throw new IOException("Invalid retained variants");
-                consume(c,p,ticketId,1);kept.add(new StarterCatalog.Model(variant,Map.of()));
+                TownLedger.consume(c,p,ticketId,1);kept.add(new StarterCatalog.Model(variant,Map.of()));
             }else{
                 if(count<1||count>3||kept.size()>=count)throw new IOException("Invalid variant count");
-                if(ticketId==0)pay(c,p,new int[]{20000,75000,225000}[count-1],0);
-                else{var ticket=owned(p,ticketId);if(!ticket.config().equals("Ticket/Variants/Variants "+count))throw new IOException("Invalid variant ticket");consume(c,p,ticketId,1);}
+                if(ticketId==0)TownLedger.pay(c,p,new int[]{20000,75000,225000}[count-1],0);
+                else{var ticket=TownLedger.owned(p,ticketId);if(!ticket.config().equals("Ticket/Variants/Variants "+count))throw new IOException("Invalid variant ticket");TownLedger.consume(c,p,ticketId,1);}
                 var rolled=rules.roll("Shop/Variant "+count,group,kept);kept.clear();kept.addAll(rolled);
                 if(kept.size()!=count)throw new IOException("Variant table did not supply the selected outcome");
             }
@@ -563,28 +514,28 @@ public final class TownStore {
         });
     }
     public Result unbind(int account,int knight,long auth,long item,long ticket)throws IOException{
-        return change(account,knight,auth,(c,p)->{var i=owned(p,item);var def=items.require(i.config());int rarity=def.rarity();
+        return change(account,knight,auth,(c,p)->{var i=TownLedger.owned(p,item);var def=items.require(i.config());int rarity=def.rarity();
             if(!i.bound())throw new IOException("e.not_bound");if(i.permanent()||i.starter()||def.variant()!=ItemCatalog.Variant.LEVEL_ITEM&&i.slot()==WorldProfile.Slot.OTHER||rarity<1||rarity>5)throw new IOException("e.cannot_unbind");if(i.equippedSlot()!=null)throw new IOException("e.equipped");
-            if(ticket!=0){if(!owned(p,ticket).config().equals("Ticket/Unbind/Unbind "+rarity))throw new IOException("e.invalid_ticket");consume(c,p,ticket,1);}else pay(c,p,0,new int[]{0,100,200,600,1800,4000}[rarity]);
+            if(ticket!=0){if(!TownLedger.owned(p,ticket).config().equals("Ticket/Unbind/Unbind "+rarity))throw new IOException("e.invalid_ticket");TownLedger.consume(c,p,ticket,1);}else TownLedger.pay(c,p,0,new int[]{0,100,200,600,1800,4000}[rarity]);
             try(var s=c.prepareStatement("UPDATE inventory_items SET bound=0,heat=0,level=0,heat_progress=0 WHERE item_id=? AND world_id=?")){s.setLong(1,item);s.setInt(2,p.worldId());s.executeUpdate();}return item;});
     }
     private static final List<String> ACCESSORY_SLOTS=List.of("HELM_TOP","HELM_BROW","HELM_FRONT","HELM_BACK","HELM_SIDE","ARMOR_FRONT","ARMOR_BACK","ARMOR_REAR","ARMOR_ARMS","ARMOR_ANKLE","ARMOR_AURA");
     public Result accessorize(int account,int knight,long auth,int method,long gearId,Object argument,String costume)throws IOException{
-        return change(account,knight,auth,(c,p)->{var gear=owned(p,gearId);if(gear.slot()!=WorldProfile.Slot.HELM&&gear.slot()!=WorldProfile.Slot.HELM_COSTUME&&gear.slot()!=WorldProfile.Slot.ARMOR&&gear.slot()!=WorldProfile.Slot.ARMOR_COSTUME)throw new IOException("e.cant_use_accessory");
+        return change(account,knight,auth,(c,p)->{var gear=TownLedger.owned(p,gearId);if(gear.slot()!=WorldProfile.Slot.HELM&&gear.slot()!=WorldProfile.Slot.HELM_COSTUME&&gear.slot()!=WorldProfile.Slot.ARMOR&&gear.slot()!=WorldProfile.Slot.ARMOR_COSTUME)throw new IOException("e.cant_use_accessory");
             var accessories=new ArrayList<>(gear.nativeAccessories(costume));long result=0;
-            if(method==1){long ticket=(Long)argument;var held=owned(p,ticket);String name=rules.item(held.config()).get("accessory");var accessory=name==null?null:rules.accessory(name);
+            if(method==1){long ticket=(Long)argument;var held=TownLedger.owned(p,ticket);String name=rules.item(held.config()).get("accessory");var accessory=name==null?null:rules.accessory(name);
                 if(accessory==null||accessory.remove())throw new IOException("e.cant_use_accessory");
                 var blocked=new HashSet<>(rules.blockers(gear.config()));boolean helm=gear.slot()==WorldProfile.Slot.HELM||gear.slot()==WorldProfile.Slot.HELM_COSTUME;
                 for(String slot:ACCESSORY_SLOTS)if(helm?slot.startsWith("ARMOR_"):slot.startsWith("HELM_"))blocked.add(slot);
                 if(accessory.blocks().stream().anyMatch(blocked::contains))throw new IOException("e.cant_use_accessory");
                 for(String existing:accessories){var worn=rules.accessory(existing);if(worn==null)continue;if(worn.location().equals(accessory.location()))throw new IOException("e.existing_accessory");if(worn.blocks().stream().anyMatch(accessory.blocks()::contains))throw new IOException("e.existing_multislot");}
-                consume(c,p,ticket,1);accessories.add(name);
+                TownLedger.consume(c,p,ticket,1);accessories.add(name);
             }else{
                 String slot;TownCatalog.Accessory tool=null;long toolId=0;
                 if(method==2){int ordinal=((org.tortodrone.core.wire.EnumValue)argument).ordinal();if(ordinal<0||ordinal>=ACCESSORY_SLOTS.size())throw new IOException("Invalid accessory slot");slot=ACCESSORY_SLOTS.get(ordinal);}
-                else if(method==3){toolId=(Long)argument;String name=rules.item(owned(p,toolId).config()).get("accessory");tool=name==null?null:rules.accessory(name);if(tool==null||!tool.remove())throw new IOException("e.cant_use_accessory");slot=tool.location();}else throw new IOException("Invalid accessory operation");
+                else if(method==3){toolId=(Long)argument;String name=rules.item(TownLedger.owned(p,toolId).config()).get("accessory");tool=name==null?null:rules.accessory(name);if(tool==null||!tool.remove())throw new IOException("e.cant_use_accessory");slot=tool.location();}else throw new IOException("Invalid accessory operation");
                 String worn=null;for(String existing:accessories){var a=rules.accessory(existing);if(a!=null&&a.location().equals(slot)){worn=existing;break;}}if(worn==null)throw new IOException("e.no_accessory");
-                if(tool!=null){consume(c,p,toolId,1);if(!tool.destroy()){String recovered=rules.accessoryTicket(worn);if(recovered==null)throw new IOException("Accessory has no recoverable ticket");result=create(c,p,recovered,1,false,0,0,List.of());}}
+                if(tool!=null){TownLedger.consume(c,p,toolId,1);if(!tool.destroy()){String recovered=rules.accessoryTicket(worn);if(recovered==null)throw new IOException("Accessory has no recoverable ticket");result=create(c,p,recovered,1,false,0,0,List.of());}}
                 accessories.remove(worn);
             }
             try(var s=c.prepareStatement("UPDATE inventory_items SET accessory=NULL,accessories=? WHERE item_id=? AND world_id=?")){s.setString(1,Json.stringify(accessories));s.setLong(2,gearId);s.setInt(3,p.worldId());s.executeUpdate();}return result;

@@ -277,7 +277,7 @@ final class AdministrationRepository {
             var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("Item is not owned by this knight"));
             modifiers.validate(catalog.require(item.config()),rules);
             try(var s=c.prepareStatement("UPDATE inventory_items SET level=?,heat_progress=?,variants=? WHERE world_id=? AND item_id=?")){s.setInt(1,modifiers.level());s.setFloat(2,modifiers.heat());s.setString(3,org.tortodrone.core.Json.stringify(modifiers.variants()));s.setInt(4,profile.worldId());s.setLong(5,itemId);if(s.executeUpdate()!=1)throw new IOException("Item changed");}
-            TownStore.touch(c,profile.worldId());AccountRepository.event(c,profile.accountId(),"item modifiers; world="+profile.worldId()+"; item="+itemId);
+            TownLedger.touch(c,profile.worldId());AccountRepository.event(c,profile.accountId(),"item modifiers; world="+profile.worldId()+"; item="+itemId);
             return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
         });
     }
@@ -291,7 +291,7 @@ final class AdministrationRepository {
             String costume;
             try(var s=c.prepareStatement("SELECT costume FROM knights WHERE account_id=? AND id=?")){s.setInt(1,profile.accountId());s.setInt(2,profile.knightId());try(var r=s.executeQuery()){if(!r.next())throw new IOException("Knight changed");costume=r.getString(1);}}
             TownStore.editAccessory(c,profile,item,accessory,costume,rules);
-            TownStore.touch(c,profile.worldId());AccountRepository.event(c,profile.accountId(),"item accessory; world="+profile.worldId()+"; item="+itemId);
+            TownLedger.touch(c,profile.worldId());AccountRepository.event(c,profile.accountId(),"item accessory; world="+profile.worldId()+"; item="+itemId);
             return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
         });
     }

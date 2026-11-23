@@ -77,8 +77,8 @@ final class SpriteStore {
         return null;
     }
     Object hatch(Connection c,WorldProfile p,long egg)throws SQLException,IOException{
-        var item=TownStore.owned(p,egg);String config=rules.item(item.config()).get("sprite");if(config==null||rules.sprite(config)==null)throw new IOException("m.internal_error");
-        TownStore.consume(c,p,egg,1);
+        var item=TownLedger.owned(p,egg);String config=rules.item(item.config()).get("sprite");if(config==null||rules.sprite(config)==null)throw new IOException("m.internal_error");
+        TownLedger.consume(c,p,egg,1);
         try(var s=c.prepareStatement("INSERT INTO town_sprites(world_id,config) VALUES(?,?)",Statement.RETURN_GENERATED_KEYS)){
             s.setInt(1,p.worldId());s.setString(2,config);s.executeUpdate();try(var keys=s.getGeneratedKeys()){keys.next();return keys.getInt(1);}
         }
@@ -92,7 +92,7 @@ final class SpriteStore {
             var def=items.require(good.item());int price=good.price()<0?rules.price(good.item(),def.rarity(),true):good.price();if(price<0||good.energy()<0)throw new IOException("e.good_unavailable");
             crowns+=price;energy+=good.energy();configs.add(config);
         }
-        if(crowns>Integer.MAX_VALUE||energy>Integer.MAX_VALUE)throw new IOException("Currency balance exceeds supported limits");TownStore.pay(c,p,(int)crowns,(int)energy);
+        if(crowns>Integer.MAX_VALUE||energy>Integer.MAX_VALUE)throw new IOException("Currency balance exceeds supported limits");TownLedger.pay(c,p,(int)crowns,(int)energy);
         for(String config:configs){
             String prerequisite=rules.harnessPrerequisite(config);var prior=p.town().harnesses().stream().filter(h->h.config().equals(prerequisite)).findFirst().orElse(null);
             if(prior!=null){try(var st=c.prepareStatement("UPDATE town_harnesses SET config=? WHERE world_id=? AND id=?")){st.setString(1,config);st.setInt(2,p.worldId());st.setLong(3,prior.id());if(st.executeUpdate()!=1)throw new IOException("Harness changed");}}
@@ -105,11 +105,11 @@ final class SpriteStore {
     }
     /** Current archive harness installation consumes one kit and persists one owned harness. */
     long installHarness(Connection c,WorldProfile p,long kit)throws SQLException,IOException{
-        var item=TownStore.owned(p,kit);String config=rules.item(item.config()).get("harness");
+        var item=TownLedger.owned(p,kit);String config=rules.item(item.config()).get("harness");
         if(config==null||rules.harnessDamage(config)==null)throw new IOException("m.internal_error");
         if(item.gift()!=null||item.expired(System.currentTimeMillis()))throw new IOException("m.internal_error");
         // Archive security-fixes S8: one kit buys one harness, atomically.
-        TownStore.consume(c,p,kit,1);
+        TownLedger.consume(c,p,kit,1);
         try(var s=c.prepareStatement("INSERT INTO town_harnesses(world_id,config) VALUES(?,?)",Statement.RETURN_GENERATED_KEYS)){
             s.setInt(1,p.worldId());s.setString(2,config);s.executeUpdate();
             try(var keys=s.getGeneratedKeys()){if(!keys.next())throw new SQLException("Missing installed harness ID");return keys.getLong(1);}
@@ -131,15 +131,15 @@ final class SpriteStore {
             case 3->{Integer requested=args.get(1)==null?null:((org.tortodrone.core.wire.EnumValue)args.get(1)).ordinal();
                 var unlocked=unlocked(rules,perkLevel,perks);if(requested!=null&&!unlocked.contains(requested))throw new IOException("Perk not unlocked");perk=requested;}
             case 5->{harness=(Long)args.get(1);if(harness!=0){var h=p.town().harnesses().stream().filter(v->v.id()==(Long)args.get(1)).findFirst().orElseThrow(()->new IOException("Unknown owned harness"));if(definition.restrictedDamage().equals(rules.harnessDamage(h.config())))throw new IOException("This sprite cannot wear that harness");}}
-            case 6->{long foodId=(Long)args.get(0);var food=TownStore.owned(p,foodId);if(food.config().equals("Food/Special/Reset Star")){if(sprite.spent()==0)throw new IOException("e.no_points_to_reset");Collections.fill(powers,0);Collections.fill(ultimates,0);}else{
+            case 6->{long foodId=(Long)args.get(0);var food=TownLedger.owned(p,foodId);if(food.config().equals("Food/Special/Reset Star")){if(sprite.spent()==0)throw new IOException("e.no_points_to_reset");Collections.fill(powers,0);Collections.fill(ultimates,0);}else{
                     String role=rules.item(food.config()).getOrDefault("spriteFoodRole","");if(!role.equals("FOOD_ONLY")&&!role.equals("MATERIAL_AND_FOOD"))throw new IOException("This item is not sprite food");
                     long now=System.currentTimeMillis();if(heat>=1)throw new IOException("Sprite heat is full");if(!SpriteRules.appetite(lastFull,now))throw new IOException("e.not_enough_appetite");
                     var fd=items.require(food.config());heat=Math.min(1,heat+SpriteRules.feedGain(fd.rarity(),definition.preferredFood().contains(food.config())));lastFull=SpriteRules.fedAt(lastFull,now);if(heat==1)fullStamp=now;
-                }TownStore.consume(c,p,foodId,1);}
+                }TownLedger.consume(c,p,foodId,1);}
             case 7->{long foodId=(Long)args.get(1);boolean force=(Boolean)args.get(2);if((force||foodId==0)&&!staff)throw new IOException(force?"m.access_denied":"e.wrong_level_item");
                 if(!force&&(heat!=1||level>=99&&perkLevel>5))throw new IOException("Sprite cannot level up");
                 if(!staff&&p.progress().rank()<SpriteRules.requiredRank(level))throw new IOException("e.need_higher_rank");
-                if(foodId!=0&&!force){var food=TownStore.owned(p,foodId);if(!food.config().equals(SpriteRules.levelItem(level,definition.preferredFood())))throw new IOException("e.wrong_level_item");TownStore.consume(c,p,foodId,1);}
+                if(foodId!=0&&!force){var food=TownLedger.owned(p,foodId);if(!food.config().equals(SpriteRules.levelItem(level,definition.preferredFood())))throw new IOException("e.wrong_level_item");TownLedger.consume(c,p,foodId,1);}
                 if(level>=99&&perkLevel>5)return null;
                 boolean grant=SpriteRules.grantsPerk(level);level=Math.min(99,level+1);heat=0;
                 if(grant&&perkLevel<=5){var candidates=new ArrayList<Integer>();for(int i=0;i<rules.perks().size();i++)if(rules.perks().get(i).tier()==perkLevel&&!perks.contains(i))candidates.add(i);

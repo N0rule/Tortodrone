@@ -137,7 +137,7 @@ public final class OpeningMissionStore {
             var deletes=verifyExchangeItems(profile,mission,itemIds);
             var receipt=new OpeningCompletion(missionId,Math.max(1,System.currentTimeMillis()),"MEDIUM");
             var memories=KnightMemories.load(c,profile.worldId());var objectives=KnightObjectives.load(c,profile.worldId());
-            for(var use:deletes.entrySet())inventory.consume(c,profile,use.getKey(),use.getValue());
+            for(var use:deletes.entrySet())TownLedger.consume(c,profile,use.getKey(),use.getValue());
             for(var grant:missions.grants(missionId))inventory.create(c,profile,grant.config(),grant.count(),grant.locked(),0,0,
                 grant.variants().stream().map(name->new StarterCatalog.Model(name,Map.of())).toList());
             int prestige=missions.prestige(missionId);

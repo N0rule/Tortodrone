@@ -71,14 +71,14 @@ public final class FriendStore {
                 s.setInt(1,peer);s.setLong(2,System.currentTimeMillis());s.setString(3,subject);s.setString(4,body);
                 long id;try(var r=s.executeQuery()){r.next();id=r.getLong(1);}put(c,"social.request."+id,world);
             }
-            TownStore.touch(c,peer);return null;
+            TownLedger.touch(c,peer);return null;
         });
     }
     public void remove(int account,int knight,long auth,String name)throws IOException {
         database.write(c->{int world=owner(c,account,knight,auth),peer=named(c,name);
             if(!linked(c,world,peer))throw new IOException("That knight is not a friend");
             try(var s=c.prepareStatement("DELETE FROM metadata WHERE key IN(?,?)")){s.setString(1,prefix(world)+peer);s.setString(2,prefix(peer)+world);s.executeUpdate();}
-            TownStore.touch(c,world);TownStore.touch(c,peer);return null;
+            TownLedger.touch(c,world);TownLedger.touch(c,peer);return null;
         });
     }
     private static boolean linked(Connection c,int world,int peer)throws SQLException {
@@ -95,7 +95,7 @@ public final class FriendStore {
         try(var s=c.prepareStatement("UPDATE town_mail SET claimed=1 WHERE id IN(SELECT m.id FROM town_mail m JOIN metadata r ON r.key='social.request.'||m.id WHERE m.id<>? AND ((m.world_id=? AND r.value=?) OR (m.world_id=? AND r.value=?)))")) {
             s.setLong(1,mail.id());s.setInt(2,world);s.setInt(3,peer);s.setInt(4,peer);s.setInt(5,world);s.executeUpdate();
         }
-        TownStore.touch(c,peer);
+        TownLedger.touch(c,peer);
     }
     static void deletedMail(Connection c,long id)throws SQLException {try(var s=c.prepareStatement("DELETE FROM metadata WHERE key=?")){s.setString(1,"social.request."+id);s.executeUpdate();}}
     static void clean(Connection c)throws SQLException {

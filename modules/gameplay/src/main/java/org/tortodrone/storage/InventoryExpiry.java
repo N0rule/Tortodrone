@@ -38,7 +38,7 @@ final class InventoryExpiry {
             try(var s=c.prepareStatement("DELETE FROM metadata WHERE key=?")){s.setString(1,PREFIX+id);s.executeUpdate();}
         }
         // Losing a timed upgrade returns equipment to the bag; equipment itself never expires with its slot.
-        for(int world:worlds){reconcile(c,world,now);TownStore.touch(c,world);}
+        for(int world:worlds){reconcile(c,world,now);TownLedger.touch(c,world);}
     }
     static void reconcile(Connection c,int world,long now)throws SQLException {
         int weapons=0,trinkets=0;
