@@ -376,7 +376,7 @@ owners that compose named collaborators instead of mixing responsibilities:
 | `SceneSimulation` | 427 | process-wide `SceneClock`, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
 | `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |
 | `Database` | 517 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models |
-| `CharacterStore` | 357 | roster facade returning core character models; knight identity policy is in `KnightIdentity`, and the roster monitor enters the `CHARACTER` rank at every synchronized entry point |
+| `CharacterStore` | 351 | roster facade returning core character models; per-knight storage reads/writes are in `KnightStorage`, knight identity policy is in `KnightIdentity`, and the roster monitor enters the `CHARACTER` rank at every synchronized entry point |
 
 The line counts are the size of each facade, not a target: a facade gains a line
 whenever a protocol entry point or a new collaborator is added. The two largest

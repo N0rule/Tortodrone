@@ -29,6 +29,7 @@ public final class CharacterStore {
     private final String username;
     private final int accountId;
     private ItemCatalog catalog=ItemCatalog.starter();
+    private final KnightStorage storage;
     private final CharacterServices services;
     public ItemCatalog catalog(){return catalog;}
     /** Storage-facing services for session handlers; the roster stays storage-free. */
@@ -69,6 +70,7 @@ public final class CharacterStore {
     public CharacterStore(int accountId, String username) {
         if (accountId < 1 || username == null) throw new IllegalArgumentException("Invalid account identity");
         database = null; this.username = username; this.accountId = accountId;
+        storage = new KnightStorage(database, accountId, catalog);
         services = new CharacterServices(database, catalog);
     }
 
@@ -77,6 +79,7 @@ public final class CharacterStore {
     }
     public CharacterStore(Database database,int accountId,String username,ItemCatalog catalog)throws IOException {
         this.database = database; this.accountId = accountId; this.username = username; this.catalog = catalog;
+        storage = new KnightStorage(database, accountId, catalog);
         services = new CharacterServices(database, catalog);
         refresh();
     }
@@ -271,63 +274,54 @@ public final class CharacterStore {
         refresh();
         int index = indexOf(name);
         if (index < 0) throw new Refused("No such knight");
-        if (database == null) throw new IOException("World profiles require SQLite storage");
-        return database.worldProfile(accountId,knights.get(index).id(),authRevision,cached);
+        return storage.worldProfile(knights.get(index).id(),authRevision,cached);
         } finally { LockOrder.exit(); }
     }
 
     public synchronized WorldProfile equip(int knightId,long revision,long itemId,Integer slot)throws IOException {
         LockOrder.enter(LockOrder.CHARACTER);
         try {
-        if(database==null)throw new IOException("Equipment requires SQLite storage");
-        return database.equip(accountId,knightId,revision,itemId,slot);
+        return storage.equip(knightId,revision,itemId,slot);
         } finally { LockOrder.exit(); }
     }
 
     /** Trade coordinator never takes an account's roster lock while holding its own lock. */
     public WorldProfile tradeProfile(int knightId,long authRevision)throws IOException {
-        if(database==null)throw new IOException("Trading requires SQLite storage");
-        return database.worldProfile(accountId,knightId,authRevision);
+        return storage.tradeProfile(knightId,authRevision);
     }
     public boolean inspectionHidden(long authRevision)throws IOException {
-        return database!=null&&database.inspectionHidden(accountId,authRevision);
+        return storage.inspectionHidden(authRevision);
     }
     public int lastTownScene(int knightId,long authRevision)throws IOException {
-        return database.lastTownScene(accountId,knightId,authRevision);
+        return storage.lastTownScene(knightId,authRevision);
     }
     public void lastTownScene(int knightId,long authRevision,int scene)throws IOException {
-        database.lastTownScene(accountId,knightId,authRevision,scene);
+        storage.lastTownScene(knightId,authRevision,scene);
     }
     public WorldProfile completeTutorial(int knightId,long authRevision,WorldProfile expected)throws IOException {
         return completeTutorial(knightId,authRevision,expected,0,null);
     }
     public WorldProfile completeTutorial(int knightId,long authRevision,WorldProfile expected,float heat,org.tortodrone.core.town.TownCatalog rules)throws IOException {
-        if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid tutorial owner");
-        return database.completeTutorial(accountId,knightId,authRevision,expected.worldId(),expected.revision(),heat,rules);
+        return storage.completeTutorial(knightId,authRevision,expected,heat,rules);
     }
     public Set<String> knightMemories(int knightId,long authRevision)throws IOException {
-        if(database==null)throw new IOException("Knight memories require SQLite storage");
-        return database.knightMemories(accountId,knightId,authRevision);
+        return storage.knightMemories(knightId,authRevision);
     }
     public Map<String,KnightObjective.State> knightObjectives(int knightId,long authRevision)throws IOException {
-        if(database==null)throw new IOException("Objectives require SQLite storage");return database.knightObjectives(accountId,knightId,authRevision);
+        return storage.knightObjectives(knightId,authRevision);
     }
     public KnightStory knightStory(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> memories,List<KnightObjective> objectives)throws IOException {
-        if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid story owner");
-        return database.knightStory(accountId,knightId,authRevision,expected.worldId(),expected.revision(),memories,objectives);
+        return storage.knightStory(knightId,authRevision,expected,memories,objectives);
     }
     public KnightMemoryState knightMemories(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> operations)throws IOException {
-        if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid knight memory owner");
-        return database.knightMemories(accountId,knightId,authRevision,expected.worldId(),expected.revision(),operations);
+        return storage.knightMemories(knightId,authRevision,expected,operations);
     }
     public void inspectionHidden(long authRevision,boolean hidden)throws IOException {
-        if(database==null)throw new IOException("Preferences require SQLite storage");
-        database.inspectionHidden(accountId,authRevision,hidden);
+        storage.inspectionHidden(authRevision,hidden);
     }
     public List<WorldProfile> trade(WorldProfile first,long firstAuth,Map<Long,Integer> firstItems,int firstCrowns,int firstEnergy,
             WorldProfile second,long secondAuth,Map<Long,Integer> secondItems,int secondCrowns,int secondEnergy)throws IOException {
-        if(database==null||first.accountId()!=accountId)throw new IOException("Invalid trade owner");
-        return database.trade(first,firstAuth,firstItems,firstCrowns,firstEnergy,second,secondAuth,secondItems,secondCrowns,secondEnergy,catalog);
+        return storage.trade(first,firstAuth,firstItems,firstCrowns,firstEnergy,second,secondAuth,secondItems,secondCrowns,secondEnergy);
     }
 
     private int indexOf(String name) {
