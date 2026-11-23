@@ -65,11 +65,15 @@ final class SchemaMigrations {
         var indexes=new java.util.LinkedHashMap<String,java.util.List<String>>();
         var triggers=new java.util.LinkedHashMap<String,java.util.List<String>>();
         var sequences=new java.util.LinkedHashMap<String,Long>();
+        var strict=new java.util.HashSet<String>();
+        try(var statement=connection.createStatement();var rows=statement.executeQuery("PRAGMA table_list")){
+            while(rows.next())if("main".equals(rows.getString("schema"))&&rows.getInt("strict")!=0)strict.add(rows.getString("name"));
+        }
         try(var statement=connection.createStatement();
             var rows=statement.executeQuery("SELECT name,sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")){
             while(rows.next()){
                 var name=rows.getString(1);var sql=rows.getString(2);
-                if(sql!=null&&!strict(sql)){names.add(name);tables.put(name,sql);}
+                if(sql!=null&&!strict.contains(name)){names.add(name);tables.put(name,sql);}
             }
         }
         if(!names.isEmpty()){
@@ -134,10 +138,6 @@ final class SchemaMigrations {
         try(var insert=connection.prepareStatement("INSERT INTO sqlite_sequence(name,seq) VALUES(?,?)")){
             insert.setString(1,table);insert.setLong(2,sequence);insert.executeUpdate();
         }
-    }
-
-    private static boolean strict(String create){
-        return create.matches("(?is).*\\)\\s*STRICT\\s*$");
     }
 
     /** Rewrite the declared name while leaving every other byte of the definition intact. */
