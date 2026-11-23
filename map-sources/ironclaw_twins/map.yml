@@ -1,8 +1,0 @@
-# deployed-levels.tsv 112,'ironclaw_munitions_factory_twins' -> scene 322; zone is ZoneUtil.qualify(2, 112).
-id: 322
-name: "Ironclaw Munitions Factory|The Roarmulus Twins"
-type: level
-zone-id: 33554544
-zone-name: "%dungeon:m.ironclaw_munitions_factory_twins"
-defaultSpawn: level_start
-instances: 1

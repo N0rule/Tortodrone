@@ -2,6 +2,11 @@
 /local/
 AGENTS.md
 
+# Map conversion inputs are local client exports; only the guide and template are tracked.
+/map-sources/*
+!/map-sources/README.md
+!/map-sources/map.example.yml
+
 # Captures and logs
 *.pcap
 *.pcapng

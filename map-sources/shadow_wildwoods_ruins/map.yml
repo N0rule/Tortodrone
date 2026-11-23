@@ -1,8 +1,0 @@
-# deployed-levels.tsv 160,'gloaming_wildwoods_ruins' -> scene 382; zone is ZoneUtil.qualify(2, 160).
-id: 382
-name: "Gloaming Wildwoods|Roarsterous Ruins"
-type: level
-zone-id: 33554592
-zone-name: "%dungeon:m.gloaming_wildwoods_ruins"
-defaultSpawn: level_start
-instances: 1

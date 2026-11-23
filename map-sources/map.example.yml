@@ -1,0 +1,10 @@
+# Copy to map-sources/<name>/map.yml and put the exported scene.dat beside it.
+# Only the fields below are read by MapCompiler; see README.md for the full workflow.
+id: 1234                      # positive native scene id
+name: Zone|Scene Name         # used by --list and the compile report
+type: level                   # town | training | level
+zone-id: 1                    # native zone id
+zone-name: "%town:m.haven"    # client bundle key; must start with %
+# Optional: choose the town arrival when a scene has several Destination portals.
+# spawn-x: 1
+# spawn-y: -30.5

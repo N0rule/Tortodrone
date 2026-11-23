@@ -1,8 +1,0 @@
-# deployed-levels.tsv 189,'training_grounds_generator' -> scene 337; zone is ZoneUtil.qualify(2, 189).
-id: 337
-name: Ancient Generator|Restoring Power
-type: level
-zone-id: 33554605
-zone-name: "%dungeon:m.training_grounds_generator"
-defaultSpawn: level_start
-instances: 1

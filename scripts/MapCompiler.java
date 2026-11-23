@@ -9,6 +9,8 @@ import org.yaml.snakeyaml.Yaml;
  * <p>Development-only. A release build consumes the compiled deployment; this command never runs
  * at server startup. The scene is read read-only by the stock exporter, which derives exact
  * collision, portals, actors and localization. Anything it cannot derive is refused, not invented.
+ * Sources are local client exports and are not tracked; {@code map-sources/README.md} and
+ * {@code map-sources/map.example.yml} are the only committed files there.
  */
 public final class MapCompiler {
     public static void main(String[] args) throws Exception {
@@ -27,12 +29,17 @@ public final class MapCompiler {
     }
 
     private static void list(Path root) throws IOException {
-        for (var entry : manifests(root).entrySet()) {
+        var entries = manifests(root);
+        if (entries.isEmpty()) {
+            System.out.println("No map sources under " + root + "; see map-sources/README.md");
+            return;
+        }
+        for (var entry : entries.entrySet()) {
             var map = entry.getValue();
             System.out.println(entry.getKey() + "\tid=" + map.get("id") + "\ttype=" + map.get("type")
                 + "\tzone=" + map.get("zone-id") + "\t" + map.get("name"));
         }
-        System.out.println(manifests(root).size() + " map source(s)");
+        System.out.println(entries.size() + " map source(s)");
     }
 
     private static void compile(Path explicitGame, Path root, Path deployment, boolean replace, String only) throws Exception {
@@ -46,7 +53,8 @@ public final class MapCompiler {
         }
         if (!Files.isDirectory(game.resolve("code"))) throw new IOException("game directory has no code/: " + game);
         var manifests = manifests(root);
-        if (manifests.isEmpty()) throw new IOException("No map sources under " + root);
+        if (manifests.isEmpty()) throw new IOException(
+            "No map sources under " + root + "; copy map.example.yml to <name>/map.yml and read map-sources/README.md");
         Path deploymentRoot = deployment.toAbsolutePath().normalize();
         if (!Files.isDirectory(deploymentRoot.resolve("content/shared")))
             throw new IOException("deployment content is not prepared; run prepareContent first: " + deploymentRoot);

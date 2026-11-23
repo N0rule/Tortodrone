@@ -1,8 +1,0 @@
-# towns.sql town 6,'rescue_camp_state_2' -> scene 218; zone is ZoneUtil.qualify(1, 6).
-id: 218
-name: Rescue Camp|Light in the Darkness
-type: town
-zone-id: 16777222
-zone-name: "%town:m.rescue_camp_state_2"
-defaultSpawn: level_start
-instances: 1

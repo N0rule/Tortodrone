@@ -1,8 +1,0 @@
-# deployed-levels.tsv 113,'ironclaw_munitions_factory_workshop' -> scene 324; zone is ZoneUtil.qualify(2, 113).
-id: 324
-name: "Ironclaw Munitions Factory|Warfare Workshop"
-type: level
-zone-id: 33554545
-zone-name: "%dungeon:m.ironclaw_munitions_factory_workshop"
-defaultSpawn: level_start
-instances: 1

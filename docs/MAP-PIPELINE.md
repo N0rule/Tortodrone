@@ -6,9 +6,13 @@ Maps are **development inputs**, not runtime imports. A release build ships the 
 
 ## Source layout
 
+Only the guide and the template are tracked; per-map inputs are local client exports:
+
 ```text
 map-sources/
-  advanced_training/
+  README.md              # tracked: export, author, compile and verify workflow
+  map.example.yml        # tracked: the fields a source needs
+  advanced_training/     # untracked: created on the author's machine
     scene.dat            # the only binary input
     map.yml              # identity and the facts a scene cannot state
 ```
@@ -19,12 +23,13 @@ name: Advanced Training Hall
 type: training
 zone-id: 1
 zone-name: "%town:m.haven"
-defaultSpawn: level_start
-instances: 1
+# spawn-x / spawn-y only when a town scene has several Destination portals
 ```
 
-`zone-id` and `zone-name` are the two values a cached scene does not establish. Routing (`link`)
-is a design decision and is not invented.
+`zone-id` and `zone-name` are the two values a cached scene does not establish; read them from the
+compiled map's `native/metadata.properties` when rebuilding a shipped map. Routing (`link`) is a
+design decision and is not invented. Every compiled map records `scene-id`, `zone-id`,
+`zone-name`, `version` and `sha256.scene.dat`, so a fresh export can be verified against it.
 
 ## Commands
 
