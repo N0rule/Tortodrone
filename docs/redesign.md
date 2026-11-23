@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,181,200 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,183,104 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -435,6 +435,11 @@ remaining stores were split the same way:
 - `EquipmentCatalog` keeps the immutable per-item modifier lookups and stock
   modifier arithmetic; `EquipmentCatalogCodec` owns the exported TSV format,
   the weapon-class column order and the size/row/field rules.
+- `SceneCatalog` keeps the lazy id/body map and lookup; `SceneCatalogLoader`
+  owns prepared-map descriptor ingestion: path containment, pinned checksums,
+  the archived header, compiled collision hash, spawn clearance and the
+  portal/collision metadata. Cross-scene portal-graph validation stays with
+  the catalog in `of`.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.
