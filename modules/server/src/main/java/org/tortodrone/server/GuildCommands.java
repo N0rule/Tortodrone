@@ -50,7 +50,14 @@ public final class GuildCommands {
                     + stamp(guild.formed()) + " | members=" + view.members().size() + "/" + guild.memberLimit()
                     + " | well=" + guild.energy() + " | upkeep=" + guild.upkeepCost() + " | hallOpen="
                     + guild.hallOpen() + " | theme=" + dash(guild.theme()) + " | environment="
-                    + dash(guild.environment()) + " | motd=" + dash(guild.motd()));
+                    + dash(guild.environment()) + " | motd=" + dash(guild.motd()) + " | expansions="
+                    + (view.expansions().isEmpty()
+                            ? "-"
+                            : String.join(
+                                    ",",
+                                    view.expansions().stream()
+                                            .map(String::valueOf)
+                                            .toList())));
             for (Member member : view.members())
                 text.append('\n')
                         .append("  ")

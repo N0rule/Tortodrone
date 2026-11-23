@@ -110,8 +110,9 @@ public final class WebAdminServiceTest {
                         guildRows.size() == 1
                                 && guildRow.name().equals("Oracion")
                                 && guildRow.members() == 1
-                                && guildRow.memberLimit() == GuildStore.MAX_MEMBERS,
-                        "the guild listing reports the formed guild and its limit");
+                                && guildRow.memberLimit() == GuildStore.MAX_MEMBERS
+                                && guildRow.expansions().isEmpty(),
+                        "the guild listing reports the formed guild, its limit and no expansions");
                 var guildDetail = (AdminViews.GuildDetail)
                         service.read("guild", new AdminService.Input(Map.of("name", "oracion", "count", "25")));
                 check(

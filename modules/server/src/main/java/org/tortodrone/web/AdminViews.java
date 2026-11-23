@@ -519,7 +519,8 @@ final class AdminViews {
             boolean hallOpen,
             String theme,
             String environment,
-            String motd) {}
+            String motd,
+            List<Integer> expansions) {}
 
     /** A roster row with the stock rank name and the recorded last session. */
     public record GuildMemberRow(
@@ -576,7 +577,8 @@ final class AdminViews {
                 guild.hallOpen(),
                 guild.theme(),
                 guild.environment(),
-                guild.motd());
+                guild.motd(),
+                List.copyOf(view.expansions()));
     }
 
     /** Stock rank bytes: 0 master, 1 officer, 2 member, 3 veteran, 4 recruit; one definition. */

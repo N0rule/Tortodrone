@@ -104,6 +104,7 @@ export async function mount(ctx) {
                 ['Hall access', record.guild.hallOpen ? 'Open' : 'Invite only'],
                 ['Theme', record.guild.theme || 'None'],
                 ['Environment', record.guild.environment || 'None'],
+                ['Hall expansions', (record.guild.expansions || []).join(', ') || 'None'],
                 ['Message', record.guild.motd || 'None']
             ]),
             logNote(record.log),

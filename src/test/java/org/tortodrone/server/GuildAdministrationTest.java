@@ -59,6 +59,7 @@ public final class GuildAdministrationTest {
             String info = GuildCommands.execute("guild info ORACION", guilds);
             check(info.contains("Guild Oracion | id=" + id), "the record is found case-insensitively");
             check(info.contains("Master | Alice-Knight | joined="), "the roster names the master");
+            check(info.contains("| expansions=-"), "a guild without a hall expansion reports none");
             check(info.contains("lastSession=never"), "a knight who has not logged out has no session stamp");
             check(formed.profile() != null, "formation returned the founder's profile");
 
