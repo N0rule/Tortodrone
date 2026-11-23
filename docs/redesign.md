@@ -536,8 +536,10 @@ working.
 - Add `--check` to all four mission importers, not just `import_missions.py`, and
   give all four temporary-file/directory writes with atomic replacement. The four
   importers now share `scripts/content/mission_layout.py` (`write_all`/`atomic_write`)
-  and expose `--check`; the converter still writes directly, so a partial run remains
-  a converter risk.
+  and expose `--check`. The converter writes into a disposable staging tree and swaps
+  directories only after validation, so a failed run leaves the live tree untouched;
+  the residual window is a crash between those two directory renames, recoverable
+  from the `content.v1-backup` sibling.
 - The manifest is already per-file: 1011 `owned.*` and 847 `source.*` keys in
   `_internal/default-source.properties`. Keep per-file keys and regenerate mission
   paths from the converted tree. A folder digest may exist as an optional summary,
