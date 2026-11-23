@@ -27,7 +27,8 @@ zone-name: "%town:m.haven"
 ```
 
 `zone-id` and `zone-name` are the two values a cached scene does not establish; read them from the
-compiled map's `native/metadata.properties` when rebuilding a shipped map. Routing (`link`) is a
+compiled map's `native/metadata.properties` when rebuilding a shipped map, whose
+`native/scene.dat` is the scene to copy back here. Routing (`link`) is a
 design decision and is not invented. Every compiled map records `scene-id`, `zone-id`,
 `zone-name`, `version` and `sha256.scene.dat`, so a fresh export can be verified against it.
 

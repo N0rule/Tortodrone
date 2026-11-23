@@ -1,8 +1,8 @@
 # Map sources
 
 Development inputs for `compileMapsFromSource`. **Nothing here is shipped and nothing here is
-committed.** The server and every release read the compiled deployment maps under
-`content/maps/`; the raw client scene exports stay on the author's machine.
+committed.** The server and every release read the compiled maps under `content/maps/`, and each
+compiled map keeps the scene it was built from in its own `native/scene.dat`.
 
 ```text
 map-sources/
@@ -50,13 +50,19 @@ checked against the shipped map before replacing anything.
 
 ## Re-importing a shipped map
 
-The source export is not in Git. To rebuild one:
+No client export is needed: every compiled map keeps the scene it was built from at
+`content/maps/<type>/<name>/native/scene.dat`, byte-identical to the original. To rebuild one:
 
-- read `zone-id` and `zone-name` from `content/maps/<type>/<name>/native/metadata.properties`;
-- read `id`, `name`, `type` and the default spawn from that folder's `map.yml`;
-- compare your export's SHA-256 with `sha256.scene.dat` before compiling;
+- copy that `native/scene.dat` to `map-sources/<name>/scene.dat`;
+- write `map.yml` from `id`, `name` and `type` in those folders' `map.yml`, plus `zone-id` and
+  `zone-name` from `native/metadata.properties`;
+- confirm `sha256sum map-sources/<name>/scene.dat` equals `sha256.scene.dat` before compiling, so
+  an older or newer client build cannot silently replace a shipped revision;
 - add `spawn-x`/`spawn-y` only when a town scene has several `Dynamic/Portal/Destination` markers
   and the arrival must be chosen explicitly.
+
+A *new* map is the only case that needs an export from an installed client, because no compiled
+map exists yet to supply one.
 
 ## Rights
 
