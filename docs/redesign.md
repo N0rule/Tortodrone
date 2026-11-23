@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,190,646 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,191,519 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -455,6 +455,9 @@ remaining stores were split the same way:
 - `SceneCollision` keeps the immutable tile/floor/shape tables and the
   penetration/clearance kernel; `SceneCollisionCodec` owns the exported
   properties format, layout-hash check, bounded row counts and geometry grammar.
+- `HandshakeCodec` keeps the stateful inbound parsing and the per-connection
+  class/intern tables; `HandshakeWire` owns the two fixed downstream frames and
+  their mapping sequence (`-1/-2`, then `-3/-4/-5`).
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.
