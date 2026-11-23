@@ -58,7 +58,6 @@ public final class Database {
     private final RosterRepository roster;
     private final WorldRepository worlds;
     private final PreferenceRepository preferences;
-    private boolean initialized;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
 
     public Database(Path directory, boolean deploymentLocked) throws IOException {
@@ -69,7 +68,6 @@ public final class Database {
         if (Files.exists(file)) openExisting(directory, deploymentLocked);
         else if (deploymentLocked) initialize();
         else initializeUnderLock(directory);
-        initialized = true;
         accounts = new AccountRepository(this);
         roster = new RosterRepository(this);
         worlds = new WorldRepository(this);
@@ -244,11 +242,6 @@ public final class Database {
         try(Connection connection=connect();Statement statement=connection.createStatement()) {
             statement.execute("BEGIN IMMEDIATE");
             try {
-                if(initialized) {
-                    long expiryStart=System.nanoTime();
-                    try { InventoryExpiry.prune(connection,System.currentTimeMillis()); }
-                    finally { expiryRuns.incrementAndGet();expiryNanos.addAndGet(System.nanoTime()-expiryStart); }
-                }
                 T value=work.run(connection);statement.execute("COMMIT");failed=false;return value;
             } catch(SQLException|IOException|RuntimeException error) {
                 rollbacks.incrementAndGet();
@@ -257,6 +250,22 @@ public final class Database {
             }
         } catch(SQLException error){throw failure(error);}
         finally{measured("write",start,failed);}
+    }
+    /** Reclaim expired inventory on its own transaction instead of on every write.
+     *
+     * <p>Reads already hide an item whose deadline passed, so this sweep owns only the
+     * durable deletion, slot reconciliation and the revision each affected world publishes.
+     * The scheduled caller bounds the delay; the world-state pollers still ask for a sweep
+     * when a deadline is due so an observed knight notices within a poll interval.</p>
+     */
+    public void sweepExpired() throws IOException {
+        if(closed)throw new IOException("Storage is closed");
+        write(connection->{
+            long expiryStart=System.nanoTime();
+            try { InventoryExpiry.prune(connection,System.currentTimeMillis()); }
+            finally { expiryRuns.incrementAndGet();expiryNanos.addAndGet(System.nanoTime()-expiryStart); }
+            return null;
+        });
     }
     /** Stop accepting work and join both dedicated pools before the final checkpoint. */
     public void close() {

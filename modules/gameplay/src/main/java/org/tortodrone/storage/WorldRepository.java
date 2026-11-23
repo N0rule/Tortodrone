@@ -29,7 +29,7 @@ final class WorldRepository {
 
     /** Lightweight consistent metadata for active world observers; inventories load only on change. */
     Map<Integer,org.tortodrone.core.character.WorldSummary> worldStates()throws IOException {
-        if(database.read(c->InventoryExpiry.due(c,System.currentTimeMillis())))database.write(c->null);
+        if(database.read(c->InventoryExpiry.due(c,System.currentTimeMillis())))database.sweepExpired();
         return database.read(c->{
             var states=new HashMap<Integer,org.tortodrone.core.character.WorldSummary>();
             try(var s=c.createStatement();var rows=s.executeQuery("SELECT w.account_id,w.knight_id,w.world_id,k.name,w.state_revision,a.auth_revision,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id")) {
@@ -44,7 +44,7 @@ final class WorldRepository {
 
     /** Indexed revision probe; does not materialize inventory or town state. */
     org.tortodrone.core.character.WorldSummary knightState(String username,String knight)throws IOException {
-        if(database.read(c->InventoryExpiry.due(c,System.currentTimeMillis())))database.write(c->null);
+        if(database.read(c->InventoryExpiry.due(c,System.currentTimeMillis())))database.sweepExpired();
         return database.read(c->{try(var statement=c.prepareStatement("SELECT w.account_id,w.knight_id,w.world_id,k.name,w.state_revision,a.auth_revision,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id WHERE a.name_key=? AND k.name_key=?")){
             statement.setString(1,username.toLowerCase(Locale.ROOT));statement.setString(2,knight.toLowerCase(Locale.ROOT));
             try(var r=statement.executeQuery()){if(!r.next())throw new IOException("No such knight");return new org.tortodrone.core.character.WorldSummary(r.getInt(1),r.getInt(2),r.getInt(3),r.getString(4),r.getLong(5),r.getLong(6),r.getBoolean(7));}

@@ -143,8 +143,10 @@ Source-verified settings and write path:
 - Pre-0.42.0 measurement: SQLite schema 18 (superseded by the schema 1 baseline); WAL enabled at initialization; `foreign_keys=ON` and
   `busy_timeout=5000` per connection; a fresh connection for every `read`/`write`;
   writes use `BEGIN IMMEDIATE`.
-- Every write calls `InventoryExpiry.prune(...)` before the caller's work
-  (`Database.write`), so the global expiry sweep is on the write path.
+- Pre-0.42.0 measurement (superseded): every write called `InventoryExpiry.prune(...)`
+  before the caller's work (`Database.write`), so the global expiry sweep was on the
+  write path. The current runtime sweeps on its own `InventoryExpiry` daemon and on the
+  world-state pollers' due probe, so an ordinary write no longer pays it.
 - `synchronous`, `wal_autocheckpoint`, `journal_size_limit` and `cache_size` are not
   set and therefore inherit SQLite/JDBC defaults.
 - `Database.diagnostics()` reports operations, operations ≥100 ms, failures,
@@ -189,6 +191,7 @@ while the run's disposable server is alive.
 | `AccountSessions` | 1 | platform daemon | 250 ms account/auth-revision watcher; performs a database read per attached session |
 | `WorldStateRefresh` | 0–1 | platform daemon | Batched 250 ms world/social poller while sessions are registered |
 | `AuctionExpiry` | 1 | platform daemon | 30 s auction/mail expiry writer |
+| `InventoryExpiry` | 1 | platform daemon | 30 s expired-inventory sweep, outside session/scene monitors |
 | `HTTP-*` | 4–16 | platform pool | Shared News/WebUI listener; 64-slot queue, `AbortPolicy` |
 | `webui-metrics` | 0–1 | platform daemon | Five-second metric samples retained for one hour |
 

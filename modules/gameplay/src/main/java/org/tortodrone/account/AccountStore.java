@@ -70,6 +70,8 @@ public final class AccountStore implements AutoCloseable {
     }
     /** Process-wide storage counters for the admin status view; observation only. */
     public Database.StorageMetrics storageMetrics()throws IOException {if(database==null)throw new IOException("Storage metrics require SQLite storage");return database.storageMetrics();}
+    /** Reclaim expired inventory; the scheduled owner runs outside every session monitor. */
+    public void sweepExpiredItems()throws IOException {if(database!=null)database.sweepExpired();}
     public boolean gameAttached(int account){return sessions.containsKey(account);}
     public WorldProfile progress(String username,String knight,Integer rank,Integer subrank,Integer prestige,int expectedAccount,int expectedWorld)throws IOException{
         return progress(username,knight,rank,subrank,prestige,expectedAccount,expectedWorld,null);

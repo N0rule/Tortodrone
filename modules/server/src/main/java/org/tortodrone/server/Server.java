@@ -165,7 +165,8 @@ public final class Server {
             }
         }, "ServerShutdown");
         Runtime.getRuntime().addShutdownHook(shutdown);
-        try (var expiry=new AuctionExpiry(accounts.auctions(),log)) {
+        try (var expiry=new AuctionExpiry(accounts.auctions(),log);
+             var inventoryExpiry=new InventoryExpirySweeper(accounts,log)) {
             log.debug("Limits: "+maxClients+" clients; 64 KiB upstream / 1 MiB downstream frame; 15 s handshake / 60 s session idle timeout");
             log.info("Done! Listening on " + listener.getInetAddress().getHostAddress() + ":" + listener.getLocalPort() + " (TCP)");
             webReady.run();

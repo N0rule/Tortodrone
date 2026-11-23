@@ -50,9 +50,13 @@ public final class InventoryExpiryTest {
             long expired=System.currentTimeMillis()-1;
             db.write(c->{InventoryExpiry.save(c,restored.id(),expired);TownStore.touch(c,unwrapped.worldId());return null;});
             try {db.write(c->{InventoryExpiry.prune(c,System.currentTimeMillis());throw new IOException("injected rollback");});throw new AssertionError("rollback expected");}catch(IOException expected){ }
-            check(db.read(c->{try(var s=c.prepareStatement("SELECT count(*) FROM inventory_items WHERE item_id=?")){s.setLong(1,restored.id());try(var r=s.executeQuery()){r.next();return r.getInt(1)==1;}}}),"failed transaction rolls back expiration deletion");
-            db.worldStates();var after=db.worldProfile(b,1,1);
-            check(after.items().stream().noneMatch(i->i.id()==restored.id())&&after.revision()>unwrapped.revision(),"observer maintenance removes expired item and advances revision");
+            check(itemRows(db,restored.id())==1,"failed transaction rolls back expiration deletion");
+            db.write(c->null);
+            check(itemRows(db,restored.id())==1,"ordinary writes no longer run the global expiry sweep");
+            db.sweepExpired();
+            check(itemRows(db,restored.id())==0,"the scheduled sweep reclaims the expired item");
+            var after=db.worldProfile(b,1,1);
+            check(after.items().stream().noneMatch(i->i.id()==restored.id())&&after.revision()>unwrapped.revision(),"expiry advances the revision the observer polls");
             check(new Database(home,true).worldProfile(b,1,1).equals(after),"expired item remains absent after restart");
             System.out.println("PASS: native timed prize deadlines, reconnect/restart, trade, escrow, gift, rollback and revision-based expiration publication");
         }finally{org.tortodrone.support.ContentFixture.delete(home);}
@@ -89,6 +93,7 @@ public final class InventoryExpiryTest {
         check(expired.items().stream().anyMatch(i->i.id()==extra.id()&&i.equippedSlot()==null),"slot expiry preserves the weapon in inventory");
     }
     private static WorldProfile.Item find(WorldProfile p,String config){return p.items().stream().filter(i->i.config().equals(config)).findFirst().orElseThrow();}
+    private static int itemRows(Database db,long id)throws IOException{return db.read(c->{try(var s=c.prepareStatement("SELECT count(*) FROM inventory_items WHERE item_id=?")){s.setLong(1,id);try(var r=s.executeQuery()){r.next();return r.getInt(1);}}});}
     private static void bonuses(Database db,int account,int other,ItemCatalog items)throws Exception {
         var rules=TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));var town=new TownStore(db,items,rules);
         for(String config:List.of("Upgrade/Heat Bonus","Upgrade/Coin Bonus")){
