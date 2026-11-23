@@ -331,7 +331,9 @@ are expected: a package is assigned by extracted type, not by its current name.
    owns `WebFrontend`/`WebIdentities`; `web.AdminFrontend` is the single provider.)
 7. Only then create Gradle projects and the dependency check. Use `jdeps`/bytecode as
    well as imports; fully qualified references hide edges. (Landed: `checkModuleGraph`
-   also rejects a direct `org.tortodrone.server` → `org.tortodrone.web` reference.)
+   also rejects a direct `org.tortodrone.server` → `org.tortodrone.web` reference, and
+   `checkBytecodeDependencies` validates the packaged bytecode against the documented
+   module graph.)
 
 ### Codec split
 
@@ -369,7 +371,7 @@ owners that compose named collaborators instead of mixing responsibilities:
 | `SceneEntities` | 516 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
 | `SceneSimulation` | 427 | per-instance clock, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
 | `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |
-| `Database` | 479 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models |
+| `Database` | 517 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models |
 | `CharacterStore` | 308 | roster facade returning core character models; knight identity policy is in `KnightIdentity` |
 
 The line counts are the size of each facade, not a target: a facade gains a line

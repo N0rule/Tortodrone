@@ -85,6 +85,56 @@ fun ShadowJar.executableJar(filename: String, entryPoint: String) {
 val serverJar = tasks.named<ShadowJar>("shadowJar") {
     executableJar("tortodrone.jar", "org.tortodrone.server.Server")
 }
+// Validate the documented module graph against packaged bytecode, not only imports:
+// javac cannot see a fully-qualified reference that no project edge declares.
+val checkBytecodeDependencies = tasks.register("checkBytecodeDependencies") {
+    group = "verification"
+    description = "Verify the packaged bytecode respects the documented module edges."
+    val packaged = serverJar.flatMap { it.archiveFile }
+    dependsOn(serverJar)
+    inputs.file(packaged)
+    doLast {
+        val process = ProcessBuilder("jdeps", "--multi-release", "25", "--ignore-missing-deps",
+            "-verbose:package", packaged.get().asFile.absolutePath)
+            .redirectErrorStream(true).start()
+        val output = process.inputStream.bufferedReader().use { it.readText() }
+        val status = process.waitFor()
+        if (status != 0) throw GradleException("jdeps failed with exit $status:\n$output")
+        val pattern = Regex("""^\s*(org\.tortodrone[\w.]*)\s+->\s+(org\.tortodrone[\w.]*)\s""")
+        val edges = output.lineSequence().mapNotNull { line ->
+            pattern.find(line)?.let { it.groupValues[1] to it.groupValues[2] }
+        }.toSet()
+        fun module(name: String): String? = when {
+            name == "org.tortodrone.core" || name.startsWith("org.tortodrone.core.") -> "core"
+            name == "org.tortodrone.protocol" || name.startsWith("org.tortodrone.protocol.") -> "protocol"
+            name == "org.tortodrone.resources" || name.startsWith("org.tortodrone.resources.") -> "content"
+            name == "org.tortodrone.world" || name.startsWith("org.tortodrone.world.") -> "world"
+            name == "org.tortodrone.account" || name.startsWith("org.tortodrone.account.") ||
+                name == "org.tortodrone.character" || name.startsWith("org.tortodrone.character.") ||
+                name == "org.tortodrone.storage" || name.startsWith("org.tortodrone.storage.") ||
+                name == "org.tortodrone.town" || name.startsWith("org.tortodrone.town.") -> "gameplay"
+            name == "org.tortodrone.server" || name.startsWith("org.tortodrone.server.") ||
+                name == "org.tortodrone.web" || name.startsWith("org.tortodrone.web.") -> "server"
+            else -> null
+        }
+        val allowed = mapOf(
+            "core" to emptySet(),
+            "content" to setOf("core"),
+            "protocol" to setOf("core"),
+            "world" to setOf("content", "core"),
+            "gameplay" to setOf("world", "content", "core"),
+            "server" to setOf("gameplay", "protocol", "world", "content", "core"))
+        val violations = edges.mapNotNull { (from, to) ->
+            val source = module(from) ?: return@mapNotNull null
+            val target = module(to) ?: return@mapNotNull null
+            if (source == target || target in allowed.getValue(source)) null
+            else "$source -> $target ($from -> $to)"
+        }.toSortedSet()
+        if (violations.isNotEmpty())
+            throw GradleException("Packaged bytecode has forbidden module edges: $violations")
+    }
+}
+tasks.named("checkModuleGraph") { dependsOn(checkBytecodeDependencies) }
 
 
 // Compile the existing Java preparation tool and its standalone regression together.
