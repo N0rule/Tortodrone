@@ -64,8 +64,7 @@ public final class RestorationCompatibility {
                     var actor = (Actor) decoded;
                     actor.init(manager);
                     checked++;
-                    FireCompatibility.check(
-                            FireCompatibility.field(actor, "_config") != null, "legacy config initializes");
+                    Harness.check(FireCompatibility.field(actor, "_config") != null, "legacy config initializes");
                 }
                 var updates = FireCompatibility.read(new SessionCodec()
                         .sceneDelta(
@@ -98,7 +97,7 @@ public final class RestorationCompatibility {
                     .action();
             while (fire.actor() == null) fire = fire.children().getFirst();
             var spec = fire.actor().attachment();
-            FireCompatibility.check(spec != null, "retained tag reference");
+            Harness.check(spec != null, "retained tag reference");
             var state = new ProjectileState(
                     "ORBITAL",
                     spec.config(),
@@ -131,7 +130,7 @@ public final class RestorationCompatibility {
                             true));
             var actor = (Actor) event.afd()[0];
             actor.init(manager);
-            FireCompatibility.check(
+            Harness.check(
                     (int) FireCompatibility.field(actor, "_followId") == 77,
                     "native tag follows the struck actor rather than its owner");
         }
@@ -159,9 +158,9 @@ public final class RestorationCompatibility {
                     f.setAccessible(true);
                     effects = f.get(event);
                 }
-            FireCompatibility.check(effects != null, "native scene effect collection");
+            Harness.check(effects != null, "native scene effect collection");
             var effect = java.lang.reflect.Array.get(effects, 0);
-            FireCompatibility.check(
+            Harness.check(
                     (int) FireCompatibility.field(effect, "_clientOid") == 0
                             && FireCompatibility.field(effect, "_target")
                                     instanceof com.threerings.tudey.data.EntityKey.Actor target
@@ -171,20 +170,19 @@ public final class RestorationCompatibility {
         for (int rank = 3; rank <= 5; rank++) {
             String standard = "item/weapon/handgun/orbit/model_r" + rank + ".dat";
             var base = manager.a(ModelConfig.class, new ConfigReference<ModelConfig>(standard));
-            FireCompatibility.check(base != null, "standard orbit model exists");
+            Harness.check(base != null, "standard orbit model exists");
             var original = base.getOriginal();
-            FireCompatibility.check(original instanceof ArticulatedConfig, "standard articulated weapon");
+            Harness.check(original instanceof ArticulatedConfig, "standard articulated weapon");
             var bones = new TreeSet<>(Arrays.asList(((ArticulatedConfig) original).getNodeNames()));
             for (String family : List.of("fir", "fre", "poi", "sho")) {
                 String file = "item/weapon/handgun/orbit/model_" + family + "_r" + rank + ".dat";
                 var model = manager.a(ModelConfig.class, new ConfigReference<ModelConfig>(file));
-                FireCompatibility.check(
+                Harness.check(
                         model != null && model.getOriginal() instanceof ArticulatedConfig,
                         "elemental model loads: " + file);
                 var nodes = new TreeSet<>(Arrays.asList(((ArticulatedConfig) model.getOriginal()).getNodeNames()));
-                FireCompatibility.check(
-                        nodes.equals(bones), "elemental model uses the standard rank skeleton: " + file);
-                FireCompatibility.check(
+                Harness.check(nodes.equals(bones), "elemental model uses the standard rank skeleton: " + file);
+                Harness.check(
                         Arrays.stream(model.parameters)
                                 .map(p -> p.name)
                                 .toList()

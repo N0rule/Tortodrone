@@ -2,6 +2,7 @@ import com.threerings.config.*;
 import com.threerings.projectx.config.ConversationConfig;
 import com.threerings.projectx.mission.config.MissionConfig;
 import java.lang.reflect.*;
+import java.nio.file.Path;
 import java.util.*;
 import org.tortodrone.core.Json;
 

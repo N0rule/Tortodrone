@@ -32,7 +32,23 @@ public final class MissionProtocolCompatibility {
         var before = new WorldProfile(1, 1, 1, 0, 0, 1, List.of(), new KnightProgress(1, 1, 0, 1));
         var after = new WorldProfile(1, 1, 1, 0, 0, 2, List.of(), new KnightProgress(1, 2, 10, 1));
         var receipt = new OpeningCompletion(OpeningMission.SECURING_CAMP, 1770000000000L, null);
-        Harness.append(bytes, codec.missionSettlement(1001, before, after, receipt, 1770000000001L));
+        // The settlement carries the mission's own bound rewards and prestige, so the fixture takes
+        // them from the shipped mission card instead of inventing a list the layout check would accept.
+        var rewards = OpeningMission.SECURING_CAMP.rewards().stream()
+                .map(reward -> new org.tortodrone.core.mission.MissionCatalog.Grant(
+                        reward.config(), reward.count(), true, List.of()))
+                .toList();
+        Harness.append(
+                bytes,
+                codec.missionSettlement(
+                        1001,
+                        before,
+                        after,
+                        receipt,
+                        rewards,
+                        OpeningMission.SECURING_CAMP.prestige(),
+                        true,
+                        1770000000001L));
         Harness.append(
                 bytes,
                 codec.completedMissions(
