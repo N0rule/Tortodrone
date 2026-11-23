@@ -238,8 +238,8 @@ final class ChatHandler {
             try{session.charactersStore().worldProfile(session.selectedKnight().name(),session.authRevision());}
             catch(CharacterStore.Refused refused){return false;}
         }
-        responder.send(()->responder.codec().chat(message.personal()?responder.oid()
-            :session.currentScene().map().town()?place:session.partyOid(),message));
+        int channel=message.personal()?responder.oid():session.currentScene().map().town()?place:session.partyOid();
+        responder.send(()->responder.codec().chat(channel,message));
         return true;
     }
 }
