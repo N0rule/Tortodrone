@@ -175,6 +175,15 @@ that action reference when editing its sentence; dropping it fails validation.
 Animations, interface models and exact placed NPC bindings are in the map's native
 compatibility data. They do not need to appear in dialogue YAML.
 
+Two maps with the same dialogue can share one body. Put it under
+`content/shared/dialogues.yml` with an `initial` and `nodes` section, then use
+`dialogue: {shared: <name>}` in each NPC file. The shared reference is the only
+key on that `dialogue` mapping (never mixed with local `initial`/`nodes`); it
+expands to the exact body and is validated against the referencing NPC's native
+node and response bindings. Unknown names, unknown fields, duplicate names or an
+unreadable shared file fail startup. Keep a local body when any text, node,
+response or action differs, even slightly.
+
 The defaults resolve original English strings from the read-only stock
 `code/projectx-config.jar`, including retained `npc` keys found in the
 `conversation` bundle. Unchanged text preserves its original localization key on

@@ -224,7 +224,7 @@ public final class MapYaml {
         var local=map(mechanics.get("properties"),"mechanics");
         for(String field:local.keySet())if(!allowedMechanics.contains(field))throw new IOException(folder+": unknown mechanic field "+field);
         properties(content,"",local);
-        var npcBindings=map(bindings.get("npcs"),"native NPCs");var seen=new HashSet<String>();
+        var npcBindings=map(bindings.get("npcs"),"native NPCs");var seen=new HashSet<String>();var sharedDialogues=dialogues(shared);
         Path npcDirectory=folder.resolve("npcs");ContentFiles.safe(npcDirectory);
         if(Files.exists(npcDirectory))try(var files=Files.list(npcDirectory)) {
             var paths=files.sorted().toList();if(paths.size()>256)throw new IOException("Too many NPC files: "+folder);
@@ -232,7 +232,7 @@ public final class MapYaml {
                 if(!file.getFileName().toString().endsWith(".yml"))throw new IOException("Unexpected NPC file: "+file);
                 var npc=read(file);fields(npc,file.toString(),"id","dialogue");String id=text(npc.get("id"),file+" id");
                 if(!seen.add(id)||!npcBindings.containsKey(id))throw new IOException(file+": duplicate or unknown NPC binding "+id);
-                npc(content,id,npc,map(npcBindings.get(id),file+" native binding"));
+                npc(content,id,npc,map(npcBindings.get(id),file+" native binding"),sharedDialogues);
             }
         }
         if(!seen.equals(npcBindings.keySet()))throw new IOException(folder+": missing NPC definitions: "+npcBindings.keySet());
@@ -286,9 +286,29 @@ public final class MapYaml {
         p.setProperty("triggers",String.join(",",nativeIds));
         return p;
     }
-    private static void npc(Properties p,String id,Map<String,Object> yaml,Map<String,Object> nativeNpc)throws IOException {
+    /** Opt-in dialogue bodies; an NPC uses one with {@code dialogue: {shared: <name>}}. */
+    private static Map<String,Map<String,Object>> dialogues(Path shared)throws IOException {
+        Path file=shared.resolve("dialogues.yml");if(!Files.exists(file))return Map.of();
+        ContentFiles.safe(file);
+        var data=read(file);fields(data,"shared dialogues","dialogues");
+        var result=new LinkedHashMap<String,Map<String,Object>>();
+        for(var row:map(data.get("dialogues"),"shared dialogues").entrySet()) {
+            String name=row.getKey();if(!name.matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid shared dialogue: "+name);
+            var body=map(row.getValue(),name);fields(body,"shared dialogue "+name,"initial","nodes");
+            if(result.put(name,body)!=null)throw new IOException("Duplicate shared dialogue: "+name);
+        }
+        return Map.copyOf(result);
+    }
+    private static void npc(Properties p,String id,Map<String,Object> yaml,Map<String,Object> nativeNpc,Map<String,Map<String,Object>> sharedDialogues)throws IOException {
         String prefix="dialogue."+id+".";properties(p,prefix,map(nativeNpc.get("properties"),"NPC properties"));
-        var dialogue=map(yaml.get("dialogue"),"dialogue "+id);fields(dialogue,"dialogue "+id,"initial","nodes");p.setProperty(prefix+"initial",text(dialogue.get("initial"),"initial"));
+        var dialogue=map(yaml.get("dialogue"),"dialogue "+id);
+        if(dialogue.containsKey("shared")) {
+            fields(dialogue,"dialogue "+id,"shared");
+            String reference=text(dialogue.get("shared"),"dialogue "+id+" shared");
+            dialogue=sharedDialogues.get(reference);
+            if(dialogue==null)throw new IOException("Unknown shared dialogue: "+reference);
+        } else fields(dialogue,"dialogue "+id,"initial","nodes");
+        p.setProperty(prefix+"initial",text(dialogue.get("initial"),"initial"));
         var nodes=map(dialogue.get("nodes"),"nodes");var nativeNodes=map(nativeNpc.get("nodes"),"native nodes");var ids=new ArrayList<String>();int index=0;
         for(var entry:nodes.entrySet()) {
             String nodeId=entry.getKey(),np=prefix+"node."+index+".";ids.add(Integer.toString(index++));var node=map(entry.getValue(),"node "+nodeId);fields(node,"node "+nodeId,"text","responses");
