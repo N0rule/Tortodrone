@@ -124,12 +124,14 @@ starts from a `--seed-rapid` GM knight with every weapon family at maximum level
 requests Advanced Training scene 294 directly with the native move call (no command
 or walk), equips six armor/shield pieces through the native item service, and sweeps
 23 short sword/gun/bomb/shield/sprite actions with authoritative and rendered
-activity checks. Only sword, gun and bomb charges pay a hold; the rest are rapid
-presses. It also shows three battle sprites (one skill), relocates a Training Cube
-next to the entrance and verifies a real native shield bump, without the
-`playability` walk, conversation and vial phases. Its scene time is under a minute,
-but it shares login/build cost with every scenario, so use it as the broad first
-check and follow up with a focused scenario for depth.
+activity checks. Quick sword/gun presses stay fast, while sword, gun and every bomb
+family hold a real charge: an early bomb release only emits the stock invisible Dud,
+so the specialized bombs would otherwise never explode. The sweep also shows three
+battle sprites (one skill), relocates a Training Cube next to the entrance and
+verifies a real native shield bump, without the `playability` walk, conversation and
+vial phases. Its scene time is about a minute, but it shares login/build cost with
+every scenario, so use it as the broad first check and follow up with a focused
+scenario for depth.
 
 Automated scenarios open a windowed client and request a 1280x900 window on their
 first tick; only `--manual` applies the desktop fullscreen mode. `rapid` also pins

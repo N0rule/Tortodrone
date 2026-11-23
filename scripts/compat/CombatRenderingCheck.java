@@ -53,15 +53,17 @@ public final class CombatRenderingCheck {
             new Action("alchemer-charge", "Weapon/Handgun/Voltech Alchemer Mk II", 4, 4000, 290, true),
             new Action("tortofist-charge", "Weapon/Handgun/Tortafist/Grand Tortofist", 4, 4000, 290, true));
     /**
-     * Broad but shallow client smoke: one fast press per weapon family picks up equipment
-     * convergence, authoritative activity, native animation and projectiles. Only the three
-     * base classes pay the four-second charge hold; every other family fires normally.
+     * Broad but shallow client smoke: one press per weapon family picks up equipment
+     * convergence, authoritative activity, native animation and projectiles. Sword/gun presses
+     * stay fast; charges and the specialized bomb families hold long enough to throw a real
+     * projectile, because an early bomb release only emits the stock invisible Dud.
      */
     private static final List<Action> RAPID_ACTIONS = List.of(
             new Action("sword", SWORD, 4, 120, 292, false),
             new Action("sword-charge", SWORD, 4, 4000, 290, false),
             new Action("gun", GUN, 4, 120, 292, true),
             new Action("gun-charge", GUN, 4, 4000, 290, true),
+            // Deliberate early release: keeps the stock one-millisecond Dud path covered.
             new Action("bomb", BOMB, 4, 120, 289, false),
             new Action("bomb-charge", BOMB, 4, 4000, 290, true),
             new Action("defense", SWORD, 64, 700, 284, false),
@@ -77,10 +79,10 @@ public final class CombatRenderingCheck {
             new Action("pulsar", "Weapon/Handgun/Pulsar", 4, 120, 292, true),
             new Action("alchemer", "Weapon/Handgun/Voltech Alchemer Mk II", 4, 120, 292, true),
             new Action("tortofist", "Weapon/Handgun/Tortafist/Grand Tortofist", 4, 120, 292, false),
-            new Action("crystal-bomb", "Weapon/Bomb/Crystal Bomb", 4, 120, 289, false),
-            new Action("vaporizer", "Weapon/Bomb/Fiery Vaporizer", 4, 120, 289, false),
-            new Action("electron-bomb", "Weapon/Bomb/Electron Bomb", 4, 120, 289, false),
-            new Action("vortex", "Weapon/Bomb/Graviton Vortex", 4, 120, 289, false));
+            new Action("crystal-bomb", "Weapon/Bomb/Crystal Bomb", 4, 4000, 290, true),
+            new Action("vaporizer", "Weapon/Bomb/Fiery Vaporizer", 4, 4000, 290, true),
+            new Action("electron-bomb", "Weapon/Bomb/Electron Bomb", 4, 4000, 290, true),
+            new Action("vortex", "Weapon/Bomb/Graviton Vortex", 4, 4000, 290, true));
 
     private final ProjectXApp app;
     private final Path output;
@@ -2300,6 +2302,9 @@ public final class CombatRenderingCheck {
                 if (window != 0L) {
                     if (GLFW.glfwGetWindowMonitor(window) != 0L)
                         GLFW.glfwSetWindowMonitor(window, 0L, 0, 0, 1280, 900, GLFW.GLFW_DONT_CARE);
+                    // The rapid sweep pins its size once, at login, so the direct scene
+                    // jump never has to resize the window on the way into Training.
+                    if (rapidOnly) GLFW.glfwSetWindowSizeLimits(window, 1280, 900, 1280, 900);
                     GLFW.glfwSetWindowSize(window, 1280, 900);
                     GLFW.glfwFocusWindow(window);
                     var windowWidth = BufferUtils.createIntBuffer(1);
@@ -3298,15 +3303,9 @@ public final class CombatRenderingCheck {
 
     private boolean rapidTick(View view, long now) throws Exception {
         if (stage == 0) {
-            long window = app.getWindow();
-            // Tiling window managers otherwise keep their own tile size and the
-            // disposable window changes size between scenes. A fixed-size hint makes
-            // them keep the requested capture size for the whole run.
-            GLFW.glfwSetWindowSizeLimits(window, 1280, 900, 1280, 900);
-            GLFW.glfwSetWindowSize(window, 1280, 900);
-            GLFW.glfwFocusWindow(window);
             // A direct native scene jump, not a command or a walk: the smoke starts in Haven and
-            // immediately requests its training instance.
+            // immediately requests its training instance. The window was already sized and
+            // pinned at login, so nothing here resizes it as the scene changes.
             app.GK().bn(294);
             System.out.println("CHECK: rapid smoke jumps directly from Haven into Advanced Training");
             started = now;
