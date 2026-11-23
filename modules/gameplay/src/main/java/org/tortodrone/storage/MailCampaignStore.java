@@ -46,10 +46,12 @@ public final class MailCampaignStore {
 
     private final Database database;
     private final ItemCatalog items;
+    private final StaffMail staff;
 
     public MailCampaignStore(Database database, ItemCatalog items) {
         this.database = Objects.requireNonNull(database);
         this.items = Objects.requireNonNull(items);
+        this.staff = new StaffMail(this.items);
     }
 
     /** Mail campaign tables for the 0.42.0 baseline. */
@@ -163,17 +165,9 @@ public final class MailCampaignStore {
                 r.next();
                 if (r.getInt(1) == 0) continue;
             }
-            var gifts = materialise(campaign, now);
-            try (var s = c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,crowns,energy,attachments,sender,sender_label,mail_type) VALUES(?,?,?,?,?,?,?,?,?,?)")) {
-                s.setInt(1, world); s.setLong(2, now);
-                s.setString(3, mailText(campaign.subject(), campaign.senderLabel()));
-                s.setString(4, mailText(campaign.body(), campaign.senderLabel()));
-                s.setInt(5, campaign.crowns()); s.setInt(6, campaign.energy());
-                s.setString(7, gifts.isEmpty() ? null : TownMail.encodeItems(gifts));
-                s.setInt(8, -campaign.sender()); s.setString(9, campaign.senderLabel());
-                s.setInt(10, mailType(campaign.senderLabel()));
-                s.executeUpdate();
-            }
+            staff.deliver(c, world, now, campaign.subject(), campaign.body(),
+                campaign.crowns(), campaign.energy(), staff.materialise(campaign.gifts()),
+                campaign.sender(), campaign.senderLabel());
             delivered = true;
         }
         return delivered;
@@ -230,17 +224,8 @@ public final class MailCampaignStore {
                 }
             }
             long now = System.currentTimeMillis();
-            var mail = materialise(merged, now);
-            try (var s = c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,crowns,energy,attachments,sender,sender_label,mail_type) VALUES(?,?,?,?,?,?,?,?,?,?) RETURNING id")) {
-                s.setInt(1, world); s.setLong(2, now);
-                s.setString(3, mailText(cleanSubject, cleanSender));
-                s.setString(4, mailText(cleanBody, cleanSender));
-                s.setInt(5, crowns); s.setInt(6, energy);
-                s.setString(7, mail.isEmpty() ? null : TownMail.encodeItems(mail));
-                s.setInt(8, -sender); s.setString(9, cleanSender);
-                s.setInt(10, mailType(cleanSender));
-                try (var r = s.executeQuery()) { r.next(); return r.getLong(1); }
-            }
+            return staff.deliver(c, world, now, cleanSubject, cleanBody, crowns, energy,
+                staff.materialise(merged), sender, cleanSender);
         });
     }
 
@@ -266,17 +251,8 @@ public final class MailCampaignStore {
             if (r.getInt(1) == 0) return false;
         }
         long now = System.currentTimeMillis();
-        var gifts = materialise(letter.gifts(), now);
-        try (var s = c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,crowns,energy,attachments,sender,sender_label,mail_type) VALUES(?,?,?,?,?,?,?,?,?,?)")) {
-            s.setInt(1, world); s.setLong(2, now);
-            s.setString(3, mailText(letter.subject(), letter.senderLabel()));
-            s.setString(4, mailText(letter.body(), letter.senderLabel()));
-            s.setInt(5, letter.crowns()); s.setInt(6, letter.energy());
-            s.setString(7, gifts.isEmpty() ? null : TownMail.encodeItems(gifts));
-            s.setInt(8, -letter.sender()); s.setString(9, letter.senderLabel());
-            s.setInt(10, mailType(letter.senderLabel()));
-            s.executeUpdate();
-        }
+        staff.deliver(c, world, now, letter.subject(), letter.body(), letter.crowns(),
+            letter.energy(), staff.materialise(letter.gifts()), letter.sender(), letter.senderLabel());
         return true;
     }
 
@@ -291,38 +267,6 @@ public final class MailCampaignStore {
     }
 
     private static String nullToEmpty(String value) { return value == null ? "" : value; }
-
-    /** System senders use SYSTEM mail and a tainted literal; a custom name uses an
-     *  ANNOUNCE letter with plain text, because the native reader only translates the
-     *  subject and body when the sender is a stock SystemSender. */
-    private static String mailText(String text, String senderLabel) {
-        return senderLabel == null ? "%uplink:~" + text : text;
-    }
-
-    private static int mailType(String senderLabel) {
-        // Both are SYSTEM mail so the inbox lists them; a custom name makes the
-        // native reader skip translation and show the plain text and literal sender.
-        return 3;
-    }
-
-    private List<WorldProfile.Item> materialise(List<Gift> gifts, long now) throws IOException {
-        var result = new ArrayList<WorldProfile.Item>(gifts.size());
-        for (var gift : gifts) {
-            var entry = items.find(gift.config());
-            if (entry == null || !entry.grantable()) continue;
-            result.add(new WorldProfile.Item(0, entry.slot(), entry.config(), null, 0, null,
-                gift.bound(), entry.bindOnEquip(), false, gift.count(), entry.permanent(), 0, 0f,
-                List.of(), List.of()));
-        }
-        return result;
-    }
-
-    private List<WorldProfile.Item> materialise(Campaign campaign, long now) throws IOException {
-        // Content can be replaced between saving a campaign and a later delivery. A removed
-        // or no-longer-grantable item must not block the knight's login or the rest of the
-        // letter; the other gifts and text still arrive.
-        return materialise(campaign.gifts(), now);
-    }
 
     private static Campaign find(Connection c, long id) throws SQLException, IOException {
         try (var s = c.prepareStatement("SELECT * FROM mail_campaigns WHERE id=?")) {

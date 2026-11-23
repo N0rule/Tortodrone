@@ -406,6 +406,10 @@ remaining stores were split the same way:
 - `MonsterCatalog` keeps the immutable type/overlay maps and runtime
   resolution; `MonsterCatalogReader` owns file/fingerprint ingestion, parsing,
   overlay validation and the bounded scripted-boss check.
+- `MailCampaignStore` keeps campaign and welcome policy; `StaffMail` owns the
+  single staff-letter writer (sender negation, literal/tainted text, SYSTEM
+  type and gift materialisation) used by campaigns, the welcome letter and
+  one-off sends inside the caller's transaction.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.
