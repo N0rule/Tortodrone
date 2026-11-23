@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,184,636 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,187,099 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -443,6 +443,9 @@ remaining stores were split the same way:
 - `SceneContent` keeps the immutable actor/item/status tables and `Spec`
   lookups; `SceneContentLoader` owns the prepared properties format, sorted-key
   range scans, table limits and the pinned layout-hash check.
+- `TownCatalog` keeps the immutable town tables, lookups and variant rolling;
+  `TownCatalogReader` owns the exported JSON catalogue, its format version, row
+  shapes and size limit.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.
