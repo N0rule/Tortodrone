@@ -171,6 +171,11 @@ final class ConsoleHelp {
         return ENTRIES.stream().anyMatch(e -> e.command().equals(name));
     }
 
+    /** Canonical command names in entry order, for the docs conformance check. */
+    static List<String> commands() {
+        return ENTRIES.stream().map(Entry::command).distinct().toList();
+    }
+
     static List<String> overview() {
         var lines = new java.util.ArrayList<String>();
         lines.add("Server console commands:");

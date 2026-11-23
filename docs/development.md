@@ -1,6 +1,10 @@
 # Development and verification
 
-Start with [AGENTS.md](../AGENTS.md), then the files relevant to your task. Source, current tests and the **unchanged stock client** outrank historical documentation. Keep test accounts, server state, client preferences and processes disposable; do not modify the owner's installed client or active deployment.
+Start with the [contributing rules](../CONTRIBUTING.md) and, when your checkout carries it, the local
+`AGENTS.md` (deliberately untracked, so a fresh clone has none), then the files relevant to your
+task. Source, current tests and the **unchanged stock client** outrank historical documentation. Keep
+test accounts, server state, client preferences and processes disposable; do not modify the owner's
+installed client or active deployment.
 
 ## Verification policy (FAST by default)
 
