@@ -13,7 +13,8 @@ public final class ClientConnectionsTest {
     public static void main(String[] args) throws Exception {
         drain(false);
         drain(true);
-        System.out.println("PASS: socket shutdown, handler drain, late-client refusal, concurrent close and interrupt preservation");
+        stuckHandlerIsInterrupted();
+        System.out.println("PASS: socket shutdown, handler drain, late-client refusal, concurrent close, stuck-handler deadline and interrupt preservation");
     }
 
     private static void drain(boolean interrupt) throws Exception {
@@ -79,6 +80,33 @@ public final class ClientConnectionsTest {
         } finally {
             release.countDown();
             connections.close();
+        }
+    }
+
+    /** A handler that ignores its socket can only be stopped by the shutdown deadline. */
+    private static void stuckHandlerIsInterrupted() throws Exception {
+        var connections = new ClientConnections();
+        try (var listener = new ServerSocket(0); var peer = new Socket("127.0.0.1", listener.getLocalPort())) {
+            var socket = listener.accept();
+            var entered = new CountDownLatch(1);
+            var observed = new CountDownLatch(1);
+            var interrupted = new AtomicBoolean();
+            connections.start(socket, "stuck-client-test", () -> {
+                entered.countDown();
+                try { new CountDownLatch(1).await(); }
+                catch (InterruptedException expected) {
+                    interrupted.set(true);
+                    observed.countDown();
+                    Thread.currentThread().interrupt();
+                }
+            });
+            check(entered.await(10, TimeUnit.SECONDS), "stuck handler entered");
+            long started = System.nanoTime();
+            connections.close();
+            long elapsedMillis = (System.nanoTime() - started) / 1_000_000L;
+            check(observed.await(5, TimeUnit.SECONDS), "stuck handler observed the deadline interrupt");
+            check(interrupted.get(), "stuck handler interrupted at the shutdown deadline");
+            check(elapsedMillis < 8_000L, "stuck-handler shutdown returned within its deadline");
         }
     }
 

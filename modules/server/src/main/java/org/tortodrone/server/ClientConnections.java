@@ -52,10 +52,10 @@ final class ClientConnections implements AutoCloseable {
     static void await(Thread thread, long deadlineNanos) {
         boolean interrupted = false;
         try {
-            while (true) {
+            while (thread.isAlive()) {
                 long remaining = deadlineNanos - System.nanoTime();
                 if (remaining <= 0) { thread.interrupt(); return; }
-                try { thread.join(Math.max(1, remaining / 1_000_000L)); return; }
+                try { thread.join(Math.max(1, remaining / 1_000_000L)); }
                 catch (InterruptedException interruption) { interrupted = true; }
             }
         } finally {
