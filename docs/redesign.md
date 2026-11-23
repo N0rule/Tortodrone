@@ -340,7 +340,7 @@ are expected: a package is assigned by extracted type, not by its current name.
 ### Codec split
 
 `SessionCodec` was 1,980 lines with connection-global class and string interning.
-It is now a 459-line facade over per-feature codecs that share one `WireContext`
+It is now a 423-line facade over per-feature codecs that share one `WireContext`
 holding the class table, intern table and connection-local state. The split proved
 identical bytes for a synthetic cross-feature stream (no client captures), not only
 for per-feature frames; `SessionWireGoldenTest` pins that stream, and
@@ -414,6 +414,10 @@ remaining stores were split the same way:
   owns the item-instance, gift and loadout records (`KnightCodec`,
   `TradeCodec` and `SceneActorWire` compose it). Byte layout is unchanged and
   the cross-feature golden still matches.
+- `SessionCodec` keeps the protocol constants, shared view records and facade
+  delegations; `SceneDeltaTemplate` owns the reusable scene-delta fan-out
+  frame, its recorded offsets and the +4 shift. Recipients still materialise
+  their own symbols from the same `WireContext`.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.

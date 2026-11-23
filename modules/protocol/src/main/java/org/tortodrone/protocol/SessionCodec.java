@@ -246,44 +246,15 @@ public final class SessionCodec extends WireWriter {
     /** Notify stock OccupantDirector observers; replacing a DSet alone does not update labels. */
 
 
-    /** Encode the shared actor records once. The result keeps every class and interned string as
-     * a placeholder: the stock client and server each maintain a per-connection symbol table, so
-     * recipients materialize their own codes rather than reusing another session's bytes. */
+    /** Encode the shared actor records once; the template keeps per-connection symbol
+     * placeholders that each recipient materializes with its own codes. */
     public static org.tortodrone.core.world.SceneFrame sceneDeltaTemplate(ItemCatalog catalog,int sceneOid,int timestamp,
             List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline,
             boolean interior,List<SceneEffect> effects,List<SceneCombatEvent> combat)throws IOException {
-        var codec=new SessionCodec(catalog);
-        codec.context.beginTemplate();
-        try{
-            var body=new ByteArrayOutputStream(4096);
-            var out=new DataOutputStream(body);
-            codec.type(out,PREFIX+"EventNotification");out.writeShort(-1);codec.type(out,"com.threerings.tudey.dobj.SceneDeltaEvent");
-            int oidOffset=body.size();out.writeInt(0);
-            out.writeInt(sceneOid);
-            int acknowledgeOffset=body.size();out.writeInt(0);
-            int pingOffset=body.size();out.writeShort(0);
-            int referenceOffset=body.size();out.writeInt(0);
-            out.writeInt(timestamp);
-            int elapsedOffset=body.size();out.writeShort(0);
-            codec.sceneCodec.sceneDeltaActors(out,0,added,updated,removed,baseline,interior,effects,combat);
-            out.flush();
-            if(body.size()+4>MAX_DOWNSTREAM_FRAME)throw new IOException("Session frame too large");
-            int total=body.size()+4;
-            byte[] template=new byte[total];
-            template[0]=(byte)(total>>>24);template[1]=(byte)(total>>>16);template[2]=(byte)(total>>>8);template[3]=(byte)total;
-            System.arraycopy(body.toByteArray(),0,template,4,body.size());
-            return new org.tortodrone.core.world.SceneFrame(template,4+oidOffset,4+acknowledgeOffset,4+pingOffset,
-                4+referenceOffset,4+elapsedOffset,shift(codec.context.templateTypes()),shift(codec.context.templateInterns()));
-        } finally {
-            codec.context.endTemplate();
-        }
+        return SceneDeltaTemplate.encode(catalog,sceneOid,timestamp,added,updated,removed,baseline,interior,effects,combat);
     }
-    /** Frame body offsets become frame offsets once the four-byte length prefix is prepended. */
-    private static List<org.tortodrone.core.world.SceneFrame.Symbol> shift(List<org.tortodrone.core.world.SceneFrame.Symbol> symbols){
-        var shifted=new ArrayList<org.tortodrone.core.world.SceneFrame.Symbol>(symbols.size());
-        for(var symbol:symbols)shifted.add(new org.tortodrone.core.world.SceneFrame.Symbol(symbol.offset()+4,symbol.name()));
-        return List.copyOf(shifted);
-    }
+    /** The scene codec used by the one-off template encoder, which never touches live state. */
+    SceneCodec sceneCodec(){return sceneCodec;}
     /** Copy a shared template with this connection's codes and header fields. Returns null while
      * the connection has not seen every symbol yet; the caller then encodes this tick directly,
      * which also registers them for later ticks. Called with the encoder's output lock held, so
@@ -291,14 +262,6 @@ public final class SessionCodec extends WireWriter {
     public byte[] materialize(org.tortodrone.core.world.SceneFrame frame,int oid,int acknowledge,short ping,int reference,short elapsed){
         return context.materialize(frame,oid,acknowledge,ping,reference,elapsed);
     }
-    private static void integer(byte[] data,int at,int value){
-        data[at]=(byte)(value>>>24);data[at+1]=(byte)(value>>>16);data[at+2]=(byte)(value>>>8);data[at+3]=(byte)value;
-    }
-    private static void shortValue(byte[] data,int at,int value){
-        data[at]=(byte)(value>>>8);data[at+1]=(byte)value;
-    }
-
-
     /** Native home changes after successful town entry, not on a floor-complete request. */
     /** DamageEffect, the current combat feedback channel: the party-object DamageEvent of the
      *  2011 and 2022 clients (which the PartyObject$DamageEvent crash showed is gone from the
