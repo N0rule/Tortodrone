@@ -21,7 +21,7 @@ final class GuildHallStore {
             try(var s=c.prepareStatement("UPDATE guilds SET hall_open=?,hall_open_at=? WHERE id=?")){
                 s.setInt(1,open?1:0);s.setLong(2,open?System.currentTimeMillis():0);s.setLong(3,guild.id());s.executeUpdate();
             }
-            GuildStore.log(c,guild.id(),open?32:33,member.name(),System.currentTimeMillis(),null);
+            GuildLogStore.log(c,guild.id(),open?32:33,member.name(),System.currentTimeMillis(),null);
             TownLedger.touch(c,profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),GuildStore.view(c,guild.id()));
         });
@@ -40,7 +40,7 @@ final class GuildHallStore {
                 s.setInt(1,total);s.setLong(2,guild.id());s.executeUpdate();
             }
             TownLedger.pay(c,profile,0,amount);
-            GuildStore.log(c,guild.id(),9,null,System.currentTimeMillis(),List.of("~"+amount));
+            GuildLogStore.log(c,guild.id(),9,null,System.currentTimeMillis(),List.of("~"+amount));
             TownLedger.touch(c,profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),GuildStore.view(c,guild.id()));
         });
@@ -66,7 +66,7 @@ final class GuildHallStore {
                 s.setLong(1,now);s.setInt(2,profile.worldId());s.executeUpdate();
             }
             TownLedger.credit(c,profile.worldId(),0,amount);
-            GuildStore.log(c,guild.id(),10,member.name(),now,List.of("~"+amount));
+            GuildLogStore.log(c,guild.id(),10,member.name(),now,List.of("~"+amount));
             TownLedger.touch(c,profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),GuildStore.view(c,guild.id()));
         });
@@ -94,7 +94,7 @@ final class GuildHallStore {
             try(var s=c.prepareStatement("UPDATE guilds SET upkeep_cost=upkeep_cost+? WHERE id=?")){
                 s.setInt(1,expansionUpkeep(expansion));s.setLong(2,guild.id());s.executeUpdate();
             }
-            GuildStore.log(c,guild.id(),21,member.name(),System.currentTimeMillis(),List.of("m.exp."+expansion));
+            GuildLogStore.log(c,guild.id(),21,member.name(),System.currentTimeMillis(),List.of("m.exp."+expansion));
             TownLedger.touch(c,profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),GuildStore.view(c,guild.id()));
         });
@@ -115,7 +115,7 @@ final class GuildHallStore {
             try(var s=c.prepareStatement("UPDATE guilds SET upkeep_cost=MAX(0,upkeep_cost-?) WHERE id=?")){
                 s.setInt(1,expansionUpkeep(expansion));s.setLong(2,guild.id());s.executeUpdate();
             }
-            GuildStore.log(c,guild.id(),22,member.name(),System.currentTimeMillis(),List.of("m.exp."+expansion));
+            GuildLogStore.log(c,guild.id(),22,member.name(),System.currentTimeMillis(),List.of("m.exp."+expansion));
             TownLedger.touch(c,profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),GuildStore.view(c,guild.id()));
         });
@@ -132,7 +132,7 @@ final class GuildHallStore {
             try(var s=c.prepareStatement("UPDATE guilds SET "+(type==0?"theme":"environment")+"=? WHERE id=?")){
                 s.setString(1,ticket);s.setLong(2,guild.id());s.executeUpdate();
             }
-            GuildStore.log(c,guild.id(),type==0?23:24,member.name(),System.currentTimeMillis(),
+            GuildLogStore.log(c,guild.id(),type==0?23:24,member.name(),System.currentTimeMillis(),
                 ticket==null?null:List.of(ticket));
             TownLedger.touch(c,profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),GuildStore.view(c,guild.id()));

@@ -1,7 +1,6 @@
 package org.tortodrone.storage;
 
 import org.tortodrone.core.guild.Guild;
-import org.tortodrone.core.guild.LogEntry;
 import org.tortodrone.core.guild.Member;
 import org.tortodrone.core.guild.Page;
 import org.tortodrone.core.guild.View;
@@ -92,7 +91,7 @@ public final class GuildStore {
         return database.read(c -> {
             var profile = WorldProfiles.load(c, account, knight, auth);
             if (membership(c, guildId, profile.worldId()) == null) throw new IOException("m.access_denied");
-            return page(c, guildId, cursor, offset, count, category, knightName);
+            return GuildLogStore.page(c, guildId, cursor, offset, count, category, knightName);
         });
     }
 
@@ -137,7 +136,7 @@ public final class GuildStore {
                 s.setLong(3, now);
                 s.executeUpdate();
             }
-            log(c, id, 0, null, now, null);
+            GuildLogStore.log(c, id, 0, null, now, null);
             TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, id));
         });
@@ -193,7 +192,7 @@ public final class GuildStore {
             s.setLong(3, now);
             s.executeUpdate();
         }
-        log(c, guildId, 0, knightName, now, null);
+        GuildLogStore.log(c, guildId, 0, knightName, now, null);
         TownLedger.touch(c, worldId);
     }
 
@@ -245,7 +244,7 @@ public final class GuildStore {
                 s.setLong(4, guild.id());
                 s.executeUpdate();
             }
-            log(c, guild.id(), 3, changer.name(), System.currentTimeMillis(),
+            GuildLogStore.log(c, guild.id(), 3, changer.name(), System.currentTimeMillis(),
                 List.of(rank < changee.rank() ? "m.gl_promoted" : "m.gl_demoted", "~" + changee.name(), "m.rank." + rank));
             TownLedger.touch(c, changee.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
@@ -289,7 +288,7 @@ public final class GuildStore {
                 s.executeUpdate();
             }
             TownLedger.consume(c, profile, ticket.id(), 1);
-            log(c, guild.id(), 31, member.name(), System.currentTimeMillis(), List.of("~" + name));
+            GuildLogStore.log(c, guild.id(), 31, member.name(), System.currentTimeMillis(), List.of("~" + name));
             TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
@@ -312,7 +311,7 @@ public final class GuildStore {
                 s.setLong(2, guild.id());
                 s.executeUpdate();
             }
-            log(c, guild.id(), 28, member.name(), System.currentTimeMillis(), null);
+            GuildLogStore.log(c, guild.id(), 28, member.name(), System.currentTimeMillis(), null);
             TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), view(c, guild.id()));
         });
@@ -451,7 +450,7 @@ public final class GuildStore {
             s.setInt(1, worldId);
             try (var r = s.executeQuery()) { name = r.next() ? r.getString(1) : null; }
         }
-        log(c, guildId, type, actor, System.currentTimeMillis(), name == null ? null : List.of("~" + name));
+        GuildLogStore.log(c, guildId, type, actor, System.currentTimeMillis(), name == null ? null : List.of("~" + name));
         if (master) promoteSuccessor(c, guildId);
     }
 
@@ -477,72 +476,7 @@ public final class GuildStore {
             s.setLong(2, guildId);
             s.executeUpdate();
         }
-        log(c, guildId, 4, null, System.currentTimeMillis(), List.of("m.rank.0"));
-    }
-
-    static void log(Connection c, long guildId, int type, String knightName, long when,
-            List<String> args) throws SQLException, IOException {
-        try (var s = c.prepareStatement("INSERT INTO guild_log(guild_id,type,knight_name,when_ms,args) VALUES(?,?,?,?,?)")) {
-            s.setLong(1, guildId);
-            s.setInt(2, type);
-            s.setString(3, knightName);
-            s.setLong(4, when);
-            s.setString(5, org.tortodrone.core.Json.stringify(args == null ? List.of() : args));
-            s.executeUpdate();
-        }
-    }
-
-    private static Page page(Connection c, long guildId, long cursor, int offset, int count,
-            Integer category, String knightName) throws SQLException, IOException {
-        var where = new StringBuilder(" FROM guild_log WHERE guild_id=?");
-        var args = new ArrayList<Object>();
-        args.add(guildId);
-        if (cursor != Long.MAX_VALUE) { where.append(" AND id<=?"); args.add(cursor); }
-        if (category != null) { where.append(" AND type IN (" + typesForCategory(category) + ")"); }
-        if (knightName != null && !knightName.isBlank()) {
-            where.append(" AND knight_name=? COLLATE NOCASE");
-            args.add(knightName);
-        }
-        int total;
-        try (var s = c.prepareStatement("SELECT count(*)" + where)) {
-            bind(s, args);
-            try (var r = s.executeQuery()) { r.next(); total = r.getInt(1); }
-        }
-        var entries = new ArrayList<LogEntry>();
-        try (var s = c.prepareStatement("SELECT *" + where + " ORDER BY id DESC LIMIT ? OFFSET ?")) {
-            bind(s, args);
-            s.setInt(args.size() + 1, count);
-            s.setInt(args.size() + 2, offset);
-            try (var r = s.executeQuery()) {
-                while (r.next()) {
-                    var raw = (List<?>) org.tortodrone.core.Json.parse(r.getString("args"));
-                    entries.add(new LogEntry(r.getLong("id"), r.getInt("type"), r.getString("knight_name"),
-                        r.getLong("when_ms"), raw.stream().map(String::valueOf).toList()));
-                }
-            }
-        }
-        return new Page(total, entries);
-    }
-
-    private static String typesForCategory(int category) {
-        return switch (category) {
-            case 0 -> "0,1,2,3,4";
-            case 1 -> "5,6,7,8";
-            case 2 -> "13,14,15,16,17,18";
-            case 3 -> "9,10";
-            case 4 -> "11,12";
-            case 5 -> "19,20,21,22,23,24,25,26,27,28,29,30,31,32,33";
-            default -> "-1";
-        };
-    }
-
-    private static void bind(PreparedStatement s, List<Object> args) throws SQLException {
-        for (int i = 0; i < args.size(); i++) {
-            Object value = args.get(i);
-            if (value instanceof Integer number) s.setInt(i + 1, number);
-            else if (value instanceof Long number) s.setLong(i + 1, number);
-            else s.setString(i + 1, (String) value);
-        }
+        GuildLogStore.log(c, guildId, 4, null, System.currentTimeMillis(), List.of("m.rank.0"));
     }
 
     private static boolean nameTaken(Connection c, String name) throws SQLException {
