@@ -34,7 +34,7 @@ final class TradeHandler {
             Knight knight = session.selectedKnight();
             trades = broker;
             member = broker.join(store, knight, session.currentProfile(), session.authRevision(), place,
-                responder.oid(), session.output(), responder.codec(), session.socket());
+                responder.oid(), responder);
         }
     }
 

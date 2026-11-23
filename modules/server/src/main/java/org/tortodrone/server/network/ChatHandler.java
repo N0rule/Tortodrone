@@ -54,7 +54,7 @@ final class ChatHandler {
         String failure=null,target=null;SceneChat.Membership sender=null;
         var descriptor=PlayerEmotes.find((String)args.getFirst());
         synchronized(session) {
-          if(session.isClosed()||session.socket().isClosed()||!session.sceneSubscribed()||!session.sceneEntered()
+          if(session.isClosed()||!session.responder().open()||!session.sceneSubscribed()||!session.sceneEntered()
                   ||!session.ownsScene(request.oid()))
             failure="Enter a scene before using an emote";
           else {
@@ -145,7 +145,7 @@ final class ChatHandler {
         synchronized(session) {
             if(session.departingScene(request.oid()))return;
             boolean party=session.ownsInteriorParty(request.oid())&&request.service()==SceneChat.PARTY_SERVICE;
-            if(session.isClosed()||session.socket().isClosed()||!session.sceneSubscribed()||!session.sceneEntered()
+            if(session.isClosed()||!session.responder().open()||!session.sceneSubscribed()||!session.sceneEntered()
                     ||!party&&!session.ownsScene(request.oid()))throw new SessionDecoder.Rejected("Unauthorized scene chat");
             if((!party&&request.service()!=SceneChat.SERVICE)||request.method()!=1||request.arguments().size()!=2
                     ||!(request.arguments().get(0) instanceof String)||!(request.arguments().get(1) instanceof Byte))
@@ -171,7 +171,7 @@ final class ChatHandler {
         SceneChat.Membership sender;
         try {
             synchronized(session) {
-                if(session.isClosed()||session.socket().isClosed()||!session.sceneSubscribed()||!session.sceneEntered())
+                if(session.isClosed()||!session.responder().open()||!session.sceneSubscribed()||!session.sceneEntered())
                     throw new IOException("Enter a scene before broadcasting");
                 if(!session.gameMasterRole())throw new IOException("Game Master permission required");
                 try{session.charactersStore().worldProfile(session.selectedKnight().name(),session.authRevision());}
@@ -206,7 +206,7 @@ final class ChatHandler {
         SceneChat.Membership sender;
         try {
             synchronized(session) {
-                if(session.isClosed()||session.socket().isClosed()||!session.sceneSubscribed()||!session.sceneEntered())
+                if(session.isClosed()||!session.responder().open()||!session.sceneSubscribed()||!session.sceneEntered())
                     throw new IOException("Enter a scene before sending a tell");
                 try{session.charactersStore().worldProfile(session.selectedKnight().name(),session.authRevision());}
                 catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
@@ -230,7 +230,7 @@ final class ChatHandler {
     }}
 
     private synchronized boolean deliver(int place,int generation,SceneChat.Message message)throws IOException {
-        if(session.isClosed()||session.socket().isClosed()||!session.sceneSubscribed()||!session.sceneEntered()
+        if(session.isClosed()||!session.responder().open()||!session.sceneSubscribed()||!session.sceneEntered()
                 ||session.currentScene().oid()!=place||session.sceneGenerationValue()!=generation)return false;
         if(message.personal()) {
             try{session.charactersStore().worldProfile(session.selectedKnight().name(),session.authRevision());}

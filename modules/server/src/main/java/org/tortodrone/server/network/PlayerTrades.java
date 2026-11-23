@@ -20,13 +20,13 @@ final class PlayerTrades {
     }
     static final class Member {
         final CharacterStore store;final Knight knight;final int worldId,sceneOid,playerOid;final long auth;
-        final SessionOutput output;final SessionCodec codec;final java.net.Socket socket;
+        final SessionResponder responder;
         boolean live=true;volatile long dialogGeneration;
-        Member(CharacterStore store,Knight knight,WorldProfile profile,long auth,int sceneOid,int playerOid,SessionOutput output,SessionCodec codec,java.net.Socket socket){
-            this.store=store;this.knight=knight;worldId=profile.worldId();this.auth=auth;this.sceneOid=sceneOid;this.playerOid=playerOid;this.output=output;this.codec=codec;this.socket=socket;
+        Member(CharacterStore store,Knight knight,WorldProfile profile,long auth,int sceneOid,int playerOid,SessionResponder responder){
+            this.store=store;this.knight=knight;worldId=profile.worldId();this.auth=auth;this.sceneOid=sceneOid;this.playerOid=playerOid;this.responder=responder;
         }
         WorldProfile current()throws IOException {
-            if(!live||socket.isClosed())throw new IOException("Trade participant left the scene");
+            if(!live||!responder.open())throw new IOException("Trade participant left the scene");
             var profile=store.tradeProfile(knight.id(),auth);
             if(profile.worldId()!=worldId)throw new IOException("Trade participant changed");return profile;
         }
@@ -49,8 +49,8 @@ final class PlayerTrades {
     private final Map<Member,Invite> invitations=new HashMap<>(); // At most one outstanding request per participant.
     private final Map<Member,Trade> trades=new HashMap<>();
     private long lastCreated;
-    synchronized Member join(CharacterStore store,Knight knight,WorldProfile profile,long auth,int scene,int oid,SessionOutput output,SessionCodec codec,java.net.Socket socket){
-        var member=new Member(store,knight,profile,auth,scene,oid,output,codec,socket);members.put(key(knight.name()),member);return member;
+    synchronized Member join(CharacterStore store,Knight knight,WorldProfile profile,long auth,int scene,int oid,SessionResponder responder){
+        var member=new Member(store,knight,profile,auth,scene,oid,responder);members.put(key(knight.name()),member);return member;
     }
     synchronized void leave(Member member){
         if(member==null)return;member.live=false;members.remove(key(member.knight.name()),member);
@@ -65,7 +65,7 @@ final class PlayerTrades {
         if(busy(sender)||busy(recipient))throw new IOException("A trade or invitation is already open");
         var invite=new Invite(sender,recipient,System.nanoTime()+60_000_000_000L);
         invitations.put(sender,invite);invitations.put(recipient,invite);
-        try{recipient.output.send(()->recipient.codec.tradeNotification(recipient.playerOid,sender.knight.name(),true));}
+        try{recipient.responder.send(()->recipient.responder.codec().tradeNotification(recipient.playerOid,sender.knight.name(),true));}
         catch(IOException failed){remove(invite);throw failed;}
     }
     synchronized void respond(Member recipient,String notification,int choice)throws IOException {
@@ -80,14 +80,14 @@ final class PlayerTrades {
         long created=lastCreated=Math.max(System.currentTimeMillis(),lastCreated+1);
         var trade=new Trade(a,b,ap,bp,oid,created);trades.put(a,trade);trades.put(b,trade);
         var view=trade.view();a.dialogGeneration=b.dialogGeneration=created;
-        try{a.output.send(()->a.codec.tradeDialog(a.playerOid,view,created));b.output.send(()->b.codec.tradeDialog(b.playerOid,view,created));}
+        try{a.responder.send(()->a.responder.codec().tradeDialog(a.playerOid,view,created));b.responder.send(()->b.responder.codec().tradeDialog(b.playerOid,view,created));}
         catch(IOException failed){cancel(trade);throw failed;}
     }
     synchronized boolean active(Member member){return member!=null&&trades.containsKey(member);}
     synchronized boolean owns(Member member,int oid){var t=trades.get(member);return member!=null&&member.live&&t!=null&&t.oid==oid;}
     synchronized void subscribe(Member member,int oid,short message)throws IOException {
         expire();var t=require(member,oid);check(t);var view=t.view();
-        member.output.send(()->member.codec.tradeObject(message,view));t.subscribers.add(member);
+        member.responder.send(()->member.responder.codec().tradeObject(message,view));t.subscribers.add(member);
     }
     synchronized void unsubscribe(Member member,int oid){if(owns(member,oid))cancel(trades.get(member));}
     synchronized void close(Member member,long created){var trade=trades.get(member);if(trade!=null&&trade.created==created)cancel(trade);}
@@ -147,7 +147,7 @@ final class PlayerTrades {
     }
     private void publish(Trade t,SessionCodec.TradeView before)throws IOException {
         var after=t.view();IOException failure=null;
-        for(var member:List.copyOf(t.subscribers))try{member.output.send(()->member.codec.tradeChanges(before,after));}catch(IOException failed){failure=failed;}
+        for(var member:List.copyOf(t.subscribers))try{member.responder.send(()->member.responder.codec().tradeChanges(before,after));}catch(IOException failed){failure=failed;}
         if(failure!=null){cancel(t);throw failure;}
         // The stock dialog only reports the completed flag; clearing sceneDialog is what closes
         // the window. Keep the completed update first so the client still shows its feedback.
@@ -155,9 +155,9 @@ final class PlayerTrades {
     }
     private boolean busy(Member m){return trades.containsKey(m)||invitations.containsKey(m);}
     private void remove(Invite i){invitations.remove(i.sender,i);invitations.remove(i.recipient,i);
-        if(i.recipient.live)try{i.recipient.output.send(()->i.recipient.codec.tradeNotification(i.recipient.playerOid,i.sender.knight.name(),false));}catch(IOException ignored){} }
+        if(i.recipient.live)try{i.recipient.responder.send(()->i.recipient.responder.codec().tradeNotification(i.recipient.playerOid,i.sender.knight.name(),false));}catch(IOException ignored){} }
     private void cancel(Trade t){
-        for(var member:t.members){trades.remove(member,t);if(member.live)try{member.output.send(()->member.codec.tradeDialog(member.playerOid,null,t.created));}catch(IOException ignored){} }
+        for(var member:t.members){trades.remove(member,t);if(member.live)try{member.responder.send(()->member.responder.codec().tradeDialog(member.playerOid,null,t.created));}catch(IOException ignored){} }
     }
     private void expire(){long now=System.nanoTime();for(var i: new HashSet<>(invitations.values()))if(now-i.expires>=0)remove(i);
         for(var t:new HashSet<>(trades.values()))if(!t.completed&&now-t.expires>=0)cancel(t);}

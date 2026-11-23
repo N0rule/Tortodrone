@@ -10,9 +10,11 @@ import org.tortodrone.core.character.WorldProfile;
  *  committed equip. */
 final class WorldStateHandler {
     private final WorldSession session;
+    private final SessionResponder responder;
 
     WorldStateHandler(WorldSession session) {
         this.session = session;
+        this.responder = session.responder();
     }
 
     void refresh(WorldStatePoller.Registration registration, WorldSummary state) throws IOException {
@@ -30,7 +32,7 @@ final class WorldStateHandler {
             if (state.gameMaster() != session.gameMasterFlag()) {
                 session.setGameMaster(state.gameMaster());
                 session.applyActorAppearance();
-                session.output().send(() -> session.codec().playerFlags(session.connectionOid(),
+                responder.send(() -> responder.codec().playerFlags(responder.oid(),
                     session.gameMasterFlag(), session.inspectionHiddenValue(), session.currentProfile().progress().tutorialComplete()));
             }
             // An equip may commit while the read is in flight: never roll back its publication.
@@ -39,22 +41,22 @@ final class WorldStateHandler {
                 var previous = session.currentProfile();
                 session.applyProfile(fresh);
                 if (fresh.crowns() != previous.crowns() || fresh.energy() != previous.energy())
-                    session.output().send(() -> session.codec().balances(session.connectionOid(), session.currentProfile()));
+                    responder.send(() -> responder.codec().balances(responder.oid(), session.currentProfile()));
                 if (!fresh.progress().equals(previous.progress())) {
                     session.membership().equipment(session.visibleProfileNow());
-                    session.output().send(() -> session.codec().knightProgress(session.connectionOid(), session.currentProfile()));
+                    responder.send(() -> responder.codec().knightProgress(responder.oid(), session.currentProfile()));
                 }
                 if (!fresh.town().equals(previous.town())) {
                     session.membership().equipment(session.visibleProfileNow());
-                    session.output().send(() -> session.codec().townState(session.connectionOid(), session.currentProfile()));
+                    responder.send(() -> responder.codec().townState(responder.oid(), session.currentProfile()));
                     session.refreshOutbids(previous, session.currentProfile());
                 }
                 if (!fresh.town().loadouts().equals(previous.town().loadouts()))
-                    session.output().send(() -> session.codec().loadoutChanges(session.connectionOid(), previous, session.currentProfile()));
+                    responder.send(() -> responder.codec().loadoutChanges(responder.oid(), previous, session.currentProfile()));
                 if (!fresh.items().equals(previous.items())) {
                     session.updateAppearance();
                     var visibleAfter = session.visibleProfileNow();
-                    session.output().send(() -> session.codec().itemChanges(session.connectionOid(),
+                    responder.send(() -> responder.codec().itemChanges(responder.oid(),
                         session.selectedKnight(), visibleBefore, visibleAfter));
                 }
             }
@@ -66,7 +68,7 @@ final class WorldStateHandler {
             if (!session.stateRefreshActive(registration)) return;
             session.sessionLog().warn("World state refresh closed; " + WorldSession.deliveryFailure(failure));
             session.close();
-            try { session.socket().close(); } catch (IOException ignored) {}
+            responder.disconnect();
         }
     }
 }

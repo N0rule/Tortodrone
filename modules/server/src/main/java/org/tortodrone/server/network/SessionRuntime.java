@@ -100,9 +100,9 @@ final class SessionRuntime {
             throw new IOException("Scene has no unique owned pawn");
         if(!inputThrottleSent){
             // Town movement and service calls share the native TCP throttle queue.
-            session.output().send(session.codec()::inputThrottle);inputThrottleSent=true;
+            session.responder().send(session.responder().codec()::inputThrottle);inputThrottleSent=true;
         }
-        session.output().send(()->session.codec().scene(message,scene,snapshot.players()));
+        session.responder().send(()->session.responder().codec().scene(message,scene,snapshot.players()));
         session.leaveChat();lastSnapshot=null;session.resetReferences();
         session.setOccupantClients(snapshot.players().stream().collect(java.util.stream.Collectors.toMap(ActorState::id,ActorState::clientOid)));
         session.setOccupantRoles(snapshot.roles());subscribed=true;entered=false;sceneGeneration++;
@@ -116,7 +116,7 @@ final class SessionRuntime {
         if(entered)return;
         if(scene.map().town()){
             session.charactersStore().lastTownScene(session.selectedKnight().id(),session.authRevision(),scene.map().id());
-            if(session.currentProfile().progress().openingStage()>=0)session.output().send(()->session.codec().homeTown(session.connectionOid(),session.currentProfile()));
+            if(session.currentProfile().progress().openingStage()>=0)session.responder().send(()->session.responder().codec().homeTown(session.connectionOid(),session.currentProfile()));
         }
         entered=true;
         session.friendLocation(session.presence(session.sceneRegistry().parties().view(session.partyMember())));
@@ -125,7 +125,7 @@ final class SessionRuntime {
         session.chatHandler().enter(place,generation);
         if(!welcomed&&!session.welcomeMessage().isEmpty()){
             welcomed=true;
-            session.output().send(()->session.codec().systemNotice(place,session.welcomeMessage()));
+            session.responder().send(()->session.responder().codec().systemNotice(place,session.welcomeMessage()));
         }
         session.tradeHandler().join(place);
         session.markSceneEntry();
@@ -152,7 +152,7 @@ final class SessionRuntime {
     /** Incomplete Crash Site knights resume a private floor; completed knights stage locally. */
     void select(String name,Map<String,Short> receivers,boolean stageInReadyRoom)throws IOException,CharacterStore.Refused {synchronized(session){
         long selectionStarted=System.nanoTime();
-        if(session.isClosed()||session.socket().isClosed())throw new IOException("Session is closed");
+        if(session.isClosed()||!session.responder().open())throw new IOException("Session is closed");
         if(session.selected())throw new IOException("A character is already selected; reconnect to change characters");
         var scenes=session.sceneRegistry();
         if(scenes.catalog().isEmpty())throw new IOException("Maps are unavailable; install default maps and restart the server");
@@ -204,13 +204,13 @@ final class SessionRuntime {
         if(characters.hasWorldStorage())session.setMemories(characters.knightMemories(session.selectedKnight().id(),session.authRevision()));
         if(characters.hasWorldStorage())session.setObjectives(characters.knightObjectives(session.selectedKnight().id(),session.authRevision()));
         if(characters.hasWorldStorage())session.setCompletedOpening(characters.services().openingMissions(scenes.town(),scenes.missions()).load(characters.accountId(),session.selectedKnight().id(),session.authRevision()));
-        session.output().send(()->session.codec().selected(session.connectionOid(),session.selectedKnight(),session.currentProfile(),session.guilds.guildInfo()));
-        session.output().send(()->session.codec().knightMemories(session.connectionOid(),session.memoriesValue()));
+        session.responder().send(()->session.responder().codec().selected(session.connectionOid(),session.selectedKnight(),session.currentProfile(),session.guilds.guildInfo()));
+        session.responder().send(()->session.responder().codec().knightMemories(session.connectionOid(),session.memoriesValue()));
         session.publishObjectives();
-        session.output().send(()->session.codec().completedMissions(session.connectionOid(),session.completedOpeningValues()));
-        session.output().send(()->session.codec().townState(session.connectionOid(),session.currentProfile()));
+        session.responder().send(()->session.responder().codec().completedMissions(session.connectionOid(),session.completedOpeningValues()));
+        session.responder().send(()->session.responder().codec().townState(session.connectionOid(),session.currentProfile()));
         session.publishStyles();
-        session.output().send(()->session.codec().playerFlags(session.connectionOid(),session.gameMasterFlag(),session.inspectionHiddenValue(),session.currentProfile().progress().tutorialComplete()));
+        session.responder().send(()->session.responder().codec().playerFlags(session.connectionOid(),session.gameMasterFlag(),session.inspectionHiddenValue(),session.currentProfile().progress().tutorialComplete()));
         if(characters.hasWorldStorage())session.refreshFriends(null,characters.services().friends().snapshot(),WorldSession.friendPresence(characters.worldStorageFile()));
         session.refreshParty();
         session.receiverChanged(receivers);
@@ -247,16 +247,16 @@ final class SessionRuntime {
             session.temporaryItems().clear();lastSnapshot=null;session.resetReferences();arrival=null;
             readyRoom=true;session.refreshParty(true);
             var after=session.visibleProfile();
-            if(!before.equals(after))session.output().send(()->session.codec().itemChanges(session.connectionOid(),session.selectedKnight(),before,after));
+            if(!before.equals(after))session.responder().send(()->session.responder().codec().itemChanges(session.connectionOid(),session.selectedKnight(),before,after));
         }
         session.friendLocation(new SessionPresence.FriendPresence("~",ReadyRoom.ZONE,0));
-        session.output().send(()->session.codec().readyRoomLocation(session.connectionOid()));
-        session.output().send(()->session.codec().readyRoomMove(session.connectionOid(),requestId));
+        session.responder().send(()->session.responder().codec().readyRoomLocation(session.connectionOid()));
+        session.responder().send(()->session.responder().codec().readyRoomMove(session.connectionOid(),requestId));
     }}
 
     void completeMove(short requestId,boolean zone)throws IOException {
-        session.output().send(()->session.codec().sceneMove(session.connectionOid(),requestId,zone,scene,session.sceneRegistry().catalog()));
-        session.output().send(()->session.codec().sceneLocation(session.connectionOid(),scene,
+        session.responder().send(()->session.responder().codec().sceneMove(session.connectionOid(),requestId,zone,scene,session.sceneRegistry().catalog()));
+        session.responder().send(()->session.responder().codec().sceneLocation(session.connectionOid(),scene,
             session.sceneRegistry().channelOid(scene.map().zone(),false),session.sceneRegistry().channelOid(scene.map().zone(),true)));
         // Deliver the pre-arranged arrival comlink behind the moveSucceeded response: the
         // client processes it in the window where its scene controllers are gone (see the
@@ -276,7 +276,7 @@ final class SessionRuntime {
         session.closeConversation();session.closeTownDialog();
         if(!session.temporaryItems().isEmpty()){
             var before=session.visibleProfile();session.temporaryItems().clear();
-            session.output().send(()->session.codec().itemChanges(session.connectionOid(),session.selectedKnight(),before,session.currentProfile()));
+            session.responder().send(()->session.responder().codec().itemChanges(session.connectionOid(),session.selectedKnight(),before,session.currentProfile()));
             session.publishQuickbar();
         }
         session.leaveChat();
@@ -303,7 +303,7 @@ final class SessionRuntime {
         if(session.isClosed())return;
         session.sessionLog().warn("Scene tick failed; closing session for a safe return; scene="+(scene==null?0:scene.oid()));
         closeSession();
-        try{session.socket().close();}catch(IOException ignored){}
+        session.responder().disconnect();
     }
 
     /** Join the installed instance's simulation and publish the knight actor. */

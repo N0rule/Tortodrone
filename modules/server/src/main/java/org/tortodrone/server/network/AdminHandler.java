@@ -29,7 +29,7 @@ final class AdminHandler {
 
     /** The caller's live pawn, re-checked under the session monitor. */
     AdminLocation location()throws IOException { synchronized (session) {
-        if(session.isClosed()||session.socket().isClosed()||!session.selected()
+        if(session.isClosed()||!session.responder().open()||!session.selected()
                 ||!session.sceneSubscribed()||!session.sceneEntered()||session.sceneTravelPending())
             throw new IOException("That knight is changing scenes");
         try{store.worldProfile(session.selectedKnight().name(),session.authRevision());}
@@ -44,7 +44,7 @@ final class AdminHandler {
 
     /** Move this session to a captured location; never acquires another session monitor. */
     void travel(AdminLocation location)throws IOException { synchronized (session) {
-        if(session.isClosed()||session.socket().isClosed()||!session.selected()
+        if(session.isClosed()||!session.responder().open()||!session.selected()
                 ||(!session.inReadyRoom()&&(!session.sceneSubscribed()||!session.sceneEntered()))
                 ||session.forcedReceiverValue()==null||session.sceneTravelPending()||session.deferredMovePending())
             throw new IOException("Finish entering this scene first");
@@ -112,7 +112,7 @@ final class AdminHandler {
                     if(target==session)throw new IOException("You cannot kick yourself");
                     // Recheck identity/readiness immediately before ending only this live connection.
                     synchronized(target){target.adminHandler().location();target.close();}
-                    target.output().disconnect();
+                    target.responder().disconnect();
                 }else if(method==27){
                     session.requireAdminReady();
                     if(location.scene()==session.currentScene())throw new IOException("That knight is already in this scene");

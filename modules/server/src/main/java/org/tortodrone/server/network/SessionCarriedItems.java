@@ -60,7 +60,7 @@ final class SessionCarriedItems {
             if (session.membership() != null) session.membership().inventory(session.visibleProfile());
             for (int slot = 0; slot < quickbar.length; slot++) if (!items.containsKey(quickbar[slot])) quickbar[slot] = 0;
             var slots = quickbar.clone();
-            session.output().send(() -> session.codec().quickbar(session.connectionOid(), slots));
+            session.responder().send(() -> session.responder().codec().quickbar(session.connectionOid(), slots));
         }
     }
 
@@ -73,7 +73,7 @@ final class SessionCarriedItems {
             var before = session.visibleProfile();
             items.remove(id);
             var after = session.visibleProfile();
-            session.output().send(() -> session.codec().itemChanges(session.connectionOid(),
+            session.responder().send(() -> session.responder().codec().itemChanges(session.connectionOid(),
                 session.selectedKnight(), before, after));
             publish();
             return true;

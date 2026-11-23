@@ -20,8 +20,8 @@ final class SceneInputHandler {
     void input(SessionDecoder.Input input)throws IOException { synchronized (session) {
         // Old frames can already be in flight when the server forces a portal move.
         // Ignore only the known departing scene until the destination becomes ready.
-        if(!session.isClosed()&&!session.socket().isClosed()&&session.departedSceneOid()!=0&&input.oid()==session.departedSceneOid())return;
-        if(session.isClosed()||session.socket().isClosed()||!session.sceneSubscribed()||!session.sceneEntered()
+        if(!session.isClosed()&&!!session.responder().open()&&session.departedSceneOid()!=0&&input.oid()==session.departedSceneOid())return;
+        if(session.isClosed()||!session.responder().open()||!session.sceneSubscribed()||!session.sceneEntered()
                 ||input.oid()!=session.currentScene().oid())
             throw new SessionDecoder.Rejected("Unauthorized movement input");
         // TCP delivers every queued snapshot in order, even while scene loading delays input.

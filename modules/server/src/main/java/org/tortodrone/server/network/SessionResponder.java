@@ -23,6 +23,17 @@ final class SessionResponder {
     /** Reliable state change; never dropped by the output budget. */
     void send(SessionOutput.Encoder frame) throws IOException { output.send(frame); }
 
+    /** Liveness probe for cross-session delivery; it never writes a frame. */
+    boolean open() { return output.open(); }
+
+    /** End the frame queue after the final frame; the native rename/kick path. */
+    void disconnect() { output.disconnect(); }
+
+    /** Optional frames may skip encoding once this session is over budget. */
+    boolean optionalOverBudget() { return output.optionalOverBudget(); }
+
+    boolean sendOptional(SessionOutput.Encoder frame) throws IOException { return output.sendOptional(frame); }
+
     void confirmed(short requestId) throws IOException {
         send(() -> codec.invocationConfirmed(oid, requestId));
     }

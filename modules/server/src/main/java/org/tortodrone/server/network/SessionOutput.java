@@ -56,7 +56,7 @@ final class SessionOutput implements AutoCloseable {
     private final ArrayDeque<byte[]> pending = new ArrayDeque<>();
     private final Thread writer;
     private volatile Throwable failure;
-    private boolean closed;
+    private volatile boolean closed;
     private long pendingBytes;
     private long overBudgetSince;
     private long droppedOptional;
@@ -204,6 +204,9 @@ final class SessionOutput implements AutoCloseable {
             closeSocket(); writer.interrupt(); Thread.currentThread().interrupt();
         }
     }
+
+    /** True while this queue still owns a live socket. */
+    boolean open() { return !closed && !socket.isClosed(); }
 
     /** Drains queued frames, then closes the socket: the official post-rename session end. */
     void disconnect() {

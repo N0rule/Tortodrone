@@ -35,7 +35,7 @@ final class InspectionHandler {
             throw new SessionDecoder.Rejected("Invalid inspection request");
         SceneRegistry.Instance place;
         synchronized(session) {
-            if(session.isClosed()||session.socket().isClosed()||!session.sceneSubscribed()||!session.sceneEntered()||!session.ownsScene(request.oid()))
+            if(session.isClosed()||!session.responder().open()||!session.sceneSubscribed()||!session.sceneEntered()||!session.ownsScene(request.oid()))
                 throw new SessionDecoder.Rejected("Unauthorized inspection");
             try{store.worldProfile(session.selectedKnight().name(),session.authRevision());}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
             place=session.currentScene();
@@ -53,7 +53,7 @@ final class InspectionHandler {
 
     Inspection snapshot(SceneRegistry.Instance place)throws IOException {
         synchronized(session) {
-            if(session.isClosed()||session.socket().isClosed()||!session.sceneSubscribed()||!session.sceneEntered()||session.currentScene()!=place)return null;
+            if(session.isClosed()||!session.responder().open()||!session.sceneSubscribed()||!session.sceneEntered()||session.currentScene()!=place)return null;
             try {var current=store.worldProfile(session.selectedKnight().name(),session.authRevision());return new Inspection(session.selectedKnight(),current,session.inspectionHiddenValue());}
             catch(CharacterStore.Refused refused){return null;}
         }

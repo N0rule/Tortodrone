@@ -376,9 +376,6 @@ final class WorldSession implements AutoCloseable {
     void setArrivalComlink(OpeningMission value){story.arrivalComlink(value);}
     void friendLocation(SessionPresence.FriendPresence value){presenceState.location(value);}
     SessionResponder responder(){return responder;}
-    SessionOutput output(){return output;}
-    SessionCodec codec(){return codec;}
-    Socket socket(){return socket;}
     boolean sceneEntered(){return runtime.entered();}
     boolean sceneSubscribed(){return runtime.subscribed();}
     boolean inSubscribedScene(){return !closed&&selected()&&runtime.entered()&&runtime.subscribed();}

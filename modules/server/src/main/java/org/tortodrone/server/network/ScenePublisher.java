@@ -54,7 +54,7 @@ final class ScenePublisher {
                     session.townChanged(reward,false);
                     continue;
                 }
-                var after=session.visibleProfileNow();session.output().send(()->session.codec().itemChanges(session.connectionOid(),session.selectedKnight(),before,after));session.publishQuickbar();success=true;
+                var after=session.visibleProfileNow();session.responder().send(()->session.responder().codec().itemChanges(session.connectionOid(),session.selectedKnight(),before,after));session.publishQuickbar();success=true;
             }catch(IOException failure){session.sessionLog().debug("Scene pickup refused: "+failure.getMessage());}
             finally{session.membership().completePickup(pickup.entityId(),success);}
         }
@@ -65,21 +65,21 @@ final class ScenePublisher {
         var scene=session.currentScene();
         // Optional scene work is skipped before encoding when this reader is behind its byte
         // budget; the next publication re-encodes from the last snapshot actually sent.
-        if(session.output().optionalOverBudget())return;
+        if(session.responder().optionalOverBudget())return;
         var current=publication.snapshot();int stamp=current.timestamp();
         if(session.isClosed()||!session.sceneSubscribed()||!session.sceneEntered()||scene!=publication.scene()||session.sceneGenerationValue()!=publication.generation()||stamp-session.lastStampValue()<=0)return;
         boolean interior=!scene.map().town();
         var encoded=current.encoded(session.lastSnapshotValue(),interior,
-            (frameDelta,frameEffects,frameCombat,frameInterior)->SessionCodec.sceneDeltaTemplate(session.codec().catalog(),
+            (frameDelta,frameEffects,frameCombat,frameInterior)->SessionCodec.sceneDeltaTemplate(session.responder().codec().catalog(),
                 scene.oid(),stamp,frameDelta.added(),frameDelta.updated(),frameDelta.removed(),
                 frameDelta.baseline(),frameInterior,frameEffects,frameCombat));
         var delta=encoded.delta();
         // Subscription already announces occupants; the first reliable delta has no baseline.
         var changedRoles=session.lastSnapshotValue()==null?current.actors().stream().filter(a->session.occupantRolesValue().containsKey(a.id())&&session.occupantRolesValue().get(a.id())!=a.gameMaster()).toList():delta.changedRoles();
-        if(!changedRoles.isEmpty())session.output().send(()->session.codec().occupantRoles(scene.oid(),changedRoles));
+        if(!changedRoles.isEmpty())session.responder().send(()->session.responder().codec().occupantRoles(scene.oid(),changedRoles));
         var clients=current.clientOids();
         if(!clients.equals(session.occupantClientsValue())){
-            session.output().send(()->session.codec().occupantChanges(scene.oid(),session.occupantClientsValue(),current.players()));
+            session.responder().send(()->session.responder().codec().occupantChanges(scene.oid(),session.occupantClientsValue(),current.players()));
             session.setOccupantClients(clients);
         }
         session.setOccupantRoles(current.roles());
@@ -89,9 +89,9 @@ final class ScenePublisher {
         // The first frame for a connection registers the symbols; later ones reuse the shared body.
         // This is an optional update: when the session is already over budget it is skipped before
         // encoding, so no unseen symbol mapping can be introduced.
-        if(!session.output().sendOptional(()->{
-            var shared=session.codec().materialize(frame,session.connectionOid(),session.acknowledgeValue(),session.pingValue(),session.referenceValue(),elapsed);
-            return shared!=null?shared:session.codec().sceneDelta(session.connectionOid(),scene.oid(),session.acknowledgeValue(),session.pingValue(),session.referenceValue(),stamp,elapsed,
+        if(!session.responder().sendOptional(()->{
+            var shared=session.responder().codec().materialize(frame,session.connectionOid(),session.acknowledgeValue(),session.pingValue(),session.referenceValue(),elapsed);
+            return shared!=null?shared:session.responder().codec().sceneDelta(session.connectionOid(),scene.oid(),session.acknowledgeValue(),session.pingValue(),session.referenceValue(),stamp,elapsed,
                 delta.added(),delta.updated(),delta.removed(),delta.baseline(),interior,encoded.effects(),encoded.combat());
         }))return;
         var currentOwn=current.player(session.connectionOid());
@@ -99,7 +99,7 @@ final class ScenePublisher {
         var previousOwn=session.lastSnapshotValue()==null?null:session.lastSnapshotValue().actor(session.currentProfile().worldId());
         Set<Long> previousCurse=previousOwn==null||previousOwn.sceneKnight()==null?Set.of():previousOwn.sceneKnight().status().cursedItems();
         Set<Long> currentCurse=currentOwn==null||currentOwn.sceneKnight()==null?Set.of():currentOwn.sceneKnight().status().cursedItems();
-        if(!previousCurse.equals(currentCurse))session.output().send(()->session.codec().itemChanges(session.connectionOid(),session.selectedKnight(),session.visibleProfile(previousCurse),session.visibleProfile(currentCurse)));
+        if(!previousCurse.equals(currentCurse))session.responder().send(()->session.responder().codec().itemChanges(session.connectionOid(),session.selectedKnight(),session.visibleProfile(previousCurse),session.visibleProfile(currentCurse)));
         if(health!=null&&currentOwn.sceneKnight()!=null){
             var status=currentOwn.sceneKnight().status();
             if(!health.equals(session.publishedHealthValue())||!status.equals(session.publishedStatusValue())){
@@ -113,7 +113,7 @@ final class ScenePublisher {
             session.reloadProfile();
             var result=session.charactersStore().knightStory(session.selectedKnight().id(),session.authRevision(),session.currentProfile(),story.memories().stream().map(SceneSimulation.MemoryRequest::operation).toList(),story.objectives().stream().map(SceneSimulation.ObjectiveRequest::operation).toList());
             session.applyProfile(result.profile());
-            if(!session.memoriesValue().equals(result.memories())){var before=session.memoriesValue();session.setMemories(result.memories());session.output().send(()->session.codec().knightMemoryChanges(session.connectionOid(),before,session.memoriesValue()));}
+            if(!session.memoriesValue().equals(result.memories())){var before=session.memoriesValue();session.setMemories(result.memories());session.responder().send(()->session.responder().codec().knightMemoryChanges(session.connectionOid(),before,session.memoriesValue()));}
             if(!session.objectivesValue().equals(result.objectives())){session.setObjectives(result.objectives());session.publishObjectives();}
         }
         collectPickups();
@@ -125,7 +125,7 @@ final class ScenePublisher {
                 capsuleCounters.merge(used.text("stat",""),Math.max(1,used.integer("stat-delta",1)),Integer::sum);
             var before=session.visibleProfileNow();
             if(item.count()==1)session.temporaryItems().remove(id);else session.temporaryItems().put(id,new WorldProfile.Item(id,item.slot(),item.config(),item.accessory(),item.heat(),item.equippedSlot(),item.bound(),item.bindOnEquip(),item.starter(),item.count()-1,item.permanent()));
-            var after=session.visibleProfileNow();session.output().send(()->session.codec().itemChanges(session.connectionOid(),session.selectedKnight(),before,after));
+            var after=session.visibleProfileNow();session.responder().send(()->session.responder().codec().itemChanges(session.connectionOid(),session.selectedKnight(),before,after));
             session.publishQuickbar();
         }
         if(!capsuleCounters.isEmpty()){
@@ -133,8 +133,8 @@ final class ScenePublisher {
             try{
                 var result=session.charactersStore().services().town(session.sceneRegistry().town()).stats(session.charactersStore().accountId(),session.selectedKnight().id(),session.authRevision(),capsuleCounters);
                 session.applyProfile(result.profile());
-                var changes=session.codec().achievementChanges(session.connectionOid(),before,session.visibleProfileNow());
-                if(changes!=null)session.output().send(()->changes);
+                var changes=session.responder().codec().achievementChanges(session.connectionOid(),before,session.visibleProfileNow());
+                if(changes!=null)session.responder().send(()->changes);
             }catch(IOException failure){
                 // The scene capsule has already been consumed; a refused receipt is recorded
                 // without turning a healthy scene stream into a disconnect.
@@ -143,7 +143,7 @@ final class ScenePublisher {
         }
         var own=current.actor(session.currentProfile().worldId());
         boolean arsenal=session.membership().arsenalZone();
-        if(session.publishedArsenalValue()==null||session.publishedArsenalValue()!=arsenal){session.setPublishedArsenal(arsenal);session.output().send(()->session.codec().equipPolicy(session.connectionOid(),arsenal));}
+        if(session.publishedArsenalValue()==null||session.publishedArsenalValue()!=arsenal){session.setPublishedArsenal(arsenal);session.responder().send(()->session.responder().codec().equipPolicy(session.connectionOid(),arsenal));}
         session.townHandler().expire(own);
         if(session.conversations().expired(own))session.closeConversation();
         var scripted=session.membership().takeConversation();
@@ -190,6 +190,6 @@ final class ScenePublisher {
         if(entrance==null)throw new IOException("Portal destination is unavailable");
         session.beginForcedTravel(destination,entrance);
         short receiver=session.forcedReceiverValue();
-        session.output().send(()->session.codec().forceScene(session.connectionOid(),receiver,destination));
+        session.responder().send(()->session.responder().codec().forceScene(session.connectionOid(),receiver,destination));
     }
 }

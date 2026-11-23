@@ -32,7 +32,7 @@ final class FriendHandler {
         if(snapshot.authentication().getOrDefault(profile.worldId(),-1L)!=session.authRevision())throw new IOException("Knight or account changed; reconnect");
         if(snapshot.revisions().getOrDefault(profile.worldId(),-1L)<profile.revision())return;
         var next=snapshot.lists().getOrDefault(profile.worldId(),List.of()).stream().map(p->new SessionCodec.FriendView(p.world(),p.name(),p.color(),online.containsKey(p.world())?online.get(p.world()).location():null,p.lastSession(),online.containsKey(p.world())?online.get(p.world()).zone():0,online.containsKey(p.world())?online.get(p.world()).instance():0)).toList();
-        if(!next.equals(publishedFriends)){var previous=publishedFriends;session.output().send(()->session.codec().friends(session.connectionOid(),previous,next));publishedFriends=next;}
+        if(!next.equals(publishedFriends)){var previous=publishedFriends;responder.send(()->responder.codec().friends(responder.oid(),previous,next));publishedFriends=next;}
     }
 
     /** Native method 4: publish the party-finder flag; matchmaking itself is not implemented. */
@@ -45,7 +45,7 @@ final class FriendHandler {
         lookingForGroupAnyLanguage=false;
         lookingForGroup=enabled;
         if(session.sessionLog().debugEnabled())session.sessionLog().debug("Party finder "+(enabled?"enabled":"disabled")+"; difficulty="+lookingForGroupDifficulty+"; anyLanguage="+lookingForGroupAnyLanguage);
-        session.output().send(()->session.codec().lookingForGroup(session.connectionOid(),enabled));
+        responder.send(()->responder.codec().lookingForGroup(responder.oid(),enabled));
     }}
     boolean lookingForGroup(){return lookingForGroup;}
 
@@ -110,7 +110,7 @@ final class FriendHandler {
         var peerMember=peer.partyMemberSnapshot();
         synchronized(session){
             requireFriendReady();
-            if(friendNamed(name)!=target||!peer.friendOnlineValue()||peer.socket().isClosed()
+            if(friendNamed(name)!=target||!peer.friendOnlineValue()||!peer.responder().open()
                     ||presence!=peer.friendPresenceValue()||location.scene().oid()!=presence.instance())
                 throw new IOException(friendUnjoinable(name));
             if(location.scene().map().town()){
@@ -130,7 +130,7 @@ final class FriendHandler {
         String name=secret.substring(0,comma);
         if(name.equalsIgnoreCase(session.selectedKnight().name()))throw new IOException("%social:m.friend_self");
         var candidates=WorldSession.activeSessions().stream()
-            .filter(s->s.friendOnlineValue()&&!s.socket().isClosed()&&s.hasWorldStorage()&&session.sameWorld(s))
+            .filter(s->s.friendOnlineValue()&&!!s.responder().open()&&s.hasWorldStorage()&&session.sameWorld(s))
             .toList();
         WorldSession peer=null;int target=0;
         for(var candidate:candidates){
@@ -146,7 +146,7 @@ final class FriendHandler {
         var peerMember=peer.partyMemberSnapshot();
         synchronized(session){
             requireFriendReady();
-            if(peer!=WorldSession.activeSession(target)||!peer.friendOnlineValue()||peer.socket().isClosed()
+            if(peer!=WorldSession.activeSession(target)||!peer.friendOnlineValue()||!peer.responder().open()
                     ||presence!=peer.friendPresenceValue()||location.scene().oid()!=presence.instance())
                 throw new IOException(friendUnjoinable(name));
             if(location.scene().map().town()){

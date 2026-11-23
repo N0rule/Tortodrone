@@ -83,7 +83,7 @@ final class SessionStory {
         if (memories.equals(fresh)) return;
         var previous = memories;
         memories = fresh;
-        session.output().send(() -> session.codec().knightMemoryChanges(session.connectionOid(),previous,memories));
+        session.responder().send(() -> session.responder().codec().knightMemoryChanges(session.connectionOid(),previous,memories));
     }
 
     void applyObjectives(Map<String,KnightObjective.State> fresh) throws IOException {
@@ -148,7 +148,7 @@ final class SessionStory {
 
     void publishObjectives() throws IOException {
         var wire = wireObjectives();
-        session.output().send(() -> session.codec().objectives(session.connectionOid(),wire));
+        session.responder().send(() -> session.responder().codec().objectives(session.connectionOid(),wire));
     }
 
     /** The mission bar follows the owned run: the imported mission's {@code o.<id>} objective
