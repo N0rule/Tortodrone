@@ -25,7 +25,8 @@ final class SceneActorWire extends WireWriter {
         "WEAK","NORMAL","STRONG","WEAK_SMALL","WEAK_MEDIUM","WEAK_LARGE",
         "NORMAL_SMALL","NORMAL_MEDIUM","NORMAL_LARGE","STRONG_SMALL","STRONG_MEDIUM","STRONG_LARGE");
 
-    SceneActorWire(WireContext context,ItemCatalog catalog){super(context,catalog);}
+    private final ItemWire items;
+    SceneActorWire(WireContext context,ItemCatalog catalog){super(context,catalog);items=new ItemWire(context,catalog);}
 
     protected void sceneDeltaHeader(DataOutputStream out,int oid,int sceneOid,int acknowledge,short ping,int reference,int timestamp,short elapsed)throws IOException {
         type(out,PREFIX+"EventNotification");out.writeShort(-1);type(out,"com.threerings.tudey.dobj.SceneDeltaEvent");out.writeInt(oid);
@@ -288,7 +289,7 @@ final class SceneActorWire extends WireWriter {
     }
 
     protected void weapon(DataOutputStream out,int bag,KnightCombat.State combat)throws IOException {
-        if(combat==null||combat.weapon()==null)out.writeShort(0);else item(out,(String)null,bag,combat.weapon());
+        if(combat==null||combat.weapon()==null)out.writeShort(0);else items.item(out,(String)null,bag,combat.weapon());
     }
 
     protected void impulse(DataOutputStream out,KnightCombat.Impulse impulse)throws IOException {

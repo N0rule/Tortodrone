@@ -410,6 +410,10 @@ remaining stores were split the same way:
   single staff-letter writer (sender negation, literal/tainted text, SYSTEM
   type and gift materialisation) used by campaigns, the welcome letter and
   one-off sends inside the caller's transaction.
+- `WireWriter` keeps shared framing, symbol and event primitives; `ItemWire`
+  owns the item-instance, gift and loadout records (`KnightCodec`,
+  `TradeCodec` and `SceneActorWire` compose it). Byte layout is unchanged and
+  the cross-feature golden still matches.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.

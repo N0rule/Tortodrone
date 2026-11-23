@@ -54,7 +54,8 @@ import org.tortodrone.core.party.PartyView;
 
 /** Trade-owned downstream frames; shares the connection symbol tables. */
 public final class TradeCodec extends WireWriter {
-    public TradeCodec(WireContext context, ItemCatalog catalog){super(context,catalog);}
+    private final ItemWire items;
+    public TradeCodec(WireContext context, ItemCatalog catalog){super(context,catalog);items=new ItemWire(context,catalog);}
     public byte[] tradeNotification(int playerOid,String sender,boolean add)throws IOException {
         return frame(out->{if(add){eventHeader(out,"EntryAddedEvent",playerOid);string(out,"notifications");
             type(out,"com.threerings.projectx.social.data.Notification$TradeRequest");name(out,sender);
@@ -104,11 +105,11 @@ public final class TradeCodec extends WireWriter {
         var old=new HashMap<Long,WorldProfile.Item>();for(var item:before)old.put(item.id(),item);
         var ids=after.stream().map(WorldProfile.Item::id).collect(java.util.stream.Collectors.toSet());
         for(var item:before)if(!ids.contains(item.id()))events.add(o->entryRemoved(o,oid,field,item.id()));
-        for(var item:after)if(!item.equals(old.get(item.id())))events.add(o->{event(o,old.containsKey(item.id())?"EntryUpdatedEvent":"EntryAddedEvent",oid);string(o,field);item(o,knight,owner.worldId(),item);});
+        for(var item:after)if(!item.equals(old.get(item.id())))events.add(o->{event(o,old.containsKey(item.id())?"EntryUpdatedEvent":"EntryAddedEvent",oid);string(o,field);items.item(o,knight,owner.worldId(),item);});
     }
 
     private void tradeItems(DataOutputStream out,Knight knight,WorldProfile owner,List<WorldProfile.Item> items)throws IOException {
-        type(out,WireTypes.DSET);out.writeInt(items.size());for(var item:items)item(out,knight,owner.worldId(),item);
+        type(out,WireTypes.DSET);out.writeInt(items.size());for(var item:items)this.items.item(out,knight,owner.worldId(),item);
     }
 
     private static List<Long> tradeIds(TradeView view){var ids=new ArrayList<Long>();for(var item:view.firstItems())ids.add(item.id());for(var item:view.secondItems())ids.add(item.id());return ids;}

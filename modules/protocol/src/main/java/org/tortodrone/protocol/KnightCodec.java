@@ -54,7 +54,8 @@ import org.tortodrone.core.party.PartyView;
 
 /** Knight-owned downstream frames; shares the connection symbol tables. */
 public final class KnightCodec extends WireWriter {
-    public KnightCodec(WireContext context, ItemCatalog catalog){super(context,catalog);}
+    private final ItemWire items;
+    public KnightCodec(WireContext context, ItemCatalog catalog){super(context,catalog);items=new ItemWire(context,catalog);}
     public byte[] rosterChanged(int clientOid, List<org.tortodrone.core.character.RosterEntry> knights) throws IOException {
         return frame(out -> {
             type(out, PREFIX + "EventNotification"); out.writeShort(-1);
@@ -86,7 +87,7 @@ public final class KnightCodec extends WireWriter {
                 for(String accessory:accessories)value(out,new StarterCatalog.Model(accessory+", "+knight.costume(),Map.of()));
             } else {
                 out.writeBoolean(false);out.writeBoolean(true);out.writeInt(equipped.size());
-                for(var entry:equipped.entrySet()){value(out,entry.getKey());item(out,knight,profile.worldId(),entry.getValue());}
+                for(var entry:equipped.entrySet()){value(out,entry.getKey());items.item(out,knight,profile.worldId(),entry.getValue());}
                 out.writeBoolean(false);
             }
             var sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);if(sprite==null)out.writeShort(0);else sprite(out,profile,sprite);emptyDSet(out);
@@ -107,9 +108,9 @@ public final class KnightCodec extends WireWriter {
             attribute(out,oid,"eye",o -> { type(o,WireTypes.EYE_TYPE);o.writeByte(knight.eye()); });
             attribute(out,oid,"height",o -> { type(o,WireTypes.KNIGHT_HEIGHT);o.writeByte(knight.height()); });
             attribute(out,oid,"bagId",o -> value(o,profile.worldId()));
-            attribute(out,oid,"items",o -> items(o,knight,profile));
+            attribute(out,oid,"items",o -> items.items(o,knight,profile));
             attribute(out,oid,"equipment",o -> longs(o,profile.equipment()));
-            attribute(out,oid,"loadouts",o -> currentLoadout(o,profile));
+            attribute(out,oid,"loadouts",o -> items.currentLoadout(o,profile));
             attribute(out,oid,"quickbar",o -> longs(o,new long[4]));
             attribute(out,oid,"weaponSlots",o -> value(o,SlotUpgrades.weapons(profile)));
             attribute(out,oid,"trinketSlots",o -> value(o,SlotUpgrades.trinkets(profile)));
@@ -250,13 +251,13 @@ public final class KnightCodec extends WireWriter {
             for(var item:removed)entryRemoved(out,oid,"items",item.id());
             for(var item:changed) {
                 type(out,"com.threerings.presents.dobj."+(old.containsKey(item.id())?"EntryUpdatedEvent":"EntryAddedEvent"));
-                out.writeInt(oid);string(out,"items");item(out,knight,after.worldId(),item);
+                out.writeInt(oid);string(out,"items");items.item(out,knight,after.worldId(),item);
             }
             for(int slot:slots) {
                 type(out,"com.threerings.presents.dobj.ElementUpdatedEvent");out.writeInt(oid);string(out,"equipment");
                 value(out,equipment[slot]);out.writeInt(slot);
             }
-            if(!slots.isEmpty())loadoutUpdated(out,oid,after);
+            if(!slots.isEmpty())items.loadoutUpdated(out,oid,after);
         });
     }
 
@@ -288,7 +289,7 @@ public final class KnightCodec extends WireWriter {
     }
 
     public byte[] loadouts(int oid,WorldProfile profile)throws IOException {
-        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"loadouts");currentLoadout(out,profile);});
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"loadouts");items.currentLoadout(out,profile);});
     }
 
     public byte[] loadoutChanges(int oid,WorldProfile before,WorldProfile after)throws IOException {
@@ -299,9 +300,9 @@ public final class KnightCodec extends WireWriter {
             int count=1+(int)old.keySet().stream().filter(k->!current.containsKey(k)).count()
                 +(int)current.values().stream().filter(l->!l.equals(old.get(l.name()))).count();
             out.writeInt(count);
-            loadoutUpdated(out,oid,after);
+            items.loadoutUpdated(out,oid,after);
             for(String key:old.keySet())if(!current.containsKey(key))entryRemoved(out,oid,"loadouts",key.toLowerCase(java.util.Locale.ROOT));
-            for(var l:current.values())if(!l.equals(old.get(l.name()))){event(out,old.containsKey(l.name())?"EntryUpdatedEvent":"EntryAddedEvent",oid);string(out,"loadouts");loadout(out,l,after);}
+            for(var l:current.values())if(!l.equals(old.get(l.name()))){event(out,old.containsKey(l.name())?"EntryUpdatedEvent":"EntryAddedEvent",oid);string(out,"loadouts");items.loadout(out,l,after);}
         });
     }
 
