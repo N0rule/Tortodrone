@@ -70,7 +70,7 @@ public final class MailCampaignStore {
                     campaigns.add(new Campaign(r.getLong("id"), r.getLong("created"), r.getLong("updated"),
                         r.getLong("starts"), r.getLong("ends"), r.getBoolean("enabled"), r.getInt("sender"),
                         r.getString("sender_label"), r.getString("subject"), r.getString("body"),
-                        r.getInt("crowns"), r.getInt("energy"), decodeGifts(r.getString("gifts")),
+                        r.getInt("crowns"), r.getInt("energy"), MailCampaignRules.decodeGifts(r.getString("gifts")),
                         delivered.getOrDefault(r.getLong("id"), 0)));
                 }
             }
@@ -82,13 +82,13 @@ public final class MailCampaignStore {
     public Campaign save(long id, long revision, long starts, long ends, int sender,
             String senderLabel, String subject, String body, int crowns, int energy, List<Gift> gifts)
             throws IOException {
-        String cleanSubject = validateText(subject, MAX_SUBJECT, false, "Subject");
-        String cleanBody = validateText(body, MAX_BODY, true, "Body");
-        validateWindow(starts, ends);
+        String cleanSubject = MailCampaignRules.validateText(subject, MAX_SUBJECT, false, "Subject");
+        String cleanBody = MailCampaignRules.validateText(body, MAX_BODY, true, "Body");
+        MailCampaignRules.validateWindow(starts, ends);
         if (!SENDERS.contains(sender)) throw new IOException("Choose a supported sender");
-        String cleanSender = validateSenderLabel(senderLabel);
+        String cleanSender = MailCampaignRules.validateSenderLabel(senderLabel);
         if (crowns < 0 || energy < 0) throw new IOException("Crowns and energy cannot be negative");
-        var merged = normalizeGifts(gifts);
+        var merged = MailCampaignRules.normalizeGifts(items,gifts);
         return database.write(c -> {
             long now = System.currentTimeMillis();
             if (id == 0) {
@@ -97,7 +97,7 @@ public final class MailCampaignStore {
                     s.setLong(1, now); s.setLong(2, now); s.setLong(3, starts); s.setLong(4, ends);
                     s.setInt(5, sender); s.setString(6, cleanSender); s.setString(7, cleanSubject);
                     s.setString(8, cleanBody); s.setInt(9, crowns); s.setInt(10, energy);
-                    s.setString(11, encodeGifts(merged));
+                    s.setString(11, MailCampaignRules.encodeGifts(merged));
                     try (var r = s.executeQuery()) {
                         r.next();
                         return find(c, r.getLong(1));
@@ -107,7 +107,7 @@ public final class MailCampaignStore {
             try (var s = c.prepareStatement("UPDATE mail_campaigns SET updated=?,starts=?,ends=?,sender=?,sender_label=?,subject=?,body=?,crowns=?,energy=?,gifts=? WHERE id=? AND updated=? AND enabled=1")) {
                 s.setLong(1, now); s.setLong(2, starts); s.setLong(3, ends); s.setInt(4, sender);
                 s.setString(5, cleanSender); s.setString(6, cleanSubject); s.setString(7, cleanBody);
-                s.setInt(8, crowns); s.setInt(9, energy); s.setString(10, encodeGifts(merged));
+                s.setInt(8, crowns); s.setInt(9, energy); s.setString(10, MailCampaignRules.encodeGifts(merged));
                 s.setLong(11, id); s.setLong(12, revision);
                 if (s.executeUpdate() != 1) throw new IOException("This mailing changed or was cancelled; reopen it");
             }
@@ -149,7 +149,7 @@ public final class MailCampaignStore {
                     active.add(new Campaign(r.getLong("id"), r.getLong("created"), r.getLong("updated"),
                         r.getLong("starts"), r.getLong("ends"), true, r.getInt("sender"),
                         r.getString("sender_label"), r.getString("subject"), r.getString("body"),
-                        r.getInt("crowns"), r.getInt("energy"), decodeGifts(r.getString("gifts")), 0));
+                        r.getInt("crowns"), r.getInt("energy"), MailCampaignRules.decodeGifts(r.getString("gifts")), 0));
                 }
             }
         }
@@ -187,14 +187,14 @@ public final class MailCampaignStore {
     public Welcome saveWelcome(boolean enabled, int sender, String senderLabel, String subject,
             String body, int crowns, int energy, List<Gift> gifts) throws IOException {
         if (!SENDERS.contains(sender)) throw new IOException("Choose a supported sender");
-        String cleanSender = validateSenderLabel(senderLabel);
+        String cleanSender = MailCampaignRules.validateSenderLabel(senderLabel);
         if (crowns < 0 || energy < 0) throw new IOException("Crowns and energy cannot be negative");
-        var merged = normalizeGifts(gifts);
+        var merged = MailCampaignRules.normalizeGifts(items,gifts);
         // A knight created during an earlier enabled period can still receive the letter
         // after it is switched off, so keep usable text once it has ever been enabled.
         boolean textRequired = enabled || welcome().enabledAt() > 0;
-        String cleanSubject = textRequired ? validateText(subject, MAX_SUBJECT, false, "Subject") : nullToEmpty(subject).strip();
-        String cleanBody = textRequired ? validateText(body, MAX_BODY, true, "Body") : nullToEmpty(body).strip();
+        String cleanSubject = textRequired ? MailCampaignRules.validateText(subject, MAX_SUBJECT, false, "Subject") : nullToEmpty(subject).strip();
+        String cleanBody = textRequired ? MailCampaignRules.validateText(body, MAX_BODY, true, "Body") : nullToEmpty(body).strip();
         if (cleanSubject.length() > MAX_SUBJECT || cleanBody.length() > MAX_BODY)
             throw new IOException("Welcome mail is too long");
         return database.write(c -> {
@@ -206,7 +206,7 @@ public final class MailCampaignStore {
                 s.setBoolean(1, enabled); s.setLong(2, enabledAt); s.setLong(3, disabledAt);
                 s.setInt(4, sender); s.setString(5, cleanSender); s.setString(6, cleanSubject);
                 s.setString(7, cleanBody); s.setInt(8, crowns); s.setInt(9, energy);
-                s.setString(10, encodeGifts(merged)); s.setLong(11, now);
+                s.setString(10, MailCampaignRules.encodeGifts(merged)); s.setLong(11, now);
                 s.executeUpdate();
             }
             return readWelcome(c);
@@ -216,12 +216,12 @@ public final class MailCampaignStore {
     /** One-off staff mail to a single knight, online or offline; the inbox row is the delivery. */
     public long sendTo(int world, int sender, String senderLabel, String subject, String body,
             int crowns, int energy, List<Gift> gifts) throws IOException {
-        String cleanSubject = validateText(subject, MAX_SUBJECT, false, "Subject");
-        String cleanBody = validateText(body, MAX_BODY, true, "Body");
+        String cleanSubject = MailCampaignRules.validateText(subject, MAX_SUBJECT, false, "Subject");
+        String cleanBody = MailCampaignRules.validateText(body, MAX_BODY, true, "Body");
         if (!SENDERS.contains(sender)) throw new IOException("Choose a supported sender");
-        String cleanSender = validateSenderLabel(senderLabel);
+        String cleanSender = MailCampaignRules.validateSenderLabel(senderLabel);
         if (crowns < 0 || energy < 0) throw new IOException("Crowns and energy cannot be negative");
-        var merged = normalizeGifts(gifts);
+        var merged = MailCampaignRules.normalizeGifts(items,gifts);
         return database.write(c -> {
             try (var s = c.prepareStatement("SELECT 1 FROM world_characters WHERE world_id=?")) {
                 s.setInt(1, world);
@@ -286,7 +286,7 @@ public final class MailCampaignStore {
             return new Welcome(r.getBoolean("enabled"), r.getLong("enabled_at"),
                 r.getLong("disabled_at"), r.getInt("sender"), r.getString("sender_label"),
                 r.getString("subject"), r.getString("body"), r.getInt("crowns"), r.getInt("energy"),
-                decodeGifts(r.getString("gifts")), r.getLong("updated"));
+                MailCampaignRules.decodeGifts(r.getString("gifts")), r.getLong("updated"));
         }
     }
 
@@ -337,81 +337,9 @@ public final class MailCampaignStore {
                 return new Campaign(r.getLong("id"), r.getLong("created"), r.getLong("updated"),
                     r.getLong("starts"), r.getLong("ends"), r.getBoolean("enabled"), r.getInt("sender"),
                     r.getString("sender_label"), r.getString("subject"), r.getString("body"),
-                    r.getInt("crowns"), r.getInt("energy"), decodeGifts(r.getString("gifts")), delivered);
+                    r.getInt("crowns"), r.getInt("energy"), MailCampaignRules.decodeGifts(r.getString("gifts")), delivered);
             }
         }
     }
 
-    private static void validateWindow(long starts, long ends) throws IOException {
-        if (starts < 0 || ends < 0) throw new IOException("Choose a valid delivery window");
-        if (ends <= starts) throw new IOException("The mailing must end after it starts");
-        if (ends - starts > 10L * 366 * 86_400_000L) throw new IOException("The delivery window is too long");
-    }
-
-    private static String validateSenderLabel(String value) throws IOException {
-        if (value == null || value.isBlank()) return null;
-        if (value.startsWith(" ") || value.chars().anyMatch(Character::isISOControl))
-            throw new IOException("Sender name contains unsupported characters");
-        String label = value.strip();
-        if (label.length() > MAX_SENDER_LABEL) throw new IOException("Sender name must be at most " + MAX_SENDER_LABEL + " characters");
-        return label;
-    }
-
-    private static String validateText(String value, int limit, boolean multiline, String label) throws IOException {
-        if (value == null) throw new IOException(label + " is required");
-        String text = value.strip();
-        if (text.isEmpty()) throw new IOException(label + " is required");
-        if (text.length() > limit) throw new IOException(label + " must be at most " + limit + " characters");
-        for (int index = 0; index < text.length(); index++) {
-            char ch = text.charAt(index);
-            if (ch == '\n' || multiline && ch == '\t') continue;
-            if (Character.isISOControl(ch)) throw new IOException(label + " contains unsupported control characters");
-        }
-        return text;
-    }
-
-    /** Merges identical gifts and enforces the client's fourteen-unit attachment budget. */
-    private List<Gift> normalizeGifts(List<Gift> gifts) throws IOException {
-        if (gifts == null || gifts.size() > MAX_UNITS) throw new IOException("Add at most " + MAX_UNITS + " gift stacks");
-        var merged = new LinkedHashMap<String, Gift>();
-        int units = 0;
-        for (var gift : gifts) {
-            if (gift == null || gift.config() == null || gift.config().isBlank()) throw new IOException("Choose a gift item");
-            if (gift.count() < 1 || gift.count() > 999) throw new IOException("Gift quantities must be between 1 and 999");
-            var entry = items.find(gift.config());
-            if (entry == null || !entry.grantable()) throw new IOException("Gift is not grantable: " + gift.config());
-            units += gift.count();
-            if (units > MAX_UNITS) throw new IOException("A mailing can carry at most " + MAX_UNITS + " item units");
-            String key = gift.config() + "\u0000" + gift.bound();
-            var prior = merged.get(key);
-            merged.put(key, prior == null ? gift
-                : new Gift(prior.config(), prior.count() + gift.count(), prior.bound()));
-        }
-        return List.copyOf(merged.values());
-    }
-
-    private static String encodeGifts(List<Gift> gifts) throws IOException {
-        var rows = new ArrayList<Map<String, Object>>(gifts.size());
-        for (var gift : gifts) {
-            rows.add(Map.of("config", gift.config(), "count", gift.count(), "bound", gift.bound()));
-        }
-        return Json.stringify(rows);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static List<Gift> decodeGifts(String json) throws IOException {
-        if (json == null || json.isBlank()) return List.of();
-        try {
-            var rows = (List<Object>) Json.parse(json);
-            var gifts = new ArrayList<Gift>(rows.size());
-            for (var row : rows) {
-                var map = (Map<String, Object>) row;
-                gifts.add(new Gift((String) map.get("config"), ((Number) map.get("count")).intValue(),
-                    Boolean.TRUE.equals(map.get("bound"))));
-            }
-            return List.copyOf(gifts);
-        } catch (RuntimeException bad) {
-            throw new IOException("Invalid stored mail gifts", bad);
-        }
-    }
 }
