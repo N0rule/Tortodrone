@@ -54,7 +54,7 @@ public final class LoadBenchmark {
         System.out.println("Isolated benchmark: "+home+"; workload="+(town?"town movement":"authenticated sessions")+"; seconds="+seconds);
         Thread hook=new Thread(LoadBenchmark::stop,"BenchmarkCleanup");Runtime.getRuntime().addShutdownHook(hook);
         try {
-            TestDeployment.copyServer(Path.of(System.getProperty("tortodrone.serverJar","build/tortodrone.jar")),home.resolve("tortodrone.jar"));
+            TestDeployment.copyServer(Path.of(System.getProperty("tortodrone.serverJar","dist/tortodrone.jar")),home.resolve("tortodrone.jar"));
             Path manifest=home.resolve("content/maps/town/haven/map.yml");
             var settings=org.tortodrone.core.Yaml.read(manifest);settings.put("instances",instances);Files.delete(manifest);org.tortodrone.core.Yaml.write(manifest,settings);
             Path data=home.resolve("data");int maximum=Arrays.stream(sizes).max().orElseThrow();

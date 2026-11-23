@@ -48,8 +48,8 @@ data/                        private runtime state, keys and logs; never in Git
 ```
 
 The checkout and portable deployment use the same content/configuration layout.
-`./gradlew build` prepares `build/content`, `build/config` and
-`build/plugins` beside the single `tortodrone.jar`. Ordinary builds are offline once
+`./gradlew build` prepares `dist/content`, `dist/config` and
+`dist/plugins` beside the single `tortodrone.jar`. Ordinary builds are offline once
 Gradle dependencies are cached and never require a game installation or capture.
 
 Seventeen maps ship in total. The shared non-mission maps are `haven` (1), `bazaar` (2),
@@ -93,7 +93,7 @@ belong exclusively to SQLite; no Depot YAML or empty economy file is shipped.
 Validate without starting a listener or opening SQLite/keys:
 
 ```sh
-java -cp build/tortodrone.jar org.tortodrone.resources.ContentManager /deployment
+java -cp dist/tortodrone.jar org.tortodrone.resources.ContentManager /deployment
 ```
 
 All YAML is data-only, with bounded sizes/depth, duplicate-key rejection and field
@@ -435,7 +435,7 @@ cannot safely describe those graphs. No decorative damage control or multiplier
 is accepted. Editing timing changes the existing action/effect schedule; it does
 not claim to replace every native animation or implement missing game logic.
 Regenerate a plain `fires.json` with `scripts/build/StockTools.java fires`, review it,
-then run `java -cp build/tortodrone.jar scripts/build/StockTools.java fire-compact
+then run `java -cp dist/tortodrone.jar scripts/build/StockTools.java fire-compact
 plain.json content/_internal/fires.json.gz`; the same command compacts
 `pet-fires.json`. The loader accepts both forms, but only compressed graphs are
 committed.
@@ -913,7 +913,7 @@ For a source-checkout preflight:
 
 ```sh
 ./gradlew build
-java -cp build/tortodrone.jar scripts/build/CheckOpeningDeployment.java build
+java -cp dist/tortodrone.jar scripts/build/CheckOpeningDeployment.java dist
 ```
 
 The check must print `PASS: verified opening content`, scene 398 at entrance
@@ -924,7 +924,7 @@ preparation and require a separate validated candidate, not automatic replacemen
 
 For the manual playthrough, use a disposable test account in your normal server:
 
-1. Start `java -jar build/tortodrone.jar --nogui` (or use the already running
+1. Start `java -jar dist/tortodrone.jar --nogui` (or use the already running
    normal server; do not launch another on its ports).
 2. In the **server console**, run `account create CrashTester` and follow its
    password prompt. A GM role is not required for this test.
@@ -956,7 +956,7 @@ and stock-reader harnesses cannot compile against renamed installed-client metho
 so the direct-Haven route has **not** received graphical acceptance. Giant
 targeting is capture-calibrated, and companion/parity limits remain documented
 as implementation limits. Record the first failure, screenshot/client error if available,
-and server logs under `build/data/logs/`. Avoid repeated graphical runs for
+and server logs under `dist/data/logs/`. Avoid repeated graphical runs for
 unrelated changes.
 
 ### Import procedure
@@ -974,7 +974,7 @@ with supported actor/collision extraction and writes only disposable staging
 files. It then runs the packaged installer:
 
 ```sh
-java -cp build/tortodrone.jar org.tortodrone.resources.MapImport \
+java -cp dist/tortodrone.jar org.tortodrone.resources.MapImport \
   /prepared-native-map /deployment map_name /path/to/read-only-game
 ```
 
@@ -1419,7 +1419,7 @@ From a separate read-only installation, with a freshly built server JAR:
 
 ```sh
 java --enable-native-access=ALL-UNNAMED \
-  -cp 'build/tortodrone.jar:/path/to/Spiral Knights/code/*' \
+  -cp 'dist/tortodrone.jar:/path/to/Spiral Knights/code/*' \
   scripts/compat/BoxCompatibility.java '/path/to/Spiral Knights'
 java --enable-native-access=ALL-UNNAMED \
   -Dtortodrone.deployment=/tmp/tortodrone-check \

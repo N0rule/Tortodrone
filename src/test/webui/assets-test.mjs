@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, realpath } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve, sep } from 'node:path';
-const root = await realpath(process.argv[2] || 'build/webui');
+const root = await realpath(process.argv[2] || 'dist/webui');
 const game = resolve(root, 'assets/game');
 const manifest = JSON.parse(await readFile(resolve(game, 'manifest.json'), 'utf8'));
 const symbols = [

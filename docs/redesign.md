@@ -24,7 +24,7 @@ marker keeps a pre-`0.42.0` database from being mistaken for the new one.
 
 ## Fixed constraints
 
-1. `./gradlew build` produces exactly one deployable archive: `build/tortodrone.jar`,
+1. `./gradlew build` produces exactly one deployable archive: `dist/tortodrone.jar`,
    beside `config/`, `content/`, `webui/` and `plugins/`.
 2. Runtime state stays in `data/` beside the JAR.
 3. Hosting stays headless. Administration stays on the local console and the
@@ -92,11 +92,11 @@ Build assertion to keep:
 
 ```sh
 ./gradlew clean build
-find build -maxdepth 1 -name '*.jar'
-# exactly one: build/tortodrone.jar
+find dist -maxdepth 1 -name '*.jar'
+# exactly one: dist/tortodrone.jar
 ```
 
-Gradle scratch output stays under `.build/`; it is not a deployment artifact.
+Gradle scratch output stays under `build/`; `clean` never touches the deployment's runtime state.
 
 ## Concurrency and runtime
 
@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,207,776 bytes in the 0.42.4 build); the
+- `dist/tortodrone.jar` is about 16 MB (16,207,776 bytes in the 0.42.4 build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -752,7 +752,7 @@ covers trigger and sequence preservation.
 
 | Phase | Work | Exit gate |
 | --- | --- | --- |
-| 0. Baseline | Record the `sha256` of `content/` and of `build/tortodrone.jar`, the JAR size, and tick/DB/queue baselines using existing tools; write the current thread/lock inventory; list the required wire evidence with its evidence source; add synthetic fixture scaffolding | `build` and selected tests green; the baseline file and evidence list exist and are committed |
+| 0. Baseline | Record the `sha256` of `content/` and of `dist/tortodrone.jar`, the JAR size, and tick/DB/queue baselines using existing tools; write the current thread/lock inventory; list the required wire evidence with its evidence source; add synthetic fixture scaffolding | `build` and selected tests green; the baseline file and evidence list exist and are committed |
 | 1. Content v2 | Mission folders, `shared/missions/`, `format.txt`, recursive v2 reader, converter, per-file manifest, `--check` and atomic writes on all four importers; create reserved `systems/` folders and `package-info.java` skeletons | v1/v2 mission domains identical and `_internal` equal excluding the manifest; converted deployment boots; mixed/unknown trees refused; reserved paths exist |
 | 2. Mission runtime | Wire evidence for MissionObject/objectives, mission bar, gate map, party config, reward wheel and lobby; objective model and `objectives.yml`; room progress; exchange draw; settle-once; add a `mission` graphical scenario | `shadow_beast` runs floor-by-floor with live objectives, bar and room progress; the four other bundled routes are either playable or recorded as blocked with the exact missing wedge/floor; no invented layouts |
 | 3. Cycle breaking | Move shared models, settings/news types and `WireTypes` to `:core`; replace protocol→world/storage/town with view contracts; remove storage→protocol, resources→world, resources/world→config/news, world→protocol, server↔web | No forbidden **package** edge under the Phase 3 rules, checked with `jdeps`/bytecode; no behaviour change. Gradle enforcement is Phase 6 |

@@ -8,7 +8,7 @@ import org.tortodrone.core.character.Confetti;
  * Re-labels the administrator-only item categories to the vanilla Arsenal tabs.
  * Only the YAML category/subcategory fields change; native bindings and names are read-only.
  *
- * Usage: java -cp build/tortodrone.jar scripts/build/RelabelItemCategories.java [phase1|bases] [--content DIR]
+ * Usage: java -cp dist/tortodrone.jar scripts/build/RelabelItemCategories.java [phase1|bases] [--content DIR]
  */
 public final class RelabelItemCategories {
     private static final List<String> FAMILIES=List.of("weapons","gear","costumes","accessories","materials","consumables","misc");

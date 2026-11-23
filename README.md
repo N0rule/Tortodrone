@@ -200,7 +200,7 @@ The public key is safe to share with players. The matching private key stays in 
 
 ## Configuration
 
-Settings live in `config/server.yml` in a release ZIP, or `build/config/server.yml` in a source build. Stop the server before editing; restart to apply changes.
+Settings live in `config/server.yml` in a release ZIP, or `dist/config/server.yml` in a source build. Stop the server before editing; restart to apply changes.
 
 A typical configuration:
 
@@ -286,10 +286,10 @@ cd Tortodrone
 
 On Windows, use `.\gradlew.bat build`. The first build downloads Gradle and the project dependencies. Later builds can use `--offline` once the cache is populated.
 
-The build produces one deployment under `build/`:
+The build produces one deployment under `dist/`:
 
 ```text
-build/
+dist/
   tortodrone.jar
   config/          server and combat settings
   content/         maps, items, and town definitions
@@ -301,17 +301,17 @@ build/
 Start it with:
 
 ```sh
-java -jar build/tortodrone.jar
+java -jar dist/tortodrone.jar
 ```
 
-Then create an account and connect the client as described in [Quick start](#quick-start). For a source build, the public key is at `build/data/keys/public.txt`. A release ZIP uses the same layout, with these files directly beside the JAR instead of under `build/`.
+Then create an account and connect the client as described in [Quick start](#quick-start). For a source build, the public key is at `dist/data/keys/public.txt`. A release ZIP uses the same layout, with these files directly beside the JAR instead of under `dist/`.
 
 ### Verify bundled opening content (optional)
 
 The build includes Crash Site **398** and initial Rescue Camp **217** with their original layouts, collision, actors, and conversations. To check the deployment before starting:
 
 ```sh
-java -cp build/tortodrone.jar scripts/build/CheckOpeningDeployment.java build
+java -cp dist/tortodrone.jar scripts/build/CheckOpeningDeployment.java dist
 ```
 
 This validates the pinned scenes, entrances, and route prerequisites. It does **not** prove a full gameplay playthrough; see the [Crash Site playtest](docs/content.md#local-crash-site-playtest) for manual acceptance.

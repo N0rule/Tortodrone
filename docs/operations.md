@@ -4,7 +4,7 @@ This is the operator reference for the **current implementation**, not a promise
 
 ## Deployment and lifecycle
 
-Install JDK 25 and run `java -jar tortodrone.jar`. Create player accounts with `account create Alice` in its console or through the WebUI. Deploy the single JAR beside `config/`, `content/`, `plugins/` and `webui/`. Server settings live in `config/server.yml`. Persistent state stays in **`data/` beside the JAR**, regardless of the current working directory. `./gradlew build` produces `build/tortodrone.jar` and `build/{config,content,plugins,webui}/`; there is no separate admin application.
+Install JDK 25 and run `java -jar tortodrone.jar`. Create player accounts with `account create Alice` in its console or through the WebUI. Deploy the single JAR beside `config/`, `content/`, `plugins/` and `webui/`. Server settings live in `config/server.yml`. Persistent state stays in **`data/` beside the JAR**, regardless of the current working directory. `./gradlew build` produces `dist/tortodrone.jar` and `dist/{config,content,plugins,webui}/` (override with `-PdeploymentOutput` or `TORTODRONE_DEPLOYMENT`); there is no separate admin application.
 
 - Hosting is always headless; `--nogui` remains accepted and `--gui` is rejected.
 - The parsed content catalogue stays resident, so the JVM may grow and collect a large heap. If players report brief rubber-banding while the host is otherwise idle, log GC pauses with `-Xlog:gc`; a multi-hundred-millisecond collection appears as one scene tick tail. Give the JVM a low-pause collector when CPU and memory allow, for example `java -XX:+UseZGC -jar tortodrone.jar`, or cap G1 pauses with `-XX:MaxGCPauseMillis=50`. G1 mixed pauses measured 80–300 ms during a tutorial run.

@@ -5,6 +5,10 @@ import java.util.concurrent.TimeUnit;
 
 /** Read-only installed-client exporters/checks, with disposable home/preferences and Java 25 compilation. */
 public final class StockTools {
+    /** Deployment JAR; TORTODRONE_DEPLOYMENT overrides the dist/ default. */
+    private static Path deploymentJar() {
+        return Path.of(System.getenv().getOrDefault("TORTODRONE_DEPLOYMENT", "dist"), "tortodrone.jar").toAbsolutePath();
+    }
     public static void main(String[] args) throws Exception {
         if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/build/StockTools.java previews|items|weapons|fires|fire-compact|equipment|item-use|scene|monster-roster|monster-catalog|haven|town|town-check|recipes|craft-check game-directory [arguments]");
         Path project = Path.of("").toAbsolutePath();
@@ -125,14 +129,15 @@ public final class StockTools {
                 if (args.length != 2) throw new IllegalArgumentException("previews expects only a game directory");
                 fixture = "PreviewCompatibility";
                 fixtureArgs.add(project.resolve("src/main/resources/starter-models.txt").toString());
-                if (!Files.isRegularFile(project.resolve("build/tortodrone.jar")))
+                if (!Files.isRegularFile(deploymentJar()))
                     throw new IOException("Build the server JAR before checking previews: ./gradlew buildServer");
             }
             case "items" -> {
                 if (args.length > 3) throw new IllegalArgumentException("items expects game directory [fresh-output-directory]");
                 fixture = "ItemCatalogExport";
-                fixtureArgs.add(args.length == 3 ? Path.of(args[2]).toAbsolutePath().toString() : project.resolve("build/exports/items").toString());
-                if(!Files.isRegularFile(project.resolve("build/tortodrone.jar")))throw new IOException("Build the server JAR before exporting items: ./gradlew buildServer");
+                fixtureArgs.add(args.length == 3 ? Path.of(args[2]).toAbsolutePath().toString()
+                    : deploymentJar().getParent().resolve("exports/items").toString());
+                if(!Files.isRegularFile(deploymentJar()))throw new IOException("Build the server JAR before exporting items: ./gradlew buildServer");
             }
             case "gear-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("gear-check expects game-directory");fixture="GearProgressionCompatibility";
@@ -269,12 +274,12 @@ public final class StockTools {
         Path scratch = Files.createTempDirectory("tortodrone-stock-tool-");
         try {
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code") + File.separator + "*"
-                + File.pathSeparator + Path.of(System.getProperty("tortodrone.deployment",project.resolve("build").toString())).resolve("tortodrone.jar");
+                + File.pathSeparator + deploymentJar();
             var compile=new ArrayList<>(List.of(executable("javac"), "--release", "25", "-cp", cp, "-d", scratch.toString()));
             for(Path source:sources)compile.add(source.toString());
             run(compile);
             var command = new ArrayList<>(List.of(executable("java"), "--add-opens=java.base/java.lang=ALL-UNNAMED",
-                "--add-opens=java.base/java.util=ALL-UNNAMED", "-Djava.awt.headless=true", "-Dno_unpack_resources=true", "-Dtortodrone.deployment="+System.getProperty("tortodrone.deployment",project.resolve("build").toString()),
+                "--add-opens=java.base/java.util=ALL-UNNAMED", "-Djava.awt.headless=true", "-Dno_unpack_resources=true", "-Dtortodrone.deployment="+System.getProperty("tortodrone.deployment",deploymentJar().getParent().toString()),
                 "-Duser.home=" + scratch.resolve("home"), "-Djava.util.prefs.userRoot=" + scratch.resolve("prefs"),
                 "-Djava.util.prefs.systemRoot=" + scratch.resolve("system-prefs"), "-cp", scratch + File.pathSeparator + cp, fixture));
             command.addAll(fixtureArgs);

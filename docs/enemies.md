@@ -111,8 +111,8 @@ The exporter is read-only against the installed client and refuses an existing o
 directory, so review the output before copying it in:
 
 ```
-java -cp build/tortodrone.jar scripts/build/StockTools.java monster-roster "/path/to/Spiral Knights" /tmp/monster-roster
-java -cp build/tortodrone.jar scripts/build/StockTools.java monster-catalog "/path/to/Spiral Knights" /tmp/monster-catalog --catalog
+java -cp dist/tortodrone.jar scripts/build/StockTools.java monster-roster "/path/to/Spiral Knights" /tmp/monster-roster
+java -cp dist/tortodrone.jar scripts/build/StockTools.java monster-catalog "/path/to/Spiral Knights" /tmp/monster-catalog --catalog
 ```
 
 Build the server JAR first (`./gradlew buildServer`). The report writes

@@ -14,8 +14,10 @@ AGENTS.md
 *.log
 /logs/
 
-# Build output and editors (JARs are not globally ignored)
+# Build output and editors (JARs are not globally ignored). Gradle uses build/; the runnable
+# deployment (JAR, prepared content, WebUI and runtime data/) uses dist/.
 build/
+dist/
 .build/
 .gradle/
 __pycache__/

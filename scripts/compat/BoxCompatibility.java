@@ -69,7 +69,7 @@ public final class BoxCompatibility {
         Harness.append(bytes,codec.invocationFailure(10,(short)10,"m.inventory_full"));
         var weapon=(StarterCatalog.Model)catalog.require("untimely_scythe").arguments(256).get("Weapon");
         Harness.append(bytes,codec.townResult(10,(short)11,weapon,after));
-        org.tortodrone.world.SceneRegistry.install(ContentManager.load(Path.of(".")).createScenes());
+        org.tortodrone.world.SceneRegistry.install(org.tortodrone.world.SceneRegistry.create(ContentManager.load(Path.of("."))));
         var active=inactive.withExpiration(expiry);
         var activated=new WorldProfile(42,1,1,0,0,3,List.of(item,active,furni,timed),KnightProgress.RECRUIT);
         Harness.append(bytes,codec.selected(10,new Knight(1,"Test-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0),activated));

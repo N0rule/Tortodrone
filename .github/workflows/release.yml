@@ -57,26 +57,26 @@ jobs:
           set -euo pipefail
           version="$(tr -d '\r\n' < VERSION)"
           package="Tortodrone-v$version"
-          mkdir -p dist
+          mkdir -p release
 
-          test -s build/tortodrone.jar
-          test -s build/webui/index.html
-          test -s build/webui/assets/app.js
-          test -s build/webui/assets/api.js
+          test -s dist/tortodrone.jar
+          test -s dist/webui/index.html
+          test -s dist/webui/assets/app.js
+          test -s dist/webui/assets/api.js
           for stylesheet in tokens base layout components pages; do
-            test -s "build/webui/assets/css/$stylesheet.css"
+            test -s "dist/webui/assets/css/$stylesheet.css"
           done
-          test -f build/content/maps/town/haven/map.yml
-          test -f build/content/maps/level/crash_site/native/scene.dat
-          test -f build/content/maps/town/rescue_camp/native/scene.dat
-          java -cp build/tortodrone.jar scripts/build/CheckOpeningDeployment.java build
-          test -f build/content/items/weapons.yml
-          test -d build/config
-          test -d build/plugins
+          test -f dist/content/maps/town/haven/map.yml
+          test -f dist/content/maps/level/crash_site/native/scene.dat
+          test -f dist/content/maps/town/rescue_camp/native/scene.dat
+          java -cp dist/tortodrone.jar scripts/build/CheckOpeningDeployment.java dist
+          test -f dist/content/items/weapons.yml
+          test -d dist/config
+          test -d dist/plugins
 
           # Publish the same clean, layout-checked archive as local portableZip.
-          cp ".build/distributions/$package.zip" "dist/$package.zip"
-          sha256sum "dist/$package.zip"
+          cp "build/distributions/$package.zip" "release/$package.zip"
+          sha256sum "release/$package.zip"
 
       - name: Publish GitHub Release
         shell: bash
@@ -107,7 +107,7 @@ jobs:
           Licensed under PolyForm Noncommercial 1.0.0. Retain the N0rule/Tortodrone attribution notice; see `docs/LICENSE`, `docs/NOTICE` and `docs/provenance.md`.
           NOTES
           gh release create "$GITHUB_REF_NAME" \
-            "dist/Tortodrone-$GITHUB_REF_NAME.zip" \
+            "release/Tortodrone-$GITHUB_REF_NAME.zip" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag --generate-notes --prerelease \
             --notes-file "$RUNNER_TEMP/release-notes.md" \

@@ -9,6 +9,7 @@ import org.tortodrone.core.character.Knight;
 /** Optional stock-reader/network checks. All server state and preferences are disposable. */
 public final class CheckClientWorld {
     private static Path scratch;
+    private static String deployment() { return System.getenv().getOrDefault("TORTODRONE_DEPLOYMENT", "dist"); }
     public static void main(String[] args) throws Exception {
         Path project = Path.of("").toAbsolutePath();
         if (args.length < 1 || args.length > 2 || !Files.isRegularFile(Path.of(args[0], "code/projectx-pcode.jar"))) {
@@ -16,21 +17,21 @@ public final class CheckClientWorld {
         }
         Path game = Path.of(args[0]).toAbsolutePath();
         for (String jar : List.of("tortodrone.jar")) {
-            if (!Files.isRegularFile(project.resolve("build/" + jar))) throw new IOException("Build first with ./gradlew build");
+            if (!Files.isRegularFile(project.resolve(deployment()).resolve(jar))) throw new IOException("Build first with ./gradlew build");
         }
         scratch = Files.createTempDirectory("tortodrone-installed-client-");
         Thread cleanup = new Thread(ClientCheckHarness::stopChildren, "check-cleanup");
         Runtime.getRuntime().addShutdownHook(cleanup);
         try {
-            for (String jar : List.of("tortodrone.jar")) Files.copy(project.resolve("build/" + jar), scratch.resolve(jar));
-            Path maps=project.resolve("build/content");
+            for (String jar : List.of("tortodrone.jar")) Files.copy(project.resolve(deployment()).resolve(jar), scratch.resolve(jar));
+            Path maps=project.resolve(deployment()).resolve("content");
             try(var paths=Files.walk(maps)) {
                 for(var path:paths.toList()) {
                     Path target=scratch.resolve("content").resolve(maps.relativize(path));
                     if(Files.isDirectory(path))Files.createDirectories(target);else Files.copy(path,target);
                 }
             }
-            ClientCheckHarness.copyTree(project.resolve("build/config"),scratch.resolve("config"),"config");Files.deleteIfExists(scratch.resolve("config/server.yml"));
+            ClientCheckHarness.copyTree(project.resolve(deployment()).resolve("config"),scratch.resolve("config"),"config");Files.deleteIfExists(scratch.resolve("config/server.yml"));
             Files.createDirectories(scratch.resolve("home/prefs"));
             Files.createDirectories(scratch.resolve("data"));
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code") + File.separator + "*" + File.pathSeparator + scratch.resolve("tortodrone.jar");
@@ -124,7 +125,7 @@ public final class CheckClientWorld {
             catch(Exception failure){System.err.println(ClientCheckHarness.tail(serverLog));throw failure;}
             server.destroy();
             if (!server.waitFor(5, TimeUnit.SECONDS)) throw new IOException("Temporary server did not stop");
-            Path prepared=args.length==2?Path.of(args[1]).toAbsolutePath():project.resolve("build/content/maps");
+            Path prepared=args.length==2?Path.of(args[1]).toAbsolutePath():project.resolve(deployment()).resolve("content/maps");
             if(args.length==2||Files.isDirectory(prepared.resolve("training/advanced_training"))
                     &&Files.isDirectory(prepared.resolve("level/laboratory"))&&Files.isDirectory(prepared.resolve("level/hall_of_heroes"))) {
                 if(args.length==2) {

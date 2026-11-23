@@ -16,6 +16,9 @@ public final class CheckCombatRendering {
     private static final List<Process> CHILDREN = new ArrayList<>();
     private static Path scratch;
 
+    private static Path deployment() {
+        return Path.of(System.getenv().getOrDefault("TORTODRONE_DEPLOYMENT", "dist")).toAbsolutePath();
+    }
     public static void main(String[] args) throws Exception {
         if (args.length < 1) {
             throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--opening-tutorial-only|--tutorial-entry-only|--tutorial-only|--ready-room-only|--ready-room-mail-only|--mail-campaign-only|--ready-room-forge-only|--equipment-groups|--items-only|--arsenal-blink-only|--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--playability-only|--depot-only|--hazards-only|--vortex-shield-only|--multiplayer-only|--multiplayer-world-only|--explore-only --scene=<id>|--mission-only|--manual]");
@@ -58,7 +61,7 @@ public final class CheckCombatRendering {
             !Files.isRegularFile(game.resolve("code/projectx-pcode.jar"))) {
             throw new IOException("Game directory must contain full.dat and code/projectx-pcode.jar");
         }
-        Path deployment=Path.of(System.getProperty("tortodrone.deployment",project.resolve("build").toString()));
+        Path deployment=Path.of(System.getProperty("tortodrone.deployment",deployment().toString()));
         Path jar = deployment.resolve("tortodrone.jar");
         if (!Files.isRegularFile(jar)) throw new IOException("Build first with ./gradlew build");
         Path defaults = deployment.resolve("content");

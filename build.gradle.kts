@@ -13,8 +13,9 @@ plugins {
 version = providers.fileContents(layout.projectDirectory.file("VERSION")).asText.get().trim()
 repositories { mavenCentral() }
 
-// Generated Gradle outputs live in a dedicated root tree; deployment data stays under build/.
-layout.buildDirectory.set(layout.projectDirectory.dir(".build"))
+// Gradle keeps the conventional build/ scratch tree; the runnable deployment (JAR, prepared
+// content, WebUI and its runtime data/) goes to dist/. Override the deployment with
+// -PdeploymentOutput=<path> or TORTODRONE_DEPLOYMENT.
 java { toolchain { languageVersion.set(JavaLanguageVersion.of(25)) } }
 tasks.withType<JavaCompile>().configureEach {
     options.release.set(25)
@@ -70,7 +71,10 @@ tasks.withType<AbstractArchiveTask>().configureEach {
 tasks.jar { enabled = false }
 
 // Allow disposable builds beside an existing deployment, without modifying its runtime state.
-val publicOutput = layout.projectDirectory.dir(providers.gradleProperty("deploymentOutput").getOrElse("build"))
+val publicOutput = layout.projectDirectory.dir(
+    providers.gradleProperty("deploymentOutput")
+        .orElse(providers.environmentVariable("TORTODRONE_DEPLOYMENT"))
+        .getOrElse("dist"))
 fun ShadowJar.executableJar(filename: String, entryPoint: String) {
     archiveFileName.set(filename)
     destinationDirectory.set(publicOutput)
@@ -418,9 +422,6 @@ tasks.clean {
     delete(serverJar.flatMap { it.archiveFile }, publicOutput.file("tortodrone-admin.jar"))
     delete(publicOutput.file("tortodrone.jar.tmp"), publicOutput.file("tortodrone-admin.jar.tmp"))
     // Preserve runtime data, versioned content, dependencies and unknown files.
-    delete(publicOutput.dir(".build"))
-    // Gradle verification reports use this fixed path even with a custom buildDirectory.
-    delete(publicOutput.dir("reports/dependency-verification"))
 }
 tasks.wrapper {
     gradleVersion = "9.5.1"

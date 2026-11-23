@@ -29,7 +29,7 @@ requires Pillow with WebP support. These are not server runtime dependencies.
 For the usual opening-content check:
 
 ```sh
-java -cp build/tortodrone.jar scripts/build/CheckOpeningDeployment.java build
+java -cp dist/tortodrone.jar scripts/build/CheckOpeningDeployment.java dist
 ```
 
 A passing check validates map identity, entrances and route prerequisites. It

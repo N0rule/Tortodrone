@@ -20,16 +20,16 @@ threads), 15 GiB RAM.
 | `content/` files | 485 (all tracked; no content changes) |
 | `content/` bytes | 112,609,511 |
 | `content/` tree SHA-256 | `8f421b751a94917fae7601e2ee61f26dc86ddc0377799bf969d4e8aa659a7737` |
-| `build/tortodrone.jar` bytes | 15,780,467 |
-| `build/tortodrone.jar` SHA-256 | `8e4cc15474749375e7e48e83710f34804caf2c755733cbce9e6ba02b0b14debb` |
-| JARs at `build/` depth 1 | one: `tortodrone.jar` |
+| `dist/tortodrone.jar` bytes | 15,780,467 |
+| `dist/tortodrone.jar` SHA-256 | `8e4cc15474749375e7e48e83710f34804caf2c755733cbce9e6ba02b0b14debb` |
+| JARs at `dist/` depth 1 | one: `tortodrone.jar` |
 
 The tree digest is the SHA-256 of the sorted per-file `sha256sum` listing, with
 paths relative to `content/`:
 
 ```sh
 (cd content && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)
-sha256sum build/tortodrone.jar
+sha256sum dist/tortodrone.jar
 find build -maxdepth 1 -name '*.jar'
 ```
 
@@ -395,7 +395,7 @@ Run only when this baseline must be replaced, not per change:
 ./gradlew benchmarkScenes --args=10000
 ./gradlew benchmark --args="--seconds 20 --clients 16 --session-only"
 (cd content && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)
-sha256sum build/tortodrone.jar
+sha256sum dist/tortodrone.jar
 ```
 
 The town/scene workload is recorded with

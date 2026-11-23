@@ -32,12 +32,15 @@ public final class BuildTools {
             case "maps", "defaults", "content" -> {
                 if (args.length > 2) throw new IllegalArgumentException("Expected at most one map output directory");
                 String command=args[0];
-                Path output = args.length == 2 ? Path.of(args[1]) : project.resolve(command.equals("maps")?"build/content/maps":"build/content");
+                Path output = args.length == 2 ? Path.of(args[1])
+                    : project.resolve(deployment()).resolve(command.equals("maps") ? "content/maps" : "content");
                 prepare(project, output.toAbsolutePath().normalize(), command);
             }
             default -> throw new IllegalArgumentException("Unknown build input command");
         }
     }
+    /** Deployment directory used when a command does not receive an explicit output. */
+    private static String deployment() { return System.getenv().getOrDefault("TORTODRONE_DEPLOYMENT", "dist"); }
     private static Properties properties(Path file) throws IOException {
         var values = new Properties();
         try (var input = Files.newInputStream(file)) { values.load(input); }

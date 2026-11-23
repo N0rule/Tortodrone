@@ -41,14 +41,14 @@ CI runs `testUnit` on pull requests, pushes to `main` and version tags, and also
 
 `build` packages the single server JAR, WebUI and prepared content. Unit and packaged WebUI/console integration tests use that same executable. `checkModuleGraph` runs inside `buildServer` and validates every extracted project's declared edges, including that `org.tortodrone.server` does not reference `org.tortodrone.web` directly; `checkBytecodeDependencies` then runs `jdeps` over the packaged JAR and rejects any package dependency outside the documented module graph, so a fully-qualified reference cannot hide an undeclared edge. Map preparation integration reuses compiled `BuildTools` instead of invoking Java's source compiler for each fixture operation.
 
-To keep an existing deployment untouched, use `-PdeploymentOutput=$HOME/tortodrone-check` with build/test tasks. The JAR, frontend and prepared configuration/content go there, while Gradle compilation stays in `.build/`. Test output redirection does not upgrade an existing `build/content/packs` deployment.
+Deployments default to `dist/`; set `-PdeploymentOutput=<path>` or `TORTODRONE_DEPLOYMENT=<path>` for build/test tasks and the helper tools to keep an existing deployment untouched. The JAR, frontend and prepared configuration/content go there, while Gradle compilation stays in `build/`. Test output redirection does not upgrade an existing deployment.
 
 The bundled `StandaloneTestSuite` also accepts fully-qualified test classes directly. From the repository root (Linux/macOS):
 
 ```sh
 ./gradlew build testClasses
 java --enable-native-access=ALL-UNNAMED \
-  -cp 'build/tortodrone.jar:.build/classes/java/test' \
+  -cp 'dist/tortodrone.jar:build/classes/java/test' \
   org.tortodrone.support.StandaloneTestSuite \
   org.tortodrone.world.SceneCatalogTest \
   org.tortodrone.world.SceneSimulationTest
@@ -58,15 +58,15 @@ Windows PowerShell/CMD (classpath uses `;`):
 
 ```powershell
 .\gradlew.bat build testClasses
-java --enable-native-access=ALL-UNNAMED -cp "build/tortodrone.jar;.build/classes/java/test" org.tortodrone.support.StandaloneTestSuite org.tortodrone.world.SceneCatalogTest org.tortodrone.world.SceneSimulationTest
+java --enable-native-access=ALL-UNNAMED -cp "dist/tortodrone.jar;build/classes/java/test" org.tortodrone.support.StandaloneTestSuite org.tortodrone.world.SceneCatalogTest org.tortodrone.world.SceneSimulationTest
 ```
 
 Replace the example classes with the specific tests for your change; do not run them all by default. This uses the same packaged JAR and compiled test output as the Gradle unit suite. Tests which need arguments or packaged servers have their own named Gradle integration tasks.
 
 
-Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml` pin distribution/dependency integrity. First build needs Gradle/Maven/plugin downloads; cached inputs support `--offline`. `build` and the explicit test tasks **do not** run native stock graphical checks. Unit programs run sequentially in one JVM; packaged integration fixtures use separate processes. Test JVMs set `java.io.tmpdir` to `.build/test-tmp`, so copied content fixtures stay off a small system tmpfs and `clean` reclaims anything a failed program leaves behind. A shared build-service slot serializes regression runs; don't run competing builds in the same checkout.
+Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml` pin distribution/dependency integrity. First build needs Gradle/Maven/plugin downloads; cached inputs support `--offline`. `build` and the explicit test tasks **do not** run native stock graphical checks. Unit programs run sequentially in one JVM; packaged integration fixtures use separate processes. Test JVMs set `java.io.tmpdir` to `build/test-tmp`, so copied content fixtures stay off a small system tmpfs and `clean` reclaims anything a failed program leaves behind. A shared build-service slot serializes regression runs; don't run competing builds in the same checkout.
 
-`runServer` operates on **real `build/data/`** and is not a disposable test. `clean` removes generated JARs/scratch, but **preserves** `build/data/`, `build/content/` and legacy `build/deps/`. If using headless Linux, `env -u DISPLAY ./gradlew build` is possible; it is not graphical acceptance.
+`runServer` operates on **real `dist/data/`** and is not a disposable test. `clean` removes generated JARs/scratch, but **preserves** `dist/data/`, `dist/content/` and legacy `dist/deps/`. If using headless Linux, `env -u DISPLAY ./gradlew build` is possible; it is not graphical acceptance.
 
 ## Test by change type
 
@@ -90,8 +90,8 @@ Useful checked-in Java tools (from repository root with a separate read-only gam
 
 ```sh
 ./gradlew build
-java -cp build/tortodrone.jar scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
-java -cp build/tortodrone.jar scripts/compat/CheckCombatRendering.java "/path/to/Spiral Knights" /tmp/tortodrone-combat-check
+java -cp dist/tortodrone.jar scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
+java -cp dist/tortodrone.jar scripts/compat/CheckCombatRendering.java "/path/to/Spiral Knights" /tmp/tortodrone-combat-check
 java scripts/build/StockTools.java previews "/path/to/Spiral Knights"
 ```
 
@@ -164,7 +164,7 @@ python scripts/OptimizeWebUiAssets.py local/webui-assets local/webui-assets-opti
 ./gradlew build
 ```
 
-The optional optimizer requires Pillow with WebP support. Appending a previous raw pack and its optimized pack reuses unchanged images after checking content hashes, image roles and optimization settings. The stock client's resolver and colorizer supply exact item/Sprite mappings; original HUD navigation/action icons, empty-slot category icons and Sprite skill icons are also exported; images are resized, content-hash deduplicated, and recorded in `manifest.json`. `buildWebui` overlays `local/webui-assets-optimized`, or an explicit `-PwebuiAssets=/prepared/path`, into `build/webui/assets/game/`. Neither the client nor Python is required at runtime or for ordinary builds. The exported `symbols` map includes the native Trojan horse mark, HUD navigation/actions and category glyphs with their material-mask backing removed. SVG tinting makes them inherit cyan, active gold or destructive red from the control, including Battle Sprites and both themes. The complete images and manifest are copied into the deployment: neither the server machine nor the browser needs an installed client or the preparation directory. Copy the entire generated `webui/` beside the JAR. Clean source builds without a prepared pack retain source-owned outline navigation, a horse mark and item/UV fallbacks; client artwork remains outside Git. Prepared client artwork stays under ignored `local/`; do not commit it or redistribute it without the necessary rights. Run `node src/test/webui/assets-test.mjs /path/to/deployment/webui` against a copied deployment to verify all original images, native symbols and content hashes without a client installation. Copy `src/test/webui/icons.js` beside a disposable fixture’s `api.js` and call `run({disposable: true})` for native/fallback loading and theme inheritance; visually inspect both themes. Static modules and image/font MIME types remain confined to the symlink-free asset directory; hashed icons are cacheable, while private APIs remain uncached.
+The optional optimizer requires Pillow with WebP support. Appending a previous raw pack and its optimized pack reuses unchanged images after checking content hashes, image roles and optimization settings. The stock client's resolver and colorizer supply exact item/Sprite mappings; original HUD navigation/action icons, empty-slot category icons and Sprite skill icons are also exported; images are resized, content-hash deduplicated, and recorded in `manifest.json`. `buildWebui` overlays `local/webui-assets-optimized`, or an explicit `-PwebuiAssets=/prepared/path`, into `dist/webui/assets/game/`. Neither the client nor Python is required at runtime or for ordinary builds. The exported `symbols` map includes the native Trojan horse mark, HUD navigation/actions and category glyphs with their material-mask backing removed. SVG tinting makes them inherit cyan, active gold or destructive red from the control, including Battle Sprites and both themes. The complete images and manifest are copied into the deployment: neither the server machine nor the browser needs an installed client or the preparation directory. Copy the entire generated `webui/` beside the JAR. Clean source builds without a prepared pack retain source-owned outline navigation, a horse mark and item/UV fallbacks; client artwork remains outside Git. Prepared client artwork stays under ignored `local/`; do not commit it or redistribute it without the necessary rights. Run `node src/test/webui/assets-test.mjs /path/to/deployment/webui` against a copied deployment to verify all original images, native symbols and content hashes without a client installation. Copy `src/test/webui/icons.js` beside a disposable fixture’s `api.js` and call `run({disposable: true})` for native/fallback loading and theme inheritance; visually inspect both themes. Static modules and image/font MIME types remain confined to the symlink-free asset directory; hashed icons are cacheable, while private APIs remain uncached.
 
 ## Load testing
 
@@ -208,7 +208,7 @@ The graphical harness can also inject reproducible transport lag for spike inves
   lists, common grants) are import structure, not copied definitions. Do not factor
   them into shared bodies without updating all four mission importers, because a
   regeneration would reintroduce the copies.
-- Do not commit installed game assets, third-party material without appropriate rights, private captures, secrets, `data/`, `build/` or `.build/`.
+- Do not commit installed game assets, third-party material without appropriate rights, private captures, secrets, `data/`, `build/` or `dist/`.
 - Review `git status`, `git diff` and `git diff --check`; report **only tests actually run**, with failures and what remains unverified. Avoid repeated runs after passing checks without relevant changes.
 - Bump `VERSION` only for deliberate behavioral releases. Release workflow tags must match `v<VERSION>`; CI tests/builds do not substitute for native graphical verification. See [Operations](operations.md).
 - Third-party runtime/license metadata: `src/main/resources/THIRD-PARTY.md`, `src/main/resources/licenses/`, the `licenses/` release assembly and `gradle/verification-metadata.xml`. Inspect changes to pinned hashes carefully.

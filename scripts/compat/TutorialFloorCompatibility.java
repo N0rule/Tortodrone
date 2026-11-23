@@ -24,7 +24,7 @@ public final class TutorialFloorCompatibility {
     public static void main(String[] args)throws Exception {
         if(args.length!=2)throw new IllegalArgumentException("Usage: TutorialFloorCompatibility GAME DISPOSABLE_DEPLOYMENT_WITH_ORIGINAL_MAPS");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
-        var registry=ContentManager.load(Path.of(args[1])).createScenes();SceneRegistry.install(registry);
+        var registry=SceneRegistry.create(ContentManager.load(Path.of(args[1])));SceneRegistry.install(registry);
         var route=registry.tutorial();check(route!=null,"verified Crash Site and Haven arrival must be available");
         memoryWire();
         check(route.source().version()==TutorialRoute.sourceVersion(route.source().layout())&&route.destination().id()==1&&route.entrance().x()==1&&route.entrance().y()==-30.5f,"pinned source revision and authored Haven entrance");

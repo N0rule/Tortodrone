@@ -30,7 +30,8 @@
 #
 # game-dir defaults to $SPIRAL_KNIGHTS_DIR or the Linux Steam library path.
 # Extra --flags are appended to CheckCombatRendering for other checked-in modes.
-# Set TORTODRONE_SKIP_BUILD=1 to reuse the current build/tortodrone.jar.
+# Set TORTODRONE_SKIP_BUILD=1 to reuse the current deployment JAR.
+# The deployment defaults to dist/; set TORTODRONE_DEPLOYMENT to override it.
 #
 # Output layout (one directory per run, never reused):
 #   run.log              this script plus the full fixture output
@@ -148,21 +149,22 @@ log "FLAGS ${scenario_flags[*]:-}"
 log "EXTRA ${extra[*]:-}"
 log "OUTPUT $out"
 
+deployment="${TORTODRONE_DEPLOYMENT:-dist}"
 if [ "${TORTODRONE_SKIP_BUILD:-0}" != 1 ]; then
-    log "BUILD build/tortodrone.jar"
+    log "BUILD $deployment/tortodrone.jar"
     ./gradlew buildServer >>"$runlog" 2>&1 || {
         status=$?
         log "RESULT FAIL scenario=$scenario stage=build exit=$status"
         exit "$status"
     }
 fi
-if [ ! -f build/tortodrone.jar ]; then
+if [ ! -f "$deployment/tortodrone.jar" ]; then
     log "RESULT FAIL scenario=$scenario stage=build reason=missing-jar"
-    echo "graphical-test: build/tortodrone.jar is missing; run ./gradlew buildServer" >&2
+    echo "graphical-test: $deployment/tortodrone.jar is missing; run ./gradlew buildServer" >&2
     exit 2
 fi
 
-command=(java -cp build/tortodrone.jar scripts/compat/CheckCombatRendering.java
+command=(java -cp "$deployment/tortodrone.jar" scripts/compat/CheckCombatRendering.java
     "$game" "$session" "${scenario_flags[@]}" "${extra[@]}")
 log "COMMAND $(printf '%q ' "${command[@]}")"
 
