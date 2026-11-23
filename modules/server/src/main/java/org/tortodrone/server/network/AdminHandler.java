@@ -87,8 +87,8 @@ final class AdminHandler {
     /** Resolve one online knight of the same deployment; never acquires a peer monitor. */
     private WorldSession target(String name)throws IOException {
         if(name.length()<3||name.length()>16||!name.matches("[A-Za-z]+(?:-[A-Za-z]+)*"))throw new IOException("Enter a valid knight name");
-        synchronized(WorldSession.ACTIVE){
-            return WorldSession.ACTIVE.values().stream().filter(w->name.equalsIgnoreCase(w.selectedKnightName())
+        synchronized(SessionDirectory.ACTIVE){
+            return SessionDirectory.ACTIVE.values().stream().filter(w->name.equalsIgnoreCase(w.selectedKnightName())
                 &&session.sameWorld(w)).findFirst().orElseThrow(()->new IOException("That knight is not online"));
         }
     }

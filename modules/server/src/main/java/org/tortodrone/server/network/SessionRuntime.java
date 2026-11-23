@@ -177,12 +177,12 @@ final class SessionRuntime {
                 target=loaded.progress().openingStage()==1?217:218;
                 if(!scenes.catalog().scene(target).town())throw new IOException("The opening camp is unavailable; please try again later");
             }
-            synchronized(WorldSession.ACTIVE){
-                if(WorldSession.ACTIVE.containsKey(loaded.worldId()))throw new IOException("This knight is already online");
+            synchronized(SessionDirectory.ACTIVE){
+                if(SessionDirectory.ACTIVE.containsKey(loaded.worldId()))throw new IOException("This knight is already online");
                 session.applyProfile(loaded);
                 session.setSelectedKnight(choice);
                 scene=scenes.destination(target,loaded.worldId());
-                WorldSession.ACTIVE.put(loaded.worldId(),session);
+                SessionDirectory.ACTIVE.put(loaded.worldId(),session);
             }
         }
         session.markSceneCreated();
@@ -211,7 +211,7 @@ final class SessionRuntime {
         session.responder().send(()->session.responder().codec().townState(session.connectionOid(),session.currentProfile()));
         session.publishStyles();
         session.responder().send(()->session.responder().codec().playerFlags(session.connectionOid(),session.gameMasterFlag(),session.inspectionHiddenValue(),session.currentProfile().progress().tutorialComplete()));
-        if(characters.hasWorldStorage())session.refreshFriends(null,characters.services().friends().snapshot(),WorldSession.friendPresence(characters.worldStorageFile()));
+        if(characters.hasWorldStorage())session.refreshFriends(null,characters.services().friends().snapshot(),SessionDirectory.friendPresence(characters.worldStorageFile()));
         session.refreshParty();
         session.receiverChanged(receivers);
         session.sessionLog().selected(session.selectedKnight().id(),session.currentProfile().worldId(),session.selectedKnight().name());
@@ -344,7 +344,7 @@ final class SessionRuntime {
             if(portalMove!=null)session.sceneRegistry().release(portalMove.destination(),profile.worldId());
         }
         session.stopPublications();
-        if(profile!=null)synchronized(WorldSession.ACTIVE){WorldSession.ACTIVE.remove(profile.worldId(),session);}
+        if(profile!=null)synchronized(SessionDirectory.ACTIVE){SessionDirectory.ACTIVE.remove(profile.worldId(),session);}
     }}
 
     /** Detach the client subscription while keeping the installed instance and membership. */

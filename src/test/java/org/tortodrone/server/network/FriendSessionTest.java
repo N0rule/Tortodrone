@@ -37,7 +37,7 @@ public final class FriendSessionTest {
                 bob.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of(destination(town),new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));
                 alice.world.friendInvocation(joinRpc("Bobby"));alice.socket.await("changing scenes");
                 move(bob,town);
-                var presence=WorldSession.friendPresence(db.file());int bobWorld=bob.chars.worldProfile("Bobby",1).worldId();
+                var presence=SessionDirectory.friendPresence(db.file());int bobWorld=bob.chars.worldProfile("Bobby",1).worldId();
                 check(presence.get(bobWorld).instance()>0&&presence.get(bobWorld).zone()==town.zone(),"Town presence includes joinable native instance and zone");
                 alice.world.friendInvocation(joinRpc("Bobby"));
                 check(alice.world.sceneTravelPending(),"friend join starts native forced travel; queued="+alice.socket.frames);
@@ -61,13 +61,13 @@ public final class FriendSessionTest {
                 var training=scenes.catalog().scene(294);
                 bob.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("training",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));
                 move(bob,training);
-                var trainingPresence=WorldSession.friendPresence(db.file()).get(bobWorld);
+                var trainingPresence=SessionDirectory.friendPresence(db.file()).get(bobWorld);
                 check(trainingPresence.instance()>0,"shared Training room publishes the instance that enables native Join");
                 alice.world.friendInvocation(joinRpc("Bobby"));
                 check(alice.world.sceneTravelPending(),"friend join starts native forced travel into Training");
                 move(alice,training);
                 check(alice.world.ownsScene(trainingPresence.instance()),"friend join reaches the exact Training party instance");
-                check(WorldSession.friendPresence(db.file()).get(alice.chars.worldProfile("Alice",1).worldId()).instance()==trainingPresence.instance(),"both friends publish the same Training presence");
+                check(SessionDirectory.friendPresence(db.file()).get(alice.chars.worldProfile("Alice",1).worldId()).instance()==trainingPresence.instance(),"both friends publish the same Training presence");
                 // Native method 6: only the toggle is published; matching itself is not simulated.
                 var difficulty=new org.tortodrone.core.wire.EnumValue("com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty",1);
                 alice.world.friendInvocation(new SessionDecoder.Invocation(3,12,6,List.of(true,difficulty,confirm())));alice.socket.await("lfg");
@@ -77,7 +77,7 @@ public final class FriendSessionTest {
                 other.world.friendInvocation(joinRpc("Bobby"));other.socket.await("m.internal_error");
                 bob.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("lab",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));move(bob,scenes.catalog().scene(30893));
                 alice.world.friendInvocation(joinRpc("Bobby"));alice.socket.await("friend_unjoinable");
-                check(WorldSession.friendPresence(db.file()).get(bobWorld).instance()==0,"private interior is published as unjoinable");
+                check(SessionDirectory.friendPresence(db.file()).get(bobWorld).instance()==0,"private interior is published as unjoinable");
                 bob.world.close();alice.world.friendInvocation(joinRpc("Bobby"));alice.socket.await("friend_unjoinable");
                 alice.world.friendInvocation(rpc(8,"Bobby"));
                 check(alice.chars.services().friends().list(1,1,1).isEmpty()&&bob.chars.services().friends().list(2,1,1).isEmpty(),"native method 8 removes both friendship edges");
@@ -95,21 +95,21 @@ public final class FriendSessionTest {
                 lead.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("training",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));move(lead,room);
                 mate.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("training",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));move(mate,room);
                 int mateWorld=mate.chars.worldProfile("Mate",1).worldId();
-                int mateScene=WorldSession.friendPresence(db.file()).get(mateWorld).instance();
+                int mateScene=SessionDirectory.friendPresence(db.file()).get(mateWorld).instance();
                 check(mateScene==lead.world.currentScene().oid(),"party members enter one Training simulation");
                 check(mateScene>0,"an open Training party publishes the joinable instance");
                 lead.world.interiorPartyInvocation(new SessionDecoder.Invocation(leadParty,SessionCodec.LEVEL_PARTY_SERVICE,6,List.of(true,confirm())));mate.socket.await("inviteOnly");
-                await(()->WorldSession.friendPresence(db.file()).get(mateWorld).instance()==0);
+                await(()->SessionDirectory.friendPresence(db.file()).get(mateWorld).instance()==0);
                 spare.world.friendInvocation(joinRpc("Mate"));spare.socket.await("friend_unjoinable");
                 check(scenes.parties().view(partyMember(lead.world)).inviteOnly(),"the stock party panel writes inviteOnly through LevelPartyMarshaller");
                 lead.world.interiorPartyInvocation(new SessionDecoder.Invocation(leadParty,SessionCodec.LEVEL_PARTY_SERVICE,6,List.of(false,confirm())));
-                await(()->WorldSession.friendPresence(db.file()).get(mateWorld).instance()==mateScene);
+                await(()->SessionDirectory.friendPresence(db.file()).get(mateWorld).instance()==mateScene);
                 spare.world.friendInvocation(joinRpc("Mate"));
                 check(spare.world.sceneTravelPending(),"friend join starts native forced travel into an open explicit party");
                 move(spare,room);
                 check(spare.world.ownsScene(mateScene)&&scenes.parties().view(partyMember(spare.world)).oid()==leadParty,"friend join reaches the explicit party instance and seat");
                 lead.world.interiorPartyInvocation(new SessionDecoder.Invocation(leadParty,SessionCodec.LEVEL_PARTY_SERVICE,6,List.of(true,confirm())));
-                await(()->WorldSession.friendPresence(db.file()).get(mateWorld).instance()==0);
+                await(()->SessionDirectory.friendPresence(db.file()).get(mateWorld).instance()==0);
             }
             System.out.println("PASS: native friend request/join/secret join/looking-for-group/remove, Town and Training instance presence/travel, open/private party controls, stranger/offline/private/transition/auth guards");
         }finally{org.tortodrone.world.SceneRegistry.install(previous);org.tortodrone.support.ContentFixture.delete(root);}

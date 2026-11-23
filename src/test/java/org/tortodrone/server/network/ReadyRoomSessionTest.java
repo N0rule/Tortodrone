@@ -38,7 +38,7 @@ public final class ReadyRoomSessionTest {
                 try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(),1900,1,m->{},registry)){
                     refuse(()->world.select("Not-Owned",RECEIVERS,true));
                     world.select(knight.name(),RECEIVERS,true);
-                    check(world.selected()&&WorldSession.active(1,knight.id()),"selection retains authenticated ownership");
+                    check(world.selected()&&SessionDirectory.active(1,knight.id()),"selection retains authenticated ownership");
                     check(entry.simulation().playerCount()==initial,"selection creates no world pawn");
                     check(!world.ownsScene(entry.oid())&&!world.ownsScene(0),"Ready Room owns no server place");
                     var competingSocket=new RecordingSocket();
@@ -46,11 +46,11 @@ public final class ReadyRoomSessionTest {
                         refuse(()->competing.select(knight.name(),RECEIVERS,true));
                         check(!competing.selected(),"duplicate selection cannot acquire the Ready Room owner");
                     }
-                    check(WorldSession.active(1,knight.id()),"closing refused selection preserves owner");
+                    check(SessionDirectory.active(1,knight.id()),"closing refused selection preserves owner");
                     var peerSocket=new RecordingSocket();
                     try(var peerOutput=new SessionOutput(peerSocket);var peer=new WorldSession(peerSocket,peerCharacters,peerOutput,new SessionCodec(),1904,1,m->{},registry)){
                         peer.select(peerKnight.name(),RECEIVERS,true);move(peer,ReadyRoom.ZONE,ReadyRoom.SCENE);
-                        check(WorldSession.active(1,knight.id())&&WorldSession.active(2,peerKnight.id()),"simultaneous knights own independent Ready Room sessions");
+                        check(SessionDirectory.active(1,knight.id())&&SessionDirectory.active(2,peerKnight.id()),"simultaneous knights own independent Ready Room sessions");
                         check(entry.simulation().playerCount()==initial,"simultaneous Ready Room players create no shared scene pawns");
                     }
                     refuse(()->world.subscribe((short)2));refuse(()->world.subscribeInteriorParty((short)3));
@@ -72,7 +72,7 @@ public final class ReadyRoomSessionTest {
                     check(entry.simulation().playerCount()==initial&&!world.ownsScene(entry.oid()),"Ready Room travel removes the pawn and scene authorization");
                     refuse(()->world.entered());refuse(()->world.subscribe((short)5));
                 }
-                check(!WorldSession.active(1,knight.id())&&entry.simulation().playerCount()==initial,"disconnect releases owner and scene state");
+                check(!SessionDirectory.active(1,knight.id())&&entry.simulation().playerCount()==initial,"disconnect releases owner and scene state");
             }
             var otherTown=registry.catalog().scenes().stream().filter(map->map.town()&&map.id()!=entry.map().id()).findFirst().orElseThrow();
             // A successful enteredPlace, not a client-selected scene number, records the return.
@@ -123,7 +123,7 @@ public final class ReadyRoomSessionTest {
             world.subscribe((short)20);world.entered();
             registry.parties().invite(sender,knight.name());
             await(()->socket.notifications>=71||socket.isClosed(),"party delivery continues after Return to Game");
-            check(!socket.isClosed()&&WorldSession.active(characters.accountId(),knight.id()),
+            check(!socket.isClosed()&&SessionDirectory.active(characters.accountId(),knight.id()),
                 "Ready Room invitations must not kick the player on Return to Game: "+messages);
             move(world,ReadyRoom.ZONE,ReadyRoom.SCENE);
             check(delivery(world)==delivery,"world/Ready Room travel reuses the session delivery worker");
@@ -135,7 +135,7 @@ public final class ReadyRoomSessionTest {
             check(!delivery.isAlive(),"disconnect stops the Ready Room event worker");
             refuse(()->registry.parties().invite(sender,knight.name()));
         }
-        check(!WorldSession.active(characters.accountId(),knight.id()),"party delivery cleanup releases Ready Room ownership");
+        check(!SessionDirectory.active(characters.accountId(),knight.id()),"party delivery cleanup releases Ready Room ownership");
     }
     private static Thread delivery(WorldSession world){return world.deliveryThread();}
     /** Exercise the actual connection loop/decoder and writer, not only WorldSession methods. */
@@ -182,7 +182,7 @@ public final class ReadyRoomSessionTest {
                 check(invitation&&registry.entry().simulation().playerCount()==initial,"live socket receives invitation without subscribing to any server place");
                 writer.send(socket.getOutputStream(),out->writer.message(out,"LogoffRequest",3));
                 server.get(3,TimeUnit.SECONDS);
-                check(!WorldSession.active(characters.accountId(),knight.id()),"live Ready Room logoff releases ownership");
+                check(!SessionDirectory.active(characters.accountId(),knight.id()),"live Ready Room logoff releases ownership");
             }
         }
     }

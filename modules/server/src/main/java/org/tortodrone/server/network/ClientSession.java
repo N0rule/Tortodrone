@@ -224,7 +224,7 @@ final class ClientSession {
             } else {
                 try {
                     synchronized(characters) {
-                        if(characters.roster().stream().anyMatch(k->k.name().equalsIgnoreCase(name)&&WorldSession.active(characters.accountId(),k.id())))throw new IOException("Knight is online; disconnect before deleting it");
+                        if(characters.roster().stream().anyMatch(k->k.name().equalsIgnoreCase(name)&&SessionDirectory.active(characters.accountId(),k.id())))throw new IOException("Knight is online; disconnect before deleting it");
                         characters.delete(name,authRevision);
                     }
                 } catch (CharacterStore.Refused e) {
@@ -264,7 +264,7 @@ final class ClientSession {
                     else {
                         String old=(String)args.get(0);
                         synchronized(characters) {
-                            if(characters.roster().stream().anyMatch(k->k.name().equalsIgnoreCase(old)&&WorldSession.active(characters.accountId(),k.id())))throw new IOException("Knight is online; disconnect before editing it");
+                            if(characters.roster().stream().anyMatch(k->k.name().equalsIgnoreCase(old)&&SessionDirectory.active(characters.accountId(),k.id())))throw new IOException("Knight is online; disconnect before editing it");
                             characters.update(old, choices,authRevision);
                         }
                     }

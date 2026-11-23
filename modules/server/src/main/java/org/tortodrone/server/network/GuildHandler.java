@@ -57,8 +57,8 @@ final class GuildHandler {
         var remaining=new java.util.HashSet<Integer>();
         for(var member:after.members())remaining.add(member.worldId());
         var peers=new ArrayList<WorldSession>();
-        synchronized(WorldSession.ACTIVE){
-            for(var peer:WorldSession.ACTIVE.values())if(peer!=session&&!peer.isClosed()&&peer.guilds.view!=null
+        synchronized(SessionDirectory.ACTIVE){
+            for(var peer:SessionDirectory.ACTIVE.values())if(peer!=session&&!peer.isClosed()&&peer.guilds.view!=null
                     &&peer.guilds.view.guild().id()==after.guild().id())peers.add(peer);
         }
         // A member who is no longer in the roster learns it from their own session, not from a
@@ -87,7 +87,7 @@ final class GuildHandler {
                 if(!session.chatRate().allow(System.nanoTime())){session.unavailable("Please slow down before sending another message.");return true;}
                 var message=new org.tortodrone.core.world.SceneChat.Message(session.selectedKnight().name(),text,mode);
                 var peers=new ArrayList<WorldSession>();
-                synchronized(WorldSession.ACTIVE){for(var peer:WorldSession.ACTIVE.values())if(!peer.isClosed()&&peer.guilds.view!=null
+                synchronized(SessionDirectory.ACTIVE){for(var peer:SessionDirectory.ACTIVE.values())if(!peer.isClosed()&&peer.guilds.view!=null
                         &&peer.guilds.view.guild().id()==view.guild().id())peers.add(peer);}
                 for(var peer:peers)peer.responder.send(()->responder.codec().chat(org.tortodrone.protocol.SessionCodec.guildOid(view.guild().id()),message));
                 return true;

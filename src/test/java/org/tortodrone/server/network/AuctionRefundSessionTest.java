@@ -34,8 +34,8 @@ public final class AuctionRefundSessionTest {
             int aw;
             try(var alice=client(db,content.items(),scenes,"Alice",1001);var bob=client(db,content.items(),scenes,"Bobby",1002)) {
                 aw=db.worldProfile(alice.account(),1,1).worldId();
-                check(WorldSession.auctionPresence(db.file()).keySet().contains(aw),"selected authenticated knight is online for this deployment");
-                check(WorldSession.auctionPresence(root.resolve("other.db")).isEmpty(),"same native IDs in another deployment cannot select direct refunds");
+                check(SessionDirectory.auctionPresence(db.file()).keySet().contains(aw),"selected authenticated knight is online for this deployment");
+                check(SessionDirectory.auctionPresence(root.resolve("other.db")).isEmpty(),"same native IDs in another deployment cannot select direct refunds");
                 var listener=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)7);
                 alice.world().auctionInvocation(new SessionDecoder.Invocation(3,15,1,List.of(listing.id(),100,listener)));
                 bob.world().auctionInvocation(new SessionDecoder.Invocation(3,15,1,List.of(listing.id(),110,listener)));
@@ -52,7 +52,7 @@ public final class AuctionRefundSessionTest {
                 alice.world().auctionInvocation(new SessionDecoder.Invocation(3,15,4,List.of(listener)));
                 check(db.worldProfile(alice.account(),1,1).town().outbids().isEmpty(),"My Bids native call acknowledges durable indicator");
             }
-            WorldStatePoller.awaitStopped();check(!WorldSession.auctionPresence(db.file()).containsKey(aw),"closed connection leaves presence");
+            WorldStatePoller.awaitStopped();check(!SessionDirectory.auctionPresence(db.file()).containsKey(aw),"closed connection leaves presence");
             System.out.println("PASS: native online outbid credit, deployment presence, poller publication, notification and My Bids acknowledgement");
         }finally{SceneRegistry.install(previous);WorldStatePoller.awaitStopped();ContentFixture.delete(root);}
     }

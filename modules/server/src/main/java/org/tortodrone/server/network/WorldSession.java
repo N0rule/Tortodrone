@@ -43,7 +43,6 @@ import org.tortodrone.core.party.PartyView;
 final class WorldSession implements AutoCloseable {
     private final ClientDiagnostics diagnostics;
     void hardware(List<Object> args)throws IOException { diagnostics.hardware(args); }
-    static final Map<Integer, WorldSession> ACTIVE = new HashMap<>();
     final SessionPresence presenceState=new SessionPresence();
     /** Per-knight-session join secret published through PlayerObject.ML(); never persisted. */
     private static final java.security.SecureRandom SECRETS=new java.security.SecureRandom();
@@ -203,21 +202,6 @@ final class WorldSession implements AutoCloseable {
     boolean sameWorld(WorldSession peer){return peer!=null&&peer.scenes==scenes&&peer.characters.worldStorageFile().equals(characters.worldStorageFile());}
     /** Snapshot taken under the session monitor, never under ACTIVE (close locks in that order). */
     int identityWorld(String name){synchronized(this){return knight!=null&&profile!=null&&knight.name().equalsIgnoreCase(name)?profile.worldId():0;}}
-    static WorldSession activeSession(int world){synchronized(ACTIVE){return ACTIVE.get(world);}}
-    static List<WorldSession> activeSessions(){synchronized(ACTIVE){return List.copyOf(ACTIVE.values());}}
-    /** Only volatile presence is read under ACTIVE; no peer session monitor is acquired. */
-    static Map<Integer,SessionPresence.FriendPresence> friendPresence(java.nio.file.Path storage) {
-        var result=new HashMap<Integer,SessionPresence.FriendPresence>();
-        synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();if(session.presenceState.online()&&!session.socket.isClosed()&&session.characters.hasWorldStorage()&&session.characters.worldStorageFile().equals(storage))result.put(entry.getKey(),session.presenceState.location());}}
-        return Map.copyOf(result);
-    }
-    /** Read only volatile session presence and immutable auth revisions under ACTIVE.
-     * The recipient's DB authentication is checked again before a direct refund commits. */
-    static Map<Integer,Long> auctionPresence(java.nio.file.Path storage) {
-        var result=new HashMap<Integer,Long>();
-        synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();if(session.presenceState.online()&&!session.socket.isClosed()&&session.characters.hasWorldStorage()&&session.characters.worldStorageFile().equals(storage))result.put(entry.getKey(),session.authRevision);}}
-        return Map.copyOf(result);
-    }
     synchronized void refreshFriends(WorldStatePoller.Registration registration,org.tortodrone.storage.FriendStore.Snapshot snapshot,Map<Integer,SessionPresence.FriendPresence> online)throws IOException {
         friends.refresh(registration,snapshot,online);
     }
@@ -509,13 +493,6 @@ final class WorldSession implements AutoCloseable {
     void subscribeTrade(int objectId,short message)throws IOException{trade.subscribe(objectId,message);}
     void unsubscribeTrade(int objectId){trade.unsubscribe(objectId);}
     boolean tradeInvocation(SessionDecoder.Invocation request)throws IOException{return trade.invocation(request);}
-
-    static boolean active(int accountId, int knightId) {
-        synchronized (ACTIVE) {
-            return ACTIVE.values().stream().anyMatch(session ->
-                session.characters.accountId() == accountId && session.profile.knightId() == knightId);
-        }
-    }
 
     synchronized void select(String name, Map<String, Short> receivers)
             throws IOException, CharacterStore.Refused {

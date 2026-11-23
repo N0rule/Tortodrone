@@ -68,7 +68,7 @@ public final class PortalSessionTest {
                 world.invocation(move(1,0));socket.awaitText("account changed");
                 check(world.ownsScene(destination.oid()),"revoked account cannot travel to another scene");
             }
-            check(!WorldSession.active(id,knight.id())&&destinationEmpty(registry),"disconnect releases both scene and controller");
+            check(!SessionDirectory.active(id,knight.id())&&destinationEmpty(registry),"disconnect releases both scene and controller");
             System.out.println("PASS: server portal ownership, pending freeze, destination/cache-version validation, tagged arrival, stale-input grace, readiness and immediate revocation");
         }finally{SceneRegistry.install(previous);try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }

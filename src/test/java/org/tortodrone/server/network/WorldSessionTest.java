@@ -33,7 +33,7 @@ public final class WorldSessionTest {
             try(var output=new SessionOutput(unavailable);var empty=new WorldSession(unavailable,characters,output,new SessionCodec(),1000,1,message->{},
                     emptyRegistry)) {
                 refuse(()->empty.select(knight.name(),Map.of(TownSquare.ZONE_RECEIVER,(short)0)));
-                check(!empty.selected()&&!WorldSession.active(1,knight.id()),"missing maps refuse world entry without acquiring a controller");
+                check(!empty.selected()&&!SessionDirectory.active(1,knight.id()),"missing maps refuse world entry without acquiring a controller");
             }
             org.tortodrone.world.SceneRegistry.install(restore);
             RecordingSocket one=new RecordingSocket(),two=new RecordingSocket(),stale=new RecordingSocket();
@@ -48,11 +48,11 @@ public final class WorldSessionTest {
                 first.select(knight.name(),receiver);
                 var chatRequest=new SessionDecoder.Invocation(TownSquare.SCENE_OID,org.tortodrone.core.world.SceneChat.SERVICE,1,List.of("hello",(byte)0));
                 refuse(()->first.speak(chatRequest));
-                check(first.selected() && WorldSession.active(1,knight.id()),"owned character acquires controller");
+                check(first.selected() && SessionDirectory.active(1,knight.id()),"owned character acquires controller");
                 refuse(() -> second.select(knight.name(),receiver));
                 check(!second.selected(),"duplicate selection leaves its session unselected");
                 second.close();
-                check(WorldSession.active(1,knight.id()),"closing refused session cannot release another controller");
+                check(SessionDirectory.active(1,knight.id()),"closing refused session cannot release another controller");
                 refuse(() -> first.select(knight.name(),receiver));
                 first.subscribe((short)1);
                 refuse(() -> first.input(input));
@@ -100,7 +100,7 @@ public final class WorldSessionTest {
                 }
                 first.refreshState(oldRegistration,null);
                 first.refreshFailed(oldRegistration,new IOException("late old subscription read"));
-                check(WorldSession.active(1,knight.id())&&!one.isClosed(),"stale poll results/errors cannot close a replacement subscription");
+                check(SessionDirectory.active(1,knight.id())&&!one.isClosed(),"stale poll results/errors cannot close a replacement subscription");
                 var reentry = reader.nextAfterSubscription((short)2);
                 check(reentry.reference()==0 && reentry.added()==sceneActors, "resubscription resets the scene baseline");
                 var afterReentry = reader.next();
@@ -119,7 +119,7 @@ public final class WorldSessionTest {
                 check(characters.worldProfile(knight.name(),1).equipment()[0]==helm,"invalid Arsenal slot cannot change equipment");
                 first.close();
                 refuse(()->first.speak(chatRequest));
-                check(!WorldSession.active(1,knight.id()),"disconnect releases controller");
+                check(!SessionDirectory.active(1,knight.id()),"disconnect releases controller");
             }
             // A new session can select the persistent character after the old controller exits.
             Socket reconnect=new RecordingSocket();
@@ -128,7 +128,7 @@ public final class WorldSessionTest {
                 world.select(knight.name(),Map.of(TownSquare.ZONE_RECEIVER,(short)0));
                 check(world.selected(),"reconnect selects saved character");
             }
-            check(!WorldSession.active(1,knight.id()),"reconnect cleanup releases controller");
+            check(!SessionDirectory.active(1,knight.id()),"reconnect cleanup releases controller");
             System.out.println("PASS: town ownership, auth revisions, input readiness, delayed/invalid acknowledgements, reliable deltas, re-entry and reconnect cleanup");
         } finally {org.tortodrone.world.SceneRegistry.install(restore);try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
     }

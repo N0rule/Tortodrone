@@ -85,7 +85,7 @@ final class AuctionHandler {
                 var house = store.services().auction(session.sceneRegistry().town());
                 var result = auction
                     ? house.operate(store.accountId(), knight.id(), session.authRevision(), method, a,
-                        session.gameMasterRole(), WorldSession.auctionPresence(store.worldStorageFile()))
+                        session.gameMasterRole(), SessionDirectory.auctionPresence(store.worldStorageFile()))
                     : house.mail(store.accountId(), knight.id(), session.authRevision(), method, a);
                 session.townChanged(result);
                 if (resultListener) responder.result(listener.requestId(), result.result(), session.currentProfile());

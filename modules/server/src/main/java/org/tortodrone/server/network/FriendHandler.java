@@ -102,7 +102,7 @@ final class FriendHandler {
     private void joinFriend(String name)throws IOException {
         int target;
         synchronized(session){requireFriendReady();target=friendNamed(name);}
-        var peer=WorldSession.activeSession(target);
+        var peer=SessionDirectory.activeSession(target);
         if(peer==null||peer==session||!session.sameWorld(peer))throw new IOException(friendUnjoinable(name));
         // Like archive joinPlayerInstance: capture the ready target, then transfer on the
         // caller. Never acquire both session monitors; recheck presence before departure.
@@ -129,7 +129,7 @@ final class FriendHandler {
         try{claimed=Long.parseUnsignedLong(secret.substring(comma+1),16);}catch(NumberFormatException invalid){throw new IOException("%social:m.internal_error");}
         String name=secret.substring(0,comma);
         if(name.equalsIgnoreCase(session.selectedKnight().name()))throw new IOException("%social:m.friend_self");
-        var candidates=WorldSession.activeSessions().stream()
+        var candidates=SessionDirectory.activeSessions().stream()
             .filter(s->s.friendOnlineValue()&&!!s.responder().open()&&s.hasWorldStorage()&&session.sameWorld(s))
             .toList();
         WorldSession peer=null;int target=0;
@@ -146,7 +146,7 @@ final class FriendHandler {
         var peerMember=peer.partyMemberSnapshot();
         synchronized(session){
             requireFriendReady();
-            if(peer!=WorldSession.activeSession(target)||!peer.friendOnlineValue()||!peer.responder().open()
+            if(peer!=SessionDirectory.activeSession(target)||!peer.friendOnlineValue()||!peer.responder().open()
                     ||presence!=peer.friendPresenceValue()||location.scene().oid()!=presence.instance())
                 throw new IOException(friendUnjoinable(name));
             if(location.scene().map().town()){
@@ -201,7 +201,7 @@ final class FriendHandler {
         requireCurrent();var friends=session.charactersStore().services().friends();
         friends.remove(session.charactersStore().accountId(),session.selectedKnight().id(),session.authRevision(),name);
         session.applyProfile(session.charactersStore().worldProfile(session.selectedKnight().name(),session.authRevision(),session.currentProfile()));
-        session.refreshFriends(null,friends.snapshot(),WorldSession.friendPresence(session.charactersStore().worldStorageFile()));
+        session.refreshFriends(null,friends.snapshot(),SessionDirectory.friendPresence(session.charactersStore().worldStorageFile()));
     }}
 
     void requestFriend(String name,String message,String response)throws IOException,CharacterStore.Refused { synchronized (session) {
