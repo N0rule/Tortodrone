@@ -33,7 +33,8 @@ public final class TownStore {
     private final CustomizeStore customize;
     private final UpgradeStore upgrades;
     private final UseStore uses;
-    public TownStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;this.rules=rules;this.sprites=new SpriteStore(items,rules);this.crafts=new CraftStore(items,rules);this.gears=new GearStore(items,rules);this.shops=new ShopStore(database,items,rules);this.gifts=new GiftWrapStore(items,rules);this.customize=new CustomizeStore(items,rules);this.upgrades=new UpgradeStore();this.uses=new UseStore(database,items);}
+    private final AdminStore admins;
+    public TownStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;this.rules=rules;this.sprites=new SpriteStore(items,rules);this.crafts=new CraftStore(items,rules);this.gears=new GearStore(items,rules);this.shops=new ShopStore(database,items,rules);this.gifts=new GiftWrapStore(items,rules);this.customize=new CustomizeStore(items,rules);this.upgrades=new UpgradeStore();this.uses=new UseStore(database,items);this.admins=new AdminStore(items,rules);}
     public static final long RENAME_INTERVAL=30L*24*60*60*1000;
     /** Stock canRename: the window only opens inside the thirty-day rename interval. */
     public void canRename(int account,int knight,long auth)throws IOException {
@@ -175,50 +176,13 @@ public final class TownStore {
         CustomizeStore.editAccessory(c,p,gear,name,costume,rules);
     }
     /** Native /grant and /set_rank: role and ownership checked inside the write transaction. */
+    /** Native /grant and /set_rank: role and ownership checked inside the write transaction. */
     public Result adminProgress(int account,int knight,long auth,int method,List<Object> args)throws IOException {
-        return change(account,knight,auth,(c,p)->{
-            requireGameMaster(c,account,auth);
-            if(method==17) {
-                int amount=(Integer)args.getFirst();
-                if(amount<0)throw new IOException("Crown grant must be nonnegative");
-                TownLedger.credit(c,p.worldId(),amount,0);
-            }else if(method==44) {
-                org.tortodrone.core.character.KnightProgress progress;
-                try{progress=new org.tortodrone.core.character.KnightProgress((Integer)args.get(0),(Integer)args.get(1),p.progress().prestige());}
-                catch(IllegalArgumentException invalid){throw new IOException("Rank must be 1–10 and subrank 1–4");}
-                try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")) {
-                    st.setString(1,WorldProfiles.progressKey(p.worldId(),"rank"));st.setInt(2,progress.rank()*10+progress.subrank());st.executeUpdate();
-                }
-            }else throw new IOException("Unknown progress admin operation");
-            return null;
-        });
+        return change(account,knight,auth,(c,p)->admins.progress(c,p,account,auth,method,args));
     }
     /** Current stock /heat, /level and /forge commands; setters never grant normal-player authority. */
     public Result adminGear(int account,int knight,long auth,int method,List<Object> args)throws IOException{
-        return change(account,knight,auth,(c,p)->{
-            requireGameMaster(c,account,auth);int slot=(Integer)args.get(0);
-            if(method==41&&slot>=6&&slot<=9){
-                // The stock /heat command exposes only a "weapon" group and always
-                // sends the first weapon slot. Apply the value to every equipped
-                // weapon so slots 7-9 are reachable through the same command.
-                float percent=(Float)args.get(1);if(!Float.isFinite(percent)||percent<0||percent>100)throw new IOException("Heat progress must be between 0 and 100");
-                var weapons=p.items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()>=6&&i.equippedSlot()<=9).toList();
-                if(weapons.isEmpty())throw new IOException("Equip a weapon first");
-                boolean applied=false;
-                for(var weapon:weapons){var weaponGear=rules.gear().gear(weapon.config());if(weaponGear==null||weaponGear.levels()<1)continue;GearStore.setGearProgress(c,p.worldId(),weapon.id(),weapon.level(),percent/100f);applied=true;}
-                if(!applied)throw new IOException("This item has no heat progression");
-                return null;
-            }
-            var item=p.items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()==slot).findFirst().orElseThrow(()->new IOException("Equip an item in that slot first"));
-            var gear=rules.gear().gear(item.config());if(gear==null||gear.levels()<1)throw new IOException("This item has no heat progression");
-            if(method==41){float percent=(Float)args.get(1);if(!Float.isFinite(percent)||percent<0||percent>100)throw new IOException("Heat progress must be between 0 and 100");GearStore.setGearProgress(c,p.worldId(),item.id(),item.level(),percent/100f);return null;}
-            if(method==42){int level=(Integer)args.get(1);if(level<0||level>=gear.levels())throw new IOException("Item level is outside its progression table");GearStore.setGearProgress(c,p.worldId(),item.id(),level,0);return null;}
-            if(method!=23)throw new IOException("Unknown gear admin operation");
-            if(gear.maximum(item.level()))return null;var props=rules.gear().forge(gear,item.level());if(props==null)return null;
-            int crystals=(Integer)args.get(1);if(crystals<0||crystals>9999)throw new IOException("Invalid forge crystal tier");
-            float chance=props.chance(crystals,false);if(java.util.concurrent.ThreadLocalRandom.current().nextFloat()>=chance)return null;
-            GearStore.setGearProgress(c,p.worldId(),item.id(),item.level()+1,0);return item.level()+1;
-        });
+        return change(account,knight,auth,(c,p)->admins.gear(c,p,account,auth,method,args));
     }
     /** Native extendUpgrade(active item, unused item), ItemMarshaller method five. */
     public Result extendUpgrade(int account,int knight,long auth,long active,long unused)throws IOException {
