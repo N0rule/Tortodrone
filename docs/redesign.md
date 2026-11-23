@@ -237,7 +237,7 @@ At the time of writing:
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,191,519 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,193,051 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -458,6 +458,10 @@ remaining stores were split the same way:
 - `HandshakeCodec` keeps the stateful inbound parsing and the per-connection
   class/intern tables; `HandshakeWire` owns the two fixed downstream frames and
   their mapping sequence (`-1/-2`, then `-3/-4/-5`).
+- `ClientArtworkSetup` keeps installation discovery, skip markers, pack
+  validation and atomic publication; `ArtworkExporter` owns the bundled
+  exporter's classpath, javac/java subprocess lifecycle, progress polling,
+  deadline and child shutdown hook.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.

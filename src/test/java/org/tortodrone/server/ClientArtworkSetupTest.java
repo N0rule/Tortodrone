@@ -177,7 +177,7 @@ public final class ClientArtworkSetupTest {
             jar.putNextEntry(new java.util.jar.JarEntry(resource)); input.transferTo(jar); jar.closeEntry();
         }
         Path server = Path.of(ClientArtworkSetup.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-        String cp = ClientArtworkSetup.exportClasspath(code.getParent(), server);
+        String cp = ArtworkExporter.exportClasspath(code.getParent(), server);
         check(Arrays.asList(cp.split(java.util.regex.Pattern.quote(java.io.File.pathSeparator)))
             .equals(List.of(code.resolve("projectx-pcode.jar").toString(), code + java.io.File.separator + "*", server.toString())),
             "Classpath keeps the primary client JAR first and the wildcard outside Path parsing");
@@ -189,7 +189,7 @@ public final class ClientArtworkSetupTest {
             check(child.waitFor(10, java.util.concurrent.TimeUnit.SECONDS), "Wildcard classpath child finishes");
             check(child.exitValue() == 0 && Files.readString(log).contains("wildcard ready"),
                 "Java expands the wildcard with spaces in both directory and JAR names: " + Files.readString(log));
-        } finally { ClientArtworkSetup.stop(child); }
+        } finally { ArtworkExporter.stop(child); }
     }
 
     private static void progress(Path root) throws Exception {
@@ -197,7 +197,7 @@ public final class ClientArtworkSetupTest {
         String executable = Path.of(System.getProperty("java.home"), "bin", System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString();
         var messages = new ArrayList<String>();
         var percentages = new ArrayList<Integer>();
-        ClientArtworkSetup.run(List.of(executable, "-XX:ActiveProcessorCount=2", "-cp", System.getProperty("java.class.path"),
+        ArtworkExporter.run(List.of(executable, "-XX:ActiveProcessorCount=2", "-cp", System.getProperty("java.class.path"),
             ClientArtworkSetupTest.class.getName(), "--progress-child", root.resolve("artwork.progress").toString()), root, "export", messages::add, percentages::add);
         check(messages.getFirst().contains("extracting images"), "Extraction phase is visible before child work");
         check(percentages.equals(List.of(0,10,50,100)) && messages.size() == 1, "Measured progress is monotonic, bounded and has no heartbeat spam");
@@ -230,11 +230,11 @@ public final class ClientArtworkSetupTest {
             reader.setDaemon(true); reader.start();
             check("ready".equals(ready.get(10, java.util.concurrent.TimeUnit.SECONDS)), "Disposable child started");
             Thread.currentThread().interrupt();
-            ClientArtworkSetup.stop(child);
+            ArtworkExporter.stop(child);
             check(Thread.interrupted(), "Cancellation status preserved after child cleanup");
             check(!child.isAlive(), "Owned export child reaped even while interrupted");
             reader.join(1000);
-        } finally { ClientArtworkSetup.stop(child); }
+        } finally { ArtworkExporter.stop(child); }
     }
 
     private static Path client(Path path) throws IOException {
