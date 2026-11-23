@@ -9,6 +9,7 @@ import org.tortodrone.core.wire.EnumValue;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
 import org.tortodrone.core.world.ScenePortals;
+import org.tortodrone.world.SceneRegistry;
 
 /** Native mission service for one connection: comlinks, exchange settlement, route preview and
  *  gate start. Validation and routing live here; the session owns travel, attachment and
@@ -146,7 +147,19 @@ final class OpeningHandler {
     private void beginMissionRun(MissionRun run,ScenePortals.Entrance start,short requestId)throws IOException {
         var next=session.sceneRegistry().startRun(run,session.currentProfile().worldId(),session.partyMember());
         lastGateStart=run;lastGateStartRequest=requestId;
-        session.beginForcedMissionTravel(next,start,requestId);
+        beginForcedMissionTravel(next,start,requestId);
+    }
+
+    /** Publish the acknowledged move after the run is committed and the old scene is retired. */
+    private void beginForcedMissionTravel(SceneRegistry.Instance next,ScenePortals.Entrance start,short requestId)throws IOException {
+        synchronized(session){
+            session.closeConversation();session.closeTownDialog();
+            var runtime=session.runtime();runtime.beginPortal(next,start);session.publishPartyState();
+            runtime.retireScene(runtime.scene().oid());
+            short receiver=session.forcedReceiverValue();
+            responder.confirmed(requestId);
+            responder.send(()->responder.codec().forceScene(responder.oid(),receiver,next));
+        }
     }
 
     private void settleMissionExchange(String missionId,long[] itemIds)throws IOException {

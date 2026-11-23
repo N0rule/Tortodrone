@@ -179,12 +179,6 @@ final class WorldSession implements AutoCloseable {
     void loadOpeningCompletions()throws IOException{story.load();}
     Set<String> completedOpeningKeys(){return story.completedKeys();}
     boolean completedOpeningEmpty(){return story.completedEmpty();}
-    /** Commit, acknowledge and force the mission move in that native order. */
-    synchronized void beginForcedMissionTravel(SceneRegistry.Instance next,ScenePortals.Entrance start,short requestId)throws IOException {
-        closeConversation();closeTownDialog();runtime.beginPortal(next,start);partyState();runtime.retireScene(runtime.scene().oid());
-        short receiver=refreshState.forcedReceiver();
-        output.send(()->codec.invocationConfirmed(oid,requestId));output.send(()->codec.forceScene(oid,receiver,next));
-    }
     void clearArrivalComlink(){story.arrivalComlink(null);}
     void leaveChatForTown(){leaveChat();}
     void requestRenameDisconnect(){renameDisconnect=true;}
