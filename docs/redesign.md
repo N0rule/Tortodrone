@@ -713,7 +713,7 @@ covers trigger and sequence preservation.
 ## Verification
 
 - Unit programs stay standalone `main` programs under the existing runner. Do not
-  migrate the 265 programs selected by `testUnit` to JUnit as part of this work.
+  migrate the 284 programs selected by `testUnit` to JUnit as part of this work.
 - Selected runs: `./gradlew testUnit -PunitTests=A,B`.
 - Compile/package check: `./gradlew build`.
 - Wire changes: structural decoding plus **synthetic** per-codec and cross-feature

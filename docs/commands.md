@@ -148,6 +148,17 @@ A knight name is optional for targetable emotes and must refer to someone in you
 | `/yawn` | `/yawn` | Emote or party signal. |
 | `/yes [player name] (/agree, /nod)` | `/yes Jane` | Targetable emote. |
 
+### Guild chat
+
+Guild chat is a served channel: the guild's own object carries its `SpeakMarshaller`, and a
+member's message reaches every online member of that guild, rate-limited like other chat.
+Guild menus (form, invite, ranks, record, well) are native client windows, not slash
+commands.
+
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/guild message (/g, /guildchat)` | `/guild Hello everyone` | Guild chat. The client refuses for a knight who is not in a guild yet. |
+
 ### Player features not available yet
 
 These depend on systems the server does not currently provide. They return an unavailable response where the client sends a request; they do not perform the described action.
@@ -157,9 +168,8 @@ These depend on systems the server does not currently provide. They return an un
 | `/bug description` | `/bug Stuck after entering a scene` | Bug-report delivery service. |
 | `/complain player name (/report)` | `/complain Jane` | Player-report submission service. |
 | `/game message` | `/game Ready to start` | PvP game chat. |
-| `/guild message (/g, /guildchat)` | `/guild Hello everyone` | Guild membership and guild chat. |
 | `/guildhall (/gh)` | `/guildhall` | Guild-owned halls. |
-| `/officer message (/o)` | `/officer Meeting in Haven` | Guild officer permissions and officer chat. |
+| `/officer message (/o)` | `/officer Meeting in Haven` | Officer chat channel. Officer ranks and permissions themselves are served in the guild menus. |
 | `/readyroom (/rr)` | `/readyroom` | Ready-room and dungeon matchmaking. |
 | `/recharge [player name]` | `/recharge Jane` | Legacy client command without a current server handler. |
 | `/set-ident` | `/set-ident` | Forum identity linking. |
