@@ -183,9 +183,9 @@ while the run's disposable server is alive.
 | Thread / executor | Count | Kind | Owner and bounds |
 | --- | --- | --- | --- |
 | `ServerMain` | 1 | platform | Accept loop; acquires a semaphore slot per connection (`max-clients`, default 16) |
-| `Client-<id>` | per connection | platform | `ClientConnections`; one handler per accepted socket, joined on shutdown after sockets close |
+| `Client-<id>` | per connection | platform | `ClientConnections`; one handler per accepted socket, joined on shutdown after sockets close against a five-second deadline |
 | `<Client>-Output` | per session | platform | `SessionOutput`; drains the 64-frame queue and writes the socket |
-| `SceneDelivery-<oid>` | per selected session | virtual | `WorldSession.deliverPublications`; drains party/activity publications |
+| `SceneDelivery-<oid>` | per selected session | virtual | `WorldSession.deliverPublications`; drains party/activity publications and is awaited for up to one second after the session monitor is released |
 | `Scene-<oid>` | per active scene | virtual | Single-thread scheduled executor, fixed 50 ms delay; stops when the instance is idle |
 | `ServerConsole` | 1 | platform | Terminal command reader |
 | `AccountSessions` | 1 | platform daemon | 250 ms account/auth-revision watcher; performs a database read per attached session |

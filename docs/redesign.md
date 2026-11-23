@@ -233,11 +233,11 @@ At the time of writing:
 - 53 imported gate routes; one fully playable route beyond the pinned opening gate:
   `shadow_beast` (scenes 351, 380, 382, 384).
 - 17 scene definitions under `content/maps`.
-- 269 `*Test.java` programs under `src/test`; `testUnit` selects 263 of them (six
+- 271 `*Test.java` programs under `src/test`; `testUnit` selects 265 of them (six
   integration tests are excluded). Two further programs live under `scripts`. Three
   files declare `main()` as benchmarks or the harness rather than tests:
   `SceneBenchmark`, `LoadBenchmark`, `StandaloneTestSuite`.
-- `build/tortodrone.jar` is about 16 MB (16,102,002 bytes in the current build); the
+- `build/tortodrone.jar` is about 16 MB (16,109,034 bytes in the current build); the
   exact size changes with content and dependencies.
 
 **108 rank missions is not 108 playable routes.** 53 routes are imported. Five have
@@ -343,7 +343,9 @@ are expected: a package is assigned by extracted type, not by its current name.
 It is now a 459-line facade over per-feature codecs that share one `WireContext`
 holding the class table, intern table and connection-local state. The split proved
 identical bytes for a synthetic cross-feature stream (no client captures), not only
-for per-feature frames; `SessionWireGoldenTest` pins that stream.
+for per-feature frames; `SessionWireGoldenTest` pins that stream, and
+`SessionCodecFeaturesTest` constructs each per-feature codec directly and pins its
+own representative frame.
 
 ### God-class splits
 
@@ -369,17 +371,20 @@ owners that compose named collaborators instead of mixing responsibilities:
 
 | Class | Lines | Composition |
 | --- | --- | --- |
-| `WorldSession` | 600 | protocol facade over `SessionRuntime`, `SessionDirectory`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
+| `WorldSession` | 601 | protocol facade over `SessionRuntime`, `SessionDirectory`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
 | `SceneEntities` | 516 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
 | `SceneSimulation` | 427 | process-wide `SceneClock`, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
 | `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |
 | `Database` | 517 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models |
-| `CharacterStore` | 308 | roster facade returning core character models; knight identity policy is in `KnightIdentity` |
+| `CharacterStore` | 357 | roster facade returning core character models; knight identity policy is in `KnightIdentity`, and the roster monitor enters the `CHARACTER` rank at every synchronized entry point |
 
 The line counts are the size of each facade, not a target: a facade gains a line
-whenever a protocol entry point or a new collaborator is added. Phase 9 stays
-evidence-gated and is not part of this table; it needs the per-epic stock evidence
-listed in `docs/baseline.md`.
+whenever a protocol entry point or a new collaborator is added. The two largest
+remaining stores were split the same way: `TownStore` composes `SpriteStore`,
+`TownLedger`, `TownSchema` and `CraftStore`, and `GuildStore` composes
+`GuildHallStore` for the treasury well, hall state and expansion tickets. Phase 9
+stays evidence-gated and is not part of this table; it needs the per-epic stock
+evidence listed in `docs/baseline.md`.
 
 Reserved packages and their content folders are created in Phase 1, each with a
 `package-info.java` (and a `README.md` under the matching content folder) describing
@@ -625,10 +630,11 @@ covers trigger and sequence preservation.
 ## Verification
 
 - Unit programs stay standalone `main` programs under the existing runner. Do not
-  migrate the 262 programs selected by `testUnit` to JUnit as part of this work.
+  migrate the 265 programs selected by `testUnit` to JUnit as part of this work.
 - Selected runs: `./gradlew testUnit -PunitTests=A,B`.
 - Compile/package check: `./gradlew build`.
-- Wire changes: structural decoding plus **synthetic** cross-feature golden fixtures.
+- Wire changes: structural decoding plus **synthetic** per-codec and cross-feature
+  golden fixtures.
   Do not commit client captures.
 - Storage changes: ownership, rollback, escrow, concurrent trade/auction/mail, and
   refusal of historical schemas without modification.
@@ -674,9 +680,9 @@ regressions. Phase 9 is explicitly outside the 0.42.0 definition of done.
 - Database uses the new baseline marker, schema 1, no pre-`0.42.0` upgrade, and a
   versioned migration runner for future releases.
 - Seven modules with no forbidden dependency edge.
-- `WorldSession` is a facade; feature handlers have their own session tests and the
-  facade has a byte-for-byte cross-feature golden, but each per-feature codec is not
-  separately pinned yet.
+- `WorldSession` is a facade; feature handlers have their own session tests, the
+  facade has a byte-for-byte cross-feature golden, and each per-feature codec pins
+  its own frame directly.
 - Wire layouts are byte-verified with synthetic fixtures.
 - Scene ownership, written lock order, commit-before-publish and one-writer storage
   hold; the control, registry, character and output monitors are instrumented and the

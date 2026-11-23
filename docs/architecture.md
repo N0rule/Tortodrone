@@ -91,7 +91,7 @@ SQLite runs on a single dedicated platform writer and a small platform reader po
 
 ## Wire correctness
 
-`SessionCodec` is a facade over per-feature codecs that share one `WireContext` per connection, so class and string-intern ordering stays single and connection-global. `SessionWireGoldenTest` pins a synthetic cross-feature stream byte-for-byte. `SessionInvocationRouter` keeps the ordered claim chain, and feature handlers write only through `SessionResponder`; neither touches the socket queue directly.
+`SessionCodec` is a facade over per-feature codecs that share one `WireContext` per connection, so class and string-intern ordering stays single and connection-global. `SessionWireGoldenTest` pins a synthetic cross-feature stream byte-for-byte, and `SessionCodecFeaturesTest` pins each per-feature codec's own frame directly. `SessionInvocationRouter` keeps the ordered claim chain, and feature handlers write only through `SessionResponder`; neither touches the socket queue directly.
 
 The stock client expects exact Narya/Presents serialization, not Java serialization or approximate messages:
 
