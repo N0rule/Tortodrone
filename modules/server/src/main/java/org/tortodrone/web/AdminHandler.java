@@ -61,7 +61,7 @@ public final class AdminHandler implements HttpHandler {
         var p=parameters(post?body(e,limit):Objects.requireNonNullElse(e.getRequestURI().getRawQuery(),""),limit);
         if(route.equals("setup")&&!post){send(e,200,Map.of("required",security.setupRequired()));return;}
         if(route.equals("setup")&&post){
-            if(!security.allowLogin()||!logins.tryAcquire()){send(e,429,Map.of("error","Setup rate limit; wait one minute"));return;}
+            if(!security.allowLogin(remoteAddress(e))||!logins.tryAcquire()){send(e,429,Map.of("error","Setup rate limit; wait one minute"));return;}
             try {
                 if(!p.text("password").equals(p.text("passwordConfirmation")))throw new IllegalArgumentException("Passwords do not match");
                 char[] password=p.text("password").toCharArray();
@@ -72,7 +72,7 @@ public final class AdminHandler implements HttpHandler {
             }finally{logins.release();}
         }
         if(route.equals("login")&&post){
-            if(!security.allowLogin()||!logins.tryAcquire()){send(e,429,Map.of("error","Login rate limit; wait one minute"));return;}
+            if(!security.allowLogin(remoteAddress(e))||!logins.tryAcquire()){send(e,429,Map.of("error","Login rate limit; wait one minute"));return;}
             try{
                 char[] password=p.text("password").toCharArray();if(password.length>128)throw new IllegalArgumentException();
                 WebSecurity.Session s;try{s=security.login(p.text("username"),password);}finally{Arrays.fill(password,'\0');}
@@ -87,7 +87,7 @@ public final class AdminHandler implements HttpHandler {
         if(route.equals("session")&&!post){send(e,200,session(s));return;}
         if(route.equals("logout")&&post){security.logout(s);security.cookie(e,null);send(e,200,Map.of("ok",true));return;}
         var permission=AdminService.permission(route,post);
-        if(s.identity().role().ordinal()<permission.ordinal()){identities.audit(s.identity().username(),route,"","denied");send(e,403,Map.of("error","Role does not permit this operation"));return;}
+        if(!s.identity().role().permits(permission)){identities.audit(s.identity().username(),route,"","denied");send(e,403,Map.of("error","Role does not permit this operation"));return;}
         if(!post){
             Object result=switch(route){
                 case "audit"->identities.audit();
@@ -128,6 +128,11 @@ public final class AdminHandler implements HttpHandler {
     }
     private static long positiveRevision(AdminService.Input p){long revision=p.number("revision");if(revision<1)throw new IllegalArgumentException("Invalid revision");return revision;}
     private static Object session(WebSecurity.Session s){return Map.of("username",s.identity().username(),"role",s.identity().role(),"csrf",s.csrf(),"expires",s.expires());}
+    /** Stable throttle bucket per peer address; never a shared bucket for all clients. */
+    private static String remoteAddress(HttpExchange e) {
+        var address=e.getRemoteAddress();
+        return address==null||address.getAddress()==null?"unknown":address.getAddress().getHostAddress();
+    }
     private static String body(HttpExchange e,int limit)throws IOException {
         if(!"application/x-www-form-urlencoded;charset=UTF-8".equalsIgnoreCase(e.getRequestHeaders().getFirst("Content-Type")))throw new IllegalArgumentException();
         byte[] b=e.getRequestBody().readNBytes(limit+1);if(b.length>limit)throw new IllegalArgumentException("Request too large");return new String(b,StandardCharsets.UTF_8);

@@ -14,7 +14,7 @@ public final class ServerControl {
     public enum State { STARTING, RUNNING, STOPPING, STOPPED, FAILED }
     public record Snapshot(String version,State state,String endpoint,Instant startedAt,long uptimeSeconds,int maps,int items,
             List<SessionRegistry.Snapshot> sessions,List<SceneRegistry.Status> scenes,
-            RuntimeMetrics metrics,String failure) { }
+            RuntimeMetrics metrics,java.util.Map<String,Long> output,String failure) { }
     private final String version;
     private final Path data;
     private final SessionRegistry sessions=new SessionRegistry();
@@ -56,7 +56,8 @@ public final class ServerControl {
         try {
             long uptime=startedAt==null?0:Math.max(0,((stoppedNanos==0?System.nanoTime():stoppedNanos)-startedNanos)/1000000000);
             return new Snapshot(version,state,endpoint,startedAt,uptime,scenes==null?0:scenes.catalog().sceneCount(),itemCount,
-                sessions.snapshots(),scenes==null?List.of():scenes.statuses(),RuntimeMetrics.capture(),failure);
+                sessions.snapshots(),scenes==null?List.of():scenes.statuses(),RuntimeMetrics.capture(),
+                org.tortodrone.server.network.NetworkMetrics.snapshot(),failure);
         } finally { org.tortodrone.core.LockOrder.exit(); }
     }
     public synchronized boolean awaitStart(boolean persistent) throws InterruptedException {

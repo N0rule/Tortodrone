@@ -16,6 +16,7 @@ import org.tortodrone.core.town.TownCatalog;
 
 /** Shared account service for the game server and local administration application. */
 public final class AccountStore implements AutoCloseable {
+    private static final System.Logger LOG = System.getLogger(AccountStore.class.getName());
     public static final String DEFAULT_USERNAME = "tortodrone";
     public record Account(int id, String username, boolean gameMaster, long authRevision, CharacterStore characters) { }
     public enum LoginFailure { NO_SUCH_USER, INVALID_PASSWORD }
@@ -135,13 +136,18 @@ public final class AccountStore implements AutoCloseable {
      * and the observed size is reported so the caller can warn without blocking writes.
      */
     public synchronized void watchStorage(long alarmBytes, java.util.function.LongConsumer alarm) {
+        watchStorage(alarmBytes, alarm, message -> LOG.log(System.Logger.Level.WARNING, message));
+    }
+    /** @param warning receives maintenance failures, so the server can route them to its own log */
+    public synchronized void watchStorage(long alarmBytes, java.util.function.LongConsumer alarm,
+            java.util.function.Consumer<String> warning) {
         if (database == null || maintenance != null) return;
         maintenance = Executors.newSingleThreadScheduledExecutor(task -> {
             Thread thread = new Thread(task, "StorageMaintenance"); thread.setDaemon(true); return thread;
         });
         maintenance.scheduleWithFixedDelay(() -> {
             try { long wal = database.maintain(alarmBytes); if (wal >= alarmBytes) alarm.accept(wal); }
-            catch (RuntimeException ignored) { }
+            catch (RuntimeException failure) { warning.accept("Storage maintenance failed; WAL growth is unmanaged: "+failure); }
         }, 60, 60, TimeUnit.SECONDS);
     }
 
@@ -279,7 +285,7 @@ public final class AccountStore implements AutoCloseable {
     public Session attach(Account account,Socket socket) throws IOException {
         return attachments.attach(account,socket,attachmentHost);
     }
-    /** The server owns this watcher. The desktop tool opens no networking endpoint. */
+    /** The server owns this watcher; administration never opens a networking endpoint of its own. */
     public synchronized void watchSessions() {
         attachments.watch(attachmentHost);
     }

@@ -144,59 +144,8 @@ public final class SessionCodec extends WireWriter {
     /** Shared symbol tables and template materialization for this connection. */
     public WireContext context(){return context;}
 
-
-
-
-
-
-
-    /** Captured 2026 tutorial gate 397. A single stationary LEVEL wedge fills its wheel. */
-    /** Native 2026 captured Generator gate: lobby wheel followed by training grounds. */
-    /** An imported rank mission's live 2026 gate, wheel for wheel. */
-
-
-
-
-
-
-
-
-    /** Native unreliable input falls back to the reliable FIFO when no UDP is advertised. */
-
-
-    /** Item forge callbacks resolve these keys in the stock item bundle. */
-    /** Listener method zero is the standard failure callback; stock message keys stay localizable. */
-
-    /** Confirm listeners use method one with a null argument array for success. */
-
-    /** ResultMarshaller callback for read-only list requests (feed, party suggestions). */
-
-    /** TellListener method one carries idle duration and an optional away message. */
-
-    /** The social feed is empty on this server; its Result listener receives one empty list. */
-
-    /** Uplink News returns alternating property name/value strings that the client reads as a Properties. */
-
-
-    /** PlayerObject derives GAME_MASTER from flag 256; token 8 permits stock broadcast UI. */
-
-    /** The native HUD redraws its party-finder toggle from this attribute, never from the request. */
-
-    /** Stock ResultListener payload; only equipped items or their visible appearance leave the owner. */
-
-
-
-
-
     /** Guild objects live in their own stable OID range, above scene/trade identities. */
     public static int guildOid(long guildId){return 1_000_000+Math.toIntExact(guildId);}
-    /** Whole native set after a durable commit, also used when activating a saved knight. */
-    /** TudeyBodyObject.FORCE_CLIENT_ACTION, as emitted by ForceClientAction logic. */
-
-
-
-    /** Item entry, equipment element and loadout entry events notify the open stock panels. */
-
 
     public record TradeView(int oid,Knight first,WorldProfile firstProfile,List<WorldProfile.Item> firstItems,
             Knight second,WorldProfile secondProfile,List<WorldProfile.Item> secondItems,
@@ -218,33 +167,8 @@ public final class SessionCodec extends WireWriter {
     public static final int TRADE_INVOCATION=1, PROJECTX_SCENE_INVOCATION=6, TUDEY_SCENE_INVOCATION=10,
         TOWN_SCENE_INVOCATION=11, PARTY_INVOCATION=20;
 
-    /** Single stock PlayerObject.recipes entry; open alchemy dialogs refresh on this event. */
-
-
-
-
-    /** Native moveSucceeded, not moveSucceededWithScene: the client loads its own model. */
-
-
-
-
-
     /** Compatibility transport for explicitly constructed single-member interior fixtures. */
     public static int interiorPartyOid(SceneInstanceView scene){return 500+scene.oid();}
-    /** The name event deliberately fires even when its value was already null: it opens
-     * the stock EndOfLevelWindow. Type/depth must precede it in the same transaction. */
-    /** Every native level member requires a Heat entry, including an empty floor. */
-
-    /** Original Crowd place chat message, carrying a server-selected visible name. */
-    /** Server-authored notice rendered in the stock chat log; null resolves the literal text. */
-    /** Original auction localization arguments; system-info routing is archive reconstructed. */
-
-    /** Publish occupant metadata before adding their actors to the scene. */
-
-    /** Publish native membership events in the same order as PlaceManager. */
-
-    /** Notify stock OccupantDirector observers; replacing a DSet alone does not update labels. */
-
 
     /** Encode the shared actor records once; the template keeps per-connection symbol
      * placeholders that each recipient materializes with its own codes. */
@@ -262,30 +186,10 @@ public final class SessionCodec extends WireWriter {
     public byte[] materialize(org.tortodrone.core.world.SceneFrame frame,int oid,int acknowledge,short ping,int reference,short elapsed){
         return context.materialize(frame,oid,acknowledge,ping,reference,elapsed);
     }
-    /** Native home changes after successful town entry, not on a floor-complete request. */
-    /** DamageEffect, the current combat feedback channel: the party-object DamageEvent of the
-     *  2011 and 2022 clients (which the PartyObject$DamageEvent crash showed is gone from the
-     *  live client build) moved into the tudey effect stream as the Feedback/Damage entry the
-     *  shipped effect.dat defines. The current client's actor sprites implement its listener:
-     *  a damaged monster sprite plays the gethit particle and the attacker's own client draws
-     *  the floating number, while a damaged knight sprite decodes the packed per-type
-     *  breakdown into his own pips. Amount encodings ride the event unchanged: a monster's
-     *  dealt amount with its attacking pawn as source, a knight's packed breakdown with the
-     *  native literal zero source. */
-
 
     // ---- guild object and its roster (GuildObject fields stream in client declaration order)
 
     public static final int GUILD_PEER_SERVICE=28,GUILD_CHAT_SERVICE=29;
-
-    /** Full {@code GuildObject} after a subscribe; {@code messageId} is the request's. */
-    /** Compound of attribute and roster changes; the client subscribes to both. */
-    /** The knight is no longer in a guild: clear the three PlayerObject fields the client reads. */
-    /** The Expand Guild Hall window (id 19 reply), pushed at the caller's {@code sceneDialog}. */
-    /** The themes / environments window (id 20 reply), pushed at the caller's {@code sceneDialog}. */
-    /** A guild record page: {@code entryCount} is the filter's total, not the page size. */
-
-
 
     public byte[] bootstrap(int connectionId, int clientOid, String host, int port) throws IOException { return bootstrapCodec.bootstrap(connectionId, clientOid, host, port); }
     public byte[] player(short messageId, int oid, int playerId, String username) throws IOException { return bootstrapCodec.player(messageId, oid, playerId, username); }

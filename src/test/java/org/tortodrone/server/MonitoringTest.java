@@ -29,9 +29,9 @@ public final class MonitoringTest {
         check(control.awaitStart(false)&&control.snapshot().state()==ServerControl.State.STARTING,"initial lifecycle starts once");
         control.stop();control.stopped();check(!control.awaitStart(false),"terminal completion exits");
         check(control.snapshot().uptimeSeconds()>=0,"monotonic run duration remains available after stopping");
-        control.start();check(control.awaitStart(false),"desktop start can restart stopped core");control.exit();control.stopped();check(!control.awaitStart(false),"exit prevents restart");
-        check(ServerOptions.parse(new String[]{"--nogui","--config","/tmp/server file.properties"},Path.of("default")).mode()==ServerOptions.Mode.TERMINAL,"flags/path parse without desktop");
-        check(!ServerOptions.parse(new String[]{"--nogui"},Path.of("default")).desktopRequested(),"nogui bypasses desktop availability");
+        control.start();check(control.awaitStart(false),"a stopped core can be started again");control.exit();control.stopped();check(!control.awaitStart(false),"exit prevents restart");
+        check(ServerOptions.parse(new String[]{"--nogui","--config","/tmp/server file.properties"},Path.of("default")).mode()==ServerOptions.Mode.TERMINAL,"flags and paths parse");
+        try{ServerOptions.parse(new String[]{"--gui"},Path.of("default"));throw new AssertionError("Removed --gui accepted");}catch(java.io.IOException expected){ }
         try{ServerOptions.parse(new String[]{"--gui","--nogui"},Path.of("default"));throw new AssertionError("Conflicting modes accepted");}catch(java.io.IOException expected){ }
         var metrics=RuntimeMetrics.capture();check(metrics.processors()>0&&metrics.heapUsed()>=0&&metrics.heapMax()>0,"real JVM metrics");
         System.out.println("PASS: immutable session identity, late-event cleanup, lifecycle restart/exit and launch arguments");

@@ -3,9 +3,10 @@ package org.tortodrone.server;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** Pure argument parsing; --nogui never queries or initializes a desktop toolkit. */
+/** Pure argument parsing for the headless server. */
 public record ServerOptions(Path config, Mode mode, Path client, boolean skipClientAssets) {
-    public enum Mode { AUTO, GUI, TERMINAL }
+    /** Headless only; --gui is rejected during parsing. */
+    public enum Mode { AUTO, TERMINAL }
     public static ServerOptions parse(String[] args,Path defaultConfig) throws IOException {
         Path config=defaultConfig;Mode mode=Mode.AUTO;boolean configured=false;
         Path client=null;boolean skipClientAssets=false;
@@ -22,9 +23,5 @@ public record ServerOptions(Path config, Mode mode, Path client, boolean skipCli
         }
         if(client!=null&&skipClientAssets)throw new IOException("Choose --client or --skip-client-assets");
         return new ServerOptions(config,mode,client,skipClientAssets);
-    }
-    public boolean desktopRequested() throws IOException {
-        if(mode==Mode.GUI)throw new IOException("--gui was removed; enable the HTTPS WebUI in config/server.yml");
-        return false;
     }
 }

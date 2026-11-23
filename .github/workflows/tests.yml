@@ -1,0 +1,57 @@
+name: Standalone tests
+
+# The Gradle build stays test-free by design; this workflow is the CI gate that
+# actually runs the standalone unit programs. Tags additionally run the packaged
+# integration programs, which need the built JAR.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Unit programs (Java 25)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Run standalone unit programs
+        shell: bash
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon testUnit
+
+  integration:
+    name: Packaged integration programs (Java 25)
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Run packaged integration programs
+        shell: bash
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon testIntegration

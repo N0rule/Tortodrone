@@ -15,6 +15,10 @@ public final class WebIdentityStoreTest {
     public static void main(String[] args)throws Exception {
         Path root=Files.createTempDirectory("tortodrone-identities-");
         try {
+            // Authorization uses explicit ranks, so reordering the enum cannot widen access.
+            check(!WebIdentities.Role.VIEWER.permits(WebIdentities.Role.MODERATOR),"a viewer cannot perform moderator work");
+            check(!WebIdentities.Role.MODERATOR.permits(WebIdentities.Role.ADMINISTRATOR),"a moderator cannot perform administrator work");
+            check(WebIdentities.Role.MODERATOR.permits(WebIdentities.Role.MODERATOR)&&WebIdentities.Role.ADMINISTRATOR.permits(WebIdentities.Role.VIEWER),"ranked roles permit their own and lower levels");
             var store=new WebIdentityStore(root);
             check(store.bootstrapAvailable(),"fresh deployment offers setup");
             try(var pool=Executors.newFixedThreadPool(2)) {

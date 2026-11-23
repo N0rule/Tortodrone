@@ -42,7 +42,7 @@ public final class AdminService implements AutoCloseable {
         return switch(route) {
             case "status"->{var s=control.snapshot();var status=new LinkedHashMap<String,Object>();
                 status.put("version",s.version());status.put("state",s.state());status.put("endpoint",s.endpoint());
-                status.put("uptimeSeconds",s.uptimeSeconds());status.put("metrics",s.metrics());
+                status.put("uptimeSeconds",s.uptimeSeconds());status.put("metrics",s.metrics());status.put("output",s.output());
                 status.put("database",Database.diagnostics());status.put("storage",accounts.storageMetrics());
                 status.put("accounts",accounts.list().size());status.put("sessions",s.sessions());
                 status.put("scenes",s.scenes());status.put("failure",s.failure());yield status;}

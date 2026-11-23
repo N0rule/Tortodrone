@@ -149,6 +149,11 @@ final class ServerConsole implements AutoCloseable {
                 log.info("Tortodrone "+status.version()+" | "+status.state()+" | "+status.endpoint()+" | uptime="+status.uptimeSeconds()+"s");
                 log.info("Sessions: "+status.sessions().size()+" | Players: "+status.sessions().stream().filter(p->p.knightId()!=null).count()+" | Maps: "+status.maps()+" | Items: "+status.items()+" | Instances: "+status.scenes().size());
                 log.info("Heap: "+RuntimeMetrics.mib(metrics.heapUsed())+" / "+RuntimeMetrics.mib(metrics.heapMax())+" MiB | Accounts: "+accounts.list().size());
+                var output=status.output();
+                log.info("Output: frames="+output.get("frames")+" bytes="+output.get("bytes")+" largestFrame="+output.get("largestFrame")
+                    +" droppedOptional="+output.get("droppedOptional")
+                    +" reliableOverflows="+output.get("reliableOverflows")+" budgetDisconnects="+output.get("budgetDisconnects")
+                    +" peakPendingFrames="+output.get("peakPendingFrames")+" peakPendingBytes="+output.get("peakPendingBytes"));
             }
         } else if(command.equals("webui")) {
             webui(words);

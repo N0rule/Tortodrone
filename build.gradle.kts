@@ -297,6 +297,15 @@ val regressionExecution = gradle.sharedServices.registerIfAbsent("regressionExec
     maxParallelUsages.set(1)
 }
 
+// Test fixtures copy content trees; keep their temporary files under the build directory so a
+// small tmpfs cannot fail a suite, and `clean` reclaims whatever a failed program leaves behind.
+val testTempDirectory = layout.buildDirectory.dir("test-tmp").get().asFile
+fun JavaExec.useBuildTemp() {
+    val temporary = testTempDirectory
+    doFirst { temporary.mkdirs() }
+    systemProperty("java.io.tmpdir", temporary.absolutePath)
+}
+
 // Integration programs use separate JVMs; unit programs share one sequential runner.
 // Use packaged code rather than main output so tests exercise the shipped resources/driver.
 fun standalone(name: String, entryPoint: String, arguments: List<String> = emptyList()) =
@@ -308,6 +317,7 @@ fun standalone(name: String, entryPoint: String, arguments: List<String> = empty
         mainClass.set(entryPoint)
         jvmArgs("--enable-native-access=ALL-UNNAMED")
         workingDir = projectDir
+        useBuildTemp()
         args(arguments)
     }
 val unitProgramNames = fileTree("src/test/java") {
@@ -335,6 +345,7 @@ val testUnit = tasks.register<JavaExec>("testUnit") {
     mainClass.set("org.tortodrone.support.StandaloneTestSuite")
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     workingDir = projectDir
+    useBuildTemp()
     args(selectedUnitPrograms)
 }
 val serverPath = publicOutput.file("tortodrone.jar").asFile.absolutePath
@@ -354,6 +365,7 @@ val testBuildTools = tasks.register<JavaExec>("testBuildTools") {
     classpath = buildTools.runtimeClasspath
     mainClass.set("BuildToolsTest")
     workingDir = projectDir
+    useBuildTemp()
 }
 val testProcessCleanup = tasks.register<JavaExec>("testProcessCleanup") {
     usesService(regressionExecution)
@@ -361,6 +373,7 @@ val testProcessCleanup = tasks.register<JavaExec>("testProcessCleanup") {
     classpath = buildTools.runtimeClasspath
     mainClass.set("ProcessCleanupTest")
     workingDir = projectDir
+    useBuildTemp()
 }
 val testIntegration = tasks.register("testIntegration") {
     group = "verification"
@@ -388,6 +401,7 @@ tasks.register<JavaExec>("benchmark") {
     systemProperty("tortodrone.serverJar", serverPath)
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     workingDir = projectDir
+    useBuildTemp()
 }
 tasks.register<JavaExec>("benchmarkScenes") {
     group = "benchmark"
@@ -397,6 +411,7 @@ tasks.register<JavaExec>("benchmarkScenes") {
     classpath = files(serverJar.flatMap { it.archiveFile }, sourceSets.test.get().output)
     mainClass.set("org.tortodrone.benchmark.SceneBenchmark")
     workingDir = projectDir
+    useBuildTemp()
 }
 
 tasks.clean {

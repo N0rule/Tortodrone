@@ -4,49 +4,79 @@ import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import static org.tortodrone.support.TestWire.check;
 
-/** Bounded per-session output: optional frames drop before encoding, reliable frames never drop. */
+/** Bounded per-session output: optional frames are skipped before encoding, never after a start; reliable frames never drop. */
 public final class SessionOutputBudgetTest {
     public static void main(String[] args)throws Exception {
         optionalFramesDropBeforeEncoding();
+        optionalFrameThatStartsEncodingIsQueued();
         reliableOverflowFails();
         sustainedOverBudgetDisconnects();
         slowReaderQueueIsBoundedAndMeasured();
-        System.out.println("PASS: optional frame drop, reliable overflow, sustained budget disconnect and bounded slow-reader queue");
+        System.out.println("PASS: optional frame drop, post-encode queueing, reliable overflow, sustained budget disconnect and bounded slow-reader queue");
     }
 
     private static void optionalFramesDropBeforeEncoding()throws Exception {
         var socket=new BlockingSocket();
         var before=SessionOutput.Metrics.snapshot();
-        try(var output=new SessionOutput(socket,4,1024,60_000)) {
+        var clock=new AtomicLong(1_000_000);
+        var encoded=new AtomicInteger();
+        try(var output=new SessionOutput(socket,2,1024,60_000_000_000L,clock::get)) {
             check(output.droppedOptional()==0,"no frame dropped before the budget is reached");
-            check(!output.sendOptional(()->new byte[2048]),"optional frame larger than the budget is skipped");
+            output.send(()->new byte[1]);
+            awaitPendingBytes(output,0);
+            check(output.sendOptional(()->new byte[1024]),"an optional frame within the budget is queued");
+            check(!output.sendOptional(()->{encoded.incrementAndGet();return new byte[1];}),"an optional frame is skipped once the queue is over budget");
+            check(encoded.get()==0,"the skipped optional frame is never encoded");
             check(output.droppedOptional()==1,"skipped optional frame is counted");
         }
         var after=SessionOutput.Metrics.snapshot();
         check(after.droppedOptional()-before.droppedOptional()==1,"global optional-drop counter advances");
     }
 
-    private static void reliableOverflowFails()throws Exception {
+    private static void optionalFrameThatStartsEncodingIsQueued()throws Exception {
         var socket=new BlockingSocket();
+        var encoded=new AtomicInteger();
+        try(var output=new SessionOutput(socket,4,1024,60_000_000_000L,new AtomicLong(1_000_000)::get)) {
+            // Encoded frames may register class/intern mappings. Dropping one after encoding
+            // would leave the client with mappings it never saw, so it must be queued even if
+            // that leaves the queue one frame past the byte budget.
+            check(output.sendOptional(()->{encoded.incrementAndGet();return new byte[2048];}),"an optional frame that begins encoding is queued");
+            check(encoded.get()==1,"the queued optional frame is encoded exactly once");
+        }
+    }
+
+    private static void reliableOverflowFails()throws Exception {
         var before=SessionOutput.Metrics.snapshot();
-        try(var output=new SessionOutput(socket,4,1024,60_000)) {
+        try(var output=new SessionOutput(new BlockingSocket(),0,1024,60_000)) {
+            boolean failed=false;
+            try { output.send(()->new byte[1]); }
+            catch(IOException expected){failed=true;}
+            check(failed,"a reliable frame beyond the queue budget fails the connection");
+        }
+        try(var output=new SessionOutput(new BlockingSocket(),4,1024,60_000)) {
             boolean failed=false;
             try { output.send(()->new byte[2048]); }
             catch(IOException expected){failed=true;}
-            check(failed,"reliable frame beyond the byte budget fails the connection");
+            check(failed,"a reliable frame beyond the byte budget fails the connection");
         }
         var after=SessionOutput.Metrics.snapshot();
-        check(after.reliableOverflows()-before.reliableOverflows()==1,"global reliable-overflow counter advances");
+        check(after.reliableOverflows()-before.reliableOverflows()==2,"both reliable overflow causes are counted");
+        check(after.budgetDisconnects()==before.budgetDisconnects(),"a single oversized reliable frame is not a sustained budget disconnect");
     }
 
     private static void sustainedOverBudgetDisconnects()throws Exception {
         var socket=new BlockingSocket();
         var before=SessionOutput.Metrics.snapshot();
-        try(var output=new SessionOutput(socket,4,1024,50)) {
-            check(!output.sendOptional(()->new byte[2048]),"over-budget optional frame is dropped");
-            Thread.sleep(80);
+        var clock=new AtomicLong(1_000_000);
+        try(var output=new SessionOutput(socket,2,1024,60_000,clock::get)) {
+            output.send(()->new byte[1]);
+            awaitPendingBytes(output,0);
+            check(output.sendOptional(()->new byte[1024]),"the frame that reaches the budget is queued");
+            clock.set(1_060_000);
             boolean failed=false;
             try { output.send(()->new byte[1]); }
             catch(IOException expected){failed=true;}
@@ -75,6 +105,15 @@ public final class SessionOutputBudgetTest {
             check(after.largestFrame()>=4096,"largest queued frame is observed");
             System.out.printf("SLOW_READER retainedFrames=%d retainedBytes>=%d largestFrame=%d peakPendingFrames=%d peakPendingBytes=%d heapDeltaBytes=%d%n",
                 frames,64L*4096,after.largestFrame(),after.peakPendingFrames(),after.peakPendingBytes(),heapAfter-heapBefore);
+        }
+    }
+
+    /** Wait for the writer to take queued frames, bounded so a bug cannot hang the suite. */
+    private static void awaitPendingBytes(SessionOutput output,long expected)throws Exception {
+        long deadline=System.nanoTime()+2_000_000_000L;
+        while(output.pendingBytesForTest()!=expected) {
+            if(System.nanoTime()>=deadline)throw new AssertionError("output writer did not drain the queue");
+            Thread.sleep(1);
         }
     }
 

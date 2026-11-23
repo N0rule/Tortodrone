@@ -254,6 +254,7 @@ final class SessionRuntime {
     }}
 
     void completeMove(short requestId,boolean zone)throws IOException {
+        // Native moveSucceeded, not moveSucceededWithScene: the client loads its own model.
         session.responder().send(()->session.responder().codec().sceneMove(session.connectionOid(),requestId,zone,scene,session.sceneRegistry().catalog()));
         session.responder().send(()->session.responder().codec().sceneLocation(session.connectionOid(),scene,
             session.sceneRegistry().channelOid(scene.map().zone(),false),session.sceneRegistry().channelOid(scene.map().zone(),true)));

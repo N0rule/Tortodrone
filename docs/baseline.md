@@ -97,16 +97,20 @@ writes beyond session setup.
 Source-verified bounds:
 
 - `SessionOutput` holds at most **64 frames** and **4 MiB** per session in a bounded
-  `ArrayDeque`; a reliable frame that would exceed either limit fails the session with
-  "Downstream queue full" rather than blocking the scene. Optional update frames are
-  skipped before encoding once the queue is over budget, and a client that stays over
-  budget for 5 s is disconnected.
+  `ArrayDeque`; a reliable frame that would exceed either limit fails the session rather
+  than blocking the scene. Optional update frames are skipped before encoding while the
+  queue is over budget. The budget decision and encoding share one lock, so an optional
+  frame that starts encoding is always queued; the retained set can therefore exceed the
+  byte limit by at most that one frame. A client that stays over budget for 5 s is
+  disconnected.
 - Delivery uses one `SceneDelivery-<oid>` virtual thread and three in-memory
   collections (`pending`, `activityPublications`, `partyEvents`). The two deques are
-  unbounded; overflow is signalled by `partyOverflow`/`publicationOverflow` flags.
+  bounded (16 activity records, 64 party events) and overflow is signalled by the
+  `publicationOverflow`/`partyOverflow` flags instead of unbounded growth.
 - `SessionOutput.Metrics` records process-wide frames, bytes, largest frame, optional
   drops, reliable overflows, budget disconnects, and peak pending frames/bytes. The
-  counters are observation only and never change policy.
+  counters are observation only and never change policy; `NetworkMetrics` exposes them
+  through the console/WebUI `status` response.
 
 Town/scene workload with the repaired tool:
 
@@ -134,7 +138,8 @@ sends `enteredPlace` and waits for the initial delta. The OID is never derived f
 template id.
 
 Absolutely baselined by `SessionOutputBudgetTest` (slow-reader queue depth, largest
-frame, optional drops and disconnect) and the Phase 4 measurements below.
+frame, optional drops that never encode, a started optional frame that is queued, and
+the sustained-budget disconnect) and the Phase 4 measurements below.
 
 ## Database baseline
 

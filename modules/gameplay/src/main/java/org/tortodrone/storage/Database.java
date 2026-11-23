@@ -67,8 +67,8 @@ public final class Database {
      * unknown file and is refused untouched; the marker is never written by a read.
      */
     private void openExisting(Path directory, boolean deploymentLocked) throws IOException {
-        if (applicationId() != SchemaMigrations.APPLICATION_ID) {
-            int marker = applicationId();
+        int marker = applicationId();
+        if (marker != SchemaMigrations.APPLICATION_ID) {
             throw new IOException((marker == 0
                 ? "This database predates Tortodrone 0.42.0 and has no project marker; saved data was not changed. Use the last 0.41.x build if it must be exported."
                 : "Unsupported database application_id " + marker + "; saved data was not changed"));

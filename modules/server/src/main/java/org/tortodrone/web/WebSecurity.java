@@ -21,8 +21,9 @@ public final class WebSecurity {
     private final java.util.function.LongSupplier clock;
     private String setupCode;
     private int setupFailures;
-    private long loginWindow;
-    private int loginAttempts;
+    private static final int LOGIN_LIMIT=10, MAX_LOGIN_ADDRESSES=1024;
+    /** Per-address one-minute windows; bounded so hostile addresses cannot grow the map. */
+    private final Map<String,long[]> loginWindows=new LinkedHashMap<>(16,0.75f,true);
     public WebSecurity(WebSettings settings,WebIdentityStore identities,Path data)throws IOException {
         this(settings,identities,data,System::currentTimeMillis);
     }
@@ -67,9 +68,15 @@ public final class WebSecurity {
     }
     private static String single(HttpExchange e,String name){var values=e.getRequestHeaders().get(name);return values==null||values.size()!=1?null:values.getFirst();}
     public static boolean equal(String a,String b){return a!=null&&b!=null&&MessageDigest.isEqual(a.getBytes(StandardCharsets.UTF_8),b.getBytes(StandardCharsets.UTF_8));}
-    public synchronized boolean allowLogin(){
-        long now=clock.getAsLong();if(now-loginWindow>60_000){loginWindow=now;loginAttempts=0;}
-        return ++loginAttempts<=10;
+    /** Throttle by remote address: one noisy or hostile client cannot lock every administrator out. */
+    public synchronized boolean allowLogin(String remoteAddress){
+        long now=clock.getAsLong();
+        long[] window=loginWindows.get(remoteAddress);
+        if(window==null){
+            if(loginWindows.size()>=MAX_LOGIN_ADDRESSES)loginWindows.remove(loginWindows.keySet().iterator().next());
+            window=new long[]{now,0};loginWindows.put(remoteAddress,window);
+        }else if(now-window[0]>60_000){window[0]=now;window[1]=0;}
+        return ++window[1]<=LOGIN_LIMIT;
     }
     public synchronized Session login(String username,char[] password)throws IOException {
         var id=identities.authenticate(username,password);if(id==null)return null;

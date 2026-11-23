@@ -117,7 +117,10 @@ public final class WebUiTest {
                     for(int i=0;i<16;i++){clock.addAndGet(29*60_000);check(get("status").status==200,"active session before absolute expiry");}
                     clock.addAndGet(17*60_000);check(get("status").status==401,"absolute eight-hour expiry despite activity");
                     check(!identities.audit().isEmpty(),"persistent action audit");
-                    for(int i=0;i<12;i++)security.allowLogin();check(!security.allowLogin(),"bounded global login rate");
+                    for(int i=0;i<12;i++)security.allowLogin("203.0.113.9");
+                    check(!security.allowLogin("203.0.113.9"),"bounded per-address login rate");
+                    check(security.allowLogin("203.0.113.10"),"one noisy address cannot lock out another");
+                    clock.addAndGet(61_000);check(security.allowLogin("203.0.113.9"),"the login window resets after a minute");
                 }
                 httpMode(root,news,frontend,identities,service);
                 automaticHttpMode(root,news,frontend,identities,service);

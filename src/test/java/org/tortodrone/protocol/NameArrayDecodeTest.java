@@ -23,7 +23,7 @@ public final class NameArrayDecodeTest {
             "the result listener follows the array without desync");
         check(invocation(2).arguments().get(1) instanceof List<?> empty&&empty.isEmpty(),
             "an empty Name[] decodes to an empty name list");
-        refuse(()->oversized(200)); // array length above the shared collection cap
+        refuse(()->oversized(257)); // one past the shared 256 collection cap
         refuse(()->foreignElement("com.threerings.util.Message")); // element type outside the value switch
         System.out.println("PASS: stock party-suggestion Name[] arrays decode as name lists");
     }

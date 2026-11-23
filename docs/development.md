@@ -37,9 +37,11 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 
 Tortodrone's unit tests are standalone `main` programs, **not JUnit**. `./gradlew testUnit --tests ...` is not supported. Prefer `-PunitTests=SceneSimulationTest,MovementCollisionTest`; fully qualified names also work. Unknown, empty or ambiguous names fail instead of silently running zero tests. Without the property, `testUnit` still runs every unit program. Programs run sequentially, report elapsed time and list the five slowest programs; authentication, storage and rollback coverage is retained.
 
+CI runs `testUnit` on pull requests and pushes to `main`, and `testIntegration` on version tags (`.github/workflows/tests.yml`); the Gradle `build` task itself stays test-free.
+
 `build` packages the single server JAR, WebUI and prepared content. Unit and packaged WebUI/console integration tests use that same executable. `checkModuleGraph` runs inside `buildServer` and validates every extracted project's declared edges, including that `org.tortodrone.server` does not reference `org.tortodrone.web` directly; `checkBytecodeDependencies` then runs `jdeps` over the packaged JAR and rejects any package dependency outside the documented module graph, so a fully-qualified reference cannot hide an undeclared edge. Map preparation integration reuses compiled `BuildTools` instead of invoking Java's source compiler for each fixture operation.
 
-To keep an existing deployment untouched, use `-PdeploymentOutput=/tmp/tortodrone-check` with build/test tasks. The JAR, frontend and prepared configuration/content go there, while Gradle compilation stays in `.build/`. Test output redirection does not upgrade an existing `build/content/packs` deployment.
+To keep an existing deployment untouched, use `-PdeploymentOutput=$HOME/tortodrone-check` with build/test tasks. The JAR, frontend and prepared configuration/content go there, while Gradle compilation stays in `.build/`. Test output redirection does not upgrade an existing `build/content/packs` deployment.
 
 The bundled `StandaloneTestSuite` also accepts fully-qualified test classes directly. From the repository root (Linux/macOS):
 
@@ -62,7 +64,7 @@ java --enable-native-access=ALL-UNNAMED -cp "build/tortodrone.jar;.build/classes
 Replace the example classes with the specific tests for your change; do not run them all by default. This uses the same packaged JAR and compiled test output as the Gradle unit suite. Tests which need arguments or packaged servers have their own named Gradle integration tasks.
 
 
-Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml` pin distribution/dependency integrity. First build needs Gradle/Maven/plugin downloads; cached inputs support `--offline`. `build` and the explicit test tasks **do not** run native stock graphical checks. Unit programs run sequentially in one JVM; packaged integration fixtures use separate processes. A shared build-service slot serializes regression runs; don't run competing builds in the same checkout.
+Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml` pin distribution/dependency integrity. First build needs Gradle/Maven/plugin downloads; cached inputs support `--offline`. `build` and the explicit test tasks **do not** run native stock graphical checks. Unit programs run sequentially in one JVM; packaged integration fixtures use separate processes. Test JVMs set `java.io.tmpdir` to `.build/test-tmp`, so copied content fixtures stay off a small system tmpfs and `clean` reclaims anything a failed program leaves behind. A shared build-service slot serializes regression runs; don't run competing builds in the same checkout.
 
 `runServer` operates on **real `build/data/`** and is not a disposable test. `clean` removes generated JARs/scratch, but **preserves** `build/data/`, `build/content/` and legacy `build/deps/`. If using headless Linux, `env -u DISPLAY ./gradlew build` is possible; it is not graphical acceptance.
 

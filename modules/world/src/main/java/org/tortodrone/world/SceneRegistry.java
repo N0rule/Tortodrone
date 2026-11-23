@@ -87,7 +87,10 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
     public void fires(FireCatalog catalog){fires=Objects.requireNonNull(catalog);for(var copies:instances.values())for(var instance:copies)instance.simulation().fires(catalog);}
     public WeaponCatalog weapons(){return weapons;}
     public void weapons(WeaponCatalog catalog){weapons=Objects.requireNonNull(catalog);}
-    private final Map<Integer,List<Instance>> instances=new HashMap<>();
+    /** Written under the registry monitor by ensure(); read lock-free by protocol encoding. */
+    private final Map<Integer,List<Instance>> instances=new java.util.concurrent.ConcurrentHashMap<>();
+    /** The entry instance is created once at startup; encoding reads it without the monitor. */
+    private final Instance entry;
     private int nextOid=10;
     private record InteriorKey(int scene,int worldId){}
     private final Map<InteriorKey,Instance> interiors=new HashMap<>();
@@ -118,8 +121,9 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
             channelZones.put(zone,chatOid);channels.put(chatOid,new SceneChat());channels.put(chatOid+1,new SceneChat());chatOid+=2;
         }
         for(int id=140;id<500;id++)interiorOids.add(id);
-        if(catalog.isEmpty())return;
-        try{ensure(catalog.entry().id());}catch(java.io.IOException failure){throw new IllegalStateException(failure);}
+        Instance created=null;
+        if(!catalog.isEmpty())try{created=ensure(catalog.entry().id()).getFirst();}catch(java.io.IOException failure){throw new IllegalStateException(failure);}
+        entry=created;
     }
     /** Creates a template's instances on first travel; 500-map catalogs never load every body at boot. */
     private synchronized List<Instance> ensure(int scene)throws IOException {
@@ -182,7 +186,10 @@ public final class SceneRegistry implements org.tortodrone.core.world.SceneSourc
         return new Status(instance.map().id(),instance.oid(),instance.map().name(),players,
             players==0?"Idle":"Active",instance.simulation().metrics());
     }
-    public Instance entry(){return instances.get(catalog.entry().id()).get(0);}
+    public Instance entry(){
+        if(entry==null)throw new IllegalStateException("Scene catalogue is empty");
+        return entry;
+    }
     public Instance instance(int scene,int index)throws IOException {
         var copies=ensure(scene);
         if(index<0||index>=copies.size())throw new IOException("Scene instance is not available");return copies.get(index);

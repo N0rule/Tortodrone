@@ -22,26 +22,27 @@ public final class SecureHandshake {
         run(socket, key, log, false);
     }
 
-    static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth) throws Exception {
-        run(socket, key, log, localAuth, 1, socket.getLocalAddress().getHostAddress(), socket.getLocalPort());
+    static void run(Socket socket, PrivateKey key, SessionLog log, boolean authenticate) throws Exception {
+        run(socket, key, log, authenticate, 1, socket.getLocalAddress().getHostAddress(), socket.getLocalPort());
     }
 
-    static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth,
+    static void run(Socket socket, PrivateKey key, SessionLog log, boolean authenticate,
             int connectionId, String host, int port) throws Exception {
-        run(socket, key, log, localAuth, connectionId, host, port, new CharacterStore());
+        run(socket, key, log, authenticate, connectionId, host, port, new CharacterStore());
     }
 
-    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth,
+    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean authenticate,
             int connectionId, String host, int port, CharacterStore characters) throws Exception {
-        run(socket, key, log, localAuth, connectionId, host, port, new AccountStore(characters));
+        run(socket, key, log, authenticate, connectionId, host, port, new AccountStore(characters));
     }
 
-    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth,
+    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean authenticate,
             int connectionId, String host, int port, AccountStore accounts) throws Exception {
-        run(socket,key,log,localAuth,connectionId,host,port,accounts,"");
+        run(socket,key,log,authenticate,connectionId,host,port,accounts,"");
     }
 
-    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth,
+    /** @param authenticate false only for handshake probes that stop before account authentication */
+    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean authenticate,
             int connectionId, String host, int port, AccountStore accounts, String welcomeMessage) throws Exception {
         long started=System.nanoTime();
         HandshakeCodec codec = new HandshakeCodec();
@@ -67,7 +68,7 @@ public final class SecureHandshake {
             log.debug("SecureResponse sent; frame=" + response.length + " bytes");
             body = HandshakeCodec.readFrame(socket.getInputStream());
             if (body == null) throw new IOException("Client disconnected before authentication request");
-            if (!localAuth) {
+            if (!authenticate) {
                 if (!codec.isAuthRequest(body)) throw new IOException("Unexpected next request type");
                 log.debug("AESAuthRequest received; frame=" + (body.length + 4)
                     + " bytes; body not decoded; stopping before authentication");

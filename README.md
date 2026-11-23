@@ -268,7 +268,7 @@ To update:
 4. Start the new version and verify login and the WebUI.
 
 > [!CAUTION]
-> Do not delete the database or regenerate keys to fix a login problem. The 0.42.0 baseline uses a fixed marker and schema 1; a pre-0.42.0 or unknown database is refused untouched instead of migrated. Use the console `backup` command before replacing saved state.
+> Do not delete the database or regenerate keys to fix a login problem. The 0.42.0 baseline uses a fixed project marker and starts at schema 1; this build is schema 4 and applies ordered migrations after taking its own backup. A pre-0.42.0 or unknown database is refused untouched instead of migrated. Use the console `backup` command before replacing saved state.
 
 ## Run from source
 

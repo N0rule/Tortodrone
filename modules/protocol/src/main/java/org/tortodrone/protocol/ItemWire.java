@@ -91,6 +91,7 @@ final class ItemWire extends WireWriter {
         for (var saved : profile.town().loadouts().stream().sorted(java.util.Comparator.comparing(l -> l.name().toLowerCase(java.util.Locale.ROOT))).toList()) loadout(out, saved, profile);
     }
 
+    /** Item entry, equipment element and loadout entry events notify the open stock panels. */
     void loadoutUpdated(DataOutputStream out, int oid, WorldProfile profile) throws IOException {
         type(out, WireTypes.ENTRY_UPDATED_EVENT); out.writeInt(oid); string(out, "loadouts");
         loadout(out, profile);

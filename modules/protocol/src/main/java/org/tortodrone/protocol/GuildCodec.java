@@ -162,6 +162,7 @@ public final class GuildCodec extends WireWriter {
         for(int expansion:expansions){type(out,"com.threerings.projectx.guild.data.HallExpansion");out.writeByte(expansion);}
     }
 
+    /** A guild record page: {@code entryCount} is the filter's total, not the page size. */
     public byte[] guildLog(short request,int oid,org.tortodrone.core.guild.Page page)throws IOException {
         return frame(out->{eventHeader(out,"InvocationResponseEvent",oid);out.writeShort(request);out.writeByte(1);out.writeBoolean(true);out.writeInt(1);
             type(out,"com.threerings.projectx.guild.data.GuildLogPage");out.writeInt(page.entryCount());
