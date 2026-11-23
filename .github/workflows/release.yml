@@ -7,10 +7,17 @@ on:
 permissions:
   contents: read
 
+# Releases publish under distinct tag refs; never cancel a run that may already
+# be uploading an artifact.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
-    name: Build and publish portable ZIP (Java 25)
+    name: Test, build and publish portable ZIP (Java 25)
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
     permissions:
       contents: write
     steps:
@@ -45,11 +52,13 @@ jobs:
           java-version: '25'
           cache: gradle
 
-      - name: Build and verify portable release
+      # One Gradle invocation runs both gates and builds the release archive, so
+      # the tag does not pay for a separate checkout and build in another run.
+      - name: Run release gates and build portable release
         shell: bash
         run: |
           chmod +x ./gradlew
-          ./gradlew --no-daemon integrationPackaging
+          ./gradlew --no-daemon testUnit testIntegration
 
       - name: Package one portable ZIP
         shell: bash
