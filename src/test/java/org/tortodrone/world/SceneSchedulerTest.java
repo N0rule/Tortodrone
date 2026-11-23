@@ -13,8 +13,9 @@ public final class SceneSchedulerTest {
         concurrentStartRespectsCap();
         failureStopsOnlyItsLane();
         closeStopsLanes();
+        cadenceLatenessIsMeasured();
         System.out.println(
-                "PASS: serial scene lanes, active-scene cap (including concurrent admission), failure isolation and shutdown");
+                "PASS: serial scene lanes, active-scene cap (including concurrent admission), failure isolation, shutdown and cadence lateness");
     }
 
     private static void serialLaneNeverOverlaps() throws Exception {
@@ -114,6 +115,30 @@ public final class SceneSchedulerTest {
         Thread.sleep(150);
         check(ticks.get() <= settled + 1, "close stops all lanes within the drain deadline");
         check(scheduler.activeScenes() == 0, "close clears the lane table");
+    }
+
+    /** A tick that outruns the cadence is counted, and its lateness is reported as p50/p99/max. */
+    private static void cadenceLatenessIsMeasured() throws Exception {
+        try (var scheduler = new SceneScheduler(1, 4)) {
+            var ticks = new AtomicInteger();
+            scheduler.start(1, () -> {
+                if (ticks.incrementAndGet() <= 2)
+                    try {
+                        Thread.sleep(SceneScheduler.CADENCE_MILLIS + 30);
+                    } catch (InterruptedException interrupted) {
+                        Thread.currentThread().interrupt();
+                    }
+            });
+            await(() -> scheduler.lateTicks() >= 2, 5000);
+            check(scheduler.overruns() >= 2, "a tick that outruns the cadence is counted as an overrun");
+            var lateness = scheduler.lateness();
+            check(
+                    lateness.p50Millis() > 0 && lateness.p99Millis() > 0 && lateness.maxMillis() >= 20,
+                    "cadence lateness reports p50, p99 and the maximum");
+            check(
+                    lateness.p50Millis() <= lateness.p99Millis() && lateness.p99Millis() <= lateness.maxMillis(),
+                    "cadence lateness percentiles are ordered");
+        }
     }
 
     private static void await(java.util.function.BooleanSupplier condition, long millis) throws Exception {

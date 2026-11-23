@@ -110,6 +110,23 @@ public final class ServerControl {
         return ids.incrementAndGet();
     }
 
+    /** Outbound counters plus the scene scheduler's cadence observations.
+     *
+     *  <p>The cadence numbers were measured but only reachable through a benchmark; the status
+     *  payload and the console {@code status} command are the readable path an operator has. */
+    private static java.util.Map<String, Long> runtimeCounters() {
+        var counters = new java.util.TreeMap<>(org.tortodrone.server.network.NetworkMetrics.snapshot());
+        var scheduler = org.tortodrone.world.SceneScheduler.shared();
+        var lateness = scheduler.lateness();
+        counters.put("sceneActive", (long) scheduler.activeScenes());
+        counters.put("sceneLateTicks", scheduler.lateTicks());
+        counters.put("sceneOverruns", scheduler.overruns());
+        counters.put("sceneLatenessP50Micros", Math.round(lateness.p50Millis() * 1000));
+        counters.put("sceneLatenessP99Micros", Math.round(lateness.p99Millis() * 1000));
+        counters.put("sceneLatenessMaxMicros", Math.round(lateness.maxMillis() * 1000));
+        return java.util.Map.copyOf(counters);
+    }
+
     public synchronized Snapshot snapshot() {
         org.tortodrone.core.LockOrder.enter(org.tortodrone.core.LockOrder.CONTROL);
         try {
@@ -127,7 +144,7 @@ public final class ServerControl {
                     sessions.snapshots(),
                     scenes == null ? List.of() : scenes.statuses(),
                     RuntimeMetrics.capture(),
-                    org.tortodrone.server.network.NetworkMetrics.snapshot(),
+                    runtimeCounters(),
                     failure);
         } finally {
             org.tortodrone.core.LockOrder.exit();

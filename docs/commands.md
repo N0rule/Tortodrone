@@ -284,7 +284,7 @@ The server terminal accepts these forms with an optional leading `/`. These are 
 | Syntax | Use | Example |
 |---|---|---|
 | `help [command] [action]` | Show all commands or help for one command. | `help account create` |
-| `status` | Show version, uptime, sessions, resources and memory. | `status` |
+| `status` | Show version, uptime, sessions, resources, memory, outbound counters and scene cadence (late ticks, overruns, lateness). | `status` |
 | `backup [directory \| file.db]` | Write a consistent SQLite snapshot while the server keeps running. | `backup` |
 | `players` | List current TCP sessions, verified identities and locations. | `players` |
 | `session <session-id>` | Inspect an active connection. | `session 1` |

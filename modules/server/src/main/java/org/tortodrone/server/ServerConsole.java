@@ -234,6 +234,12 @@ final class ServerConsole implements AutoCloseable {
                         + output.get("budgetDisconnects")
                         + " peakPendingFrames=" + output.get("peakPendingFrames") + " peakPendingBytes="
                         + output.get("peakPendingBytes"));
+                log.info("Scene cadence: active=" + output.get("sceneActive") + " lateTicks="
+                        + output.get("sceneLateTicks")
+                        + " overruns=" + output.get("sceneOverruns") + " latenessP50Us="
+                        + output.get("sceneLatenessP50Micros") + " latenessP99Us="
+                        + output.get("sceneLatenessP99Micros") + " latenessMaxUs="
+                        + output.get("sceneLatenessMaxMicros"));
             }
         } else if (command.equals("webui")) {
             webui(words);

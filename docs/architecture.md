@@ -16,7 +16,7 @@ Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights 
 | Atomic unified YAML resolution | `resources/{ContentManager,ContentRegistry}` |
 | Browser administration | `web/{AdminHandler,AdminService,WebIdentityStore}` |
 
-The executable JAR and packaged WebUI are independent of a running stock game installation. Source imports/compatibility fixtures can read installed client classes read-only in isolated test environments. The console and admin `status` view reports indexed map/item counts and live scene instances without opening unvisited map templates.
+The executable JAR and packaged WebUI are independent of a running stock game installation. Source imports/compatibility fixtures can read installed client classes read-only in isolated test environments. The console and admin `status` view reports indexed map/item counts and live scene instances without opening unvisited map templates, together with the outbound counters and the scene scheduler's own cadence observations (active lanes, late ticks, overruns and lateness p50/p99/max) so a host does not need a benchmark run to see a scene falling behind. Per-tick work, lock wait, publication and delivery percentiles live on the scene status object.
 
 ## Module graph
 

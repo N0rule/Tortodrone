@@ -26,7 +26,12 @@ final class ConsoleHelp {
                     "help [command] [action]",
                     "Show all commands or help for one command.",
                     "help account create"),
-            new Entry("status", "", "status", "Show version, uptime, sessions, resources and memory.", "status"),
+            new Entry(
+                    "status",
+                    "",
+                    "status",
+                    "Show version, uptime, sessions, resources, memory, outbound counters and scene cadence.",
+                    "status"),
             new Entry(
                     "backup",
                     "",
