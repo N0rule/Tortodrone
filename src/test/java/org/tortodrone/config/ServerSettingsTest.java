@@ -243,8 +243,35 @@ public final class ServerSettingsTest {
                 throw new AssertionError("Wildcard proxy hostname accepted");
             } catch (IOException expected) {
             }
+            Path fresh = home.resolve("fresh-defaults.yml");
+            var stockPolicy = ServerSettings.read(fresh);
+            check(
+                    stockPolicy.partyMaxPlayers() == ServerSettings.DEFAULT_PARTY_MAX_PLAYERS
+                            && stockPolicy.tradesEnabled()
+                            && stockPolicy.chatEnabled(),
+                    "player policy defaults keep the stock party size and both features on");
+            Path policy = home.resolve("policy.yml");
+            Files.writeString(policy, "party-max-players: 4\ntrades-enabled: false\nchat-enabled: false\n");
+            var narrowed = ServerSettings.read(policy);
+            check(
+                    narrowed.partyMaxPlayers() == 4 && !narrowed.tradesEnabled() && !narrowed.chatEnabled(),
+                    "broad player policy is configurable");
+            Files.writeString(policy, "party-max-players: 9\n");
+            try {
+                ServerSettings.read(policy);
+                throw new AssertionError("Party size beyond the client slot count accepted");
+            } catch (IOException expected) {
+                check(expected.getMessage().startsWith("party-max-players"), "bounded party size");
+            }
+            Files.writeString(policy, "chat-enabled: 2\n");
+            try {
+                ServerSettings.read(policy);
+                throw new AssertionError("Non-boolean feature switch accepted");
+            } catch (IOException expected) {
+                check(expected.getMessage().startsWith("chat-enabled"), "strict feature switch");
+            }
             System.out.println(
-                    "PASS: bounded settings, one shared HTTP port, legacy compatibility, automatic host origins and proxy defaults");
+                    "PASS: bounded settings, one shared HTTP port, legacy compatibility, automatic host origins, proxy defaults and broad player policy");
         } finally {
             try (var paths = Files.walk(home)) {
                 for (var path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);

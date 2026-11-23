@@ -118,14 +118,14 @@ final class UnifiedExport {
         config.put("server-ip", settings.bind());
         config.put("server-port", settings.port());
         config.put("max-clients", settings.maxClients());
+        config.put("party-max-players", settings.partyMaxPlayers());
+        config.put("trades-enabled", settings.tradesEnabled());
+        config.put("chat-enabled", settings.chatEnabled());
         config.put("log-mode", settings.logMode().name().toLowerCase(Locale.ROOT));
         config.put("log-max-mib", settings.logMaxMiB());
         config.put("log-retention", settings.logRetention());
         config.put("startup-map", names.get(registry.scenes().entry().id()));
         write(target.resolve("config/server.yml"), config);
-        write(
-                target.resolve("config/combat.yml"),
-                Map.of("dodgeCooldownMs", registry.weapons().dodgeCooldown()));
         for (var resource : registry.resources().entrySet())
             report.add("Converted " + resource.getKey() + " from "
                     + resource.getValue().pack() + " / " + resource.getValue().path() + " sha256="

@@ -175,6 +175,8 @@ public final class Server {
                 : initialContent;
         var scenes = org.tortodrone.world.SceneRegistry.create(content);
         org.tortodrone.world.SceneRegistry.install(scenes);
+        scenes.parties().capacity(settings.partyMaxPlayers());
+        ServerPolicy.install(settings.tradesEnabled(), settings.chatEnabled());
         var catalog = content.items();
         for (String warning : content.warnings()) log.warn(warning);
         log.info("Unified content: " + content.scenes().sceneCount() + " maps, "

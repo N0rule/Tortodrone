@@ -208,8 +208,13 @@ A typical configuration:
 server-ip: 0.0.0.0
 server-port: 47624
 max-clients: 16
+
+party-max-players: 8
 startup-map: haven
 welcome-message: Welcome to Tortodrone!
+
+trades-enabled: true
+chat-enabled: true
 
 webui-enabled: true
 webui-public-url: 0.0.0.0
@@ -226,6 +231,9 @@ log-retention: 5
 | `server-ip` | `0.0.0.0` | Bind address. `0.0.0.0` accepts local and LAN connections. |
 | `server-port` | `47624` | Game TCP port. |
 | `max-clients` | `16` | Maximum simultaneous game clients (1–1024). |
+| `party-max-players` | `8` | Maximum knights in one player party (1–8); the client still renders eight slots. |
+| `trades-enabled` | `true` | `false` refuses new trade invitations. |
+| `chat-enabled` | `true` | `false` refuses player chat; other systems keep working. |
 | `startup-map` | `haven` | Installed map folder used by the startup flow; it must be a town. |
 | `welcome-message` | `Welcome to Tortodrone!` | Shown once in chat after a knight enters the world. Set `""` to disable. |
 | `webui-enabled` | `true` | Enables administration and WebUI routes. |

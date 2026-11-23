@@ -7,8 +7,7 @@ progression remain in SQLite. Back up a stopped deployment before upgrading.
 
 ```text
 config/
-  server.yml                 listener, limits, logs, startup-map
-  combat.yml                 dodgeCooldownMs
+  server.yml                 listener, limits, party/trade/chat switches, logs, startup-map
 content/
   maps/<type>/<map>/         type is town, training or level and must match map.yml
     map.yml                  readable identity, default entrance, instance count
@@ -75,6 +74,9 @@ server-ip: 0.0.0.0
 server-port: 47624
 webui/content_url-port: 8080
 max-clients: 16
+party-max-players: 8
+trades-enabled: true
+chat-enabled: true
 log-mode: normal
 log-max-mib: 10
 log-retention: 5
@@ -86,7 +88,11 @@ begin in Crash Site; existing completed knights return to the native Ready Room,
 as described in the [README](../README.md#step-5-connect-the-game-client).
 `--config path.yml` changes the settings file without relocating `data/`. Existing explicitly chosen
 `.properties` settings remain readable, including their listener overrides.
-`config/combat.yml` holds the verified global dodge cooldown in milliseconds.
+`party-max-players` narrows party admission (1-8); the stock client still renders eight
+slots. `trades-enabled` and `chat-enabled` refuse new trade invitations and player
+chat without changing any other system. The knight dodge cooldown is the verified
+stock value (`8000` ms in `WeaponCatalog`), not a deployment setting: `config/` holds
+server policy only.
 Static merchant rules belong to Town YAML. Depot offers/promotions and auctions
 belong exclusively to SQLite; no Depot YAML or empty economy file is shipped.
 

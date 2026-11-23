@@ -9,6 +9,7 @@ import org.tortodrone.core.world.SceneChat;
 import org.tortodrone.core.world.SceneClock;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
+import org.tortodrone.server.ServerPolicy;
 
 /** Scene, zone and direct chat for one connection. Membership and rate limits follow the
  *  stock chat model; routing happens outside the session monitor so peer delivery never
@@ -197,6 +198,7 @@ final class ChatHandler {
     }
 
     void speak(SessionDecoder.Invocation request) throws IOException {
+        if (!ServerPolicy.chatEnabled()) throw new IOException("Chat is disabled on this server.");
         var partyMember = session.partyMember();
         if (request.service() == SceneChat.PARTY_SERVICE
                 && session.sceneRegistry().parties().owns(partyMember, request.oid())) {
@@ -254,6 +256,7 @@ final class ChatHandler {
 
     /** Crowd ChatService method 2. ListenerMarshaller has failure only, no success response. */
     void broadcast(SessionDecoder.Invocation request) throws IOException {
+        if (!ServerPolicy.chatEnabled()) throw new IOException("Chat is disabled on this server.");
         var args = request.arguments();
         if (request.oid() != SessionCodec.INVOCATION_OID
                 || request.service() != SessionCodec.CHAT_SERVICE
@@ -310,6 +313,7 @@ final class ChatHandler {
     }
 
     void tell(SessionDecoder.Invocation request) throws IOException {
+        if (!ServerPolicy.chatEnabled()) throw new IOException("Chat is disabled on this server.");
         var args = request.arguments();
         if (request.oid() != SessionCodec.INVOCATION_OID
                 || request.service() != SessionCodec.CHAT_SERVICE

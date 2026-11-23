@@ -360,7 +360,7 @@ public final class ServerIntegrationTest {
                 log.contains("Loading server keypair") && log.contains("Generating server keypair"),
                 "accurate key creation/reuse messages");
         check(
-                Files.isRegularFile(deployment.resolve("config/combat.yml"))
+                Files.isRegularFile(deployment.resolve("config/server.yml"))
                         && !Files.exists(deployment.resolve("cache"))
                         && Files.isRegularFile(data.resolve("server.properties")),
                 "legacy settings overrides remain usable beside unified config/content");

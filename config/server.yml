@@ -1,15 +1,31 @@
-# Restart the server after editing. Port 0 selects an ephemeral port for isolated tests.
+# Tortodrone server settings. Stop the server, edit, restart.
+# Port 0 selects an ephemeral port for isolated tests.
+
+# --- Network ---
 server-ip: 0.0.0.0
 server-port: 47624
+# Maximum simultaneous game clients; pending logins count.
 max-clients: 16
-log-mode: normal
-log-max-mib: 10
-log-retention: 5
+
+# --- Players ---
+# Maximum knights in one player party. The stock client renders eight slots, so 1-8.
+party-max-players: 8
 # Folder name under content/maps; the existing startup flow requires a town.
 startup-map: haven
 # Shown once in chat after a knight enters the world. Set to "" to disable.
 welcome-message: Welcome to Tortodrone!
 
+# --- Features ---
+# false refuses new trade invitations and player chat. Other systems are unaffected.
+trades-enabled: true
+chat-enabled: true
+
+# --- Logging ---
+log-mode: normal
+log-max-mib: 10
+log-retention: 5
+
+# --- Administration ---
 # Administration starts on the shared HTTP listener by default.
 webui-enabled: true
 webui-public-url: 0.0.0.0

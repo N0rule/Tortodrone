@@ -29,8 +29,5 @@ public final class TestDeployment {
                     else Files.copy(path, copy);
                 }
             }
-        Path config = target.toAbsolutePath().getParent().resolve("config");
-        Files.createDirectories(config);
-        Files.copy(source.toAbsolutePath().getParent().resolve("config/combat.yml"), config.resolve("combat.yml"));
     }
 }
