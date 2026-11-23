@@ -289,6 +289,8 @@ The server terminal accepts these forms with an optional leading `/`. These are 
 | `players` | List current TCP sessions, verified identities and locations. | `players` |
 | `session <session-id>` | Inspect an active connection. | `session 1` |
 | `inspect <knight-name>` | Inspect persistent identity, balances and inventory count. | `inspect Jane` |
+| `guild list` | List every formed guild with member count and well balance. | `guild list` |
+| `guild info <guild-name>` | Show one guild's record and roster, including last session stamps. | `guild info Oracion` |
 | `account list` | List accounts and Game Master roles. | `ac list` |
 | `account create <username> [gm]` | Create an account; enter its password at the prompts. | `account create Alice` |
 | `account password <username>` | Change a password; existing sessions disconnect. | `ac password Alice` |

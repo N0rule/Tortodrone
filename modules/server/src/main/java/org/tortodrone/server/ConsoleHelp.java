@@ -159,7 +159,25 @@ final class ConsoleHelp {
                     "",
                     "giveitem <knight-name> <1-20> <catalogue ID or exact item config>",
                     "Grant unequipped items by unique knight name. The account-qualified form also works.",
-                    "giveitem Jane 2 Weapon/Sword/Proto Sword"));
+                    "giveitem Jane 2 Weapon/Sword/Proto Sword"),
+            new Entry(
+                    "guild",
+                    "",
+                    "guild list | guild info <guild-name>",
+                    "Inspect formed guilds, their well and their roster. Guild writes stay with the game client.",
+                    "guild list"),
+            new Entry(
+                    "guild",
+                    "list",
+                    "guild list",
+                    "List every formed guild with member count and well balance.",
+                    "guild list"),
+            new Entry(
+                    "guild",
+                    "info",
+                    "guild info <guild-name>",
+                    "Show one guild's record and roster, including last session stamps.",
+                    "guild info Oracion"));
 
     static String canonical(String command) {
         command = command.toLowerCase(Locale.ROOT);

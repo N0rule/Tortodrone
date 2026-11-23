@@ -133,6 +133,12 @@ public final class AccountStore implements AutoCloseable {
         if (database == null) throw new IOException("Supply Depot requires SQLite storage");
         return new org.tortodrone.storage.DepotStore(database, catalog, town);
     }
+
+    /** Guild reads for the local console. Guild mutations stay with the game service. */
+    public org.tortodrone.storage.GuildStore guilds() throws IOException {
+        if (database == null) throw new IOException("Guilds require SQLite storage");
+        return new org.tortodrone.storage.GuildStore(database);
+    }
     /** Local admin access; no game invocation dispatch exposes these methods. */
     public org.tortodrone.storage.AuctionHouse auctions() throws IOException {
         if (database == null) throw new IOException("Auctions require SQLite storage");

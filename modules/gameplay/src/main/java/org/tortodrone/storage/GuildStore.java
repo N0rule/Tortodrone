@@ -191,24 +191,53 @@ public final class GuildStore {
         try (var s = c.prepareStatement("SELECT * FROM guilds WHERE id=?")) {
             s.setLong(1, guildId);
             try (var r = s.executeQuery()) {
-                if (!r.next()) return null;
-                return new Guild(
-                        r.getLong("id"),
-                        r.getString("name"),
-                        r.getLong("formed"),
-                        r.getString("motd"),
-                        r.getInt("hall_open") != 0,
-                        r.getInt("energy"),
-                        r.getInt("upkeep_cost"),
-                        r.getLong("upkeep_time"),
-                        r.getInt("in_default") != 0,
-                        r.getInt("member_limit"),
-                        r.getString("theme"),
-                        r.getString("environment"),
-                        r.getLong("hall_open_at"),
-                        r.getLong("renamed"));
+                return r.next() ? row(r) : null;
             }
         }
+    }
+
+    /** One {@code guilds} row. Column names are used so the shared column list stays valid. */
+    private static Guild row(ResultSet r) throws SQLException {
+        return new Guild(
+                r.getLong("id"),
+                r.getString("name"),
+                r.getLong("formed"),
+                r.getString("motd"),
+                r.getInt("hall_open") != 0,
+                r.getInt("energy"),
+                r.getInt("upkeep_cost"),
+                r.getLong("upkeep_time"),
+                r.getInt("in_default") != 0,
+                r.getInt("member_limit"),
+                r.getString("theme"),
+                r.getString("environment"),
+                r.getLong("hall_open_at"),
+                r.getLong("renamed"));
+    }
+
+    /** Guilds ordered by formation, for the local console. Read-only. */
+    public List<Guild> list() throws IOException {
+        return database.read(c -> {
+            var guilds = new ArrayList<Guild>();
+            try (var s = c.prepareStatement("SELECT * FROM guilds ORDER BY id");
+                    var r = s.executeQuery()) {
+                while (r.next()) guilds.add(row(r));
+            }
+            return guilds;
+        });
+    }
+
+    /** One guild by name, case-insensitively, or null. Read-only. */
+    public Guild named(String name) throws IOException {
+        if (name == null || name.isBlank()) return null;
+        return database.read(c -> {
+            try (var s = c.prepareStatement("SELECT * FROM guilds WHERE name_key=?")) {
+                s.setString(1, name.trim().toLowerCase(Locale.ROOT));
+                try (var r = s.executeQuery()) {
+                    return r.next() ? row(r) : null;
+                }
+            }
+        });
     }
 
     static View view(Connection c, long guildId) throws SQLException, IOException {
