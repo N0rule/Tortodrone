@@ -2,8 +2,6 @@ package org.tortodrone.world;
 
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.core.world.SceneContent;
-import org.tortodrone.core.world.SceneCollision;
 import org.tortodrone.core.world.MonsterCatalog;
 
 /**
@@ -14,7 +12,7 @@ public final class MonsterSpawnAdminTest {
     private MonsterSpawnAdminTest() { }
 
     public static void main(String[] args) throws Exception {
-        var catalog = catalog();
+        var catalog = MonsterFixture.catalog("fixture_wave", "Monster/Fixture/Wave", "Fixture Wave", MonsterFixture.unsupported("fixture_unsupported", "Monster/Fixture/Broken", "Fixture Broken"));
         resolves(catalog);
         spawns(catalog);
         refusals(catalog);
@@ -45,7 +43,7 @@ public final class MonsterSpawnAdminTest {
     }
 
     private static void spawns(MonsterCatalog catalog) throws Exception {
-        var world = scene(catalog);
+        var world = MonsterFixture.scene(catalog);
         int created = world.spawnMonsters("Character/NPC/Monster/Fixture/Wave", 2, 3, 90, 3, 2, 1000);
         check(created == 3 && world.liveMonsters() == 3, "a GM batch creates exactly the requested live monsters");
         var monsters = world.actors().stream().filter(a -> a.entity() != null && "Monster".equals(a.entity().kind())).toList();
@@ -68,7 +66,7 @@ public final class MonsterSpawnAdminTest {
                 {"fixture_unsupported", 0, 0, 0, 1, 0},
                 {"missing_type", 0, 0, 0, 1, 0},
                 {"fixture_wave", 1000, 1000, 0, 1, 0}}) {
-            var world = scene(catalog);
+            var world = MonsterFixture.scene(catalog);
             try {
                 world.spawnMonsters((String) request[0], ((Number) request[1]).floatValue(), ((Number) request[2]).floatValue(),
                     ((Number) request[3]).floatValue(), (Integer) request[4], ((Number) request[5]).floatValue(), 1000);
@@ -78,7 +76,7 @@ public final class MonsterSpawnAdminTest {
                     "a refused spawn creates no partial actor: " + Arrays.toString(request));
             }
         }
-        var world = scene(catalog);
+        var world = MonsterFixture.scene(catalog);
         check(world.spawnMonsters("fixture_wave", 0, 0, 0,
             SceneEntities.MAX_ALIVE_MONSTERS - 1, 0, 1000) == SceneEntities.MAX_ALIVE_MONSTERS - 1,
             "the fixture fills all but one slot");
@@ -94,7 +92,7 @@ public final class MonsterSpawnAdminTest {
     }
 
     private static void caps(MonsterCatalog catalog) throws Exception {
-        var world = scene(catalog);
+        var world = MonsterFixture.scene(catalog);
         check(world.spawnMonsters("fixture_wave", 0, 0, 0, SceneEntities.MAX_ALIVE_MONSTERS, 0, 1000)
             == SceneEntities.MAX_ALIVE_MONSTERS, "the exact alive cap is admitted");
         try {
@@ -103,59 +101,5 @@ public final class MonsterSpawnAdminTest {
         } catch (java.io.IOException expected) {
             check(world.liveMonsters() == SceneEntities.MAX_ALIVE_MONSTERS, "the live cap is never exceeded");
         }
-    }
-
-    private static SceneEntities scene(MonsterCatalog catalog) throws Exception {
-        return new SceneEntities(SceneContent.empty(), TestCollision.floor(-32, -32, 64, 64),
-            SceneCollision.empty(), new Random(7), true, 1000, catalog);
-    }
-
-    private static MonsterCatalog catalog() throws Exception {
-        return MonsterCatalog.parse("""
-            {
-              "format": 1,
-              "generatedFrom": {"actorSha256": "%s", "descriptionSha256": "%s"},
-              "types": {
-                "fixture_wave": {
-                  "config": "Monster/Fixture/Wave",
-                  "display": "Fixture Wave",
-                  "family": "Gremlin",
-                  "archetype": "melee-chaser",
-                  "supported": true,
-                  "capabilities": [],
-                  "unsupported": [],
-                  "actor": "Character/NPC/Monster/Fixture/Wave",
-                  "configs": ["Character/NPC/Monster/Fixture/Wave"],
-                  "spec": {
-                    "config": "Character/NPC/Monster/Fixture/Wave",
-                    "kind": "Monster",
-                    "native-type": "com.threerings.projectx.dungeon.data.actor.Monster",
-                    "health": "100",
-                    "radius": ".4",
-                    "damage-mask": "2",
-                    "collision-mask": "1",
-                    "collision-flags": "8",
-                    "speed": "4",
-                    "acquire-distance": "40",
-                    "acquisition-interval": "0",
-                    "attack-distance": "1",
-                    "attack": "0",
-                    "turn-rate": "100"
-                  }
-                },
-                "fixture_unsupported": {
-                  "config": "Monster/Fixture/Broken",
-                  "display": "Fixture Broken",
-                  "family": "Gremlin",
-                  "archetype": "melee-chaser",
-                  "supported": false,
-                  "capabilities": [],
-                  "unsupported": ["missing-action", "missing-reward"],
-                  "actor": "Character/NPC/Monster/Fixture/Broken",
-                  "configs": ["Character/NPC/Monster/Fixture/Broken"]
-                }
-              }
-            }
-            """.formatted("1".repeat(64), "2".repeat(64)));
     }
 }
