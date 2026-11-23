@@ -63,6 +63,7 @@ public final class Database {
     private final AccountRepository accounts;
     private final RosterRepository roster;
     private final WorldRepository worlds;
+    private final PreferenceRepository preferences;
     private boolean initialized;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
 
@@ -78,6 +79,7 @@ public final class Database {
         accounts = new AccountRepository(this);
         roster = new RosterRepository(this);
         worlds = new WorldRepository(this);
+        preferences = new PreferenceRepository(this);
         DepotStore.alignDefaults(this);
     }
     /**
@@ -314,50 +316,18 @@ public final class Database {
     public boolean current(int id, long revision) throws IOException { return accounts.current(id,revision); }
     /** Ordinary account preference rows in the existing integer metadata table; schema stays unchanged. */
     public boolean inspectionHidden(int accountId,long authRevision)throws IOException {
-        return read(c->{WorldRepository.requirePreferenceOwner(c,accountId,authRevision);
-            try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")) {
-                s.setString(1,"account."+accountId+".inspection-hidden");
-                try(var r=s.executeQuery()) {
-                    if(!r.next())return false;
-                    int value=r.getInt(1);if(value!=0&&value!=1)throw new IOException("Invalid inspection preference");return value==1;
-                }
-            }
-        });
+        return preferences.inspectionHidden(accountId,authRevision);
     }
     public void inspectionHidden(int accountId,long authRevision,boolean hidden)throws IOException {
-        write(c->{WorldRepository.requirePreferenceOwner(c,accountId,authRevision);
-            try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")) {
-                s.setString(1,"account."+accountId+".inspection-hidden");s.setInt(2,hidden?1:0);s.executeUpdate();
-            }return null;
-        });
-    }
-    private static void requirePreferenceOwner(Connection c,int accountId,long authRevision)throws SQLException,IOException {
-        WorldRepository.requirePreferenceOwner(c,accountId,authRevision);
+        preferences.inspectionHidden(accountId,authRevision,hidden);
     }
 
     /** Last acknowledged permanent scene, keyed by the non-recycled world identity. */
     public int lastTownScene(int accountId,int knightId,long authRevision)throws IOException {
-        return read(c->{
-            c.setAutoCommit(false);
-            WorldRepository.requirePreferenceOwner(c,accountId,authRevision);
-            var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
-            try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){
-                s.setString(1,"world."+profile.worldId()+".last-town-scene");
-                int result;try(var r=s.executeQuery()){result=r.next()?r.getInt(1):0;}
-                c.commit();return result;
-            }
-        });
+        return preferences.lastTownScene(accountId,knightId,authRevision);
     }
     public void lastTownScene(int accountId,int knightId,long authRevision,int scene)throws IOException {
-        if(scene<=0||scene==Integer.MAX_VALUE)throw new IOException("Invalid permanent scene");
-        write(c->{
-            WorldRepository.requirePreferenceOwner(c,accountId,authRevision);
-            var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
-            try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
-                s.setString(1,"world."+profile.worldId()+".last-town-scene");s.setInt(2,scene);s.executeUpdate();
-            }
-            return null;
-        });
+        preferences.lastTownScene(accountId,knightId,authRevision,scene);
     }
     /** SystemSender.ORIENTATION ("Spiral HQ") in the stock uplink enum. */
     public static final int ORIENTATION_SENDER=6;
