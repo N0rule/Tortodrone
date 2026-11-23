@@ -80,8 +80,9 @@ final class FloorHandler {
         session.closeConversation();session.closeTownDialog();
         session.beginForcedTravel(next,route.entrance());
         short receiver=session.forcedReceiverValue();
-        responder.send(()->responder.codec().playerFlags(responder.oid(),session.gameMasterFlag(),
-            session.inspectionHiddenValue(),settled.progress().tutorialComplete()));
+        boolean gameMaster=session.gameMasterFlag(),hidden=session.inspectionHiddenValue();
+        responder.send(()->responder.codec().playerFlags(responder.oid(),gameMaster,
+            hidden,settled.progress().tutorialComplete()));
         responder.send(()->responder.codec().forceScene(responder.oid(),receiver,next));
         return true;
     }

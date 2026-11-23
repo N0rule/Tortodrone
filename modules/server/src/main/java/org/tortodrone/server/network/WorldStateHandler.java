@@ -32,8 +32,9 @@ final class WorldStateHandler {
             if (state.gameMaster() != session.gameMasterFlag()) {
                 session.setGameMaster(state.gameMaster());
                 session.applyActorAppearance();
-                responder.send(() -> responder.codec().playerFlags(responder.oid(),
-                    session.gameMasterFlag(), session.inspectionHiddenValue(), session.currentProfile().progress().tutorialComplete()));
+                boolean gameMaster=session.gameMasterFlag(),hidden=session.inspectionHiddenValue();
+                boolean tutorial=session.currentProfile().progress().tutorialComplete();
+                responder.send(() -> responder.codec().playerFlags(responder.oid(),gameMaster,hidden,tutorial));
             }
             // An equip may commit while the read is in flight: never roll back its publication.
             if (fresh.revision() > session.currentProfile().revision()) {

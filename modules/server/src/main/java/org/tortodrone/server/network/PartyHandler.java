@@ -153,11 +153,11 @@ final class PartyHandler {
             // belongs to the destination (its gate and mission class), never to the old town.
             var partyScene=session.sceneNowForParty();
             var health=membership.health();var status=membership.status();
-            responder.send(()->responder.codec().party(message,view,partyScene,session.floorReport()!=null&&session.floorReport().valid()));
+            var report=session.floorReport();boolean validReport=report!=null&&report.valid();
+            responder.send(()->responder.codec().party(message,view,partyScene,validReport));
             subscribedPartyOid=view.oid();publishedParty=view;publishedPartyScene=partyScene;publishedPartyVisited=partyScene.visited();
-            var report=session.floorReport();
-            if(report!=null&&report.valid())responder.send(()->session.sceneRun()==null
-                ?responder.codec().finalFloorReport(view.oid()):responder.codec().openingFloorReport(view.oid()));
+            if(validReport){boolean opening=session.sceneRun()!=null;
+                responder.send(()->opening?responder.codec().openingFloorReport(view.oid()):responder.codec().finalFloorReport(view.oid()));}
             session.publishedHealthStatus(health,status);
             session.completeDeferredPartyMove();
         }
