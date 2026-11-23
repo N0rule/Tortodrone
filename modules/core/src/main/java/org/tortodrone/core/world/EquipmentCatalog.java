@@ -1,17 +1,13 @@
 package org.tortodrone.core.world;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import org.tortodrone.core.character.WorldProfile;
 import org.tortodrone.core.town.TownCatalog;
 
 /** Stock level-zero control modifiers for grantable items, keyed by item and weapon class. */
 public final class EquipmentCatalog {
-    private static final String HEADER = "TORTODRONE-EQUIPMENT\t1";
-    private static final long MAX_BYTES = 16L * 1024 * 1024;
-    private static final int MAX_ROWS = 100_000;
     /** Mirrors stock ItemCodes.GEAR_SLOTS, not the full visible equipment/loadout array. */
     private static final int[] GEAR_SLOTS = {0, 1, 2, 5, 10, 11, 12};
 
@@ -60,48 +56,13 @@ public final class EquipmentCatalog {
 
     public static EquipmentCatalog empty() { return new EquipmentCatalog(List.of()); }
 
+    /** Read the exported catalogue; the codec owns format, ordering and row validation. */
     public static EquipmentCatalog load(Path file) throws IOException {
-        long size = Files.size(file);
-        if (size > MAX_BYTES) throw new IOException("Equipment catalogue exceeds size limit");
-        List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
-        if (lines.isEmpty() || !HEADER.equals(lines.getFirst())) throw new IOException("Unsupported equipment catalogue format");
-        if (lines.size() > MAX_ROWS) throw new IOException("Equipment catalogue exceeds row limit");
-        var entries = new ArrayList<Entry>();
-        for (int i = 1; i < lines.size(); i++) {
-            String line = lines.get(i);
-            if (line.isEmpty() || line.startsWith("#")) continue;
-            String[] fields = line.split("\t", -1);
-            try {
-                if (fields.length != 19 || !fields[0].equals("E")) throw new IllegalArgumentException("Expected 19 columns");
-                var values = new EnumMap<WeaponClass, Modifiers>(WeaponClass.class);
-                int offset = 3;
-                for (WeaponClass weaponClass : WeaponClass.values()) {
-                    values.put(weaponClass, new Modifiers(decimal(fields[offset]), decimal(fields[offset + 1]),
-                        decimal(fields[offset + 2]), decimal(fields[offset + 3])));
-                    offset += 4;
-                }
-                entries.add(new Entry(fields[1], WorldProfile.Slot.valueOf(fields[2]), values));
-            } catch (RuntimeException invalid) {
-                throw new IOException("Invalid equipment catalogue row " + (i + 1) + ": " + invalid.getMessage(), invalid);
-            }
-        }
-        try { return new EquipmentCatalog(entries); }
-        catch (IllegalArgumentException invalid) { throw new IOException("Invalid equipment catalogue", invalid); }
+        return EquipmentCatalogCodec.load(file);
     }
 
     public static void write(Path file, Collection<Entry> entries) throws IOException {
-        var lines = new ArrayList<String>(); lines.add(HEADER);
-        for (Entry entry : entries.stream().sorted(Comparator.comparing(Entry::config)).toList()) {
-            var row = new ArrayList<String>(); row.add("E"); row.add(entry.config()); row.add(entry.slot().name());
-            for (WeaponClass weaponClass : WeaponClass.values()) {
-                Modifiers value = entry.forClass(weaponClass);
-                row.add(Float.toString(value.chargeTime())); row.add(Float.toString(value.speed()));
-                row.add(Float.toString(value.attackSpeed())); row.add(Float.toString(value.defendingSpeed()));
-            }
-            lines.add(String.join("\t", row));
-        }
-        Files.createDirectories(file.toAbsolutePath().normalize().getParent());
-        Files.write(file, lines, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+        EquipmentCatalogCodec.write(file, entries);
     }
 
     public List<Entry> entries() { return entries.values().stream().sorted(Comparator.comparing(Entry::config)).toList(); }
@@ -162,11 +123,10 @@ public final class EquipmentCatalog {
     }
     public static float defenseSpeedMultiplier(Modifiers equipment) { return 1f + equipment.defendingSpeed(); }
 
-    private static String reference(String value) {
+    static String reference(String value) {
         if (value == null || value.isBlank() || value.length() > 256 || value.indexOf('\t') >= 0
                 || value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0) throw new IllegalArgumentException("Invalid item config");
         return value;
     }
-    private static String key(String value) { return reference(value).toLowerCase(Locale.ROOT); }
-    private static float decimal(String value) { float n = Float.parseFloat(value); if (!Float.isFinite(n)) throw new IllegalArgumentException("Non-finite modifier"); return n; }
+    static String key(String value) { return reference(value).toLowerCase(Locale.ROOT); }
 }
