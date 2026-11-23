@@ -43,12 +43,16 @@ final class GuildSettingsStore {
     TownStore.Result rename(int account, int knight, long auth, String name) throws IOException {
         String error = nameError(name);
         if (error != null) throw new IOException(error);
+        // Stored trimmed for the same reason formation is: the uniqueness key is the trimmed,
+        // case-folded name.
+        String guildName = name.trim();
         return database.write(c -> {
             var profile = WorldProfiles.load(c, account, knight, auth);
             var guild = GuildStore.requireMember(c, GuildStore.guildOf(c, profile.worldId()));
             var member = GuildStore.membership(c, guild.id(), profile.worldId());
             if (member == null || member.rank() != 0) throw new IOException("m.access_denied");
-            if (nameTaken(c, name) && !guild.name().equalsIgnoreCase(name)) throw new IOException("m.name_in_use");
+            if (nameTaken(c, guildName) && !guild.name().equalsIgnoreCase(guildName))
+                throw new IOException("m.name_in_use");
             if (guild.renamed() > 0 && System.currentTimeMillis() - guild.renamed() < GuildStore.RENAME_INTERVAL)
                 throw new IOException("m.rename_too_soon");
             var ticket = profile.items().stream()
@@ -56,14 +60,14 @@ final class GuildSettingsStore {
                     .findFirst()
                     .orElseThrow(() -> new IOException("m.no_rename_item"));
             try (var s = c.prepareStatement("UPDATE guilds SET name=?,name_key=?,renamed=? WHERE id=?")) {
-                s.setString(1, name);
-                s.setString(2, name.toLowerCase(Locale.ROOT));
+                s.setString(1, guildName);
+                s.setString(2, guildName.toLowerCase(Locale.ROOT));
                 s.setLong(3, System.currentTimeMillis());
                 s.setLong(4, guild.id());
                 s.executeUpdate();
             }
             TownLedger.consume(c, profile, ticket.id(), 1);
-            GuildLogStore.log(c, guild.id(), 31, member.name(), System.currentTimeMillis(), List.of("~" + name));
+            GuildLogStore.log(c, guild.id(), 31, member.name(), System.currentTimeMillis(), List.of("~" + guildName));
             TownLedger.touch(c, profile.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), GuildStore.view(c, guild.id()));
         });

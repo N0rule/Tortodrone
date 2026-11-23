@@ -21,7 +21,12 @@ public final class MessageFailureTest {
                 failure("Enter a scene first").equals("~Enter a scene first"),
                 "literal server text is still protected from translation lookup");
         check(failure("m.unsupported key").equals("~m.unsupported key"), "non-key text with spaces stays literal");
-        System.out.println("PASS: stock m.* failure keys stay localizable and literal text remains escaped");
+        check(
+                failure("e.already_withdrew").equals("e.already_withdrew"),
+                "the stock e.* refusal family keeps its localization key");
+        check(failure("e.nsf_energy_in_well").equals("e.nsf_energy_in_well"), "well refusals stay localizable");
+        check(failure("e.unsupported key").equals("~e.unsupported key"), "non-key e.* text stays literal");
+        System.out.println("PASS: stock m.* and e.* failure keys stay localizable and literal text remains escaped");
     }
 
     private static String failure(String reason) throws Exception {

@@ -721,6 +721,14 @@ and variants YAML no longer duplicate them. Advanced overrides merge by exact
 invented or removed. NPC filenames use verified native names where available;
 `id` and native dialogue bindings remain authoritative even after a file rename.
 
+A station's `kind` is a closed set: `OpenShop`, `OpenDepot`, `OpenAuction`,
+`OpenCrafter`, `OpenCatalogCrafter`, `OpenGuildCatalogCrafter`, `OpenUnbinder`,
+`OpenAccessorizer`, `OpenVariantMaker`, `OpenHarnessInstaller` and `OpenArsenal`.
+An unknown kind fails validation instead of loading an NPC whose dialog renders
+and whose operation is always refused. `OpenGuildCatalogCrafter` crafts its pinned
+recipes exactly like `OpenCatalogCrafter`; the Hunter's Lodge machine it describes
+belongs to a guild hall, which is not served, so that station stays latent.
+
 The 27 `Rule/Hall of Heroes/<Family> <2|3|4> Star` catalogues filter the existing
 nine captured 5-star families by original item rarity, retaining order, quantities
 and prices (1/2/3/4/5 stars: 250/1,000/4,000/10,000/25,000 crowns). This reuses
@@ -1076,9 +1084,10 @@ Hearts use their authored native `Heal current` values (40, 80, 120 and 10,000)
 on the activating knight. Using a heart at full health still starts the ordinary
 hand-raising activity, but the use is not consumed and no health changes. Lethal
 Damage applies the native 100,000 `DamageTarget` to the user. Its second native
-action, `UnlockAchievement CASINO_WHAMMIE`, remains unavailable because this
-server has no achievement persistence, so Lethal Damage is only partially
-supported.
+action, `UnlockAchievement CASINO_WHAMMIE`, is still not executed: achievement
+persistence exists (`AchievementState` receipts, the `PlayerObject.achievements`
+DSet and `CASINO_WHAMMIE`'s ordinal), but the item-use path runs no
+`UnlockAchievement` action, so Lethal Damage remains partially supported.
 
 Spawn-actor items place the item's configured actor as an inert static prop at
 the user's position. This covers the four prepared bucket/pillow/pie-pan items
@@ -1090,19 +1099,23 @@ Crowns, Arena Autotarget Off, the Lockdown shields and the Mystery Lockbox stay
 disabled. Their installed native definitions are a no-op `FireEffect`, an
 `ActionConfig.None`, arena-only gear and an empty reward graph respectively, so
 enabling them would either consume an item for nothing or invent behavior the
-client does not supply. Guild bonds, hall/theme/environment tickets, member and
-storage upgrades, and furniture items remain unusable: guild halls, guild
-storage and design rooms are not served, and the native upgrade tickets are
-guild-hall props. The [item support matrix](data/item-support.csv) records each
-remaining group and its evidence.
+client does not supply. Guild bonds, member and storage upgrades, and furniture
+items remain unusable: guild halls, guild storage and design rooms are not
+served, and the native upgrade tickets are guild-hall props. Hall theme and
+environment tickets are accepted by the guild service and stored as a bounded
+string, but no hall scene exists to apply them to. The
+[item support matrix](data/item-support.csv) records each remaining group and its
+evidence.
 
 ## Lockboxes and Prize Boxes
 
-The current content set enables **243 explicitly labeled approximation pools**,
-covering all indexed non-template stock boxes. The [support matrix](data/box-support.csv) audits
-all 250 native definitions. Six internal base/parameter templates and the empty
-Mystery placeholder remain disabled because they have no playable reward pool.
-Every edition has a separate definition, using existing readable item IDs.
+The current content set enables **247 definitions** — 230 with an estimated
+distribution and 17 that keep the native key config only — covering all indexed
+non-template stock boxes. The [support matrix](data/box-support.csv) audits all
+**254** native definitions. Six internal base/parameter templates and the empty
+Mystery placeholder remain disabled (seven rows) because they have no playable
+reward pool. Every edition has a separate definition, using existing readable
+item IDs.
 
 The original 12 wiki/announcement estimates remain documented below. Another
 223 definitions preserve archived resource graph weights, choices, independent

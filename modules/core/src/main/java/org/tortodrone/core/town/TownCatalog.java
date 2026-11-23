@@ -86,6 +86,22 @@ public final class TownCatalog {
     public record Catalog(
             String name, String kind, List<String> includes, List<Good> goods, int min, int max, float chance) {}
 
+    /** Every station {@code kind} the town handler and the town codec dispatch. A kind outside
+     *  this set would load as a station whose dialog renders and whose operation is always
+     *  refused, so content validation rejects it instead. */
+    public static final Set<String> STATION_KINDS = Set.of(
+            "OpenShop",
+            "OpenDepot",
+            "OpenAuction",
+            "OpenCrafter",
+            "OpenCatalogCrafter",
+            "OpenGuildCatalogCrafter",
+            "OpenUnbinder",
+            "OpenAccessorizer",
+            "OpenVariantMaker",
+            "OpenHarnessInstaller",
+            "OpenArsenal");
+
     public record Station(
             String actor,
             String kind,

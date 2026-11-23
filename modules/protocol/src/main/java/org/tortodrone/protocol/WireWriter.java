@@ -455,12 +455,15 @@ public abstract class WireWriter {
             // MessageBundle treats a leading tilde as literal text; known stock keys translate.
             // Qualified keys (%bundle:key|~arg) resolve through MessageUtil.qualify and must
             // keep their prefix or the client would print the whole compound key literally.
+            // Both stock key families are passed through: m.* message keys and the e.* refusal
+            // keys the town, trade, auction and guild stores raise. A key the bundle does not
+            // carry is printed as written either way, so passing it through cannot be worse.
             type(out, "java.lang.String");
             out.writeUTF(
                     reason != null
                                     && (reason.startsWith("%")
                                             || reason.matches("m\\.[a-z0-9_]+")
-                                            || reason.equals("e.not_use_busy"))
+                                            || reason.matches("e\\.[a-z0-9_]+"))
                             ? reason
                             : "~" + reason);
         });

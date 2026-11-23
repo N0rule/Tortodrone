@@ -17,10 +17,14 @@ final class GuildMembershipStore {
     TownStore.Result form(int account, int knight, long auth, String name) throws IOException {
         String error = GuildSettingsStore.nameError(name);
         if (error != null) throw new IOException(error);
+        // The name is validated trimmed and probed by its trimmed, case-folded key, so it is stored
+        // trimmed as well: a padded " Foo" would otherwise occupy a key the "Foo" duplicate probe
+        // never looks at, and the padding would be published to every client.
+        String guildName = name.trim();
         return database.write(c -> {
             var profile = WorldProfiles.load(c, account, knight, auth);
-            if (GuildStore.guildOf(c, profile.worldId()) != null) throw new IOException("m.internal_error");
-            if (GuildSettingsStore.nameTaken(c, name)) throw new IOException("m.name_in_use");
+            if (GuildStore.guildOf(c, profile.worldId()) != null) throw new IOException("m.already_in_guild");
+            if (GuildSettingsStore.nameTaken(c, guildName)) throw new IOException("m.name_in_use");
             if (profile.crowns() < GuildStore.FORMATION_CROWNS) throw new IOException("m.nsf_crowns");
             if (profile.energy() < GuildStore.FORMATION_ENERGY) throw new IOException("m.nsf_energy");
             TownLedger.pay(c, profile, GuildStore.FORMATION_CROWNS, GuildStore.FORMATION_ENERGY);
@@ -29,8 +33,8 @@ final class GuildMembershipStore {
             try (var s = c.prepareStatement(
                     "INSERT INTO guilds(name,name_key,formed,member_limit) VALUES(?,?,?,?)",
                     Statement.RETURN_GENERATED_KEYS)) {
-                s.setString(1, name);
-                s.setString(2, name.toLowerCase(Locale.ROOT));
+                s.setString(1, guildName);
+                s.setString(2, guildName.toLowerCase(Locale.ROOT));
                 s.setLong(3, now);
                 s.setInt(4, GuildStore.MAX_MEMBERS);
                 s.executeUpdate();
@@ -62,10 +66,12 @@ final class GuildMembershipStore {
         return database.write(c -> {
             var profile = WorldProfiles.load(c, account, knight, auth);
             var guild = GuildStore.requireMember(c, GuildStore.guildOf(c, profile.worldId()));
-            if (profile.worldId() == worldId(c, target)) throw new IOException("m.invite_self");
+            // Authorise before the target name is resolved: otherwise any member could probe which
+            // knight names exist from the difference between m.unknown_knight and m.access_denied.
             var member = GuildStore.membership(c, guild.id(), profile.worldId());
             if (member == null || member.rank() > 1) throw new IOException("m.access_denied");
             int targetWorld = worldId(c, target);
+            if (profile.worldId() == targetWorld) throw new IOException("m.invite_self");
             if (GuildStore.guildOf(c, targetWorld) != null) throw new IOException("m.already_in_guild");
             try (var s = c.prepareStatement(
                     "INSERT INTO town_mail(world_id,sent,subject,body,sender,mail_type,guild_invite_id,guild_invite_name) VALUES(?,?,?,?,?,2,?,?)")) {
@@ -130,9 +136,10 @@ final class GuildMembershipStore {
             var profile = WorldProfiles.load(c, account, knight, auth);
             var guild = GuildStore.requireMember(c, GuildStore.guildOf(c, profile.worldId()));
             var changer = GuildStore.membership(c, guild.id(), profile.worldId());
+            if (changer == null) throw new IOException("m.access_denied");
             var changee = byName(c, guild.id(), target);
-            if (changer == null || changee == null || !canChangeStatus(changee, changer))
-                throw new IOException("m.internal_error");
+            if (changee == null) throw new IOException("m.unknown_knight");
+            if (!canChangeStatus(changee, changer)) throw new IOException("m.access_denied");
             remove(c, guild.id(), changee.worldId(), 1, changer.name());
             TownLedger.touch(c, changee.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), GuildStore.view(c, guild.id()));
@@ -146,11 +153,24 @@ final class GuildMembershipStore {
             var profile = WorldProfiles.load(c, account, knight, auth);
             var guild = GuildStore.requireMember(c, GuildStore.guildOf(c, profile.worldId()));
             var changer = GuildStore.membership(c, guild.id(), profile.worldId());
+            if (changer == null || changer.rank() > 1) throw new IOException("m.access_denied");
             var changee = byName(c, guild.id(), target);
-            if (changer == null || changee == null || !canChangeStatus(changee, changer) || rank < changer.rank())
-                throw new IOException("m.internal_error");
+            if (changee == null) throw new IOException("m.unknown_knight");
+            if (!canChangeStatus(changee, changer) || rank < changer.rank()) throw new IOException("m.access_denied");
             if (changee.rank() == rank) return new TownStore.Result(profile, GuildStore.view(c, guild.id()));
-            int order = rank <= 1 ? highestOrder(c, guild.id(), rank) + 1 : -2147483647;
+            long now = System.currentTimeMillis();
+            // A guild has one master. Promoting a member to master hands the guild over, so the
+            // promoter steps down to senior officer first and the single-master index holds for
+            // every statement of this transaction.
+            if (rank == 0)
+                try (var s = c.prepareStatement(
+                        "UPDATE guild_members SET rank=1,command_order=? WHERE world_id=? AND guild_id=?")) {
+                    s.setInt(1, highestOrder(c, guild.id(), 1) + 1);
+                    s.setInt(2, changer.worldId());
+                    s.setLong(3, guild.id());
+                    s.executeUpdate();
+                }
+            int order = rank == 0 ? 0 : rank == 1 ? highestOrder(c, guild.id(), rank) + 1 : -2147483647;
             try (var s = c.prepareStatement(
                     "UPDATE guild_members SET rank=?,command_order=? WHERE world_id=? AND guild_id=?")) {
                 s.setInt(1, rank);
@@ -159,17 +179,26 @@ final class GuildMembershipStore {
                 s.setLong(4, guild.id());
                 s.executeUpdate();
             }
+            if (rank == 0)
+                GuildLogStore.log(
+                        c,
+                        guild.id(),
+                        3,
+                        changer.name(),
+                        now,
+                        List.of("m.gl_demoted", "~" + changer.name(), "m.rank.1"));
             GuildLogStore.log(
                     c,
                     guild.id(),
                     3,
                     changer.name(),
-                    System.currentTimeMillis(),
+                    now,
                     List.of(
                             rank < changee.rank() ? "m.gl_promoted" : "m.gl_demoted",
                             "~" + changee.name(),
                             "m.rank." + rank));
             TownLedger.touch(c, changee.worldId());
+            TownLedger.touch(c, changer.worldId());
             return new TownStore.Result(WorldProfiles.load(c, account, knight, auth), GuildStore.view(c, guild.id()));
         });
     }

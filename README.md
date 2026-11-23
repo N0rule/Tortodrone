@@ -17,7 +17,7 @@
 Tortodrone is an independent Java 25 server for **Spiral Knights**. It hosts a persistent world for the unmodified official client, with authoritative movement and combat plus both console and browser-based administration. Accounts use normal usernames and passwords, including when connecting from a Steam-installed client, which is reported under a steam alias so the stock client does not offer to convert the account. Steam account/ticket authentication and guest login are not supported. Tortodrone is not affiliated with or endorsed by the owners of Spiral Knights.
 
 > [!IMPORTANT]
-> **Development status:** this is an active development release, not a complete replacement for the official server. Login, the native Ready Room, Haven, supported interiors, many town and player systems, and one verified mission route work. New knights complete Crash Site and travel directly to Haven. The remaining stock mission routes, guilds, PvP, Arcade play, and some item effects are still unfinished. See [Supported scope](#supported-scope) before inviting players.
+> **Development status:** this is an active development release, not a complete replacement for the official server. Login, the native Ready Room, Haven, supported interiors, many town and player systems, guilds, and one verified mission route work. New knights complete Crash Site and travel directly to Haven. The remaining stock mission routes, guild halls, PvP, Arcade play, and some item effects are still unfinished. See [Supported scope](#supported-scope) before inviting players.
 
 **Start here:** [Quick start](#quick-start) · [Connect the client](#step-5-connect-the-game-client) · [Play with others](#playing-with-others) · [Configuration](#configuration) · [Troubleshooting](#troubleshooting)
 
@@ -327,8 +327,9 @@ This validates the pinned scenes, entrances, and route prerequisites. It does **
 | **Player systems** | Partial: persistent inventory and currencies, equipment and costumes, weapon combat, heat, and battle sprites. Individual item and action support varies. |
 | **Town and social** | Partial: supported shops and crafting, auctions, Energy Exchange, chat, friends, parties, and eligible friend travel. |
 | **Administration** | Supported: game account management, inventory and economy tools, News, monitoring, and lifecycle controls through the console and WebUI. |
-| **Missions** | Partial: the stock catalogue, native mission bar and gate map are served, and the Shadow Beast route runs floor-by-floor with room progress and one settlement. The other four bundled routes are blocked on missing authored lobbies or floors. |
-| **Guilds, PvP, Arcade** | Not implemented. |
+| **Missions** | Partial: the stock catalogue, native mission bar and gate map are served, and the Shadow Beast route runs floor-by-floor with room progress and one settlement. Every other imported route stays blocked on a missing authored lobby, an unbundled wedge scene or the pending gate-conversation semantics, and the gate map only offers a route the bundle can actually complete. |
+| **Guilds** | Partial: formation, invitations, roster and ranks, the record page, the energy well, expansion purchases and theme/environment settings. Guild hall scenes, the hall editor, guild storage and the guild shop are not served, so a purchased expansion or stored theme has no visible effect yet. |
+| **PvP, Arcade** | Not implemented. |
 
 Imported definitions and passing serialization tests do not establish full gameplay or visual parity. See [Content](docs/content.md), the [item support inventory](docs/data/item-support.csv), and the [box support inventory](docs/data/box-support.csv) for current limits.
 

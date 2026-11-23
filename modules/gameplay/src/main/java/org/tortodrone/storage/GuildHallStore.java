@@ -12,7 +12,8 @@ final class GuildHallStore {
         this.database = database;
     }
 
-    /** {@code GuildMarshaller} id 17. Opening the hall is refused until hall scenes are authored. */
+    /** {@code GuildMarshaller} id 17. The flag persists, but entering the hall (id 21) stays refused
+     *  until a hall map is authored, so opening it has no visible effect yet. */
     TownStore.Result setHallOpen(int account, int knight, long auth, long guildId, boolean open) throws IOException {
         return database.write(c -> {
             var profile = WorldProfiles.load(c, account, knight, auth);
@@ -145,8 +146,13 @@ final class GuildHallStore {
         });
     }
 
+    /** Longest theme or environment ticket string stored. The ticket set is the client's, so the
+     *  value is only bounded, not matched against a catalogue. */
+    private static final int TICKET_LENGTH = 128;
+
     TownStore.Result setHallGlobal(int account, int knight, long auth, long guildId, int type, String ticket)
             throws IOException {
+        if (ticket != null && ticket.length() > TICKET_LENGTH) throw new IOException("m.internal_error");
         return database.write(c -> {
             var profile = WorldProfiles.load(c, account, knight, auth);
             var guild = GuildStore.requireMember(c, GuildStore.guildOf(c, profile.worldId()));

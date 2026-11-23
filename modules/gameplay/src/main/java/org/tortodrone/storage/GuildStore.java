@@ -131,7 +131,8 @@ public final class GuildStore {
         return settings.setMotd(account, knight, auth, guildId, motd);
     }
 
-    /** {@code GuildMarshaller} id 17. Opening the hall is refused until hall scenes are authored. */
+    /** {@code GuildMarshaller} id 17. The flag persists, but entering the hall stays refused until a
+     *  hall map is authored. */
     public TownStore.Result setHallOpen(int account, int knight, long auth, long guildId, boolean open)
             throws IOException {
         return hall.setHallOpen(account, knight, auth, guildId, open);
@@ -215,7 +216,7 @@ public final class GuildStore {
         if (guild == null) throw new IOException("m.internal_error");
         var members = new ArrayList<Member>();
         try (var s = c.prepareStatement("SELECT m.world_id,m.rank,m.command_order,m.joined,k.name,"
-                + "0 last_session,m.last_withdrawal FROM guild_members m "
+                + "w.last_session,m.last_withdrawal FROM guild_members m "
                 + "JOIN world_characters w ON w.world_id=m.world_id "
                 + "JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id "
                 + "WHERE m.guild_id=? "

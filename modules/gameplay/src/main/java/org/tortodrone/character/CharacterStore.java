@@ -142,6 +142,12 @@ public final class CharacterStore {
                 expireDays == 0 ? entry.expireDays() : expireDays);
     }
 
+    /** Stamp when a knight's session ended, for the guild roster. No-op without SQLite storage. */
+    public void recordLastSession(int worldId, long when) throws IOException {
+        if (database == null) return;
+        database.lastSession(worldId, when);
+    }
+
     public synchronized void refresh() throws IOException {
         LockOrder.enter(LockOrder.CHARACTER);
         try {

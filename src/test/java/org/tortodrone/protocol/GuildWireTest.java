@@ -152,7 +152,63 @@ public final class GuildWireTest {
                 "expansion ordinal streams second");
         check(!expansion.readBoolean(), "not in default");
         check(expansion.readFloat() == 0.25f && expansion.available() == 0, "remaining upkeep share");
+        // The record page answers the invocation with a GuildLogPage argument. It has no town
+        // result branch, so the guild codec must encode it or the downstream stream fails.
+        // The record page cannot travel through the town result writer: it has no branch for a
+        // Page and would fail the downstream stream, which is why the handler uses the guild codec.
+        boolean townWriterRejects = false;
+        try {
+            new SessionCodec()
+                    .townResult(
+                            SessionCodec.guildOid(42),
+                            (short) 12,
+                            new org.tortodrone.core.guild.Page(0, List.of()),
+                            null);
+        } catch (java.io.IOException expected) {
+            townWriterRejects = true;
+        }
+        check(townWriterRejects, "the town result writer cannot encode a guild record page");
+
+        var recordCodec = new SessionCodec();
+        var recordWire = new TestWire();
+        var record = recordWire.frame(recordCodec.guildLog(
+                (short) 12,
+                SessionCodec.guildOid(42),
+                new org.tortodrone.core.guild.Page(
+                        7,
+                        List.of(new org.tortodrone.core.guild.LogEntry(
+                                9L, 9, "Adlmarchus", 1_789_084_800_000L, List.of("~500"))))));
+        check(
+                recordWire.type(record).equals(TestWire.NET + "EventNotification")
+                        && record.readShort() == -1
+                        && recordWire.type(record).equals(TestWire.DOB + "InvocationResponseEvent"),
+                "record page arrives as an invocation response");
+        check(
+                record.readInt() == SessionCodec.guildOid(42) && record.readShort() == 12,
+                "record page echoes the guild object and the request");
+        check(record.readByte() == 1 && record.readBoolean(), "record page success flags");
+        check(record.readInt() == 1, "record page result count");
+        check(recordWire.type(record).equals("com.threerings.projectx.guild.data.GuildLogPage"), "record page class");
+        check(record.readInt() == 7, "record page reports the filter total, not the page size");
+        check(recordWire.type(record).equals("java.util.ArrayList") && record.readInt() == 1, "record page entry list");
+        check(recordWire.type(record).equals("com.threerings.projectx.guild.data.GuildLogEntry"), "record entry class");
+        check(record.readLong() == 9L, "record entry id");
+        check(
+                recordWire.type(record).equals("com.threerings.projectx.guild.data.GuildLogEntry$Type")
+                        && record.readByte() == 9,
+                "record entry type ordinal");
+        check(TestWire.string(record).equals("Adlmarchus"), "record entry knight");
+        check(record.readLong() == 1_789_084_800_000L, "record entry time");
+        check(
+                recordWire.type(record).equals("[Ljava.lang.String;") && record.readInt() == 1,
+                "record entry argument array");
+        // The argument array declares its presence-bitmap length in shorts, then writes that many
+        // bitmap bytes, as the client's String[] marshaller does.
+        check(record.readShort() == 1, "record entry argument bitmap length");
+        check(record.readByte() == 1, "record entry argument presence bit");
+        check(record.readUTF().equals("~500") && record.available() == 0, "record entry argument value");
+
         System.out.println(
-                "PASS: guild object, roster entries, removal delta and expansion window follow the client's field order");
+                "PASS: guild object, roster entries, removal delta, expansion window and record page follow the client's field order");
     }
 }

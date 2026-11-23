@@ -533,6 +533,19 @@ public final class Database {
     public void lastTownScene(int accountId, int knightId, long authRevision, int scene) throws IOException {
         preferences.lastTownScene(accountId, knightId, authRevision, scene);
     }
+
+    /** When this knight's last session ended, as published on a guild roster. */
+    public void lastSession(int worldId, long when) throws IOException {
+        if (worldId <= 0) throw new IOException("Invalid knight identity");
+        write(c -> {
+            try (var s = c.prepareStatement("UPDATE world_characters SET last_session=? WHERE world_id=?")) {
+                s.setLong(1, when);
+                s.setInt(2, worldId);
+                s.executeUpdate();
+            }
+            return null;
+        });
+    }
     /** SystemSender.ORIENTATION ("Spiral HQ") in the stock uplink enum. */
     public static final int ORIENTATION_SENDER = 6;
     /** The 2026-11-05 new-player route: knights skip Rescue Camp and arrive in Haven at 2-1. */

@@ -69,7 +69,7 @@ final class GuildLogStore {
         return new Page(total, entries);
     }
 
-    private static String typesForCategory(int category) {
+    private static String typesForCategory(int category) throws IOException {
         return switch (category) {
             case 0 -> "0,1,2,3,4";
             case 1 -> "5,6,7,8";
@@ -77,7 +77,9 @@ final class GuildLogStore {
             case 3 -> "9,10";
             case 4 -> "11,12";
             case 5 -> "19,20,21,22,23,24,25,26,27,28,29,30,31,32,33";
-            default -> "-1";
+            // An ordinal outside the client's GuildLogEntry$Category enum is a bad request, not an
+            // empty page: reporting zero entries would look like a guild with no history.
+            default -> throw new IOException("m.internal_error");
         };
     }
 

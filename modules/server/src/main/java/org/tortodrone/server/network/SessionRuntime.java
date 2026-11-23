@@ -606,6 +606,7 @@ final class SessionRuntime {
     /** Release every party, scene and delivery resource this connection owns. The bounded
      *  publication wait runs after the session monitor so a publishing worker can finish. */
     void closeSession() {
+        int worldId = 0;
         synchronized (session) {
             if (session.isClosed()) return;
             session.setFriendOnline(false);
@@ -622,6 +623,7 @@ final class SessionRuntime {
             }
             var profile = session.currentProfile();
             if (profile != null) {
+                worldId = profile.worldId();
                 session.sceneRegistry().release(scene, profile.worldId());
                 if (portalMove != null) session.sceneRegistry().release(portalMove.destination(), profile.worldId());
             }
@@ -629,6 +631,14 @@ final class SessionRuntime {
             if (profile != null) SessionDirectory.leave(profile.worldId(), session);
         }
         session.awaitPublications();
+        // The guild roster publishes this stamp as the member's last session. A failed write must
+        // not abort teardown or keep the connection open.
+        if (worldId > 0)
+            try {
+                session.charactersStore().recordLastSession(worldId, System.currentTimeMillis());
+            } catch (IOException failure) {
+                session.sessionLog().warn("Could not record the last session stamp: " + failure.getMessage());
+            }
     }
 
     /** Detach the client subscription while keeping the installed instance and membership. */
