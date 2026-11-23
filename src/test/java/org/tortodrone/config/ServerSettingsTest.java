@@ -246,9 +246,7 @@ public final class ServerSettingsTest {
             Path fresh = home.resolve("fresh-defaults.yml");
             var stockPolicy = ServerSettings.read(fresh);
             check(
-                    stockPolicy.partyMaxPlayers() == ServerSettings.DEFAULT_PARTY_MAX_PLAYERS
-                            && stockPolicy.tradesEnabled()
-                            && stockPolicy.chatEnabled(),
+                    stockPolicy.partyMaxPlayers() == 4 && stockPolicy.tradesEnabled() && stockPolicy.chatEnabled(),
                     "player policy defaults keep the stock party size and both features on");
             Path policy = home.resolve("policy.yml");
             Files.writeString(policy, "party-max-players: 4\ntrades-enabled: false\nchat-enabled: false\n");

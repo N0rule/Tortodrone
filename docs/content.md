@@ -74,7 +74,7 @@ server-ip: 0.0.0.0
 server-port: 47624
 webui/content_url-port: 8080
 max-clients: 16
-party-max-players: 8
+party-max-players: 4
 trades-enabled: true
 chat-enabled: true
 log-mode: normal
@@ -88,8 +88,10 @@ begin in Crash Site; existing completed knights return to the native Ready Room,
 as described in the [README](../README.md#step-5-connect-the-game-client).
 `--config path.yml` changes the settings file without relocating `data/`. Existing explicitly chosen
 `.properties` settings remain readable, including their listener overrides.
-`party-max-players` narrows party admission (1-8); the stock client still renders eight
-slots. `trades-enabled` and `chat-enabled` refuse new trade invitations and player
+`party-max-players` bounds party admission (1-8, shipped as 4). It is policy, not a
+client constant: `LevelPartyObject.memberLimit` is server-supplied, and the client both
+renders the members it receives and only compares the limit with 1 to decide whether
+party controls are offered. `trades-enabled` and `chat-enabled` refuse new trade invitations and player
 chat without changing any other system. The knight dodge cooldown is the verified
 stock value (`8000` ms in `WeaponCatalog`), not a deployment setting: `config/` holds
 server policy only.

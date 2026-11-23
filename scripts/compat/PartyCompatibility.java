@@ -69,6 +69,8 @@ public class PartyCompatibility {
             if (party.heat.size() != 1) throw new AssertionError("Native initial heat membership differs");
             if (party.members.iterator().next().portrait == null
                     || party.members.iterator().next().weapons.length != 4
+                    // Pins this server's encoder; the client supplies no party size of its own,
+                    // so this proves the reader accepts our value, not that eight is stock.
                     || party.memberLimit != 8
                     || party.restricted
                     || !party.Pl()

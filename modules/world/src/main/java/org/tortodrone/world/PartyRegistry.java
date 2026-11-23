@@ -18,10 +18,10 @@ import org.tortodrone.core.world.SceneStatus;
 
 /** Transient, session-bound parties. Endpoints only enqueue work; they never perform network I/O. */
 public final class PartyRegistry {
-    /** Admission cap from config/server.yml; the wire slot count stays {@link PartyView#CAPACITY}. */
-    private int capacity = PartyView.CAPACITY;
+    /** Admission cap from config/server.yml; the encoder still advertises {@link PartyView#CAPACITY}. */
+    private int capacity = org.tortodrone.core.config.ServerSettings.DEFAULT_PARTY_MAX_PLAYERS;
 
-    /** Bound one player party to the configured maximum; the client still renders its slot count. */
+    /** Bound one player party to the configured maximum; the client renders whoever joins. */
     public synchronized void capacity(int value) {
         if (value < 1 || value > PartyView.CAPACITY)
             throw new IllegalArgumentException("Party capacity must be from 1 to " + PartyView.CAPACITY);

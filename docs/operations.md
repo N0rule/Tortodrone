@@ -23,7 +23,7 @@ webui-enabled: true
 webui-public-url: 0.0.0.0
 webui-tls-mode: http
 max-clients: 16
-party-max-players: 8
+party-max-players: 4
 trades-enabled: true
 chat-enabled: true
 log-mode: normal
