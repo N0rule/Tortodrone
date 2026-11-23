@@ -246,10 +246,6 @@ final class SceneActorWire extends WireWriter {
         if(lift==null||lift.dropPoint()==null)out.writeShort(0);else vector(out,lift.dropPoint().x(),lift.dropPoint().y());
     }
 
-    protected void neutralStatus(DataOutputStream out)throws IOException {
-        statusModifiers(out,org.tortodrone.core.world.SceneStatus.Modifiers.NORMAL);
-    }
-
     protected void statusModifiers(DataOutputStream out,org.tortodrone.core.world.SceneStatus.Modifiers status)throws IOException {
         type(out,"com.threerings.projectx.dungeon.data.ImmutableStatusModifiers");
         out.writeFloat(status.speed());out.writeFloat(status.attackSpeed());out.writeFloat(status.attackDamage());out.writeFloat(status.relativeDamage());
