@@ -63,11 +63,10 @@ public final class AccountStore implements AutoCloseable {
             return database.administrativeEquipment(username,knight,account,world,revision,itemId,slot,grant,catalog,town);
         }
     }
-    /** Domain view of one stored knight row; the storage record stays inside the facade. */
+    /** Domain view of one stored knight row for a read-only publication. */
     public org.tortodrone.core.character.WorldSummary knightState(String username,String knight)throws IOException {
         validateUsername(username);if(database==null)throw new IOException("Knight inspection requires SQLite storage");
-        var state=database.knightState(username,knight);
-        return state;
+        return database.knightState(username,knight);
     }
     /** Process-wide storage counters for the admin status view; observation only. */
     public Database.StorageMetrics storageMetrics()throws IOException {if(database==null)throw new IOException("Storage metrics require SQLite storage");return database.storageMetrics();}

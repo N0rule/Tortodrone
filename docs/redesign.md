@@ -353,22 +353,23 @@ class table, intern table and connection-local state. Before splitting:
 
 #### Status after `0.42.0`
 
-The codec split, the session handler extraction and the scene system extraction are
-landed and tested. What remains is the tail of the god-class work:
+The codec split, the session handler extraction, the scene system extraction and the
+god-class splits are landed and tested. The classes the table named are now thin
+owners that compose named collaborators instead of mixing responsibilities:
 
-| Class | Current | Remaining work |
+| Class | Lines | Composition |
 | --- | --- | --- |
-| `WorldSession` | 723 lines | thin facade only: move the remaining friend/party presence state, chat and diagnostic routing, and the last forced-travel seams out of the protocol entry points |
-| `SceneEntities` | 596 lines | narrow the entity model: remaining status/dialog/effect sinks and spatial/visibility queries into `StatusSystem`, `InteractionSystem` and `SceneCollisions` |
-| `Database` | 508 lines | finish the repository split: account/session records and the remaining write paths onto `Database.read`/`Database.write` without changing the single writer |
-| `SceneSimulation` | 426 lines | constructor and callback wiring: replace the eleven callback fields with the explicit contract above |
-| `SceneMembership` | 374 lines | split inventory/equipment publication from per-knight scene state |
-| `CharacterStore` | 346 lines | split the returned models (`WorldProfile`, roster views) from the store facade |
+| `WorldSession` | 720 | protocol facade over `SessionRuntime`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
+| `SceneEntities` | 528 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
+| `SceneSimulation` | 427 | per-instance clock, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
+| `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |
+| `Database` | 470 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models |
+| `CharacterStore` | 308 | roster facade returning core character models; knight identity policy is in `KnightIdentity` |
 
-Each row is expected to be one or more focused changes: compile, run the affected
-`testUnit` programs, and commit one slice. Phase 9 stays evidence-gated and is not
-part of this table; it needs the per-epic stock evidence listed in
-`docs/baseline.md`.
+The line counts are the size of each facade, not a target: a facade gains a line
+whenever a protocol entry point or a new collaborator is added. Phase 9 stays
+evidence-gated and is not part of this table; it needs the per-epic stock evidence
+listed in `docs/baseline.md`.
 
 Reserved packages and their content folders are created in Phase 1, each with a
 `package-info.java` (and a `README.md` under the matching content folder) describing
