@@ -26,7 +26,7 @@ final class FriendHandler {
     private volatile int lookingForGroupDifficulty=-1;
     private volatile boolean lookingForGroupAnyLanguage;
 
-    synchronized void refresh(WorldStatePoller.Registration registration,org.tortodrone.storage.FriendStore.Snapshot snapshot,Map<Integer,WorldSession.FriendPresence> online)throws IOException {
+    synchronized void refresh(WorldStatePoller.Registration registration,org.tortodrone.storage.FriendStore.Snapshot snapshot,Map<Integer,SessionPresence.FriendPresence> online)throws IOException {
         if(session.isClosed()||!session.selected()||registration!=null&&session.runtime().persistence()!=registration)return;
         var profile=session.currentProfile();
         if(snapshot.authentication().getOrDefault(profile.worldId(),-1L)!=session.authRevision())throw new IOException("Knight or account changed; reconnect");

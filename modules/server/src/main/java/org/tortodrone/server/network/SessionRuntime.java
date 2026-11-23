@@ -188,7 +188,7 @@ final class SessionRuntime {
         session.guilds.reload();
         session.setFriendOnline(true);
         readyRoom=stageInReadyRoom;
-        if(readyRoom)session.friendLocation(new WorldSession.FriendPresence("~",ReadyRoom.ZONE,0));
+        if(readyRoom)session.friendLocation(new SessionPresence.FriendPresence("~",ReadyRoom.ZONE,0));
         else attach();
         session.setPartyMember(scenes.parties().join(session.connectionOid(),session.selectedKnight(),session.currentProfile(),session::offerParty));
         if(session.currentProfile().progress().crashSiteIncomplete())scenes.parties().enterTutorial(session.partyMember());
@@ -241,7 +241,7 @@ final class SessionRuntime {
             var after=session.visibleProfile();
             if(!before.equals(after))session.output().send(()->session.codec().itemChanges(session.connectionOid(),session.selectedKnight(),before,after));
         }
-        session.friendLocation(new WorldSession.FriendPresence("~",ReadyRoom.ZONE,0));
+        session.friendLocation(new SessionPresence.FriendPresence("~",ReadyRoom.ZONE,0));
         session.output().send(()->session.codec().readyRoomLocation(session.connectionOid()));
         session.output().send(()->session.codec().readyRoomMove(session.connectionOid(),requestId));
     }}

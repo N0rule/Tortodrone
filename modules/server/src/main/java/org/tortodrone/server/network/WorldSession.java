@@ -44,9 +44,7 @@ final class WorldSession implements AutoCloseable {
     private final ClientDiagnostics diagnostics;
     void hardware(List<Object> args)throws IOException { diagnostics.hardware(args); }
     static final Map<Integer, WorldSession> ACTIVE = new HashMap<>();
-    private volatile boolean friendOnline;
-    private volatile FriendPresence friendLocation=new FriendPresence("~",0,0);
-    record FriendPresence(String location,int zone,int instance) { }
+    final SessionPresence presenceState=new SessionPresence();
     /** Per-knight-session join secret published through PlayerObject.ML(); never persisted. */
     private static final java.security.SecureRandom SECRETS=new java.security.SecureRandom();
     private final long externalSecret=mintSecret();
@@ -114,14 +112,14 @@ final class WorldSession implements AutoCloseable {
     void refreshParty()throws IOException{parties.refresh();}
     void refreshParty(boolean traveling)throws IOException{parties.refresh(traveling);}
     /** The native friend list's Join affordance is driven by this presence. */
-    FriendPresence presence(PartyView.View view)throws IOException {
-        if(runtime.scene().map().town())return new FriendPresence(runtime.scene().map().name(),runtime.scene().map().zone(),runtime.scene().oid());
+    SessionPresence.FriendPresence presence(PartyView.View view)throws IOException {
+        if(runtime.scene().map().town())return new SessionPresence.FriendPresence(runtime.scene().map().name(),runtime.scene().map().zone(),runtime.scene().oid());
         // Only Training rooms are party-shared; Laboratory and Hall of Heroes stay per-world.
         boolean shared=runtime.scene().map().kind().equals("training")&&scenes.parties().owner(partyMember,profile.worldId())!=0;
         boolean joinable=shared&&(view.automatic()||!view.inviteOnly()||view.allowFriends());
-        return new FriendPresence(runtime.scene().map().name(),runtime.scene().map().zone(),joinable?runtime.scene().oid():0);
+        return new SessionPresence.FriendPresence(runtime.scene().map().name(),runtime.scene().map().zone(),joinable?runtime.scene().oid():0);
     }
-    void partyPresence(PartyView.View view)throws IOException{friendLocation=presence(view);}
+    void partyPresence(PartyView.View view)throws IOException{presenceState.location(presence(view));}
     void forcePartyExit()throws IOException {
         if(runtime.readyRoom())return;
         if(runtime.scene().map().town()&&runtime.portalMove()==null)return;
@@ -233,8 +231,8 @@ final class WorldSession implements AutoCloseable {
     void setLookingForGroup(boolean enabled,org.tortodrone.core.wire.EnumValue difficulty)throws IOException { friends.setLookingForGroup(enabled,difficulty); }
     long externalSecret(){return externalSecret;}
     boolean lookingForGroup(){return friends.lookingForGroup();}
-    boolean friendOnlineValue(){return friendOnline;}
-    FriendPresence friendPresenceValue(){return friendLocation;}
+    boolean friendOnlineValue(){return presenceState.online();}
+    SessionPresence.FriendPresence friendPresenceValue(){return presenceState.location();}
     boolean hasWorldStorage(){return characters.hasWorldStorage();}
     boolean sameWorld(WorldSession peer){return peer!=null&&peer.scenes==scenes&&peer.characters.worldStorageFile().equals(characters.worldStorageFile());}
     /** Snapshot taken under the session monitor, never under ACTIVE (close locks in that order). */
@@ -242,19 +240,19 @@ final class WorldSession implements AutoCloseable {
     static WorldSession activeSession(int world){synchronized(ACTIVE){return ACTIVE.get(world);}}
     static List<WorldSession> activeSessions(){synchronized(ACTIVE){return List.copyOf(ACTIVE.values());}}
     /** Only volatile presence is read under ACTIVE; no peer session monitor is acquired. */
-    static Map<Integer,FriendPresence> friendPresence(java.nio.file.Path storage) {
-        var result=new HashMap<Integer,FriendPresence>();
-        synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();if(session.friendOnline&&!session.socket.isClosed()&&session.characters.hasWorldStorage()&&session.characters.worldStorageFile().equals(storage))result.put(entry.getKey(),session.friendLocation);}}
+    static Map<Integer,SessionPresence.FriendPresence> friendPresence(java.nio.file.Path storage) {
+        var result=new HashMap<Integer,SessionPresence.FriendPresence>();
+        synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();if(session.presenceState.online()&&!session.socket.isClosed()&&session.characters.hasWorldStorage()&&session.characters.worldStorageFile().equals(storage))result.put(entry.getKey(),session.presenceState.location());}}
         return Map.copyOf(result);
     }
     /** Read only volatile session presence and immutable auth revisions under ACTIVE.
      * The recipient's DB authentication is checked again before a direct refund commits. */
     static Map<Integer,Long> auctionPresence(java.nio.file.Path storage) {
         var result=new HashMap<Integer,Long>();
-        synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();if(session.friendOnline&&!session.socket.isClosed()&&session.characters.hasWorldStorage()&&session.characters.worldStorageFile().equals(storage))result.put(entry.getKey(),session.authRevision);}}
+        synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();if(session.presenceState.online()&&!session.socket.isClosed()&&session.characters.hasWorldStorage()&&session.characters.worldStorageFile().equals(storage))result.put(entry.getKey(),session.authRevision);}}
         return Map.copyOf(result);
     }
-    synchronized void refreshFriends(WorldStatePoller.Registration registration,org.tortodrone.storage.FriendStore.Snapshot snapshot,Map<Integer,FriendPresence> online)throws IOException {
+    synchronized void refreshFriends(WorldStatePoller.Registration registration,org.tortodrone.storage.FriendStore.Snapshot snapshot,Map<Integer,SessionPresence.FriendPresence> online)throws IOException {
         friends.refresh(registration,snapshot,online);
     }
 
@@ -392,7 +390,7 @@ final class WorldSession implements AutoCloseable {
     void setPartyMember(PartyRegistry.Member value){partyMember=value;}
     void setCompletedOpening(Map<String,OpeningCompletion> value){story.completed(value);}
     java.util.Collection<OpeningCompletion> completedOpeningValues(){return story.completedValues();}
-    void setFriendOnline(boolean value){friendOnline=value;}
+    void setFriendOnline(boolean value){presenceState.online(value);}
     void publishStyles()throws IOException{styles.publish();}
     void startDelivery(){
         publications.start("SceneDelivery-"+oid,publisher::publish,this::deliverParty,failure->{
@@ -411,7 +409,7 @@ final class WorldSession implements AutoCloseable {
     String welcomeMessage(){return welcomeMessage;}
     OpeningMission deliveredComlink(){return story.deliveredComlink();}
     void setArrivalComlink(OpeningMission value){story.arrivalComlink(value);}
-    void friendLocation(FriendPresence value){friendLocation=value;}
+    void friendLocation(SessionPresence.FriendPresence value){presenceState.location(value);}
     SessionResponder responder(){return responder;}
     SessionOutput output(){return output;}
     SessionCodec codec(){return codec;}
@@ -678,7 +676,7 @@ final class WorldSession implements AutoCloseable {
     /** The native {@code chatFeedback} for a scene that is still current. */
     synchronized void chatFeedback(int place,int generation,String reason)throws IOException { chats.feedback(place,generation,reason); }
     void leaveChat(){
-        friendLocation=new FriendPresence("~",0,0);
+        presenceState.reset();
         town.reset();
         trade.leave();
         chats.leave();
