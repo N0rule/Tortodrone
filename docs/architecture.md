@@ -7,12 +7,12 @@ Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights 
 | Responsibility | Current source |
 | --- | --- |
 | Listener, lifecycle, terminal console, metrics/logging | `server/{Server,ServerControl,ServerConsole,ServerOptions,ServerLog,ConsoleInput,ConsoleHelp}` |
-| Login/session orchestration | `server/network/{SecureHandshake,ClientSession,WorldSession,SessionInvocationRouter,SessionResponder,SessionOutput,WorldStatePoller}` and feature handlers (`GuildHandler`, `TradeHandler`, `ExchangeHandler`, `AuctionHandler`, `BillingHandler`, `SteamHandler`, `FriendHandler`) |
+| Login/session orchestration | `server/network/{SecureHandshake,ClientSession,WorldSession,SessionRuntime,SessionDirectory,SessionInvocationRouter,SessionResponder,SessionOutput,SessionPresence,SessionPublications,SessionRefresh,SessionProfilePublisher,SessionLog,WorldStatePoller}` and the per-feature handlers |
 | Client framing, class tables and serialization | `protocol/{HandshakeCodec,SessionDecoder,WireContext,WireWriter,SessionCodec}` and per-feature codecs (`BootstrapCodec`, `SocialCodec`, `MissionCodec`, `KnightCodec`, `TradeCodec`, `TownCodec`, `PartyCodec`, `SceneCodec`, `GuildCodec`) |
 | Authentication and account/knight services | `account/`, `character/` |
 | Transactions, persisted identity, items, town services and trades | `storage/` (`Database`, `SchemaMigrations`, the `Account`/`Roster`/`World`/`Administration`/`Preference` repositories, `WorldProfiles`, `TradeTransfer` and the town domain stores) |
-| Scene templates, instances, movement and tick | `world/{SceneCatalog,SceneRegistry,SceneSimulation,TownMovement,CollisionMap,SceneContent,SceneEntities,SceneCollision}` |
-| Player combat / effects | `world/{KnightCombat,SceneWeapons,WeaponCatalog,EquipmentCatalog,FireCatalog}` |
+| Scene templates, instances, movement and tick | `world/{SceneRegistry,SceneSimulation,TownMovement,SceneEntities}`, `content/resources/SceneCatalog` and `core/world/{CollisionMap,SceneContent,SceneCollision}` |
+| Player combat / effects | `world/SceneWeapons` and `core/world/{KnightCombat,WeaponCatalog,EquipmentCatalog,FireCatalog}` |
 | Atomic unified YAML resolution | `resources/{ContentManager,ContentRegistry}` |
 | Browser administration | `web/{AdminHandler,AdminService,WebIdentityStore}` |
 

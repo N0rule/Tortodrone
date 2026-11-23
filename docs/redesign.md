@@ -371,30 +371,30 @@ owners that compose named collaborators instead of mixing responsibilities:
 
 | Class | Lines | Composition |
 | --- | --- | --- |
-| `WorldSession` | 601 | protocol facade over `SessionRuntime`, `SessionDirectory`, the feature handlers, `SessionPresence` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
+| `WorldSession` | 601 | protocol facade over `SessionRuntime`, the feature handlers, `SessionResponder`, `SessionPresence`, `SessionLog`, `SessionPublications`, `SessionRefresh`, `SessionProfilePublisher` and `ClientDiagnostics`; forced travel uses `SessionRuntime.retireScene` |
 | `SceneEntities` | 516 | shared entity model over `SceneCollisions` (spatial index), `SceneCallbacks` (status/dialog/effect contract) and the system classes |
 | `SceneSimulation` | 427 | process-wide `SceneClock`, membership map and publications; the entity/weapon callback contract is wired once in its constructor |
 | `SceneMembership` | 282 | per-knight scene state (movement, health, floor/elevator/dialog ownership); inventory and equipment publication live in `MemberLoadout` |
-| `Database` | 506 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models; process counters live in `StorageTelemetry` |
-| `CharacterStore` | 351 | roster facade returning core character models; per-knight storage reads/writes are in `KnightStorage`, knight identity policy is in `KnightIdentity`, and the roster monitor enters the `CHARACTER` rank at every synchronized entry point |
+| `Database` | 505 | transaction/schema owner over `AccountRepository`, `RosterRepository`, `WorldRepository`, `AdministrationRepository` and `PreferenceRepository`, returning storage records or core character models; process counters live in `StorageTelemetry` |
+| `CharacterStore` | 351 | roster facade returning core character models; the storage-service facade is `CharacterServices`, per-knight storage reads/writes are in `KnightStorage`, knight identity policy is in `KnightIdentity`, and the roster monitor enters the `CHARACTER` rank at every synchronized entry point |
 
 The line counts are the size of each facade, not a target: a facade gains a line
 whenever a protocol entry point or a new collaborator is added. The two largest
 remaining stores were split the same way:
 
 - `TownStore` keeps the authenticated mutation entry points and composes
-  `SpriteStore` for sprites and harnesses, `TownLedger` for inventory and currency
-  primitives, `TownSchema` for the town tables, `CraftStore` for recipes and
-  crafting, `GearStore` for forge and heat, `ShopStore` for storefront and Depot
-  purchases, `GiftWrapStore` for gift boxes, `CustomizeStore` for variants,
-  unbinding and accessories, `UpgradeStore` for Arsenal upgrades, `UseStore` for
-  scene item use and revive payment, `AdminStore` for the GM setters and
-  `RenameStore` for the knight rename window and ticket.
+  `SpriteStore` for sprites and harnesses, `CraftStore` for recipes and crafting,
+  `GearStore` for forge and heat, `ShopStore` for storefront and Depot purchases,
+  `GiftWrapStore` for gift boxes, `CustomizeStore` for variants, unbinding and
+  accessories, `UpgradeStore` for Arsenal upgrades, `UseStore` for scene item use
+  and revive payment, `AdminStore` for the GM setters and `RenameStore` for the
+  knight rename window and ticket. It delegates to the static `TownLedger` for
+  inventory and currency primitives and `TownSchema` for the town tables.
 - `GuildStore` composes `GuildHallStore` for the treasury well, hall state and
-  expansion tickets, `GuildLogStore` for the guild record, `GuildMembershipStore`
-  for formation, invitations and roster commands, `GuildSettingsStore` for name
-  checks, the rename window and the message of the day, and `GuildSchema` for the
-  guild tables.
+  expansion tickets, `GuildMembershipStore` for formation, invitations and roster
+  commands, and `GuildSettingsStore` for name checks, the rename window and the
+  message of the day. It delegates to the static `GuildLogStore` for the guild
+  record and `GuildSchema` for the guild tables.
 
 Phase 9 stays evidence-gated and is not part of this table; it needs the per-epic
 stock evidence listed in `docs/baseline.md`.
