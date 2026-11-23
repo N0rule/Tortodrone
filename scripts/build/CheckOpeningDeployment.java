@@ -5,7 +5,7 @@ import org.tortodrone.core.mission.TutorialRoute;
 /** Read-only content preflight; does not start a server or establish gameplay acceptance. */
 public final class CheckOpeningDeployment {
     public static void main(String[] args)throws Exception {
-        if(args.length!=1)throw new IllegalArgumentException("Usage: java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build");
+        if(args.length!=1)throw new IllegalArgumentException("Usage: java -cp build/tortodrone.jar scripts/build/CheckOpeningDeployment.java build");
         var route=ContentManager.load(Path.of(args[0])).createScenes().tutorial();
         if(route==null)throw new IllegalStateException("Opening route unavailable: check the bundled Crash Site 398 and Haven 1 maps; see docs/content.md");
         System.out.println("PASS: verified opening content in "+Path.of(args[0]).toAbsolutePath().normalize());

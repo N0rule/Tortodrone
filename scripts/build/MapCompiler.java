@@ -75,7 +75,7 @@ public final class MapCompiler {
             if (Files.exists(target) && !replace)
                 throw new IOException("Map already exists; pass --replace for a disposable build output: " + target);
             String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
-            var command = new ArrayList<>(List.of(java, "scripts/MapImport.java", game.toString(),
+            var command = new ArrayList<>(List.of(java, "scripts/build/MapImport.java", game.toString(),
                 scene.toString(), deploymentRoot.toString(), name, zoneId, zoneName));
             if (map.get("spawn-x") != null && map.get("spawn-y") != null) {
                 command.add(text(map, "spawn-x"));

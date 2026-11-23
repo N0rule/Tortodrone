@@ -18,7 +18,7 @@ import java.util.concurrent.*;
 public final class BuildTools {
     public static void main(String[] args) throws Exception {
         Path project = Path.of("").toAbsolutePath();
-        if (args.length == 0) throw new IllegalArgumentException("Usage: java scripts/BuildTools.java sqlite|jline output, or content|defaults|maps [output]");
+        if (args.length == 0) throw new IllegalArgumentException("Usage: java scripts/build/BuildTools.java sqlite|jline output, or content|defaults|maps [output]");
         switch (args[0]) {
             case "sqlite", "jline" -> {
                 if (args.length != 2) throw new IllegalArgumentException("Expected dependency output path");

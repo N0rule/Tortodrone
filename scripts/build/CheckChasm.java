@@ -11,7 +11,7 @@ import org.tortodrone.resources.SceneCatalog;
 /** Original content and isolated control-chain regression; never a full gameplay acceptance. */
 public final class CheckChasm {
     public static void main(String[] args)throws Exception {
-        if(args.length!=1)throw new IllegalArgumentException("Usage: java -cp DEPLOYMENT/tortodrone.jar scripts/CheckChasm.java RAW_314_EXPORT");
+        if(args.length!=1)throw new IllegalArgumentException("Usage: java -cp DEPLOYMENT/tortodrone.jar scripts/build/CheckChasm.java RAW_314_EXPORT");
         var map=SceneCatalog.loadTemplate(314,Path.of(args[0]));
         try{SceneCatalog.load(Map.of(314,Path.of(args[0])),314);throw new IllegalStateException("Level accepted as a town startup entry");}
         catch(java.io.IOException expected){if(!expected.getMessage().equals("Entry scene must be a town"))throw expected;}

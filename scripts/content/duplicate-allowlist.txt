@@ -1,4 +1,4 @@
-# Exact-duplicate content files accepted by checkContentDuplication (scripts/ContentAudit.java).
+# Exact-duplicate content files accepted by checkContentDuplication (scripts/build/ContentAudit.java).
 #
 # Every path in a duplicate group must be listed; an unlisted duplicate fails the build.
 # Stale entries are reported as warnings. Remove entries as de-duplication lands instead of

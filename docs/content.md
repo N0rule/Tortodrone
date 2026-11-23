@@ -434,8 +434,8 @@ actions; `SceneWeapons` schedules those graphs, while
 cannot safely describe those graphs. No decorative damage control or multiplier
 is accepted. Editing timing changes the existing action/effect schedule; it does
 not claim to replace every native animation or implement missing game logic.
-Regenerate a plain `fires.json` with `scripts/StockTools.java fires`, review it,
-then run `java -cp build/tortodrone.jar scripts/StockTools.java fire-compact
+Regenerate a plain `fires.json` with `scripts/build/StockTools.java fires`, review it,
+then run `java -cp build/tortodrone.jar scripts/build/StockTools.java fire-compact
 plain.json content/_internal/fires.json.gz`; the same command compacts
 `pet-fires.json`. The loader accepts both forms, but only compressed graphs are
 committed.
@@ -675,9 +675,9 @@ Reproduce the native portion of the numeric table with a separate read-only
 stock installation:
 
 ```sh
-java -Dtortodrone.deployment=/tmp/tortodrone-check scripts/StockTools.java \
+java -Dtortodrone.deployment=/tmp/tortodrone-check scripts/build/StockTools.java \
   gear-stats "/path/to/Spiral Knights" content /tmp/gear-stats-fresh.json
-java -Dtortodrone.deployment=/tmp/tortodrone-check scripts/StockTools.java \
+java -Dtortodrone.deployment=/tmp/tortodrone-check scripts/build/StockTools.java \
   gear-stats-check "/path/to/Spiral Knights"
 java --enable-native-access=ALL-UNNAMED -Dtortodrone.deployment=/tmp/tortodrone-check \
   -cp /tmp/tortodrone-check/tortodrone.jar scripts/compat/CheckCombatRendering.java \
@@ -913,7 +913,7 @@ For a source-checkout preflight:
 
 ```sh
 ./gradlew build
-java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
+java -cp build/tortodrone.jar scripts/build/CheckOpeningDeployment.java build
 ```
 
 The check must print `PASS: verified opening content`, scene 398 at entrance
@@ -965,7 +965,7 @@ Reuse the verified read-only native exporters, then validate and publish into th
 same unified tree. From a built source checkout:
 
 ```sh
-java scripts/MapImport.java /path/to/game /path/to/scene.dat /deployment map_name 1 %town:m.haven
+java scripts/build/MapImport.java /path/to/game /path/to/scene.dat /deployment map_name 1 %town:m.haven
 ```
 
 The last two arguments are the verified zone ID and native zone name; cached
@@ -1039,7 +1039,7 @@ live firework consumption semantics.
 
 `AnimatedItemSessionTest` and `SceneItemUseTest` cover ownership, revision,
 rollback, replay, busy use, timing and interruption. The read-only
-`scripts/StockTools.java animated-items-check` oracle compares all 82 definitions
+`scripts/build/StockTools.java animated-items-check` oracle compares all 82 definitions
 with the installed client and reads timed bonus selection/expiry events.
 `CheckCombatRendering.java --items-only` exercises the unchanged Arsenal Use
 menu and captures all three firework sizes, fireflies and confetti in an isolated

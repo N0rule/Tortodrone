@@ -311,7 +311,7 @@ Then create an account and connect the client as described in [Quick start](#qui
 The build includes Crash Site **398** and initial Rescue Camp **217** with their original layouts, collision, actors, and conversations. To check the deployment before starting:
 
 ```sh
-java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
+java -cp build/tortodrone.jar scripts/build/CheckOpeningDeployment.java build
 ```
 
 This validates the pinned scenes, entrances, and route prerequisites. It does **not** prove a full gameplay playthrough; see the [Crash Site playtest](docs/content.md#local-crash-site-playtest) for manual acceptance.

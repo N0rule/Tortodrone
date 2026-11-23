@@ -143,10 +143,10 @@ tasks.named("checkModuleGraph") { dependsOn(checkBytecodeDependencies) }
 // Compile the existing Java preparation tool and its standalone regression together.
 val buildTools = sourceSets.create("buildTools") {
     java.setSrcDirs(listOf("scripts"))
-    java.include("BuildTools.java", "BuildToolsTest.java", "ContentAudit.java", "ContentManifest.java",
-        "StockTools.java", "ProcessCleanupTest.java",
-        "CollisionPackExport.java", "MapCompiler.java", "compat/CheckClientWorld.java", "compat/CheckCombatRendering.java",
-        "compat/ClientCheckHarness.java")
+    java.include("build/BuildTools.java", "build/BuildToolsTest.java", "build/ContentAudit.java",
+        "build/ContentManifest.java", "build/StockTools.java", "build/ProcessCleanupTest.java",
+        "build/CollisionPackExport.java", "build/MapCompiler.java",
+        "compat/CheckClientWorld.java", "compat/CheckCombatRendering.java", "compat/ClientCheckHarness.java")
     resources.setSrcDirs(emptyList<String>())
 }
 buildTools.compileClasspath += sourceSets.main.get().output + configurations.runtimeClasspath.get()

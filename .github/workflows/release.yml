@@ -69,7 +69,7 @@ jobs:
           test -f build/content/maps/town/haven/map.yml
           test -f build/content/maps/level/crash_site/native/scene.dat
           test -f build/content/maps/town/rescue_camp/native/scene.dat
-          java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
+          java -cp build/tortodrone.jar scripts/build/CheckOpeningDeployment.java build
           test -f build/content/items/weapons.yml
           test -d build/config
           test -d build/plugins

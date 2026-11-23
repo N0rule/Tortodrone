@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 /** Read-only installed-client exporters/checks, with disposable home/preferences and Java 25 compilation. */
 public final class StockTools {
     public static void main(String[] args) throws Exception {
-        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|fire-compact|equipment|item-use|scene|monster-roster|monster-catalog|haven|town|town-check|recipes|craft-check game-directory [arguments]");
+        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/build/StockTools.java previews|items|weapons|fires|fire-compact|equipment|item-use|scene|monster-roster|monster-catalog|haven|town|town-check|recipes|craft-check game-directory [arguments]");
         Path project = Path.of("").toAbsolutePath();
         if(args[0].equals("fire-compact")) {
             if(args.length!=3)throw new IllegalArgumentException("fire-compact expects plain-json compressed-json.gz; no game install needed");
@@ -230,8 +230,8 @@ public final class StockTools {
                         case "collision" -> {
                 if(args.length<4)throw new IllegalArgumentException("collision expects game-directory maps-root [--force]");
                 fixture="SceneCollisionTool";fixtureArgs.addAll(Arrays.asList(args).subList(2,args.length));
-                sources.add(project.resolve("scripts/SceneCollisionTool.java"));
-                sources.add(project.resolve("scripts/CollisionPackExport.java"));
+                sources.add(project.resolve("scripts/build/SceneCollisionTool.java"));
+                sources.add(project.resolve("scripts/build/CollisionPackExport.java"));
                 sources.add(project.resolve("scripts/compat/SceneCollisionExport.java"));
             }
             case "monster-roster" -> {

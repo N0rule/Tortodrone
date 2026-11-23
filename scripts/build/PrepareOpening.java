@@ -8,7 +8,7 @@ import org.tortodrone.core.mission.TutorialRoute;
 /** Prepare a separate opening deployment; never read/copy private runtime state. */
 public final class PrepareOpening {
     public static void main(String[] args)throws Exception {
-        if(args.length!=4)throw new IllegalArgumentException("Usage: java -cp BASE/tortodrone.jar scripts/PrepareOpening.java GAME SCENES BASE FRESH_OUTPUT");
+        if(args.length!=4)throw new IllegalArgumentException("Usage: java -cp BASE/tortodrone.jar scripts/build/PrepareOpening.java GAME SCENES BASE FRESH_OUTPUT");
         Path game=Path.of(args[0]).toRealPath(),scenes=Path.of(args[1]).toRealPath(),base=Path.of(args[2]).toRealPath();
         Path requested=Path.of(args[3]).toAbsolutePath().normalize();
         Path output=requested.getParent().toRealPath().resolve(requested.getFileName());
@@ -28,7 +28,7 @@ public final class PrepareOpening {
             for(String name:List.of("content","config","webui","plugins"))if(Files.exists(base.resolve(name)))copy(base.resolve(name),stage.resolve(name));
             for(int scene:List.of(398,217)){
                 Path raw=work.resolve(Integer.toString(scene));
-                var command=List.of(java(),"-Dtortodrone.deployment="+base,Path.of("scripts/StockTools.java").toAbsolutePath().toString(),"scene",game.toString(),source.resolve(Integer.toString(scene)).toString(),raw.toString(),scene==398?"50332041":"16777221",scene==398?"%dungeon:m.tutorial_b":"%town:m.rescue_camp_state_1","--content");
+                var command=List.of(java(),"-Dtortodrone.deployment="+base,Path.of("scripts/build/StockTools.java").toAbsolutePath().toString(),"scene",game.toString(),source.resolve(Integer.toString(scene)).toString(),raw.toString(),scene==398?"50332041":"16777221",scene==398?"%dungeon:m.tutorial_b":"%town:m.rescue_camp_state_1","--content");
                 Path log=work.resolve(scene+".log");var process=new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(log.toFile()).start();
                 try {
                     if(!process.waitFor(240,java.util.concurrent.TimeUnit.SECONDS))throw new IOException("Native export timed out for "+scene);
