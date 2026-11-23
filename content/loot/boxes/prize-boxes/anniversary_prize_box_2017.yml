@@ -19,51 +19,8 @@ boxes:
         entries:
         - {weight: 3, rewards: [{item: golden_slime_coin, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: golden_slime_coin, quantity: 5, binding: catalog}]}
-      choices_grand_topper_blue_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 3, rewards: [{group: choices_grand_topper_blue_3}]}
-        - {weight: 3, rewards: [{group: choices_field_cap_blue_4}]}
-        - {weight: 3, rewards: [{group: choices_field_cap_plumed_blue_5}]}
-        - {weight: 1, rewards: [{group: choices_grand_topper_prismatic_6}]}
-      choices_grand_topper_blue_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: grand_topper_blue, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: grand_topper_gold, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: grand_topper_green, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: grand_topper_heavy, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: grand_topper_pink, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: grand_topper_purple, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: grand_topper_red, quantity: 1, binding: catalog}]}
-      choices_field_cap_blue_4:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: field_cap_blue, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_gold, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_green, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_heavy, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_pink, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_purple, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_red, quantity: 1, binding: catalog}]}
-      choices_field_cap_plumed_blue_5:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: field_cap_plumed_blue, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_plumed_gold, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_plumed_green, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_plumed_heavy, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_plumed_pink, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_plumed_purple, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_plumed_red, quantity: 1, binding: catalog}]}
-      choices_grand_topper_prismatic_6:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: grand_topper_prismatic, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_plumed_prismatic, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: field_cap_prismatic, quantity: 1, binding: catalog}]}
+      choices_grand_topper_blue_2: {shared: choices_grand_topper_blue_2}
+      choices_grand_topper_blue_3: {shared: choices_grand_topper_blue}
+      choices_field_cap_blue_4: {shared: choices_field_cap_blue}
+      choices_field_cap_plumed_blue_5: {shared: choices_field_cap_plumed_blue}
+      choices_grand_topper_prismatic_6: {shared: choices_grand_topper_prismatic}

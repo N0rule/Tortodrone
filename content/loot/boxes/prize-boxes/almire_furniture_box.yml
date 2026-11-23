@@ -23,29 +23,7 @@ boxes:
         - {weight: 30, rewards: [{group: choices_tapestry_stand_charred_5}]}
         - {weight: 2, rewards: [{item: nature_sprite, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: cursed_nature_sprite, quantity: 1, binding: catalog}]}
-      choices_bench_restored_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: bench_restored, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: chair_restored, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: table_restored, quantity: 1, binding: catalog}]}
-      choices_bench_charred_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: bench_charred, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: chair_charred, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: table_charred, quantity: 1, binding: catalog}]}
-      choices_rug_restored_4:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: rug_restored, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: tapestry_stand_restored, quantity: 1, binding: catalog}]}
-      choices_tapestry_stand_charred_5:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: tapestry_stand_charred, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: rug_charred, quantity: 1, binding: catalog}]}
+      choices_bench_restored_2: {shared: choices_bench_restored}
+      choices_bench_charred_3: {shared: choices_bench_charred}
+      choices_rug_restored_4: {shared: choices_rug_restored}
+      choices_tapestry_stand_charred_5: {shared: choices_tapestry_stand_charred}

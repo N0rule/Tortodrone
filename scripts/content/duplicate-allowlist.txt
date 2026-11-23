@@ -1,0 +1,15 @@
+# Exact-duplicate content files accepted by checkContentDuplication (scripts/ContentAudit.java).
+#
+# Every path in a duplicate group must be listed; an unlisted duplicate fails the build.
+# Stale entries are reported as warnings. Remove entries as de-duplication lands instead of
+# adding new ones: this file records accepted debt, not policy. New maps, missions, weapons
+# and other content must not copy an existing file verbatim; share the definition instead
+# (for maps, content/shared/mechanics.yml plus an opt-in "mechanics" shared section).
+#
+# Intentional: the Rescue Camp and its powered state place the same native NPCs.
+# Their dialogue bodies are shared in content/shared/dialogues.yml; only the
+# one-line wrapper is identical because both scenes use the same NPC id.
+maps/town/rescue_camp/npcs/greta.yml
+maps/town/rescue_camp_state_2/npcs/greta.yml
+maps/town/rescue_camp/npcs/rhendon.yml
+maps/town/rescue_camp_state_2/npcs/rhendon.yml

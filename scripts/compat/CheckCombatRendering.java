@@ -6,7 +6,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Pattern;
 import org.tortodrone.core.Json;
 import org.tortodrone.core.Yaml;
 import org.tortodrone.core.ContentFiles;
@@ -75,14 +74,14 @@ public final class CheckCombatRendering {
         }
         System.out.println("Combat rendering output: " + output);
         scratch = Files.createTempDirectory("tortodrone-combat-sandbox-");
-        Thread cleanup = new Thread(CheckCombatRendering::stopChildren, "combat-render-cleanup");
+        Thread cleanup = new Thread(ClientCheckHarness::stopChildren, "combat-render-cleanup");
         Runtime.getRuntime().addShutdownHook(cleanup);
         try {
             Path app = scratch.resolve("app");
             Files.createDirectories(app);
             Files.copy(jar, scratch.resolve("tortodrone.jar"));
-            copyTree(defaults, scratch.resolve("content"));
-            copyTree(deployment.resolve("config"),scratch.resolve("config"));
+            ClientCheckHarness.copyTree(defaults, scratch.resolve("content"), "defaults");
+            ClientCheckHarness.copyTree(deployment.resolve("config"),scratch.resolve("config"),"config");
             Files.deleteIfExists(scratch.resolve("config/server.yml"));
             Path maps = scratch.resolve("content");
             if(dialogueOnly){Path npc=maps.resolve("maps/training/advanced_training/npcs/konway.yml");var yaml=Yaml.read(npc);var dialogue=Yaml.map(yaml.get("dialogue"),"dialogue");var nodes=Yaml.map(dialogue.get("nodes"),"nodes");Yaml.map(nodes.get("part 1a"),"node").put("text","Thanks! I'm off to explore now.");Files.delete(npc);Yaml.write(npc,yaml);}
@@ -102,7 +101,7 @@ public final class CheckCombatRendering {
                 game.resolve("code") + File.separator + "*" + File.pathSeparator + scratch.resolve("tortodrone.jar");
             Path source = project.resolve("scripts/compat/CombatRenderingCheck.java");
             if (!Files.isRegularFile(source)) throw new IOException("Missing child probe: " + source);
-            run(List.of(executable("javac"), "--release", "25", "-cp", cp, "-d", scratch.toString(), source.toString()),
+            ClientCheckHarness.runQuiet(scratch, List.of(ClientCheckHarness.executable("javac"), "--release", "25", "-cp", cp, "-d", scratch.toString(), source.toString()),
                 "compile", 60, null);
 
             Path config = scratch.resolve("data/server.properties");
@@ -126,20 +125,20 @@ public final class CheckCombatRendering {
             var seed = new ArrayList<>(base);
             seed.addAll(List.of("CombatRenderingCheck", mailCampaignOnly?"--seed-mail":campStory?"--seed-camp":freshOpening?"--seed-opening":equipmentGroups?"--seed-equipment":itemsOnly?"--seed-items":multiplayerOnly?"--seed-multiplayer":boxesOnly?"--seed-boxes":depotOnly?"--seed-depot":readyRoomForgeOnly?"--seed-forge":missionOnly?"--seed-mission":"--seed", scratch.resolve("data").toString()));
             if(manual)seed.set(seed.size()-2,"--seed-manual");
-            run(seed, "seed", manual?120:45, scratch);
+            ClientCheckHarness.runQuiet(scratch, seed, "seed", manual?120:45, scratch);
             if(manual)writeManualPrefs(scratch);
 
             // Log GC stops beside the session: a multi-hundred-millisecond pause shows up as a
             // scene tick tail and would otherwise be mistaken for simulation work.
-            Process server = start(List.of(executable("java"),
+            Process server = ClientCheckHarness.start(scratch, List.of(ClientCheckHarness.executable("java"),
                 "-Xlog:gc*:file="+output.resolve("gc.log")+":time,uptime,level,tags",
                 "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui","--skip-client-assets"), serverLog, scratch);
             server.getOutputStream().close();
-            String port = ready(server, serverLog, Duration.ofSeconds(120));
+            String port = ClientCheckHarness.ready(server, serverLog, Duration.ofSeconds(120));
             Path publicKey = scratch.resolve("data/keys/public.txt");
             long keyDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
             while (!Files.isRegularFile(publicKey) && System.nanoTime() < keyDeadline) Thread.sleep(50);
-            if (!Files.isRegularFile(publicKey)) throw new IOException("Server did not create disposable public key:\n" + tail(serverLog));
+            if (!Files.isRegularFile(publicKey)) throw new IOException("Server did not create disposable public key:\n" + ClientCheckHarness.tail(serverLog));
 
             // TORTODRONE_GFX_LAG=<stallMillis>:<intervalMillis>[:<startDelayMillis>] inserts a
             // loopback stall proxy between the client and the disposable server so a scenario can
@@ -157,11 +156,11 @@ public final class CheckCombatRendering {
             peerCommand.addAll(List.of("CombatRenderingCheck","--peer",endpoint,publicKey.toString(),peerOutput.toString()));
             if(multiplayerOnly)peerCommand.add(sharedWorldOnly?"--multiplayer-world-only":"--multiplayer-only");
             if(equipmentGroups)peerCommand.add("--equipment-groups");
-            Path peerLog=output.resolve("peer-client.log");Process peer=tutorialEntryOnly||readyRoomOnly||itemsOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||exploreOnly||missionOnly||manual?null:start(peerCommand,peerLog,scratch);
+            Path peerLog=output.resolve("peer-client.log");Process peer=tutorialEntryOnly||readyRoomOnly||itemsOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||exploreOnly||missionOnly||manual?null:ClientCheckHarness.start(scratch, peerCommand,peerLog,scratch);
             long peerDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);
             while(peer!=null&&peer.isAlive()&&!Files.isRegularFile(peerOutput.resolve("peer-ready"))&&System.nanoTime()<peerDeadline)Thread.sleep(50);
             if(peer!=null&&(!peer.isAlive()||!Files.isRegularFile(peerOutput.resolve("peer-ready"))))
-                throw new IOException("Graphical peer did not become ready:\n"+tail(peerLog));
+                throw new IOException("Graphical peer did not become ready:\n"+ClientCheckHarness.tail(peerLog));
 
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", endpoint, publicKey.toString(), outputDir.toString()));
@@ -176,12 +175,12 @@ public final class CheckCombatRendering {
             else if(manual)graphical.add("--manual");
             else if(trainingOnly)graphical.add(campProgression?"--camp-progression-only":campStory?"--camp-story-only":freshOpening?"--opening-tutorial-only":tutorialOnly?"--tutorial-only":tutorialEntryOnly?"--tutorial-entry-only":mailCampaignOnly?"--mail-campaign-only":readyRoomMailOnly?"--ready-room-mail-only":readyRoomForgeOnly?"--ready-room-forge-only":readyRoomOnly?"--ready-room-only":equipmentGroups?"--equipment-groups":itemsOnly?"--items-only":sharedWorldOnly?"--multiplayer-world-only":multiplayerOnly?"--multiplayer-only":arsenalBlinkOnly?(arsenalStationOnly?"--arsenal-station-only":"--arsenal-blink-only"):boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":missionOnly?"--mission-only":"--training-only");
             Path clientLog = output.resolve("client.log");
-            Process client = start(graphical, clientLog, scratch);
+            Process client = ClientCheckHarness.start(scratch, graphical, clientLog, scratch);
             if(multiplayerOnly&&!sharedWorldOnly){
                 long mpDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(180);
                 while(peer.isAlive()&&client.isAlive()&&System.nanoTime()<mpDeadline)Thread.sleep(50);
-                if(peer.isAlive()||peer.exitValue()!=0||!Files.isRegularFile(outputDir.resolve("mp-disconnected")))throw new IOException("Multiplayer failed: "+tail(peerLog)+"\nPrimary: "+tail(clientLog));
-                peerLog=output.resolve("peer-reconnect.log");peer=start(peerCommand,peerLog,scratch);
+                if(peer.isAlive()||peer.exitValue()!=0||!Files.isRegularFile(outputDir.resolve("mp-disconnected")))throw new IOException("Multiplayer failed: "+ClientCheckHarness.tail(peerLog)+"\nPrimary: "+ClientCheckHarness.tail(clientLog));
+                peerLog=output.resolve("peer-reconnect.log");peer=ClientCheckHarness.start(scratch, peerCommand,peerLog,scratch);
             }
             if(manual){
                 System.out.println("MANUAL: disposable server on 127.0.0.1:"+port+"; the client auto-logs in as LanPlayer/Town-Knight");
@@ -191,38 +190,38 @@ public final class CheckCombatRendering {
                 return;
             }
             if (!client.waitFor(exploreOnly?120:tutorialOnly?1500:tutorialEntryOnly||readyRoomOnly?100:trainingOnly?440:400, TimeUnit.SECONDS)) {
-                throw new IOException("Graphical combat probe timed out:\n" + tail(clientLog) + "\nServer:\n" + tail(serverLog));
+                throw new IOException("Graphical combat probe timed out:\n" + ClientCheckHarness.tail(clientLog) + "\nServer:\n" + ClientCheckHarness.tail(serverLog));
             }
             String log = Files.readString(clientLog);
-            if((itemsOnly||readyRoomOnly)&&(log.contains("NullPointerException")||log.contains("ClassCastException")))throw new IOException("Native controller error: "+tail(clientLog));
+            if((itemsOnly||readyRoomOnly)&&(log.contains("NullPointerException")||log.contains("ClassCastException")))throw new IOException("Native controller error: "+ClientCheckHarness.tail(clientLog));
             if (client.exitValue() != 0 || !log.lines().anyMatch(line -> line.startsWith("PASS:"))) {
-                throw new IOException("Graphical combat probe did not pass (exit " + client.exitValue() + "):\n" + tail(clientLog) + "\nServer:\n" + tail(serverLog));
+                throw new IOException("Graphical combat probe did not pass (exit " + client.exitValue() + "):\n" + ClientCheckHarness.tail(clientLog) + "\nServer:\n" + ClientCheckHarness.tail(serverLog));
             }
             if(readyRoomMailOnly&&Files.readString(serverLog).lines().noneMatch(line -> line.contains("service=UplinkMarshaller; method=6;")))
-                throw new IOException("Ready Room mail window passed without the stock mail headers request reaching the server:\n" + tail(serverLog));
+                throw new IOException("Ready Room mail window passed without the stock mail headers request reaching the server:\n" + ClientCheckHarness.tail(serverLog));
             if(readyRoomForgeOnly&&Files.readString(serverLog).lines().noneMatch(line -> line.contains("service=ItemMarshaller; method=8;")))
-                throw new IOException("Ready Room forge window passed without the stock forge request reaching the server:\n" + tail(serverLog));
+                throw new IOException("Ready Room forge window passed without the stock forge request reaching the server:\n" + ClientCheckHarness.tail(serverLog));
             if(freshOpening||campStory){
                 var reconnect=new ArrayList<>(base);Path captures=outputDir.resolve("reconnect");Files.createDirectories(captures);
                 reconnect.addAll(List.of("CombatRenderingCheck",endpoint,publicKey.toString(),captures.toString(),campProgression?"--camp-progression-return-only":campStory?"--camp-story-return-only":"--opening-return-only"));
-                Path reconnectLog=output.resolve("reconnect.log");Process resumed=start(reconnect,reconnectLog,scratch);
-                if(!resumed.waitFor(100,TimeUnit.SECONDS)||resumed.exitValue()!=0||!Files.readString(reconnectLog).lines().anyMatch(l->l.startsWith("PASS:")))throw new IOException("Opening reconnect failed: "+tail(reconnectLog));
+                Path reconnectLog=output.resolve("reconnect.log");Process resumed=ClientCheckHarness.start(scratch, reconnect,reconnectLog,scratch);
+                if(!resumed.waitFor(100,TimeUnit.SECONDS)||resumed.exitValue()!=0||!Files.readString(reconnectLog).lines().anyMatch(l->l.startsWith("PASS:")))throw new IOException("Opening reconnect failed: "+ClientCheckHarness.tail(reconnectLog));
             }
             if(peer!=null&&(!peer.waitFor(15,TimeUnit.SECONDS)||peer.exitValue()!=0
                     ||!Files.readString(peerLog).lines().anyMatch(line->line.startsWith("PASS:"))))
-                throw new IOException("Graphical peer did not pass:\n"+tail(peerLog));
+                throw new IOException("Graphical peer did not pass:\n"+ClientCheckHarness.tail(peerLog));
             if(multiplayerOnly||equipmentGroups)for(Path nativeLog:List.of(clientLog,output.resolve("peer-client.log"),peerLog)){
                 String nativeText=Files.readString(nativeLog);
                 if(nativeText.contains("NullPointerException")||nativeText.contains("ClassCastException"))
-                    throw new IOException("Native multiplayer HUD/controller error: "+tail(nativeLog));
+                    throw new IOException("Native multiplayer HUD/controller error: "+ClientCheckHarness.tail(nativeLog));
             }
             System.out.println(log.lines().filter(line -> line.startsWith("PASS:")).findFirst().orElseThrow());
             System.out.println("Combat screenshots and logs retained at " + output);
         } finally {
-            stopChildren();
+            ClientCheckHarness.stopChildren();
             try { Runtime.getRuntime().removeShutdownHook(cleanup); }
             catch (IllegalStateException shuttingDown) { /* The registered hook is already stopping the children. */ }
-            deleteTree(scratch);
+            ClientCheckHarness.deleteTree(scratch);
         }
     }
 
@@ -238,7 +237,7 @@ public final class CheckCombatRendering {
         System.out.println("MANUAL: control scheme WASD_MOVE");
     }
     private static List<String> graphicsBase(Path game, Path app, Path sandbox) {
-        var base = new ArrayList<>(List.of(executable("java"), "--enable-native-access=ALL-UNNAMED",
+        return new ArrayList<>(List.of(ClientCheckHarness.executable("java"), "--enable-native-access=ALL-UNNAMED",
             "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED",
             "-Ddisable_sound=true", "-Dno_unpack_resources=true", "-Dresource_dir=" + game.resolve("rsrc/"),
             "-Duser.home=" + sandbox.resolve("home"),
@@ -346,36 +345,6 @@ public final class CheckCombatRendering {
         }
     }
 
-    private static void copyTree(Path source, Path destination) throws IOException {
-        try (var paths = Files.walk(source)) {
-            for (Path path : paths.toList()) {
-                if (Files.isSymbolicLink(path)) throw new IOException("Symlink in defaults: " + path);
-                Path target = destination.resolve(source.relativize(path));
-                if (Files.isDirectory(path)) Files.createDirectories(target);
-                else Files.copy(path, target);
-            }
-        }
-    }
-
-    private static void deleteTree(Path root) throws IOException {
-        if (!Files.exists(root)) return;
-        try (var paths = Files.walk(root)) {
-            for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path);
-        }
-    }
-
-    private static String ready(Process server, Path log, Duration timeout) throws Exception {
-        long deadline = System.nanoTime() + timeout.toNanos();
-        Pattern pattern = Pattern.compile("Listening on 127\\.0\\.0\\.1:(\\d+)");
-        while (System.nanoTime() < deadline) {
-            var match = pattern.matcher(Files.exists(log) ? Files.readString(log) : "");
-            if (match.find()) return match.group(1);
-            if (!server.isAlive()) throw new IOException("Disposable server failed:\n" + tail(log));
-            Thread.sleep(50);
-        }
-        throw new IOException("Disposable server readiness timeout:\n" + tail(log));
-    }
-
     /** Optional transport lag: unread socket data is held for the stall window in both directions,
      *  which delays even the small input frames a message-level buffer would otherwise absorb. */
     private static String lagProxy(String target) throws IOException {
@@ -441,59 +410,5 @@ public final class CheckCombatRendering {
             } catch (IOException | InterruptedException closed) { }
             try { to.close(); } catch (IOException ignored) { }
         });
-    }
-
-    private static String executable(String name) { return Path.of(System.getProperty("java.home"), "bin", name).toString(); }
-
-    private static Process start(List<String> command, Path log, Path directory) throws IOException {
-        ProcessBuilder builder = new ProcessBuilder(command).directory(directory.toFile()).redirectErrorStream(true).redirectOutput(log.toFile());
-        builder.environment().put("_JAVA_AWT_WM_NONREPARENTING", "1");
-        Process process = builder.start();
-        synchronized (CHILDREN) { CHILDREN.add(process); }
-        return process;
-    }
-
-    private static void run(List<String> command, String name, int timeout, Path directory) throws Exception {
-        Path log = scratch.resolve(name + ".log");
-        Process process = start(command, log, directory == null ? scratch : directory);
-        if (!process.waitFor(timeout, TimeUnit.SECONDS)) throw new IOException(name + " timed out:\n" + tail(log));
-        if (process.exitValue() != 0) throw new IOException(name + " failed:\n" + tail(log));
-    }
-
-    private static String tail(Path path) throws IOException {
-        if (!Files.exists(path)) return "(no log yet)";
-        String text = Files.readString(path);
-        return text.substring(Math.max(0, text.length() - 9000));
-    }
-
-    private static void stopChildren() {
-        synchronized (CHILDREN) {
-            boolean interrupted = Thread.interrupted();
-            try {
-                for (int i = CHILDREN.size() - 1; i >= 0; i--) interrupted = stopChild(CHILDREN.get(i), interrupted);
-            } finally {
-                if (Thread.interrupted()) interrupted = true;
-                if (interrupted) Thread.currentThread().interrupt();
-            }
-        }
-    }
-
-    private static boolean stopChild(Process process, boolean interrupted) {
-        if (!process.isAlive()) return interrupted;
-        process.destroy();
-        try {
-            if (!process.waitFor(5, TimeUnit.SECONDS) && process.isAlive()) process.destroyForcibly();
-        } catch (InterruptedException e) {
-            interrupted = true;
-            process.destroyForcibly();
-        }
-        while (process.isAlive()) {
-            try { process.waitFor(); }
-            catch (InterruptedException e) {
-                interrupted = true;
-                process.destroyForcibly();
-            }
-        }
-        return interrupted;
     }
 }

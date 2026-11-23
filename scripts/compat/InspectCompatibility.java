@@ -41,11 +41,11 @@ public final class InspectCompatibility {
         var profile = new WorldProfile(50, 1, 1, 73, 29, 1, items);
         var codec = new SessionCodec();
         var bytes = new ByteArrayOutputStream();
-        append(bytes, HandshakeCodec.response((short) 1, "0123456789abcdef0123456789abcdef"));
-        append(bytes, HandshakeCodec.authenticationResponse((short) 2, true, "fixture", "InspectUser"));
-        append(bytes, codec.player((short) 3, 1002, 1, "InspectUser"));
-        append(bytes, codec.selected(1002, knight, profile));
-        append(bytes, codec.inspected(1002, (short) 9, knight, profile, hidden));
+        Harness.append(bytes, HandshakeCodec.response((short) 1, "0123456789abcdef0123456789abcdef"));
+        Harness.append(bytes, HandshakeCodec.authenticationResponse((short) 2, true, "fixture", "InspectUser"));
+        Harness.append(bytes, codec.player((short) 3, 1002, 1, "InspectUser"));
+        Harness.append(bytes, codec.selected(1002, knight, profile));
+        Harness.append(bytes, codec.inspected(1002, (short) 9, knight, profile, hidden));
 
         var input = new v(new ByteArrayInputStream(bytes.toByteArray()));
         input.qe(); input.qe();
@@ -117,7 +117,4 @@ public final class InspectCompatibility {
         System.out.println("FIELDS PlayerEquipment=" + Arrays.toString(actual));
     }
 
-    private static void append(ByteArrayOutputStream bytes, byte[] frame) {
-        bytes.write(frame, 4, frame.length - 4);
-    }
 }

@@ -37,6 +37,8 @@ content/
     trap-cycles.yml
     statuses.yml
     combat.yml               shared numeric balance and sparse gear defenses
+    mechanics.yml            opt-in map mechanic overrides shared by several maps
+    loot/groups.yml          reward bodies referenced by several boxes
     news/news.yml            Uplink News packs and their images
   missions/                  imported stock mission, group and prestige definitions
   _internal/                 item bindings/arguments, Town defaults, fire graphs, provenance
@@ -172,6 +174,15 @@ list order is significant. `close: true` ends a conversation. A response contain
 that action reference when editing its sentence; dropping it fails validation.
 Animations, interface models and exact placed NPC bindings are in the map's native
 compatibility data. They do not need to appear in dialogue YAML.
+
+Two maps with the same dialogue can share one body. Put it under
+`content/shared/dialogues.yml` with an `initial` and `nodes` section, then use
+`dialogue: {shared: <name>}` in each NPC file. The shared reference is the only
+key on that `dialogue` mapping (never mixed with local `initial`/`nodes`); it
+expands to the exact body and is validated against the referencing NPC's native
+node and response bindings. Unknown names, unknown fields, duplicate names or an
+unreadable shared file fail startup. Keep a local body when any text, node,
+response or action differs, even slightly.
 
 The defaults resolve original English strings from the read-only stock
 `code/projectx-config.jar`, including retained `npc` keys found in the
@@ -415,12 +426,19 @@ noncontiguous/duplicate steps report the file → item → stage → field.
 | `defendingSpeed` | Defending movement multiplier is 1 + equipped gear sum; omitted shield values inherit its defendingSpeedAdjustment; selected weapon modifier is excluded | fraction | shield adjustment for shields; 0 otherwise | -1000.0…1000.0 | modifiers per weapon class |
 
 Damage, damage types, status effects, projectile graphs and detonation behavior
-remain internal in `_internal/fires.json`. `FireCatalog` retains typed compound,
-depth-scaled and delayed actions; `SceneWeapons` schedules those graphs, while
+remain internal in the gzip-compressed `_internal/fires.json.gz` (pet graphs in
+`_internal/pet-fires.json.gz`). `FireCatalog` reads both plain `.json` exports and
+compressed deployment files, and retains typed compound, depth-scaled and delayed
+actions; `SceneWeapons` schedules those graphs, while
 `SceneDamage` resolves their types/scales/statuses. A universal `damage` value
 cannot safely describe those graphs. No decorative damage control or multiplier
 is accepted. Editing timing changes the existing action/effect schedule; it does
 not claim to replace every native animation or implement missing game logic.
+Regenerate a plain `fires.json` with `scripts/StockTools.java fires`, review it,
+then run `java -cp build/tortodrone.jar scripts/StockTools.java fire-compact
+plain.json content/_internal/fires.json.gz`; the same command compacts
+`pet-fires.json`. The loader accepts both forms, but only compressed graphs are
+committed.
 
 The Fiery and Static Diskguns deliberately deviate on the server. Their stock
 Fire 3 / Shock 3 damage, charge timing and item controls are unchanged, but the
@@ -619,7 +637,16 @@ Shufflebot type; those cubes are gym targets, not hostile encounters. `MapEnemyC
 pins both boundaries. The checked-in catalogue holds 253 stock descriptions, 222 spawnable and
 31 listed with explicit native-action refusal reasons.
 
-Optional `mechanics.yml` contains each map's own rules. Native `destination.*`
+Optional `mechanics.yml` contains each map's own rules. A map may also list
+`mechanics` in the `shared` sections of its `native/bindings.json`;
+`content/shared/mechanics.yml` then supplies mechanic overrides common to every
+opted-in map. Shared mechanics merge after `combat`, `statuses` and `trap-cycles`
+and before the map's own `mechanics.yml`, so a map can refine a shared value
+without copying it and its local value still wins. Every shared and local key must
+appear in that map's `mechanicFields`; unknown keys, duplicate shared sections or a
+missing shared file fail startup. Prefer adding a key to `shared/mechanics.yml` and
+opting each map in over copying a `mechanics.yml` into a new map; keep only a
+genuine map-specific delta locally. Native `destination.*`
 markers moved to immutable bindings: travel uses the single editable arrival in
 `portals.yml`. The retained markers are scene metadata, not a second travel control.
 `shared/combat.yml` owns global player/scaling/status parameters and gear stats.
@@ -1235,6 +1262,38 @@ loot YAML contains no native paths, stock numbers or serialization metadata.
 loot tables. Edit or move an existing definition when supplying a pool; duplicate
 IDs across files are rejected. Key options must exactly match
 `_internal/box-bindings.json`, including their order.
+
+Reward groups repeated across several boxes live once in
+`content/shared/loot/groups.yml`. A local group then becomes a reference instead
+of a copy:
+
+```yaml
+groups:
+  main:
+    chance: "100%"
+    rolls: 1
+    entries:
+      - {weight: 1, rewards: [{group: main_pool}]}
+  main_pool: {shared: confetti_bundle}
+```
+
+The local group keeps its name and position in this box's graph; load time expands
+`{shared: <name>}` to the exact body from the shared file, including nested
+`{group: ...}` rewards, which resolve against the referencing box. A group is
+either a shared reference or a complete local body, never both, and unknown
+references, unknown fields, invalid names or an unreadable shared file fail
+startup. Add a shared body only when at least two boxes genuinely need the same
+one; new loot must reference an existing body rather than copy it. Use a local
+body when the values differ, even slightly.
+
+Stock boxes that are identical apart from their readable item ID share a whole body
+in `content/shared/loot/boxes.yml`. The local row is only
+`{shared: <name>}`, and the shared body supplies `kind`, `acceptedKeys`, `status`,
+`evidence`, `groups` and `guaranteed`. Each referencing box still keeps its own
+ID and native config/key checks, so the shared `acceptedKeys` must match every
+referencing box's `_internal/box-bindings.json` entry. Unknown names, mixed
+local/shared rows, malformed shared bodies or key mismatches fail startup. Use
+distinct rows when any field differs.
 
 The following is an **illustrative custom test distribution, not an official Iron
 Lockbox pool**. It must never be labeled `verified` on the strength of this example.

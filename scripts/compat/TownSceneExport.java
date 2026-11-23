@@ -11,9 +11,7 @@ public final class TownSceneExport {
     public static void main(String[] args)throws Exception{
         if(args.length!=3)throw new IllegalArgumentException("game-directory maps-directory fresh-output-directory");
         Path output=Path.of(args[2]);if(Files.exists(output))throw new IOException("Choose a fresh output directory");Files.createDirectories(output);
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
-        var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
+        var manager=NativeConfig.load(Path.of(args[0]));
         if(args[1].equals("--accessories")){
             var models=new ArrayList<Object>();for(var config:manager.be(com.threerings.projectx.item.config.AccessoryConfig.class).kR()){
                 var accessory=manager.d(com.threerings.projectx.item.config.AccessoryConfig.class,config.getName());

@@ -23,12 +23,17 @@ public final class ContentFixture {
         }
         return root.resolve(relative);
     }
+    private static void gunzip(Path source,Path target)throws IOException {
+        Files.createDirectories(target.getParent());
+        try(var input=new java.util.zip.GZIPInputStream(Files.newInputStream(source));
+            var output=Files.newOutputStream(target)){input.transferTo(output);}
+    }
     public static void generate(Path target)throws IOException {
         var snapshot=ContentManager.load(Path.of("."));Files.createDirectories(target.resolve("items"));Files.createDirectories(target.resolve("town"));
         ItemCatalog.write(target.resolve("items/catalog.json"),snapshot.items().entries());Files.copy(Path.of("content/_internal/provenance/items.tsv"),target.resolve("items/provenance.tsv"));
         WeaponCatalog.write(target.resolve("combat/weapons.tsv"),snapshot.weapons().weapons(),snapshot.weapons().shields(),snapshot.weapons().dodgeCooldown());
         EquipmentCatalog.write(target.resolve("combat/equipment.tsv"),snapshot.equipment().entries());
-        Files.copy(Path.of("content/_internal/fires.json"),target.resolve("combat/fires.json"));Files.copy(Path.of("content/_internal/pet-fires.json"),target.resolve("town/pet-fires.json"));
+        gunzip(Path.of("content/_internal/fires.json.gz"),target.resolve("combat/fires.json"));gunzip(Path.of("content/_internal/pet-fires.json.gz"),target.resolve("town/pet-fires.json"));
         Files.createDirectories(target.resolve("town"));Files.writeString(target.resolve("town/catalog.json"),Json.stringify(TownYaml.data(Path.of("content/town"),snapshot.items())));
         var resources=new TreeMap<String,String>();resources.put("entry","maps/catalog.properties");resources.put("items","items/catalog.json");resources.put("weapons","combat/weapons.tsv");resources.put("equipment","combat/equipment.tsv");resources.put("fires","combat/fires.json");resources.put("pet-fires","town/pet-fires.json");resources.put("town","town/catalog.json");
         for(var folder:MapYaml.folders(Path.of("content/maps")).entrySet()) {

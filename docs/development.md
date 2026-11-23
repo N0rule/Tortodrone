@@ -25,8 +25,11 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 ./gradlew testIntegration        # all packaged integration tests
 ./gradlew testAll                # expensive full suite; only with explicit owner authorization
 ./gradlew testProcessCleanup     # focused cleanup integration task
-./gradlew prepareContent         # offline source validation/copy
+./gradlew prepareContent         # offline source validation/copy; also checks exact duplicates
 ./gradlew prepareMaps
+./gradlew checkContentDuplication # fail on unlisted exact-duplicate content files
+./gradlew reportContentDuplication # advisory repeated-line and identical YAML subtree report
+./gradlew refreshContentManifest # maintainer: republish content digests; keep owned.* upgrade history
 ./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300" # explicit performance work only
 ```
 
@@ -90,7 +93,7 @@ java -cp build/tortodrone.jar scripts/compat/CheckCombatRendering.java "/path/to
 java scripts/StockTools.java previews "/path/to/Spiral Knights"
 ```
 
-`scripts/compat/` also contains narrower handshake, account, scene, portal, inspection, trade, item, emote, weapon, fire and protocol fixtures. Read each tool's source/usage before running it: some launch temporary servers and clients; some only inspect installed classes/configs. The exporter `scripts/StockTools.java` handles `scene`, `items`, `weapons`, `fires`, `equipment` and current source-maintainer scene/capture subcommands in read-only game input mode with a fresh output directory. `previews`/`items` require a built server JAR.
+`scripts/compat/` also contains narrower handshake, account, scene, portal, inspection, trade, item, emote, weapon, fire and protocol fixtures. Read each tool's source/usage before running it: some launch temporary servers and clients; some only inspect installed classes/configs. Probes in the unnamed package share `Harness.java` (assertions and native frame appends) and `NativeConfig.java` (installed-client config bootstrap); `java scripts/compat/SomeProbe.java` resolves those sibling sources automatically, and `StockTools` adds them to its explicit `javac` run. The exporter `scripts/StockTools.java` handles `scene`, `items`, `weapons`, `fires`, `fire-compact`, `equipment` and current source-maintainer scene/capture subcommands in read-only game input mode with a fresh output directory. `previews`/`items` require a built server JAR.
 
 **Stock reader/network acceptance ≠ graphical acceptance.** For a change to rendering, attachment composition, animation or transition readiness, one isolated unchanged-client graphical scenario may be necessary; for altered shared-instance behavior, test with two clients. This is **not** a default validation step for unrelated tasks. Use disposable endpoints, public keys, home/prefs/cache/temp/native extraction and test accounts; never patch the production launcher/client. Save and review screenshots or logs where the fixture provides them. Keep the game window focused; platform window-manager and input behaviors can invalidate short action captures.
 
@@ -180,12 +183,25 @@ The graphical harness can also inject reproducible transport lag for spike inves
 ## Editing, packaging and release hygiene
 
 - Keep changes bounded; update tests for behavior and one canonical document for user-facing changes. Do not add a new milestone diary.
+- New maps, missions, weapons and other content must not copy an existing file
+  verbatim. Opt a map into `content/shared/mechanics.yml` when several maps need the
+  same mechanic override, and keep only a genuine map-specific delta in its
+  `mechanics.yml`. Reference a repeated loot reward body from
+  `content/shared/loot/groups.yml` with `{shared: <name>}` instead of copying its
+  group, and a repeated whole box body from `content/shared/loot/boxes.yml` when
+  two IDs differ only by their readable item ID. `checkContentDuplication` fails
+  unlisted copies; treat stale allowlist entries as removal work, not as
+  permission for new duplication. Mission rows stay one row per imported native
+  mission; their repeated sub-blocks (the standard `gate` requirement, empty reward
+  lists, common grants) are import structure, not copied definitions. Do not factor
+  them into shared bodies without updating all four mission importers, because a
+  regeneration would reintroduce the copies.
 - Do not commit installed game assets, third-party material without appropriate rights, private captures, secrets, `data/`, `build/` or `.build/`.
 - Review `git status`, `git diff` and `git diff --check`; report **only tests actually run**, with failures and what remains unverified. Avoid repeated runs after passing checks without relevant changes.
 - Bump `VERSION` only for deliberate behavioral releases. Release workflow tags must match `v<VERSION>`; CI tests/builds do not substitute for native graphical verification. See [Operations](operations.md).
 - Third-party runtime/license metadata: `src/main/resources/THIRD-PARTY.md`, `src/main/resources/licenses/`, the `licenses/` release assembly and `gradle/verification-metadata.xml`. Inspect changes to pinned hashes carefully.
 
-Unified content regressions are `resources.ContentManagerTest` and `resources.MigrationPackLoaderTest`; fixtures are generated in temporary directories from the unified defaults, never maintained as a second checked-in catalog. The focused graphical `--dialogue-only` mode selects another verified localized Konway line through disposable YAML, enters Training, records both nodes and closes the native dialog. Arbitrary literal messages and responses are rejected after the stock graphical scenario showed the client appending the knight name instead of decoding literals.
+Unified content regressions are `resources.ContentManagerTest`, `resources.SharedMechanicsTest` and `resources.MigrationPackLoaderTest`; fixtures are generated in temporary directories from the unified defaults, never maintained as a second checked-in catalog. The focused graphical `--dialogue-only` mode selects another verified localized Konway line through disposable YAML, enters Training, records both nodes and closes the native dialog. Arbitrary literal messages and responses are rejected after the stock graphical scenario showed the client appending the knight name instead of decoding literals.
 
 Economy/content regressions: `DepotStoreTest`, `DepotDefaultsTest`,
 `DepotGateTest`, `DepotSupportTest`, `GearSupportTest`, `VitapodTest`, `AuctionParityTest`,

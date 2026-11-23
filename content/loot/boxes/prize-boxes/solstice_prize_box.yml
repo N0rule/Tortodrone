@@ -21,12 +21,7 @@ boxes:
         entries:
         - {weight: 1, rewards: [{item: confetti_summer, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: []}
-      choices_confetti_winter_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: []}
+      choices_confetti_winter_2: {shared: choices_confetti_winter}
       choices_confetti_summer_3:
         chance: 100%
         rolls: 1
@@ -52,17 +47,5 @@ boxes:
         - {weight: 6, rewards: [{item: snowfall_aura, quantity: 1, binding: catalog}]}
         - {weight: 4, rewards: [{item: crown_summer, quantity: 1, binding: catalog}]}
         - {weight: 4, rewards: [{item: crown_winter, quantity: 1, binding: catalog}]}
-      choices_trinket_slot_6:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{group: choices_trinket_slot_7}]}
-        - {weight: 19, rewards: []}
-      choices_trinket_slot_7:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 100, rewards: [{item: trinket_slot, quantity: 1, binding: catalog}]}
-        - {weight: 50, rewards: [{item: weapon_slot, quantity: 1, binding: catalog}]}
-        - {weight: 10, rewards: [{item: coin_bonus, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: heat_bonus_s909083618_3f30bba58f51, quantity: 1, binding: catalog}]}
+      choices_trinket_slot_6: {shared: choices_trinket_slot_2}
+      choices_trinket_slot_7: {shared: choices_trinket_slot}

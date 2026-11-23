@@ -23,7 +23,7 @@ public final class GearProgressionCompatibility {
         @Override public void a(int oid,int code,int method,Object[] args,com.threerings.presents.net.Transport transport){captured=new InvocationRequestEvent(oid,code,method,args);}
     }
     public static void main(String[] args)throws Exception{
-        System.setProperty("com.threerings.io.enumPolicy","ORDINAL");var admin=new Admin();
+        NativeConfig.ordinal();var admin=new Admin();
         admin.a(123,(A.a)null);check(17,List.of(123),"ConfirmMarshaller");
         admin.b(4,2,(A.a)null);check(44,List.of(4,2),"ConfirmMarshaller");
         new Item().a(123L,456L,(A.a)null);check(5,List.of(123L,456L),"ConfirmMarshaller");
@@ -37,8 +37,7 @@ public final class GearProgressionCompatibility {
         var variant=new com.threerings.projectx.craft.data.VariantMarshaller();variant.a(10,101,new Dispatch());
         variant.a(2,22L,0L,1,(A.c)null);check(2,List.of(2,22L,0L,1),"ResultMarshaller");
         variant.a(22L,24L,1,(A.c)null);check(1,List.of(22L,24L,1),"ResultMarshaller");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("gf",String.class).invoke(resource,Path.of(args[0]).resolve("rsrc").toString());
-        var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
+        var manager=NativeConfig.load(Path.of(args[0]));
         for(String config:List.of("Upgrade/Weapon Slot","Upgrade/Trinket Slot","Upgrade/Trinket Slot (2 days)","Upgrade/Heat Bonus","Upgrade/Heat Bonus (1 day)","Upgrade/Heat Bonus (7 days)","Upgrade/Heat Bonus (30 days)","Upgrade/Coin Bonus")) {
             var nativeDef=(ItemConfig.Upgrade)manager.d(ItemConfig.class,config).w(manager);
             var def=org.tortodrone.core.character.SlotUpgrades.find(config);

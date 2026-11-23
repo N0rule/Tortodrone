@@ -21,10 +21,7 @@ public final class ScenePackExport {
         Path source=Path.of(args[1]),out=Path.of(args[2]);
         if(Files.exists(out))throw new IOException("Output already exists; choose a fresh map pack directory");
         byte[] layout=Files.readAllBytes(source);if(layout.length>900_000)throw new IOException("Scene is too large");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
-        var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class)
-            .newInstance(resource,null,"config/");manager.init();
+        var manager=NativeConfig.load(Path.of(args[0]));
         var scene=(TudeySceneModel)com.threerings.export.util.b.e(layout);scene.init(manager);
         String kind=sceneKind(scene.aev());
         boolean explicitSpawn=args.length==7;

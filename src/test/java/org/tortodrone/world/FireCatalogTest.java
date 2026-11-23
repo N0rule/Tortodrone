@@ -37,6 +37,11 @@ public final class FireCatalogTest {
             var result=loaded.find("weapon/gun/test",292);
             check(result!=null&&result.equals(attack),"attack refs, arguments, nested projectile and action metadata round trip");
             check(loaded.unsupportedTypes().get("DamageRegion")==1,"unsupported action types are retained and reported");
+            Path compressed=root.resolve("fires.json.gz");FireCatalog.writeCompressed(compressed,List.of(attack),Map.of("DamageRegion",1));
+            byte[] header=Files.readAllBytes(compressed);
+            check(header.length>2&&(header[0]&0xff)==0x1f&&(header[1]&0xff)==0x8b,"compressed catalogue uses the gzip deployment form");
+            var compressedCatalog=FireCatalog.load(compressed);
+            check(compressedCatalog.entries().equals(loaded.entries())&&compressedCatalog.unsupportedTypes().equals(loaded.unsupportedTypes()),"compressed catalogue preserves every fire graph and unsupported count");
             Path malformed=root.resolve("bad.json");Files.writeString(malformed,"{\"format\":\"tortodrone-fires\",\"version\":1,\"entries\":[],\"unsupported\":{\"bad\":-1}}");
             try{FireCatalog.load(malformed);throw new AssertionError("Negative unsupported count accepted");}catch(java.io.IOException expected){}
             check(result.fireRefs().getFirst().action().children().getFirst().children().getFirst().values().equals(List.of("Red","Blue")),"prespawned actor argument modifications round trip");

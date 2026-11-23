@@ -31,18 +31,7 @@ boxes:
         - {weight: 1111, rewards: [{item: spiraltail_mail_hunter, quantity: 1, binding: catalog}]}
         - {weight: 1111, rewards: [{item: trojan_armor_hunter, quantity: 1, binding: catalog}]}
         - {weight: 20000, rewards: [{group: choices_fur_coat_hunter_3}]}
-      choices_fur_coat_hunter_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: fur_coat_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: cloak_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: brigandine_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: plate_mail_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: cuirass_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: scale_mail_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: culet_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: raiment_hunter, quantity: 1, binding: catalog}]}
+      choices_fur_coat_hunter_3: {shared: choices_fur_coat_hunter}
       choices_crescent_helm_hunter_4:
         chance: 100%
         rolls: 1
@@ -51,18 +40,7 @@ boxes:
         - {weight: 4, rewards: [{item: round_helm_hunter, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: field_cap_hunter, quantity: 1, binding: catalog}]}
         - {weight: 16, rewards: [{group: choices_fur_cap_hunter_5}]}
-      choices_fur_cap_hunter_5:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: fur_cap_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: hood_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: pith_helm_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: plate_helm_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: sallet_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: scale_helm_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: tailed_helm_hunter, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: winged_helm_hunter, quantity: 1, binding: catalog}]}
+      choices_fur_cap_hunter_5: {shared: choices_fur_cap_hunter}
       choices_extra_vertical_vents_hunter_6:
         chance: 100%
         rolls: 1

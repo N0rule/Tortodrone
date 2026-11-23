@@ -9,16 +9,15 @@ import com.threerings.projectx.config.*;
 
 /** Stock Objective/ObjectiveConfig/Persistence reader, repeated mappings and native set application. */
 public final class ObjectiveCompatibility {
-    private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var bytes=new ByteArrayOutputStream();var codec=new SessionCodec();
-        append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
-        append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic-session","StoryUser"));
-        append(bytes,codec.player((short)3,1001,1,"StoryUser"));
-        append(bytes,codec.knightObjectives(1001,Map.of("findRhendon",new KnightObjective.State(0,"findRhendon","m.find_rhendon"))));
-        append(bytes,codec.knightObjectives(1001,Map.of("findRhendon",new KnightObjective.State(0,"findRhendon","m.find_rhendon"))));
-        append(bytes,codec.knightObjectives(1001,Map.of()));
+        Harness.append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
+        Harness.append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic-session","StoryUser"));
+        Harness.append(bytes,codec.player((short)3,1001,1,"StoryUser"));
+        Harness.append(bytes,codec.knightObjectives(1001,Map.of("findRhendon",new KnightObjective.State(0,"findRhendon","m.find_rhendon"))));
+        Harness.append(bytes,codec.knightObjectives(1001,Map.of("findRhendon",new KnightObjective.State(0,"findRhendon","m.find_rhendon"))));
+        Harness.append(bytes,codec.knightObjectives(1001,Map.of()));
         var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.ql();in.ql();
         var player=(PlayerObject)((ObjectResponse)in.ql()).yo();
         for(int i=0;i<2;i++){

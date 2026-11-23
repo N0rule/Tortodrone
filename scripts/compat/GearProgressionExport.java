@@ -10,8 +10,7 @@ public final class GearProgressionExport {
     public static void main(String[] args)throws Exception{
         Path game=Path.of(args[0]).toRealPath(),out=Path.of(args[1]).toAbsolutePath().normalize();
         if(Files.exists(out)||out.startsWith(game))throw new IOException("Choose a fresh output directory outside the installation");
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
-        var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
+        var manager=NativeConfig.load(game);
         var gear=new ArrayList<Object>();var forges=new TreeMap<String,Object>();var tables=new ArrayList<Object>();
         for(var config:manager.be(ItemConfig.class).kR()){
             var original=config.w(manager);if(!(original instanceof ItemConfig.Level level))continue;

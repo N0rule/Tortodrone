@@ -9,14 +9,13 @@ import java.util.concurrent.TimeUnit;
 /** Deterministic lifecycle checks for the standalone stock-tool child processes. */
 public final class ProcessCleanupTest {
     private enum Scenario { GRACEFUL, FORCED, TIMED_WAIT_INTERRUPTED, FORCED_WAIT_INTERRUPTED, PRE_INTERRUPTED, ALREADY_EXITED }
-    private enum EntryPoint { STOCK_TOOLS, CLIENT_WORLD, COMBAT_RENDERING }
+    private enum EntryPoint { STOCK_TOOLS, CLIENT_CHECKS }
 
     public static void main(String[] args) throws Exception {
         for (EntryPoint entryPoint : EntryPoint.values()) {
             for (Scenario scenario : Scenario.values()) run(entryPoint, scenario);
         }
-        runMultiChild(EntryPoint.CLIENT_WORLD);
-        runMultiChild(EntryPoint.COMBAT_RENDERING);
+        runMultiChild(EntryPoint.CLIENT_CHECKS);
         System.out.println("PASS: all process cleanup paths wait for child exit and preserve interrupts");
     }
 
@@ -52,8 +51,7 @@ public final class ProcessCleanupTest {
     private static void invokeCleanup(EntryPoint entryPoint, ScriptedProcess child) throws Exception {
         String className = switch (entryPoint) {
             case STOCK_TOOLS -> "StockTools";
-            case CLIENT_WORLD -> "CheckClientWorld";
-            case COMBAT_RENDERING -> "CheckCombatRendering";
+            case CLIENT_CHECKS -> "ClientCheckHarness";
         };
         Class<?> owner = Class.forName(className);
         if (entryPoint == EntryPoint.STOCK_TOOLS) {
@@ -89,7 +87,7 @@ public final class ProcessCleanupTest {
     }
 
     private static void invokeChildrenCleanup(EntryPoint entryPoint, List<Process> children) throws Exception {
-        String className = entryPoint == EntryPoint.CLIENT_WORLD ? "CheckClientWorld" : "CheckCombatRendering";
+        String className = "ClientCheckHarness";
         Class<?> owner = Class.forName(className);
         Field field = owner.getDeclaredField("CHILDREN");
         field.setAccessible(true);
@@ -113,7 +111,7 @@ public final class ProcessCleanupTest {
 
     private static void clearChildList(EntryPoint entryPoint) throws Exception {
         if (entryPoint == EntryPoint.STOCK_TOOLS) return;
-        String className = entryPoint == EntryPoint.CLIENT_WORLD ? "CheckClientWorld" : "CheckCombatRendering";
+        String className = "ClientCheckHarness";
         Field children = Class.forName(className).getDeclaredField("CHILDREN");
         children.setAccessible(true);
         @SuppressWarnings("unchecked") List<Process> processes = (List<Process>) children.get(null);

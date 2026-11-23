@@ -38,15 +38,15 @@ public final class TradeCompatibility {
         var offered=new org.tortodrone.protocol.SessionCodec.TradeView(1001,knight,first,List.of(item),other,second,List.of(),12,0,0,0,2,2,0,false);
         var removed=new org.tortodrone.protocol.SessionCodec.TradeView(1001,knight,first,List.of(),other,second,List.of(),0,0,0,0,3,0,0,false);
         var codec=new org.tortodrone.protocol.SessionCodec();var bytes=new ByteArrayOutputStream();
-        append(bytes,org.tortodrone.protocol.HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
-        append(bytes,org.tortodrone.protocol.HandshakeCodec.authenticationResponse((short)2,true,"fixture","Alice"));
-        append(bytes,codec.player((short)3,1002,1,"Alice"));append(bytes,codec.selected(1002,knight,first));
+        Harness.append(bytes,org.tortodrone.protocol.HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
+        Harness.append(bytes,org.tortodrone.protocol.HandshakeCodec.authenticationResponse((short)2,true,"fixture","Alice"));
+        Harness.append(bytes,codec.player((short)3,1002,1,"Alice"));Harness.append(bytes,codec.selected(1002,knight,first));
         for(boolean gm:new boolean[]{true,false})for(boolean hidden:new boolean[]{true,false})
-            append(bytes,codec.playerFlags(1002,gm,hidden));
-        append(bytes,codec.tradeNotification(1002,other.name(),true));append(bytes,codec.tradeDialog(1002,empty,987654L));
-        append(bytes,codec.tradeObject((short)4,empty));append(bytes,codec.tradeChanges(empty,offered));append(bytes,codec.tradeChanges(offered,removed));
-        append(bytes,codec.tradeNotification(1002,other.name(),false));append(bytes,codec.tradeDialog(1002,null,987654L));
-        append(bytes,codec.itemChanges(1002,knight,first,new org.tortodrone.core.character.WorldProfile(10,1,1,100,40,2,List.of())));
+            Harness.append(bytes,codec.playerFlags(1002,gm,hidden));
+        Harness.append(bytes,codec.tradeNotification(1002,other.name(),true));Harness.append(bytes,codec.tradeDialog(1002,empty,987654L));
+        Harness.append(bytes,codec.tradeObject((short)4,empty));Harness.append(bytes,codec.tradeChanges(empty,offered));Harness.append(bytes,codec.tradeChanges(offered,removed));
+        Harness.append(bytes,codec.tradeNotification(1002,other.name(),false));Harness.append(bytes,codec.tradeDialog(1002,null,987654L));
+        Harness.append(bytes,codec.itemChanges(1002,knight,first,new org.tortodrone.core.character.WorldProfile(10,1,1,100,40,2,List.of())));
         var input=new v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();
         var player=(com.threerings.projectx.data.PlayerObject)((com.threerings.presents.net.ObjectResponse)input.qe()).yk();
         apply(input,player);
@@ -69,7 +69,6 @@ public final class TradeCompatibility {
         if(!player.notifications.isEmpty()||player.sceneDialog!=null||!player.items.isEmpty()||input.available()!=0)throw new AssertionError("Native cancel/inventory removal mismatch");
         System.out.println("PASS: stock decoder applies emulator trade snapshots, dialogs, notification/offer removals, revisions and inventory removals");
     }
-    private static void append(ByteArrayOutputStream bytes,byte[] frame){bytes.write(frame,4,frame.length-4);}
     private static void apply(v input,com.threerings.presents.dobj.DObject object)throws Exception {
         var event=((com.threerings.presents.net.EventNotification)input.qe()).yj();
         if(event instanceof com.threerings.presents.dobj.CompoundEvent compound)for(var child:compound.xE())child.b(object);

@@ -14,18 +14,8 @@ boxes:
         entries:
         - {weight: 1, rewards: [{item: confetti_bubbles, quantity: 1, binding: catalog}, {group: choices_confetti_bubbles_1}, {group: choices_confetti_bubbles_2},
             {group: choices_side_blade_verdant_3}]}
-      choices_confetti_bubbles_1:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_bubbles, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: []}
-      choices_confetti_bubbles_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_bubbles, quantity: 1, binding: catalog}]}
-        - {weight: 9, rewards: []}
+      choices_confetti_bubbles_1: {shared: choices_confetti_bubbles}
+      choices_confetti_bubbles_2: {shared: choices_confetti_bubbles_2}
       choices_side_blade_verdant_3:
         chance: 100%
         rolls: 1

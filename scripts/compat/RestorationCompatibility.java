@@ -16,11 +16,10 @@ import org.tortodrone.resources.SceneCatalog;
 /** Installed-client actor initialization and retained orbit-gun model skeletons. */
 public final class RestorationCompatibility {
     public static void main(String[] args)throws Exception{
-        System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
+        NativeConfig.ordinal();
         Path game=Path.of(args[0]);
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
-        var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
-        var catalog=FireCatalog.load(Path.of("content/_internal/fires.json"));
+        var manager=NativeConfig.load(game);
+        var catalog=FireCatalog.load(Path.of("content/_internal/fires.json.gz"));
         var maps=SceneCatalog.load(Path.of(System.getProperty("tortodrone.deployment")).resolve("content/maps"));
         int checked=0;
         for(String name:List.of("Fiery Diskgun","Static Diskgun","Overcharged Mixmaster (OLD)","Celestial Orbitgun (OLD)"))for(int activity:List.of(292,290)){

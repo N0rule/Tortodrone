@@ -88,17 +88,17 @@ public final class InteriorCompatibility {
             .75f, 2.5f, 0, 28, 150, model);
         var codec = new SessionCodec();
         var bytes = new ByteArrayOutputStream();
-        append(bytes, HandshakeCodec.response((short) 1, "0123456789abcdef0123456789abcdef"));
-        append(bytes, HandshakeCodec.authenticationResponse((short) 2, true, "fixture", "InteriorUser"));
-        append(bytes, codec.player((short) 10, PLAYER_OID, 1, "InteriorUser"));
-        append(bytes, codec.server((short) 11, true));
-        append(bytes, codec.inputThrottle());
-        append(bytes, codec.interiorParty((short) 3, PARTY_OID, PLAYER_OID, knight, profile, scene));
-        append(bytes, codec.sceneMove(PLAYER_OID, (short) 4, false, scene, registry.catalog()));
-        append(bytes, codec.scene((short) 5, scene, List.of(initial)));
-        append(bytes, codec.sceneDelta(PLAYER_OID, SCENE_OID, 0, (short) 0, 100, 100, (short) 50,
+        Harness.append(bytes, HandshakeCodec.response((short) 1, "0123456789abcdef0123456789abcdef"));
+        Harness.append(bytes, HandshakeCodec.authenticationResponse((short) 2, true, "fixture", "InteriorUser"));
+        Harness.append(bytes, codec.player((short) 10, PLAYER_OID, 1, "InteriorUser"));
+        Harness.append(bytes, codec.server((short) 11, true));
+        Harness.append(bytes, codec.inputThrottle());
+        Harness.append(bytes, codec.interiorParty((short) 3, PARTY_OID, PLAYER_OID, knight, profile, scene));
+        Harness.append(bytes, codec.sceneMove(PLAYER_OID, (short) 4, false, scene, registry.catalog()));
+        Harness.append(bytes, codec.scene((short) 5, scene, List.of(initial)));
+        Harness.append(bytes, codec.sceneDelta(PLAYER_OID, SCENE_OID, 0, (short) 0, 100, 100, (short) 50,
             List.of(initial), List.of(), new int[0], Map.of(), true));
-        append(bytes, codec.sceneDelta(PLAYER_OID, SCENE_OID, 1, (short) 0, 100, 150, (short) 50,
+        Harness.append(bytes, codec.sceneDelta(PLAYER_OID, SCENE_OID, 1, (short) 0, 100, 150, (short) 50,
             List.of(), List.of(updated), new int[0], Map.of(ACTOR_ID, initial), true));
 
         var input = new v(new ByteArrayInputStream(bytes.toByteArray()));
@@ -328,7 +328,4 @@ public final class InteriorCompatibility {
             throw new AssertionError("Unexpected stock status modifier " + name);
     }
 
-    private static void append(ByteArrayOutputStream bytes, byte[] frame) {
-        bytes.write(frame, 4, frame.length - 4);
-    }
 }

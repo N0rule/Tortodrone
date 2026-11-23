@@ -22,33 +22,13 @@ boxes:
         - {weight: 33, rewards: [{group: choices_chapeau_of_the_curse_rose_3}]}
         - {weight: 3, rewards: [{item: tabard_of_the_prismatic_rose, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{group: choices_chapeau_of_the_prismatic_rose_4}]}
-      choices_tabard_of_the_curse_rose_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: tabard_of_the_curse_rose, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: tabard_of_the_stun_rose, quantity: 1, binding: catalog}]}
-      choices_chapeau_of_the_curse_rose_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: chapeau_of_the_curse_rose, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: [{item: chapeau_of_the_stun_rose, quantity: 1, binding: catalog}]}
+      choices_tabard_of_the_curse_rose_2: {shared: choices_tabard_of_the_curse_rose}
+      choices_chapeau_of_the_curse_rose_3: {shared: choices_chapeau_of_the_curse_rose}
       choices_chapeau_of_the_prismatic_rose_4:
         chance: 100%
         rolls: 1
         entries:
         - {weight: 1, rewards: [{item: chapeau_of_the_prismatic_rose, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: rose_trail, quantity: 1, binding: catalog}]}
-      choices_confetti_leaf_5:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_leaf, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: []}
-      choices_confetti_leaf_6:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_leaf, quantity: 1, binding: catalog}]}
-        - {weight: 19, rewards: []}
+      choices_confetti_leaf_5: {shared: choices_confetti_leaf}
+      choices_confetti_leaf_6: {shared: choices_confetti_leaf_2}

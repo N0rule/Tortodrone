@@ -10,22 +10,8 @@ boxes:
     evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
       not verified against current live server; see docs/content.md
     groups:
-      main:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{group: choices_node_slime_blue_s1502234395_c482643_1}, {group: choices_confetti_slime_8}]}
-      choices_node_slime_blue_s1502234395_c482643_1:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1000, rewards: [{group: choices_node_slime_blue_s1502234395_c482643_2}]}
-        - {weight: 750, rewards: [{group: choices_node_slime_blue_s2769783390_4d3dc22_3}]}
-        - {weight: 500, rewards: [{group: choices_node_blue_s3565059082_81555683296b_4}]}
-        - {weight: 125, rewards: [{group: choices_node_slime_blue_s77211544_a23ce188c_5}]}
-        - {weight: 125, rewards: [{group: choices_node_slime_blue_s3935208119_4f114f3_6}]}
-        - {weight: 25, rewards: [{group: choices_slime_arms_blue_7}]}
-        - {weight: 2, rewards: [{item: node_aura, quantity: 1, binding: catalog}]}
+      main: {shared: item_001_main}
+      choices_node_slime_blue_s1502234395_c482643_1: {shared: choices_node_slime_blue_s1502234395_c482643_4}
       choices_node_slime_blue_s1502234395_c482643_2:
         chance: 100%
         rolls: 1
@@ -88,25 +74,6 @@ boxes:
         - {weight: 5, rewards: [{item: slime_arms_heavy, quantity: 1, binding: catalog}]}
         - {weight: 5, rewards: [{item: slime_arms_green, quantity: 1, binding: catalog}]}
         - {weight: 1, rewards: [{item: slime_arms_prismatic, quantity: 1, binding: catalog}]}
-      choices_confetti_slime_8:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 5, rewards: [{group: choices_confetti_slime_9}]}
-        - {weight: 4, rewards: [{group: choices_small_fireworks_slime_10}]}
-        - {weight: 1, rewards: [{item: large_fireworks_slime, quantity: 1, binding: catalog}, {item: medium_fireworks_slime, quantity: 2, binding: catalog},
-            {item: small_fireworks_slime, quantity: 3, binding: catalog}]}
-      choices_confetti_slime_9:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 5, rewards: [{item: confetti_slime, quantity: 1, binding: catalog}]}
-        - {weight: 4, rewards: [{item: confetti_slime, quantity: 2, binding: catalog}]}
-        - {weight: 1, rewards: [{item: confetti_slime, quantity: 3, binding: catalog}]}
-      choices_small_fireworks_slime_10:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 4, rewards: [{item: small_fireworks_slime, quantity: 1, binding: catalog}]}
-        - {weight: 3, rewards: [{item: medium_fireworks_slime, quantity: 1, binding: catalog}]}
-        - {weight: 2, rewards: [{item: large_fireworks_slime, quantity: 1, binding: catalog}]}
+      choices_confetti_slime_8: {shared: choices_confetti_slime_5}
+      choices_confetti_slime_9: {shared: choices_confetti_slime}
+      choices_small_fireworks_slime_10: {shared: choices_small_fireworks_slime}

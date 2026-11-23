@@ -160,31 +160,36 @@ public final class BuildTools {
             }
         }
     }
+    /** Reads and syntax-checks a source manifest without comparing digests to the tree. */
+    static Properties manifest(Path file) throws IOException {
+        if(Files.notExists(file,LinkOption.NOFOLLOW_LINKS))return null;
+        if(Files.isSymbolicLink(file)||!Files.isRegularFile(file,LinkOption.NOFOLLOW_LINKS)||Files.size(file)>1_048_576)
+            throw new IOException("Invalid source manifest: "+file);
+        Properties values=properties(file);
+        if(!"1".equals(values.getProperty("format")))throw new IOException("Unsupported source manifest format");
+        for(String key:values.stringPropertyNames()) {
+            if(key.equals("format"))continue;
+            String prefix=key.startsWith("source.")?"source.":key.startsWith("owned.")?"owned.":null;
+            if(prefix==null)throw new IOException("Unexpected source manifest key: "+key);
+            String relative=key.substring(prefix.length());Path rel=Path.of(relative);
+            if(rel.isAbsolute()||rel.normalize().startsWith("..")||!rel.normalize().toString().replace('\\','/').equals(relative))
+                throw new IOException("Invalid path in source manifest: "+relative);
+            for(String digest:values.getProperty(key).split(","))if(!digest.matches("[0-9a-f]{64}"))
+                throw new IOException("Invalid digest in source manifest: "+relative);
+        }
+        return values;
+    }
     private static Properties sourceOwnership(Path maps,String manifestName) throws IOException {
         Path manifest=maps.resolve(manifestName);
-        if(Files.notExists(manifest,LinkOption.NOFOLLOW_LINKS))return null;
-        if(Files.isSymbolicLink(manifest)||!Files.isRegularFile(manifest)||Files.size(manifest)>262144)
-            throw new IOException("Invalid source manifest: "+manifest);
-        Properties values=properties(manifest);
-        if(!"1".equals(values.getProperty("format")))throw new IOException("Unsupported source manifest format");
+        Properties values=manifest(manifest);
+        if(values==null)return null;
         if(values.stringPropertyNames().stream().noneMatch(key->key.startsWith("source.")))
             throw new IOException("Source manifest contains no source file checksums");
         for(String key:values.stringPropertyNames())if(key.startsWith("source.")) {
-            String relative=key.substring("source.".length());Path rel=Path.of(relative);
-            if(rel.isAbsolute()||rel.normalize().startsWith("..")||!rel.normalize().toString().replace('\\','/').equals(relative))
-                throw new IOException("Invalid source path in source manifest: "+relative);
-            String expected=values.getProperty(key);
-            if(expected==null||!expected.matches("[0-9a-f]{64}"))throw new IOException("Invalid source digest in source manifest: "+relative);
-            Path source=maps.resolve(rel).normalize();
+            String relative=key.substring("source.".length());
+            Path source=maps.resolve(relative).normalize();
             if(!source.startsWith(maps.normalize())||!Files.isRegularFile(source,LinkOption.NOFOLLOW_LINKS)
-                ||!expected.equals(fileDigest(source)))throw new IOException("Map source differs from its manifest: "+relative);
-        }
-        for(String key:values.stringPropertyNames())if(key.startsWith("owned.")) {
-            String relative=key.substring("owned.".length());Path rel=Path.of(relative);
-            if(rel.isAbsolute()||rel.normalize().startsWith("..")||!rel.normalize().toString().replace('\\','/').equals(relative))
-                throw new IOException("Invalid owned path in source manifest: "+relative);
-            for(String digest:values.getProperty(key).split(","))if(!digest.matches("[0-9a-f]{64}"))
-                throw new IOException("Invalid owned digest in source manifest: "+relative);
+                ||!values.getProperty(key).equals(fileDigest(source)))throw new IOException("Map source differs from its manifest: "+relative);
         }
         return values;
     }
@@ -196,7 +201,7 @@ public final class BuildTools {
         for(String digest:expected.split(","))if(digest.equals(actual))return true;
         return false;
     }
-    private static String fileDigest(Path file)throws IOException {
+    static String fileDigest(Path file)throws IOException {
         try {
             var hash=java.security.MessageDigest.getInstance("SHA-256");
             try(var in=Files.newInputStream(file)) {byte[] buffer=new byte[65536];for(int n;(n=in.read(buffer))!=-1;)hash.update(buffer,0,n);}

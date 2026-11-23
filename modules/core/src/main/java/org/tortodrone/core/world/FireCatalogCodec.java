@@ -2,6 +2,7 @@ package org.tortodrone.core.world;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -27,6 +28,17 @@ public final class FireCatalogCodec {
     public static StarterCatalog.Model modelJson(String value)throws IOException{return readModel(Json.parse(value,128),0,new int[]{0});}
 
     public static void write(Path file, Collection<FireCatalog.AttackFire> entries, Map<String,Integer> unsupported) throws IOException {
+        Files.createDirectories(file.toAbsolutePath().normalize().getParent());
+        Files.writeString(file, document(entries, unsupported), StandardOpenOption.CREATE_NEW);
+    }
+    /** Same catalogue, gzip-compressed; prepared content keeps the large graphs compact. */
+    public static void writeCompressed(Path file, Collection<FireCatalog.AttackFire> entries, Map<String,Integer> unsupported) throws IOException {
+        Files.createDirectories(file.toAbsolutePath().normalize().getParent());
+        try (var out = new java.util.zip.GZIPOutputStream(Files.newOutputStream(file, StandardOpenOption.CREATE_NEW))) {
+            out.write(document(entries, unsupported).getBytes(StandardCharsets.UTF_8));
+        }
+    }
+    private static String document(Collection<FireCatalog.AttackFire> entries, Map<String,Integer> unsupported) throws IOException {
         if (entries.size() > FireCatalog.MAX_ENTRIES || unsupported.size() > 4096) throw new IOException("Fire catalogue exceeds limits");
         var rows = new ArrayList<Object>(); int[] nodes = {0};
         for (FireCatalog.AttackFire e : entries.stream().sorted(Comparator.comparing(FireCatalog.AttackFire::weaponConfig).thenComparingInt(FireCatalog.AttackFire::activity)).toList()) {
@@ -40,13 +52,25 @@ public final class FireCatalogCodec {
         }
         var root = new LinkedHashMap<String,Object>(); root.put("format","tortodrone-fires"); root.put("version",4); root.put("entries",rows);
         root.put("unsupported",new TreeMap<>(unsupported));
-        Files.createDirectories(file.toAbsolutePath().normalize().getParent());
-        Files.writeString(file, Json.stringify(root,128), StandardOpenOption.CREATE_NEW);
+        return Json.stringify(root,128);
+    }
+    /** Read either a plain .json catalogue or its gzip-compressed .json.gz form. */
+    private static String readCatalogue(Path file) throws IOException {
+        if (Files.size(file) > MAX_BYTES) throw new IOException("Fire catalogue exceeds size limit");
+        try (var raw = Files.newInputStream(file);
+             var input = file.getFileName().toString().endsWith(".gz") ? new java.util.zip.GZIPInputStream(raw) : raw) {
+            var bytes = new java.io.ByteArrayOutputStream();
+            var buffer = new byte[8192]; int total = 0, count;
+            while ((count = input.read(buffer)) >= 0) {
+                total += count; if (total > MAX_BYTES) throw new IOException("Fire catalogue exceeds size limit");
+                bytes.write(buffer, 0, count);
+            }
+            return bytes.toString(StandardCharsets.UTF_8);
+        }
     }
     public static FireCatalog load(Path file) throws IOException {
-        if (Files.size(file) > MAX_BYTES) throw new IOException("Fire catalogue exceeds size limit");
         try {
-            var root = object(Json.parse(Files.readString(file),128), Set.of("format","version","entries","unsupported"));
+            var root = object(Json.parse(readCatalogue(file),128), Set.of("format","version","entries","unsupported"));
             int version=integer(root.get("version")); boolean legacy=version==1;
             if (!"tortodrone-fires".equals(root.get("format")) || version < 1 || version > 4) throw new IOException("Unsupported fire catalogue");
             if (!(root.get("entries") instanceof List<?> rows) || rows.size() > FireCatalog.MAX_ENTRIES) throw new IOException("Invalid fire entries");

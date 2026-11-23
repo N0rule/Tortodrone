@@ -15,18 +15,8 @@ boxes:
         - {weight: 1, rewards: [{item: confetti_flare_popper, quantity: 1, binding: catalog}, {item: confetti_flare_popper, quantity: 1, binding: catalog},
             {item: confetti_flare_popper, quantity: 1, binding: catalog}, {group: choices_confetti_flare_popper_1}, {group: choices_confetti_flare_popper_2},
             {group: choices_mech_tennas_hazardous_3}]}
-      choices_confetti_flare_popper_1:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_flare_popper, quantity: 1, binding: catalog}]}
-        - {weight: 1, rewards: []}
-      choices_confetti_flare_popper_2:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 1, rewards: [{item: confetti_flare_popper, quantity: 1, binding: catalog}]}
-        - {weight: 4, rewards: []}
+      choices_confetti_flare_popper_1: {shared: choices_confetti_flare_popper}
+      choices_confetti_flare_popper_2: {shared: choices_confetti_flare_popper_2}
       choices_mech_tennas_hazardous_3:
         chance: 100%
         rolls: 1

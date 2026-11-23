@@ -18,15 +18,12 @@ import org.tortodrone.core.world.ScenePortals;
 
 /** Optional independent reader fixture using the read-only installed client. */
 public final class WorldCompatibility {
-    private static void append(ByteArrayOutputStream stream, byte[] frame) {
-        stream.write(frame,4,frame.length-4);
-    }
     public static void main(String[] args) throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         for(String reason:List.of("m.no_such_user","m.invalid_password")) {
             var rejection=new ByteArrayOutputStream();
-            append(rejection,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
-            append(rejection,HandshakeCodec.authenticationResponse((short)2,reason,null,null));
+            Harness.append(rejection,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
+            Harness.append(rejection,HandshakeCodec.authenticationResponse((short)2,reason,null,null));
             var reader=new com.threerings.io.v(new ByteArrayInputStream(rejection.toByteArray()));reader.qe();
             var response=(ProjectXAuthResponseData)((AuthResponse)reader.qe()).yg();
             if(!response.code.equals(reason)||response.ident!=null||response.sessionId!=null||response.authName!=null||reader.available()!=0)
@@ -46,20 +43,20 @@ public final class WorldCompatibility {
         var state=new ActorState(10,1001,knight.name(),257,100,0,-8,0,0,0,
             new StarterCatalog.Model("Character/PC/Default",Map.of("Model",model,"Height",model.arguments().get("Height"))));
         var codec=new SessionCodec();var bytes=new ByteArrayOutputStream();
-        append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
-        append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic-session","Alice"));
-        append(bytes,codec.player((short)3,1001,1,"Alice"));
-        append(bytes,codec.selected(1001,knight,profile));
-        append(bytes,codec.forceTown(1001,(short)3));
-        append(bytes,codec.sceneMove(1001,(short)4,true));
-        append(bytes,codec.townLocation(1001));
-        append(bytes,codec.scene((short)5,List.of(state)));
-        append(bytes,codec.sceneDelta(1001,0,0,101,List.of(state),List.of(),new int[0]));
+        Harness.append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
+        Harness.append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic-session","Alice"));
+        Harness.append(bytes,codec.player((short)3,1001,1,"Alice"));
+        Harness.append(bytes,codec.selected(1001,knight,profile));
+        Harness.append(bytes,codec.forceTown(1001,(short)3));
+        Harness.append(bytes,codec.sceneMove(1001,(short)4,true));
+        Harness.append(bytes,codec.townLocation(1001));
+        Harness.append(bytes,codec.scene((short)5,List.of(state)));
+        Harness.append(bytes,codec.sceneDelta(1001,0,0,101,List.of(state),List.of(),new int[0]));
         var moved=new ActorState(10,1001,knight.name(),257,100,.25f,-8,1.5f,0,2,state.config());
-        append(bytes,codec.sceneDelta(1001,101,(short)20,101,151,(short)50,List.of(),List.of(moved),new int[0],Map.of(10,state)));
-        append(bytes,codec.occupants(List.of(state)));
-        append(bytes,codec.chat(10,new org.tortodrone.core.world.SceneChat.Message(knight.name(),"Hello 🌍",(byte)2)));
-        append(bytes,codec.chatFeedback(10,"Please slow down."));
+        Harness.append(bytes,codec.sceneDelta(1001,101,(short)20,101,151,(short)50,List.of(),List.of(moved),new int[0],Map.of(10,state)));
+        Harness.append(bytes,codec.occupants(List.of(state)));
+        Harness.append(bytes,codec.chat(10,new org.tortodrone.core.world.SceneChat.Message(knight.name(),"Hello 🌍",(byte)2)));
+        Harness.append(bytes,codec.chatFeedback(10,"Please slow down."));
         var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));
         input.qe();input.qe();
         var player=(PlayerObject)((ObjectResponse)input.qe()).yk();

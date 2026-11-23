@@ -34,17 +34,5 @@ boxes:
         - {weight: 4, rewards: [{group: choices_small_fireworks_slime_4}]}
         - {weight: 1, rewards: [{item: large_fireworks_slime, quantity: 1, binding: catalog}, {item: medium_fireworks_slime, quantity: 2, binding: catalog},
             {item: small_fireworks_slime, quantity: 3, binding: catalog}]}
-      choices_confetti_slime_3:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 5, rewards: [{item: confetti_slime, quantity: 1, binding: catalog}]}
-        - {weight: 4, rewards: [{item: confetti_slime, quantity: 2, binding: catalog}]}
-        - {weight: 1, rewards: [{item: confetti_slime, quantity: 3, binding: catalog}]}
-      choices_small_fireworks_slime_4:
-        chance: 100%
-        rolls: 1
-        entries:
-        - {weight: 4, rewards: [{item: small_fireworks_slime, quantity: 1, binding: catalog}]}
-        - {weight: 3, rewards: [{item: medium_fireworks_slime, quantity: 1, binding: catalog}]}
-        - {weight: 2, rewards: [{item: large_fireworks_slime, quantity: 1, binding: catalog}]}
+      choices_confetti_slime_3: {shared: choices_confetti_slime}
+      choices_small_fireworks_slime_4: {shared: choices_small_fireworks_slime}

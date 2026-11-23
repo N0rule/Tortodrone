@@ -524,8 +524,11 @@ content/
     combat.yml
     statuses.yml
     trap-cycles.yml
+    mechanics.yml
     presentation.yml
     news/
+    loot/
+      groups.yml
     missions/
       groups.yml
       properties.yml
@@ -548,8 +551,8 @@ content/
     achievements/        README (verified predicates; counters blocked)
   _internal/
     default-source.properties
-    fires.json
-    pet-fires.json
+    fires.json.gz
+    pet-fires.json.gz
     item-bindings.json
     item-actions.json
     item-use.json

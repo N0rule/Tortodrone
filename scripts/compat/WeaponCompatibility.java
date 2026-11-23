@@ -42,22 +42,22 @@ public final class WeaponCompatibility {
             var add=(SceneDeltaEvent)((EventNotification)in.qe()).yj();
             var nativeActor=(Dungeoneer)add.aej()[0];
             var nativeItem=(com.threerings.projectx.item.data.LevelItem)field(nativeActor,"_weapon");
-            check(nativeItem!=null&&nativeItem.Vx().getName().equals(entry.config()),"native equipped weapon");
-            check((int)field(nativeItem,"_configId")==entry.stockId(),"native weapon configuration identity");
-            for(var previous:nativeWeapons)check(!com.threerings.projectx.item.data.LevelItem.a(previous,nativeItem,false),"different weapon types must refresh the native sprite");
-            check(com.threerings.projectx.item.data.LevelItem.a(nativeItem,nativeItem.VN(),false),"unchanged weapon copies must preserve the native sprite");
+            Harness.check(nativeItem!=null&&nativeItem.Vx().getName().equals(entry.config()),"native equipped weapon");
+            Harness.check((int)field(nativeItem,"_configId")==entry.stockId(),"native weapon configuration identity");
+            for(var previous:nativeWeapons)Harness.check(!com.threerings.projectx.item.data.LevelItem.a(previous,nativeItem,false),"different weapon types must refresh the native sprite");
+            Harness.check(com.threerings.projectx.item.data.LevelItem.a(nativeItem,nativeItem.VN(),false),"unchanged weapon copies must preserve the native sprite");
             nativeWeapons.add(nativeItem);
-            check(field(nativeActor,"_shield").equals(shield.config())&&(int)field(nativeActor,"_shieldMaxHealth")==shield.health(),"native shield fields");
-            check((float)field(field(nativeActor,"_equipMod"),"_attackSpeed")==.12f,"native gear modifier object");
+            Harness.check(field(nativeActor,"_shield").equals(shield.config())&&(int)field(nativeActor,"_shieldMaxHealth")==shield.health(),"native shield fields");
+            Harness.check((float)field(field(nativeActor,"_equipMod"),"_attackSpeed")==.12f,"native gear modifier object");
             var update=(SceneDeltaEvent)((EventNotification)in.qe()).yj();
             var applied=(Dungeoneer)update.aek()[0].apply(nativeActor);
-            check(field(applied,"_weapon")==null&&field(applied,"_shield")==null,"delta clears old weapon and shield");
-            check((int)field(applied,"_chainCount")==2&&(int)field(applied,"_chainResetTime")==800&&(int)field(applied,"_nextDodge")==1000,"delta updates chains and dodge");
-            check((float)field(field(applied,"_equipMod"),"_attackSpeed")==0&&(float)field(field(applied,"_weaponMod"),"_attackSpeed")==.12f,"delta replaces both native modifier objects");
+            Harness.check(field(applied,"_weapon")==null&&field(applied,"_shield")==null,"delta clears old weapon and shield");
+            Harness.check((int)field(applied,"_chainCount")==2&&(int)field(applied,"_chainResetTime")==800&&(int)field(applied,"_nextDodge")==1000,"delta updates chains and dodge");
+            Harness.check((float)field(field(applied,"_equipMod"),"_attackSpeed")==0&&(float)field(field(applied,"_weaponMod"),"_attackSpeed")==.12f,"delta replaces both native modifier objects");
             Object impulse=field(applied,"_impulse");
-            check(impulse!=null&&(int)field(impulse,"_started")==150&&(int)field(impulse,"_duration")==625,"native dodge impulse");
-            check(applied.bR(Dungeoneer.ATTACK_IMPULSE_APPLIED),"delta retains the native one-time attack impulse guard");
-            check((int)field(applied,"_activity")==286&&in.available()==0,"exact stock stream framing");checked++;
+            Harness.check(impulse!=null&&(int)field(impulse,"_started")==150&&(int)field(impulse,"_duration")==625,"native dodge impulse");
+            Harness.check(applied.bR(Dungeoneer.ATTACK_IMPULSE_APPLIED),"delta retains the native one-time attack impulse guard");
+            Harness.check((int)field(applied,"_activity")==286&&in.available()==0,"exact stock stream framing");checked++;
         }
         projectiles(items);
         System.out.println("PASS: stock reader accepts sword, gun and bomb actor state, shield, impulse and combat deltas ("+checked+" cases)");
@@ -81,17 +81,16 @@ public final class WeaponCompatibility {
         var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
         var add=(SceneDeltaEvent)((EventNotification)in.qe()).yj();
         var nativeBullet=add.aej()[0];var nativeBomb=add.aej()[1];
-        check(nativeBullet.getClass().getSimpleName().equals("Bullet")&&nativeBomb.getClass().getSimpleName().equals("Bomb"),"native projectile classes");
-        check((int)field(nativeBullet,"_faction")==51&&(int)field(nativeBullet,"_clientOid")==1001&&Math.abs((float)field(nativeBullet,"_z")-1)<.001,"bullet source/height");
+        Harness.check(nativeBullet.getClass().getSimpleName().equals("Bullet")&&nativeBomb.getClass().getSimpleName().equals("Bomb"),"native projectile classes");
+        Harness.check((int)field(nativeBullet,"_faction")==51&&(int)field(nativeBullet,"_clientOid")==1001&&Math.abs((float)field(nativeBullet,"_z")-1)<.001,"bullet source/height");
         var update=(SceneDeltaEvent)((EventNotification)in.qe()).yj();
         var appliedBullet=update.aek()[0].apply(nativeBullet);var appliedBomb=update.aek()[1].apply(nativeBomb);
-        check((int)field(appliedBullet,"_destroyed")==200&&(int)field(appliedBullet,"_flags")==6,"bullet destroyed/fizzle delta");
-        check((int)field(appliedBomb,"_destroyed")==200&&in.available()==0,"bomb destroyed delta and effect stream framing");
+        Harness.check((int)field(appliedBullet,"_destroyed")==200&&(int)field(appliedBullet,"_flags")==6,"bullet destroyed/fizzle delta");
+        Harness.check((int)field(appliedBomb,"_destroyed")==200&&in.available()==0,"bomb destroyed delta and effect stream framing");
         System.out.println("PASS: stock reader accepts native bullet, bomb, destruction deltas and scene effect");
     }
     private static Object field(Object object,String name)throws Exception {
         for(Class<?> c=object.getClass();c!=null;c=c.getSuperclass())try{var f=c.getDeclaredField(name);f.setAccessible(true);return f.get(object);}catch(NoSuchFieldException ignored){}
         throw new NoSuchFieldException(name);
     }
-    private static void check(boolean value,String message){if(!value)throw new AssertionError(message);}
 }

@@ -2,10 +2,6 @@ package org.tortodrone.world;
 
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
-import org.tortodrone.core.world.FireCatalog;
-import org.tortodrone.core.world.SceneStatus;
-import org.tortodrone.core.world.SceneContent;
-import org.tortodrone.core.world.SceneCollision;
 import org.tortodrone.core.world.MonsterCatalog;
 
 /**
@@ -15,7 +11,7 @@ public final class MonsterMetricsTest {
     private MonsterMetricsTest() { }
 
     public static void main(String[] args) throws Exception {
-        var catalog = catalog();
+        var catalog = MonsterFixture.catalog("fixture_metrics", "Monster/Fixture/Metrics", "Fixture Metrics");
         gauges(catalog);
         tickWindow();
 
@@ -23,7 +19,7 @@ public final class MonsterMetricsTest {
     }
 
     private static void gauges(MonsterCatalog catalog) throws Exception {
-        var world = scene(catalog);
+        var world = MonsterFixture.scene(catalog);
         var empty = world.metrics();
         check(empty.total() == 0 && empty.awake() == 0 && empty.engaged() == 0,
             "an empty scene reports no live monsters");
@@ -39,7 +35,7 @@ public final class MonsterMetricsTest {
         check(live.byType().equals(Map.of("fixture_metrics", 3)), "the live population is grouped by catalogue type");
         check(live.awake() == 0 && live.engaged() == 0, "new wave monsters start dormant");
 
-        kill(world, 1050);
+        MonsterFixture.kill(world, 1050);
         for (int tick = 0; tick < 4; tick++) world.advance(1100 + tick * 50, List.of());
         var cleared = world.metrics();
         check(cleared.total() == 0 && cleared.awake() == 0 && cleared.engaged() == 0,
@@ -63,55 +59,5 @@ public final class MonsterMetricsTest {
         check(bounded.tickP50Millis() == 2.0, "the window does not grow without bound");
         check(new MonsterMetrics().snapshot(0, 0, 0, Map.of(), 0, 0).tickP99Millis() == 0,
             "an unsampled scene reports zero instead of a fabricated percentile");
-    }
-
-    private static SceneEntities scene(MonsterCatalog catalog) throws Exception {
-        return new SceneEntities(SceneContent.empty(), TestCollision.floor(-32, -32, 64, 64),
-            SceneCollision.empty(), new Random(7), true, 1000, catalog);
-    }
-
-    private static void kill(SceneEntities world, int stamp) {
-        var pulse = new SceneStatus.Pulse(new FireCatalog.DataValue(
-            "com.threerings.projectx.dungeon.config.DamageConfig$Normal",
-            Map.of("flags", 2, "amount", 1000f)), 100f, 128);
-        world.statusPulse(0, pulse, 0, 0, stamp);
-    }
-
-    private static MonsterCatalog catalog() throws Exception {
-        return MonsterCatalog.parse("""
-            {
-              "format": 1,
-              "generatedFrom": {"actorSha256": "%s", "descriptionSha256": "%s"},
-              "types": {
-                "fixture_metrics": {
-                  "config": "Monster/Fixture/Metrics",
-                  "display": "Fixture Metrics",
-                  "family": "Gremlin",
-                  "archetype": "melee-chaser",
-                  "supported": true,
-                  "capabilities": [],
-                  "unsupported": [],
-                  "actor": "Character/NPC/Monster/Fixture/Metrics",
-                  "configs": ["Character/NPC/Monster/Fixture/Metrics"],
-                  "spec": {
-                    "config": "Character/NPC/Monster/Fixture/Metrics",
-                    "kind": "Monster",
-                    "native-type": "com.threerings.projectx.dungeon.data.actor.Monster",
-                    "health": "100",
-                    "radius": ".4",
-                    "damage-mask": "2",
-                    "collision-mask": "1",
-                    "collision-flags": "8",
-                    "speed": "4",
-                    "acquire-distance": "40",
-                    "acquisition-interval": "0",
-                    "attack-distance": "1",
-                    "attack": "0",
-                    "turn-rate": "100"
-                  }
-                }
-              }
-            }
-            """.formatted("1".repeat(64), "2".repeat(64)));
     }
 }

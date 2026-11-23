@@ -145,6 +145,10 @@ public final class FireCatalog {
     public static void write(Path file, Collection<AttackFire> entries, Map<String,Integer> unsupported) throws IOException {
         FireCatalogCodec.write(file, entries, unsupported);
     }
+    /** Same catalogue, gzip-compressed; prepared content keeps the large graphs compact. */
+    public static void writeCompressed(Path file, Collection<AttackFire> entries, Map<String,Integer> unsupported) throws IOException {
+        FireCatalogCodec.writeCompressed(file, entries, unsupported);
+    }
 
     /** Read a prepared catalogue, including the bounded legacy version-1 shape. */
     public static FireCatalog load(Path file) throws IOException {

@@ -17,15 +17,15 @@ public final class WebUiAssetsCompatibility {
         var sprite=new BattleSpriteConfig();sprite.setName("Artwork fixture sprite");
         manager.install(ItemConfig.class,item);
         manager.install(BattleSpriteConfig.class,sprite);
-        check(collect(WebUiAssetsExport.configurations(manager,ItemConfig.class)).equals(List.of(item)),"exact typed item group");
-        check(collect(WebUiAssetsExport.configurations(manager,BattleSpriteConfig.class)).equals(List.of(sprite)),"exact typed Sprite group");
+        Harness.check(collect(WebUiAssetsExport.configurations(manager,ItemConfig.class)).equals(List.of(item)),"exact typed item group");
+        Harness.check(collect(WebUiAssetsExport.configurations(manager,BattleSpriteConfig.class)).equals(List.of(sprite)),"exact typed Sprite group");
         manager.install(ItemConfig.class,null);
-        check(collect(WebUiAssetsExport.configurations(manager,ItemConfig.class)).isEmpty(),"empty group iteration");
+        Harness.check(collect(WebUiAssetsExport.configurations(manager,ItemConfig.class)).isEmpty(),"empty group iteration");
         try {
             WebUiAssetsExport.configurations(new ConfigManager(),ItemConfig.class);
             throw new AssertionError("Missing group accepted");
         } catch(IOException expected) {
-            check(expected.getMessage().contains(ItemConfig.class.getName()),"missing group diagnostic identifies its type");
+            Harness.check(expected.getMessage().contains(ItemConfig.class.getName()),"missing group diagnostic identifies its type");
         }
         System.out.println("PASS: artwork exporter compiles against stock API; resource setter, typed item/Sprite iteration, empty and missing groups");
     }
@@ -38,8 +38,5 @@ public final class WebUiAssetsCompatibility {
     }
     private static <T> List<T> collect(Iterable<T> values) {
         var result=new ArrayList<T>();values.forEach(result::add);return result;
-    }
-    private static void check(boolean condition,String message) {
-        if(!condition)throw new AssertionError(message);
     }
 }

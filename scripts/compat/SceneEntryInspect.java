@@ -8,9 +8,7 @@ import org.tortodrone.core.Json;
 /** Read-only authored entry/handler inspection, not a scene-playability checker. */
 public final class SceneEntryInspect {
     public static void main(String[] args)throws Exception {
-        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
-        resource.getClass().getMethod("gf",String.class).invoke(resource,args[0]+"/rsrc");
-        var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        var cm=NativeConfig.load(Path.of(args[0]));
         byte[] bytes=Files.readAllBytes(Path.of(args[1]));var scene=(TudeySceneModel)com.threerings.export.util.b.e(bytes);scene.init(cm);
         System.out.println("SCENE "+scene.sceneId+" version="+scene.version+" sha256="+HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(bytes)));
         var keys=new HashSet<>(Arrays.asList(args).subList(2,args.length));

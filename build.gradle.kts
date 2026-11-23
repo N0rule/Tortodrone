@@ -57,6 +57,9 @@ val checkModuleGraph = tasks.register("checkModuleGraph") {
 
 tasks.processResources {
     from("VERSION") { rename { "version.txt" } }
+    // One editable server template: the deployment's config/server.yml is also the
+    // packaged default used to seed a missing configuration.
+    from("config/server.yml")
     from(listOf("LICENSE", "NOTICE")) { into("META-INF/tortodrone") }
     from("scripts/compat/WebUiAssetsExport.java") { into("tools") }
 }
@@ -140,8 +143,10 @@ tasks.named("checkModuleGraph") { dependsOn(checkBytecodeDependencies) }
 // Compile the existing Java preparation tool and its standalone regression together.
 val buildTools = sourceSets.create("buildTools") {
     java.setSrcDirs(listOf("scripts"))
-    java.include("BuildTools.java", "BuildToolsTest.java", "StockTools.java", "ProcessCleanupTest.java",
-        "CollisionPackExport.java", "MapCompiler.java", "compat/CheckClientWorld.java", "compat/CheckCombatRendering.java")
+    java.include("BuildTools.java", "BuildToolsTest.java", "ContentAudit.java", "ContentManifest.java",
+        "StockTools.java", "ProcessCleanupTest.java",
+        "CollisionPackExport.java", "MapCompiler.java", "compat/CheckClientWorld.java", "compat/CheckCombatRendering.java",
+        "compat/ClientCheckHarness.java")
     resources.setSrcDirs(emptyList<String>())
 }
 buildTools.compileClasspath += sourceSets.main.get().output + configurations.runtimeClasspath.get()
@@ -170,7 +175,38 @@ val validateContent = tasks.register<JavaExec>("validateContent") {
     workingDir = projectDir
     args(projectDir.absolutePath)
 }
-val prepareContent = preparation("prepareContent", "content").apply { configure { dependsOn(validateContent) } }
+// Fast content guard: fail on exact-duplicate text files that are not accepted in the allowlist.
+val checkContentDuplication = tasks.register<JavaExec>("checkContentDuplication") {
+    group = "verification"
+    description = "Fail on unlisted exact-duplicate content files; see scripts/content/duplicate-allowlist.txt."
+    classpath = buildTools.runtimeClasspath
+    javaLauncher.set(launcher25)
+    mainClass.set("ContentAudit")
+    workingDir = projectDir
+    args("check")
+}
+val reportContentDuplication = tasks.register<JavaExec>("reportContentDuplication") {
+    group = "verification"
+    description = "Report repeated content lines and large identical YAML subtrees; never rewrites files."
+    classpath = buildTools.runtimeClasspath
+    javaLauncher.set(launcher25)
+    mainClass.set("ContentAudit")
+    workingDir = projectDir
+    args("report")
+}
+// Maintainer-only: republish content digests after a reviewed content change.
+val refreshContentManifest = tasks.register<JavaExec>("refreshContentManifest") {
+    group = "build setup"
+    description = "Recompute content/_internal/default-source.properties; keep owned.* upgrade history."
+    dependsOn(validateContent)
+    classpath = buildTools.runtimeClasspath
+    javaLauncher.set(launcher25)
+    mainClass.set("ContentManifest")
+    workingDir = projectDir
+}
+val prepareContent = preparation("prepareContent", "content").apply { configure {
+    dependsOn(validateContent, checkContentDuplication)
+} }
 preparation("prepareMaps", "maps")
 // Regenerate exact collision.bin from the pinned native static collision of every map that has it.
 val compileMapsFromSource = tasks.register<JavaExec>("compileMapsFromSource") {
