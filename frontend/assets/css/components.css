@@ -13,6 +13,14 @@
     background: var(--inset);
     border-color: transparent;
 }
+/* A record dialog is already a frame, so an untitled section inside one does not draw
+   a second: the station record and the gift card are `panel('')` in `#fields`, and two
+   rounded edges four pixels apart read as a mistake, not as a hierarchy. */
+#fields > .panel:not(:has(h2)) {
+    padding: 0;
+    background: none;
+    border: 0;
+}
 .panel-heading {
     display: flex;
     align-items: center;
@@ -346,6 +354,10 @@ td .toolbar .button .ui-icon,
 .pagination button,
 .pagination select {
     min-block-size: var(--control-sm);
+    /* The height token is a floor, and a select with 6px of block padding under a
+       12.5px line measured 33 — a third height nobody chose. The paging row is the
+       compact end of the scale, so it drops the padding and keeps the token. */
+    padding-block: 0;
     font-size: 12.5px;
 }
 .pagination {
@@ -494,6 +506,32 @@ td .toolbar .button .ui-icon,
 .sprite-grid > .empty-state {
     grid-column: 1 / -1;
 }
+/* The catalogue's "As a table" view switch is a control like the ones beside it: a
+   40px fill, the control radius and a caret drawn the way the sorted column's mark is
+   drawn. It was a 21px native disclosure — the last browser-default control on the
+   page — while the same job on the depot is a 40px tab. */
+.catalogue-table {
+    border-top: 0;
+    padding: 0;
+}
+.catalogue-table > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-block-size: var(--control);
+    padding: 0 16px;
+    color: var(--text);
+    background: var(--raised);
+    border-radius: var(--radius-control);
+    font-weight: 500;
+    list-style: none;
+}
+.catalogue-table > summary:hover {
+    background: color-mix(in srgb, var(--raised) 78%, var(--line-bright));
+}
+.catalogue-table > div {
+    padding-block-start: 14px;
+}
 .item-tile {
     display: flex;
     flex-direction: column;
@@ -507,15 +545,21 @@ td .toolbar .button .ui-icon,
     justify-content: flex-start;
     color: var(--text);
     background: var(--surface);
-    border: 1px solid var(--line-bright);
+    /* A tile is a control, so it obeys the one control language: a fill, and the step
+       between two fills when it is hovered or chosen. It kept a bright rim of its own
+       after every other control dropped one, which made 24 outlined boxes the loudest
+       thing on the catalogue. Selection is still a ring, because a ring is state. */
+    border: 1px solid transparent;
     padding: 13px;
     font-weight: 400;
     box-shadow: none;
 }
-.item-tile:hover,
-.item-tile[aria-pressed='true'] {
-    border-color: var(--cyan);
+.item-tile:hover {
     background: var(--raised);
+}
+.item-tile[aria-pressed='true'] {
+    background: var(--raised);
+    box-shadow: inset 0 0 0 2px var(--cyan);
 }
 .item-tile .item-name {
     font-weight: 600;
@@ -684,7 +728,11 @@ dialog[open]::backdrop {
     max-height: 230px;
     overflow: auto;
     padding: 10px;
-    border: 1px solid var(--line-bright);
+    /* The recessed fill the fields beside it wear, not a rim of its own: a list of
+       choices is the field form of a picker, and it was the last control in a dialog
+       still drawn as an outline. */
+    background: var(--inset);
+    border: 1px solid transparent;
     border-radius: var(--radius);
 }
 .choice-list label {

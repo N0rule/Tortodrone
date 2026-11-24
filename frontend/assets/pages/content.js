@@ -305,9 +305,10 @@ export async function mount(ctx) {
                 );
                 recipeList.append(row);
             }
-        // The head is the row that opened it: the same client glyph, the name the link
-        // carried and the same breadcrumb underneath. The title used to be the actor
-        // path, which then appeared again as the body lead and again as a fact.
+        // The head is the row that opened it: the same client glyph, the kind and the
+        // same breadcrumb underneath. The title already names the record, so the head
+        // does not name it a second time 70px below — the offer dialog reads the same
+        // way, and its head carries only what the title cannot.
         const segments = String(station.actor || '')
                 .split('/')
                 .filter(Boolean),
@@ -320,7 +321,7 @@ export async function mount(ctx) {
             mark.classList.add('station-mark');
             head.append(mark);
         }
-        names.append(el('strong', label), el('span', kindLabel(station.kind), 'station-kind'));
+        names.append(el('strong', kindLabel(station.kind), 'station-kind'));
         const breadcrumb = el('small', station.actor, 'muted');
         breadcrumb.title = station.actor;
         head.append(names, breadcrumb);

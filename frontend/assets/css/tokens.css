@@ -111,7 +111,10 @@
     --canvas: #e6eef3;
     --surface: #ffffff;
     --raised: #dce8ef;
-    --inset: #f1f6f9;
+    /* The recessed fill, deepened so a field or a frame reads against a white panel
+       without a hairline: #f1f6f9 sat 1.09:1 from the panel and only its rim said
+       where it was. */
+    --inset: #dbe6ee;
     --line: #bdcfdc;
     --line-bright: #678193;
     /* 1.18:1 was not a line: on white panels that lost their shadow, the container

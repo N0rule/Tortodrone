@@ -112,7 +112,7 @@ export function chart(title, unit, series) {
         text(
             readout,
             atLatest && !inspecting
-                ? `Latest sample · ${time(s.time)}`
+                ? `Latest sample at ${time(s.time)}`
                 : `${time(s.time)} · ` +
                       series
                           .map((v) => {

@@ -363,7 +363,7 @@ export async function mount(ctx) {
                 wrap.append(el('span', 'Chart range', 'filter-label-text'), range);
                 return wrap;
             })(),
-            el('small', 'Measured every 5 seconds · retained in memory for 1 hour')
+            el('small', 'Measured every 5 seconds, retained in memory for an hour')
         ),
         charts,
         panel('Scene monster runtime', monsters.node),

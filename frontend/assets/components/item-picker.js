@@ -55,7 +55,9 @@ export function itemPicker(
             (row) => row.category
         ],
         ['Grantable', (row) => (row.grantable ? 'yes' : 'no'), (row) => (row.grantable ? 1 : 0)],
-        ['Unavailable because', (row) => row.reason ?? '']
+        // The server answers this column for both outcomes — "Available", or the reason an
+        // item cannot be granted — so the header states the question, not the failure.
+        ['Availability', (row) => row.reason ?? '']
     ];
     // The walk can be ten requests in a row, so it carries its own signal: leaving the
     // page must stop it, not download a file and toast for a page that is gone.

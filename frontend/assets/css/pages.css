@@ -4,10 +4,11 @@
     flex-wrap: wrap;
     gap: 20px;
     padding: 20px 24px;
-    background: var(--raised);
-    /* One accent width across the product, and one radius ramp. The edge is a
-       container's, not a control's: the strip is the loudest block on the page
-       already, and it does not need a drawn frame to say so. */
+    /* The panel fill, not the raised one: the four listener controls are raised
+       controls, and a raised strip painted them in their own colour — measured 1.00:1,
+       so Stop and Restart read as a run of text until the pointer arrived. The gold
+       rule down the left is what marks this block, not a second surface step. */
+    background: var(--surface);
     border: 1px solid transparent;
     border-left: 3px solid var(--gold-rule);
     border-radius: var(--radius);
@@ -273,8 +274,8 @@ button.metric:focus-visible {
     flex-direction: column;
     /* Fill the reading area on both Logs and Console so the surface reads as a
        terminal window instead of a strip of rows above empty canvas. */
-    /* A terminal window is a rectangle of one material: an 8px radius, a drop shadow
-       and a floating pill made the pane read as a card dressed as a terminal. */
+    /* A terminal window is a rectangle of one material: a 2px radius, no drop shadow
+       and no floating pill, because anything rounder read as a card dressed as one. */
     min-height: min(380px, 54dvh);
     border: 1px solid var(--term-line);
     border-radius: 2px;

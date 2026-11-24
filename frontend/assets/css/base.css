@@ -109,17 +109,34 @@ button:not(:disabled):not([aria-disabled='true']):hover,
 .button:not(:disabled):not([aria-disabled='true']):hover {
     background: color-mix(in srgb, var(--raised) 78%, var(--line-bright));
 }
+/* A press steps the control's own fill rather than painting every variant slate. One
+   shared rule did the latter, and a gold primary went grey under the same dark ink —
+   measured 1.41:1, so the only primary on the page vanished while it was being
+   pressed. Each variant mixes toward the surface it sits on, keeping its own colour
+   and its own ink. */
 button:not(:disabled):not([aria-disabled='true']):active,
-.button:not(:disabled):not([aria-disabled='true']):active,
+.button:not(:disabled):not([aria-disabled='true']):active {
+    background: color-mix(in srgb, var(--control-bg) 88%, var(--inset));
+    box-shadow: none;
+}
+/* The variant rules are spelled out because a hover rule for the same variant is
+   declared later at the same specificity: `:where()` keeps hover at (0,3,1), so a
+   bare `:active` rule lost to it and a press showed the hover fill. A class in the
+   selector is what puts the press back on top. */
 button.primary:not(:disabled):not([aria-disabled='true']):active,
+.button.primary:not(:disabled):not([aria-disabled='true']):active {
+    background: color-mix(in srgb, var(--action) 88%, var(--action-text));
+}
 button.secondary:not(:disabled):not([aria-disabled='true']):active,
-button.quiet:not(:disabled):not([aria-disabled='true']):active,
-button.danger:not(:disabled):not([aria-disabled='true']):active,
-.button.primary:not(:disabled):not([aria-disabled='true']):active,
-.button.secondary:not(:disabled):not([aria-disabled='true']):active,
-.button.quiet:not(:disabled):not([aria-disabled='true']):active,
-.button.danger:not(:disabled):not([aria-disabled='true']):active {
+.button.secondary:not(:disabled):not([aria-disabled='true']):active {
     background: color-mix(in srgb, var(--raised) 88%, var(--inset));
+}
+button.danger:not(:disabled):not([aria-disabled='true']):active,
+.button.danger:not(:disabled):not([aria-disabled='true']):active {
+    background: color-mix(in srgb, var(--bad) 26%, var(--surface));
+}
+button.quiet:not(:disabled):not([aria-disabled='true']):active,
+.button.quiet:not(:disabled):not([aria-disabled='true']):active {
     box-shadow: none;
 }
 button:focus-visible,
@@ -421,8 +438,10 @@ button[role='switch'][aria-checked='true'] {
 }
 button[role='switch'][aria-checked='true']::after {
     content: '';
-    background-color: color-mix(in srgb, var(--cyan) 62%, transparent);
-    background-image: radial-gradient(circle 7px at 22px 50%, var(--inset) 99%, transparent 100%);
+    /* The knob keeps --text in both positions, so a switch slides rather than flips
+       colour, and the lit track is a deeper teal than a bare cyan: a knob the colour of
+       the ink needs a track it can be seen on. */
+    background-color: color-mix(in srgb, var(--cyan) 55%, var(--inset));
 }
 button[role='switch'][aria-checked='true']:not(:disabled):hover {
     background: color-mix(in srgb, var(--raised) 78%, var(--line-bright));
@@ -478,23 +497,20 @@ textarea {
     padding: 6px 11px;
     color: var(--text);
     background: var(--inset);
-    /* A field is where typing goes, so it keeps a hairline the buttons no longer
-       wear: an inset fill alone is invisible on the light theme's near-white panels. */
-    border: 1px solid var(--line);
+    /* One edge language: a control is a fill, and this is the recessed one. A field
+       used to keep a hairline the buttons had dropped, so a toolbar showed a rimmed
+       search box, a rimmed select, a rimmed trigger and two filled buttons — three
+       edges saying three different things about four things that are all controls.
+       The fill carries it in both themes now (--inset is deepened in the light one so
+       a recess on a white panel still reads at a glance). */
+    border: 1px solid transparent;
     border-radius: var(--radius-control);
-    transition:
-        background-color 120ms ease,
-        border-color 120ms ease;
+    transition: background-color 120ms ease;
 }
 input:hover:not(:disabled),
 select:hover:not(:disabled),
 textarea:hover:not(:disabled) {
-    border-color: var(--line-bright);
-}
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-    border-color: transparent;
+    background: color-mix(in srgb, var(--inset) 84%, var(--line-bright));
 }
 /* `showReason` chooses to show a reason instead of hiding it, and outside a table cell
    there was no rule that honoured it: `.shown` was only ever un-clipped inside `td`/`th`,
@@ -579,9 +595,38 @@ details {
     border-top: 1px solid var(--line);
     padding: 12px 0;
 }
+/* A disclosure is a control, so it is drawn like one: a word, a row height, a radius
+   and a caret, instead of a 21px browser default with a native triangle. The caret is
+   the same mark the sorted column wears, for the same reason — a shape drawn in the
+   colours the theme already has, not an invented icon. */
 summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-block-size: var(--control-sm);
+    padding: 0 12px;
     color: var(--muted);
+    border-radius: var(--radius-control);
     cursor: pointer;
+    list-style: none;
+}
+summary::-webkit-details-marker {
+    display: none;
+}
+summary::after {
+    content: '';
+    inline-size: 0;
+    block-size: 0;
+    border-inline: 5px solid transparent;
+    border-block-start: 5px solid currentColor;
+    transition: transform 120ms ease;
+}
+details[open] > summary::after {
+    transform: rotate(180deg);
+}
+summary:hover {
+    color: var(--text);
+    background: var(--raised);
 }
 details pre {
     max-height: 350px;

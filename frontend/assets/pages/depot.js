@@ -90,15 +90,24 @@ export async function mount(ctx) {
     /**
      * Offers 0 and 1 stock the same item with different durations, so every row names
      * the config it actually sells and its own id: two priced offers must never be
-     * visually identical. The last two path segments carry the difference, and the
-     * whole path stays on the line's title for a copy.
+     * visually identical. The last two path segments carry the difference — except the
+     * leaf, when the leaf is the name the line already printed above it, which turned
+     * 36 rows of "Acheron / Sword / Acheron" into a stutter.
      */
     const configNote = (o) => {
-        const config = String(o.good.item || '');
-        const detail = config.split('/').filter(Boolean).slice(-2).join(' / ');
-        return detail || config;
+        const segments = String(o.good.item || '')
+            .split('/')
+            .filter(Boolean);
+        const name = offerName(o);
+        // Whatever is left after the leaf is dropped, and nothing at all when the path
+        // says no more than the name already did.
+        return segments
+            .slice(-2)
+            .filter((segment) => segment !== name)
+            .join(' / ');
     };
-    const offerDetail = (o) => `${configNote(o)} · offer #${o.id}`;
+    const offerDetail = (o) =>
+        [configNote(o), `offer #${o.id}`].filter(Boolean).join(' · ');
     /** A `<select>` option is a string, so the price it names is spelled out and grouped. */
     const offerLabel = (o) => `${offerName(o)} · offer #${o.id} · ${number(o.good.price)} Crowns`;
     /** One editor for the row action and for a deep link into a single offer. */
