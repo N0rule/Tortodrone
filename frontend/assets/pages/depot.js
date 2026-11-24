@@ -324,7 +324,20 @@ export async function mount(ctx) {
             ['State', (p) => promotionBadge(p)],
             ['Starts', (p) => date(p.starts), (p) => p.starts],
             ['Ends', (p) => date(p.ends), (p) => p.ends],
-            ['Price', (p) => toolbar(currency('crowns', p.crowns), currency('energy', p.energy))]
+            [
+                'Price',
+                // A promotion discounts in one currency, so the other amount is zero and
+                // a zero beside the coin reads as a second, empty price. The offer list
+                // already declines to print it.
+                (p) => {
+                    const cell = toolbar();
+                    if (p.crowns) cell.append(currency('crowns', p.crowns));
+                    if (p.energy) cell.append(currency('energy', p.energy));
+                    return cell;
+                },
+                (p) => p.crowns || p.energy,
+                'end'
+            ]
         ],
         {
             presentationKey: promotionState,

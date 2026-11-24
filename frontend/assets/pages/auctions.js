@@ -125,8 +125,9 @@ export async function mount(ctx) {
                 ],
                 ['Starts', date(a.availableAt)],
                 ['Expires', date(a.expires)],
-                ['Opening / current bid', a.bid.toLocaleString() + ' Crowns'],
-                ['Buyout', a.buy ? a.buy.toLocaleString() + ' Crowns' : 'Disabled'],
+                // The two figures the row above shows, in the renderer it shows them in.
+                ['Opening / current bid', currency('crowns', a.bid)],
+                ['Buyout', a.buy ? currency('crowns', a.buy) : 'Disabled'],
                 [
                     'Level',
                     definitions.get(a.item.config)?.progression ? a.item.level + 1 : 'Not applicable'
@@ -236,7 +237,8 @@ export async function mount(ctx) {
             [
                 'Bid / buyout',
                 (r) => toolbar(currency('crowns', r.listing.bid), currency('crowns', r.listing.buy)),
-                (r) => r.listing.bid
+                (r) => r.listing.bid,
+                'end'
             ],
             ['Status', (r) => stateBadge(r.listing)],
             ['Expires', (r) => date(r.listing.expires), (r) => r.listing.expires]
