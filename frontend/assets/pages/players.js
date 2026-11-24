@@ -3,6 +3,13 @@ import { el, panel, button, routeLink, copy, duration, status, facts, date, scen
 import { DataTable } from '../components/table.js';
 import { go } from '../router.js';
 import { confirm, confirmAction, openDialog } from '../components/dialog.js';
+// Auctions and Depot disclose that a derived time is this browser's clock against a
+// window the server owns. A session's age is the same kind of number — the server
+// normally sends it, and this page computes it from `connectedAt` when it does not —
+// so it says so instead of a fast laptop reporting an hour-old two-minute session.
+const CLOCK_NOTE =
+    'The server sends each session’s age; where it does not, this is this browser’s clock against the connection time the server recorded, so a wrong clock here shows a wrong duration.';
+const durationCell = (seconds) => Object.assign(el('span', duration(seconds)), { title: CLOCK_NOTE });
 export async function mount(ctx) {
     const node = el('div', null, 'stack');
     const players = new DataTable(
@@ -34,7 +41,7 @@ export async function mount(ctx) {
                         : '—'
             ],
             ['Instance', (r) => r.instanceId ?? '—'],
-            ['Duration', (r) => duration(r.elapsedSeconds), (r) => r.connectedAt],
+            ['Duration', (r) => durationCell(r.elapsedSeconds), (r) => r.connectedAt],
             ['State', (r) => status(r.state, true)]
         ],
         {
@@ -257,7 +264,7 @@ export async function mount(ctx) {
                     ['Instance', String(row.instanceId ?? '—')],
                     ['State', status(row.state, true)],
                     ['Connected', row.connectedAt ? date(row.connectedAt) : '—'],
-                    ['Duration', duration(row.elapsedSeconds)]
+                    ['Duration', durationCell(row.elapsedSeconds)]
                 ]),
                 links
             ),
@@ -303,6 +310,9 @@ export async function mount(ctx) {
         players.update(
             s.sessions.map((r) => ({
                 ...r,
+                // The server usually sends the age; when it does not, this is the
+                // browser's clock against the recorded connection time, which is why
+                // every duration on this page says where it came from.
                 elapsedSeconds: Math.floor((Date.now() - new Date(r.connectedAt)) / 1000)
             }))
         );

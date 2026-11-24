@@ -454,11 +454,15 @@ textarea {
    so a toolbar control's explanation stayed invisible until the pointer or the focus
    landed on it. A moderator's "this needs an administrator role" is exactly the case
    that has to be readable without hovering.
-   `:not(.row-actions)` is load-bearing, not decoration: a row's own toolbar is
-   `td.row-actions > .toolbar`, and this selector (0,3,0) outranks the floating-note rule
-   below (0,2,1). Un-scoping it there turned the note into an in-flow box and re-laid the
-   row on hover — the exact defect that rule was written to stop. */
-.toolbar:not(.row-actions) > .unavailable-reason.shown {
+   The exclusion is on the *cell*, not on a toolbar class: `.row-actions` sits on the
+   `td` (`components/table.js:587`) and never on the toolbar (`ui.js:206`), so a
+   `.toolbar:not(.row-actions)` guard matched every toolbar, row ones included, and its
+   (0,4,0) out-ranked the floating-note rule below (0,2,1) — which turned a row's reason
+   into an in-flow box that re-laid the row on hover, the exact defect that note exists
+   to stop. */
+:not(td):not(th) > .toolbar > .unavailable-reason.shown,
+td:not(.row-actions) > .toolbar > .unavailable-reason.shown,
+th:not(.row-actions) > .toolbar > .unavailable-reason.shown {
     position: static;
     inline-size: auto;
     block-size: auto;

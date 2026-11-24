@@ -411,7 +411,70 @@ function deliveredLabel(campaign) {
             }
         );
         table.update(recipients);
+        // A count cannot answer "who did not get it", which is the question a campaign
+        // stopped at 120 of 200 is actually asked. The roster is already read for the
+        // reach figure, so the other half of the answer is one comparison away.
+        const knights = roster || (await rosterRows().catch(() => null));
         const total = population();
+        const delivered = new Set(recipients.map((row) => String(row.worldId)));
+        const missing = knights
+            ? knights.filter((knight) => !delivered.has(String(knight.id)))
+            : null;
+        const missingTable = new DataTable(
+            [
+                [
+                    'Knight',
+                    (row) =>
+                        entityLink(row.name, 'knights', {
+                            username: row.username,
+                            knight: row.name
+                        }),
+                    (row) => row.name
+                ],
+                [
+                    'Account',
+                    (row) => entityLink(row.username, 'accounts', { username: row.username }),
+                    (row) => row.username
+                ],
+                ['Online', (row) => (row.online ? 'Yes' : 'No'), (row) => (row.online ? 1 : 0)]
+            ],
+            {
+                key: (row) => String(row.id),
+                caption: 'Knights that have not received this mailing',
+                exportName: `mail-pending-${campaign.id}`,
+                pageSize: 30,
+                persist: false,
+                empty: {
+                    title: 'Every knight has received this mailing',
+                    hint: 'A knight created later receives it on their first visit while the window is open.',
+                    icon: 'mailing'
+                }
+            }
+        );
+        missingTable.update(missing || []);
+        const view = el('div');
+        let showingMissing = false;
+        const deliverLabel = () =>
+            `Show not yet delivered (${(missing?.length ?? 0).toLocaleString()})`;
+        const showTable = () =>
+            view.replaceChildren(showingMissing ? missingTable.node : table.node);
+        const toggle = missing
+            ? button(
+                  deliverLabel(),
+                  () => {
+                      showingMissing = !showingMissing;
+                      text(
+                          toggle,
+                          showingMissing
+                              ? `Show delivered (${recipients.length.toLocaleString()})`
+                              : deliverLabel()
+                      );
+                      showTable();
+                  },
+                  'secondary'
+              )
+            : null;
+        showTable();
         host.replaceChildren(
             toolbar(
                 badge(
@@ -420,9 +483,18 @@ function deliveredLabel(campaign) {
                         : `${countOf(recipients.length, 'recipient')} of ${countOf(total, 'knight')}`,
                     'gold'
                 ),
-                el('span', `${moment(campaign.starts)} → ${moment(campaign.ends)}`, 'muted')
+                el('span', `${moment(campaign.starts)} → ${moment(campaign.ends)}`, 'muted'),
+                ...(toggle
+                    ? [toggle]
+                    : [
+                          el(
+                              'span',
+                              'The knight roster could not be read, so this dialog cannot say who has not received it yet.',
+                              'muted'
+                          )
+                      ])
             ),
-            table.node
+            view
         );
     }
 

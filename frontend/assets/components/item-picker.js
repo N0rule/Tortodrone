@@ -124,12 +124,20 @@ export function itemPicker(
     const tableHost = el('div'),
         asTable = el('details', null, 'catalogue-table');
     asTable.append(el('summary', 'As a table'), tableHost);
-    let table = null;
-    asTable.ontoggle = async () => {
-        if (!asTable.open || table) return;
-        tableHost.append(el('p', 'Reading the catalogue…', 'muted'));
+    let table = null,
+        tableRequest = null;
+    async function buildTable() {
+        // This walk is ten requests in a row like the export's, so it carries a signal
+        // too: closing the page mid-walk used to leave the requests running and build a
+        // table into a host nobody was looking at.
+        tableRequest?.abort();
+        const current = (tableRequest = new AbortController());
+        tableHost.replaceChildren(el('p', 'Reading the catalogue…', 'muted'));
         try {
-            const { rows, total } = await walk();
+            const { rows, total } = await walk(current.signal);
+            // A newer walk owns the host: an old one that resolved after a filter
+            // change must not paint its stale set over the newer answer.
+            if (tableRequest !== current) return;
             table = new DataTable(COLUMNS, {
                 id: 'catalogue-as-table',
                 caption: 'Catalogue items',
@@ -147,18 +155,35 @@ export function itemPicker(
             tableHost.replaceChildren(
                 el(
                     'small',
-                    `${rows.length.toLocaleString()} of ${total.toLocaleString()} items, newest walk of the same filter. The grid above pages the server; this table is the set it fetched.`,
+                    `${rows.length.toLocaleString()} of ${total.toLocaleString()} items matching the search and category above. The grid pages the server 24 tiles at a time; this table is the same set read straight through.`,
                     'muted'
                 ),
                 table.node
             );
         } catch (error) {
-            if (error.name !== 'AbortError') {
+            if (error.name !== 'AbortError' && tableRequest === current) {
                 tableHost.replaceChildren(el('p', error.message, 'error'));
                 report(error);
             }
+        } finally {
+            if (tableRequest === current) tableRequest = null;
         }
+    }
+    asTable.ontoggle = () => {
+        if (asTable.open && !table) buildTable();
     };
+    /**
+     * The table is a snapshot of the filter it was read under, so a new search or
+     * category retires it instead of leaving a set on screen under a caption that
+     * claims to match the controls above it — the failure this page keeps repeating.
+     */
+    function retireTable() {
+        if (!table && !tableRequest) return;
+        tableRequest?.abort();
+        table = null;
+        tableHost.replaceChildren();
+        if (asTable.open) buildTable();
+    }
     const paging = toolbar(count, ...(exportable ? [exportButton] : []), previous, next);
     node.append(toolbar(search, categories), grid, ...(exportable ? [asTable] : []), paging);
     async function load() {
@@ -241,6 +266,7 @@ export function itemPicker(
     search.oninput = () => {
         generation++;
         request?.abort();
+        retireTable();
         clearTimeout(timer);
         timer = setTimeout(() => {
             page = 1;
@@ -249,6 +275,7 @@ export function itemPicker(
     };
     categories.onchange = () => {
         page = 1;
+        retireTable();
         load().catch(report);
     };
     grid.onkeydown = (event) => {
@@ -273,6 +300,7 @@ export function itemPicker(
             generation++;
             request?.abort();
             exportRequest?.abort();
+            tableRequest?.abort();
             clearTimeout(timer);
         }
     };

@@ -593,7 +593,10 @@ $('#logout').onclick = async () => {
     }
 };
 
-$('#refresh').onclick = refresh;
+// `() => refresh()`, never `refresh`: an onclick handler receives the click `Event`,
+// which is truthy, so `refresh(event)` read as "this is the poll" and sent the
+// operator's own Refresh through `poll()` — a dead button on any page that pauses.
+$('#refresh').onclick = () => refresh();
 $('#navigation').addEventListener('click', () => clearRefusal());
 $('#menu').onclick = () => {
     menu(!$('#shell').classList.contains('menu-open'));

@@ -186,7 +186,12 @@ export async function mount(ctx) {
                             }
                         }),
                     'danger',
-                    () => !a.ended && !a.cancelled
+                    () => !a.ended && !a.cancelled,
+                    {
+                        unavailable: a.cancelled
+                            ? 'This listing is already cancelled, so there is nothing to cancel.'
+                            : 'This listing has already settled, so there is nothing to cancel.'
+                    }
                 )
             )
         );
@@ -276,7 +281,12 @@ export async function mount(ctx) {
                             }
                         }),
                     'danger',
-                    () => !get().listing.ended && !get().listing.cancelled
+                    () => !get().listing.ended && !get().listing.cancelled,
+                    {
+                        unavailable: get().listing.cancelled
+                            ? 'This listing is already cancelled, so there is nothing to cancel.'
+                            : 'This listing has already settled, so there is nothing to cancel.'
+                    }
                 )
             ],
             filters: [

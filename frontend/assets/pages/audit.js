@@ -255,6 +255,8 @@ export async function mount(ctx) {
                 table.update([...table.rows, ...page]);
                 more.refreshAvailability?.();
                 describeScope();
+                // A cited event below the first page is found by walking to it.
+                openPending();
             } catch (error) {
                 ctx.report(error);
             } finally {
@@ -299,7 +301,41 @@ export async function mount(ctx) {
     // The inspector sits above the trail: appended after sixty rows it was 2,200px
     // below the fold, so the citation link a row emits looked like a dead click.
     node.append(detail, toolbar(scope, more, pause), table.node);
-    let pendingEvent = null;
+    let pendingEvent = null,
+        pendingNoted = false;
+    /**
+     * The event the address names, opened as soon as the loaded pages hold it. A miss is
+     * only "no such event" once the whole trail has been read: the trail arrives 500
+     * rows at a time, so a citation older than the loaded pages was being denied
+     * outright — and one that had not loaded yet was denied silently.
+     */
+    function openPending() {
+        if (pendingEvent === null) return;
+        const row = table.rows.find((r) => r.id === pendingEvent);
+        if (row) {
+            const wanted = pendingEvent;
+            pendingEvent = null;
+            showDetail(row);
+            table.markInspected?.(row);
+            return;
+        }
+        // Nothing loaded yet: the first read will ask again.
+        if (!table.rows.length) return;
+        if (!exhausted) {
+            // It is not on screen, but neither is the whole trail: say which, once, and
+            // keep waiting so Older events opens it when the operator walks back.
+            if (!pendingNoted) {
+                pendingNoted = true;
+                ctx.notify(
+                    `Event #${pendingEvent} is older than the ${table.rows.length.toLocaleString()} events loaded; Older events reads back to it.`
+                );
+            }
+            return;
+        }
+        const wanted = pendingEvent;
+        pendingEvent = null;
+        ctx.notify(`There is no audit event #${wanted} on this server.`);
+    }
     /**
      * `force` is the operator asking: the header's Refresh button, a `data-changed`
      * event from a write, or Resume. A pause stops the *poll*, not a deliberate read —
@@ -329,15 +365,7 @@ export async function mount(ctx) {
         describeScope();
         // A cold load applies the address before the trail exists; the event it names
         // is opened as soon as there are rows to find it in.
-        if (pendingEvent !== null) {
-            const wanted = pendingEvent;
-            const row = table.rows.find((r) => r.id === wanted);
-            pendingEvent = null;
-            if (row) {
-                showDetail(row);
-                table.markInspected?.(row);
-            } else ctx.notify(`There is no audit event #${wanted} on this server.`);
-        }
+        openPending();
     }
     await refresh();
     // A cold load carries the address too. Without this the inspector a row's own
@@ -358,13 +386,11 @@ export async function mount(ctx) {
             if (row) {
                 showDetail(row);
                 table.markInspected?.(row);
-            } else if (table.rows.length) {
-                // The trail is already on screen, so the miss is reported now instead of
-                // after the next poll: a citation that lost its row looked like a link
-                // that did nothing.
-                ctx.notify(`There is no audit event #${wanted} on this server.`);
-                pendingEvent = null;
-            } else pendingEvent = wanted;
+            } else {
+                pendingEvent = wanted;
+                pendingNoted = false;
+                openPending();
+            }
         }
     }
     return {
