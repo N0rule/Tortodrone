@@ -309,6 +309,28 @@ public final class AdminHandler implements HttpHandler {
                 : address.getAddress().getHostAddress();
     }
 
+    private static boolean acceptsGzip(String header) {
+        if (header == null) return false;
+        for (String part : header.split(",")) {
+            String value = part.trim().toLowerCase(Locale.ROOT);
+            int semicolon = value.indexOf(';');
+            String coding = (semicolon < 0 ? value : value.substring(0, semicolon)).trim();
+            if (!coding.equals("gzip") && !coding.equals("*")) continue;
+            // q=0 explicitly refuses the coding.
+            return !(semicolon >= 0
+                    && value.substring(semicolon + 1).replace(" ", "").equals("q=0"));
+        }
+        return false;
+    }
+
+    private static byte[] gzip(byte[] source) throws IOException {
+        var buffer = new java.io.ByteArrayOutputStream(Math.max(64, source.length / 4));
+        try (var stream = new java.util.zip.GZIPOutputStream(buffer)) {
+            stream.write(source);
+        }
+        return buffer.toByteArray();
+    }
+
     private static String body(HttpExchange e, int limit) throws IOException {
         if (!"application/x-www-form-urlencoded;charset=UTF-8"
                 .equalsIgnoreCase(e.getRequestHeaders().getFirst("Content-Type"))) throw new IllegalArgumentException();
@@ -375,25 +397,35 @@ public final class AdminHandler implements HttpHandler {
                         name.matches("assets/game/icons/[a-f0-9]{64}\\.(?:png|webp)")
                                 ? "private, max-age=31536000, immutable"
                                 : "private, max-age=0, must-revalidate");
-        // Hash the response snapshot: a second file read can race an atomic asset replacement.
+        // Text assets compress well; the pack is a few hundred kilobytes of
+        // JavaScript and CSS that a browser reads on every cold start.
+        boolean compressible = b.length > 1024
+                && !type.startsWith("image/")
+                && !type.startsWith("font/")
+                && acceptsGzip(e.getRequestHeaders().getFirst("Accept-Encoding"));
+        // Hash the response snapshot: a second file read can race an atomic asset
+        // replacement. The encoding is part of the tag so a cache never mixes the
+        // two representations.
+        String etag;
         try {
-            e.getResponseHeaders()
-                    .set(
-                            "ETag",
-                            "\""
-                                    + HexFormat.of()
-                                            .formatHex(java.security.MessageDigest.getInstance("SHA-256")
-                                                    .digest(b))
-                                    + "\"");
+            etag = "\""
+                    + HexFormat.of()
+                            .formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                                    .digest(b))
+                    + (compressible ? "-gzip\"" : "\"");
         } catch (java.security.NoSuchAlgorithmException impossible) {
             throw new AssertionError(impossible);
         }
-        if (e.getResponseHeaders().getFirst("ETag").equals(e.getRequestHeaders().getFirst("If-None-Match"))) {
+        e.getResponseHeaders().set("ETag", etag);
+        if (compressible) e.getResponseHeaders().set("Vary", "Accept-Encoding");
+        if (etag.equals(e.getRequestHeaders().getFirst("If-None-Match"))) {
             e.sendResponseHeaders(304, -1);
             return;
         }
-        e.sendResponseHeaders(200, b.length == 0 ? -1 : b.length);
-        if (b.length > 0) e.getResponseBody().write(b);
+        byte[] payload = compressible ? gzip(b) : b;
+        if (compressible) e.getResponseHeaders().set("Content-Encoding", "gzip");
+        e.sendResponseHeaders(200, payload.length == 0 ? -1 : payload.length);
+        if (payload.length > 0) e.getResponseBody().write(payload);
     }
 
     private static void send(HttpExchange e, int status, Object result) throws IOException {

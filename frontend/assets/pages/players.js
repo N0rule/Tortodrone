@@ -64,21 +64,29 @@ export async function mount(ctx) {
                                   description:
                                       'Each selected connection is dropped immediately. Authenticated players can reconnect at once.',
                                   label: 'Disconnect',
-                                  onSubmit: async () => {
-                                      let done = 0,
-                                          failed = 0;
-                                      for (const row of rows) {
+                                  onSubmit: async (form, progress) => {
+                                      let done = 0;
+                                      const failed = [];
+                                      for (const [index, row] of rows.entries()) {
+                                          progress(index + 1, rows.length, 'Disconnecting');
                                           try {
                                               await api.change('kick', { session: row.id });
                                               done++;
-                                          } catch {
-                                              failed++;
+                                          } catch (error) {
+                                              failed.push(
+                                                  `Session ${row.id}: ${error.message || 'refused'}`
+                                              );
                                           }
                                       }
                                       ctx.toast(
                                           `Disconnected ${done} session${done === 1 ? '' : 's'}` +
-                                              (failed ? `, ${failed} could not be closed` : '.'),
-                                          { type: failed ? 'error' : 'success' }
+                                              (failed.length
+                                                  ? `, ${failed.length} could not be closed.`
+                                                  : '.'),
+                                          {
+                                              type: failed.length ? 'error' : 'success',
+                                              detail: failed.slice(0, 3).join(' · ') || undefined
+                                          }
                                       );
                                   }
                               });

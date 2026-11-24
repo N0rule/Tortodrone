@@ -50,6 +50,8 @@ textarea {
 button,
 .button {
     cursor: pointer;
+    /* WCAG 2.2 target size: no interactive control renders shorter than 32px. */
+    min-block-size: 32px;
     padding: 8px 14px;
     color: var(--action-text);
     background: var(--action);

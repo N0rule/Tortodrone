@@ -92,10 +92,11 @@ export async function mount(ctx) {
                 ? 'Game Master rights allow in-game administration. Each account is updated individually and the result is reported per account.'
                 : 'Game Master rights are removed from each selected account. WebUI roles are not affected.',
             label: gameMaster ? 'Grant' : 'Remove',
-            onSubmit: async () => {
+            onSubmit: async (form, progress) => {
                 let done = 0;
                 const failed = [];
-                for (const row of rows) {
+                for (const [index, row] of rows.entries()) {
+                    progress(index + 1, rows.length, gameMaster ? 'Granting' : 'Removing');
                     try {
                         await api.change('account-gm', {
                             username: row.username,

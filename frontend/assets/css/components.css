@@ -124,7 +124,8 @@ td .toolbar {
     flex-wrap: nowrap;
 }
 td button {
-    padding: 5px 9px;
+    padding: 6px 10px;
+    min-block-size: 28px;
     font-size: 12px;
 }
 .pagination {
@@ -812,6 +813,12 @@ caption {
 }
 
 @media (max-width: 760px) {
+    /* Card rows can afford the full touch target. */
+    td button,
+    .pagination button,
+    .pagination select {
+        min-block-size: 36px;
+    }
     .toasts {
         right: 8px;
         left: 8px;

@@ -205,5 +205,61 @@ export async function run({ disposable = false } = {}) {
             [...document.querySelectorAll('th')].every((cell) => cell.scope),
         'Every table header declares its scope'
     );
-    return 'PASS: refresh generation, skip link, mobile navigation, palette, shortcuts, toasts, selection, ids and control names';
+
+    // Every page keeps the same structural contract: one visible heading, a
+    // captioned table, scoped headers, no duplicate ids, no overflow.
+    const pageNames = [...$('#navigation').querySelectorAll('a[data-page]')].map(
+        (link) => link.dataset.page
+    );
+    check(pageNames.length >= 8, 'Navigation lists the reachable pages');
+    for (const name of pageNames) {
+        // Some pages have no refresh action, so the sweep only waits for the
+        // route and the first paint.
+        location.hash = name;
+        await until(
+            () =>
+                $('#navigation [aria-current="page"]')?.dataset.page === name &&
+                !$('#page .loading')
+        );
+        const visible = [...$('#page').querySelectorAll('h1, h2')].filter((node) =>
+            node.checkVisibility()
+        );
+        check(
+            visible.filter((node) => node.tagName === 'H1').length <= 1,
+            name + ' keeps a single h1'
+        );
+        const tables = [...$('#page').querySelectorAll('table')];
+        for (const table of tables) {
+            check(!!table.querySelector('caption'), name + ' table has a caption');
+            check(
+                [...table.querySelectorAll('th')].every((cell) => cell.scope),
+                name + ' table headers are scoped'
+            );
+        }
+        const pageIds = new Map();
+        for (const node of $('#page').querySelectorAll('[id]'))
+            pageIds.set(node.id, (pageIds.get(node.id) || 0) + 1);
+        check(
+            [...pageIds].every(([, count]) => count === 1),
+            name + ' has no duplicate ids'
+        );
+        const overflow = document.documentElement.scrollWidth - window.innerWidth;
+        check(overflow <= 0, name + ' fits the viewport (' + overflow + 'px)');
+    }
+
+    // The session is visible to the operator, including when it expires.
+    if (api.session.role === 'ADMINISTRATOR') {
+        await page('webui-users');
+        const expiry = $('#session-expiry');
+        check(!!expiry, 'Access states when the session expires');
+        check(
+            /\d/.test(expiry.textContent),
+            'The session expiry is a readable time, not a placeholder'
+        );
+        check(
+            $('#page').textContent.includes('CSRF'),
+            'Access states the request checks the server applies'
+        );
+    }
+    return 'PASS: refresh generation, skip link, mobile navigation, palette, shortcuts, toasts, selection, page sweep, session facts, ids and control names';
 }

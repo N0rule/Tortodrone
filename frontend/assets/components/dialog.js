@@ -33,6 +33,8 @@ export function openDialog({
     $('#dialog-title').textContent = title;
     $('#dialog-description').textContent = description;
     $('#dialog-error').textContent = '';
+    $('#dialog-progress').textContent = '';
+    $('#dialog-progress').hidden = true;
     $('#dialog-conflict').hidden = true;
     $('#submit-dialog').textContent = submit;
     $('#submit-dialog').disabled = false;
@@ -46,8 +48,16 @@ export function openDialog({
         state.pending = true;
         $('#submit-dialog').disabled = true;
         $('#dialog-error').textContent = '';
+        // Sequential bulk work reports its own progress through this callback,
+        // so a long run never looks frozen.
+        const progress = (done, total, label = 'Updating') => {
+            const node = $('#dialog-progress');
+            if (!node) return;
+            node.hidden = false;
+            node.textContent = `${label} ${done} of ${total}…`;
+        };
         try {
-            const result = await onSubmit(form);
+            const result = await onSubmit(form, progress);
             if (active !== state) return;
             dialog.close();
             if (notifySaved) changed();
@@ -61,6 +71,8 @@ export function openDialog({
                     : error.message;
         } finally {
             state.pending = false;
+            const progressNode = $('#dialog-progress');
+            if (progressNode) progressNode.hidden = true;
             if (active === state) $('#submit-dialog').disabled = state.conflicted;
         }
     };
