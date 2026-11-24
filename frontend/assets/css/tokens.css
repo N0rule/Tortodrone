@@ -57,8 +57,10 @@
     --radius-pill: 999px;
     --control: 40px;
     /* The sizes client art is drawn at, one per job: a row thumbnail, a tile, an
-       equipped slot. Two lists picking their own 30px and 34px was drift, not design. */
-    --icon-row: 38px;
+       equipped slot. Two lists picking their own 30px and 34px was drift, not design.
+       The row is 44, not 38: it is the same picture the 60px tile shows, and at 38 the
+       ring around it read as a border on a box rather than a frame around art. */
+    --icon-row: 44px;
     --icon-tile: 60px;
     --icon-slot: 64px;
     /* A ramp of three real steps: 32 / 36 / 44. 34 against 36 was a 2px difference

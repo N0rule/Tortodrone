@@ -429,15 +429,22 @@ td .toolbar .button .ui-icon,
        with --line-bright edges read as six boxes, and the picture inside is the point. */
     border: 1px solid var(--line);
     border-radius: var(--radius-control);
+    /* Client icons are square, opaque, 96px canvases with a bevelled rim baked into
+       the picture: the art runs to its own edges. A rounded frame around a square
+       picture shows that mismatch as four corners of art cut across the frame's
+       curve, which at a 38px row thumbnail read as a square sitting in a halo. The
+       frame clips instead, so the picture takes the frame's shape at every size. */
+    overflow: hidden;
 }
-/* The art keeps 2px of air inside its frame at every size, so a 36px row thumbnail and
+/* The art keeps 2px of air inside its frame at every size, so a 40px row thumbnail and
    a 112px sprite portrait are the same picture at two scales instead of two crops.
-   Measured inside the frame's own border, that draws a row thumbnail at 30px — big
-   enough to identify the item beside two lines of text, which 26px was not. */
+   Its own corners follow the frame's curve minus that air, so the ring drawn around
+   the picture is even instead of pinched at the corners. */
 .item-icon img {
     width: calc(100% - 4px);
     height: calc(100% - 4px);
     object-fit: contain;
+    border-radius: calc(var(--radius-control) - 2px);
 }
 /* A config the pack has no picture of: the frame stays so the column keeps its
    rhythm, dashed so it says "not the ordinary case", and the picture becomes the

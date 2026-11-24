@@ -66,7 +66,13 @@ export async function mount(ctx) {
         go('depot', Object.fromEntries(params));
     }
     const fixed = () => ({ revision: data.snapshot.revision });
-    const item = (o) => itemLine(definitions.get(o.good.item), { config: o.good.item });
+    // The table-cell size, on all three tabs: the offers and promotions tables draw the
+    // row thumbnail, and a catalogue row is the same kind of row on the same page, so it
+    // takes the same 44px art instead of the card size. Only the record dialogs, which
+    // have room for a picture, use the larger tile. Rarity moves to the inspector here
+    // for the same reason it does in the other two: the catalogue row is two lines.
+    const item = (o) =>
+        itemLine(definitions.get(o.good.item), { config: o.good.item }, { compact: true });
     /**
      * One price, not two: half of a price pair rendered as a coin beside a zero, so
      * every row opened with "0 crowns" and the operator had to work out which coin the
