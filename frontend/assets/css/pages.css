@@ -492,8 +492,13 @@ button.metric:focus-visible {
 }
 /* "No wrapping" is what a terminal does with a stack trace: one row, one scrollbar,
    the line's real shape. The pane already scrolls horizontally in raw mode, so the
-   toggle reuses that machinery instead of inventing a second layout. */
-.terminal-body.no-wrap .log-message {
+   toggle reuses that machinery instead of inventing a second layout. The answer and
+   the echoed command carry their own `white-space`, so they have to be named: without
+   them the toggle did nothing on the Console, the one page whose long lines it was
+   added for. */
+.terminal-body.no-wrap .log-message,
+.terminal-body.no-wrap .command-response,
+.terminal-body.no-wrap .command {
     white-space: pre;
     overflow-wrap: normal;
     word-break: normal;
@@ -578,6 +583,16 @@ button.metric:focus-visible {
 }
 html[data-motion='reduce'] .command-pending {
     animation: none;
+}
+/* A folded answer: the first lines, then a control that names the rest. Export still
+   carries all of it, which is what the footer says. */
+.command-fold {
+    display: block;
+}
+.command-fold .link {
+    margin-block-end: 6px;
+    padding: 0;
+    font-size: 12px;
 }
 .command-response {
     margin: 2px 0 6px;

@@ -155,8 +155,13 @@ a borderless monospace field, and **Enter** to submit — there is no Run button
 Help button and no row of command chips, because `help` prints the command list into
 the transcript where a shell prints it. `Tab` completes from the server's route list,
 prints its candidates when they are ambiguous, and says so plainly when a command
-takes an argument the page cannot guess; `↑`/`↓` walk the history, `Esc` clears the
-prompt, and `Ctrl`/`⌘` + `L`/`C` clear the screen and cancel. A structured answer is
+takes an argument the page cannot guess; `↑`/`↓` walk the history, `Ctrl`/`⌘` + `R` searches it backwards from
+whatever is in the prompt (each press steps to an older match, and reaching the
+browser with it used to reload the page mid-command), `Esc` clears the prompt, and
+`Ctrl`/`⌘` + `L`/`C` clear the screen and cancel — `Ctrl`/`⌘` + `Shift` + `C` is the
+copy-selection chord and no longer cancels, which used to destroy a half-typed
+command at the same moment it copied. An answer longer than 24 lines folds, naming
+how many lines it hid, and *Export* carries all of them. A structured answer is
 printed as aligned key/value pairs rather than prettified JSON, so `status` fits on
 one screen. **More → Show** decides what the pane is about: `Answers` (the default,
 because the server log underneath is context and used to bury every answer under live
@@ -236,6 +241,9 @@ beside a preview, and attachments.
   saving a window that already contains now asks a second time. *Duplicate* opens a
   new mailing with an empty future window and warns that the original already
   reached its recipients.
+- **Proof read:** *Send a copy to me* exists in every compose mode, not just a
+  direct send: a campaign reaches every knight, so the letter can be read in the
+  client first. It uses the roster the reach count already loaded.
 - **Receipts:** a browser-local panel (localStorage, capped, clearable) keeps the
   per-recipient result of every direct send, so a batch is explainable after the
   toast is gone; the authoritative server counts live under *Inspect recipients*.

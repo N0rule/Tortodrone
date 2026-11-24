@@ -222,6 +222,28 @@ export function logStream({
         return textValue;
     }
 
+    /** How many lines of one answer are shown before it folds. */
+    const ANSWER_LINES_SHOWN = 24;
+
+    /**
+     * One answer, folded. A `help` or `players` answer can print sixty thousand
+     * characters, and a single `pre` that tall pushed the prompt's context off screen.
+     * The fold keeps the first lines and names the rest; Export still carries all of it.
+     */
+    function answerBody(entry) {
+        const formatted = formatOutput(entry.output);
+        const lines = formatted.split('\n');
+        if (lines.length <= ANSWER_LINES_SHOWN) return el('pre', formatted, 'command-response');
+        const fold = el('div', null, 'command-fold'),
+            head = el('pre', lines.slice(0, ANSWER_LINES_SHOWN).join('\n'), 'command-response');
+        const rest = lines.length - ANSWER_LINES_SHOWN,
+            more = el('button', `${rest} more ${rest === 1 ? 'line' : 'lines'} — show all`, 'link');
+        more.type = 'button';
+        more.onclick = () => fold.replaceChildren(el('pre', formatted, 'command-response'));
+        fold.append(head, more);
+        return fold;
+    }
+
     /** The scalar as a terminal prints it: booleans bare, nothing a JSON parser needs. */
     const cell = (value) => {
         if (value === null || value === undefined) return '—';
@@ -309,12 +331,13 @@ export function logStream({
         // An answer is a command's reply: the banner and the restore notice are lines
         // in the transcript, not answers, and counting them said "1 answer" for none.
         const answered = (row) => row.entry && row.entry.command && row.entry.command !== '';
-        const counted = countAnswers
-                ? allRows().filter(answered)
-                : allRows(),
+        // Only a pane showing its own answers counts answers: in `Server log` mode the
+        // rows have no entry, so the bar read "0 answers" over a full pane.
+        const countingAnswers = countAnswers && sourceMode !== 'log',
+            counted = countingAnswers ? allRows().filter(answered) : allRows(),
+            noun = countingAnswers ? countNoun : ['line', 'lines'],
             visible = counted.filter((row) => matches(row) && !cleared(row)).length,
-            total = countAnswers
-                ? allRows().filter(answered).length
+            total = countingAnswers ? counted.length
                 : retainedCount || visible,
             away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
         // A cleared screen says nothing about counts: the pill is the whole story.
@@ -322,7 +345,7 @@ export function logStream({
             barMeta,
             clearing.size
                 ? ''
-                : `${visible} ${visible === 1 ? countNoun[0] : countNoun[1]}${
+                : `${visible} ${visible === 1 ? noun[0] : noun[1]}${
                       visible !== total ? ` of ${total}` : ''
                   }${paused ? ' · paused' : ''}${paused && fresh ? ` · ${fresh} new` : ''}`
         );
@@ -427,7 +450,7 @@ export function logStream({
             // A shell prints its candidate list under the prompt without repeating the
             // prompt line; the transcript is the record of what was issued.
             line.classList.add('notice');
-            message.replaceChildren(el('pre', formatOutput(row.entry.output), 'command-response'));
+            message.replaceChildren(answerBody(row.entry));
             // A notice may name the page that explains it; without its links the
             // console's first line was the one place links were silently dropped.
             if (row.entry.links?.length && onLink) {
@@ -450,7 +473,7 @@ export function logStream({
             // A command that has not answered yet shows a running marker instead of
             // an empty response block.
             if (row.entry.pending) message.append(el('span', 'running…', 'command-pending'));
-            else message.append(el('pre', formatOutput(row.entry.output), 'command-response'));
+            else message.append(answerBody(row.entry));
         } else if (rawMode) message.textContent = row.line ?? row.message ?? '';
         else message.append(painted(row.message ?? row.line));
         if (!row.entry && rawMode) {

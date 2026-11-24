@@ -101,7 +101,7 @@ export async function mount(ctx) {
             },
             // The Console has no tail to follow and nothing to pause: advertising
             // those keys here promised behaviour this page does not have.
-            hint: 'Enter runs · Tab completes · ↑ ↓ history · Ctrl+F search · Ctrl+L clear · help lists the commands',
+            hint: 'Enter runs · Tab completes · ↑ ↓ history · Ctrl+R history search · Ctrl+F search · Ctrl+L clear · help lists the commands',
             onLink: (link) => ctx.go(link.page, link.params || {})
         }),
         feedback = el('small', listError ? 'Command list unavailable' : 'Connected');
@@ -147,7 +147,10 @@ export async function mount(ctx) {
     /** Write a line into the transcript that is not an answer to a command. */
     const notice = (message, kind = true) => {
         outputHistory.push({ time: Date.now(), command: '', output: message, notice: kind });
-        if (outputHistory.length > 50) outputHistory.shift();
+        if (outputHistory.length > 50) {
+            outputHistory.shift();
+            droppedAnswers++;
+        }
         stream.redraw();
     };
     // The transcript outlives the document: a reload mid-command keeps the echo and
@@ -222,7 +225,10 @@ export async function mount(ctx) {
         if (!pendingEcho && history.at(-1) !== value) history.push(value);
         if (history.length > 100) history.shift();
         index = history.length;
-        if (outputHistory.length > 50) outputHistory.shift();
+        if (outputHistory.length > 50) {
+            outputHistory.shift();
+            droppedAnswers++;
+        }
         persist();
         if (!paint) return;
         stream.redraw();
@@ -244,9 +250,34 @@ export async function mount(ctx) {
         stream.redraw();
     }
     let completion = { list: [], at: -1 };
+    // Reverse history search. Ctrl+R is the reflex a terminal user has, and reaching
+    // the browser with it reloads the page and loses whatever was being typed.
+    let scanning = null;
+    function reverseSearch() {
+        if (!history.length) {
+            stream.announce('No command history yet.');
+            return;
+        }
+        if (!scanning)
+            scanning = { term: command.value.trim().toLowerCase(), at: history.length };
+        for (let at = scanning.at - 1; at >= 0; at--) {
+            if (!scanning.term || history[at].toLowerCase().includes(scanning.term)) {
+                scanning.at = at;
+                command.value = commandDraft = history[at];
+                command.setSelectionRange(history[at].length, history[at].length);
+                text(feedback, `(reverse-i-search) “${scanning.term}”: ${history[at]}`);
+                return;
+            }
+        }
+        // Stay where the search stopped instead of wrapping silently: a shell says
+        // "no match", and a prompt that jumps back to the newest line is a surprise.
+        scanning.at = 0;
+        text(feedback, `(reverse-i-search) “${scanning.term}”: no older match`);
+    }
     command.oninput = () => {
         commandDraft = command.value;
         completion = { list: [], at: -1 };
+        scanning = null;
     };
     command.onkeydown = (event) => {
         if (event.ctrlKey && event.key.toLowerCase() === 'l') {
@@ -255,15 +286,27 @@ export async function mount(ctx) {
             return;
         }
         if (event.key === 'Escape') {
-            // A terminal's Esc clears the prompt it is standing on.
+            // A terminal's Esc clears the prompt it is standing on; from a reverse
+            // search it first puts back what was typed before the search started.
             event.preventDefault();
+            if (scanning) {
+                scanning = null;
+                text(feedback, 'Connected');
+            }
             command.value = commandDraft = '';
             completion = { list: [], at: -1 };
             return;
         }
-        if (event.ctrlKey && event.key.toLowerCase() === 'c') {
+        if (event.ctrlKey && event.key.toLowerCase() === 'r') {
+            event.preventDefault();
+            reverseSearch();
+            return;
+        }
+        if (event.ctrlKey && event.key.toLowerCase() === 'c' && !event.shiftKey) {
             // A selection means the operator is copying; only an empty prompt is a
-            // cancel, the way a shell's Ctrl+C works.
+            // cancel, the way a shell's Ctrl+C works. Shift is excluded because
+            // Ctrl+Shift+C is the terminal's copy-selection chord, and cancelling on it
+            // destroyed a half-typed command at the same moment it copied.
             if (command.selectionStart !== command.selectionEnd) return;
             event.preventDefault();
             if (pending) {
@@ -369,6 +412,7 @@ export async function mount(ctx) {
             );
             return;
         }
+        scanning = null;
         pending = true;
         running = value;
         busy(true);

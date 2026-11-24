@@ -922,7 +922,9 @@ function deliveredLabel(campaign) {
         // The composer states how many knights a campaign reaches, so the roster is
         // loaded before it opens instead of pointing at a count on another panel.
         if (!roster) await rosterRows().catch(() => null);
-        const rows = mode === 'direct' ? roster || [] : [];
+        // The roster is loaded for every mode (the campaign reach count needs it), so
+        // it is what a proof read picks from; only the recipient *list* is direct-only.
+        const rows = roster || [];
         if (mode === 'direct' && !rows.length) {
             // A server with no knights is the normal dev state: say so instead of
             // opening a composer that cannot send to anybody.
@@ -1187,6 +1189,55 @@ function deliveredLabel(campaign) {
             if (before) before = '';
         };
 
+        // A proof read: the operator's own knight first, so the letter can be checked in
+        // the client before it reaches anybody else. It used to be defined inside the
+        // direct block, so the mode that mails *everybody* had no way to read the letter
+        // first. `rows` is the roster in every mode.
+        const mine = rows.filter((row) => row.username === api.session?.username);
+        const pick =
+            mine.length > 1
+                ? select(
+                      'Copy to',
+                      mine.map((row, index) => [String(index), row.name]),
+                      '0'
+                  )
+                : null;
+        const myKnight = () => (pick ? mine[Number(pick.value)] || mine[0] : mine[0]);
+        const proofCopy = button(
+            'Send a copy to me',
+            async () => {
+                const knight = myKnight();
+                proofCopy.setBusy(true);
+                try {
+                    checkLetter();
+                    await write('mail-send', {
+                        ...letterValues(),
+                        username: knight.username,
+                        knight: knight.name
+                    });
+                    recordReceipt({
+                        knight: knight.name,
+                        username: knight.username,
+                        subject: strip(subject.value),
+                        ok: true
+                    });
+                    renderReceipts();
+                    toast(`A copy is in ${knight.name}’s inbox; open the client to read it.`, {
+                        type: 'success'
+                    });
+                } catch (error) {
+                    toast(error.message || 'The copy was refused.', { type: 'error' });
+                } finally {
+                    proofCopy.setBusy(false);
+                }
+            },
+            'secondary',
+            () => mine.length > 0
+        );
+        proofCopy.title = mine.length
+            ? 'Sends this exact letter to your own knight first, as a proof read in the client.'
+            : 'This account has no knight, so there is no inbox to test with. Create a knight in the game client.';
+
         if (mode === 'direct') {
             const filter = input('Filter knights');
             const target = el('div', null, 'mail-recipients');
@@ -1317,52 +1368,6 @@ function deliveredLabel(campaign) {
             };
             filter.oninput = fill;
 
-            // A proof read: the operator's own knight first, so the letter can be
-            // checked in the client before it reaches anybody else.
-            const mine = rows.filter((row) => row.username === api.session?.username);
-            const pick =
-                mine.length > 1
-                    ? select(
-                          'Copy to',
-                          mine.map((row, index) => [String(index), row.name]),
-                          '0'
-                      )
-                    : null;
-            const myKnight = () => (pick ? mine[Number(pick.value)] || mine[0] : mine[0]);
-            const copy = button(
-                'Send a copy to me',
-                async () => {
-                    const knight = myKnight();
-                    copy.setBusy(true);
-                    try {
-                        checkLetter();
-                        await write('mail-send', {
-                            ...letterValues(),
-                            username: knight.username,
-                            knight: knight.name
-                        });
-                        recordReceipt({
-                            knight: knight.name,
-                            username: knight.username,
-                            subject: strip(subject.value),
-                            ok: true
-                        });
-                        renderReceipts();
-                        toast(`A copy is in ${knight.name}’s inbox; open the client to read it.`, {
-                            type: 'success'
-                        });
-                    } catch (error) {
-                        toast(error.message || 'The copy was refused.', { type: 'error' });
-                    } finally {
-                        copy.setBusy(false);
-                    }
-                },
-                'secondary',
-                () => mine.length > 0
-            );
-            copy.title = mine.length
-                ? 'Sends this exact letter to your own knight first, as a proof read in the client.'
-                : 'This account has no knight, so there is no inbox to test with. Create a knight in the game client.';
             const recipientPanel = panel(
                 'To',
                 el(
@@ -1380,7 +1385,7 @@ function deliveredLabel(campaign) {
                 tools,
                 countLabel,
                 toolbar(
-                    copy,
+                    proofCopy,
                     ...(pick ? [pick] : []),
                     el(
                         'small',
@@ -1396,6 +1401,33 @@ function deliveredLabel(campaign) {
             fill();
             node.append(recipientPanel);
         }
+
+    if (mode !== 'direct') {
+        // The mode that reaches every knight is the one that most needs a proof read.
+        node.append(
+            panel(
+                'Proof read',
+                el(
+                    'small',
+                    mode === 'campaign'
+                        ? 'A campaign reaches every knight. Send this exact letter to your own knight first and read it in the client before arming it.'
+                        : 'The welcome letter reaches every new knight. Send yourself a copy and read it in the client before enabling it.',
+                    'muted'
+                ),
+                toolbar(
+                    proofCopy,
+                    ...(pick ? [pick] : []),
+                    el(
+                        'small',
+                        mine.length
+                            ? `Copies go to ${mine.map((row) => row.name).join(', ')}.`
+                            : 'No knight on this account, so the copy is unavailable.',
+                        'muted'
+                    )
+                )
+            )
+        );
+    }
 
     const messagePanel = panel(
             'Message',
