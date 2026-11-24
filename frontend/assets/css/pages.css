@@ -2352,17 +2352,29 @@ dd .bad {
     .terminal-status {
         padding: 1px 10px;
     }
-    /* The bar used to be dropped on a 390px-tall screen because it was only a title.
-       It holds the pane's own menu now — Copy, Export, Clear, the answers/server-log
-       switch — so hiding it left the console with no reachable action at all. It loses
-       the pulse light and the counter instead, which is what a short screen cannot
-       afford; 26px buys the rest. */
+    /* The page heading above already names the page, so a bar that only carries a title
+       is the first thing to go on a 390px-tall screen. */
     .terminal-bar {
-        block-size: 26px;
-        padding-block: 0;
+        display: none;
     }
-    .terminal-bar .terminal-led,
-    .terminal-bar .terminal-bar-meta {
+    /* The console's bar is not a title: it holds the pane's own menu - Copy, Export,
+       Clear, the answers/server-log switch - so hiding it left the page with no
+       reachable action at all. It loses the pulse light and the counter instead, and
+       takes its height from its tallest child: `26px` plus the coarse pointer's 44px
+       floor drew the menu pill half outside the bar, over the first line of output. */
+    .console-workspace .terminal-bar {
+        display: flex;
+        block-size: auto;
+        min-block-size: 26px;
+        padding-block: 0;
+        /* `flex: none`, because a bar that may shrink is a bar whose 44px menu pill is
+           drawn 9px outside it once a full pane makes the shell's children overflow:
+           the pill then crosses the top rule and covers the first line of output. The
+           body scrolls; the bar keeps the height of its tallest control. */
+        flex: none;
+    }
+    .console-workspace .terminal-bar .terminal-led,
+    .console-workspace .terminal-bar .terminal-bar-meta {
         display: none;
     }
     /* The "More" summary sat 23px taller than the buttons beside it and pushed the
@@ -2558,6 +2570,10 @@ dd .bad {
     .terminal-tools button,
     .terminal-tools select,
     .terminal-menu-toggle,
+    /* The box around the toggle, not only the toggle: it was fixed at 36px, so a 44px
+       menu button stood 4px proud of its own container and 2px outside the bar that
+       centred it. */
+    .terminal-menu,
     /* A link-styled control is a control: `button.link` sets its own 24px floor at
        (0,1,1), which outranks the bare `button` selector above, so the audit
        drill-downs and the Logs related-page buttons stayed at 24px on a phone. Prose
