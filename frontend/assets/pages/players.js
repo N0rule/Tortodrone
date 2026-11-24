@@ -68,7 +68,7 @@ export async function mount(ctx) {
                       ...(ctx.moderator
                           ? [
                                 button(
-                                    'Kick',
+                                    'Disconnect',
                                     () =>
                                         confirm(
                                             'Disconnect session ' + get().id,

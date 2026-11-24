@@ -289,6 +289,16 @@ export async function mount(ctx) {
         content.replaceChildren(
             tab === 'offers' ? offers.node : tab === 'promotions' ? promotions.node : effective.node
         );
+        const lead = tab === 'promotions' ? createPromotionButton : createOfferButton;
+        for (const control of [createOfferButton, createPromotionButton]) {
+            control.classList.toggle('primary', control === lead);
+            control.classList.toggle('secondary', control !== lead);
+        }
+        // The tab that has no create action shows neither as the page's lead.
+        if (tab === 'effective') {
+            createOfferButton.classList.replace('primary', 'secondary');
+            createPromotionButton.classList.replace('primary', 'secondary');
+        }
     }
     const tabBar = tabs(
         [
@@ -309,15 +319,11 @@ export async function mount(ctx) {
             control.tabIndex = selected ? 0 : -1;
         }
     }
-    node.append(
-        toolbar(
-            button('Create offer', () => createOffer(), 'primary'),
-            button('Schedule promotion', () => schedulePromotion(null)),
-            revision
-        ),
-        tabBar,
-        content
-    );
+    // The filled action follows the tab: on Promotions, the page's one primary must
+    // not still be the offer editor.
+    const createOfferButton = button('Create offer', () => createOffer()),
+        createPromotionButton = button('Schedule promotion', () => schedulePromotion(null));
+    node.append(toolbar(createOfferButton, createPromotionButton, revision), tabBar, content);
     paintTabs();
     show();
     /**

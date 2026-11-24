@@ -38,6 +38,9 @@ export async function mount(ctx) {
     const showDetail = (row) => {
         if (selected) selected.classList.remove('inspected');
         selected = row || null;
+        // No row, no pane: an empty inspector above the trail is the first thing an
+        // operator sees on a page that has nothing to inspect yet.
+        detail.hidden = !row;
         if (!row) {
             detail.replaceChildren(placeholder());
             return;
@@ -51,7 +54,11 @@ export async function mount(ctx) {
         const owner = ownerOf(row.action);
         if (owner)
             links.append(button(owner.label, () => ctx.go(owner.page), 'secondary'));
-        if (target.username && !target.knight)
+        // Only an account-scoped action names an account. A console command or a
+        // mail subject is a word, not a username, and must not offer a link that
+        // lands on "No such account".
+        const accountScoped = /^(account|knight|login|logout|webui-user)/.test(row.action);
+        if (target.username && !target.knight && accountScoped)
             links.append(
                 button(
                     'Open account',
@@ -172,7 +179,10 @@ export async function mount(ctx) {
         }
     );
     showDetail(null);
-    node.append(detail, table.node);
+    // The trail is the page; the inspector appears above it once a row is chosen, so
+    // the first thing an operator reads is the events, not an empty pane.
+    detail.hidden = true;
+    node.append(table.node, detail);
     async function refresh() {
         table.update(await ctx.request('audit'));
     }

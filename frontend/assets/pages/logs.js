@@ -30,10 +30,16 @@ export async function mount(ctx) {
             }
             text(stream.state, '');
             stream.state.classList.remove('error');
+            // The LED is computed while painting, so a recovering stream repaints to
+            // stop showing the failure colour it earned a moment ago.
+            if (failures === 0) stream.redraw();
         } catch (error) {
             failures++;
             text(stream.state, 'Disconnected · ' + error.message);
             stream.state.classList.add('error');
+            // Same reason, other direction: a dead stream must not keep a calm green
+            // LED, so repaint the status and the LED with the error in place.
+            stream.redraw();
             throw error;
         }
     }

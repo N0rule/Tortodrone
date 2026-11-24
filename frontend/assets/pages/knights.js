@@ -84,6 +84,14 @@ export async function mount(ctx) {
             caption: 'Knights',
             exportName: 'knights',
             selectable: true,
+            // The dev and first-run state is "no knights yet", so it has to explain
+            // itself and offer the page that does have an action.
+            empty: {
+                title: 'No knights exist yet',
+                hint: 'Knights are created in the game client: connect to this server, make a character, and it appears here on the next refresh.',
+                action: { label: 'Open accounts', run: () => ctx.go('accounts') },
+                icon: 'knights'
+            },
             bulkActions: (selected) => [
                 button(
                     'Copy names',
@@ -428,8 +436,13 @@ export async function mount(ctx) {
                                     ? 'trinket'
                                     : 'costume')
                 );
-                emptyIcon.classList.add('slot-icon');
-                slot.replaceChildren(item ? icon(item.config, def?.rarity) : emptyIcon, info);
+                // An empty slot only shows client art; with none available it is a
+                // labelled outline rather than a drawn placeholder.
+                if (emptyIcon) emptyIcon.classList.add('slot-icon');
+                slot.replaceChildren(
+                    item ? icon(item.config, def?.rarity) : emptyIcon || el('span'),
+                    info
+                );
                 slot.dataset.slot = index;
                 slot.disabled = !item && !view.unlockedSlots.includes(index);
                 return slot;
@@ -767,7 +780,45 @@ export async function mount(ctx) {
                 return;
             }
         }
-        const result = await ctx.request('knight-view', { username, knight });
+        let result;
+        try {
+            result = await ctx.request('knight-view', { username, knight });
+        } catch (error) {
+            if (id !== requestId) return;
+            if (error?.status !== 404) throw error;
+            // A stale or mistyped link names a knight that is gone; the roster is
+            // still the useful page, so the miss renders beside it instead of
+            // replacing it.
+            view = null;
+            selectedKey = '';
+            list.hidden = false;
+            profileHost.hidden = false;
+            profileHost.replaceChildren(
+                panel(
+                    'No such knight',
+                    el(
+                        'p',
+                        `There is no knight named “${knight}” on account “${username}”. It may have been deleted, renamed, or the link may be stale.`,
+                        'muted'
+                    ),
+                    toolbar(
+                        button(
+                            'Back to all knights',
+                            () => ctx.go('knights'),
+                            'secondary'
+                        ),
+                        button(
+                            'Open this account',
+                            () => ctx.go('accounts', { username }),
+                            'secondary'
+                        )
+                    )
+                )
+            );
+            const rows = await ctx.request('knights-all').catch(() => []);
+            if (id === requestId) roster.update(rows);
+            return;
+        }
         if (id !== requestId) return;
         const switched = selectedKey !== key;
         view = result;

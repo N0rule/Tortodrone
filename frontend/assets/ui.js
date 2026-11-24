@@ -18,7 +18,7 @@ function guessIcon(label) {
     if (/^(Add|Grant|New)\b/.test(label)) return 'add';
     if (/^(Save|Equip)\b/.test(label)) return 'save';
     if (/^(Remove|Unequip|Delete|Revoke)\b/.test(label)) return 'remove';
-    if (/^(Inspect|View|Details|Review)\b/.test(label)) return 'search';
+    if (/^(Inspect|View|Details|Review)\b/.test(label)) return 'details';
     return null;
 }
 /* A disabled control explains itself, out loud and on screen. The reason rides on
@@ -73,7 +73,9 @@ export function button(label, action, className = 'secondary', available, option
     const node = el('button', label, className);
     node.type = 'button';
     const icon = settings.icon === undefined ? guessIcon(label) : settings.icon;
-    if (icon) node.prepend(symbol(icon));
+    // No client art for this job means no icon, never a drawn stand-in.
+    const art = icon ? symbol(icon) : null;
+    if (art) node.prepend(art);
     if (available) {
         // `available` answers true when the action may run. A string answer means
         // "no, because …", and an explicit reason overrides it. `unavailable`
@@ -304,7 +306,8 @@ export function tabs(options, value, onChange) {
     }
     for (const [id, title] of options) {
         const b = button(title, () => choose(id));
-        b.prepend(symbol(id));
+        const art = symbol(id);
+        if (art) b.prepend(art);
         b.dataset.tab = id;
         b.setAttribute('role', 'tab');
         b.setAttribute('aria-selected', id === value);
@@ -339,7 +342,8 @@ export function paintShell() {
         ['#close-navigation', 'close']
     ]) {
         const node = $(selector);
-        if (node && !node.querySelector('.ui-icon')) node.prepend(symbol(name));
+        const art = node && !node.querySelector('.ui-icon') ? symbol(name) : null;
+        if (art) node.prepend(art);
     }
     syncAppearances();
 }
@@ -351,11 +355,16 @@ const appearances = [
     ['#theme', 'theme', 'light'],
     ['#density', 'density', 'compact']
 ];
+// These two are switches, not toggles: the label names the setting ("Light theme")
+// and `aria-checked` says whether it is on, so the button can never display the
+// opposite of its own state.
 function syncAppearances() {
     for (const [selector, key, on] of appearances) {
         const node = $(selector);
-        if (node)
-            node.setAttribute('aria-pressed', String(document.documentElement.dataset[key] === on));
+        if (node) {
+            node.setAttribute('role', 'switch');
+            node.setAttribute('aria-checked', String(document.documentElement.dataset[key] === on));
+        }
     }
 }
 // The regression programs import this module in Node for its pure helpers, so

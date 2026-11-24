@@ -66,14 +66,19 @@ const displaySender = (value) =>
     strip(value.senderLabel) ? strip(value.senderLabel) : senderName(value.sender);
 const units = (gifts) => gifts.reduce((total, gift) => total + Number(gift.count || 0), 0);
 const unitCount = (value) => `${value} unit${value === 1 ? '' : 's'}`;
-// A delivery window is a moment, and the input side is a datetime-local: showing a
-// bare date on read-back hid the hour the operator had just picked.
-const moment = (value) =>
-    Number.isFinite(value)
-        ? new Date(value).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
-        : 'an unchosen time';
+// One formatter for the page: the app's own `date()` (24-hour, four-digit year),
+// so a window never reads 11/20/86 next to a stored row that reads 24/11/2026. A
+// value nobody picked yet says so instead of rendering "Invalid Date".
+const moment = (value) => (Number.isFinite(value) ? date(value) : 'an unchosen time');
 const sentTime = (value) => moment(value);
 const countOf = (value, noun) => `${Number(value).toLocaleString()} ${noun}${value === 1 ? '' : 's'}`;
+/** A cell that names an entity links to the page that owns it. */
+const entityLink = (label, open) => {
+    const node = el('button', label, 'link');
+    node.type = 'button';
+    node.onclick = open;
+    return node;
+};
 
 function loadReceipts() {
     try {
@@ -99,7 +104,12 @@ function saveReceipts(rows) {
  */
 function normalized(error) {
     const message = strip(error?.message);
-    if (error?.status !== 409) return error;
+    // A dead server must not reach the operator as "Failed to fetch".
+    if (!error?.status)
+        return new Error(
+            'The server did not answer, so nothing was sent. Check the connection, then use Resume or save again.'
+        );
+    if (error.status !== 409) return error;
     // Only the sentences that say the record moved earn reload advice, and it is
     // spelled out here instead of letting every 409 read as a revision race.
     if (!/changed|reopen|cancel/i.test(message))
@@ -344,12 +354,25 @@ export async function mount(ctx) {
             [
                 [
                     'Knight',
-                    (row) => row.knight || el('span', 'deleted knight', 'muted'),
+                    (row) =>
+                        row.knight
+                            ? entityLink(row.knight, () =>
+                                  ctx.go('knights', {
+                                      username: row.username || '',
+                                      knight: row.knight
+                                  })
+                              )
+                            : el('span', 'deleted knight', 'muted'),
                     (row) => row.knight || ''
                 ],
                 [
                     'Account',
-                    (row) => row.username || el('span', 'unknown account', 'muted'),
+                    (row) =>
+                        row.username
+                            ? entityLink(row.username, () =>
+                                  ctx.go('accounts', { username: row.username })
+                              )
+                            : el('span', 'unknown account', 'muted'),
                     (row) => row.username || ''
                 ],
                 ['Sent', (row) => sentTime(row.sent), (row) => row.sent],
@@ -519,7 +542,8 @@ export async function mount(ctx) {
                     'Edit',
                     () => compose('campaign', get()),
                     'secondary',
-                    () => get().enabled
+                    () => get().enabled,
+                    { unavailable: 'Cancelled mailings cannot be edited. Duplicate it to send it again.' }
                 ),
                 button('Inspect recipients', () => openDeliveries(get()), 'secondary'),
                 button('Duplicate', () => duplicate(get()), 'secondary'),
@@ -534,7 +558,8 @@ export async function mount(ctx) {
                             'Knights who already received this mailing keep it. No further deliveries will be made.'
                         ),
                     'secondary',
-                    () => get().enabled
+                    () => get().enabled,
+                    { unavailable: 'This mailing is already cancelled.' }
                 )
             ],
             filters: [
@@ -665,8 +690,27 @@ export async function mount(ctx) {
         else {
             const table = new DataTable(
                 [
-                    ['Knight', (row) => row.knight],
-                    ['Account', (row) => row.username],
+                    [
+                        'Knight',
+                        (row) =>
+                            row.knight
+                                ? entityLink(row.knight, () =>
+                                      ctx.go('knights', {
+                                          username: row.username || '',
+                                          knight: row.knight
+                                      })
+                                  )
+                                : el('span', 'deleted knight', 'muted')
+                    ],
+                    [
+                        'Account',
+                        (row) =>
+                            row.username
+                                ? entityLink(row.username, () =>
+                                      ctx.go('accounts', { username: row.username })
+                                  )
+                                : el('span', 'unknown account', 'muted')
+                    ],
                     ['Subject', (row) => row.subject],
                     ['Sent', (row) => date(row.at), (row) => row.at],
                     [
@@ -738,12 +782,25 @@ export async function mount(ctx) {
             [
                 [
                     'Knight',
-                    (row) => row.knight || el('span', 'deleted knight', 'muted'),
+                    (row) =>
+                        row.knight
+                            ? entityLink(row.knight, () =>
+                                  ctx.go('knights', {
+                                      username: row.username || '',
+                                      knight: row.knight
+                                  })
+                              )
+                            : el('span', 'deleted knight', 'muted'),
                     (row) => row.knight || ''
                 ],
                 [
                     'Account',
-                    (row) => row.username || el('span', 'unknown account', 'muted'),
+                    (row) =>
+                        row.username
+                            ? entityLink(row.username, () =>
+                                  ctx.go('accounts', { username: row.username })
+                              )
+                            : el('span', 'unknown account', 'muted'),
                     (row) => row.username || ''
                 ],
                 ['Sent', (row) => sentTime(row.sent), (row) => row.sent]
@@ -806,7 +863,10 @@ export async function mount(ctx) {
 
     async function compose(mode, record = null, options = {}) {
         if (mode === 'direct') roster = null;
-        const rows = mode === 'direct' ? await rosterRows() : [];
+        // The composer states how many knights a campaign reaches, so the roster is
+        // loaded before it opens instead of pointing at a count on another panel.
+        if (!roster) await rosterRows().catch(() => null);
+        const rows = mode === 'direct' ? roster || [] : [];
         if (mode === 'direct' && !rows.length) {
             // A server with no knights is the normal dev state: say so instead of
             // opening a composer that cannot send to anybody.
@@ -1255,8 +1315,11 @@ export async function mount(ctx) {
                     end = new Date(ends.value).getTime();
                 notes.push(
                     (population() === null
-                        ? 'Knight count unknown; use Count knights on the page.'
-                        : `${countOf(population(), 'knight')} on this server receive it once.`) +
+                        ? 'Reaches every knight on this server once, including knights created later; the count is loading.'
+                        : `Reaches every knight on this server once, including knights created later (${countOf(
+                              population(),
+                              'knight'
+                          )} exist right now).`) +
                         ` Window ${sentTime(start)} → ${sentTime(end)} (${zone}).`
                 );
             } else if (mode === 'welcome')
@@ -1631,6 +1694,14 @@ export async function mount(ctx) {
     );
     mailings.classList.add('stack');
     node.append(summary, mailings, receiptsHost);
+    // The page's three parts are linkable, so a colleague can be sent straight to
+    // the section that answers their question.
+    const tab = ctx.params.get('tab');
+    if (tab === 'welcome') {
+        welcomeDetails.open = true;
+        welcomeDetails.scrollIntoView({ block: 'start' });
+    } else if (tab === 'receipts') receiptsHost.scrollIntoView({ block: 'start' });
+    else if (tab === 'mailings') mailings.scrollIntoView({ block: 'start' });
     return {
         node,
         interval: 30000,

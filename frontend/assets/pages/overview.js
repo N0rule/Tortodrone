@@ -10,10 +10,11 @@ import {
     facts,
     date,
     copy,
-    download
+    download,
+    number
 } from '../ui.js';
 import { chart } from '../components/chart.js';
-import { confirm, field } from '../components/dialog.js';
+import { confirm, field, openDialog } from '../components/dialog.js';
 import { DataTable } from '../components/table.js';
 
 export async function mount(ctx) {
@@ -141,7 +142,39 @@ export async function mount(ctx) {
     ]);
     const charts = el('div', null, 'two-columns');
     charts.append(cpu.node, memory.node, population.node, activity.node);
-    const diagnostics = details('Database operations and runtime details', {});
+    // The fourth metric tile leads here, so it reads like the rest of the page: a
+    // ledger of named figures, with the raw payload kept one disclosure deeper.
+    const diagnosticsBody = el('div', null, 'stack'),
+        diagnosticsFacts = facts([]);
+    let diagnosticsSignature = '';
+    const diagnosticsRaw = el('div');
+    const diagnostics = el('details', null, 'stack-tight');
+    diagnostics.append(
+        el('summary', 'Database operations and runtime details'),
+        diagnosticsBody
+    );
+    diagnosticsBody.append(diagnosticsFacts);
+    function renderDiagnostics(database) {
+        const signature = JSON.stringify(database);
+        if (signature === diagnosticsSignature) return;
+        diagnosticsSignature = signature;
+        const operations = database?.operations ?? 0,
+            slow = database?.slowOperations ?? 0,
+            worst = database?.maximumMillis ?? 0,
+            rollbacks = database?.rollbacks ?? 0,
+            failures = database?.failures ?? 0;
+        const cells = [
+            ['Operations recorded', number(operations)],
+            ['Slowest statement', worst ? `${number(Math.round(worst))} ms` : '—'],
+            ['Slow statements', number(slow)],
+            ['Rolled back', number(rollbacks)],
+            ['Failures', number(failures)]
+        ];
+        diagnosticsFacts.replaceChildren(
+            ...cells.flatMap(([key, value]) => [el('dt', key), el('dd', value)])
+        );
+        diagnosticsRaw.replaceChildren(details('Raw runtime payload', database ?? {}));
+    }
     // The handshake identity is the one thing an operator otherwise has to SSH in
     // for; it sits on the page they land on.
     const identityFingerprint = el('code', null, 'identity-fingerprint'),
@@ -151,8 +184,7 @@ export async function mount(ctx) {
         identityActions = toolbar();
     identityKey.readOnly = true;
     identityKey.spellcheck = false;
-    identityKey.hidden = true;
-    identityKey.rows = 6;
+    identityKey.rows = 5;
     identityKey.setAttribute('aria-label', 'Server public key, modulus and exponent');
     identityWarning.hidden = true;
     const identityBits = el('span'),
@@ -169,33 +201,25 @@ export async function mount(ctx) {
         ['Signing key', identityPair],
         ['Recorded in', 'data/keys/public.txt']
     ]);
+    // The key itself is the point of the panel, so it is on the page, not behind a
+    // toggle; the derived facts collapse underneath it.
+    const identityDetails = el('details', null, 'identity-details');
+    identityDetails.append(el('summary', 'Key details'), identityFacts);
+    const IDENTITY_NOTE =
+        "The public half only. Paste it into the client's Add Server dialog, in the Public key field (game.publicKey), on every machine that plays here. The private key never leaves the server.";
+    text(identityNote, IDENTITY_NOTE);
     const identityPanel = panel(
         'Server identity',
         identityNote,
-        identityFacts,
+        identityKey,
         identityActions,
         identityWarning,
-        identityKey
+        identityDetails
     );
     // Handlers read the current key at click time, so a rotated key is the one an
     // operator copies; the panels are built once and never hold stale values.
     let identityLoaded = false,
         identityCurrent = null;
-    const toggleKey = button(
-        'Show full key',
-        () => {
-            identityKey.hidden = !identityKey.hidden;
-            toggleKey.textContent = identityKey.hidden ? 'Show full key' : 'Hide full key';
-            toggleKey.setAttribute('aria-expanded', String(!identityKey.hidden));
-            if (!identityKey.hidden) {
-                // Revealed on demand, so select it in one gesture to copy by hand.
-                identityKey.focus();
-                identityKey.select();
-            }
-        },
-        'secondary'
-    );
-    toggleKey.setAttribute('aria-expanded', 'false');
     const monsters = new DataTable(
         [
             [
@@ -211,18 +235,7 @@ export async function mount(ctx) {
             ['Players', (r) => r.players],
             ['Live', (r) => r.monsters.total],
             ['Awake', (r) => r.monsters.awake],
-            ['Engaged', (r) => r.monsters.engaged],
-            ['Spawned', (r) => r.monsters.spawned],
-            ['Despawned', (r) => r.monsters.despawned],
-            ['Path searches', (r) => r.monsters.pathSearches],
-            ['Queued', (r) => r.monsters.pathQueued],
-            ['Dropped', (r) => r.monsters.pathDropped],
-            ['Path failures', (r) => r.monsters.pathFailures],
-            [
-                'Tick p99',
-                (r) => r.monsters.tickP99Millis.toFixed(2),
-                (r) => r.monsters.tickP99Millis
-            ]
+            ['Engaged', (r) => r.monsters.engaged]
         ],
         {
             key: (r) => `${r.templateId}:${r.instanceId}`,
@@ -233,7 +246,36 @@ export async function mount(ctx) {
             // A scene name in the URL pre-filters the runtime table, so the
             // Players page can link straight to one scene here.
             initialQuery: ctx.params.get('scene') || '',
+            // The six columns answer "what is in this scene"; the path and tick
+            // internals answer "why is it slow", which is a per-scene question.
             actions: (get) => [
+                button(
+                    'Details',
+                    () => {
+                        const m = get().monsters;
+                        openDialog({
+                            title: 'Scene runtime · ' + get().name,
+                            content: facts([
+                                ['State', get().state],
+                                ['Players', number(get().players)],
+                                ['Live monsters', number(m.total)],
+                                ['Awake', number(m.awake)],
+                                ['Engaged', number(m.engaged)],
+                                ['Spawned', number(m.spawned)],
+                                ['Despawned', number(m.despawned)],
+                                ['Path searches', number(m.pathSearches)],
+                                ['Path queue', number(m.pathQueued)],
+                                ['Dropped', number(m.pathDropped)],
+                                ['Path failures', number(m.pathFailures)],
+                                ['Tick p99', m.tickP99Millis.toFixed(2) + ' ms']
+                            ]),
+                            submit: 'Close',
+                            notifySaved: false,
+                            onSubmit: async () => {}
+                        });
+                    },
+                    'secondary'
+                ),
                 button(
                     'Players here',
                     () => ctx.go('players', { scene: get().name }),
@@ -277,6 +319,13 @@ export async function mount(ctx) {
     let diagnosticSignature;
     const currentKey = () =>
         identityCurrent ? `${identityCurrent.modulus}#${identityCurrent.exponent}` : '';
+    // The value a client must trust: the file's key, or the one the private half
+    // implies when the two disagree. Copy, download and the field all use it, so a
+    // mismatch can never hand out two different keys.
+    const trustedKey = () =>
+        identityCurrent?.pairMatches === false && identityCurrent?.expectedPublicKey
+            ? identityCurrent.expectedPublicKey
+            : currentKey();
     async function renderIdentity(identity) {
         if (!identity.available) {
             // A degraded panel still tells the operator what exists on disk: "no
@@ -293,9 +342,6 @@ export async function mount(ctx) {
             text(identityModified, '—');
             text(identityPair, identity.keyStored ? 'unknown' : 'absent');
             identityKey.value = '';
-            identityKey.hidden = true;
-            toggleKey.textContent = 'Show full key';
-            toggleKey.setAttribute('aria-expanded', 'false');
             identityWarning.hidden = false;
             identityWarning.textContent = identity.keyStored
                 ? 'A signing key is stored but its public half could not be read. Nothing here is served to clients until data/keys/public.txt is fixed.'
@@ -337,35 +383,30 @@ export async function mount(ctx) {
                   identity.expectedPublicKey
                       ? ` The key the private half implies is ${identity.expectedPublicKey.slice(0, 24)}… — copy that one instead.`
                       : ''
-              } Stop the server, restore the matching public.txt from backup (or delete data/keys and let the next start create a fresh pair), then start it again.`
+              } Stop the server and restore the matching public.txt from your backup, then start it again. Deleting data/keys lets the next start create a fresh pair, but every client pinned to the old key — including the one you are about to set up — must be re-keyed.`
             : '';
         identityCurrent = identity;
-        const keyText = `${identity.modulus}#${identity.exponent}`;
+        text(identityNote, IDENTITY_NOTE);
         // A five-second poll must not eat a selection the operator is copying:
         // only rewrite the field when it is not focused and the value changed.
-        if (!identityKey.hidden && document.activeElement !== identityKey && identityKey.value !== keyText)
-            identityKey.value = keyText;
-        else if (identityKey.hidden && identityKey.value !== keyText) identityKey.value = keyText;
+        const shown = trustedKey();
+        if (document.activeElement !== identityKey && identityKey.value !== shown)
+            identityKey.value = shown;
         if (!identityLoaded) {
             identityLoaded = true;
             identityActions.append(
                 button(
                     'Copy public key',
-                    () =>
-                        copy(
-                            identityCurrent?.pairMatches === false && identityCurrent?.expectedPublicKey
-                                ? identityCurrent.expectedPublicKey
-                                : currentKey(),
-                            'Server public key copied.'
-                        ),
-                    'secondary'
+                    () => copy(trustedKey(), 'Server public key copied.'),
+                    'primary'
                 ),
                 button(
                     'Download public.txt',
-                    () => download('public.txt', currentKey() + '\n'),
+                    // Byte-for-byte what the panel hashes: no trailing newline, so
+                    // `sha256sum` on the download matches the SHA-256 above.
+                    () => download('public.txt', trustedKey()),
                     'secondary'
                 ),
-                toggleKey,
                 button(
                     'Copy fingerprint',
                     () => copy(identityCurrent?.fingerprint ?? '', 'Fingerprint copied.'),
@@ -426,11 +467,16 @@ export async function mount(ctx) {
         warnings.update(
             (logs.events || logs).filter((r) => ['WARN', 'ERROR'].includes(r.level)).reverse()
         );
-        const signature = JSON.stringify(s.database);
+        // Named figures first, the JSON payload one disclosure deeper, and no
+        // rewrite of the DOM when nothing changed.
+        renderDiagnostics(s.database);
+        if (diagnosticsRaw.childElementCount === 0) {
+            diagnosticsBody.append(diagnosticsRaw);
+        }
+        const signature = JSON.stringify({ database: s.database, runtime: s.metrics });
         if (signature !== diagnosticSignature) {
-            text(
-                diagnostics.querySelector('pre'),
-                JSON.stringify({ database: s.database, runtime: s.metrics }, null, 2)
+            diagnosticsRaw.replaceChildren(
+                details('Raw runtime payload', { database: s.database, runtime: s.metrics })
             );
             diagnosticSignature = signature;
         }

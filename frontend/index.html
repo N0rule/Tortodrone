@@ -109,10 +109,11 @@
                             >Connecting</span
                         ><button
                             id="shortcuts"
-                            class="quiet"
+                            class="quiet sm"
                             aria-label="Keyboard shortcuts"
                             aria-keyshortcuts="?"
-                        ></button
+                        >
+                            Shortcuts</button
                         ><time id="clock"></time
                     ></span>
                 </header>
@@ -125,10 +126,10 @@
                         </div>
                         <button
                             id="refresh"
-                            class="quiet icon sm"
-                            aria-label="Refresh page data"
+                            class="quiet sm"
                             title="Reload this page (R)"
-                        ></button>
+                        >
+                            Refresh</button>
                     </div>
                     <div id="notice" role="status" aria-live="polite" hidden></div>
                     <div id="page-status" class="visually-hidden" role="status" aria-live="polite"></div>
@@ -140,12 +141,7 @@
             <form id="editor">
                 <div class="dialog-heading">
                     <h2 id="dialog-title"></h2>
-                    <button
-                        type="button"
-                        id="close-dialog"
-                        class="quiet icon"
-                        aria-label="Close dialog"
-                    ></button>
+                    <button type="button" id="close-dialog" class="quiet sm">Close</button>
                 </div>
                 <div id="dialog-description"></div>
                 <div id="dialog-conflict" role="alert" class="warning" hidden></div>

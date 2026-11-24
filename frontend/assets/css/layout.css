@@ -347,19 +347,17 @@ main {
     white-space: nowrap;
 }
 /* A 34px target with 16px art: comfortable to hit, quiet on the bar. */
+/* A word, not a glyph: the client pack has no keyboard or magnifier art, and the
+   rule is that nothing else is drawn. */
 #shortcuts {
-    display: inline-grid;
-    place-items: center;
-    inline-size: var(--control-sm);
-    block-size: var(--control-sm);
-    padding: 0;
     color: var(--muted);
-    border: 1px solid var(--line-bright);
     border-radius: var(--radius-pill);
+    font-weight: 500;
 }
-#shortcuts .ui-icon {
-    inline-size: 16px;
-    block-size: 16px;
+@media (max-width: 760px) {
+    #shortcuts {
+        display: none;
+    }
 }
 .search-trigger {
     display: flex;
@@ -375,15 +373,11 @@ main {
     box-shadow: none;
     font-weight: 400;
     text-align: left;
+    min-block-size: var(--control);
 }
 .search-trigger:not(:disabled):hover {
     color: var(--text);
     border-color: var(--cyan);
-}
-.search-trigger .ui-icon {
-    flex: 0 0 18px;
-    width: 18px;
-    height: 18px;
 }
 .search-trigger span {
     flex: 1;

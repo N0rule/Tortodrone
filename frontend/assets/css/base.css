@@ -240,9 +240,12 @@ button.link:disabled,
     color: var(--muted);
     text-decoration: none;
 }
-/* A toggled control (Tail, Pause, density) reads as pressed, not hovered. */
+/* A toggled control (Tail, Pause) and a switch (theme, density) read as pressed,
+   not hovered: both say "this is on", so both use the same fill. */
 button[aria-pressed='true'],
-.button[aria-pressed='true'] {
+.button[aria-pressed='true'],
+button[aria-checked='true'],
+.button[aria-checked='true'] {
     background: color-mix(in srgb, var(--cyan) 18%, var(--raised));
     border-color: var(--cyan);
     color: var(--text);
@@ -250,7 +253,9 @@ button[aria-pressed='true'],
 /* Hover deepens the pressed fill instead of replacing it, so a pressed control
    never flickers back to looking unpressed. */
 button[aria-pressed='true']:not(:disabled):hover,
-.button[aria-pressed='true']:not(:disabled):hover {
+.button[aria-pressed='true']:not(:disabled):hover,
+button[aria-checked='true']:not(:disabled):hover,
+.button[aria-checked='true']:not(:disabled):hover {
     background: color-mix(in srgb, var(--cyan) 26%, var(--raised));
     border-color: var(--cyan);
     color: var(--text);

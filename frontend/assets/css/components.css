@@ -319,7 +319,7 @@ dialog {
     box-shadow: var(--shadow);
 }
 dialog::backdrop {
-    background: #020c16bd;
+    background: var(--scrim);
     backdrop-filter: blur(3px);
 }
 .dialog-heading,
@@ -332,11 +332,21 @@ dialog::backdrop {
 .dialog-heading h2 {
     margin: 0;
 }
+/* The footer of a tall editor stays in reach: a long letter, a big gift list or a
+   roster of two hundred knights must not hide the button that saves them. */
 .dialog-actions {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 1;
     justify-content: flex-end;
-    border-top: 1px solid var(--line);
-    padding-top: 18px;
+    padding: 14px 0 4px;
     margin-top: 20px;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+}
+#dialog {
+    max-block-size: 90dvh;
+    overflow: auto;
 }
 #fields {
     display: grid;
@@ -432,7 +442,8 @@ img.ui-icon {
 }
 
 #navigation .ui-icon {
-    color: var(--cyan);
+    /* Neutral ink: a column of cyan silhouettes makes "current" invisible. */
+    color: var(--muted);
 }
 #navigation [aria-current='page'] .ui-icon {
     color: var(--gold);
@@ -559,12 +570,7 @@ caption {
     border: 2px solid var(--line-bright);
     border-top-color: var(--cyan);
     border-radius: 50%;
-    animation: spin 0.9s linear infinite;
-}
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    animation: control-spin 700ms linear infinite;
 }
 
 /* Empty and error states always offer a next step instead of a dead end. */
@@ -657,17 +663,12 @@ caption {
     color: var(--muted);
     font-size: 12.5px;
 }
-/* A dismiss control keeps a 34px target while its art stays 16px. */
+/* A dismiss control says "Dismiss": the shell has no client close glyph. */
 .toast-dismiss {
     align-self: start;
-    min-inline-size: var(--control-sm);
-    min-block-size: var(--control-sm);
-    padding: 0;
+    padding-inline: 8px;
     border-radius: var(--radius-control);
-}
-.toast-dismiss .ui-icon {
-    inline-size: 16px;
-    block-size: 16px;
+    color: var(--muted);
 }
 .toast-action {
     justify-self: start;
@@ -716,7 +717,7 @@ caption {
     border-radius: var(--radius);
 }
 .palette::backdrop {
-    background: #020c16c4;
+    background: var(--scrim);
 }
 .palette-field {
     display: flex;
@@ -987,13 +988,36 @@ caption {
     overflow-wrap: anywhere;
     user-select: all;
 }
+/* The key is the reason the panel exists: mono, always visible, one gesture from
+   selected, and wrapped so a 518-character value never scrolls sideways. */
 .identity-key {
-    width: 100%;
-    min-height: 64px;
-    margin-top: 10px;
+    inline-size: 100%;
+    min-block-size: 84px;
+    margin: 0 0 10px;
     padding: 10px 12px;
+    background: var(--inset);
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius-control);
     font-family: var(--mono);
     font-size: 12.5px;
     line-height: 1.6;
+    overflow-wrap: anywhere;
     resize: vertical;
+}
+.identity-key[hidden] {
+    display: none;
+}
+/* Derived facts are reference material, not the headline: one row until asked. */
+.identity-details {
+    margin-top: 12px;
+    border-top: 1px solid var(--line);
+    padding-top: 8px;
+}
+.identity-details > summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12.5px;
+}
+.identity-details > summary:hover {
+    color: var(--text);
 }

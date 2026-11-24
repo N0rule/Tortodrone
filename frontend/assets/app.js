@@ -182,7 +182,7 @@ function clock() {
     const now = new Date();
     text(
         $('#clock'),
-        prefs.read('clock') === '12-hour'
+        prefs.read('clock') === 'date-time'
             ? now.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
             : calendarDate(now)
     );
@@ -273,21 +273,23 @@ async function navigate() {
     const next = route(),
         spec = pageFor(next.name);
     if (!spec) {
-        // A denied link is not an empty click: say which role the page needs.
+        // A denied link is not an empty click: say which role the page needs. The
+        // redirect to Overview hides the page notice, so the sentence travels as a
+        // toast, which navigation does not clear.
         const denied = pages.find((page) => page.name === next.name);
         const needs = ['a viewer', 'a moderator', 'an administrator'][denied?.rank ?? 2];
-        notify(
+        toast(
             denied
                 ? `You do not have access to ${denied.title}. It needs ${needs} role.`
-                : 'That page does not exist.',
-            true
+                : `There is no page called “${next.name}”.`,
+            { type: 'error', detail: denied ? '' : 'Overview is shown instead.' }
         );
         go('overview');
         return;
     }
     if (
         current &&
-        next.name !== current &&
+        spec.name !== current &&
         controller?.isDirty?.() &&
         !window.confirm('Discard the unsaved changes on this page?')
     ) {
@@ -303,14 +305,16 @@ async function navigate() {
     menu(false);
     if (fromMenu) $('#main').focus();
     for (const a of $('#navigation').querySelectorAll('a'))
-        a.setAttribute('aria-current', a.dataset.page === next.name ? 'page' : 'false');
+        // The nav names the page, not the spelling in the address: `#access` still
+        // highlights WebUI Access.
+        a.setAttribute('aria-current', a.dataset.page === spec.name ? 'page' : 'false');
     text($('#title'), spec.title);
     text($('#page-section'), spec.section);
     text($('#page-description'), spec.description ?? '');
     document.title = spec.title + ' · Tortodrone';
     $('#page').setAttribute('aria-label', spec.title);
     announce(spec.title + ' page');
-    if (current === next.name && controller) {
+    if (current === spec.name && controller) {
         if (controller.navigate) {
             try {
                 await controller.navigate(next.params);
@@ -328,7 +332,7 @@ async function navigate() {
     refreshJob = null;
     controller?.dispose?.();
     controller = null;
-    current = next.name;
+    current = spec.name;
     clearTimeout(timer);
     const placeholder = skeleton({ rows: 5, columns: 4, label: 'Loading ' + spec.title });
     // `loading` keeps the documented acceptance contract that waits for the
@@ -453,7 +457,9 @@ $('#login-form').onsubmit = async (event) => {
     event.preventDefault();
     const form = event.currentTarget,
         submit = form.querySelector('button');
+    // A greyed-out "Sign in" reads as broken; the spinner says it is working.
     submit.disabled = true;
+    submit.setAttribute('aria-busy', 'true');
     text($('#login-error'), '');
     try {
         if (setupRequired) {
@@ -472,6 +478,7 @@ $('#login-form').onsubmit = async (event) => {
         text($('#login-error'), error.message);
     } finally {
         submit.disabled = false;
+        submit.removeAttribute('aria-busy');
     }
 };
 
@@ -487,7 +494,6 @@ $('#logout').onclick = async () => {
     }
 };
 
-$('#refresh').prepend(uiSymbol('refresh'));
 $('#refresh').onclick = refresh;
 $('#menu').onclick = () => {
     menu(!$('#shell').classList.contains('menu-open'));
@@ -520,20 +526,21 @@ $('.skip').onclick = (event) => {
     $('#main').focus();
 };
 
-/* Appearance shortcuts stay in the shell footer; preferences own the values. */
-for (const [key, values, labels] of [
-    ['theme', ['dark', 'light'], ['Light theme', 'Dark theme']],
-    ['density', ['comfortable', 'compact'], ['Compact view', 'Comfortable view']]
-]) {
-    $('#' + key).onclick = () => {
-        const value = values.find((v) => v !== prefs.read(key));
-        prefs.write(key, value);
-        text($('#' + key), labels[values.indexOf(prefs.read(key))]);
-    };
-}
+/* Appearance shortcuts stay in the shell footer; preferences own the values. The
+   label names the setting and the switch reports whether it is on. */
+const APPEARANCE = [
+    ['theme', 'dark', 'light'],
+    ['density', 'comfortable', 'compact']
+];
 function preferences() {
-    text($('#theme'), prefs.read('theme') === 'dark' ? 'Light theme' : 'Dark theme');
-    text($('#density'), prefs.read('density') === 'comfortable' ? 'Compact view' : 'Comfortable view');
+    for (const [key] of APPEARANCE) {
+        const node = $('#' + key);
+        if (node)
+            node.title = key === 'theme' ? 'Switch the light theme' : 'Switch compact density';
+    }
+}
+for (const [key, off, on] of APPEARANCE) {
+    $('#' + key).onclick = () => prefs.write(key, prefs.read(key) === on ? off : on);
 }
 prefs.subscribe(() => preferences());
 
@@ -638,7 +645,6 @@ function showShortcuts() {
     const dialog = $('#shortcut-dialog');
     if (!dialog.open) dialog.showModal();
 }
-$('#search').prepend(uiSymbol('search'));
 $('#search').onclick = (event) => palette.open('', { trigger: event.currentTarget });
 $('#shortcuts').onclick = () => showShortcuts();
 $('#shortcuts-close').onclick = () => $('#shortcut-dialog').close();

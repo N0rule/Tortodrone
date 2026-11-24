@@ -29,7 +29,7 @@ export async function mount(ctx) {
     const createAccount = () =>
         edit('Create game account', 'account-create', [
             field('username', 'Username'),
-            field('password', 'Password', '', 'password'),
+            field('password', 'Password', '', 'password', null, { minLength: 8, maxLength: 128 }),
             field('gm', 'Game Master', false, 'checkbox')
         ]);
     if (ctx.admin) controls.append(button('Create account', createAccount, 'primary'));
@@ -130,6 +130,9 @@ export async function mount(ctx) {
     async function show() {
         const id = ++selection,
             account = rows.find((a) => a.username === selected);
+        // A deep-linked account marks its own row, so the table and the panel agree
+        // about what is being described.
+        table.markInspected?.(account || null);
         if (!account) {
             detailSignature = null;
             detail.replaceChildren(
@@ -173,7 +176,12 @@ export async function mount(ctx) {
                     edit(
                         'Password · ' + account.username,
                         'account-password',
-                        [field('password', 'New password', '', 'password')],
+                        [
+                            field('password', 'New password', '', 'password', null, {
+                                minLength: 8,
+                                maxLength: 128
+                            })
+                        ],
                         fixed
                     )
                 ),

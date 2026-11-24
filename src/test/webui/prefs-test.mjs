@@ -17,7 +17,8 @@ test('writing without browser storage still applies coercion', () => {
     assert.equal(write('pageSize', 999), 30);
     assert.equal(write('pollScale', '2'), 2);
     assert.equal(write('theme', 'chartreuse'), 'dark');
-    assert.equal(write('confirmations', 'false'), false);
+    assert.equal(write('clock', 'nonsense'), 'date');
+    assert.equal(write('motion', 'reduce'), 'reduce');
 });
 
 test('the schema stays the single source of defaults', () => {
@@ -27,8 +28,7 @@ test('the schema stays the single source of defaults', () => {
         'pageSize',
         'pollScale',
         'clock',
-        'motion',
-        'confirmations'
+        'motion'
     ]);
     assert.equal(schema.pageSize[0], 30);
 });

@@ -43,12 +43,16 @@ export function openDialog({
     $('#dialog-progress').textContent = '';
     $('#dialog-progress').hidden = true;
     $('#dialog-conflict').hidden = true;
-    const submitButton = $('#submit-dialog');
+    const submitButton = $('#submit-dialog'),
+        // A read-only inspector has one exit, not two: "Cancel" beside a filled
+        // "Close" is the same button twice with different weights.
+        readOnly = submit === 'Close';
     submitButton.textContent = submit;
     // The variant lives here, not in index.html: one dialog markup serves a save
     // and a delete, so the class has to follow the caller.
-    submitButton.className = variant === 'danger' ? 'danger' : 'primary';
+    submitButton.className = variant === 'danger' ? 'danger' : readOnly ? 'secondary' : 'primary';
     submitButton.disabled = false;
+    $('#cancel-dialog').hidden = readOnly;
     $('#fields').replaceChildren(content);
     const state = { revision, target, isDirty, pending: false, conflicted: false };
     active = state;
@@ -89,6 +93,12 @@ export function openDialog({
             if (active === state) $('#submit-dialog').disabled = state.conflicted;
         }
     };
+    form.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+            event.preventDefault();
+            form.requestSubmit();
+        }
+    });
     $('#close-dialog').onclick = $('#cancel-dialog').onclick = () => {
         if (
             !state.pending &&
@@ -114,6 +124,14 @@ export function openDialog({
     };
     dialog.showModal();
     if (variant === 'danger') $('#cancel-dialog').focus();
+    else {
+        // Landing on the dismiss control would throw away a draft on the first
+        // Enter, so an editor opens on its first field.
+        const first = $('#fields').querySelector(
+            'input:not([type=hidden]):not([disabled]), textarea:not([disabled]), select:not([disabled])'
+        );
+        if (first) first.focus();
+    }
     return true;
 }
 export function dialogDirty() {

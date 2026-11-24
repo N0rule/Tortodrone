@@ -86,9 +86,14 @@ export function logStream({
         rawMode = raw,
         lastRowAt = 0,
         fileRows = [],
+        retainedCount = 0,
+        lastPayload = null,
         clearing = new Set();
 
-    const cache = new Map();
+    const cache = new Map(),
+        // Dividers are cached per day, so crossing midnight does not rebuild the
+        // node (and its scroll anchor) on every poll.
+        dividers = new Map();
     const pause = button('Pause', () => {
         paused = !paused;
         pause.setAttribute('aria-pressed', String(paused));
@@ -104,6 +109,11 @@ export function logStream({
     });
     pause.setAttribute('aria-pressed', 'false');
     pause.title = 'Freeze the view; the stream keeps reading';
+    // Ctrl+L hides lines, so it must be possible to get them back: a cleared tail
+    // that cannot be restored is a log viewer that lost the log.
+    const undoClear = button('Restore cleared lines', () => unclear(), 'quiet sm');
+    undoClear.hidden = true;
+    undoClear.title = 'Put the lines cleared with Ctrl+L back on screen';
     const follow = button('Tail', () => setTail(!auto));
     follow.setAttribute('aria-pressed', 'true');
     follow.title = 'Follow the newest line';
@@ -158,25 +168,38 @@ export function logStream({
         row.entry ? row.entry.command + '\n' + (row.entry.output ?? '') : row.line ?? row.message ?? '';
 
     function renderStatus() {
-        const visible = [...rows, ...commandRows()].filter(matches).length;
-        // One place counts lines. The tools row used to repeat it.
+        const visible = [...rows, ...commandRows()].filter(matches).length,
+            total = retainedCount || visible,
+            away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
+        // One place counts lines, and it says how many the filter hid rather than
+        // counting and then erasing the number.
         text(
             barMeta,
-            `${visible} ${visible === 1 ? 'line' : 'lines'}${paused ? ' · paused' : ''}${
-                paused && fresh ? ` · ${fresh} new` : ''
-            }`
+            `${visible} ${visible === 1 ? 'line' : 'lines'}${
+                visible !== total ? ` of ${total}` : ''
+            }${paused ? ' · paused' : ''}${paused && fresh ? ` · ${fresh} new` : ''}`
         );
-        text(count, '');
-        // Paused is not tailing: the pill says what the pane is actually doing.
+        text(
+            count,
+            `${visible} of ${total}${
+                visible !== total ? ' shown' : ''
+            }${dropped ? ` · ${dropped} older dropped` : ''}`
+        );
+        // The pill names what the pane is doing, not what the tail wants to do.
         text(
             statusRight,
             paused
                 ? `paused${fresh ? ` · ${fresh} new` : ''}`
-                : auto
-                  ? 'tail'
-                  : 'scrolled back'
+                : !auto && away
+                  ? 'scrolled back'
+                  : 'tail'
         );
-        statusRight.dataset.state = auto ? 'tail' : 'paused';
+        statusRight.dataset.state = paused || (!auto && away) ? 'paused' : 'tail';
+        undoClear.hidden = !clearing.size;
+        text(
+            undoClear,
+            clearing.size === 1 ? 'Restore 1 cleared line' : `Restore ${clearing.size} cleared lines`
+        );
         const bounds = [];
         if (dropped) bounds.push(`${retained} of ${capacity}, ${dropped} older dropped`);
         else if (retained) bounds.push(`${retained} buffered`);
@@ -204,6 +227,29 @@ export function logStream({
                     : 'idle'
                 : 'back';
         statusRight.title = file?.path ? 'The complete log lives in ' + file.path : '';
+        // A notice appearing above the pane (or a second status row) moves its top
+        // edge; refit so the prompt and source line stay on screen.
+        scheduleFit();
+    }
+
+    /** Wrap every match of the search term, so a filtered line shows why it matched. */
+    function painted(value) {
+        const source = String(value ?? ''),
+            term = search.value.trim();
+        if (!term) return document.createTextNode(source);
+        const lower = source.toLowerCase(),
+            needle = term.toLowerCase(),
+            frag = document.createDocumentFragment();
+        let at = 0,
+            hit = lower.indexOf(needle);
+        while (hit !== -1) {
+            if (hit > at) frag.append(document.createTextNode(source.slice(at, hit)));
+            frag.append(el('mark', source.slice(hit, hit + needle.length)));
+            at = hit + needle.length;
+            hit = lower.indexOf(needle, at);
+        }
+        frag.append(document.createTextNode(source.slice(at)));
+        return frag;
     }
 
     function lineFor(row, id) {
@@ -223,9 +269,13 @@ export function logStream({
             if (row.entry.pending) message.append(el('span', 'running…', 'command-pending'));
             else message.append(el('pre', formatOutput(row.entry.output), 'command-response'));
         } else if (rawMode) message.textContent = row.line ?? row.message ?? '';
-        else message.textContent = row.message ?? row.line;
-        if (!row.entry && rawMode) line.classList.add('raw');
-        line.append(time, level, thread, message);
+        else message.append(painted(row.message ?? row.line));
+        if (!row.entry && rawMode) {
+            // The file's own line already says `[time] [thread/LEVEL]:`, so the
+            // gutter would print all three twice.
+            line.classList.add('raw');
+            line.append(message);
+        } else line.append(time, level, thread, message);
         if (row.entry?.links?.length && onLink) {
             const links = el('span', null, 'command-links');
             for (const link of row.entry.links) {
@@ -255,7 +305,8 @@ export function logStream({
             row.entry ? String(row.entry.output).length : '',
             row.entry?.links?.length || 0,
             row.entry ? '' : (row.line ?? '') + '|' + (row.message ?? ''),
-            row.thread ?? ''
+            row.thread ?? '',
+            search.value.trim().toLowerCase()
         ].join('·');
 
     function display(force = false) {
@@ -277,12 +328,16 @@ export function logStream({
             if (day && dayStamp !== day) {
                 // A buffer that spans midnight is unreadable without the date, and
                 // only the boundary needs one: the first row is today by default.
-                const divider = el('div', null, 'log-day');
-                divider.textContent = stamp.toLocaleDateString(undefined, {
-                    weekday: 'short',
-                    day: '2-digit',
-                    month: 'short'
-                });
+                let divider = dividers.get(dayStamp);
+                if (!divider) {
+                    divider = el('div', null, 'log-day');
+                    divider.textContent = stamp.toLocaleDateString(undefined, {
+                        weekday: 'short',
+                        day: '2-digit',
+                        month: 'short'
+                    });
+                    dividers.set(dayStamp, divider);
+                }
                 desired.push(divider);
             }
             day = dayStamp;
@@ -298,11 +353,30 @@ export function logStream({
             }
             desired.push(line);
         }
+        retainedCount = retained_rows.length;
         if (!desired.length) {
             const note = el('p', null, 'log-empty');
-            note.textContent = retained_rows.length
-                ? 'No line matches this filter. Clear the search or choose another severity.'
-                : 'Nothing has been logged yet. Lines appear as the server writes them.';
+            if (retained_rows.length)
+                note.textContent =
+                    'No line matches this filter. Clear the search or choose another severity.';
+            else if (clearing.size) {
+                // Clearing hid the lines; saying "nothing has been logged" would be
+                // a lie about a buffer that is still there.
+                note.append(
+                    el(
+                        'span',
+                        retained
+                            ? `${retained} lines are buffered but cleared from view. `
+                            : 'Lines are cleared from view. '
+                    )
+                );
+                const again = el('button', 'Restore them', 'link');
+                again.type = 'button';
+                again.onclick = () => unclear();
+                note.append(again);
+            } else
+                note.textContent =
+                    'Nothing has been logged yet. Lines appear as the server writes them.';
             desired.push(note);
         }
         const wanted = new Set(desired);
@@ -317,12 +391,6 @@ export function logStream({
         for (const [slot, line] of cache) if (!wanted.has(line)) cache.delete(slot);
         if (!auto && anchor?.isConnected && before != null)
             output.scrollTop += anchor.getBoundingClientRect().top - before;
-        text(
-            count,
-            `${visible.length} of ${retained_rows.length}${
-                dropped ? ` · ${dropped} older dropped` : ''
-            }`
-        );
         renderStatus();
         if (auto && (atBottom || force)) {
             output.scrollTop = output.scrollHeight;
@@ -347,10 +415,22 @@ export function logStream({
     function update(incoming) {
         const payload = Array.isArray(incoming) ? { events: incoming } : incoming || {};
         const live = payload.events || [];
+        lastPayload = payload;
         // File history is older than the live buffer by construction, and a poll
-        // that carried no file history must not erase it.
-        const seen = new Set(live.map(key));
-        const events = [...fileRows.filter((row) => !seen.has(key(row))), ...live];
+        // that carried no file history must not erase it. The same physical line
+        // arrives from both, so a loaded file row is dropped as soon as the live
+        // buffer carries the identical text: one line, printed once.
+        const seen = new Set(live.map(key)),
+            spoken = new Set(
+                live.map((row) => (row.line ?? row.message ?? '').trim()).filter(Boolean)
+            );
+        const events = [
+            ...fileRows.filter(
+                (row) =>
+                    !seen.has(key(row)) && !spoken.has((row.line ?? row.message ?? '').trim())
+            ),
+            ...live
+        ];
         if (typeof payload.capacity === 'number') capacity = payload.capacity;
         if (typeof payload.dropped === 'number') dropped = payload.dropped;
         if (typeof payload.retained === 'number') retained = payload.retained;
@@ -366,7 +446,13 @@ export function logStream({
         }
         rows = kept.slice(-capacity);
         fresh = 0;
-        if (events.length) lastRowAt = Date.now();
+        // The pulse follows the newest line's own timestamp, not the poll: a static
+        // buffer must not keep claiming it is live.
+        const newest = events.reduce(
+            (newest, row) => Math.max(newest, Date.parse(row.timestamp) || 0),
+            0
+        );
+        if (newest) lastRowAt = newest;
         display();
     }
 
@@ -435,6 +521,12 @@ export function logStream({
         display(true);
     }
 
+    function unclear() {
+        clearing = new Set();
+        if (lastPayload) update(lastPayload);
+        else display(true);
+    }
+
     const transcript = (rawOnly) =>
         [...rows, ...commandRows()]
             .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
@@ -451,7 +543,9 @@ export function logStream({
     // Secondary actions stay behind one menu: a tail needs Pause, Tail and Jump,
     // not nine equal buttons in a row.
     const menu = el('details', null, 'terminal-menu'),
-        menuToggle = el('summary', 'More', 'terminal-menu-toggle'),
+        // `button` carries the control language; the summary only needs to lose its
+        // disclosure marker and its list styling.
+        menuToggle = el('summary', 'More', 'button secondary sm terminal-menu-toggle'),
         menuBody = el('div', null, 'terminal-menu-body');
     menuToggle.title = 'Copy, export, raw lines and file history';
     const rawToggle = button(rawMode ? 'Show parsed lines' : 'Show raw lines', () => {
@@ -508,7 +602,7 @@ export function logStream({
         menuBody.append(load);
     }
     menu.append(menuToggle, menuBody);
-    tools.append(search, severity, pause, follow, menu, count);
+    tools.append(search, severity, pause, follow, menu, undoClear, count);
 
     /** Parse the file's own `[24-11-2026 04:53:11]` prefix into an instant. */
     function fileStamp(value) {
@@ -533,7 +627,15 @@ export function logStream({
      * the fold. Measuring the pane's own top is right at every width.
      */
     let fitting = 0,
-        settle = 0;
+        settle = 0,
+        fittingFrame = 0;
+    function scheduleFit() {
+        if (!fill || fittingFrame) return;
+        fittingFrame = requestAnimationFrame(() => {
+            fittingFrame = 0;
+            fit();
+        });
+    }
     function fit() {
         // A page mounts its node after this component returns, so the first frame
         // may arrive before the shell is in the document: wait for it instead of

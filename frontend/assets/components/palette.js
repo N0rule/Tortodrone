@@ -1,5 +1,4 @@
 import { el, text } from '../ui.js';
-import { symbol } from './symbols.js';
 
 /**
  * Fuzzy subsequence score for the command palette. Returns a positive number
@@ -75,7 +74,7 @@ export function createPalette({ entries, lookup, label = 'Search or run a comman
     field.setAttribute('aria-autocomplete', 'list');
     field.setAttribute('aria-describedby', 'palette-status');
     const searchBox = el('div', null, 'palette-field');
-    searchBox.append(symbol('search'), field, el('kbd', 'Esc', 'kbd'));
+    searchBox.append(field, el('kbd', 'Esc', 'kbd'));
     const list = el('ul');
     list.id = 'palette-list';
     list.setAttribute('role', 'listbox');
@@ -147,7 +146,6 @@ export function createPalette({ entries, lookup, label = 'Search or run a comman
             const empty = el('li', null, 'palette-empty');
             empty.setAttribute('role', 'presentation');
             empty.append(
-                symbol('search'),
                 el('p', 'Nothing matched', 'empty-title'),
                 el('p', 'Try a different word, or a page name such as Knights.', 'empty-message')
             );

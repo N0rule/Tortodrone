@@ -47,7 +47,8 @@ export function waiting(label = 'Loading…') {
  */
 export function emptyState({ title, message = '', action, icon = 'details', compact = false }) {
     const node = el('div', null, 'empty-state' + (compact ? ' compact' : ''));
-    node.append(symbol(icon));
+    const art = symbol(icon);
+    if (art) node.append(art);
     node.append(el('p', title, 'empty-title'));
     if (message) node.append(el('p', message, 'empty-message'));
     if (action) node.append(button(action.label, action.run));
@@ -61,7 +62,8 @@ export function emptyState({ title, message = '', action, icon = 'details', comp
 export function errorState({ error, retry, title = 'That view could not be loaded' }) {
     const node = el('div', null, 'empty-state error-state');
     node.setAttribute('role', 'alert');
-    node.append(symbol('warning'));
+    const art = symbol('warning');
+    if (art) node.append(art);
     node.append(el('p', title, 'empty-title'));
     node.append(el('p', error?.message || 'The server did not answer.', 'empty-message'));
     if (retry) node.append(button('Try again', retry));

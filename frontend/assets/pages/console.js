@@ -21,14 +21,22 @@ export function reset() {
     commandDraft = '';
 }
 export async function mount(ctx) {
-    const metadata = await ctx.request('console'),
-        stream = logStream({
+    // The prompt is the console: a failed command list must not replace the page an
+    // operator reaches for when the server is misbehaving with an error card.
+    let listError = null,
+        metadata = { read: [], actions: [] };
+    try {
+        metadata = await ctx.request('console');
+    } catch (error) {
+        listError = error;
+    }
+    const stream = logStream({
             commands: outputHistory,
             title: 'tortodrone — console',
             fill: true,
             onLink: (link) => ctx.go(link.page, link.params || {})
         }),
-        feedback = el('small', 'Connected');
+        feedback = el('small', listError ? 'Command list unavailable' : 'Connected');
     const output = stream.output;
     output.setAttribute('aria-label', 'Console output');
     feedback.className = 'console-connection';
@@ -44,6 +52,12 @@ export async function mount(ctx) {
         run = el('button', 'Run', 'primary'),
         words = [...metadata.read, ...metadata.actions];
     run.type = 'submit';
+    // It is a bare submit button, not ui.js's control, so it carries its own busy
+    // state: the spinner from base.css, the label kept, and no second submit.
+    run.setBusy = (busy) => {
+        if (busy) run.setAttribute('aria-busy', 'true');
+        else run.removeAttribute('aria-busy');
+    };
     // Mobile keyboards capitalise the first word and the server refuses `Status`.
     command.setAttribute('autocapitalize', 'off');
     command.setAttribute('enterkeyhint', 'send');
@@ -51,13 +65,39 @@ export async function mount(ctx) {
     command.classList.add('console-input');
     // One completion mechanism, and it is the one a terminal user already knows:
     // Tab. A native <datalist> popup would compete with it and cannot be styled.
-    const hint = el('p', null, 'console-hint');
-    hint.textContent =
-        'Tab completes a command · ↑ ↓ history · ' +
-        metadata.read.join(' · ') +
-        ' · ' +
-        metadata.actions.map((name) => (name === 'kick' ? 'kick <session>' : name)).join(' · ') +
-        ' (asked to confirm)';
+    // Every command is also a control that fills the prompt, because a list of
+    // names in running text is not something you can act on.
+    const hint = el('p', null, 'console-hint'),
+        chip = (name, label) => {
+            const node = el('button', label ?? name, 'link sm');
+            node.type = 'button';
+            node.addEventListener('click', () => {
+                command.value = commandDraft = name;
+                command.focus();
+                command.setSelectionRange(name.length, name.length);
+            });
+            return node;
+        },
+        fillHint = () => {
+            hint.replaceChildren();
+            hint.append(el('span', 'Tab completes · ↑ ↓ history'));
+            if (listError) {
+                hint.append(
+                    el(
+                        'span',
+                        'The list of commands could not be loaded' +
+                            (listError.message ? ` (${listError.message})` : '') +
+                            '. A command still runs once the server answers.'
+                    )
+                );
+                return;
+            }
+            for (const name of metadata.read) hint.append(chip(name));
+            for (const name of metadata.actions)
+                hint.append(chip(name, name === 'kick' ? 'kick <session>' : name));
+            if (metadata.actions.length) hint.append(el('span', 'ask to confirm'));
+        };
+    fillHint();
     const promptLabel = el('span', 'tortodrone$', 'console-prompt-label');
     promptLabel.setAttribute('aria-hidden', 'true');
     form.append(promptLabel, command, run);
@@ -109,7 +149,6 @@ export async function mount(ctx) {
     function echo(value) {
         outputHistory.push({ time: Date.now(), command: value, output: '', error: false, pending: true });
         if (outputHistory.length > 50) outputHistory.shift();
-        if (!paint) return;
         stream.redraw();
     }
     command.oninput = () => {
@@ -122,6 +161,9 @@ export async function mount(ctx) {
             return;
         }
         if (event.ctrlKey && event.key.toLowerCase() === 'c') {
+            // A selection means the operator is copying; only an empty prompt is a
+            // cancel, the way a shell's Ctrl+C works.
+            if (command.selectionStart !== command.selectionEnd) return;
             event.preventDefault();
             if (pending) {
                 stream.announce('A command is already running; its answer will arrive.');

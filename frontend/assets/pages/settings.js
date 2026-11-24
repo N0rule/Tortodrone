@@ -17,8 +17,8 @@ const choices = {
         ['reduce', 'Reduce motion']
     ],
     clock: [
-        ['24-hour', 'Date only'],
-        ['12-hour', 'Date and local time']
+        ['date', 'Date only'],
+        ['date-time', 'Date and time']
     ],
     pageSize: [
         [15, '15 rows'],
@@ -32,16 +32,11 @@ const choices = {
         [2, 'Half as often'],
         [4, 'Four times less often']
     ],
-    confirmations: [
-        [true, 'Always confirm'],
-        [false, 'Skip the optional confirmation prompt']
-    ]
 };
 
 const describe = {
     pageSize: (value) => value + ' rows',
-    pollScale: (value) => `×${value}`,
-    confirmations: (value) => (value ? 'always confirm' : 'no optional prompt')
+    pollScale: (value) => `×${value}`
 };
 
 export async function mount(ctx) {
@@ -121,11 +116,6 @@ export async function mount(ctx) {
             key: 'pollScale',
             title: 'Refresh frequency',
             help: 'Slower polling reduces load on the server and on metered connections.'
-        }),
-        setting({
-            key: 'confirmations',
-            title: 'Destructive actions',
-            help: 'The server still requires its own confirmation for irreversible operations.'
         })
     );
 

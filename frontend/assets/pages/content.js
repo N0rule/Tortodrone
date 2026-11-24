@@ -1,6 +1,6 @@
 import { el, toolbar, badge, details, facts, panel, button, copy, report } from '../ui.js';
 import { itemPicker } from '../components/item-picker.js';
-import { itemLine, itemLinks, inspectItemName } from '../components/items.js';
+import { definitionsFor, itemLine, itemLinks, inspectItemName } from '../components/items.js';
 import { openDialog } from '../components/dialog.js';
 import { DataTable } from '../components/table.js';
 import { route, go } from '../router.js';
@@ -21,13 +21,20 @@ export async function mount(ctx) {
     /** One item inspector for the picker, the recipes and the deep link. */
     const showItem = async (config, definition) => {
         try {
+            // A deep link (?item=) has no definition to hand, and the cross-links
+            // need its name: resolve it first so the inspector offers the same
+            // actions as the picker.
+            const known =
+                definition ??
+                (await definitionsFor([config]).catch(() => new Map())).get(config) ??
+                null;
             await inspectItemName(config, {
-                definition,
+                definition: known,
                 // The catalogue is already behind this dialog, so the economy
                 // jump and the way back are the useful actions here.
                 actions: [
                     button('Back to catalogue', () => here({}, ['item']), 'secondary'),
-                    ...itemLinks(config, definition?.name, { catalogue: false })
+                    ...itemLinks(config, known?.name, { catalogue: false })
                 ]
             });
             unlinkOnClose();

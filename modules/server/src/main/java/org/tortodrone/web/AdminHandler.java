@@ -113,6 +113,11 @@ public final class AdminHandler implements HttpHandler {
                     "Invalid session",
                     "Unknown resource",
                     "Unknown action",
+                    // A refused password is a field problem with its own sentence; the
+                    // generic conflict advice does not apply to a form with no revision.
+                    "Passwords need 8-128 characters",
+                    "Passwords do not match",
+                    "Password contains control characters",
                     "welcome-message must be at most 256 characters",
                     "welcome-message must not contain control characters",
                     "welcome-message must not contain invalid text" -> message;

@@ -143,7 +143,6 @@ button.metric:focus-visible {
 }
 .equipment-slot.empty-slot {
     border-style: dashed;
-    opacity: 0.7;
 }
 .equipment-slot.empty-slot .item-icon {
     border-style: dashed;
@@ -316,34 +315,15 @@ button.metric:focus-visible {
 .terminal-menu {
     position: relative;
 }
+/* The menu toggle is a `.button`; this only drops the native disclosure marker. */
 .terminal-menu-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    block-size: var(--control-sm, 34px);
-    padding: 0 12px;
-    border: 1px solid var(--line-bright);
-    border-radius: var(--radius-control);
-    background: var(--raised);
-    color: var(--text);
-    font: inherit;
-    font-size: 13px;
-    cursor: pointer;
     list-style: none;
 }
 .terminal-menu-toggle::-webkit-details-marker {
     display: none;
 }
-.terminal-menu-toggle::after {
-    content: '▾';
-    font-size: 10.5px;
-    color: var(--muted);
-}
-.terminal-menu-toggle {
-    transition:
-        border-color 120ms ease,
-        background-color 120ms ease;
-}
+/* No drawn caret: the client pack has no chevron, and <summary> already opens the
+   menu on click, Enter and Space. Hovering the open menu keeps the accent. */
 .terminal-menu-toggle:hover {
     border-color: var(--cyan);
 }
@@ -463,10 +443,27 @@ button.metric:focus-visible {
     word-break: normal;
 }
 /* Raw mode is the file's own text: a stack trace must keep its indentation. */
+/* Raw mode is one line of file text: no gutter (the line carries its own time,
+   level and thread) and one horizontal scroller for the whole pane, not one per
+   row. */
+.terminal-line.raw {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+}
 .terminal-line.raw .log-message {
     white-space: pre;
-    overflow-x: auto;
+    overflow-x: visible;
     text-indent: 0;
+}
+.terminal-body {
+    overflow-x: auto;
+}
+/* A search hit shows itself: a filtered line explains why it matched. */
+.terminal-body mark {
+    padding: 0 1px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--gold) 42%, transparent);
+    color: var(--text);
 }
 /* A day change is a real boundary in a buffer that spans midnight. */
 .log-day {
@@ -671,15 +668,32 @@ button.metric:focus-visible {
     outline: none;
 }
 /* Discoverable commands beat a native autocomplete popup that fights Tab. */
+/* The command list is the console's documentation, so it wraps instead of
+   truncating, and each name is a control that fills the prompt. */
 .console-hint {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
     margin: 0;
-    padding: 0 12px 8px;
+    padding: 5px 12px 9px;
     color: var(--term-time);
     font-family: var(--mono);
     font-size: 10.5px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.6;
+}
+.console-hint .link {
+    color: var(--cyan);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    min-block-size: 0;
+}
+.console-hint .link:hover {
+    color: var(--text);
+}
+.console-hint .link:focus-visible {
+    outline: 1px solid var(--cyan);
+    outline-offset: 2px;
 }
 .console-connection {
     color: var(--good);
@@ -695,8 +709,13 @@ button.metric:focus-visible {
         line-height: 1.45;
     }
     .terminal-line {
-        grid-template-columns: 50px 36px minmax(0, 1fr);
-        gap: 6px;
+        /* Wide enough for h:mm:ss at 10.5px, plus its own scroll clip: a timestamp
+           that overprints the level is worse than a missing thread column. */
+        grid-template-columns: 58px 34px minmax(0, 1fr);
+        gap: 5px;
+    }
+    .log-time {
+        overflow: hidden;
     }
     .log-thread {
         display: none;
@@ -717,7 +736,8 @@ button.metric:focus-visible {
     .console-input {
         font-size: 16px;
     }
-    .console-input {
+    .console-input,
+    .console-prompt button {
         min-block-size: var(--control-lg, 44px);
     }
     /* One row of controls: a phone cannot afford four wrapped rows of chrome
@@ -1353,9 +1373,15 @@ button.metric:focus-visible {
     gap: 2px;
     justify-items: start;
 }
+/* A long letter must not push the dialog's own buttons seven screens away: the
+   preview scrolls inside a bounded box and the actions stay put. */
 .mail-preview-host {
     display: block;
     min-width: 0;
+    max-block-size: 20rem;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
 }
 /* Plain-text view: exactly the characters that reach the client mailbox, so
    wrapping and blank lines can be checked before the letter is sent. */

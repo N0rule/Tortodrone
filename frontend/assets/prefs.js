@@ -22,9 +22,8 @@ export const schema = {
     density: ['comfortable', 'compact'],
     pageSize: [30, 15, 60, 120],
     pollScale: [1, 0.5, 2, 4],
-    clock: ['24-hour', '12-hour'],
-    motion: ['auto', 'reduce'],
-    confirmations: [true, false]
+    clock: ['date', 'date-time'],
+    motion: ['auto', 'reduce']
 };
 
 const listeners = new Set();
