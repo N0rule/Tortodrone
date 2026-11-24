@@ -72,6 +72,19 @@ export async function mount(ctx) {
             fill: true,
             // A console has no tail to follow and nothing to freeze.
             tail: false,
+            severity: ctx.params.get('severity') || 'All',
+            search: ctx.params.get('search') || '',
+            // The filter is part of the view: writing it into the address is what lets
+            // an operator hand a colleague the exact console they are reading.
+            onFilter: ({ severity, search }) => {
+                const params = new URLSearchParams();
+                if (severity && severity !== 'All') params.set('severity', severity);
+                if (search) params.set('search', search);
+                const hash = '#console' + (params.size ? '?' + params : '');
+                // `history` in this module is the prompt's ↑ list, so the browser's
+                // history is named in full.
+                if (location.hash !== hash) window.history.replaceState(null, '', hash);
+            },
             // The Console has no tail to follow and nothing to pause: advertising
             // those keys here promised behaviour this page does not have.
             hint: 'Enter runs · Tab completes · ↑ ↓ history · Ctrl+F search · Ctrl+L clear · help lists the commands',

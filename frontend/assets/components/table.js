@@ -1,4 +1,5 @@
 import { el, button, input, select, toolbar, text, date } from '../ui.js';
+import { route } from '../router.js';
 
 /** An epoch sort key exports as the timestamp the cell prints, not as milliseconds. */
 const stamp = (value) => date(value);
@@ -97,6 +98,10 @@ export class DataTable {
             exportName = id,
             persist = true,
             initialQuery = '',
+            // `address: true` makes the query and the filters part of the URL: every
+            // list that reads `?search=` on arrival must also write it back, or a
+            // shared link can disagree with the screen it was meant to name.
+            address = false,
             empty,
             onRefresh,
         } = {}
@@ -138,15 +143,24 @@ export class DataTable {
         this.query = input('Search records');
         this.query.type = 'search';
         this.query.placeholder = 'Search records';
-        if (initialQuery) this.query.value = initialQuery;
+        // A table that owns its address reads the search from it as well as writing it.
+        const fromAddress = this.address ? route().params.get('search') : null;
+        if (fromAddress) this.query.value = fromAddress;
+        else if (initialQuery) this.query.value = initialQuery;
         this.controls = toolbar();
         this.controls.classList.add('table-tools');
         if (search) this.controls.append(this.query);
         this.filtersByName = {};
         this.filtersInitial = {};
+        this.address = address;
         this.choices = filters.map(([name, values, match, initial]) => {
             const savedValue = saved?.filters?.[name];
-            const start = values.includes(savedValue) ? savedValue : (initial ?? values[0]);
+            const fromAddress = this.address ? route().params.get(name.toLowerCase()) : null;
+            const start = values.includes(savedValue)
+                ? savedValue
+                : values.includes(fromAddress)
+                  ? fromAddress
+                  : (initial ?? values[0]);
             const control = select(name, values, start);
             control.dataset.filter = name;
             // The visible text of a filter was only its value ("All"), so what it
@@ -158,6 +172,7 @@ export class DataTable {
                 this.page = 1;
                 this.remember();
                 this.render();
+                this.syncAddress();
             };
             this.controls.append(wrap);
             this.filtersByName[name] = control;
@@ -324,6 +339,7 @@ export class DataTable {
                 timer = setTimeout(() => {
                     this.page = 1;
                     this.render();
+                    this.syncAddress();
                 }, 140);
             };
             this.query.onkeydown = (event) => {
@@ -335,6 +351,27 @@ export class DataTable {
                 }
             };
         }
+    }
+
+    /**
+     * Write the query and the filters back into the address, keeping every param this
+     * table does not own (`?tab=`, `?offer=`). `replaceState`, so typing a search does
+     * not stack a history entry per keystroke.
+     */
+    syncAddress() {
+        if (!this.address) return;
+        const params = route().params;
+        const query = this.query?.value?.trim() || '';
+        if (query) params.set('search', query);
+        else params.delete('search');
+        for (const [control, name] of this.choices) {
+            const chosen = control.value;
+            const first = this.filtersInitial[name];
+            if (chosen && chosen !== first) params.set(name.toLowerCase(), chosen);
+            else params.delete(name.toLowerCase());
+        }
+        const hash = '#' + route().name + (params.size ? '?' + params : '');
+        if (location.hash !== hash) window.history.replaceState(null, '', hash);
     }
 
     /** Mark the one row an inspector describes, and clear the previous mark. */

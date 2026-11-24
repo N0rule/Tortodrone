@@ -46,6 +46,7 @@ export async function mount(ctx) {
         ],
         {
             id: 'accounts',
+            address: true,
             caption: 'Game accounts',
             exportName: 'accounts',
             empty: {

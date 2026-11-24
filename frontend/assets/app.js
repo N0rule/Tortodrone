@@ -293,7 +293,7 @@ async function navigate() {
                 : `There is no page called “${next.name}”. Overview is shown instead.`,
             true
         );
-        if (location.hash !== '#overview') history.replaceState(null, '', '#overview');
+        if (location.hash !== '#overview') window.history.replaceState(null, '', '#overview');
         acceptedHash = '#overview';
         current = null;
         return navigate();
@@ -302,7 +302,7 @@ async function navigate() {
     if (next.name !== spec.name) {
         const query = next.params.toString();
         const hash = '#' + spec.name + (query ? '?' + query : '');
-        if (location.hash !== hash) history.replaceState(null, '', hash);
+        if (location.hash !== hash) window.history.replaceState(null, '', hash);
         acceptedHash = hash;
     }
     if (

@@ -168,7 +168,24 @@ export async function mount(ctx) {
     }
     const offers = new DataTable(
         [
-            ['Item', item, (o) => definitions.get(o.good.item)?.name || o.good.item],
+            [
+                'Item',
+                // Offers 0 and 1 stock the same item with different durations, so the row
+                // names the config it actually sells and its own id: two priced offers
+                // must never be visually identical.
+                (o) => {
+                    const cell = el('div', null, 'offer-reference');
+                    cell.append(item(o));
+                    const detail = String(o.good.item || '')
+                        .split('/')
+                        .filter(Boolean)
+                        .slice(-2)
+                        .join(' / ');
+                    cell.append(el('small', `${detail} · offer #${o.id}`, 'muted'));
+                    return cell;
+                },
+                (o) => definitions.get(o.good.item)?.name || o.good.item
+            ],
             ['Quantity', (o) => o.good.count],
             ['Price', price, (o) => o.good.price],
             ['Limit', (o) => o.good.limit || 'Unlimited'],
@@ -184,6 +201,7 @@ export async function mount(ctx) {
         ],
         {
             id: 'depot-offers',
+            address: true,
             caption: 'Depot offers',
             exportName: 'depot-offers',
             empty: {

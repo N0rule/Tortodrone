@@ -1778,3 +1778,16 @@ dd .bad {
         min-block-size: 44px;
     }
 }
+
+/* The delivery explanation is an aside, not a paragraph above every list. */
+.mail-guidance {
+    font-size: 12.5px;
+}
+.mail-guidance summary {
+    color: var(--muted);
+    cursor: pointer;
+}
+.mail-guidance p {
+    margin: 6px 0 0;
+    max-width: 72ch;
+}

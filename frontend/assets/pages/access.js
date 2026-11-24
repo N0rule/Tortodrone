@@ -205,7 +205,6 @@ export async function mount(ctx) {
         );
     };
     node.append(
-        sessionPanel,
         toolbar(button('Create WebUI identity', () => createIdentity(), 'primary')),
         el(
             'small',
@@ -213,7 +212,10 @@ export async function mount(ctx) {
                 'role ends every session it holds; there is no separate ' +
                 'sign-out-everywhere action. At least one administrator must remain.'
         ),
-        table.node
+        table.node,
+        // The page is the identities; the session that is reading them is context, so it
+        // sits after the list instead of pushing the first row 700px down.
+        sessionPanel
     );
     async function refresh() {
         text(expiry, describeExpiry());

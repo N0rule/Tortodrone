@@ -234,6 +234,12 @@ export async function mount(ctx) {
             if (row) {
                 showDetail(row);
                 table.markInspected?.(row);
+            } else if (table.rows.length) {
+                // The trail is already on screen, so the miss is reported now instead of
+                // after the next poll: a citation that lost its row looked like a link
+                // that did nothing.
+                ctx.notify(`There is no audit event #${wanted} on this server.`);
+                pendingEvent = null;
             } else pendingEvent = wanted;
         }
     }

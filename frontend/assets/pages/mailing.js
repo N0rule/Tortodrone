@@ -261,10 +261,15 @@ export async function mount(ctx) {
         summary = el('div', null, 'stack'),
         welcomeHost = el('div', null, 'stack'),
         receiptsHost = el('div', null, 'stack'),
-        guidance = el(
+        // The explanation is worth having and not worth 60px above every list: it opens
+        // on request, like any other aside.
+        guidance = el('details', null, 'mail-guidance'),
+        guidanceText = el(
             'p',
-            'A mailing reaches every knight once while its window is open, including knights created later. Delivery happens on their next visit; delivered letters are never duplicated.'
+            'A mailing reaches every knight once while its window is open, including knights created later. Delivery happens on their next visit; delivered letters are never duplicated.',
+            'muted'
         );
+    guidance.append(el('summary', 'How delivery works'), guidanceText);
     let roster = null,
         receipts = loadReceipts();
 
@@ -547,6 +552,7 @@ export async function mount(ctx) {
         ],
         {
             id: 'mail-campaigns',
+            address: true,
             caption: 'Mail campaigns',
             exportName: 'mail-campaigns',
             // An empty list says what a mailing is and where knights come from,

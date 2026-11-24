@@ -435,7 +435,7 @@ export async function mount(ctx) {
                 // The file holds a hex modulus and exponent, not a DER blob: the server's
                 // own note still claimed the fingerprint was computed from data the file
                 // does not contain, and concatenating it contradicted this sentence.
-                'The file holds the modulus and exponent in hex, not a DER blob. The fingerprint is the SHA-256 of the DER SubjectPublicKeyInfo the server builds from them.',
+                'The fingerprint is the SHA-256 of the key structure the server builds from the modulus and exponent below.',
                 identity.fileSha256Command
                     ? `Type ${identity.fileSha256Command} on the host to reproduce the file hash beside it.`
                     : ''
@@ -539,10 +539,11 @@ export async function mount(ctx) {
         if (running !== listenerRunning) {
             listenerRunning = running;
             for (const [route, node] of listenerButtons) {
-                // One weight on the row: the next sensible action is filled, the
-                // others stay neutral. Both classes set the same custom property,
-                // so they are swapped rather than stacked.
-                const lead = running ? route === 'restart' : route === 'start';
+                // One weight on the row, and it follows the safe productive action:
+                // Start is filled when the listener is down, and nothing is filled
+                // while it runs — a gold Restart steered the landing page toward
+                // disconnecting every connected player.
+                const lead = !running && route === 'start';
                 node.classList.toggle('primary', lead);
                 node.classList.toggle('secondary', !lead);
                 node.refreshAvailability?.();

@@ -332,7 +332,15 @@ export function report(error) {
         return;
     }
     if (error) console.error('Unexpected WebUI failure', error);
-    notify('The WebUI could not finish that action. Nothing was changed; reload the page and try again.', true);
+    // A request that never got an answer is not a request that did nothing: a write
+    // can have committed and lost its reply, so the sentence must not invite a
+    // re-submit into a possible double write.
+    notify(
+        error?.name === 'TypeError' || /fetch|network/i.test(String(error?.message || ''))
+            ? 'The server did not answer. The change may or may not have been stored: reopen the record and read its state before saving again.'
+            : 'The WebUI could not finish that action; reload the page and try again.',
+        true
+    );
 }
 export function changed(message = 'Changes saved.') {
     // A transient confirmation, so the sticky page notice stays reserved for

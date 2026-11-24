@@ -258,7 +258,9 @@ main {
         padding: 22px;
     }
 }
-@media (max-width: 760px) {
+/* The sidebar becomes the overlay drawer at 900px, not 760: at 844x390 (a landscape
+   phone) it was keeping 220px of a 609px shell, leaving 523px for every card. */
+@media (max-width: 900px) {
     #shell {
         display: block;
     }

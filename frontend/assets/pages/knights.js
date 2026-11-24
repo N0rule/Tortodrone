@@ -65,6 +65,7 @@ export async function mount(ctx) {
         {
             key: (k) => `${k.accountId}:${k.id}`,
             id: 'knights',
+            address: true,
             caption: 'Knights',
             exportName: 'knights',
             selectable: true,

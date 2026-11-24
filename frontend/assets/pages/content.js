@@ -122,6 +122,7 @@ export async function mount(ctx) {
         {
             key: keyOf,
             id: 'content-merchants',
+            address: true,
             caption: 'Merchant stations in the exported town catalogue',
             exportName: 'merchant-stations',
             pageSize: 10,
@@ -221,7 +222,9 @@ export async function mount(ctx) {
         );
     }
     paintSummary();
-    node.append(summary, picker.node, panel('Merchant catalogue', stationTable.node));
+    // The page is a catalogue of stations at the top and an item search below it: the
+    // picker used to sit above the table and pushed every merchant row past the fold.
+    node.append(summary, panel('Merchant catalogue', stationTable.node), picker.node);
     stationTable.update(merchants());
     async function refresh() {
         data = await ctx.request('content');

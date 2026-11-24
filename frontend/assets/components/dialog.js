@@ -87,7 +87,11 @@ export function openDialog({
                 error.status === 409
                     ? error.message +
                       ' Your draft is preserved. Close and reopen this record to use its latest revision.'
-                    : error.message;
+                    : error.status
+                      ? error.message
+                      : // No status means no answer, not no effect: say what is true of a
+                        // write whose reply was lost.
+                        'The server did not answer. The change may or may not have been stored: reopen this record and read its state before saving again.';
         } finally {
             state.pending = false;
             $('#submit-dialog').removeAttribute('aria-busy');

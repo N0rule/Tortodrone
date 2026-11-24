@@ -521,3 +521,15 @@ time {
 :target {
     scroll-margin-top: 70px;
 }
+
+/* A finger is not a mouse: on a coarse pointer every control keeps the large step,
+   because a 34px target is a miss on the surface most likely to be driven from a
+   phone. */
+@media (pointer: coarse) {
+    button,
+    .button,
+    select,
+    input[type='search'] {
+        min-block-size: var(--control-lg);
+    }
+}

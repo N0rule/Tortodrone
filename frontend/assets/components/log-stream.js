@@ -79,8 +79,10 @@ export function logStream({
     if (initialSearch) search.value = initialSearch;
     // A deep link may name a level this page does not offer (COMMAND on Logs): the
     // select would then sit on "All" while the URL claimed a filter.
-    if ([...severity.options].some((option) => option.value === initialSeverity))
-        severity.value = initialSeverity;
+    const severityOffered = [...severity.options].some(
+        (option) => option.value === initialSeverity
+    );
+    if (severityOffered) severity.value = initialSeverity;
 
     let paused = false,
         auto = true,
@@ -272,8 +274,15 @@ export function logStream({
                 : 'back';
         statusRight.title = file?.path ? 'The complete log lives in ' + file.path : '';
         // A notice appearing above the pane (or a second status row) moves its top
-        // edge; refit so the prompt and source line stay on screen.
-        scheduleFit();
+        // edge, and that is the only reason to resize: refitting on every status
+        // repaint grew the pane under the operator's eyes on arrival (305px → 490px).
+        const chrome = [...node.children]
+            .filter((child) => !child.classList.contains('terminal-body'))
+            .reduce((total, child) => total + child.offsetHeight, 0);
+        if (chrome !== lastChrome) {
+            lastChrome = chrome;
+            scheduleFit();
+        }
     }
 
     /** Wrap every match of the search term, so a filtered line shows why it matched. */
@@ -695,7 +704,11 @@ export function logStream({
                 update({ events: pending, capacity, dropped, retained, file });
                 announce.textContent = `Loaded ${entries.length} lines from ${result.path}.`;
             } catch (error) {
+                // The pane is the only channel a sighted operator reads here, and a
+                // button that visibly does nothing reads as broken.
                 announce.textContent = 'Could not read the log file: ' + error.message;
+                text(state, 'Could not read the log file: ' + error.message);
+                state.classList.add('error');
             } finally {
                 load.disabled = false;
             }
@@ -729,6 +742,7 @@ export function logStream({
      */
     let fitting = 0,
         settle = 0,
+        lastChrome = -1,
         fittingFrame = 0;
     function scheduleFit() {
         if (!fill || fittingFrame) return;
@@ -766,6 +780,10 @@ export function logStream({
     }
 
     renderStatus();
+    // `#logs?severity=COMMAND` is a level this page does not offer: the select falls back
+    // to All, so the address must stop claiming a filter that is not shown.
+    if (initialSeverity && !severityOffered && onFilter)
+        queueMicrotask(() => onFilter({ severity: severity.value, search: search.value }));
     return {
         node,
         fit,

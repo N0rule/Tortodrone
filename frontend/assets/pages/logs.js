@@ -24,7 +24,7 @@ export async function mount(ctx) {
             if (severity && severity !== 'All') params.set('severity', severity);
             if (search) params.set('search', search);
             const hash = '#logs' + (params.size ? '?' + params : '');
-            if (location.hash !== hash) history.replaceState(null, '', hash);
+            if (location.hash !== hash) window.history.replaceState(null, '', hash);
         }
     });
     let failures = 0;
