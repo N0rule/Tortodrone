@@ -9,7 +9,8 @@ import {
     routeLink,
     copy,
     text,
-    landOn
+    landOn,
+    stamp
 } from '../ui.js';
 import { route } from '../router.js';
 import { DataTable } from '../components/table.js';
@@ -132,7 +133,17 @@ export async function mount(ctx) {
                     ['Actor', row.actor],
                     ['Action', row.action],
                     ['Target', parseTarget(row.target).label || 'No subject recorded'],
-                    ['Outcome', badge(row.outcome, row.outcome === 'committed' ? 'good' : '')],
+                    [
+                        'Outcome',
+                        badge(
+                            row.outcome,
+                            ['refused', 'denied', 'failed'].includes(row.outcome)
+                                ? 'bad'
+                                : row.outcome === 'requested'
+                                  ? 'flag'
+                                  : ''
+                        )
+                    ],
                     [
                         'Note',
                         row.outcome === 'requested'
@@ -144,9 +155,25 @@ export async function mount(ctx) {
             )
         );
     };
+    /**
+     * A trail is read as a sequence, not as fifty stamps: the date is printed where the
+     * day changes, so the widest column stops repeating one constant and the times line
+     * up under each other. The full stamp stays in the cell's title and in the record.
+     */
+    /* Every row carries its own day, its own minute and its own second.
+       The old cell printed a day only on the row where the day changed and left the
+       date out of the rest, so "24/11/2026" sat inside the first row's Time cell
+       reading as that row's date, the day was lost the moment the list scrolled past
+       it, and five rows inside one minute had no order to read. A stamp that cannot be
+       misread costs a wider column in a table that has the width. */
+    const timeCell = (row) => {
+        const cell = el('time', stamp(row.time), 'time-stamp');
+        cell.dateTime = new Date(row.time).toISOString();
+        return cell;
+    };
     const table = new DataTable(
         [
-            ['Time', (r) => date(r.time), (r) => r.time],
+            ['Time', timeCell, (r) => r.time],
             [
                 'Actor',
                 (r) => {
@@ -171,12 +198,14 @@ export async function mount(ctx) {
             [
                 'Outcome',
                 (r) =>
+                    // The ordinary outcomes are words; only what went wrong, or what
+                    // never finished, earns an edge.
                     badge(
                         r.outcome,
-                        r.outcome === 'committed'
-                            ? 'good'
-                            : ['refused', 'denied'].includes(r.outcome)
-                              ? 'bad'
+                        ['refused', 'denied', 'failed'].includes(r.outcome)
+                            ? 'bad'
+                            : r.outcome === 'requested'
+                              ? 'flag'
                               : ''
                     )
             ]
@@ -185,7 +214,10 @@ export async function mount(ctx) {
             key: (r) => r.id,
             id: 'audit',
             caption: 'Audit trail',
+            searchPlaceholder: 'Search actor, action or target',
             exportName: 'audit-trail',
+            // A trail is read from the newest entry backwards.
+            defaultSort: { index: 0, direction: -1 },
             initialQuery: ctx.params.get('actor') || ctx.params.get('target') || '',
             empty: {
                 title: 'No audit events match this view',
@@ -233,7 +265,9 @@ export async function mount(ctx) {
     // privileged request" over it: an operator on a busy server read the bottom row as
     // the beginning of the trail. The cap, and where the rest lives, are stated.
     const CAP = 500;
-    const scope = el('small', null, 'muted');
+    // Its own line above the controls: a sentence of prose between two buttons read
+    // as a third control, and it is the longest thing in that row.
+    const scope = el('small', null, 'muted audit-scope');
     let paused = false,
         reading = false,
         // Pages the operator asked for, older than the live first page. Kept apart so a
@@ -295,12 +329,12 @@ export async function mount(ctx) {
         scope.textContent = paused
             ? `Paused: ${tail} The ten-second tick is paused; the header's Refresh, a write's own refresh and Older events still read.`
             : exhausted
-              ? `${tail} That is the whole trail — Older events found nothing more.`
+              ? `${tail} That is the whole trail; nothing older exists.`
               : `${tail} The server sends the newest ${CAP} at a time; Older events reads back through data/webui.sqlite.`;
     }
     // The inspector sits above the trail: appended after sixty rows it was 2,200px
     // below the fold, so the citation link a row emits looked like a dead click.
-    node.append(detail, toolbar(scope, more, pause), table.node);
+    node.append(detail, scope, toolbar(more, pause), table.node);
     let pendingEvent = null,
         pendingNoted = false;
     /**

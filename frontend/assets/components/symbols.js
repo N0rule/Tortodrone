@@ -20,14 +20,10 @@ const alias = {
     check: 'save',
     inspect: 'details',
     view: 'details',
-    review: 'details',
-    help: 'details',
-    info: 'details',
-    // No client art is exported as nav-search or nav-warning, so the table's empty
-    // state and every error state fell through to no icon at all. `details` is the
-    // client's inspect glyph and is the closest thing the pack actually carries.
-    search: 'details',
-    warning: 'details',
+    // No client art is exported for "search", "warning", "help" or "info", and lending
+    // them the inspect glyph made the catalogues' no-results state and every error
+    // panel wear a magnifier that means "look at this record". A job the pack has no
+    // art for now gets no icon, which is the rule this file opens with.
     weapon: 'slot-weapon',
     helmet: 'slot-helmet',
     armor: 'slot-armor',

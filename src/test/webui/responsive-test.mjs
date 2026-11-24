@@ -40,7 +40,11 @@ test('tables become labelled cards below 900px', () => {
     const mobile = mobileBlock(components);
     assert.match(mobile, /\.data-table table\s*\{[^}]*display:\s*block/, 'table must leave grid layout');
     assert.match(mobile, /\.data-table thead\s*\{[^}]*clip-path/, 'the header row must be visually hidden');
-    assert.match(mobile, /\.data-table td\s*\{[^}]*grid-template-columns/, 'cells must stack label and value');
+    assert.match(
+        mobile,
+        /\.data-table td\s*\{[^}]*display:\s*flex[^}]*justify-content:\s*space-between/,
+        'cells must put the label on the leading edge and the value on the trailing one'
+    );
     assert.match(mobile, /\.data-table \.table-wrap\s*\{[^}]*overflow:\s*visible/, 'cards must not scroll');
     assert.match(components, /content:\s*attr\(data-label\)/, 'the card label reads data-label');
     assert.match(table, /dataset\.label|data-label/, 'cells must carry the label');

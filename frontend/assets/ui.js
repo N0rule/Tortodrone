@@ -12,14 +12,13 @@ export function text(node, value) {
     const next = String(value ?? '—');
     if (node.textContent !== next) node.textContent = next;
 }
-/* Label-to-icon is only a fallback: callers that care name the art themselves.
-   Read actions get read art, so "Inspect" is never drawn with a pencil. */
+/* One rule for art on a control: the picture marks the action that cannot be undone.
+   Matching a verb was a lottery — "Revoke" wore client art while "Create WebUI
+   identity" and "Export CSV" beside it wore none, so the column looked half painted
+   and the paint promised nothing. A word is always enough for a control that can be
+   taken back. */
 function guessIcon(label) {
-    if (/^(Edit|Change)\b/.test(label)) return 'edit';
-    if (/^(Add|Grant|New)\b/.test(label)) return 'add';
-    if (/^(Save|Equip)\b/.test(label)) return 'save';
-    if (/^(Remove|Unequip|Delete|Revoke)\b/.test(label)) return 'remove';
-    if (/^(Inspect|View|Details|Review)\b/.test(label)) return 'details';
+    if (/^(Remove|Unequip|Delete|Revoke|Settle)\b/.test(label)) return 'remove';
     return null;
 }
 /* A disabled control explains itself, out loud and on screen. The reason rides on
@@ -316,10 +315,35 @@ const clockFormat = new Intl.DateTimeFormat(preferredLocale, {
     second: '2-digit',
     hourCycle: 'h23'
 });
+/**
+ * The zone a date prints, read from the formatter that prints dates.
+ *
+ * The header clock probed the zone with `Intl.DateTimeFormat(undefined, …)` — the raw
+ * browser locale — while every row used `preferredLocale`, which this bundle forces to
+ * `en-GB` outside the Americas. One viewport then read "GMT+2" in the header and "EET"
+ * four lines below it, and both were right.
+ */
+export const zoneName = (value = Date.now()) =>
+    dateFormat.formatToParts(new Date(value)).find((part) => part.type === 'timeZoneName')
+        ?.value || '';
 export const date = (value) => (value ? dateFormat.format(new Date(value)) : '—');
 export const time = (value) => (value ? timeFormat.format(new Date(value)) : '—');
 export const clock = (value) => (value ? clockFormat.format(new Date(value)) : '—');
 export const calendarDate = (value = Date.now()) => calendarFormat.format(new Date(value));
+// A trail can hold several events inside one minute, so its stamp carries seconds:
+// five rows reading "16:15 EET" left the operator unable to read the order the table
+// was already sorted by. Same locale, same zone, one more part.
+const stampFormat = new Intl.DateTimeFormat(preferredLocale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+    timeZoneName: 'short'
+});
+export const stamp = (value) => (value ? stampFormat.format(new Date(value)) : '—');
 export function duration(seconds) {
     seconds = Math.max(0, seconds);
     return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m ${Math.floor(seconds % 60)}s`;
@@ -533,8 +557,13 @@ export function paintShell() {
 export function paintBrand() {
     const mark = symbol('brand');
     if (!mark) return;
+    /* Each slot gets a symbol of its own. A clone carries the original's filter id, and
+       a duplicate id resolves to whichever copy the document reaches first: the login
+       card's, whose subtree is hidden once the operator signs in. A filter inside a
+       hidden subtree does not render, so the sidebar's mark fell back to the raw white
+       client art — invisible on the light theme's near-white sidebar. */
     for (const slot of document.querySelectorAll('.brand-mark'))
-        if (!slot.querySelector('.ui-icon')) slot.append(mark.cloneNode(true));
+        if (!slot.querySelector('.ui-icon')) slot.append(symbol('brand'));
     const image = mark.querySelector('image');
     const favicon = $('#favicon');
     if (favicon && image) favicon.href = image.getAttribute('href');

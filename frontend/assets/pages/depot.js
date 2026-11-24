@@ -20,7 +20,7 @@ const promotionState = (p) =>
 /** A state badge that says where the judgement came from. */
 const promotionBadge = (p) => {
     const state = promotionState(p);
-    return Object.assign(badge(state, state === 'Active' ? 'good' : ''), { title: CLOCK_NOTE });
+    return Object.assign(badge(state, state === 'Active' ? '' : 'flag'), { title: CLOCK_NOTE });
 };
 /** The URL names the catalogue tab `catalogue`; the page keeps `effective`. */
 const tabNames = {
@@ -65,9 +65,39 @@ export async function mount(ctx) {
     }
     const fixed = () => ({ revision: data.snapshot.revision });
     const item = (o) => itemLine(definitions.get(o.good.item), { config: o.good.item });
-    const price = (o) =>
-        toolbar(currency('crowns', o.good.price), currency('energy', o.good.energy));
+    /**
+     * One price, not two: half of a price pair rendered as a coin beside a zero, so
+     * every row opened with "0 crowns" and the operator had to work out which coin the
+     * real number belonged to. Only the currencies that are actually charged appear,
+     * and the record shows the same wording in words.
+     */
+    const price = (o) => {
+        const cell = el('div', null, 'price-cell'),
+            crowns = o.good.price,
+            energy = o.good.energy;
+        if (crowns) cell.append(currency('crowns', crowns));
+        if (energy) cell.append(currency('energy', energy));
+        if (!crowns && !energy) cell.append(el('span', 'Free', 'muted'));
+        cell.title = [
+            crowns ? `${crowns.toLocaleString()} Crowns` : '',
+            energy ? `${energy.toLocaleString()} Energy` : ''
+        ]
+            .filter(Boolean)
+            .join(' + ');
+        return cell;
+    };
     const offerName = (o) => definitions.get(o.good.item)?.name || o.good.item;
+    /**
+     * Offers 0 and 1 stock the same item with different durations, so every row names
+     * the config it actually sells and its own id: two priced offers must never be
+     * visually identical. The last two path segments carry the difference, and the
+     * whole path stays on the line's title for a copy.
+     */
+    const offerDetail = (o) => {
+        const config = String(o.good.item || '');
+        const detail = config.split('/').filter(Boolean).slice(-2).join(' / ');
+        return `${detail || config} · offer #${o.id}`;
+    };
     const offerLabel = (o) => `${offerName(o)} · offer #${o.id} · ${o.good.price} Crowns`;
     /** One editor for the row action and for a deep link into a single offer. */
     function editOffer(o) {
@@ -119,17 +149,22 @@ export async function mount(ctx) {
             content: panel(
                 '',
                 el('p', offer.enabled ? 'Enabled in the Depot.' : 'Disabled.', 'muted'),
+                // The title already names the item and offers the id, and the list under
+                // Promotions already says how many there are: both were printed twice
+                // in one dialog, once as a heading and once as a row of its own.
                 facts([
-                    ['Item', offerName(offer)],
                     ['Quantity', String(offer.good.count)],
                     ['Price', `${offer.good.price} Crowns${offer.good.energy ? ` + ${offer.good.energy} Energy` : ''}`],
                     ['Lifetime limit', offer.good.limit ? String(offer.good.limit) : 'Unlimited'],
                     ['Featured', offer.featured ? 'yes' : 'no'],
-                    ['Promotion only', offer.promotionOnly ? 'yes' : 'no'],
-                    ['Promotions', promotionsFor.length ? String(promotionsFor.length) : 'none'],
-                    ['Offer id', String(offer.id)]
+                    ['Promotion only', offer.promotionOnly ? 'yes' : 'no']
                 ]),
-                el('h3', 'Promotions'),
+                el(
+                    'h3',
+                    promotionsFor.length
+                        ? `Promotions (${promotionsFor.length})`
+                        : 'Promotions'
+                ),
                 list,
                 toolbar(
                     button('Edit this offer', () => editOffer(offer), 'primary'),
@@ -182,34 +217,30 @@ export async function mount(ctx) {
         [
             [
                 'Item',
-                // Offers 0 and 1 stock the same item with different durations, so the row
-                // names the config it actually sells and its own id: two priced offers
-                // must never be visually identical.
-                (o) => {
-                    // One 13px line per row: 56px of art inside a table row made 328
-                    // offers a 99px-per-row, 22-page list.
-                    const cell = el('div', null, 'offer-reference');
-                    cell.append(el('span', offerName(o)));
-                    const detail = String(o.good.item || '')
-                        .split('/')
-                        .filter(Boolean)
-                        .slice(-2)
-                        .join(' / ');
-                    cell.append(el('small', `${detail} · offer #${o.id}`, 'muted'));
-                    return cell;
-                },
+                (o) =>
+                    itemLine(definitions.get(o.good.item), { config: o.good.item }, {
+                        note: offerDetail(o),
+                        compact: true
+                    }),
                 (o) => definitions.get(o.good.item)?.name || o.good.item
             ],
-            ['Quantity', (o) => o.good.count],
-            ['Price', price, (o) => o.good.price],
-            ['Limit', (o) => o.good.limit || 'Unlimited'],
+            ['Quantity', (o) => o.good.count, (o) => o.good.count, 'end'],
+            ['Price', price, (o) => o.good.price, 'end'],
+            // A limit is the exception; "Unlimited" in 30 of 30 rows is a column of
+            // noise where the item's own detail line should have the width.
+            [
+                'Limit',
+                (o) => o.good.limit || el('span', '—', 'muted'),
+                (o) => o.good.limit || 0,
+                'end'
+            ],
             [
                 'Status',
                 (o) =>
                     toolbar(
-                        badge(o.enabled ? 'Enabled' : 'Disabled', o.enabled ? 'good' : ''),
+                        o.enabled ? badge('Enabled') : badge('Disabled', 'flag'),
                         ...(o.featured ? [badge('Featured', 'gold')] : []),
-                        ...(o.promotionOnly ? [badge('Promotion only')] : [])
+                        ...(o.promotionOnly ? [badge('Promotion only', 'flag')] : [])
                     )
             ]
         ],
@@ -217,16 +248,25 @@ export async function mount(ctx) {
             id: 'depot-offers',
             address: true,
             caption: 'Depot offers',
+            searchPlaceholder: 'Search item, offer id or price',
+            // Thirty rows of the same limit and the same status is a column of noise.
+            dropConstantColumns: true,
             exportName: 'depot-offers',
+            // Offers arrive in the order they were written; an operator reads them by
+            // item, which is what the first column says.
+            defaultSort: { index: 0 },
             empty: {
                 title: 'No depot offers are defined',
                 hint: 'An offer stocks one item in the Supply Depot; players only see enabled offers.',
                 action: { label: 'Create offer', run: () => createOffer() },
                 icon: 'depot'
             },
+            // One control per row: the record this opens carries "Edit this offer", so
+            // the second button on 328 rows was the same destination twice. It is
+            // named for what it opens — "Inspect" said nothing about an offer, and it
+            // used the same word as every other row on the server.
             actions: (get) => [
-                routeLink('Inspect', 'depot', { offer: get().id }, 'button secondary'),
-                button('Edit', () => editOffer(get()))
+                routeLink('Open offer', 'depot', { offer: get().id }, 'button secondary')
             ],
             filters: [
                 [
@@ -251,15 +291,17 @@ export async function mount(ctx) {
                     // A promotion that only shows an offer id is a dead end: name the
                     // item it discounts and keep the id beside it.
                     const offer = data.snapshot.offers.find((o) => o.id === p.offerId);
-                    const cell = el('div', null, 'offer-reference');
-                    cell.append(
-                        el(
-                            'strong',
-                            offer ? offerName(offer) : `Offer #${p.offerId}`
-                        )
+                    if (!offer) {
+                        const cell = el('div', null, 'offer-reference');
+                        cell.append(el('strong', `Offer #${p.offerId}`));
+                        cell.append(el('small', 'not in this snapshot', 'muted'));
+                        return cell;
+                    }
+                    return itemLine(
+                        definitions.get(offer.good.item),
+                        { config: offer.good.item },
+                        { note: `offer #${p.offerId}`, compact: true }
                     );
-                    cell.append(el('small', `offer #${p.offerId}`, 'muted'));
-                    return cell;
                 },
                 (p) => p.offerId
             ],
@@ -272,6 +314,7 @@ export async function mount(ctx) {
             presentationKey: promotionState,
             id: 'promotions',
             caption: 'Scheduled promotions',
+            searchPlaceholder: 'Search promotion or offer id',
             exportName: 'promotions',
             empty: {
                 title: 'No promotions are scheduled',
@@ -324,8 +367,8 @@ export async function mount(ctx) {
     const effective = new DataTable(
         [
             ['Item', item],
-            ['Quantity', (o) => o.good.count],
-            ['Price', price],
+            ['Quantity', (o) => o.good.count, (o) => o.good.count, 'end'],
+            ['Price', price, undefined, 'end'],
             [
                 'Availability',
                 (o) => (o.sale ? 'Promotion sale' : o.featured ? 'Featured' : 'Regular')
@@ -356,6 +399,7 @@ export async function mount(ctx) {
             key: (o) => o.id,
             id: 'depot-effective',
             caption: 'Effective catalogue: what a player sees today',
+            searchPlaceholder: 'Search item or station',
             exportName: 'depot-catalogue',
             empty: {
                 title: 'The player catalogue is empty',

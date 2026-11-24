@@ -24,13 +24,37 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 3px 8px;
-    /* A pill is a small component, so its edge is a component boundary. */
-    border: 1px solid var(--line-bright);
     border-radius: var(--radius);
     font-size: 11.5px;
     color: var(--muted);
     white-space: nowrap;
+}
+.uv,
+/* A sentence of explanation is read, not glanced at: it takes the body size and a
+   measure. At the caption size, running the full width of a 900px dialog, a note
+   that says why the identity store has no timestamps was a line of small print
+   nobody finishes. */
+.prose-note {
+    max-width: 68ch;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+/* A chip is a container; a default value is a word. Three columns of identical
+   bordered chips (nine "Enabled", ten "authenticated") inked every row the same, so
+   a tone now costs the exception and the ordinary case is written plainly. */
+.badge.good,
+.badge.bad,
+.badge.gold,
+.badge.cyan,
+.badge.flag {
+    padding: 3px 8px;
+    /* A pill is a small component, so its edge is a component boundary. */
+    border: 1px solid var(--line-bright);
+}
+/* Neither good nor bad, but not the ordinary case either: disabled, promotion only. */
+.badge.flag {
+    border-style: dashed;
 }
 .status::before {
     content: '';
@@ -46,6 +70,14 @@
 .badge.gold {
     color: var(--warn);
     border-color: var(--warn);
+}
+/* Authority, not emphasis: gold is the primary action and the current page, so a role
+   chip in gold competed with both. Purple is the one hue in the palette that means
+   nothing else. */
+.badge.purple {
+    color: var(--purple);
+    border-color: color-mix(in srgb, var(--purple) 45%, transparent);
+    background: color-mix(in srgb, var(--purple) 12%, transparent);
 }
 .badge.cyan {
     color: var(--cyan);
@@ -74,6 +106,10 @@
     overflow: auto;
     border: 1px solid var(--line-bright);
     border-radius: var(--radius);
+    /* The table is a panel, so a cell can be painted opaque and still match: without
+       a background here the sticky actions column had to guess what was behind its
+       row, and guessed a hard light stripe across every tinted row. */
+    background: var(--surface);
 }
 table {
     width: 100%;
@@ -96,11 +132,12 @@ th {
    a sortable header gave no feedback at all. `aria-sort` lives on the `th`, so the
    guard is scoped there: hovering the *sorted* column used to repaint its cyan ink as
    body text and lose the marker under the pointer. */
-th:not([aria-sort]) button:not(:disabled):not([aria-disabled='true']):hover {
+th[aria-sort='none'] button:not(:disabled):not([aria-disabled='true']):hover {
     background: color-mix(in srgb, var(--raised) 68%, var(--line-bright));
     color: var(--text);
 }
-th[aria-sort] button:not(:disabled):not([aria-disabled='true']):hover {
+th[aria-sort='ascending'] button:not(:disabled):not([aria-disabled='true']):hover,
+th[aria-sort='descending'] button:not(:disabled):not([aria-disabled='true']):hover {
     background: color-mix(in srgb, var(--raised) 80%, var(--line-bright));
 }
 th button {
@@ -120,24 +157,106 @@ th button {
 /* The sorted column is named by `aria-sort` and marked by its ink; the ↑/↓ carets
    were invented glyphs, and the art rule here is that a mark is client art or a
    word. */
-th[aria-sort] button {
+/* Every sortable header now carries `aria-sort`, `none` included, so the marker is
+   scoped to the two states that mean this column is the sort. */
+th[aria-sort='ascending'] button,
+th[aria-sort='descending'] button {
     color: var(--cyan);
     text-decoration: underline;
     text-underline-offset: 3px;
 }
+/* The caret is type, not art: it says which way a column sorts and that it sorts at
+   all — and it sits beside its own column name, because pushed to the far edge of a
+   wide column it read as a stray mark in the gap between two headers. */
+th button {
+    justify-content: flex-start;
+}
+/* One numeric column language: the header's label ends on the same edge as every cell
+   and the digits line up under the word above them. The caret goes to the left of the
+   label — on the right it pushed the word 21px off the edge its numbers end on. */
+th.numeric button {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
+td.numeric {
+    text-align: end;
+}
+/* Nothing to label: the empty state speaks for the table, and the headers stay in the
+   accessibility tree as the table's own structure. */
+@media (min-width: 901px) {
+    .data-table table.is-empty thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+}
+/* A column this view has nothing in: the cells and the header leave together. */
+.column-dropped {
+    display: none;
+}
+td.numeric .currency {
+    justify-content: flex-end;
+}
+/* A price is a flex row, so `text-align: end` on the cell never reached it: the coin
+   and its figure sat against the left edge of a column whose header ended on the
+   right one. Every block inside a numeric cell has to end where the header ends. */
+td.numeric > div {
+    display: flex;
+    justify-content: flex-end;
+}
+/* The direction mark is drawn, not typed. At 12px a text arrowhead collapses to a
+   one-pixel wing, so the ascending and descending marks photographed as the same
+   vertical tick: the colour said which column and nothing said which way.
+   The slot is held on every header, so a label never moves when the sorted column
+   changes, and only the sorted column shows a mark. */
+.sort-mark {
+    display: inline-block;
+    flex: 0 0 auto;
+    align-self: center;
+    inline-size: 7px;
+    block-size: 5px;
+    margin-inline-start: 6px;
+    visibility: hidden;
+}
+.sort-mark.sorted {
+    visibility: visible;
+}
+.sort-mark::before {
+    content: '';
+    display: block;
+    inline-size: 0;
+    block-size: 0;
+    margin-inline: auto;
+    border-inline: 3.5px solid transparent;
+}
+.sort-mark.is-asc::before {
+    border-block-end: 5px solid var(--cyan);
+}
+.sort-mark.is-desc::before {
+    border-block-start: 5px solid var(--cyan);
+}
 td {
     padding: var(--row) 12px;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--line-data);
     vertical-align: middle;
 }
-tbody tr:nth-child(even) td {
-    background: color-mix(in srgb, var(--raised) 22%, transparent);
+/* One tint per row, declared on the row: the sticky actions cell has to paint the
+   same colour as its siblings while staying opaque over the cells scrolling under
+   it, and two independent declarations of "the zebra" drift apart. */
+tbody tr {
+    --row-tint: transparent;
 }
-/* The zebra rule out-specifies a bare `tr:hover td`, so hover is stated at the
-   same weight for even and odd rows. */
-tbody tr:nth-child(even):hover td,
-tbody tr:hover td {
-    background: color-mix(in srgb, var(--raised) 50%, transparent);
+tbody tr:nth-child(even) {
+    --row-tint: color-mix(in srgb, var(--raised) 22%, transparent);
+}
+tbody tr:hover,
+tbody tr:nth-child(even):hover {
+    --row-tint: color-mix(in srgb, var(--raised) 50%, transparent);
+}
+tbody td {
+    background: var(--row-tint);
 }
 td:first-of-type {
     overflow-wrap: anywhere;
@@ -151,20 +270,36 @@ td .toolbar {
 }
 /* Two actions per line need room for the widest pair, and the cell stays visible when
    a dense table scrolls sideways: the row's controls must never be the clipped part. */
-td.row-actions {
-    min-inline-size: 190px;
+td.row-actions,
+th.row-actions {
+    /* Room for the widest triple that exists ("Inspect", "Audit trail", "Revoke") on one
+       line. `inline-size: 1%` keeps a wide table from handing 400px of slack to the last
+       column, and the toolbar below refuses to wrap, so a row's controls are always one
+       line tall: two-to-a-line made that table's rows 89px beside a 48px rhythm. */
+    inline-size: 1%;
+    min-inline-size: 224px;
+    padding-inline: 10px;
     position: sticky;
     inset-inline-end: 0;
-    background: var(--surface);
-    box-shadow: -8px 0 10px -10px var(--line-bright);
+    text-align: end;
 }
-tbody tr:hover td.row-actions {
-    background: var(--raised);
+th.row-actions {
+    z-index: 2;
+}
+/* The row's own tint over the panel, so the pinned column is opaque *and* the same
+   colour as the row it belongs to — the hover stripe runs straight through it. */
+td.row-actions {
+    background: linear-gradient(var(--row-tint), var(--row-tint)), var(--surface);
+    box-shadow: -10px 0 10px -10px color-mix(in srgb, var(--line-bright) 70%, transparent);
 }
 /* The two widest pairs must share a line; an 8px gutter pushed the fourth action onto
    a third line and added 40px to the row. */
 td.row-actions .toolbar {
     column-gap: 4px;
+    flex-wrap: nowrap;
+    /* The controls end on the table's right inset, under the "Actions" heading that
+       ends there too, instead of starting at the left edge of a column 400px wide. */
+    justify-content: flex-end;
 }
 /* Row actions use the small control size so dense tables stay scannable. Anchors
    that route count as row actions too: a row that mixed a 36px/13px link with a
@@ -227,31 +362,35 @@ td .toolbar .button .ui-icon,
     gap: 4px;
     flex-wrap: wrap;
     border-bottom: 1px solid var(--line);
-    padding-bottom: 8px;
+    /* The selected tab's rule sits on the strip's own rule: a tab is a place in a
+       strip, not a raised button, and a filled tab with a control radius spoke a third
+       "selected" language on a screen that already used a gold bar in the nav. */
+    padding-bottom: 0;
 }
 .tabs button {
     background: transparent;
     color: var(--muted);
     border-color: transparent;
-    box-shadow: none;
+    border-radius: 0;
+    box-shadow: inset 0 -2px transparent;
 }
 /* Hovering must not outline an unselected tab: the shared button hover paints a
    cyan edge, which reads as "selected" on a tab strip. */
 .tabs button:not(:disabled):not([aria-disabled='true']):not([aria-selected='true']):hover {
     color: var(--text);
-    background: color-mix(in srgb, var(--raised) 60%, transparent);
+    background: transparent;
     border-color: transparent;
 }
 .tabs button[aria-selected='true'] {
-    color: var(--gold);
-    background: var(--raised);
-    border-color: var(--line-bright);
-    box-shadow: inset 0 -2px var(--gold);
+    color: var(--text);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: inset 0 -2px var(--gold-rule);
 }
 .tabs button[aria-selected='true']:hover {
-    color: var(--gold);
-    background: var(--raised);
-    border-color: var(--line-bright);
+    color: var(--text);
+    background: transparent;
+    border-color: transparent;
 }
 .item-icon {
     position: relative;
@@ -269,14 +408,14 @@ td .toolbar .button .ui-icon,
     height: 48px;
     object-fit: contain;
 }
-.item-icon .stars {
-    position: absolute;
-    bottom: -5px;
-    font-size: 10.5px;
-    letter-spacing: -1px;
+/* Rarity is a line under the art, not a chip on it: at the 32px size tiles use the
+   overlay covered the picture, and at 56px it hung below the frame over the row rule. */
+.item-rarity {
     color: var(--gold);
-    /* A black halo under gold stars was a dirty outline on the light theme. */
-    text-shadow: var(--star-halo, 0 1px 2px #000);
+}
+.item-line .item-rarity {
+    font-size: 11.5px;
+    line-height: 1.3;
 }
 .item-line {
     display: flex;
@@ -289,6 +428,25 @@ td .toolbar .button .ui-icon,
 }
 .item-line small {
     display: block;
+}
+/* The table-cell size of the same line. A list of offers is scanned by eye, and the
+   art is what makes one row findable in a hundred, so the thumbnail stays and only
+   its box shrinks: 32px of art fits inside the height these rows already had. Rarity
+   is the one thing that does not fit here; the inspector the name opens carries it. */
+.item-line.compact {
+    gap: 10px;
+    min-width: 0;
+}
+.item-line.compact .item-icon {
+    width: 32px;
+    height: 32px;
+}
+.item-line.compact .item-icon img {
+    width: 26px;
+    height: 26px;
+}
+.item-line.compact .item-rarity {
+    display: none;
 }
 .item-grid {
     display: grid;
@@ -366,7 +524,7 @@ dialog {
     color: var(--text);
     background: var(--surface);
     border: 1px solid var(--line-bright);
-    border-top: 3px solid var(--gold);
+    border-top: 3px solid var(--gold-rule);
     border-radius: var(--radius);
     padding: 24px;
     box-shadow: var(--shadow);
@@ -374,6 +532,43 @@ dialog {
 dialog::backdrop {
     background: var(--scrim);
     backdrop-filter: blur(3px);
+}
+/* The shell enters in 140ms; the largest surface on the page appeared with no motion
+   at all, as a hard cut over the page it interrupted. Both move by the same amount and
+   for the same reason, and the global reduced-motion rules cancel the pair. */
+dialog {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.985);
+    transition:
+        opacity 120ms ease-out,
+        transform 120ms ease-out,
+        overlay 120ms allow-discrete,
+        display 120ms allow-discrete;
+}
+dialog[open] {
+    opacity: 1;
+    transform: none;
+}
+@starting-style {
+    dialog[open] {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.985);
+    }
+}
+dialog::backdrop {
+    opacity: 0;
+    transition:
+        opacity 120ms ease-out,
+        overlay 120ms allow-discrete,
+        display 120ms allow-discrete;
+}
+dialog[open]::backdrop {
+    opacity: 1;
+}
+@starting-style {
+    dialog[open]::backdrop {
+        opacity: 0;
+    }
 }
 .dialog-heading,
 .dialog-actions {
@@ -409,12 +604,36 @@ dialog::backdrop {
 }
 #dialog {
     max-block-size: 90dvh;
-    overflow: auto;
+    /* The form is the column: the heading and the actions keep their place and the
+       fields scroll between them. Scrolling the whole dialog took Save, Cancel and the
+       error line off screen on a long offer, so the operator had to scroll to the end
+       of a form to learn it had refused the save. */
+    overflow: hidden;
+}
+#editor {
+    display: flex;
+    flex-direction: column;
+    /* The dialog's own ceiling minus its 24px padding top and bottom and the 40px of
+       gutter it keeps from the viewport edges. */
+    max-block-size: calc(100dvh - 88px);
+    min-block-size: 0;
 }
 #fields {
     display: grid;
     gap: 18px;
     margin-top: 18px;
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow: auto;
+    /* Room for a focus ring inside the scroll box, without a visible gutter shift. */
+    padding-inline: 2px;
+    margin-inline: -2px;
+}
+/* A record taller than the dialog scrolls, and without a cue the last rows were sliced
+   flat against the footer with nothing to say more existed below. */
+#fields.is-scrollable {
+    padding-block-end: 12px;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
 }
 .form-grid {
     display: grid;
@@ -444,7 +663,7 @@ dialog::backdrop {
 }
 .draft-preview {
     padding: 14px;
-    border-left: 3px solid var(--gold);
+    border-left: 3px solid var(--gold-rule);
     background: var(--inset);
 }
 .chart {
@@ -473,6 +692,33 @@ dialog::backdrop {
     justify-content: space-between;
     color: var(--muted);
     font-size: 12.5px;
+}
+/* The measured value and the thing it measures are one reading: "0.3 % CPU", not
+   "0.3 %CPU". They were two inline nodes with no gap, and a second series stacked
+   under the first with nothing between them but its own line box. */
+.chart-current {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 20px;
+    margin-block: 2px 6px;
+    font-variant-numeric: tabular-nums;
+}
+.chart-current > div {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+.chart-current strong {
+    font-size: 15px;
+    font-weight: 600;
+}
+.chart-current small {
+    color: var(--muted);
+    font-size: 11.5px;
+}
+.chart-current .secondary-value strong {
+    color: var(--muted);
 }
 @media (max-width: 600px) {
     .form-grid {
@@ -551,7 +797,7 @@ a:focus-visible {
     padding: 12px 15px;
     color: var(--muted);
     background: var(--raised);
-    border-left: 3px solid var(--gold);
+    border-left: 3px solid var(--gold-rule);
     border-radius: var(--radius);
 }
 /* A refused address keeps Overview beneath it, so the card has to read as a banner
@@ -585,6 +831,13 @@ a:focus-visible {
     outline: 2px solid var(--cyan);
     outline-offset: 2px;
 }
+/* An empty table inside a panel drew three frames for one sentence: the panel, the
+   table's own border and the empty state. With nothing to scroll the inner frame has
+   no job, so it goes and the empty state sits on the panel it belongs to. */
+.panel .table-wrap:has(> table.is-empty) {
+    border-color: transparent;
+    background: transparent;
+}
 .select-column {
     width: 1%;
     padding-inline: 12px 4px;
@@ -611,8 +864,14 @@ caption {
 .skeleton-row {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: 1fr;
+    /* The first column carries the record's name and is the wide one, the way it is in
+       every table on this console. Equal columns drew a five-column list no page has,
+       and the placeholder jumped sideways the moment the real one arrived. */
+    grid-auto-columns: minmax(0, 1fr);
     gap: 14px;
+}
+.skeleton-row > :first-child {
+    grid-column: span 2;
 }
 .skeleton-bar {
     height: 12px;
@@ -776,7 +1035,7 @@ caption {
     padding: 10px 14px;
     background: var(--raised);
     border: 1px solid var(--line-bright);
-    border-left: 3px solid var(--gold);
+    border-left: 3px solid var(--gold-rule);
     border-radius: var(--radius);
     font-size: 13px;
 }
@@ -827,6 +1086,13 @@ caption {
     max-height: min(52dvh, 470px);
     overflow: auto;
     list-style: none;
+    /* Twenty destinations in a 470px list: the track was invisible and the last row
+       was cut in half, so the list looked like it had ended. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-bright) transparent;
+    scrollbar-gutter: stable;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
 }
 #palette-list ul {
     margin: 0;
@@ -837,9 +1103,7 @@ caption {
     padding: 10px 10px 6px;
     color: var(--muted);
     font-size: 11.5px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-weight: 600;
 }
 .palette-option {
     display: flex;
@@ -852,14 +1116,30 @@ caption {
 .palette-option.active,
 .palette-option[aria-selected='true'] {
     background: var(--raised);
-    box-shadow: inset 3px 0 var(--gold);
+    box-shadow: inset 3px 0 var(--gold-rule);
+}
+/* Every row reserves the glyph slot, so a row without client art still lines its
+   title up with the pages above it. */
+.palette-glyph {
+    display: grid;
+    place-items: center;
+    inline-size: 18px;
+    block-size: 18px;
+    flex: 0 0 auto;
+    align-self: center;
+    color: var(--muted);
+}
+.palette-glyph .ui-icon {
+    inline-size: 16px;
+    block-size: 16px;
+}
+.palette-option[aria-selected='true'] .palette-glyph {
+    color: var(--gold);
 }
 .palette-kind {
     min-width: 84px;
     color: var(--muted);
     font-size: 11.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 .palette-title {
     font-weight: 600;
@@ -917,6 +1197,26 @@ caption {
     gap: 16px;
     color: var(--text);
     font-size: 14px;
+}
+/* A preference the shell also switches draws the shell's switch, on the same edge the
+   selects above and below it occupy — and beside the same help line, so the two forms
+   of a setting read as one row. A bare word stretched across the row was the only
+   control on the page with no visible state. */
+.setting:has(> button[role='switch']) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 16px;
+}
+.setting > button[role='switch'] {
+    grid-area: 1 / 2;
+    min-inline-size: 156px;
+    block-size: 32px;
+    padding: 0 10px;
+    justify-content: space-between;
+    font-size: 13px;
+}
+.setting:has(> button[role='switch']) > .setting-help {
+    grid-area: 1 / 1;
 }
 .setting select {
     width: 100%;
@@ -996,10 +1296,15 @@ caption {
     .data-table tr:hover td {
         background: transparent;
     }
+    /* One line per field, label on the card's leading edge and value on its trailing
+       edge. A two-column grid aligned the values under each other only when they were
+       short, and a numeric cell pushed its value to the right of a column the text
+       cells started from — so a card ended with two ragged edges and no reason. */
     .data-table td {
-        display: grid;
-        grid-template-columns: minmax(84px, 38%) 1fr;
-        gap: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 2px 12px;
         padding: 2px 0;
         border: 0;
         overflow-wrap: anywhere;
@@ -1009,6 +1314,26 @@ caption {
         color: var(--muted);
         font-size: 12.5px;
     }
+    /* A card has no column to leave a gap for, so a dropped one goes entirely: the
+       flex rule above outranked the class that hides it on a wide table. */
+    .data-table td.column-dropped {
+        display: none;
+    }
+    .data-table td > * {
+        min-inline-size: 0;
+        margin-inline-start: auto;
+        text-align: end;
+    }
+    /* The item cell is a card of its own on a phone: a label gutter squeezed the 56px
+       thumbnail and a two-line item name into the value column beside it. */
+    .data-table td:has(.item-line) {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .data-table td:has(.item-line) > * {
+        margin-inline-start: 0;
+        text-align: start;
+    }
     .data-table td:empty {
         display: none;
     }
@@ -1017,8 +1342,22 @@ caption {
         display: block;
         padding-top: 6px;
     }
+    /* A card is not a table column: the pinned actions cell keeps neither its width
+       floor, its 1% width nor its sticky edge once the row becomes a card. Without the
+       width reset the cell was four pixels wide and the row's own button hung off the
+       left edge of the card, half of it outside the panel. */
+    .data-table td.row-actions {
+        inline-size: auto;
+        min-inline-size: 0;
+        position: static;
+        box-shadow: none;
+        background: none;
+    }
+    /* Only the cell that holds the row's controls loses its label. Scoping this to
+       "any cell with a toolbar" dropped the Price and Status labels too, because both
+       are wrapped in a toolbar, and their values slid into the label column. */
     .data-table td.select-column::before,
-    .data-table td:has(.toolbar)::before {
+    .data-table td:last-child:has(.toolbar)::before {
         content: none;
     }
     .data-table td .toolbar {
@@ -1037,8 +1376,11 @@ caption {
     .data-table .table-tools .spacer {
         display: none;
     }
+    /* Export buttons share a line as equals instead of the last one stretching alone
+       across the whole card: `flex: 1 1 auto` grew whichever button happened to wrap
+       onto a line of its own. */
     .data-table .table-tools button {
-        flex: 1 1 auto;
+        flex: 1 1 calc(50% - 6px);
     }
     .pagination select {
         flex: 1 1 140px;
@@ -1108,23 +1450,43 @@ caption {
     font-size: 12.5px;
     line-height: 1.6;
     overflow-wrap: anywhere;
-    resize: vertical;
+    /* A value, not a draft: the native drag grip invited the operator to reshape the
+       card, and nothing else on the page can be resized by accident. */
+    resize: none;
     user-select: all;
 }
 .identity-key[hidden] {
     display: none;
 }
+/* On a phone the key is 345px of a 702px first screen and it pushed everything else
+   below the fold. It keeps its own scroll instead, at the height of the copy row: the
+   button beside it still copies the whole value. */
+@media (max-width: 520px) {
+    .identity-key {
+        field-sizing: fixed;
+        block-size: 8lh;
+        overflow: auto;
+        resize: none;
+    }
+}
 /* A value and the control that acts on it stay on one line: the copy button is
-   useless if the thing it copies is behind a toggle. */
+   useless if the thing it copies is behind a toggle. The control sits on the same
+   edge in every row — pinned after the value it landed wherever the value ended, so
+   the two copy buttons on one card never lined up. */
 .identity-value {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     flex-wrap: wrap;
 }
 .identity-value > code {
     min-inline-size: 0;
     overflow-wrap: anywhere;
+}
+.identity-value > button {
+    flex: 0 0 auto;
+    margin-inline-start: auto;
 }
 .identity-field-label {
     margin: 0;
@@ -1133,14 +1495,45 @@ caption {
 /* An explanation of a value belongs on the page, not in a tooltip. */
 .identity-caption {
     /* Load-bearing explanation, so the body step and a readable measure — not the
-       smallest caption size on the page. */
+       smallest caption size on the page. Declared once: the 11.5px override that used
+       to follow this comment was the value that won. */
     font-size: 12.5px;
     line-height: 1.5;
     max-inline-size: 76ch;
     margin: 0;
-    font-size: 11.5px;
-    line-height: 1.45;
-    max-width: 78ch;
+}
+/* Three notes, side by side: the card is wide and they are short, and stacked they
+   left half of it empty and pushed the value grid out of reading order. */
+.identity-notes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 4px 36px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+}
+/* One note, headed by the row it explains. */
+.identity-note {
+    display: grid;
+    gap: 3px;
+    align-content: start;
+}
+/* A caption is a word at the caption size, in the same voice everywhere: tracked
+   all-caps mono in four different modules made four typographic systems out of one. */
+.identity-note dt {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 600;
+}
+.identity-session {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+}
+.identity-note dd {
+    margin: 0;
+    max-inline-size: 60ch;
 }
 /* Derived facts are reference material, not the headline: one row until asked. */
 .identity-details {

@@ -15,8 +15,10 @@ import {
     localDate,
     text,
     changed,
+    copy,
     landOn
 } from '../ui.js';
+import { href } from '../router.js';
 import { DataTable } from '../components/table.js';
 import { toast } from '../components/toast.js';
 // Two different confirm shapes: `confirm` takes positional route fields (a gated
@@ -88,6 +90,21 @@ const sentTime = (value) => moment(value);
 const countOf = (value, noun) => `${Number(value).toLocaleString()} ${noun}${value === 1 ? '' : 's'}`;
 /** A cell that names an entity links to the page that owns it, as a real link. */
 const entityLink = (label, name, values) => routeLink(label, name, values);
+/**
+ * One affordance, one label: the same job is "Copy link" on the server identity, and
+ * "Permalink" named the idea rather than the action — with two of them on one screen
+ * an operator could not tell the sections apart. The accessible name says which.
+ */
+function copyRouteLink(tab, what) {
+    const control = button(
+        'Copy link',
+        () => copy(`${location.origin}${location.pathname}${href('mailing', { tab })}`, 'Link copied.'),
+        'secondary sm'
+    );
+    control.setAttribute('aria-label', 'Copy link to ' + what);
+    control.title = 'Copy a link to ' + what;
+    return control;
+}
 
 function loadReceipts() {
     try {
@@ -148,7 +165,7 @@ export function mailingItems(gifts) {
 
 function statusBadge(campaign, now) {
     const status = mailingStatus(campaign, now);
-    return badge(status, status === 'Active' ? 'good' : status === 'Scheduled' ? 'gold' : '');
+    return badge(status, status === 'Active' ? '' : status === 'Scheduled' ? 'gold' : 'flag');
 }
 
 function giftsLine(gifts, definitions) {
@@ -653,12 +670,15 @@ function deliveredLabel(campaign) {
             id: 'mail-campaigns',
             address: true,
             caption: 'Mail campaigns',
+            searchPlaceholder: 'Search subject or sender',
             exportName: 'mail-campaigns',
             // An empty list says what a mailing is and where knights come from,
             // instead of guessing that it fills on its own.
             empty: {
                 title: 'No mailings yet',
-                hint: 'A mailing is a letter every knight receives once while its window is open. Knights are created in the game client, and a knight created later still receives an open mailing.',
+                // Where knights come from is already said under the button row: this
+                // sentence carried the same clause a second time, 120px below it.
+                hint: 'A mailing is a letter every knight receives once while its window is open, so one saved now reaches nobody until a knight exists.',
                 icon: 'mailing'
             },
             // The delivered cell reads "42 of N", so the population is part of what
@@ -745,8 +765,10 @@ function deliveredLabel(campaign) {
             delivered += campaign.delivered;
         }
         const total = population();
+        // A bordered control, not a quiet word: this one sits at the end of a line of
+        // figures and it is the only way to refresh them.
         const countKnights = button(
-            'Retry the knight count',
+            'Recount knights',
             async () => {
                 countKnights.setBusy(true);
                 try {
@@ -760,7 +782,7 @@ function deliveredLabel(campaign) {
                     table.update(data.campaigns);
                 }
             },
-            'quiet'
+            'secondary sm'
         );
         // Reaching a figure this control can refresh, and saying when it was read, is
         // better than re-reading every knight on a 30-second poll.
@@ -769,37 +791,43 @@ function deliveredLabel(campaign) {
                   rosterReadAt
               ).toLocaleTimeString()}.`
             : 'The roster read failed; this retries it once.';
+        // Four counts as one line of prose ("0 active 0 scheduled 0 ended 0
+        // cancelled") read as a sentence with the words run together, and the figure
+        // — the only part an operator scans — had the same weight as its own label.
+        // A counter sets the number first and the label muted under it.
+        const counters = el('dl', null, 'mail-counters');
+        for (const [name, count] of Object.entries(counts)) {
+            const item = el('div', null, 'mail-counter');
+            item.append(
+                el('dt', count.toLocaleString(), name === 'Active' && count > 0 ? 'is-live' : ''),
+                el('dd', name.toLowerCase())
+            );
+            counters.append(item);
+        }
         const content = [
-            guidance,
             toolbar(
-                ...Object.entries(counts).map(([name, count]) =>
-                    badge(
-                        `${count} ${name.toLowerCase()}`,
-                        name === 'Active' && count > 0 ? 'good' : ''
-                    )
-                ),
-                badge(
-                    total === null
-                        ? `${countOf(delivered, 'letter')} delivered`
-                        : delivered === 0
-                          ? 'Nothing delivered yet'
-                          : `${delivered.toLocaleString()} of ${countOf(total, 'knight')} reached`,
-                    delivered ? 'gold' : ''
-                ),
+                counters,
                 // Not `...(roster ? [] : [countKnights])`: once the first read succeeded
                 // the only control that could re-read the roster vanished, exactly when
                 // the "N of M reached" numbers started going stale.
                 countKnights
-            )
+            ),
+            // The reach figure is a sentence about the strip above it, not a fifth
+            // counter: inline between "0 cancelled" and the recount button it read as
+            // one more column of the same row.
+            el(
+                'p',
+                total === null
+                    ? `${countOf(delivered, 'letter')} delivered so far.`
+                    : delivered === 0
+                      ? 'Nothing has been delivered yet; no letter has reached a knight.'
+                      : `${delivered.toLocaleString()} of ${countOf(total, 'knight')} reached.`,
+                'mail-reach'
+            ),
+            // The disclosure goes last: it is the aside, and with the numbers it sat
+            // in front of its marker cut into the row the figures are read from.
+            guidance
         ];
-        if (roster && !roster.length)
-            content.push(
-                el(
-                    'p',
-                    'No knights exist on this server yet, so a mailing saved now delivers to nobody until a knight is created in the game client.',
-                    'muted'
-                )
-            );
         const summaryPanel = el('div', null, 'mail-status-strip');
         // A strip, not a panel: 262px of "Delivery status" above the list put the first
         // campaign row at y=730 of an 800px page, so the operator opened Player Mail on
@@ -837,12 +865,12 @@ function deliveredLabel(campaign) {
                         }),
                     'secondary'
                 ),
-                routeLink('Link to this section', 'mailing', { tab: 'receipts' }, 'link')
+                // No permalink here: the receipts are one panel of this page, which the
+                // Mailings permalink above already addresses, and two of them on one
+                // screen read as two different pages.
+                null
             );
-        else
-            header.append(
-                routeLink('Link to this section', 'mailing', { tab: 'receipts' }, 'link')
-            );
+        else header.append();
         const content = [
             el(
                 'small',
@@ -905,6 +933,7 @@ function deliveredLabel(campaign) {
                     key: (row) => String(row.at) + row.knight,
                     id: 'mail-receipts',
                     caption: 'Direct mail receipts',
+                    searchPlaceholder: 'Search subject or recipient',
                     search: false,
                     persist: false,
                     pageSize: 10
@@ -1026,7 +1055,7 @@ function deliveredLabel(campaign) {
                           )
                       ]
                     : []),
-                routeLink('Link to this section', 'mailing', { tab: 'welcome' }, 'link')
+                copyRouteLink('welcome', 'the new-knight welcome letter')
             )
         );
         const card = panel('', ...content);
@@ -1625,7 +1654,7 @@ function deliveredLabel(campaign) {
         const refreshPreview = () => {
             gameHost.replaceChildren(preview(currentMessage(), definitions));
             notesHost.replaceChildren(
-                ...previewNotes().map((note) => el('small', note, 'muted'))
+                ...previewNotes().map((note) => el('p', note, 'muted prose-note'))
             );
             if (previewMode === 'plain') showPreview('plain');
         };
@@ -2019,8 +2048,10 @@ function deliveredLabel(campaign) {
         // wastes the read the page already had: the control says it instead.
         () => roster === null || roster.length > 0,
         {
+            // The table's own empty state already says where knights come from: this
+            // line said it a second time, 120px above it in the same card.
             showReason: true,
-            unavailable: 'No knight exists on this server yet; knights are created in the game client.'
+            unavailable: 'No knights to write to yet.'
         }
     );
     directMail.title =
@@ -2030,7 +2061,7 @@ function deliveredLabel(campaign) {
         toolbar(
             newMailing,
             directMail,
-            routeLink('Link to this section', 'mailing', { tab: 'mailings' }, 'link')
+            copyRouteLink('mailings', 'the mailings list')
         ),
         table.node,
         welcomeDetails

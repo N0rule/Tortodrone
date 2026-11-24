@@ -7,7 +7,10 @@
         <meta name="description" content="Tortodrone server administration" />
         <title>Tortodrone</title>
         <script src="/admin/assets/preferences.js"></script>
-        <link id="favicon" rel="icon" href="data:," />
+        <!-- The tab icon is the pack's brand art, painted by `paintBrand()` once the
+             artwork is known. A placeholder here is a source the CSP forbids, and it
+             logged a violation on every page view. -->
+        <link id="favicon" rel="icon" />
         <link rel="modulepreload" href="/admin/assets/app.js" />
         <link rel="stylesheet" href="/admin/assets/css/tokens.css" />
         <link rel="stylesheet" href="/admin/assets/css/base.css" />
@@ -82,7 +85,10 @@
                 >
                 <nav id="navigation" aria-label="Administration sections"></nav>
                 <footer>
-                    <span id="identity"></span>
+                    <span id="identity"
+                        ><span id="identity-name"></span
+                        ><span id="identity-role" class="badge purple"></span
+                    ></span>
                     <div class="preference-controls">
                         <button id="theme" class="quiet" role="switch" aria-checked="false">
                             Light theme</button
@@ -125,7 +131,6 @@
                 <main id="main" tabindex="-1">
                     <div class="page-heading">
                         <div class="page-titles">
-                            <p id="page-section" class="eyebrow"></p>
                             <h1 id="title" tabindex="-1">Overview</h1>
                             <p id="page-description" class="page-description"></p>
                         </div>

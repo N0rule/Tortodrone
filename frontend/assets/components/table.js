@@ -104,6 +104,20 @@ export class DataTable {
             // with two tables gives one of them its own param name.
             address = false,
             addressParam = 'search',
+            // What this table can be searched for. Six tables used one placeholder,
+            // so "Search records" told the operator nothing about the columns that
+            // are actually matched.
+            searchPlaceholder = 'Search records',
+            // A column that holds nothing, or that says the same thing on every row,
+            // is a column of dashes where the table's real subject should have the
+            // width. Blank columns always go; a constant one only when the caller
+            // says so, because a filter that leaves one value is information.
+            dropConstantColumns = false,
+            // The order a list opens in. A table that sorts nothing renders in whatever
+            // order the export happened to hold and says so on every header
+            // (`aria-sort="none"`), which reads as an unsorted list with no order at all;
+            // the caller names the column that is really the list's spine.
+            defaultSort = null,
             empty,
             onRefresh,
         } = {}
@@ -117,6 +131,7 @@ export class DataTable {
             id: persist ? id : undefined,
             caption,
             selectable: selectable && !!bulkActions,
+            dropConstantColumns,
             bulkActions,
             onRefresh,
             exportName: exportName || caption || 'records',
@@ -133,6 +148,10 @@ export class DataTable {
                 : read('pageSize');
         this.sort = -1;
         this.direction = 1;
+        if (defaultSort && Number.isInteger(defaultSort.index) && defaultSort.index < columns.length) {
+            this.sort = defaultSort.index;
+            this.direction = defaultSort.direction === -1 ? -1 : 1;
+        }
         this.node = el('div', null, 'data-table');
 
         const saved = persist ? loadState(this.id) : null;
@@ -142,9 +161,10 @@ export class DataTable {
             if (schema.pageSize.includes(saved.pageSize)) this.pageSize = saved.pageSize;
         }
 
-        this.query = input('Search records');
+        this.query = input(searchPlaceholder);
         this.query.type = 'search';
-        this.query.placeholder = 'Search records';
+        this.query.placeholder = searchPlaceholder;
+        this.query.setAttribute('aria-label', searchPlaceholder);
         this.addressParam = addressParam;
         // A table that owns its address reads the search from it as well as writing it.
         // The flag is read from the option, not from a field that is assigned further
@@ -160,17 +180,23 @@ export class DataTable {
         this.filtersInitial = {};
         this.filterDefaults = {};
         this.address = address;
-        this.choices = filters.map(([name, values, match, initial]) => {
+        this.choices = filters.map(([name, options, match, initial]) => {
+            // A filter option is either the value itself or a `[value, label]` pair,
+            // and the label is what a person reads ("Administrator" for the enum the
+            // server speaks). Comparing and remembering the pair instead of its value
+            // matched nothing at all, so the page that used one listed no rows.
+            const values = options.map((option) => (Array.isArray(option) ? option : [option, option]));
+            const has = (value) => value !== null && values.some(([id]) => id === value);
             const savedValue = saved?.filters?.[name];
             const fromAddress = this.address ? route().params.get(name.toLowerCase()) : null;
             // The address outranks a remembered preference: a shared link that says
             // `?availability=Disabled` has to show disabled offers even in a browser
             // that last looked at enabled ones, or the link silently lies.
-            const start = values.includes(fromAddress)
+            const start = has(fromAddress)
                 ? fromAddress
-                : values.includes(savedValue)
+                : has(savedValue)
                   ? savedValue
-                  : (initial ?? values[0]);
+                  : (initial ?? values[0][0]);
             const control = select(name, values, start);
             control.dataset.filter = name;
             // The visible text of a filter was only its value ("All"), so what it
@@ -190,7 +216,7 @@ export class DataTable {
             // What the filter reads before anybody chose anything: the baseline a
             // "Clear filters" press returns to, and the one the address is compared
             // with so a remembered filter is written into it instead of vanishing.
-            this.filterDefaults[name] = initial ?? values[0];
+            this.filterDefaults[name] = initial ?? values[0][0];
             return [control, name, match];
         });
         this.controls.append(el('span', null, 'spacer'));
@@ -234,19 +260,28 @@ export class DataTable {
             cell.append(allLabel);
             row.append(cell);
         }
-        columns.forEach(([name], index) => {
+        this.headCells = [];
+        columns.forEach(([name, , , align], index) => {
             const cell = el('th');
             cell.scope = 'col';
+            this.headCells.push(cell);
+            // A column of numbers is read by its right edge; the header follows its
+            // data, or the two disagree by the width of the longest word.
+            if (align === 'end') cell.classList.add('numeric');
+            /**
+             * The direction of the column this table is actually sorted by, and nothing
+             * on the others. A caret on every sortable header at rest was fifteen marks
+             * per table saying "maybe": the order of the rows was still undiscoverable,
+             * and each header carried a faint `↕` too pale to read. The slot is reserved
+             * on every header so the label does not move when the mark arrives.
+             */
+            const mark = el('span', null, 'sort-mark');
+            mark.setAttribute('aria-hidden', 'true');
             const label = button(
                 name,
                 () => {
                     this.direction = this.sort === index ? -this.direction : 1;
                     this.sort = index;
-                    for (const th of head.querySelectorAll('th')) th.removeAttribute('aria-sort');
-                    cell.setAttribute(
-                        'aria-sort',
-                        this.direction === 1 ? 'ascending' : 'descending'
-                    );
                     if (this.sortSelect) this.sortSelect.value = String(this.sort);
                     this.remember();
                     this.render();
@@ -254,12 +289,17 @@ export class DataTable {
                 'quiet'
             );
             label.title = 'Sort by ' + name;
+            label.append(mark);
             cell.append(label);
-            if (this.sort === index)
-                cell.setAttribute(
-                    'aria-sort',
-                    this.direction === 1 ? 'ascending' : 'descending'
-                );
+            cell.dataset.sort = String(index);
+            cell.setAttribute(
+                'aria-sort',
+                this.sort === index
+                    ? this.direction === 1
+                        ? 'ascending'
+                        : 'descending'
+                    : 'none'
+            );
             row.append(cell);
         });
         if (actions) {
@@ -335,13 +375,6 @@ export class DataTable {
                 this.sort = index;
                 this.direction = 1;
             }
-            const header = this.table.querySelectorAll('thead th')[index + (this.selectable ? 1 : 0)];
-            for (const th of this.table.querySelectorAll('thead th')) th.removeAttribute('aria-sort');
-            if (this.sort >= 0)
-                header?.setAttribute(
-                    'aria-sort',
-                    this.direction === 1 ? 'ascending' : 'descending'
-                );
             this.remember();
             this.render();
         };
@@ -538,23 +571,65 @@ export class DataTable {
         return this.rows.filter((row) => wanted.has(String(this.key(row))));
     }
 
+    /**
+     * Paint the sort state from the table's own field.
+     *
+     * The mark used to be written once, when its header was built, so clicking "Kind"
+     * left the arrow beside "Station": the rows were ordered by Kind, the paging bar's
+     * select read "Kind", and the only visible direction pointed at a column that no
+     * longer sorted anything. Every path that changes the order ends in `render()`.
+     */
+    paintMarks() {
+        if (!this.headCells?.length) return;
+        this.headCells.forEach((cell, index) => {
+            const sorted = this.sort === index,
+                up = this.direction === 1,
+                mark = cell.querySelector('.sort-mark');
+            if (mark) {
+                // The arrow is a drawn triangle toggled by class, not a character: a
+                // 12px ↑ and ↓ photographed as the same tick, so the mark named the
+                // column and never the direction.
+                mark.classList.toggle('sorted', sorted);
+                mark.classList.toggle('is-asc', sorted && up);
+                mark.classList.toggle('is-desc', sorted && !up);
+            }
+            if (!cell.hasAttribute('data-sort')) return;
+            cell.setAttribute('aria-sort', sorted ? (up ? 'ascending' : 'descending') : 'none');
+            const label = cell.querySelector('button');
+            if (label)
+                label.title = sorted
+                    ? `${cell.textContent.trim()}, ${up ? 'ascending' : 'descending'} — click to reverse`
+                    : `Sort by ${cell.textContent.trim()}`;
+        });
+    }
+
     render() {
+        this.paintMarks();
         const rows = this.filteredRows();
         const pages = Math.max(1, Math.ceil(rows.length / this.pageSize));
         this.page = Math.max(1, Math.min(this.page, pages));
         this.pageRows = rows.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+        // One page needs no position: "page 1 / 1" is a fact the reader can already see.
         text(
             this.count,
             `${rows.length.toLocaleString()} ${rows.length === 1 ? 'record' : 'records'}${
                 rows.length === this.rows.length ? '' : ' of ' + this.rows.length.toLocaleString()
-            } · page ${this.page} / ${pages}`
+            }${pages > 1 ? ` · page ${this.page} / ${pages}` : ''}`
         );
         this.previous.disabled = this.page <= 1;
         this.next.disabled = this.page >= pages;
         this.size.value = String(this.pageSize);
+        // An empty table has nothing to page through: the size, the order and the two
+        // page buttons are three controls that cannot change anything, and beside an
+        // empty state they read as a broken footer. \"0 records\" under a sentence that
+        // already says there is nothing was the fourth copy of the same fact.
+        const paged = rows.length > 1;
+        for (const control of [this.previous, this.next, this.size, this.sortSelect])
+            control.hidden = !paged;
+        this.count.hidden = rows.length === 0;
 
         const desired = [];
-        for (const record of this.pageRows) {
+        for (const [rowIndex, record] of this.pageRows.entries()) {
             const key = String(this.key(record));
             let entry = this.cache.get(key);
             if (!entry) {
@@ -578,8 +653,9 @@ export class DataTable {
                     row.append(cell);
                     entry.box = box;
                 }
-                for (const _ of this.columns) {
+                for (const [, , , align] of this.columns) {
                     const td = el('td');
+                    if (align === 'end') td.classList.add('numeric');
                     row.append(td);
                     entry.cells.push(td);
                 }
@@ -612,7 +688,10 @@ export class DataTable {
             const signature = this.describeRow(record) + this.presentationKey(record);
             if (entry.signature !== signature) {
                 this.columns.forEach(([name, fn], index) => {
-                    const value = fn(record),
+                    // A cell may know where it sits: a trail that spans midnight prints
+                    // its date once a day instead of on fifty rows. The count is the
+                    // row's position — the loop's own index is the column's.
+                    const value = fn(record, rowIndex, this.pageRows),
                         cell = entry.cells[index];
                     cell.dataset.label = name;
                     if (value instanceof Node) cell.replaceChildren(value);
@@ -676,13 +755,58 @@ export class DataTable {
         const keys = new Set(this.rows.map((r) => String(this.key(r))));
         for (const key of [...this.cache.keys()]) if (!keys.has(key)) this.cache.delete(key);
         for (const key of [...this.selected]) if (!keys.has(key)) this.selected.delete(key);
+        this.dropColumns();
+        // An empty table has nothing to label: eight headers over one sentence read as
+        // a table that failed to load. The column names stay for a screen reader.
+        this.table.classList.toggle('is-empty', rows.length === 0);
         this.syncSelection();
+    }
+
+    /**
+     * Hide the columns this view has nothing to say in. A trail whose events carry no
+     * target printed "—" down a whole column; the depot printed the same limit and the
+     * same status thirty times. The header greys out with the cells, and the rule is
+     * re-decided on every render, so a filter that brings the values back brings the
+     * column back with them.
+     */
+    dropColumns() {
+        if (!this.headCells?.length) return;
+        const rows = this.pageRows ?? [];
+        if (!rows.length) {
+            for (const cell of this.headCells) cell.classList.remove('column-dropped');
+            return;
+        }
+        const entries = rows
+            .map((row) => this.cache.get(String(this.key(row))))
+            .filter(Boolean);
+        this.columns.forEach((_, index) => {
+            let filled = false,
+                first = null,
+                constant = true;
+            for (const entry of entries) {
+                const value = String(entry.cells[index]?.textContent || '').trim();
+                if (value && value !== '—') {
+                    filled = true;
+                    if (first === null) first = value;
+                    else if (value !== first) constant = false;
+                }
+            }
+            const hide = !filled || (this.dropConstantColumns && constant);
+            this.headCells[index].classList.toggle('column-dropped', hide);
+            for (const entry of entries)
+                entry.cells[index].classList.toggle('column-dropped', hide);
+        });
     }
 
     syncSelection() {
         if (!this.selectable) return;
         const visible = (this.pageRows ?? []).map((row) => String(this.key(row)));
         const chosen = visible.filter((key) => this.selected.has(key)).length;
+        // A select-all over no rows is a checkbox that asks about nothing, so it is
+        // not drawn at all: a disabled box in the header of an empty table is a mark
+        // with no meaning.
+        this.all.disabled = visible.length === 0;
+        this.all.parentElement.hidden = visible.length === 0;
         this.all.checked = visible.length > 0 && chosen === visible.length;
         this.all.indeterminate = chosen > 0 && chosen < visible.length;
         this.all.setAttribute(

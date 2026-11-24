@@ -48,6 +48,11 @@
     scrollbar-width: thin;
     scrollbar-color: var(--line-bright) transparent;
 }
+/* Only when the list is longer than its column: the last item fades into the footer
+   instead of ending in a hard cut with nothing to say there is more. */
+#sidebar.nav-overflows #navigation {
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent);
+}
 #navigation a {
     display: flex;
     align-items: center;
@@ -85,7 +90,7 @@
     color: var(--gold);
     border-color: var(--line-bright);
     background: var(--raised);
-    box-shadow: inset 3px 0 var(--gold);
+    box-shadow: inset 3px 0 var(--gold-rule);
 }
 .nav-icon {
     display: inline-block;
@@ -109,12 +114,27 @@
     display: flex;
     flex-wrap: wrap;
 }
+/* Who is signed in: the name, then the role as the one chip the sidebar wears. */
+#identity {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+    color: var(--text);
+}
+#identity-name {
+    font-weight: 600;
+}
 #sidebar footer button {
     min-block-size: var(--control-sm);
     padding: 0 8px;
     border-radius: var(--radius-control);
     font-size: 12.5px;
+    /* A button is a flex box: `text-align: left` never moved its label, so Sign out —
+       the one footer child that fills the column — set its word in the middle while
+       the two switches above it started at the margin. */
     text-align: left;
+    justify-content: flex-start;
 }
 .workspace {
     min-width: 0;
@@ -149,9 +169,12 @@
     padding: 0 12px;
 }
 main {
+    /* One gutter value: the sticky page heading spans it with a negative margin, so
+       the two numbers cannot drift apart at a breakpoint. */
+    --gutter: 30px;
     max-width: 1560px;
     margin: auto;
-    padding: 26px 30px 50px;
+    padding: 26px var(--gutter) 50px;
 }
 .page-heading {
     display: flex;
@@ -161,6 +184,14 @@ main {
     margin-bottom: 22px;
     padding-bottom: 18px;
     border-bottom: 1px solid var(--line);
+    /* The page travels with its name and its one action. On a 328-row depot the
+       title and the primary control used to scroll away on the first wheel notch. */
+    position: sticky;
+    top: 54px;
+    z-index: 10;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    background: var(--canvas);
 }
 .page-heading h1 {
     margin: 0;
@@ -169,6 +200,42 @@ main {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space);
+    position: relative;
+}
+@keyframes page-enter {
+    from {
+        opacity: 0;
+        transform: translateY(2px);
+    }
+}
+#page.page-enter {
+    animation: page-enter 140ms ease-out both;
+}
+/* A read in flight, drawn where the reading happens. The bar is the only motion in
+   the shell that is not a response to the operator's own click, and it stops when the
+   answer lands. */
+#page.refreshing::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: calc(var(--space) * -0.5);
+    block-size: 2px;
+    border-radius: var(--radius-pill);
+    background: var(--cyan);
+    animation: refresh-run 1.1s ease-in-out infinite;
+}
+@keyframes refresh-run {
+    0%,
+    100% {
+        opacity: 0.25;
+        transform: scaleX(0.15);
+        transform-origin: left;
+    }
+    50% {
+        opacity: 0.9;
+        transform: scaleX(0.75);
+        transform-origin: left;
+    }
 }
 .toolbar {
     display: flex;
@@ -214,7 +281,7 @@ main {
     gap: 18px;
     padding: 32px;
     border: 1px solid var(--line-bright);
-    border-top: 3px solid var(--gold);
+    border-top: 3px solid var(--gold-rule);
     background: var(--surface);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
@@ -251,7 +318,8 @@ main {
         grid-template-columns: 1fr;
     }
     main {
-        padding: 22px;
+        --gutter: 22px;
+        padding: 22px var(--gutter);
     }
 }
 /* The sidebar becomes the overlay drawer at 900px, not 760: at 844x390 (a landscape
@@ -269,6 +337,49 @@ main {
     }
     #shell.menu-open #sidebar {
         display: flex;
+    }
+    /* In the drawer the footer keeps the account and Sign out. The two appearance
+       switches already exist on Preferences, and here they cost the last four
+       destinations their place on a phone screen. */
+    #sidebar .preference-controls {
+        display: none;
+    }
+    /* The drawer's own rhythm. Five group headings and fourteen links measured 782px
+       of list in a 659px drawer at 414x900, which left Audit Trail, WebUI Access and
+       Preferences below a scrollbar nobody could see. The names stay; the space around
+       them is the drawer's to spend on destinations instead. */
+    #navigation {
+        gap: 0;
+    }
+    .nav-section {
+        padding-bottom: 0;
+    }
+    /* Fourteen destinations at the 44px touch target plus five headed sections came to
+       810px in a 659px drawer at 414x900: Audit Trail, WebUI Access and Preferences sat
+       under a fade with no scrollbar to say so. The headings keep their place in the
+       accessibility tree and lose their lines, and a hairline marks where each run of
+       pages begins — the same grouping, 100px cheaper. */
+    #sidebar .nav-heading {
+        position: absolute;
+        inline-size: 1px;
+        block-size: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+    .nav-section + .nav-section {
+        margin-top: 2px;
+        padding-top: 2px;
+        border-top: 1px solid var(--line);
+    }
+    /* The drawer pays for its list in the two places above and below it: the brand's
+       25px breathing room and the close control's negative margins were tuned for a
+        short desktop column, and here they price four destinations. */
+    #sidebar .brand {
+        padding-bottom: 10px;
+    }
+    #close-navigation {
+        margin: -8px 0 6px;
     }
     #close-navigation {
         display: inline-flex;
@@ -296,7 +407,12 @@ main {
         padding: 0 16px;
     }
     main {
-        padding: 20px 14px;
+        /* The gutter is the padding, and the sticky page heading spans it with a
+           negative margin of the same value: leaving --gutter at the 22px of the
+           breakpoint above while the padding became 14px made every page 8px wider
+           than the viewport. */
+        --gutter: 14px;
+        padding: 20px var(--gutter);
     }
     .two-columns {
         grid-template-columns: 1fr;
@@ -321,14 +437,21 @@ main {
     gap: 2px;
     padding-bottom: 4px;
 }
+/* A named group, not a shout. Tracked capitals above every group were the same
+   template device the page heading used, and the rail is the one place the group is
+   named, so it carries the name in sentence case over its own hairline. */
 .nav-heading {
-    margin: 0;
-    padding: 9px 12px 2px;
+    margin: 10px 0 0;
+    padding: 10px 12px 4px;
     color: var(--muted);
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-top: 1px solid var(--line);
+}
+.nav-heading:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
 }
 .nav-list {
     display: grid;
@@ -389,14 +512,6 @@ main {
     gap: 4px;
     min-width: 0;
 }
-.eyebrow {
-    margin: 0;
-    color: var(--muted);
-    font-size: 11.5px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-}
 .page-description {
     margin: 0;
     color: var(--muted);
@@ -452,10 +567,18 @@ main {
     }
     .page-heading {
         align-items: flex-start;
-        flex-wrap: wrap;
-        gap: 12px;
+        /* No wrap: the heading's one action used to drop to a second line on a phone,
+           where a borderless "Refresh" under the subtitle read as a stray word rather
+           than as the control that re-reads the page. It stays beside the name. */
+        gap: 10px;
     }
     .page-description {
         font-size: 12.5px;
+    }
+    /* On a phone the heading's one control sits under the subtitle, where a borderless
+       word read as a stray label rather than as the thing that re-reads the page. */
+    #refresh {
+        border-color: var(--line-bright);
+        background: var(--surface);
     }
 }

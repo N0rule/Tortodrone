@@ -1,6 +1,6 @@
 import { symbol as uiSymbol } from './components/symbols.js';
 import { api } from './api.js';
-import { $, el, button, text, notify, report, calendarDate, toolbar } from './ui.js';
+import { $, el, button, text, notify, report, calendarDate, date, zoneName, toolbar } from './ui.js';
 import { route, go } from './router.js';
 import { loadAssets } from './components/items.js';
 import { dialogDirty, closeDialog } from './components/dialog.js';
@@ -173,24 +173,78 @@ function menu(open, restoreFocus = false) {
     $('#shell').classList.toggle('menu-open', open);
     $('#menu').setAttribute('aria-expanded', String(open));
     $('.workspace').inert = open;
-    if (open) $('#close-navigation').focus();
-    else if (restoreFocus) $('#menu').focus();
+    if (open) {
+        // Fourteen destinations do not fit every phone, and the drawer scrolled with no
+        // sign that it did: "Content Catalogue" was cut mid-glyph and the last three
+        // pages might as well not have existed. The fade appears only when there is
+        // more below it.
+        const nav = $('#navigation');
+        $('#sidebar').classList.toggle('nav-overflows', nav.scrollHeight > nav.clientHeight + 2);
+        $('#close-navigation').focus();
+    } else {
+        $('#sidebar').classList.remove('nav-overflows');
+        if (restoreFocus) $('#menu').focus();
+    }
 }
 
+/**
+ * When the shell last read anything. The pill used to assert "Connected" forever after
+ * any successful mount, including on a page with no refresh hook at all, so the one
+ * status the operator trusts most was the one never aged.
+ */
+let lastRead = 0,
+    readState = 'Connected';
+
 function connection(value, online = true) {
-    text($('#connection'), value);
-    $('#connection').classList.toggle('online', online);
+    const node = $('#connection');
+    readState = value;
+    if (online) lastRead = Date.now();
+    node.classList.toggle('online', online);
+    ageConnection();
+}
+
+/**
+ * The pill reads the banner, not the fact that a function returned.
+ *
+ * A page's mount can catch its own failed read, raise the notice and return normally:
+ * the shell then painted "Connected" over "The server did not answer" until the first
+ * refresh corrected it, which is the one moment the operator is deciding whether to
+ * believe the page at all.
+ */
+function noticeRaised() {
+    const notice = $('#notice');
+    return !!notice && !notice.hidden && notice.classList.contains('error');
+}
+
+function ageConnection() {
+    const node = $('#connection'),
+        age = lastRead ? Date.now() - lastRead : Infinity;
+    // Overview and Players put the server's own state in this pill instead of the
+    // transport's, so only the "Connected" reading is aged — but every reading says
+    // when it was last refreshed.
+    if (readState === 'Connected') {
+        text(node, age > 60_000 ? `Connected · ${Math.round(age / 60_000)}m ago` : 'Connected');
+    } else text(node, readState);
+    node.title = lastRead
+        ? `Last read from the server ${
+              age < 5_000 ? 'just now' : Math.round(age / 1000) + 's ago'
+          }.`
+        : 'Nothing has been read from the server since this page opened.';
 }
 
 function clock() {
-    const now = new Date();
-    text(
-        $('#clock'),
-        prefs.read('clock') === 'date-time'
-            ? now.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
-            : calendarDate(now)
-    );
-    $('#clock').dateTime = now.toISOString();
+    const now = new Date(),
+        node = $('#clock');
+    // The zone is part of a time, and it comes from the same formatter the rows use: the
+    // header once spelled the zone "GMT+2" over rows that spelled it "EET".
+    text(node, prefs.read('clock') === 'date-time' ? date(now) : calendarDate(now) + ' ' + zoneName(now));
+    node.dateTime = now.toISOString();
+    node.title = `This browser's clock${
+        Intl.DateTimeFormat().resolvedOptions().timeZone
+            ? ' · ' + Intl.DateTimeFormat().resolvedOptions().timeZone
+            : ''
+    }. Rows are stamped by the server.`;
+    ageConnection();
 }
 
 /**
@@ -210,15 +264,20 @@ async function refresh(polled = false) {
         job = { id, repeat: false };
     refreshJob = job;
     $('#refresh').disabled = true;
+    // A refetch of a table used to look like a dead control: the only busy state the
+    // shell had was the first paint's skeleton.
+    $('#page').classList.add('refreshing');
     job.promise = (async () => {
+        const notice = $('#notice');
         try {
             if (polled && target.poll) await target.poll();
             else await target.refresh();
-            if (id === generation && current !== 'overview' && current !== 'players')
-                connection('Connected');
+            // A page that catches its own failed read returns normally, so the notice it
+            // raised is the only evidence the server did not answer: the pill said
+            // "Connected" beside a banner that said the server was not answering.
+            if (id === generation && !noticeRaised()) connection('Connected');
             // A recovered poll ends the error it raised; a sticky notice that
             // outlives the failure trains operators to ignore notices.
-            const notice = $('#notice');
             if (notice && !notice.hidden && notice.classList.contains('error')) {
                 notice.hidden = true;
                 notice.classList.remove('error');
@@ -230,7 +289,10 @@ async function refresh(polled = false) {
                 report(error, { read: true });
             }
         } finally {
-            if (id === generation) $('#refresh').disabled = false;
+            if (id === generation) {
+                $('#refresh').disabled = false;
+                $('#page').classList.remove('refreshing');
+            }
             if (refreshJob === job) {
                 refreshJob = null;
                 if (job.repeat && id === generation) refresh(polled);
@@ -366,7 +428,12 @@ function showRefusal({ title, message }) {
 }
 /** Paint the page container, keeping a live refusal above whatever it holds. */
 function paintPage(...nodes) {
-    $('#page').replaceChildren(...(refusal ? [refusal, ...nodes] : nodes));
+    const page = $('#page');
+    page.replaceChildren(...(refusal ? [refusal, ...nodes] : nodes));
+    // One arrival, not a dozen: the page fades in as a whole instead of every card
+    // animating on its own. Reduced motion turns this off with every other transition.
+    page.classList.remove('page-enter');
+    requestAnimationFrame(() => page.classList.add('page-enter'));
 }
 
 async function navigate() {
@@ -436,7 +503,6 @@ async function navigate() {
         // highlights WebUI Access.
         a.setAttribute('aria-current', a.dataset.page === spec.name ? 'page' : 'false');
     text($('#title'), spec.title);
-    text($('#page-section'), spec.section);
     text($('#page-description'), spec.description ?? '');
     document.title = spec.title + ' · Tortodrone';
     $('#page').setAttribute('aria-label', spec.title);
@@ -500,7 +566,8 @@ async function navigate() {
         $('#page').setAttribute('aria-busy', 'false');
         paintPage(mounted.node);
         $('#refresh').disabled = !mounted.refresh;
-        connection('Connected');
+        if (noticeRaised()) connection('Reconnecting', false);
+        else connection('Connected');
         // Keyboard and screen-reader users land on the new page's heading, not
         // on a stale control from the previous page.
         if (!fromMenu && document.activeElement === document.body) $('#title').focus();
@@ -518,6 +585,10 @@ async function navigate() {
                     }
                 })
             );
+            // A page that never mounted is the one failure this shell paints itself, and
+            // the pill has to say so: the banner alone left "Connected" over a page that
+            // could not be loaded at all.
+            connection('Reconnecting', false);
             report(error, { read: true });
         }
     }
@@ -529,7 +600,10 @@ function signedIn() {
     refusal = null;
     $('#login').hidden = true;
     $('#shell').hidden = false;
-    text($('#identity'), api.session.username + ' · ' + api.session.role.toLowerCase());
+    // The name and the role are two things, so they are two elements: a middot
+    // between them made one string that wrapped mid-sentence in a 220px column.
+    text($('#identity-name'), api.session.username);
+    text($('#identity-role'), String(api.session.role || '').toLowerCase());
     $('#identity').title = api.session.username + ' (' + api.session.role + ')';
     renderNavigation();
     expiryWarned = false;
@@ -674,6 +748,10 @@ function preferences() {
         // The title names what a click does, so it can never contradict the switch
         // it sits on (a light theme used to offer to "switch the light theme").
         const on2 = prefs.read(key) === on;
+        // The switch reports its own state. It never did: the markup's `aria-checked`
+        // stayed at the value it shipped with, so a screen reader heard "off" on a
+        // light theme and the checked styling never applied.
+        node.setAttribute('aria-checked', String(on2));
         node.title =
             key === 'theme'
                 ? on2
@@ -697,6 +775,7 @@ const palette = createPalette({
                 id: 'page-' + page.name,
                 title: page.title,
                 hint: page.section,
+                icon: page.name,
                 group: 'Page',
                 run: () => go(page.name)
             })),
@@ -708,6 +787,7 @@ const palette = createPalette({
             id: 'identity',
             title: 'Server public key',
             hint: 'Identity · fingerprint · modulus · ssh',
+            icon: 'overview',
             group: 'Page',
             run: () => go('overview', { panel: 'identity' })
         },

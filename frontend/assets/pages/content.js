@@ -3,6 +3,7 @@ import { itemPicker } from '../components/item-picker.js';
 import { definitionsFor, itemLine, itemLinks, inspectItemName } from '../components/items.js';
 import { openDialog, closeDialog } from '../components/dialog.js';
 import { DataTable } from '../components/table.js';
+import { symbol } from '../components/symbols.js';
 import { route, go } from '../router.js';
 export async function mount(ctx) {
     // Read once, in `refresh()` below. The page used to issue the same `content` read
@@ -11,7 +12,7 @@ export async function mount(ctx) {
         appliedSearch = ctx.params.get('search'),
         opened = null;
     const node = el('div', null, 'stack'),
-        summary = el('div', null, 'stack');
+        summary = el('div', null, 'stack content-summary');
     const keyOf = (station) => station.actor || station.name;
     /** Rewrite this page's address, keeping the params this action does not own. */
     function here(changes = {}, drop = []) {
@@ -55,6 +56,34 @@ export async function mount(ctx) {
     }
     const merchants = () =>
         Array.isArray(data.merchants) ? data.merchants : Object.values(data.merchants ?? {});
+    /* A station's kind is the engine class that opens it — `OpenCatalogCrafter` —
+       which is the one spelling an operator cannot read as a word. The label is the
+       class name with its `Open` verb dropped and the camel humps split, and the
+       engine's own spelling stays on the cell as its tooltip and in the dialog. */
+    const kindLabel = (kind) => {
+        const bare = String(kind || '').replace(/^Open/, '');
+        const words = bare
+            .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+            // The engine spells it "Catalog"; the column header, the page name and the
+            // rest of this console spell it "Catalogue", and one table cannot hold both.
+            .replace(/Catalog (Crafter|Maker)/g, 'Catalogue $1')
+            .replace(/^./, (first) => first.toUpperCase());
+        return words || '—';
+    };
+    /* The art says what the station does, in client glyphs only: a shop and a depot
+       share the depot mark because they are the same counter, and everything that
+       makes or converts items wears the catalogue's own mark. A kind with no glyph
+       of its own gets none. */
+    const kindArt = (kind) => {
+        const bare = String(kind || '').replace(/^Open/, '').toLowerCase();
+        if (bare.includes('auction')) return 'auctions';
+        if (bare.includes('depot')) return 'depot';
+        if (bare.includes('shop')) return 'depot';
+        // A kind the pack has no glyph for wears the catalogue's own mark: a station in
+        // this list is a station in the town catalogue, and one row without a face
+        // beside sixteen with one read as a failed image.
+        return 'content';
+    };
     // The merchant catalogue is operator data: a table with the same search,
     // sort and export as every other list, plus a jump into the catalogue search.
     const stationTable = new DataTable(
@@ -65,18 +94,41 @@ export async function mount(ctx) {
                     // One string per station, and the link is on the value the reader
                     // sees: a button and a hidden actor path meant no station address
                     // could be copied or middle-clicked.
-                    const cell = el('div', null, 'offer-reference');
+                    const cell = el('div', null, 'offer-reference with-art');
+                    // A merchant had no face in this catalogue at all: ninety-nine
+                    // rows of names, where every other list on the page opens with
+                    // the client's own picture of the thing.
+                    const art = kindArt(station.kind);
+                    const mark = art ? symbol(art) : null;
+                    if (mark) {
+                        mark.classList.add('station-mark');
+                        cell.append(mark);
+                    }
                     const label = station.name && station.name !== '~' ? station.name : station.actor;
                     const link = routeLink(label, 'content', { station: keyOf(station) });
                     link.title = station.actor;
                     cell.append(link);
-                    if (station.name && station.name !== '~')
-                        cell.append(el('small', station.actor, 'muted'));
+                    if (station.name && station.name !== '~') {
+                        // The actor is a path, and a long one wrapped the cell to three
+                        // lines beside a name of one: the row keeps its height and the
+                        // whole path stays reachable as the tooltip.
+                        const actor = el('small', station.actor, 'muted');
+                        actor.title = station.actor;
+                        cell.append(actor);
+                    }
                     return cell;
                 },
                 (station) => station.name && station.name !== '~' ? station.name : station.actor
             ],
-            ['Kind', (station) => station.kind || '—'],
+            [
+                'Kind',
+                (station) => {
+                    const node = el('span', kindLabel(station.kind), 'station-kind');
+                    node.title = station.kind || '';
+                    return node;
+                },
+                (station) => station.kind || ''
+            ],
             [
                 'Group',
                 // A group is an internal scene path; the leaf name is the label and the
@@ -93,8 +145,19 @@ export async function mount(ctx) {
             [
                 'Catalogue',
                 (station) => {
-                    if (!station.shop?.catalog) return el('span', 'Recipes only', 'muted');
-                    const name = el('span', station.shop.catalog.split('/').slice(-1)[0]);
+                    // "Recipes only" beside "Recipes: 0" contradicted itself in nine rows
+                    // of ten: the cell names the captured catalogue, and a station without
+                    // one has nothing to name.
+                    if (!station.shop?.catalog) {
+                        const none = el('span', '—', 'muted');
+                        none.title = 'No shop catalogue was captured for this station';
+                        return none;
+                    }
+                    const name = el(
+                        'span',
+                        station.shop.catalog.split('/').slice(-1)[0],
+                        'cell-clip'
+                    );
                     name.title = station.shop.catalog;
                     return name;
                 },
@@ -102,19 +165,34 @@ export async function mount(ctx) {
             ],
             [
                 'Level',
-                (station) => station.shop?.level ?? '—',
-                (station) => station.shop?.level ?? 0
+                (station) => {
+                    // A station whose catalogue was never captured has no level to
+                    // report: a printed 0 beside an empty Catalogue cell is a figure the
+                    // export does not hold, and it sorts as the lowest level in town.
+                    if (station.shop?.level == null) return el('span', '—', 'muted');
+                    return String(station.shop.level);
+                },
+                (station) => station.shop?.level ?? 0,
+                'end'
             ],
             [
                 'Recipes',
+                (station) => {
+                    if (!station.recipes?.length) return el('span', '—', 'muted');
+                    return String(station.recipes.length);
+                },
                 (station) => station.recipes?.length ?? 0,
-                (station) => station.recipes?.length ?? 0
+                'end'
             ],
             [
                 'Model',
                 (station) => {
                     const path = station.model || '';
-                    const node = el('span', path.split('/').filter(Boolean).pop() || '—');
+                    const node = el(
+                        'span',
+                        path.split('/').filter(Boolean).pop() || '—',
+                        'cell-clip'
+                    );
                     node.title = path;
                     return node;
                 },
@@ -129,25 +207,40 @@ export async function mount(ctx) {
             address: true,
             addressParam: 'merchant',
             caption: 'Merchant stations in the exported town catalogue',
+            searchPlaceholder: 'Search station, kind or group',
             exportName: 'merchant-stations',
             pageSize: 10,
+            defaultSort: { index: 0 },
+            // The catalogue prints "Recipes only" down a column and one level down
+            // another; a column that says the same thing in every row is a header
+            // over nothing, and it comes back the moment a filter makes it vary.
+            dropConstantColumns: true,
             empty: {
                 title: 'No merchant stations are exported',
                 hint: 'Stations come from the exported town catalogue; add one and export again.',
                 icon: 'content'
             },
-            actions: (get) => [
-                button('Open station', () => openStation(get()), 'secondary'),
-                button(
-                    'Find items',
-                    () => {
-                        setPickerQuery(get().shop?.catalog || get().actor);
-                        picker.node.querySelector('input')?.focus();
-                        picker.node.scrollIntoView({ block: 'center' });
-                    },
-                    'secondary'
-                )
-            ]
+            /* One action per row, and the one the row can actually do. Every row used
+               to carry "Open station" and "Find items" side by side — 198 equal buttons
+               down the table, where the station name above each pair already opened the
+               station and "Find items" stayed enabled on rows whose catalogue is empty,
+               so two thirds of the column did nothing. */
+            actions: (get) => {
+                const station = get();
+                if (!station.shop?.catalog)
+                    return [button('Open station', () => openStation(station), 'secondary')];
+                return [
+                    button(
+                        'Find items',
+                        () => {
+                            setPickerQuery(station.shop.catalog);
+                            picker.node.querySelector('input')?.focus();
+                            picker.node.scrollIntoView({ block: 'center' });
+                        },
+                        'secondary'
+                    )
+                ];
+            }
         }
     );
     /**
@@ -188,7 +281,7 @@ export async function mount(ctx) {
                 el('p', station.description || station.actor, 'muted'),
                 facts([
                     ['Actor', station.actor],
-                    ['Kind', station.kind || '—'],
+                    ['Kind', kindLabel(station.kind)],
                     ['Group', station.group || '—'],
                     ['Catalogue', station.shop?.catalog || 'none'],
                     [

@@ -50,10 +50,17 @@ test('a search in the address survives a cold load', () => {
 test('the address outranks a remembered filter', () => {
     const start = table.indexOf('const savedValue = saved?.filters?.[name];');
     assert.ok(start > 0, 'the filter defaults are still read from storage');
-    const block = table.slice(start, start + 700);
-    const addressAt = block.indexOf('values.includes(fromAddress)');
-    const savedAt = block.indexOf('values.includes(savedValue)');
+    const block = table.slice(start, start + 900);
+    const addressAt = block.indexOf('has(fromAddress)');
+    const savedAt = block.indexOf('has(savedValue)');
     assert.ok(addressAt > 0 && savedAt > addressAt, 'a shared link wins over this browser');
+    // A filter option may be `[value, label]`, and a value has to be compared, never
+    // the pair: matching the pair matched nothing, so WebUI Access listed no rows.
+    assert.match(
+        table,
+        /const values = options\.map\(\(option\) => \(Array\.isArray\(option\) \? option : \[option, option\]\)\)/,
+        'the option list is normalised to value/label pairs before anything is compared'
+    );
 });
 
 test('a read writes the address it is looking at', () => {

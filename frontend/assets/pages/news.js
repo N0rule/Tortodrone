@@ -63,7 +63,9 @@ export async function mount(ctx) {
         action = select(
             'Client action',
             [
-                ['', 'Open link / none'],
+                // One outcome per label: "Open link / none" named two things at once and
+                // the reader could not tell which one pressing it would choose.
+                ['', 'Open in the browser only'],
                 ['depot', 'Open Supply Depot']
             ],
             ''
@@ -130,7 +132,25 @@ export async function mount(ctx) {
         toolbar(welcomeSave, welcomeStatus)
     );
     welcomePanel.classList.add('stack');
+    // A native file input draws the browser's own grey "Choose File / No file chosen"
+    // control inside a page of client art, and it cannot be styled into this one
+    // language: the control is hidden and a real button opens it, with the name of
+    // the file it holds beside it.
     const file = input('Upload News image', '', 'file', { accept: 'image/png,image/jpeg' });
+    file.classList.add('visually-hidden');
+    file.tabIndex = -1;
+    const fileName = el('span', 'No file chosen', 'file-name');
+    const fileButton = button('Choose a file', () => file.click(), 'secondary');
+    const fileLimit = el('span', 'PNG or JPEG, up to 1 MiB', 'upload-limit');
+    fileLimit.id = 'upload-limit';
+    fileButton.setAttribute('aria-describedby', 'upload-limit');
+    const uploadRow = el('div', null, 'upload-row');
+    uploadRow.append(file, fileButton, fileName, fileLimit);
+    /** The upload disables its own picker while the bytes are in flight. */
+    const fileBusy = (state) => {
+        file.disabled = state;
+        fileButton.disabled = state;
+    };
     // The one action this page exists for carries the primary weight.
     const save = button(
         'Review and save News',
@@ -195,7 +215,7 @@ export async function mount(ctx) {
         workspace,
         panel(
             'Image library',
-            label('Upload PNG or JPEG (up to 1 MiB)', file),
+            uploadRow,
             el(
                 'small',
                 'Featured: 570 × 300. Spotlights: 280 × 190. Smaller images retain their native dimensions.',
@@ -347,9 +367,16 @@ export async function mount(ctx) {
                 name === 'featured' ? 'Featured banner' : name + ' spotlight'
             );
             if (!value?.image) {
-                target.replaceChildren(
-                    el('span', name === 'featured' ? 'Featured · 570 × 300' : `${name} · 280 × 190`)
+                // An empty slot names what belongs in it and how big the picture has to
+                // be; "left · 280 × 190" was the scene key, not a word an operator uses.
+                const placeholder = el(
+                    'span',
+                    name === 'featured'
+                        ? 'Featured banner · 570 × 300'
+                        : `${name === 'left' ? 'Left' : 'Right'} spotlight · 280 × 190`,
+                    'slot-empty'
                 );
+                target.replaceChildren(placeholder);
                 continue;
             }
             const img = el('img');
@@ -357,7 +384,7 @@ export async function mount(ctx) {
             img.alt = value.tooltip || name + ' banner';
             img.title = value.tooltip;
             img.onerror = () => {
-                target.replaceChildren(el('span', 'Image unavailable'));
+                target.replaceChildren(el('span', 'Image unavailable', 'slot-empty'));
                 text(error, 'The selected image could not be loaded.');
             };
             target.replaceChildren(img);
@@ -482,8 +509,9 @@ export async function mount(ctx) {
     };
     file.onchange = async () => {
         const upload = file.files[0];
+        fileName.textContent = upload?.name || 'No file chosen';
         if (!upload) return;
-        file.disabled = true;
+        fileBusy(true);
         try {
             if (upload.size > 1024 * 1024 || !['image/png', 'image/jpeg'].includes(upload.type))
                 throw new Error('Choose a PNG or JPEG no larger than 1 MiB.');
@@ -502,8 +530,12 @@ export async function mount(ctx) {
         } catch (failure) {
             report(failure);
         } finally {
-            file.disabled = false;
+            fileBusy(false);
             file.value = '';
+            // The picker is empty again, so the readout must not keep the name of a
+            // file the control no longer holds; the library tile and the toast are
+            // what say the upload worked.
+            fileName.textContent = 'No file chosen';
         }
     };
     function review(route, values) {

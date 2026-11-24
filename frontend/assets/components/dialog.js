@@ -4,6 +4,13 @@ import { $, el, input, select, label, changed } from '../ui.js';
 let active = null,
     cleanup;
 /**
+ * The control that opened the dialog. `<dialog>` restores focus itself in principle,
+ * but every record here re-renders the table underneath while it is open, so the node
+ * it would return to is gone by the time it closes: the operator landed on `<body>` and
+ * re-tabbed from the top of the page after every inspect.
+ */
+let opener = null;
+/**
  * Open the shared editor dialog. `variant` picks the submit button's weight:
  * 'primary' for an ordinary save, 'danger' for a decision that destroys
  * something. A destructive dialog also parks focus on Cancel, so Enter on an
@@ -32,6 +39,14 @@ export function openDialog({
     const dialog = $('#dialog'),
         form = $('#editor');
     bindEditorKeys(form);
+    if (!dialog.open) {
+        // A row action is a route link: the router has already replaced `#main` by the
+        // time this runs, so the focused node is the page's own `<body>`. Keeping it as
+        // the opener made every close land on `<body>` — the one place focus must never
+        // be. Folding it to null sends the close to the `twin()`/heading path below.
+        const focused = document.activeElement;
+        opener = focused && focused !== document.body ? focused : null;
+    }
     if (dialog.open) {
         if (
             active?.pending ||
@@ -64,6 +79,16 @@ export function openDialog({
     // copy of the same action, and it comes back for every other dialog.
     $('#close-dialog').hidden = readOnly;
     $('#fields').replaceChildren(content);
+    // The body is the scroll region, so it is also the only place that can say it
+    // scrolls. Measured after the layout settles: the content is often taller once its
+    // own tabs and lists have painted.
+    const fields = $('#fields');
+    const syncFields = () => {
+        if (!fields.isConnected) return;
+        fields.classList.toggle('is-scrollable', fields.scrollHeight > fields.clientHeight + 2);
+    };
+    requestAnimationFrame(syncFields);
+    setTimeout(syncFields, 80);
     const state = { revision, target, isDirty, pending: false, conflicted: false, stop: false };
     const stopButton = $('#dialog-stop');
     if (stopButton) {
@@ -150,11 +175,68 @@ export function openDialog({
             cleanup = null;
             $('#fields').replaceChildren();
             form.onsubmit = null;
+            const back = opener;
+            opener = null;
+            // The row a record was opened from may be gone after a save; landing on the
+            // page is honest, landing on `<body>` is not. A row action is a link to a
+            // stable address, so its replacement is found by that address: the router
+            // repaints the page the dialog named, and the operator's place in the table
+            // came back as nothing at all.
+            const twin = () => {
+                if (!back || back === document.body || back.closest('#dialog')) return null;
+                if (back.isConnected) return back;
+                const key =
+                    back.getAttribute?.('href') ||
+                    back.getAttribute?.('data-route') ||
+                    back.getAttribute?.('aria-label');
+                if (!key) return null;
+                const main = $('#main');
+                if (!main) return null;
+                const match = [...main.querySelectorAll('a[href], button')].find((node) => {
+                    if (node === back || node.closest('#dialog')) return false;
+                    return (
+                        node.getAttribute('href') === key || node.getAttribute('aria-label') === key
+                    );
+                });
+                return match || null;
+            };
+            const land = () => {
+                const target = twin();
+                if (target) {
+                    target.focus({ preventScroll: true });
+                    return true;
+                }
+                // The page's own title is the fallback, and it is a real target: `#title`
+                // is the heading the router keeps, so focus lands somewhere a screen
+                // reader announces instead of at the top of an unlabelled `<body>`.
+                const heading = $('#title') || $('#main')?.querySelector('h1');
+                if (!heading?.isConnected) return false;
+                heading.tabIndex = -1;
+                heading.focus({ preventScroll: true });
+                return true;
+            };
+            // Nothing focused is the state to retry from: the page shell swaps `#main`'s
+            // children over the frames after a close, so a single attempt either landed
+            // on a node that was about to be replaced or gave up on `<body>`. The loop
+            // runs for a dozen frames and only ever acts when nothing is focused, so a
+            // human who has already moved somewhere keeps their place.
+            const settle = (tries = 0) => {
+                if (dialog.open) return;
+                if (!document.activeElement || document.activeElement === document.body) land();
+                if (tries < 12) requestAnimationFrame(() => settle(tries + 1));
+            };
+            settle();
         }
     };
     dialog.showModal();
     if (variant === 'danger') $('#cancel-dialog').focus();
-    else {
+    else if (readOnly) {
+        // An inspector opens on its own title, not on the first field: the offer dialog
+        // parked focus on "Edit this offer", so Enter began editing a live record.
+        const heading = $('#dialog-title');
+        heading.tabIndex = -1;
+        heading.focus();
+    } else {
         // Landing on the dismiss control would throw away a draft on the first
         // Enter, so an editor opens on its first field.
         const first = $('#fields').querySelector(

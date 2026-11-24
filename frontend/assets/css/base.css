@@ -21,10 +21,15 @@ h3,
 p {
     margin: 0 0 12px;
 }
+/* The ramp's "23 page title" step, not the "32 page hero" one: the largest type in a
+   console belongs to the one thing the operator came to read, and a page name is
+   already in the nav and in the tab. 32 is spent only where a page has a hero — the
+   running state, a knight's name. */
 h1 {
-    font-size: 32px;
+    font-size: 23px;
+    font-weight: 700;
     line-height: 1.2;
-    letter-spacing: -0.6px;
+    letter-spacing: -0.4px;
 }
 h2 {
     font-size: 20px;
@@ -77,7 +82,9 @@ button,
     background: var(--control-bg);
     border: 1px solid var(--control-border);
     border-radius: var(--radius-control);
-    font-weight: 600;
+    /* 500, not 600: with system-ui at 13px, six buttons and four headings all at 600
+       made weight say nothing. Controls are 500, headings 600, the page title 700. */
+    font-weight: 500;
     font-size: 13px;
     line-height: 1.2;
     letter-spacing: 0.01em;
@@ -201,6 +208,19 @@ td .unavailable-reason.shown {
        beside it: the shadow is a theme token, like every other one here. */
     box-shadow: var(--elev-2);
 }
+/* A reason asked for on a page toolbar is permanent and takes its own line: the
+   operator needs it before they reach for the button, and hover is not a channel a
+   phone has. */
+.toolbar > .unavailable-reason.shown {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    clip-path: none;
+    white-space: normal;
+    order: 99;
+    flex-basis: 100%;
+    max-inline-size: none;
+}
 /* A disabled note in a toolbar takes its own line, so the controls it sits between
    still read as one group. */
 .server-strip .toolbar .unavailable-reason {
@@ -270,8 +290,11 @@ button.primary,
     box-shadow: var(--elev-2);
     --control-bg: var(--action);
     --control-fg: var(--action-text);
+    /* On the dark canvas the fill is its own edge; on white the same gold needs a
+       darker rim or it reads as a pale wash rather than a control. */
     --control-border: var(--action);
-    font-weight: 700;
+    border-color: var(--action-edge);
+    font-weight: 600;
 }
 /* `:where()` keeps the variant class out of the specificity count, so a component
    that knows its own host (a table header, a tab) can still paint its hover: at full
@@ -280,7 +303,7 @@ button.primary,
 button:where(.primary):not(:disabled):not([aria-disabled='true']):hover,
 .button:where(.primary):not(:disabled):not([aria-disabled='true']):hover {
     background: var(--action-hover);
-    border-color: var(--action-hover);
+    border-color: var(--action-hover-edge);
 }
 /* The neutral variant every `button()` gets by default: the same surface as a
    plain button with a boundary that is visible on the surface it sits on. */
@@ -395,6 +418,28 @@ button[aria-checked='true']:not(:disabled):hover,
     border-color: var(--cyan);
     color: var(--text);
 }
+/* A switch says its state in a word. These two are `quiet` — no fill and no border —
+   so the pressed rule above never showed, and "Light theme" or "Compact view" on its
+   own never said whether the setting was on. The word is type, not artwork, and a
+   screen reader reads `aria-checked` instead. */
+button[role='switch']::after {
+    content: 'Off';
+    margin-inline-start: 8px;
+    color: var(--muted);
+    font-size: 11.5px;
+}
+button[role='switch'][aria-checked='true'] {
+    background: color-mix(in srgb, var(--cyan) 18%, var(--raised));
+    border-color: var(--cyan);
+    color: var(--text);
+}
+button[role='switch'][aria-checked='true']::after {
+    content: 'On';
+    color: var(--cyan);
+}
+button[role='switch']:not([aria-checked='true']) {
+    border-color: var(--line-bright);
+}
 button.sm,
 .button.sm {
     min-block-size: var(--control-sm);
@@ -506,6 +551,9 @@ label.check {
     display: flex;
     align-items: center;
     gap: 9px;
+    /* A switch's own word is one line. "Enable News" broke between its two words in a
+       toolbar cell 107px wide, which read as a two-line label above a one-line box. */
+    white-space: nowrap;
 }
 :focus-visible {
     outline: 2px solid var(--cyan);
@@ -539,7 +587,10 @@ details pre {
 }
 dl {
     display: grid;
-    grid-template-columns: minmax(100px, 1fr) 2fr;
+    /* The label column is a label column, not a third of the panel: at
+       minmax(100px, 1fr) a two-word term sat 443px from its own value, and prose
+       parked itself in the gap. */
+    grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
     gap: 8px 16px;
     margin: 0;
 }

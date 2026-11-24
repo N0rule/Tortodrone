@@ -13,14 +13,25 @@
        to clear 3:1 against both surface (4.31) and raised (3.18). */
     --line: #3b586c;
     --line-bright: #779aaf;
+    /* A rule between two rows of data is a boundary the reader has to see, not a
+       decorative hairline: this one clears 3:1 against the surface and against the
+       zebra tint (3.44 and 3.21), where --line sat at 1.71. */
+    --line-data: #63899f;
     --text: #edf4f6;
     --muted: #b0c5d1;
     --cyan: #78dce8;
     --gold: #edc777;
     --action: #edc777;
     --action-text: #152c3b;
-    /* Hover only ever moves the primary fill away from its own ink: up in the
-       dark theme (9.70:1), down in the light one (7.87:1 on white). */
+    /* The primary's edge. On the dark canvas the fill is its own boundary; on white
+       it needs a darker gold around it or the button reads as a pale smear. */
+    --action-edge: #edc777;
+    --action-hover-edge: #f0d08d;
+    /* Gold as a rule — a 3px identity bar, an active link — is decoration, not text,
+       so it stays gold in both themes instead of turning brown with --gold's ink. */
+    --gold-rule: #edc777;
+    /* Hover only ever moves the primary fill away from its own ink: lighten it, so
+       the ink stays at 9.70:1 in the dark theme and 8.19:1 in the light one. */
     --action-hover: #f0d08d;
     /* Caution is its own ink, not a second gold: 6.67:1 on surface, 4.93:1 on
        raised, so a warning can never be mistaken for the primary action. */
@@ -68,7 +79,11 @@
     --term-scroll: #44647c;
     --term-scroll-bg: #0a1721;
     --space: 20px;
-    --row: 12px;
+    /* Table cell padding above and below its content. A row is as tall as the tallest
+       thing in it — usually the 36px row action — so 12px here measured 60px rows for
+       one line of text: twelve visible rows per screen, and a 30-row list that scrolled
+       twice. 6px puts a single-line row at 48px and a two-line row at 68px. */
+    --row: 6px;
     /* The platform face, because a shipped-in-2005 display font is the loudest
        "dated" signal on the page; no webfont is loaded, so nothing is delayed. */
     --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -84,13 +99,25 @@
     --inset: #f1f6f9;
     --line: #bdcfdc;
     --line-bright: #678193;
+    --line-data: #7f93a2;
     --text: #203a4d;
     --muted: #3f5c70;
     --cyan: #00677b;
     --gold: #795411;
-    --action: #805a16;
-    --action-text: #ffffff;
-    --action-hover: #6b4c12;
+    /* Two steps of gold, not three. The primary keeps the fill the dark theme uses — a
+       game console's action colour is its gold, and painting it brown in daylight made
+       the two themes read as two products — and #795411 above stays the ink gold is
+       *written* in. A third gold (#c79b3c) sat between them for the rules, close
+       enough to the fill to look like a mistake and far enough to see. */
+    --action: #edc777;
+    --action-text: #152c3b;
+    --action-hover: #f0d08d;
+    --action-edge: var(--gold);
+    --action-hover-edge: var(--gold);
+    /* Rules carry state on white — the active nav bar, the selected tab, the identity
+       bar — and #edc777 against white is 1.55:1, which is not a state anyone can see.
+       The rule gold is the darker one; the fill gold above stays for the button. */
+    --gold-rule: #b8862f;
     --warn: #933f00;
     --good: #1d6539;
     --bad: #a52f2d;
@@ -109,7 +136,10 @@
     --effect-line: #a97f27;
     --effect-strong: #755321;
     /* A paper-and-ink terminal keeps the same structure and severity semantics. */
-    --term-bg: #f8fafc;
+    /* The screen has to stay recessed against the panel it sits in: at #f8fafc it was
+       1.12:1 from the canvas and identical to the panel fill, so the light theme's
+       terminal read as an empty white card. */
+    --term-bg: #eef4f8;
     --term-bg-top: #eef3f7;
     --term-fg: #1c2f3d;
     --term-time: #52697b;
@@ -128,5 +158,5 @@
 }
 [data-density='compact'] {
     --space: 13px;
-    --row: 7px;
+    --row: 3px;
 }

@@ -49,6 +49,7 @@ export async function mount(ctx) {
         {
             id: 'sessions',
             caption: 'Live sessions',
+            searchPlaceholder: 'Search player or scene',
             exportName: 'sessions',
             empty: {
                 title: 'No player sessions are connected',
@@ -281,9 +282,9 @@ export async function mount(ctx) {
                 (r) => routeLink(sceneLabel(r.name), 'players', { scene: r.name }),
                 (r) => sceneLabel(r.name)
             ],
-            ['Template', (r) => r.templateId],
-            ['Instance', (r) => r.instanceId],
-            ['Population', (r) => r.players],
+            ['Template', (r) => r.templateId, (r) => r.templateId, 'end'],
+            ['Instance', (r) => r.instanceId, (r) => r.instanceId, 'end'],
+            ['Population', (r) => r.players, (r) => r.players, 'end'],
             ['State', (r) => r.state]
         ],
         {
@@ -296,17 +297,30 @@ export async function mount(ctx) {
                 hint: 'Scenes appear once the world starts them; the overview shows map state.',
                 icon: 'overview'
             },
+            // Two drill-downs into the same scene, so one weight: a quiet second step
+            // beside a bordered first one said "Monsters matters less", which is not
+            // what the row means.
             actions: (get) => [
                 button(
                     'Players here',
                     () => go('players', { scene: get().name }),
                     'secondary'
                 ),
-                button('Monsters', () => go('overview', { scene: get().name }), 'quiet')
+                button(
+                    'Monsters here',
+                    () => go('overview', { scene: get().name }),
+                    'secondary'
+                )
             ]
         }
     );
-    node.append(players.node, panel('Scene population', scenes.node));
+    // Two tables on one page, both in a panel: the sessions table used to float on the
+    // page background while the scenes sat in a card, which read as one of them being
+    // an afterthought rather than the other half of the page.
+    node.append(
+        panel('Connected sessions', players.node),
+        panel('Scene population', scenes.node)
+    );
     async function refresh() {
         const s = await ctx.request('status');
         players.update(
@@ -321,7 +335,10 @@ export async function mount(ctx) {
             }))
         );
         scenes.update(s.scenes);
-        ctx.connection(s.state, s.state === 'RUNNING');
+        // The pill is the WebUI's link to the server, and nothing else: the game
+        // server's own state is the hero word above, so writing it here made one slot
+        // mean two things on two pages.
+        ctx.connection('Connected', true);
     }
     await refresh();
     /**

@@ -49,12 +49,15 @@ export function emptyState({
     title,
     message = '',
     action,
-    icon = 'details',
+    icon = null,
     compact = false,
     primary = false
 }) {
     const node = el('div', null, 'empty-state' + (compact ? ' compact' : ''));
-    const art = symbol(icon);
+    // The art names the thing that is missing, or there is none. A default glyph put
+    // the inspect magnifier on every region that had no opinion about its own icon,
+    // which taught the reader that the picture means nothing.
+    const art = icon ? symbol(icon) : null;
     if (art) node.append(art);
     node.append(el('p', title, 'empty-title'));
     if (message) node.append(el('p', message, 'empty-message'));

@@ -59,7 +59,7 @@ export async function mount(ctx) {
             ['Account', (k) => k.username],
             [
                 'Permission',
-                (k) => badge(k.gameMaster ? 'GM' : 'Player', k.gameMaster ? 'gold' : '')
+                (k) => badge(k.gameMaster ? 'GM' : 'Player', k.gameMaster ? 'purple' : '')
             ],
             ['Status', (k) => status(k.online ? 'Online' : 'Offline', k.online)]
         ],
@@ -68,7 +68,9 @@ export async function mount(ctx) {
             id: 'knights',
             address: true,
             caption: 'Knights',
+            searchPlaceholder: 'Search knight, account or guild',
             exportName: 'knights',
+            defaultSort: { index: 0 },
             selectable: true,
             // The dev and first-run state is "no knights yet", so it has to explain
             // itself and offer the page that does have an action.
@@ -234,7 +236,7 @@ export async function mount(ctx) {
         badges.replaceChildren(
             badge(`Rank ${view.profile.progress.rank}-${view.profile.progress.subrank}`),
             status(view.online ? 'Online' : 'Offline', view.online),
-            badge(view.gameMaster ? 'Game Master' : 'Player', view.gameMaster ? 'gold' : ''),
+            badge(view.gameMaster ? 'Game Master' : 'Player', view.gameMaster ? 'purple' : ''),
             badge(view.guild || 'No guild')
         );
         text(accountLink, view.username);
@@ -527,6 +529,7 @@ export async function mount(ctx) {
                 search: false,
                 id: 'knight-inventory',
                 caption: 'Owned inventory',
+                searchPlaceholder: 'Search item',
                 exportName: 'knight-inventory',
                 // An inventory row is an item, not a knight: the link built its route
                 // from `username`/`name`, which an item record does not carry, so every

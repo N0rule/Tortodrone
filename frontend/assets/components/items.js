@@ -34,7 +34,7 @@ function path(value) {
         ? '/admin/assets/game/' + value
         : null;
 }
-export function icon(config, rarity = 0) {
+export function icon(config) {
     const root = el('span', null, 'item-icon'),
         source = path(manifest.items?.[config]);
     // Only client art may appear here. An item the pack has no picture of gets no
@@ -53,18 +53,26 @@ export function icon(config, rarity = 0) {
         root.append(image);
     }
     // Rarity is a number the game shows as stars; a glyph is not client art, and the
-    // word is what a screen reader can say, so it is written out.
-    if (rarity > 0) root.append(el('span', `Rarity ${rarity}`, 'stars'));
+    // word is what a screen reader can say, so it is written out — on its own line, by
+    // the callers that have room for one. Overlaid on the frame it covered the art at
+    // the 32px size tiles use and hung below it at 56px.
     return root;
+}
+/** Rarity as a line of its own, for the callers with room for one. */
+function rarityLine(rarity) {
+    return rarity > 0 ? el('small', `Rarity ${rarity}`, 'item-rarity') : null;
 }
 /**
  * One item, with its name as the drill-down into the shared inspector.
  * @param {any} [definition] the catalogue definition, when the caller already has it
  * @param {any} [item] a knight's item instance, when the caller has one
- * @param {{actions?: Node[], label?: string}} [options]
+ * @param {{actions?: Node[], label?: string, note?: string, compact?: boolean}} [options]
+ *   `note` replaces the category line with the caller's own detail, and `compact`
+ *   is the table-cell size: the art stays, at a third of the height, because a
+ *   56px thumbnail per row turns a 328-offer list into a 22-page one.
  */
-export function itemLine(definition, item, { actions, label } = {}) {
-    const root = el('div', null, 'item-line'),
+export function itemLine(definition, item, { actions, label, note, compact } = {}) {
+    const root = el('div', null, compact ? 'item-line compact' : 'item-line'),
         names = el('div');
     const config = definition?.config || item?.config;
     const name = definition?.name || config?.split('/').at(-1) || 'Unknown item';
@@ -80,8 +88,15 @@ export function itemLine(definition, item, { actions, label } = {}) {
             inspectItemName(config, { definition, item, actions }).catch(report);
         names.append(control);
     } else names.append(el('strong', label || name));
-    if (definition?.category) names.append(el('small', definition.category));
-    root.append(icon(config, definition?.rarity), names);
+    const detail = note || definition?.category;
+    if (detail) names.append(el('small', detail));
+    // A gear card has the room for the rarity the game prints as stars; a compact
+    // table row does not, and the row's own detail line carries the level instead.
+    if (!compact) {
+        const rarity = rarityLine(definition?.rarity);
+        if (rarity) names.append(rarity);
+    }
+    root.append(icon(config), names);
     return root;
 }
 
@@ -225,9 +240,11 @@ export function itemTile(def, item, onClick) {
     const root = el('button', null, 'item-tile');
     root.type = 'button';
     root.onclick = onClick;
+    const rarity = rarityLine(def?.rarity);
     root.append(
-        icon(def?.config || item.config, def?.rarity),
-        el('span', def?.name || item.config.split('/').at(-1), 'item-name')
+        icon(def?.config || item.config),
+        el('span', def?.name || item.config.split('/').at(-1), 'item-name'),
+        ...(rarity ? [rarity] : [])
     );
     if (item) {
         root.append(

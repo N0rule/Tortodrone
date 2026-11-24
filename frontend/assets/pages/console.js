@@ -105,6 +105,10 @@ export async function mount(ctx) {
                       } dropped`
                     : 'server log',
             countNoun: ['answer', 'answers'],
+            // A console holds answers, so its blank pane is a prompt nobody has
+            // used yet — the log's own sentence described the wrong thing entirely.
+            emptyNote:
+                'No answer has been printed yet. Type a command below, or type help for the list.',
             severity: ctx.params.get('severity') || 'All',
             search: ctx.params.get('search') || '',
             // The filter is part of the view: writing it into the address is what lets
@@ -120,10 +124,23 @@ export async function mount(ctx) {
             },
             // The Console has no tail to follow and nothing to pause: advertising
             // those keys here promised behaviour this page does not have.
-            hint: 'Enter runs · Tab completes · ↑ ↓ history · Ctrl+R history search · Ctrl+F search · Ctrl+L clear · help lists the commands',
+            // The list fits the footer it is written into. It used to be 132 characters
+            // in a 518px box, so the pane cut it mid-word at "Ctrl+F…" and the two keys
+            // an operator needs most — clear, and how to list the commands — were the
+            // ones that never appeared. `help` is the command that spells the rest out.
+            keys: [
+                ['Enter', 'runs'],
+                ['Tab', 'completes'],
+                ['↑ ↓', 'history'],
+                ['Ctrl R', 'search']
+            ],
+            note: 'Type help for the commands.',
             onLink: (link) => ctx.go(link.page, link.params || {})
         }),
-        feedback = el('small', listError ? 'Command list unavailable' : 'Connected');
+        // The pane's own status line, and only while something is happening in it.
+        // It used to say "Connected" beside a prompt under a top bar that already
+        // said "Connected" — and that one ages, this one never did.
+        feedback = el('small', listError ? 'Command list unavailable' : '');
     const output = stream.output;
     output.setAttribute('aria-label', 'Console output');
     feedback.className = 'console-connection';
@@ -198,7 +215,8 @@ export async function mount(ctx) {
                 'tortodrone console · ' +
                 words.length +
                 ' commands\n' +
-                'Type a command and press Enter. help lists every command; Tab completes a name.\n' +
+                // The footer already binds Tab and names `help`: this banner said both
+                // again 40px below itself.
                 'Reads print an answer; writes ask for their argument first.',
             links: [
                 { label: 'Accounts', page: 'accounts' },
@@ -256,7 +274,7 @@ export async function mount(ctx) {
         stream.announce(
             `${value}: ${error ? 'failed' : 'done'}. ${String(result.output || '').slice(0, 200)}`
         );
-        text(feedback, error ? 'Command failed' : 'Connected');
+        feedback.textContent = error ? 'Command failed' : '';
         feedback.classList.toggle('error', error);
     }
     /** Echo the prompt line before the server answers, the way a shell does. */
@@ -281,7 +299,7 @@ export async function mount(ctx) {
             } catch {
                 sessions = [];
             }
-            text(feedback, 'Connected');
+            feedback.textContent = '';
         }
         const matches = sessions.filter((id) => id.startsWith(prefix.toLowerCase()));
         if (!matches.length) {
@@ -345,7 +363,7 @@ export async function mount(ctx) {
             event.preventDefault();
             if (scanning) {
                 scanning = null;
-                text(feedback, 'Connected');
+                feedback.textContent = '';
             }
             command.value = commandDraft = '';
             completion = { list: [], at: -1 };
@@ -372,7 +390,7 @@ export async function mount(ctx) {
                 return;
             }
             command.value = commandDraft = '';
-            text(feedback, 'Connected');
+            feedback.textContent = '';
             return;
         }
         if (event.key === 'Tab') {
@@ -545,8 +563,9 @@ export async function mount(ctx) {
             // A paused stream still reads; it just stops painting new rows.
             stream.update(await ctx.request('logs'));
             failures = 0;
-            if (!pending)
-                text(feedback, stream.paused ? 'Display paused · still reading' : 'Connected');
+            // A healthy read says nothing here: the top bar's pill is the connection
+            // claim, it ages, and a second one beside the prompt could contradict it.
+            if (!pending) text(feedback, stream.paused ? 'Display paused · still reading' : '');
             // The LED reads this class, so the pane has to repaint when it is lifted:
             // otherwise the light stayed red under the word "Connected".
             if (feedback.classList.contains('error')) {

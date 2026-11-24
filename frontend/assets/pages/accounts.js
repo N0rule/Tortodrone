@@ -25,16 +25,19 @@ export async function mount(ctx) {
             ['Account', (r) => r.username],
             [
                 'Permission',
-                (r) => badge(r.gameMaster ? 'Game Master' : 'Player', r.gameMaster ? 'gold' : '')
+                (r) => badge(r.gameMaster ? 'Game Master' : 'Player', r.gameMaster ? 'purple' : '')
             ],
-            ['Knights', (r) => r.knights],
+            ['Knights', (r) => r.knights, (r) => r.knights, 'end'],
             ['Created', (r) => date(r.createdAt), (r) => r.createdAt]
         ],
         {
             id: 'accounts',
             address: true,
             caption: 'Game accounts',
+            searchPlaceholder: 'Search account, name or email',
             exportName: 'accounts',
+            // A list of logins opens in name order; the server's order is the config's.
+            defaultSort: { index: 0 },
             empty: {
                 title: 'No game accounts exist yet',
                 hint: 'Accounts are created here, or registered by the game client when a player signs up.',
@@ -251,6 +254,7 @@ export async function mount(ctx) {
             {
                 id: 'account-roster',
                 caption: 'Knights on this account',
+                searchPlaceholder: 'Search knight',
                 exportName: 'account-roster',
                 search: false,
                 empty: {
@@ -281,7 +285,7 @@ export async function mount(ctx) {
                     identity
                         ? badge(
                               identity.role.toLowerCase(),
-                              identity.role === 'ADMINISTRATOR' ? 'gold' : ''
+                              identity.role === 'ADMINISTRATOR' ? 'purple' : ''
                           )
                         : ctx.admin
                           ? 'No WebUI identity'

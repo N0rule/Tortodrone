@@ -19,6 +19,7 @@ import {
 import { chart } from '../components/chart.js';
 import { confirm, field, openDialog } from '../components/dialog.js';
 import { DataTable } from '../components/table.js';
+import { symbol } from '../components/symbols.js';
 
 export async function mount(ctx) {
     const node = el('div', null, 'stack'),
@@ -28,6 +29,26 @@ export async function mount(ctx) {
         server = el('div'),
         version = el('span', null, 'muted');
     server.append(state, endpoint);
+    // The landing page opens on the process, and the process serves one game: the card
+    // that says RUNNING wears the client's own mark, so the first screen belongs to this
+    // console and not to any administration page. The page mounts before the art pack
+    // is read, so the mark is painted again when it lands — asking once at mount
+    // answered null and the card stayed bare.
+    const serverMark = el('span', null, 'server-mark');
+    const paintServerMark = () => {
+        const art = symbol('brand');
+        if (!art) {
+            serverMark.remove();
+            return;
+        }
+        art.classList.add('server-mark-art');
+        serverMark.replaceChildren(art);
+        if (!serverMark.isConnected) strip.prepend(serverMark);
+    };
+    paintServerMark();
+    document.addEventListener('symbols-ready', () => ctx.alive() && paintServerMark(), {
+        once: true
+    });
     strip.append(server, version);
     // The three listener controls are weighted by what the server is doing: the
     // one an operator most likely wants next is filled, the impossible one is off
@@ -71,11 +92,21 @@ export async function mount(ctx) {
     if (ctx.admin)
         strip.append(
             toolbar(
+                // "Stop" and "Shut down" were a mechanism and an act of the same size
+                // side by side: one drops players, the other ends the process, and
+                // nothing on the strip said which. Every control now names its scope.
                 ...['start', 'stop', 'restart'].map((route) =>
-                    listenerButton(route[0].toUpperCase() + route.slice(1), route)
+                    listenerButton(
+                        route === 'start'
+                            ? 'Start listener'
+                            : route === 'stop'
+                              ? 'Stop listener'
+                              : 'Restart listener',
+                        route
+                    )
                 ),
                 button(
-                    'Shut down',
+                    'Shut down server',
                     () =>
                         confirm(
                             'Shut down process',
@@ -250,18 +281,35 @@ export async function mount(ctx) {
     ]);
     // The field's label names the key it holds, so the mismatch state cannot hand
     // out one key under the name of another.
+    /* A note opens with the name of the row it explains. Three paragraphs under a
+       twelve-row grid, each one starting mid-thought about a value several rows above
+       it, made the reader hunt for what "both hashes" meant. */
+    const identityNoteRow = (term) => {
+        const row = el('div', null, 'identity-note');
+        row.append(el('dt', term), el('dd', null, 'muted identity-caption'));
+        return row.lastChild;
+    };
     const identityFieldLabel = el('p', null, 'muted identity-field-label'),
-        identityCaption = el('p', null, 'muted identity-caption'),
-        identityReach = el('p', null, 'muted identity-caption'),
-        identityRotation = el('p', null, 'muted identity-caption');
+        identityCaption = identityNoteRow('Fingerprint and file hash'),
+        identityReach = identityNoteRow('Client address'),
+        identityRotation = identityNoteRow('Rotating the key'),
+        // Three notes under one value grid: as three stacked blocks they made a
+        // narrow column of prose beside half a card of white space.
+        identityNotes = el('dl', null, 'identity-notes');
+    identityNotes.append(
+        identityCaption.parentElement,
+        identityReach.parentElement,
+        identityRotation.parentElement
+    );
     // Only the mismatch branch used to warn. A deliberate rotation of a healthy pair
     // looks exactly like a healthy card, and every pinned client breaks silently.
     text(
         identityRotation,
         'If this fingerprint has changed since a client was set up, that client must be re-keyed before it can connect: the fingerprint, not the file path, is what it trusts.'
     );
+    // One sentence for the key, one for where it goes: the card is read, not studied.
     const IDENTITY_NOTE =
-        "The public half only. Paste it into the client's Add Server dialog, in the Public key field (game.publicKey), on every machine that plays here. The private key never leaves the server.";
+        "The public half only. Paste it into the client's Add Server dialog under game.publicKey on every machine that plays here — the private key never leaves this server.";
     text(identityNote, IDENTITY_NOTE);
     const identityPanel = panel(
         'Server identity',
@@ -270,10 +318,8 @@ export async function mount(ctx) {
         identityKey,
         identityActions,
         identityWarning,
-        identityCaption,
         identityFacts,
-        identityReach,
-        identityRotation
+        identityNotes
     );
     // One panel, one address: `#overview?panel=identity` is the link to hand a
     // colleague who only needs the key. Not `identity` — the footer's session line
@@ -303,6 +349,7 @@ export async function mount(ctx) {
             pageSize: 8,
             id: 'overview-monsters',
             caption: 'Scene monster runtime',
+            searchPlaceholder: 'Search scene or monster',
             exportName: 'scene-monsters',
             // A scene name in the URL pre-filters the runtime table, so the
             // Players page can link straight to one scene here.
@@ -353,6 +400,7 @@ export async function mount(ctx) {
             pageSize: 8,
             id: 'overview-warnings',
             caption: 'Recent warnings and errors',
+            searchPlaceholder: 'Search message or source',
             exportName: 'recent-warnings',
             empty: {
                 title: 'No warnings or errors since the server started',
@@ -418,10 +466,6 @@ export async function mount(ctx) {
         }
         text(identityFingerprint, identity.fingerprint);
         identityFingerprint.title = identity.fingerprintHex || identity.fingerprint;
-        text(
-            identityNote,
-            `The public half only. Paste these characters into a client's server key to trust this server; the private key never leaves the machine.`
-        );
         // One row, not two: the exponent of an RSA handshake key is always 65537 and
         // the facts grid was mostly whitespace.
         text(
@@ -441,9 +485,9 @@ export async function mount(ctx) {
                 // The file holds a hex modulus and exponent, not a DER blob: the server's
                 // own note still claimed the fingerprint was computed from data the file
                 // does not contain, and concatenating it contradicted this sentence.
-                'The fingerprint is the SHA-256 of the key structure the server builds from the modulus and exponent below.',
+                'Both hashes are SHA-256 over the key text: the fingerprint over the structure the server builds from it.',
                 identity.fileSha256Command
-                    ? `Type ${identity.fileSha256Command} on the host to reproduce the file hash beside it.`
+                    ? `${identity.fileSha256Command} on the host reproduces the file hash.`
                     : ''
             ]
                 .filter(Boolean)
@@ -493,21 +537,32 @@ export async function mount(ctx) {
             identityLoaded = true;
             identityActions.append(
                 // One gold control per page: the server strip owns the primary, and a
-                // copy is not the page's next action.
+                // copy is not the page's next action. Three controls that all hand this
+                // identity to someone else carried three different weights, which made
+                // a choice of equals look like a hierarchy. They are one weight; the
+                // per-value copies in the table are the quiet ones.
                 button(
                     'Copy public key',
                     () => copy(trustedKey(), 'Server public key copied.'),
                     'secondary'
                 ),
-                button(
-                    'Copy link to this card',
-                    () =>
-                        copy(
-                            `${location.origin}${location.pathname}#overview?panel=identity`,
-                            'Link copied.'
-                        ),
-                    'quiet'
-                ),
+                // One label for one affordance, everywhere: "card" named a container
+                // this console never calls a card, and the same job was called
+                // "Permalink" on Player Mail. The accessible name says what it links to.
+                (() => {
+                    const control = button(
+                        'Copy link',
+                        () =>
+                            copy(
+                                `${location.origin}${location.pathname}#overview?panel=identity`,
+                                'Link copied.'
+                            ),
+                        'secondary'
+                    );
+                    control.setAttribute('aria-label', 'Copy link to the server identity');
+                    control.title = 'Copy a link to the server identity';
+                    return control;
+                })(),
                 button(
                     'Download public.txt',
                     // Normally the server sends the file's own bytes, so `sha256sum`
@@ -564,16 +619,17 @@ export async function mount(ctx) {
         text(counters[2][1], s.failure || '');
         text(counters[3][0], s.database.failures ? 'Review' : 'Available');
         text(counters[3][1], `${s.accounts} accounts`);
-        text(
-            counters[4][0],
-            s.scenes.reduce((a, v) => a + v.monsters.total, 0)
-        );
-        text(counters[4][1], 'live in active scenes');
+        // Every caption under a tile is the same shape: a figure and the noun it counts.
+        // Two of the six ended on a verb clause ("live in active scenes"), which read as
+        // the caption of a different kind of number than the four beside them.
+        const monsterTotal = s.scenes.reduce((a, v) => a + v.monsters.total, 0);
+        text(counters[4][0], monsterTotal);
+        text(counters[4][1], `${s.scenes.length} active scenes`);
         text(
             counters[5][0],
             s.scenes.reduce((a, v) => a + v.monsters.engaged, 0)
         );
-        text(counters[5][1], 'full pursuit and attack');
+        text(counters[5][1], `${monsterTotal} monsters`);
         monsters.update(s.scenes);
         for (const c of [cpu, memory, population, activity]) c.update(history);
         warnings.update(
@@ -592,7 +648,10 @@ export async function mount(ctx) {
             );
             diagnosticSignature = signature;
         }
-        ctx.connection(s.state, s.state === 'RUNNING');
+        // The pill is the WebUI's link to the server, and nothing else: the game
+        // server's own state is the hero word above, so writing it here made one slot
+        // mean two things on two pages.
+        ctx.connection('Connected', true);
     }
     range.onchange = () => ctx.refresh();
     await refresh();

@@ -1,4 +1,4 @@
-import { button, text, $ } from '../ui.js';
+import { el, button, text, $ } from '../ui.js';
 import { route } from '../router.js';
 import { logStream } from '../components/log-stream.js';
 
@@ -12,6 +12,22 @@ const RELATED = [
     ['accounts', 'Accounts'],
     ['overview', 'Overview']
 ];
+
+/**
+ * The three pages, as one labelled group separated from the filters by a rule. They
+ * leave the pane and the controls beside them shape it, and an unlabelled row of
+ * three words at the end of a toolbar read as three more filters.
+ */
+function relatedStrip(ctx) {
+    const strip = el('div', null, 'toolbar-links');
+    strip.append(el('span', 'Related', 'toolbar-links-label'));
+    for (const [page, label] of RELATED) {
+        const go = button(label, () => ctx.go(page), 'link');
+        go.title = `Open ${label} — the page that explains what this line is about`;
+        strip.append(go);
+    }
+    return strip;
+}
 
 /**
  * The log page is a tail, not a table: it fills the reading area, keeps the last
@@ -32,13 +48,7 @@ export async function mount(ctx) {
         onLoadFile: (limit) => ctx.request('logs-file', { limit: String(limit) }),
         // Below 601px these three cost a whole row of chrome the pane cannot spare,
         // and the drawer already lists all three pages.
-        extras: window.matchMedia('(min-width: 601px)').matches
-            ? RELATED.map(([page, label]) => {
-                  const go = button(label, () => ctx.go(page), 'link');
-                  go.title = `Open ${label} — the page that explains what this line is about`;
-                  return go;
-              })
-            : [],
+        extras: window.matchMedia('(min-width: 601px)').matches ? [relatedStrip(ctx)] : [],
         // The filter is the view, so it belongs in the address: the operator can copy
         // what they are looking at instead of describing it to a colleague. Replace
         // rather than push, so a typed search does not stack history entries.

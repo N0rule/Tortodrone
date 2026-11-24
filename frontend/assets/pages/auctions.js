@@ -29,8 +29,9 @@ const stateBadge = (listing) =>
     Object.assign(badge(state(listing), stateTone(state(listing))), { title: CLOCK_NOTE });
 /** The states the listing-state filter offers; `?status=` matches them by name. */
 const listingStates = ['Active', 'Scheduled', 'Awaiting settlement', 'Settled', 'Cancelled'];
-const stateTone = (value) =>
-    value === 'Active' ? 'good' : value === 'Cancelled' ? 'bad' : value === 'Settled' ? 'cyan' : '';
+// Only the exceptions carry a tone: a listing that is doing the normal thing is a
+// word, and a chip means "look here".
+const stateTone = (value) => (value === 'Cancelled' ? 'bad' : value === 'Active' ? '' : 'flag');
 export async function mount(ctx) {
     const node = el('div', null, 'stack');
     let definitions = new Map(),
@@ -98,6 +99,7 @@ export async function mount(ctx) {
                     key: (d) => d.id,
                     id: 'auction-deliveries',
                     caption: 'Auction deliveries',
+                    searchPlaceholder: 'Search buyer or item',
                     exportName: 'auction-deliveries',
                     empty: {
                         title: 'No deliveries recorded',
@@ -244,7 +246,9 @@ export async function mount(ctx) {
             presentationKey: (r) => state(r.listing),
             id: 'auctions',
             caption: 'Auction listings',
+            searchPlaceholder: 'Search listing, item or seller',
             exportName: 'auctions',
+            defaultSort: { index: 0 },
             empty: {
                 title: 'No auction listings exist',
                 hint:
@@ -325,7 +329,9 @@ export async function mount(ctx) {
                 () =>
                     rows.some((r) => r.listing.expires <= Date.now()) ||
                     'No listing has expired, so there is nothing to settle.',
-                { unavailable: 'No expired listings to settle.' }
+                // Said on the page, not on hover: a toolbar has the room, and a phone
+                // has no hover to reach for.
+                { unavailable: 'No expired listings to settle.', showReason: true }
             )
         ),
         table.node

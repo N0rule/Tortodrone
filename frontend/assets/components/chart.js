@@ -18,6 +18,25 @@ function svg(tag, attrs = {}) {
     for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
     return node;
 }
+/**
+ * The next round number above `value`, at one of the steps a person counts in. An
+ * axis that ends at 1,888.8 is the raw sample plus 12%, printed.
+ * @param {number} value
+ * @returns {number}
+ */
+export function niceMaximum(value) {
+    if (!Number.isFinite(value) || value <= 0) return 1;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
+    const scaled = value / magnitude;
+    const step = scaled <= 1 ? 1 : scaled <= 2 ? 2 : scaled <= 2.5 ? 2.5 : scaled <= 5 ? 5 : 10;
+    return step * magnitude;
+}
+/** A tick is the maximum split in two, so it inherits at most one awkward digit. */
+export function roundTick(value) {
+    if (!Number.isFinite(value)) return 0;
+    return value >= 100 ? Math.round(value) : Math.round(value * 10) / 10;
+}
+
 export function chart(title, unit, series) {
     const slug = 'chart-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         node = el('section', null, 'panel'),
@@ -65,15 +84,21 @@ export function chart(title, unit, series) {
         index = Math.max(0, Math.min(samples.length - 1, at));
         const s = samples[index];
         if (!s) return;
+        // At rest the values already stand in the header, so the line under the graph
+        // says only which sample it is. Under the pointer or the arrow keys it names
+        // the sample's own readings, which is the one thing the header cannot say.
+        const atLatest = index === samples.length - 1;
         text(
             readout,
-            `${time(s.time)} · ` +
-                series
-                    .map((v) => {
-                        const n = v.value(s, index, samples);
-                        return `${v.name}: ${Number.isFinite(n) && n >= 0 ? n.toLocaleString(undefined, { maximumFractionDigits: 1 }) + ' ' + unit : 'Unavailable'}`;
-                    })
-                    .join(' · ')
+            atLatest && !inspecting
+                ? `Latest sample · ${time(s.time)}`
+                : `${time(s.time)} · ` +
+                      series
+                          .map((v) => {
+                              const n = v.value(s, index, samples);
+                              return `${v.name}: ${Number.isFinite(n) && n >= 0 ? n.toLocaleString(undefined, { maximumFractionDigits: 1 }) + ' ' + unit : 'Unavailable'}`;
+                          })
+                          .join(' · ')
         );
         const x =
             45 +
@@ -136,16 +161,20 @@ export function chart(title, unit, series) {
                 .flatMap((s) => values.map((v, i) => s.value(v, i, values)))
                 .filter((v) => Number.isFinite(v) && v >= 0);
             const rawMaximum = Math.max(unit === '%' ? 100 : 1, ...all) * (unit === '%' ? 1 : 1.12),
+                // A grid line is a reading aid, not the measurement: "1,888.8" over a
+                // flat line says the axis was never rounded to a number a human reads.
                 maximum =
-                    unit === '' || unit.startsWith('events')
-                        ? Math.max(2, Math.ceil(rawMaximum / 2) * 2)
-                        : rawMaximum,
+                    unit === '%'
+                        ? 100
+                        : unit === ''
+                          ? Math.max(2, Math.ceil(rawMaximum / 2) * 2)
+                          : niceMaximum(rawMaximum),
                 grid = [];
             for (let i = 0; i < 3; i++) {
                 const y = 15 + i * 70,
                     label = svg('text', { x: 0, y: y + 4 });
-                label.textContent = (maximum * (1 - i / 2)).toLocaleString(undefined, {
-                    maximumFractionDigits: 1
+                label.textContent = roundTick(maximum * (1 - i / 2)).toLocaleString(undefined, {
+                    maximumFractionDigits: maximum < 10 ? 1 : 0
                 });
                 grid.push(
                     svg('line', { class: 'grid-line', x1: 45, x2: 580, y1: y, y2: y }),

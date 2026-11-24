@@ -1,4 +1,5 @@
 import { el, text } from '../ui.js';
+import { symbol } from './symbols.js';
 
 /**
  * Fuzzy subsequence score for the command palette. Returns a positive number
@@ -58,7 +59,7 @@ export function rank(entries, query, describe = (entry) => `${entry.title} ${ent
  * in the input, so the operator never has to learn a second focus model.
  * @param {{entries: () => Array<{id: string, title: string, hint?: string, group?: string, run: () => void}>, lookup?: (query: string, signal: AbortSignal) => Promise<Array<{group: string, items: Array<{id: string, title: string, hint?: string, run: () => void}>}>>, label?: string}} options
  */
-export function createPalette({ entries, lookup, label = 'Search or run a command' }) {
+export function createPalette({ entries, lookup, label = 'Jump to a page or record' }) {
     const dialog = el('dialog', null, 'palette');
     dialog.id = 'palette';
     dialog.setAttribute('aria-label', label);
@@ -78,17 +79,20 @@ export function createPalette({ entries, lookup, label = 'Search or run a comman
     const list = el('ul');
     list.id = 'palette-list';
     list.setAttribute('role', 'listbox');
-    list.setAttribute('aria-label', 'Commands and records');
+    list.setAttribute('aria-label', 'Pages and records');
     const status = el('p', '', 'palette-status');
     status.id = 'palette-status';
     status.setAttribute('aria-live', 'polite');
     const hints = el('div', null, 'palette-hints');
-    hints.append(
-        hint('↑↓', 'Navigate'),
-        hint('↵', 'Open'),
-        hint('Esc', 'Close'),
-        el('span', 'Powered by the administration API', 'muted')
-    );
+    /* The footer advertises the keys that exist for what is on screen: over an empty
+       list, "↑↓ Navigate" and "↵ Open" described four arrow presses and a return on
+       nothing at all. */
+    function paintHints(anyResults) {
+        hints.replaceChildren();
+        if (anyResults) hints.append(hint('↑↓', 'Navigate'), hint('↵', 'Open'));
+        hints.append(hint('Esc', 'Close'), el('span', 'Pages and records on this server', 'muted'));
+    }
+    paintHints(false);
     dialog.append(searchBox, list, status, hints);
     document.body.append(dialog);
 
@@ -135,6 +139,12 @@ export function createPalette({ entries, lookup, label = 'Search or run a comman
                 option.setAttribute('role', 'option');
                 option.setAttribute('aria-selected', 'false');
                 option.dataset.index = String(index);
+                // The nav's own artwork, at the row's size: twenty destinations that all
+                // have a client glyph rendered as a wall of text.
+                const glyph = el('span', null, 'palette-glyph');
+                const art = item.icon ? symbol(item.icon) : null;
+                if (art) glyph.append(art);
+                option.append(glyph);
                 if (item.hint) option.append(el('span', item.hint, 'palette-kind'));
                 option.append(el('span', item.title, 'palette-title'));
                 option.addEventListener('mousemove', () => select(index));
@@ -152,11 +162,43 @@ export function createPalette({ entries, lookup, label = 'Search or run a comman
             list.append(empty);
         }
         select(active, true);
+        paintHints(!!options.length);
+        paintStatus();
+        repaintSoon();
+    }
+
+    /**
+     * How many rows are below the fold. Measured against the list's own box: `offsetTop`
+     * is relative to the nearest positioned ancestor, which is the dialog, so every row
+     * sat "inside" the fold and a list that scrolled to eleven of twenty said nothing.
+     */
+    function paintStatus() {
+        const box = list.getBoundingClientRect();
+        let below = 0;
+        if (box.height) {
+            for (const node of list.querySelectorAll('.palette-option'))
+                if (node.getBoundingClientRect().bottom > box.bottom + 2) below++;
+        }
+        // The empty card already says "Nothing matched": a second "No results" under it
+        // was the same sentence twice in a 200px dialog.
         text(
             status,
-            options.length ? `${options.length} result${options.length === 1 ? '' : 's'}` : 'No results'
+            !options.length
+                ? ''
+                : `${options.length} result${options.length === 1 ? '' : 's'}${
+                      below ? ` · ${below} more below` : ''
+                  }`
         );
     }
+    list.addEventListener('scroll', paintStatus, { passive: true });
+    // A paint that lands while the dialog is still `display: none` measures a box of
+    // zero height and cannot say what is below the fold: the list then claims "20
+    // results" over a list that shows eleven. The frame after the dialog is visible is
+    // the first one with a height to measure.
+    const repaintSoon = () => {
+        if (typeof requestAnimationFrame === 'function') requestAnimationFrame(paintStatus);
+    };
+    window.addEventListener('resize', paintStatus, { passive: true });
 
     function select(index, quiet = false) {
         if (!options.length) {
@@ -185,16 +227,27 @@ export function createPalette({ entries, lookup, label = 'Search or run a comman
         item.run();
     }
 
-    /** Page entries repeat their group name, so only other kinds show a label. */
+    /** Under a "Pages" heading the label column names the page's section, which is
+     * the one thing the title does not; actions name their kind. */
     function decorate(query) {
         return rank(entries(), query).map((entry) => ({
             ...entry,
-            hint: entry.group && entry.group !== 'Page' ? entry.group : ''
+            hint: entry.hint || ''
         }));
     }
 
+    /** Pages first, then what the palette can do: one heading called "Commands" over
+     * twenty destinations named the wrong thing. Order is preserved inside each. */
+    function localGroups(query) {
+        const all = decorate(query);
+        return [
+            { name: 'Pages', items: all.filter((entry) => entry.group === 'Page') },
+            { name: 'Actions', items: all.filter((entry) => entry.group !== 'Page') }
+        ];
+    }
+
     function paintLocal(query) {
-        paint([{ name: 'Commands', items: decorate(query) }]);
+        paint(localGroups(query));
     }
 
     async function search(query) {
@@ -208,10 +261,7 @@ export function createPalette({ entries, lookup, label = 'Search or run a comman
             const extra = await lookup(query.trim(), controller.signal);
             if (current !== version || !dialog.open) return;
             paint([
-                {
-                    name: 'Commands',
-                    items: decorate(query)
-                },
+                ...localGroups(query),
                 ...extra.map((group) => ({
                     name: group.group,
                     items: group.items.slice(0, 8)
@@ -292,9 +342,14 @@ export function createPalette({ entries, lookup, label = 'Search or run a comman
         // A programmatic click does not move focus, so callers may name the
         // control that should get focus back.
         const active = document.activeElement;
+        // Ctrl+K fires from anywhere, and a keyboard shortcut leaves the body focused:
+        // the palette then had no trigger to return to and Escape dropped the operator
+        // on <body>. The search control in the top bar is where the palette lives.
         opener =
             options.trigger ??
-            (active instanceof HTMLElement && active !== document.body ? active : null);
+            (active instanceof HTMLElement && active !== document.body
+                ? active
+                : document.querySelector('#search'));
         dialog.showModal();
         field.focus();
         if (initial) search(initial);

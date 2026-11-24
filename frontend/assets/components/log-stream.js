@@ -15,6 +15,22 @@ const LEVELS = ['All', 'INFO', 'WARN', 'ERROR', 'DEBUG', 'COMMAND'];
  * `commands` receives command/output entries (the Console page) and renders them
  * as a prompt line plus an indented response, never as a separate list.
  */
+/**
+ * Chords and their verbs, as one row of bindings. The chord wears the same key face
+ * the shell uses for Ctrl K, so the pane and the top bar spell a shortcut the same
+ * way; the verb stays a word at the smaller caption size.
+ */
+function keyHint(keys = [], note = null) {
+    const row = el('span', null, 'terminal-keys');
+    for (const [chord, verb] of keys) {
+        const binding = el('span', null, 'terminal-key');
+        binding.append(el('kbd', chord, 'kbd'), el('span', verb, 'terminal-key-verb'));
+        row.append(binding);
+    }
+    if (note) row.append(el('span', note, 'terminal-key-note'));
+    return row;
+}
+
 export function logStream({
     commands = null,
     title = 'Server output',
@@ -25,7 +41,19 @@ export function logStream({
     wrap: initialWrap = true,
     raw = false,
     fill = false,
-    hint = 'Ctrl+F search · Ctrl+L clear · End tail · Home top · p pause · Esc leave',
+    // The keys a pane answers to, as chords and their verbs. Six clauses strung on
+    // middots read as one sentence about the pane; a chord in a key face and a word
+    // after it reads as six things an operator can press.
+    keys = [
+        ['Ctrl F', 'search'],
+        ['Ctrl L', 'clear'],
+        ['End', 'tail'],
+        ['Home', 'top'],
+        ['P', 'pause'],
+        ['Esc', 'leave']
+    ],
+    // The sentence that follows the chords, when a pane has one.
+    note = null,
     onLoadFile = null,
     onLink = null,
     onFilter = null,
@@ -37,6 +65,10 @@ export function logStream({
     countNoun = ['line', 'lines'],
     // A page whose rows are its own answers, not the server's lines.
     countAnswers = false,
+    // What an empty pane is called. A tail says lines arrive as the server writes
+    // them; a console holds answers to commands, and it printed the log's sentence
+    // over a prompt that had simply never been used.
+    emptyNote = 'Nothing has been logged yet. Lines appear as the server writes them.',
     // What the source strip is describing, when the pane is not the log itself.
     sourceLabel = null,
     // A console has no Tail control but still opens at its prompt, the way a
@@ -90,9 +122,9 @@ export function logStream({
     jump.hidden = true;
     jump.setAttribute('aria-label', 'Jump to latest');
     footer.setAttribute('role', 'status');
-    // The keys differ per page, so the caller owns the sentence: the Console has no
-    // tail or pause, and advertising them there is a promise nothing keeps.
-    statusLeft.textContent = hint;
+    // The keys differ per page, so the caller owns the list: the Console has no tail
+    // or pause, and advertising them there is a promise nothing keeps.
+    statusLeft.append(keyHint(keys, note));
     footer.append(state, statusLeft, statusRight, source);
     node.append(bar, tools, output, announce, jump, footer);
 
@@ -369,18 +401,22 @@ export function logStream({
                 ? ''
                 : `${visible} ${visible === 1 ? noun[0] : noun[1]}${
                       visible !== total ? ` of ${total}` : ''
-                  }${paused ? ' · paused' : ''}${paused && fresh ? ` · ${fresh} new` : ''}`
+                  }${paused ? ', paused' : ''}${paused && fresh ? `, ${fresh} new` : ''}`
         );
-        // The pill names what the pane is doing, not what the tail wants to do.
+        // The pill names what the pane is doing, not what the tail wants to do — and a
+        // pane with no tail (the Console) has no pill to fill: it printed the word
+        // "tail" on a page whose own footer says there is nothing to follow.
         text(
             statusRight,
-            paused
-                ? `paused${fresh ? ` · ${fresh} new` : ''}`
-                : auto
-                  ? 'tail'
-                  : away
-                    ? 'scrolled back'
-                    : 'tail off'
+            !tail
+                ? ''
+                : paused
+                  ? `paused${fresh ? `, ${fresh} new` : ''}`
+                  : auto
+                    ? 'tail'
+                    : away
+                      ? 'scrolled back'
+                      : 'tail off'
         );
         statusRight.dataset.state = paused || !auto ? 'paused' : 'tail';
         undoClear.hidden = !clearing.size;
@@ -398,10 +434,11 @@ export function logStream({
             const size = file.bytes ? `${Math.round(file.bytes / 1024)} KB` : null;
             const name = file.path.split(/[\\/]/).pop();
             bounds.push(
-                [name, size].filter(Boolean).join(' · ') +
-                    (file.exists === false ? ' (not written yet)' : '')
+                name + (size ? ` (${size})` : '') + (file.exists === false ? ', not written yet' : '')
             );
         }
+        // One phrase, not six clauses on middots: the source line said what the pane is,
+        // how full its buffer is and where the file lives in a single dot-separated run.
         text(
             source,
             [
@@ -409,7 +446,7 @@ export function logStream({
                 ...bounds
             ]
                 .filter(Boolean)
-                .join(' · ')
+                .join(', ')
         );
         // The console puts its connection text inside the state line, so the LED
         // has to look for the error class on either of them.
@@ -433,9 +470,14 @@ export function logStream({
         // "ERROR (300)" over a pane holding the last five minutes and nothing else.
         const needle = search.value.trim().toLowerCase(),
             span = PERIODS[period.value],
-            counts = new Map();
+            counts = new Map(),
+            // The bar counts a console's answers and its severity filter counted every
+            // row, so a fresh console read "0 answers" beside "All (1)" — the one extra
+            // row being the banner, which says nothing about commands.
+            onlyAnswers = countAnswers && sourceMode !== 'log';
         for (const row of allRows()) {
             if (cleared(row)) continue;
+            if (onlyAnswers && !(row.entry && row.entry.command)) continue;
             if (span) {
                 const at =
                     typeof row.timestamp === 'number'
@@ -492,6 +534,23 @@ export function logStream({
         return frag;
     }
 
+    /**
+     * The pages that explain an answer, as a strip under it. Both the banner and an
+     * answered command carry these, so the markup lives in one place instead of two
+     * copies that can drift apart.
+     */
+    function linkStrip(links) {
+        const strip = el('span', null, 'command-links');
+        strip.append(el('span', 'Related', 'command-links-label'));
+        for (const link of links) {
+            const go = el('button', link.label, 'link');
+            go.type = 'button';
+            go.onclick = () => onLink(link);
+            strip.append(go);
+        }
+        return strip;
+    }
+
     function lineFor(row, id) {
         const line = el('div', null, 'terminal-line level-' + row.level);
         const time = el('time', clockTime(row.timestamp), 'log-time');
@@ -510,16 +569,7 @@ export function logStream({
             message.replaceChildren(answerBody(row.entry));
             // A notice may name the page that explains it; without its links the
             // console's first line was the one place links were silently dropped.
-            if (row.entry.links?.length && onLink) {
-                const links = el('span', null, 'command-links');
-                for (const link of row.entry.links) {
-                    const go = el('button', link.label, 'link');
-                    go.type = 'button';
-                    go.onclick = () => onLink(link);
-                    links.append(go);
-                }
-                message.append(links);
-            }
+            if (row.entry.links?.length && onLink) message.append(linkStrip(row.entry.links));
             line.append(message);
             line.title = new Date(row.timestamp).toLocaleString();
             line.dataset.sig = signature(row);
@@ -539,16 +589,7 @@ export function logStream({
             line.classList.add('raw');
             line.append(message);
         } else line.append(time, level, thread, message);
-        if (row.entry?.links?.length && onLink) {
-            const links = el('span', null, 'command-links');
-            for (const link of row.entry.links) {
-                const go = el('button', link.label, 'link');
-                go.type = 'button';
-                go.onclick = () => onLink(link);
-                links.append(go);
-            }
-            message.append(links);
-        }
+        if (row.entry?.links?.length && onLink) message.append(linkStrip(row.entry.links));
         line.title = new Date(row.timestamp).toLocaleString();
         line.dataset.sig = signature(row);
         return line;
@@ -572,6 +613,14 @@ export function logStream({
             row.thread ?? '',
             search.value.trim().toLowerCase()
         ].join('·');
+
+    // One beat of arrival, then gone. The class is dropped on a timer rather than on
+    // `animationend`, because a reader who asked for reduced motion gets no animation
+    // to end and the mark would stay on the row for the rest of the session.
+    function markArrival(line) {
+        line.classList.add('is-new');
+        setTimeout(() => line.classList.remove('is-new'), 200);
+    }
 
     let firstPaint = true;
     function display(force = false) {
@@ -625,6 +674,11 @@ export function logStream({
             if (!line) {
                 line = lineFor(row, slot);
                 cache.set(slot, line);
+                // A line that has just arrived is said so once: the newest row at the
+                // end of a full pane is otherwise indistinguishable from the one above
+                // it, and an operator watching a quiet tail could not tell whether the
+                // tail was working. The first paint has nothing to announce.
+                if (!firstPaint) markArrival(line);
             }
             desired.push(line);
         }
@@ -644,9 +698,7 @@ export function logStream({
                 again.type = 'button';
                 again.onclick = () => unclear();
                 note.append(again);
-            } else
-                note.textContent =
-                    'Nothing has been logged yet. Lines appear as the server writes them.';
+            } else note.textContent = emptyNote;
             desired.push(note);
         }
         const wanted = new Set(desired);

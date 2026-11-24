@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, panel, toolbar, button, select, text, label, date, copy } from '../ui.js';
+import { el, panel, toolbar, button, select, text, label, date, copy, badge } from '../ui.js';
 import { toast } from '../components/toast.js';
 import * as prefs from '../prefs.js';
 
@@ -39,9 +39,18 @@ const describe = {
     pollScale: (value) => `×${value}`
 };
 
+/* Theme and density are switches in the shell footer on every page. This page shows
+   the same switch rather than a select of the same two values, because two controls
+   that write one preference drift apart the moment one of them is changed. */
+const SWITCHES = {
+    theme: { on: 'light', label: 'Light theme', help: 'Applies immediately and is remembered in this browser only.' },
+    density: { on: 'compact', label: 'Compact view', help: 'Compact removes vertical padding from rows, panels and toolbars.' }
+};
+
 export async function mount(ctx) {
     const node = el('div', null, 'stack');
     const controls = new Map();
+    const switches = new Map();
     const feedback = el('p', '', 'visually-hidden');
     feedback.setAttribute('role', 'status');
     feedback.setAttribute('aria-live', 'polite');
@@ -73,22 +82,44 @@ export async function mount(ctx) {
         return row;
     }
 
+    /** The switch form of a preference the shell also switches. */
+    function switchSetting(key) {
+        const config = SWITCHES[key];
+        const control = el('button', config.label, 'quiet');
+        control.id = 'pref-' + key;
+        control.type = 'button';
+        control.setAttribute('role', 'switch');
+        switches.set(key, control);
+        control.onclick = () => {
+            const next = control.getAttribute('aria-checked') !== 'true';
+            const applied = prefs.write(key, next ? config.on : prefs.schema[key][0]);
+            text(feedback, `${config.label} ${applied === config.on ? 'on' : 'off'}.`);
+            paint();
+        };
+        const row = el('div', null, 'setting');
+        row.append(control, el('small', config.help, 'setting-help'));
+        return row;
+    }
+
     function paint() {
         for (const [key, control] of controls) control.value = String(prefs.read(key));
+        for (const [key, control] of switches) {
+            const on = prefs.read(key) === SWITCHES[key].on;
+            control.setAttribute('aria-checked', String(on));
+            control.title = on
+                ? key === 'theme'
+                    ? 'Switch to the dark theme'
+                    : 'Switch to comfortable density'
+                : key === 'theme'
+                  ? 'Switch to the light theme'
+                  : 'Switch to compact density';
+        }
     }
 
     const appearance = panel(
         'Appearance',
-        setting({
-            key: 'theme',
-            title: 'Theme',
-            help: 'Applies immediately and is remembered in this browser only.'
-        }),
-        setting({
-            key: 'density',
-            title: 'Density',
-            help: 'Compact removes vertical padding from rows, panels and toolbars.'
-        }),
+        switchSetting('theme'),
+        switchSetting('density'),
         setting({
             key: 'motion',
             title: 'Motion',
@@ -169,7 +200,16 @@ export async function mount(ctx) {
             const list = el('dl', null, 'facts');
             list.append(
                 el('dt', 'Identity'),
-                el('dd', api.session.username + ' · ' + api.session.role.toLowerCase()),
+                (() => {
+                    // The name and the role are two things: one middot string wrapped
+                    // mid-sentence, and a role is a badge everywhere else on the console.
+                    const cell = el('dd', null, 'identity-session');
+                    cell.append(
+                        el('span', api.session.username),
+                        badge(String(api.session.role || '').toLowerCase(), 'cyan')
+                    );
+                    return cell;
+                })(),
                 el('dt', 'Expires'),
                 el('dd', api.session ? date(api.session.expires) : '—'),
                 el('dt', 'Idle timeout'),
@@ -180,10 +220,13 @@ export async function mount(ctx) {
     );
 
     node.append(appearance, display, live, support, session);
+    // A switch flipped in the footer repaints this page's copy of it, and the other
+    // way round: one preference, one value, whichever switch was pressed.
+    const detachment = prefs.subscribe(() => paint());
     paint();
 
     function refresh() {
         paint();
     }
-    return { node, refresh };
+    return { node, refresh, dispose: detachment };
 }
