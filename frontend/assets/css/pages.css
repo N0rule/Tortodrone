@@ -2089,9 +2089,10 @@ dd .bad {
         flex: 1 1 120px;
         order: 0;
     }
-    .terminal-tools select {
-        min-inline-size: 72px;
-    }
+    /* No select floor here: with `flex: 0 0 auto` and `inline-size: auto` a select is
+       as wide as its widest option ("All (12)" 110px, "All time" 146px at 16px type),
+       so a 72px floor never bound. The portrait clipping came from a fixed 74px
+       inline-size, not from this. */
     .terminal-tools button {
         padding-inline: 7px;
     }
