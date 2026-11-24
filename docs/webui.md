@@ -249,11 +249,13 @@ trail, so nothing is unreachable: it disables itself the first time a page comes
 short, which is how the end is known without counting the table. The line above the list
 says how many events are loaded, over how many pages, and whether that is all of them.
 
-**Pause** stops the ten-second poll and the automatic refresh a write triggers, because
-those re-inserted rows at the top under whoever was reading them. It does not stop the
-operator: the header's Refresh and Older events still read, because a button that says
-Refresh has to refresh. A poll replaces the newest page and keeps every page paged back
-to.
+**Pause** stops the ten-second tick, because it re-inserted rows at the top under whoever
+was reading them. It does not stop the operator: the header's Refresh, the refresh a write
+triggers, and Older events all still read, because a button that says Refresh has to
+refresh. The shell keeps those apart — `refresh(polled)` sends the tick to the page's own
+`poll()` and the operator to its `refresh()` (`app.js:196-250`) — so the page's copy says
+"the ten-second tick is paused", not "polling is off". A read replaces the newest page and
+keeps every page paged back to.
 
 ## Player Mail
 
@@ -282,8 +284,11 @@ beside a preview, and attachments.
   refused, and offers *Retry refused* / *Resume remaining* without ever re-sending
   a knight that already received the letter in that batch.
 - **Delivered:** each campaign shows `delivered of population`, and *Inspect
-  recipients* reads `mail-deliveries` for the per-knight roster — the count alone
-  cannot answer "who did not get it".
+  recipients* reads `mail-deliveries` for the per-knight roster, then diffs it
+  against the knight roster it already holds for the reach figure — the count alone
+  cannot answer "who did not get it", so a **Show not yet delivered (N)** toggle does,
+  with its own export. When the roster could not be read the dialog says that instead
+  of printing an empty list as if everybody had received it.
 - **Reading a letter:** the campaign name opens a read-only rendering of what was
   sent, with its window, sender, gifts and counts, and an *Edit* action inside.
 - **Scheduling, not drafts:** there is no draft state. A campaign is either armed
@@ -333,11 +338,14 @@ table starts at. A pager that wrote the global preference silently reset the
 operator's default for every other table, which is the opposite of what Preferences
 promised.
 
-The item catalogue is the one list that is read through a window rather than a table
-(the picker is a 24-tile grid), so it carries its own **Export**: it walks the
-server's 100-row pages and downloads the filtered set as CSV, up to 1,000 rows, and
-the toast says how many of how many it wrote. A partial file that claims to be whole
-would be worse than no file.
+The item catalogue is read through a 24-tile window, so it carries two things the
+window cannot: its own **Export**, which walks the server's 100-row pages and
+downloads the filtered set as CSV up to 1,000 rows (the toast says how many of how
+many it wrote — a partial file that claims to be whole would be worse than no file),
+and **As a table**, which reads the same walk into the shared sortable table with
+its own CSV/JSON export. Both walks carry an `AbortController` that leaving the page
+aborts, and the table is retired when the search or the category changes, so the set
+on screen is never one the controls above no longer describe.
 
 Every record list shares one table component and therefore one behaviour set:
 
@@ -389,10 +397,12 @@ Every record list shares one table component and therefore one behaviour set:
   control that ends it, is a trap.
 - A *conditional* control stays focusable and explains itself: `aria-disabled` plus a
   visible note and `aria-describedby`, instead of a native `disabled` that removes the
-  control and its reason from the tab order together. Two cases keep native `disabled`,
-  because neither has a reason a focus stop would deliver: an `<option>`, which no
-  browser exposes as focusable, and a control switched off only while a request is in
-  flight (`aria-busy` carries that, and the progress line says what is happening).
+  control and its reason from the tab order together. Three cases keep native `disabled`,
+  because none of them has a reason a focus stop would deliver: an `<option>`, which no
+  browser exposes as focusable at all; a control switched off only while a request is in
+  flight (`aria-busy` carries that, and the progress line says what is happening); and a
+  control whose off-state is the design itself — a pager's Previous on page one, where
+  the disabled end is the convention and the sentence would be noise.
 - One empty-state component for the whole application: icon, title, message, and — when
   there is something the operator can do from there — the action that fills the region.
   A bare "No items match these filters." line is a dead end; the catalogue, the gear grid
@@ -514,14 +524,14 @@ the code it was supposed to describe.
 | Asset class | Raw | Gzip | Transport |
 | --- | --- | --- | --- |
 | `index.html` | 9 860 B | 2 234 B | Gzip when the browser offers it, `must-revalidate` |
-| JavaScript (33 files under `frontend/assets`) | 587 224 B | 148 427 B | Gzip, `must-revalidate`, ETag per encoding |
-| CSS (5 sheets) | 113 497 B | 27 030 B | Gzip, `must-revalidate`, ETag per encoding |
+| JavaScript (33 files under `frontend/assets`) | 594 307 B | 150 380 B | Gzip, `must-revalidate`, ETag per encoding |
+| CSS (5 sheets) | 113 738 B | 27 102 B | Gzip, `must-revalidate`, ETag per encoding |
 | Icons and artwork (5081 files, 87 MB on disk) | median icon 16 kB | n/a | `max-age=31536000, immutable` for the content-hashed `assets/game/icons/<hash>` paths |
 
 The JavaScript column is every module at once, which no single page loads: a
 VIEWER never fetches `mailing.js`, and there is no bundler, so the number grows
 with each page module. Gzip is applied to text assets over 1 kB: `app.js` alone
-goes from 31 598 to 9 113 bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
+goes from 31 858 to 9 221 bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
 cache never serves one representation for the other and revalidation still
 answers `304`. Every non-hashed asset revalidates, so an upgrade is visible on the
 next load without a hard refresh; hashed artwork is cached for a year. Only the
