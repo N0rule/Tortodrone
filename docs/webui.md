@@ -387,9 +387,12 @@ Every record list shares one table component and therefore one behaviour set:
   every outcome already recorded, and leaves the remaining knights listed for
   **Resume**. A modal that refuses Close, Cancel and Escape while it works, with no
   control that ends it, is a trap.
-- A disabled control stays focusable and explains itself: `aria-disabled` plus a
+- A *conditional* control stays focusable and explains itself: `aria-disabled` plus a
   visible note and `aria-describedby`, instead of a native `disabled` that removes the
-  control and its reason from the tab order together.
+  control and its reason from the tab order together. Two cases keep native `disabled`,
+  because neither has a reason a focus stop would deliver: an `<option>`, which no
+  browser exposes as focusable, and a control switched off only while a request is in
+  flight (`aria-busy` carries that, and the progress line says what is happening).
 - One empty-state component for the whole application: icon, title, message, and — when
   there is something the operator can do from there — the action that fills the region.
   A bare "No items match these filters." line is a dead end; the catalogue, the gear grid
@@ -446,8 +449,12 @@ administrator can therefore confirm the transport in use without reading
   the whole row reappears through `:focus-within` when a sort button takes focus: a
   keyboard user never stops in a 1x1 box. Dialogs trap focus; the mobile drawer closes
   with Escape and restores focus to the button that opened it.
-- A control that cannot act stays focusable and says why (`aria-disabled` plus a
-  description) rather than disappearing from the tab order as `disabled` would.
+- A control that cannot act *because of context* stays focusable and says why
+  (`aria-disabled` plus a description) rather than disappearing from the tab order as
+  `disabled` would. Its `unavailable` reason names the actual blocker, never the generic
+  "not available on this server yet": an off-by-default row action refused with that
+  sentence was telling the operator the feature does not exist when his own row was the
+  problem.
 - A tab strip names the region it switches: `aria-controls` on each tab, and
   `role="tabpanel"` with `aria-labelledby` following the selection.
 - Status text does not rely on colour alone, both themes meet AA contrast, and
@@ -455,11 +462,12 @@ administrator can therefore confirm the transport in use without reading
 - Row-selection checkboxes draw at 16px inside a 24px label, and table rows are
   spaced further apart than the 24px target circle, so WCAG 2.2 target size is
   met by the spacing exception while dense tables stay readable. On a coarse pointer
-  every button, select and link-styled control reaches 44px, named explicitly in the
-  last sheet: `button.link` sets its own 24px floor at a higher specificity, and the
-  drawer's page links are padding-only, so both had to be listed or the touch step
-  silently skipped them. A link inside a sentence keeps the inline-text exception,
-  because a 44px-tall inline link breaks the paragraph it sits in.
+  every button, select and `button.link`/`.button.link` reaches 44px, named explicitly in
+  the last sheet: the link variants set their own 24px floor at a higher specificity, and
+  the drawer's page links are padding-only, so both had to be listed or the touch step
+  silently skipped them. A bare `a.link` — a scene name in a cell, a drill-down in a
+  sentence — keeps 24px, which is WCAG 2.5.8's minimum for a pointer target and the most a
+  line of prose can give it.
 - Charts are focusable images with a description: arrow keys, Home and End move
   through samples and the readout becomes a polite live region only while the
   keyboard is inspecting, so pointer movement never floods a screen reader.
@@ -497,20 +505,23 @@ Conventions worth keeping:
 
 ## Payload and caching
 
-Counted from this tree, which is what `buildWebui` copies: `wc -c` for the raw
-size and `gzip -9 | wc -c` for the compressed one.
+Counted from this tree at the commit that last touched `frontend/`, which is what
+`buildWebui` copies: `wc -c` for the raw size and `gzip -9 | wc -c` for the
+compressed one. Every number below was measured *after* the assets stopped moving —
+a table re-measured before the commit that edited the same files is off by exactly
+the code it was supposed to describe.
 
 | Asset class | Raw | Gzip | Transport |
 | --- | --- | --- | --- |
 | `index.html` | 9 860 B | 2 234 B | Gzip when the browser offers it, `must-revalidate` |
-| JavaScript (33 files under `frontend/assets`) | 572 754 B | 144 528 B | Gzip, `must-revalidate`, ETag per encoding |
-| CSS (5 sheets) | 112 545 B | 26 702 B | Gzip, `must-revalidate`, ETag per encoding |
+| JavaScript (33 files under `frontend/assets`) | 587 224 B | 148 427 B | Gzip, `must-revalidate`, ETag per encoding |
+| CSS (5 sheets) | 113 497 B | 27 030 B | Gzip, `must-revalidate`, ETag per encoding |
 | Icons and artwork (5081 files, 87 MB on disk) | median icon 16 kB | n/a | `max-age=31536000, immutable` for the content-hashed `assets/game/icons/<hash>` paths |
 
 The JavaScript column is every module at once, which no single page loads: a
 VIEWER never fetches `mailing.js`, and there is no bundler, so the number grows
 with each page module. Gzip is applied to text assets over 1 kB: `app.js` alone
-goes from 31 176 to 8 921 bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
+goes from 31 598 to 9 113 bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
 cache never serves one representation for the other and revalidation still
 answers `304`. Every non-hashed asset revalidates, so an upgrade is visible on the
 next load without a hard refresh; hashed artwork is cached for a year. Only the
