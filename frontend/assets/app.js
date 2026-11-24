@@ -113,7 +113,11 @@ const pages = [
         section: 'Operations',
         rank: 2,
         module: consolePage,
-        description: 'Run recovery commands with confirmation for state changes.'
+        // The terminal's bar names the pane, its footer lists the keys and `help` lists
+        // the commands, so a sentence describing the page above the screen was the third
+        // copy of the same fact - and it is the only page whose own surface is the whole
+        // screen.
+        description: ''
     },
     {
         name: 'audit',

@@ -126,6 +126,37 @@ test('an empty console is not a dead end', () => {
     assert.match(consolePage, /notice: true/, 'the banner is a line in the transcript');
     assert.match(stream, /row\.entry\.links\?\.length && onLink/, 'a notice keeps its links');
 });
+
+/**
+ * The console is a terminal emulator, not a page with a shell drawn in it:
+ *
+ *  - the prompt is the line after the last answer, inside the scrollback, so scrolling
+ *    up into history takes the prompt with it;
+ *  - the transcript prints from the top, with the empty screen below it;
+ *  - the filters are a find bar opened with Ctrl+F, because a terminal has no toolbar.
+ *
+ * The row-rendering pass rebuilds the body's children by index and removes anything it
+ * did not draw, so the slot holding the prompt has to be known to it: without the guard
+ * the prompt was culled on the next poll and the page lost its only input.
+ */
+test('the console keeps its prompt at the end of the buffer', () => {
+    assert.match(consolePage, /stream\.bodyTail\.append\(prompt\)/, 'the prompt is a line in the buffer');
+    assert.doesNotMatch(consolePage, /insertBefore\(prompt/, 'the prompt is not a strip under the screen');
+    assert.match(stream, /child !== bodyTail/, 'the render pass keeps the prompt slot');
+    assert.match(stream, /output\.append\(bodyTail\)/, 'the slot is the last child of the body');
+    assert.match(consolePage, /findBar: true/, 'the console answers Ctrl+F with a find bar');
+    assert.match(stream, /tools\.hidden = true/, 'the find bar is closed on arrival');
+    assert.match(stream, /findBar && event\.key === 'Escape'/, 'Escape closes the find bar from its own field');
+});
+test('the console prints from the top of the screen', () => {
+    const pages = read('frontend/assets/css/pages.css');
+    assert.match(
+        pages,
+        /\.console-workspace \.terminal-body::before \{[^}]*display: none;/,
+        'the leading spacer that floats a short transcript to the bottom is off for the console'
+    );
+    assert.match(pages, /\.terminal-find\[hidden\] \{\s*display: none;/, 'the bar is gone when closed');
+});
 test('an in-app link moves the box, not only a reloaded document', () => {
     // The table reads its parameter when it is built, so a page that only handles
     // `navigate` by re-rendering rows leaves the search box where the last visit put

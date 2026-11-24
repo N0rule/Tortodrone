@@ -546,6 +546,70 @@ button.metric:focus-visible {
 .terminal-menu-body:has(.terminal-menu-links) {
     min-inline-size: min(344px, calc(100dvw - 24px));
 }
+/* ---------------------------------------------------------------------------------
+   The find bar: a terminal emulator's only chrome. Closed on arrival, opened by Ctrl+F
+   and closed by Escape, one line of mono over the output it is searching.
+   ------------------------------------------------------------------------------ */
+.terminal-find {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 12px;
+    border-bottom: 1px solid var(--term-line);
+    background: var(--term-bg-top);
+    font-family: var(--mono);
+    font-size: 12px;
+}
+.terminal-find[hidden] {
+    display: none;
+}
+.terminal-find-label {
+    color: var(--term-time);
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+    user-select: none;
+}
+.terminal-find-label::after {
+    content: '>';
+    margin-inline-start: 1px;
+}
+/* The row is the control. A field in a find bar carries no rim, no fill, no corner and
+   no control height, and the bar says where the caret is by brightening `find>` - the
+   same device the prompt uses - instead of outlining a box inside a line of text. */
+.terminal-tools.terminal-find input:not(:disabled),
+.terminal-tools.terminal-find select:not(:disabled) {
+    background: transparent;
+    border-color: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    min-block-size: 22px;
+    font-size: 12px;
+}
+.terminal-tools.terminal-find input:not(:disabled):hover,
+.terminal-tools.terminal-find select:not(:disabled):hover {
+    background: color-mix(in srgb, var(--term-fg) 6%, transparent);
+    border-color: transparent;
+}
+.terminal-tools.terminal-find input:focus-visible,
+.terminal-tools.terminal-find select:focus-visible {
+    background: transparent;
+    border-color: transparent;
+    outline: none;
+    box-shadow: none;
+}
+.terminal-find:focus-within .terminal-find-label {
+    color: var(--term-fg);
+}
+/* The window's controls move into the bar on a find-bar pane, where they shrink to the
+   bar's own line: a 36px button in a 26px title bar draws a header over it. */
+.terminal-bar > .terminal-menu,
+.terminal-bar > .terminal-menu .terminal-menu-toggle,
+.terminal-bar > button {
+    block-size: 20px;
+    min-block-size: 20px;
+    padding: 0 8px;
+    font-size: 11px;
+}
 .terminal-body {
     flex: 1 1 auto;
     min-height: 160px;
@@ -783,10 +847,13 @@ html[data-motion='reduce'] .command-pending {
     padding: 0;
     font-size: 12px;
 }
+/* An answer is the shell's own text, not a block in a frame: no rule down its side and
+   no indent of its own. A terminal prints the output under the command it belongs to and
+   stops there; the rule and the 10px of hanging indent made every answer look like a
+   card inside the transcript. */
 .command-response {
     margin: 2px 0 6px;
-    padding: 6px 0 2px 10px;
-    border-left: 2px solid var(--term-line);
+    padding: 4px 0 2px;
     color: var(--term-response);
     font: inherit;
     white-space: pre-wrap;
@@ -796,18 +863,24 @@ html[data-motion='reduce'] .command-pending {
 /* A command's output names pages, so it is not a dead end. It is a strip under the
    answer, ruled off from it: three bare words on the line after the text read as a
    stray sentence, not as the places that explain what just happened. */
+/* The pages that explain an answer are a line of the transcript too, so they keep no
+   rule above them: a hairline was the one thing in the pane that said "panel". The dim
+   label keeps them from reading as output the server printed. */
 .command-links {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: 4px 12px;
-    margin-top: 8px;
-    padding-top: 7px;
-    border-top: 1px solid var(--term-line);
+    margin-top: 2px;
 }
 .command-links-label {
     color: var(--term-time);
-    font-size: 12.5px;
+    font-size: 12px;
+    text-transform: lowercase;
+}
+.command-links .link {
+    font-family: var(--mono);
+    font-size: 12px;
 }
 /* The same word above the same three links in the log pane's toolbar, where a ruled
    strip would break the bar: a rule on the leading edge is what separates them from
@@ -997,15 +1070,43 @@ html[data-motion='reduce'] .command-pending {
     min-height: 0;
     height: auto;
 }
-.console-prompt-block {
-    border-top: 1px solid var(--term-line);
-    background: var(--term-bg);
+/* A terminal prints from the top: the banner on the first line, the prompt under the
+   last answer, the rest of the screen blank. The shared pane grows a leading spacer to
+   push a short transcript to the bottom, which is right for a log tail that fills up but
+   leaves a console looking at a black void with its prompt hanging beneath it. */
+.console-workspace .terminal-body::before {
+    /* `display: none`, not `content: none`: a pseudo-element with no content still took
+       a flex slot in Chrome, and the transcript hung 199px down the pane with the
+       prompt under it - the exact void this rule is meant to remove. */
+    display: none;
+}
+/* The line after the last one. It is a slot, not a box: it takes no room of its own and
+   draws nothing, so the prompt inside it sits exactly where the next answered line will
+   fall. */
+.terminal-tail-slot {
+    display: contents;
+}
+/* The prompt is a line in the buffer - the terminal's own cursor row - not a strip
+   under the screen: no rule above it, no second fill, and the body's padding already
+   indents it to the column every answer is printed in. */
+.console-workspace .console-prompt-block {
+    border-top: 0;
+    background: transparent;
+    padding-block: 1px 0;
 }
 .console-prompt {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 8px;
     padding: 8px 12px 4px;
+}
+.console-workspace .console-prompt {
+    padding: 0;
+}
+/* Where the caret is, said by the row rather than by a rim: a terminal has no field to
+   outline, so the line that holds the cursor is the thing that lights up. */
+.console-prompt:focus-within .console-prompt-label {
+    color: var(--term-fg);
 }
 .console-prompt-label {
     font-family: var(--mono);
@@ -1043,22 +1144,31 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
 .console-input {
     flex: 1;
     min-inline-size: 0;
-    min-block-size: var(--control);
+    /* One line tall, on the buffer's own leading: a 36px control with a rim inside a
+       13px/1.2 transcript was a form field sitting in the middle of the terminal. */
+    min-block-size: 0;
     background: transparent;
-    border: 1px solid transparent;
-    border-radius: var(--radius-control);
+    border: 0;
+    border-radius: 0;
     color: var(--term-fg);
     font-family: var(--mono);
     font-size: 13px;
+    line-height: 1.2;
     caret-color: var(--term-input);
-    padding: 0 8px;
+    padding: 1px 0;
 }
 .console-input::placeholder {
     color: var(--term-time);
 }
+/* No rim on either state: the cursor is the indicator, and the prompt line's own label
+   brightens while the caret is in it (`.console-prompt:focus-within`). */
 .console-input:focus-visible {
-    border-color: var(--cyan);
+    border-color: transparent;
     outline: none;
+}
+.console-prompt[aria-busy='true'] .console-input {
+    /* While a command is out the prompt is not the operator's: say so by fading it. */
+    color: var(--term-time);
 }
 /* The chip row this described was replaced by Tab-in-a-transcript and never built, so
    the rules for it were dead CSS. */

@@ -83,7 +83,15 @@ export function logStream({
     // a single row of controls 44px tall and a strip of three links beside it would
     // have to scroll sideways out of sight to be reached. They go in the menu that is
     // already there instead — one tap, nothing hidden.
-    menuLinks = []
+    menuLinks = [],
+    // A terminal emulator has no toolbar: its controls are chords and a find bar that
+    // appears when asked for, over the output it is searching. A page that renders the
+    // pane as the terminal itself passes this, and the row of fields stops being
+    // permanent chrome above the screen.
+    findBar = false,
+    // Called when the find bar opens and closes, so the page can put the caret back on
+    // its own prompt instead of leaving it nowhere.
+    onFind = null
 } = {}) {
     const node = el('div', null, 'terminal-shell'),
         // The first paint is measured a frame later, so the pane is kept invisible
@@ -99,6 +107,12 @@ export function logStream({
         matchCount = el('span', null, 'terminal-match-count'),
         tools = toolbar(),
         output = el('div', null, 'terminal-body'),
+        // The line after the last one: a page that puts its own prompt inside the
+        // scrollback - a terminal keeps its cursor at the end of the buffer, not in a
+        // strip under the screen - reserves this slot and fills it. display() rebuilds
+        // the rows by index and removes children it did not draw, so the slot has to be
+        // known to it or the prompt would be culled on the next paint.
+        bodyTail = el('div', null, 'terminal-tail-slot'),
         footer = el('div', null, 'terminal-status'),
         state = el('span', null, 'terminal-state'),
         statusLeft = el('span', null, 'terminal-hint'),
@@ -123,6 +137,7 @@ export function logStream({
     announce.setAttribute('role', 'status');
     announce.setAttribute('aria-live', 'polite');
     output.tabIndex = 0;
+    output.append(bodyTail);
     jump.type = 'button';
     jump.hidden = true;
     jump.setAttribute('aria-label', 'Jump to latest');
@@ -708,7 +723,8 @@ export function logStream({
         }
         const wanted = new Set(desired);
         for (const child of [...output.children])
-            if (!wanted.has(child) && !child.classList.contains('log-day')) child.remove();
+            if (!wanted.has(child) && !child.classList.contains('log-day') && child !== bodyTail)
+                child.remove();
         for (const child of [...output.children])
             if (child.classList.contains('log-day') && !wanted.has(child)) child.remove();
         desired.forEach((child, i) => {
@@ -872,8 +888,13 @@ export function logStream({
             const shortcut = event.key.toLowerCase();
             if (shortcut === 'f') {
                 event.preventDefault();
-                search.focus();
-                search.select();
+                // On a find-bar pane the field is hidden until this keystroke; focusing
+                // an element nobody can see moved the caret into the dark.
+                if (findBar) setFind(true);
+                else {
+                    search.focus();
+                    search.select();
+                }
                 return;
             }
             if (shortcut === 'c' && event.shiftKey) {
@@ -893,6 +914,13 @@ export function logStream({
             }
         }
         if (!event.ctrlKey && !event.metaKey) {
+            // Escape is the terminal's way out of a find bar, and it is pressed while the
+            // caret is in the bar's own field - so it is answered before the typing guard.
+            if (findBar && event.key === 'Escape' && !tools.hidden) {
+                event.preventDefault();
+                setFind(false);
+                return;
+            }
             if (typing) return;
             if (event.key === 'End') {
                 event.preventDefault();
@@ -1153,6 +1181,33 @@ export function logStream({
         undoClear,
         ...extras
     );
+    if (findBar) {
+        // A terminal emulator has no toolbar: it has a screen and a find bar that opens
+        // over it. The fields are the same controls the Logs page keeps on screen, only
+        // out of the way until the operator asks, so neither page learned a second way
+        // to filter the pane.
+        tools.classList.add('terminal-find');
+        tools.hidden = true;
+        const findLabel = el('span', 'find', 'terminal-find-label');
+        findLabel.setAttribute('aria-hidden', 'true');
+        tools.prepend(findLabel);
+        // The window's own controls, not the find bar's: Copy, Export, the raw toggle
+        // and Restore-cleared belong where the bar lives, or Ctrl+L would hide the only
+        // way to put the cleared lines back.
+        bar.append(undoClear, menu);
+    }
+    /** Open or close the find bar, which is the whole of this pane's chrome. */
+    function setFind(open) {
+        if (!findBar) return;
+        tools.hidden = !open;
+        if (open) {
+            search.focus();
+            search.select();
+        }
+        // The bar is chrome above the body, so the pane refits when it comes or goes.
+        scheduleFit();
+        onFind?.(open);
+    }
 
     /** Parse the file's own `[24-11-2026 04:53:11]` prefix into an instant. */
     function fileStamp(value) {
@@ -1230,6 +1285,9 @@ export function logStream({
         fit,
         update,
         output,
+        // Where a page puts the line after the last one; the prompt goes here.
+        bodyTail,
+        setFind,
         footer,
         state,
         /** Take the page-level listeners off with the page that owns them. */

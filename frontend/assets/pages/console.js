@@ -132,9 +132,19 @@ export async function mount(ctx) {
                 ['Enter', 'runs'],
                 ['Tab', 'completes'],
                 ['↑ ↓', 'history'],
-                ['Ctrl R', 'search']
+                ['Ctrl R', 'recall'],
+                ['Ctrl F', 'find']
             ],
             note: 'Type help for the commands.',
+            // The pane is the terminal, so its filters are not a toolbar parked above
+            // the screen: Ctrl+F opens a find bar over the output, the way a terminal
+            // emulator searches its own scrollback.
+            findBar: true,
+            onFind: (open) => {
+                // Closing the find bar puts the caret back on the prompt; it had been
+                // left on a field that is no longer on screen.
+                if (!open) command.focus();
+            },
             onLink: (link) => ctx.go(link.page, link.params || {})
         }),
         // The pane's own status line, and only while something is happening in it.
@@ -145,9 +155,11 @@ export async function mount(ctx) {
     output.setAttribute('aria-label', 'Console output');
     feedback.className = 'console-connection';
     const form = el('form', null, 'console-prompt'),
+        // Not `required`: the browser painted the empty prompt with the invalid-field
+        // ring (a red box around a cursor), and an empty prompt is not a mistake - Enter
+        // on it does nothing, which `onsubmit` already handles.
         command = input('Command', commandDraft, 'text', {
             maxLength: 128,
-            required: true,
             autocomplete: 'off',
             autocapitalize: 'off',
             autocorrect: 'off',
@@ -163,7 +175,9 @@ export async function mount(ctx) {
     // Mobile keyboards capitalise the first word and the server refuses `Status`.
     command.setAttribute('autocapitalize', 'off');
     command.setAttribute('enterkeyhint', 'send');
-    command.placeholder = 'Type a command, or press Tab';
+    // Short, because the prompt is now a line in the buffer: the full sentence was
+    // clipped mid-word at 390px, and the footer already lists Enter, Tab and the rest.
+    command.placeholder = 'Type a command';
     command.classList.add('console-input');
     const promptLabel = el('span', 'tortodrone$', 'console-prompt-label');
     promptLabel.setAttribute('aria-hidden', 'true');
@@ -541,22 +555,15 @@ export async function mount(ctx) {
     stream.state.append(feedback);
     const prompt = el('div', null, 'console-prompt-block');
     prompt.append(form);
-    stream.node.insertBefore(prompt, stream.footer);
+    // The cursor stands on the line after the last one, inside the scrollback: a shell
+    // keeps its prompt at the end of the buffer, so scrolling up into history scrolls
+    // the prompt away with it. In a strip under the body the prompt stayed pinned while
+    // the answers it belonged to scrolled, which is a chat window, not a terminal.
+    stream.bodyTail.append(prompt);
     const node = stream.node;
     node.classList.add('console-workspace');
-    // The jump pill must sit above the prompt, whatever the prompt's height is.
-    const measurePrompt = () => {
-        node.style.setProperty('--prompt-height', prompt.offsetHeight + 'px');
-        // The prompt changes the space the stream needs, so refit with it.
-        stream.fit();
-    };
-    measurePrompt();
-    // Kept so the page can let go of it: a new observer per visit measured a prompt
-    // that had already been removed, and the old one was never disconnected.
-    const promptObserver =
-        typeof ResizeObserver === 'function' ? new ResizeObserver(measurePrompt) : null;
-    if (promptObserver) promptObserver.observe(prompt);
-    else window.addEventListener('resize', measurePrompt);
+    // No prompt height to measure any more: the prompt is a line in the body, so it is
+    // part of the pane's own scroll height instead of chrome the jump pill has to clear.
     let failures = 0;
     async function refresh() {
         try {
@@ -612,8 +619,6 @@ export async function mount(ctx) {
         },
         dispose() {
             commandDraft = command.value;
-            promptObserver?.disconnect();
-            if (!promptObserver) window.removeEventListener('resize', measurePrompt);
             // The terminal's own page-level keys go with the terminal.
             stream.dispose?.();
         }
