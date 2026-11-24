@@ -357,7 +357,13 @@ Every record list shares one table component and therefore one behaviour set:
 - **Search** is debounced and matches every field; `Esc` in the search box clears it.
 - **Filters** per table combine with search; both persist per table.
 - **Sorting** works from the column header buttons and from the sort control in the
-  paging bar, which is what mobile keeps available when the header collapses.
+  paging bar, which is what mobile keeps available when the header collapses. Every
+  list that has a spine declares the order it opens in — username, item, station,
+  newest-first for the trail — so a header reports the column it is really sorted by
+  instead of `none` on all of them. The direction is drawn as a triangle, not typed: at
+  12px an `↑` and a `↓` photograph as the same tick, and a mark that names the column
+  without naming the way is worse than no mark. It sits only on the sorted column, and
+  every header holds the same 7px slot so no label moves when the order changes.
 - **Paging** shows `N records of M · page X / Y` in a polite live region.
 - **Selection** adds a checkbox column, a header select-all with an indeterminate
   state, and a bulk bar with the actions that page supports (for example
@@ -473,7 +479,10 @@ administrator can therefore confirm the transport in use without reading
 - A tab strip names the region it switches: `aria-controls` on each tab, and
   `role="tabpanel"` with `aria-labelledby` following the selection.
 - Status text does not rely on colour alone, both themes meet AA contrast, and
-  `prefers-reduced-motion` plus the preference switch disable animation.
+  `prefers-reduced-motion` plus the preference switch disable animation. A rule between
+  two rows of data is a boundary, not decoration, so it has its own token: `--line-data`
+  clears 3:1 against the surface and against the zebra tint, where the decorative
+  `--line` sat at 1.71.
 - Row-selection checkboxes draw at 16px inside a 24px label, and table rows are
   spaced further apart than the 24px target circle, so WCAG 2.2 target size is
   met by the spacing exception while dense tables stay readable. On a coarse pointer
@@ -528,15 +537,15 @@ the code it was supposed to describe.
 
 | Asset class | Raw | Gzip | Transport |
 | --- | --- | --- | --- |
-| `index.html` | 9 860 B | 2 234 B | Gzip when the browser offers it, `must-revalidate` |
-| JavaScript (33 files under `frontend/assets`) | 597 698 B | 151 451 B | Gzip, `must-revalidate`, ETag per encoding |
-| CSS (5 sheets) | 113 738 B | 27 102 B | Gzip, `must-revalidate`, ETag per encoding |
+| `index.html` | 10 160 B | 2 377 B | Gzip when the browser offers it, `must-revalidate` |
+| JavaScript (33 files under `frontend/assets`) | 646 684 B | 168 028 B | Gzip, `must-revalidate`, ETag per encoding |
+| CSS (5 sheets) | 147 834 B | 37 579 B | Gzip, `must-revalidate`, ETag per encoding |
 | Icons and artwork (5081 files, 87 MB on disk) | median icon 16 kB | n/a | `max-age=31536000, immutable` for the content-hashed `assets/game/icons/<hash>` paths |
 
 The JavaScript column is every module at once, which no single page loads: a
 VIEWER never fetches `mailing.js`, and there is no bundler, so the number grows
 with each page module. Gzip is applied to text assets over 1 kB: `app.js` alone
-goes from 33 131 to 9 655 bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
+goes from 37 213 to 11 008 bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
 cache never serves one representation for the other and revalidation still
 answers `304`. Every non-hashed asset revalidates, so an upgrade is visible on the
 next load without a hard refresh; hashed artwork is cached for a year. Only the
