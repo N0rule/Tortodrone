@@ -1,5 +1,6 @@
 import { api } from '../api.js';
 import {
+    $,
     el,
     button,
     input,
@@ -8,13 +9,16 @@ import {
     toolbar,
     panel,
     badge,
+    facts,
     date,
     localDate,
     text,
     changed
 } from '../ui.js';
 import { DataTable } from '../components/table.js';
+import { toast } from '../components/toast.js';
 import { openDialog, confirm as confirmAction } from '../components/dialog.js';
+import { emptyState, waiting } from '../components/states.js';
 import { itemPicker } from '../components/item-picker.js';
 import { currency, itemLine } from '../components/items.js';
 
@@ -44,19 +48,60 @@ const TEMPLATES = [
         body: 'A new season opens today.\n\nPrestige, gear and rewards reset as usual; your account and inventory stay exactly as they are.'
     }
 ];
-/** Direct sends from this browser session, newest first; not persisted server-side. */
-const recentSends = [];
-const SENDERS = [
-    ['6', 'Spiral HQ'],
-    ['5', 'Haven Treasury'],
-    ['4', 'Spiral Knights Support']
-];
-const senderName = (sender) =>
-    SENDERS.find(([id]) => Number(id) === sender)?.[1] || `System ${sender}`;
+/** The server ships the supported sender ordinals; these are their stock names. */
+const SENDER_NAMES = { 6: 'Spiral HQ', 5: 'Haven Treasury', 4: 'Spiral Knights Support' };
+/** Mirrors of the shipped limits, used only when an older server omits them. */
+const FALLBACK_LIMITS = { subject: 50, body: 8096, units: 14, senderLabel: 40 };
+/** StaffMail stores both fields behind the game's tainted-literal prefix. */
+const UPLINK = '%uplink:~';
+/** Local receipts for direct letters; the server keeps its own delivery record. */
+const RECEIPTS_KEY = 'tortodrone-mail-receipts',
+    RECEIPT_LIMIT = 200;
+/** The roster draws at most this many rows, so "Select all shown" means these. */
+const ROSTER_ROWS = 200;
+
+const strip = (value) => String(value ?? '').trim();
+const senderName = (sender) => SENDER_NAMES[Number(sender)] || `System ${sender}`;
 const displaySender = (value) =>
-    value.senderLabel?.trim() ? value.senderLabel.trim() : senderName(value.sender);
+    strip(value.senderLabel) ? strip(value.senderLabel) : senderName(value.sender);
 const units = (gifts) => gifts.reduce((total, gift) => total + Number(gift.count || 0), 0);
 const unitCount = (value) => `${value} unit${value === 1 ? '' : 's'}`;
+const sentTime = (value) => (Number.isFinite(value) ? date(value) : 'an unchosen time');
+const countOf = (value, noun) => `${Number(value).toLocaleString()} ${noun}${value === 1 ? '' : 's'}`;
+
+function loadReceipts() {
+    try {
+        const rows = JSON.parse(localStorage.getItem(RECEIPTS_KEY) || '[]');
+        return Array.isArray(rows) ? rows.filter((row) => row && row.knight) : [];
+    } catch {
+        // A corrupt or blocked store leaves an empty list, never a broken page.
+        return [];
+    }
+}
+
+function saveReceipts(rows) {
+    try {
+        localStorage.setItem(RECEIPTS_KEY, JSON.stringify(rows.slice(0, RECEIPT_LIMIT)));
+    } catch {
+        /* Private browsing keeps the session copy only. */
+    }
+}
+
+/**
+ * dialog.js dresses every 409 as a revision race. A mail refusal is a sentence,
+ * so only the sentences that really are about a moved record keep that status.
+ */
+function normalized(error) {
+    const message = strip(error?.message);
+    if (error?.status !== 409) return error;
+    // Only the sentences that say the record moved earn reload advice, and it is
+    // spelled out here instead of letting every 409 read as a revision race.
+    if (!/changed|reopen|cancel/i.test(message))
+        return new Error(message || 'The server refused this change.');
+    return new Error(
+        `${message.replace(/[.;]$/, '')}. Close and reopen this record to use its latest revision.`
+    );
+}
 
 /** Exported for the Node serialization test and shared by the editor. */
 export function mailingStatus(campaign, now = Date.now()) {
@@ -92,12 +137,13 @@ function giftsLine(gifts, definitions) {
     return node;
 }
 
-function preview(message, definitions) {
+/** The letter as the client renders it. `notes` is the reach and timing footer. */
+function preview(message, definitions, notes = []) {
     const node = el('div', null, 'mail-preview');
     node.append(
         el('small', 'Uplink message', 'muted'),
-        el('strong', message.subject.trim() || 'Subject preview', 'mail-subject'),
-        el('p', message.body.trim() || 'Your message will appear here.', 'mail-body'),
+        el('strong', strip(message.subject) || 'Subject preview', 'mail-subject'),
+        el('p', strip(message.body) || 'Your message will appear here.', 'mail-body'),
         toolbar(
             el('span', displaySender(message), 'muted'),
             ...(message.crowns > 0 ? [currency('crowns', message.crowns)] : []),
@@ -106,10 +152,41 @@ function preview(message, definitions) {
     );
     const gifts = giftsLine(message.gifts || [], definitions);
     if (gifts) node.append(gifts);
+    for (const note of notes) node.append(el('small', note, 'muted'));
     return node;
 }
 
-function draftOf(mode, campaign) {
+/**
+ * Exactly what StaffMail writes into `town_mail`, so the operator sees the stored
+ * value (literal prefix, negated sender) instead of a projection of it.
+ */
+function letterText(message) {
+    const senderLabel = strip(message.senderLabel);
+    const prefix = senderLabel ? '' : UPLINK;
+    const lines = [
+        senderLabel
+            ? `sender: -${message.sender} (the custom label replaces the stock ${senderName(message.sender)})`
+            : `sender: -${message.sender} (${senderName(message.sender)})`,
+        `sender_label: ${senderLabel || '(none: the stock SystemSender name is shown)'}`,
+        'mail_type: 3 (SYSTEM)',
+        `subject: ${prefix}${strip(message.subject)}`,
+        `body: ${prefix}${strip(message.body)}`,
+        `crowns: ${Number(message.crowns) || 0}`,
+        `energy: ${Number(message.energy) || 0}`
+    ];
+    const gifts = message.gifts || [];
+    if (!gifts.length) lines.push('attachments: none');
+    else {
+        lines.push('attachments:');
+        for (const gift of gifts)
+            lines.push(`  ${gift.count} × ${gift.config}${gift.bound ? ' (bound)' : ''}`);
+    }
+    return lines.join('\n');
+}
+
+function draftOf(mode, campaign, senders) {
+    const homeSender = senders.includes(6) || !senders.length ? 6 : senders[senders.length - 1];
+    const soon = Math.ceil((Date.now() + 3_600_000) / 900_000) * 900_000;
     if (mode === 'welcome') {
         const welcome = campaign;
         return {
@@ -117,12 +194,11 @@ function draftOf(mode, campaign) {
             enabledAt: welcome.enabledAt,
             sender: welcome.sender,
             senderLabel: welcome.senderLabel || '',
-            subject: welcome.subject,
-            body: welcome.body,
+            subject: welcome.subject || '',
+            body: welcome.body || '',
             crowns: welcome.crowns,
             energy: welcome.energy,
-            gifts: welcome.gifts.map((gift) => ({ ...gift })),
-            recipient: ''
+            gifts: (welcome.gifts || []).map((gift) => ({ ...gift }))
         };
     }
     if (mode === 'campaign' && campaign) {
@@ -137,52 +213,55 @@ function draftOf(mode, campaign) {
             ends: campaign.ends,
             crowns: campaign.crowns,
             energy: campaign.energy,
-            gifts: campaign.gifts.map((gift) => ({ ...gift })),
-            recipient: ''
+            gifts: (campaign.gifts || []).map((gift) => ({ ...gift }))
         };
     }
     return {
         id: 0,
         revision: 0,
         enabled: false,
-        sender: 6,
+        sender: homeSender,
         senderLabel: '',
         subject: '',
         body: '',
-        // The window opens on the next quarter hour, so a draft is never saved
-        // with a start that has already passed, and runs for thirty days.
-        starts: Math.ceil((Date.now() + 3_600_000) / 900_000) * 900_000,
-        ends: Math.ceil((Date.now() + 3_600_000) / 900_000) * 900_000 + 30 * 86_400_000,
+        // A mailing is live for its window, so a new one opens on a future window:
+        // an accidental save cannot deliver before the operator has read it back.
+        starts: soon,
+        ends: soon + 30 * 86_400_000,
         crowns: 0,
         energy: 0,
-        gifts: [],
-        recipient: ''
+        gifts: []
     };
 }
 
 export async function mount(ctx) {
     let data = await ctx.request('mail');
-    const definitions = new Map(),
+    const limits = { ...FALLBACK_LIMITS, ...(data.limits || {}) },
+        senders = Array.isArray(data.senders) && data.senders.length ? data.senders : [4, 5, 6],
+        zone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time',
+        definitions = new Map(),
         node = el('div', null, 'stack mail-page'),
         summary = el('div', null, 'stack'),
-        welcomeHost = el('div'),
-        recentSendsHost = el('div'),
+        welcomeHost = el('div', null, 'stack'),
+        receiptsHost = el('div', null, 'stack'),
         guidance = el(
             'p',
-            'A mailing reaches every knight once while the window is open, including knights created later. Delivery happens on their next visit; delivered letters are never duplicated.'
+            'A mailing reaches every knight once while its window is open, including knights created later. Delivery happens on their next visit; delivered letters are never duplicated.'
         );
-    let roster = null;
+    let roster = null,
+        receipts = loadReceipts();
 
     const rosterRows = async () => {
         if (!roster) roster = await ctx.request('knights-all');
         return roster;
     };
+    const population = () => (roster ? roster.length : null);
 
     const loadDefinitions = async (campaigns) => {
         const configs = [
-            ...new Set(campaigns.flatMap((campaign) => campaign.gifts.map((gift) => gift.config)))
+            ...new Set(campaigns.flatMap((campaign) => (campaign.gifts || []).map((g) => g.config)))
         ];
-        if (data.welcome) configs.push(...data.welcome.gifts.map((gift) => gift.config));
+        if (data.welcome) configs.push(...(data.welcome.gifts || []).map((gift) => gift.config));
         const missing = [...new Set(configs)].filter((config) => !definitions.has(config));
         await Promise.all(
             missing.map(async (config) => {
@@ -191,11 +270,157 @@ export async function mount(ctx) {
                 } catch (error) {
                     // Keep the config in the map so the row can say the definition is
                     // unavailable instead of silently rendering nothing.
-                    if (error.name !== 'AbortError') definitions.set(config, { config, unavailable: true });
+                    if (error.name !== 'AbortError')
+                        definitions.set(config, { config, unavailable: true });
                 }
             })
         );
     };
+
+    const write = async (route, values) => {
+        try {
+            return await api.change(route, values);
+        } catch (error) {
+            throw normalized(error);
+        }
+    };
+
+    function recordReceipt(row) {
+        receipts.unshift({ at: Date.now(), ...row });
+        receipts = receipts.slice(0, RECEIPT_LIMIT);
+        saveReceipts(receipts);
+    }
+
+    function deliveredLabel(campaign) {
+        const total = population();
+        return total === null
+            ? campaign.delivered.toLocaleString()
+            : `${campaign.delivered.toLocaleString()} of ${total.toLocaleString()}`;
+    }
+
+    /** One row per knight that received the mailing, straight from the delivery table. */
+    async function openDeliveries(campaign) {
+        const host = el('div', null, 'stack');
+        host.append(waiting('Reading deliveries…'));
+        openDialog({
+            title: `Recipients · ${strip(campaign.subject) || 'mailing'}`,
+            description:
+                'One row per knight that received this mailing, oldest first. A knight deleted after delivery keeps its world id.',
+            content: host,
+            submit: 'Close',
+            notifySaved: false,
+            onSubmit: async () => {}
+        });
+        let rows;
+        try {
+            rows = await ctx.request('mail-deliveries', { id: campaign.id });
+        } catch (error) {
+            host.replaceChildren(
+                el('p', error.message || 'The delivery roster is unavailable.', 'error')
+            );
+            return;
+        }
+        const recipients = rows.recipients || [];
+        if (!recipients.length) {
+            host.replaceChildren(
+                emptyState({
+                    title: 'No delivery yet',
+                    message: 'The window is open and knights receive it when they next log in.',
+                    icon: 'mailing'
+                })
+            );
+            return;
+        }
+        const table = new DataTable(
+            [
+                [
+                    'Knight',
+                    (row) => row.knight || el('span', 'deleted knight', 'muted'),
+                    (row) => row.knight || ''
+                ],
+                [
+                    'Account',
+                    (row) => row.username || el('span', 'unknown account', 'muted'),
+                    (row) => row.username || ''
+                ],
+                ['Sent', (row) => sentTime(row.sent), (row) => row.sent],
+                ['World', (row) => String(row.worldId), (row) => row.worldId]
+            ],
+            {
+                // Delivery rows carry no id of their own; the world id is the one
+                // identity a knight keeps across a rename or a deletion.
+                key: (row) => String(row.worldId),
+                caption: 'Knights that received this mailing',
+                exportName: `mail-deliveries-${campaign.id}`,
+                pageSize: 30,
+                persist: false
+            }
+        );
+        table.update(recipients);
+        const total = population();
+        host.replaceChildren(
+            toolbar(
+                badge(
+                    total === null
+                        ? countOf(recipients.length, 'recipient')
+                        : `${countOf(recipients.length, 'recipient')} of ${countOf(total, 'knight')}`,
+                    'gold'
+                ),
+                el('span', `${date(campaign.starts)} → ${date(campaign.ends)}`, 'muted')
+            ),
+            table.node
+        );
+    }
+
+    /** The stored letter, read-only: what a knight actually receives. */
+    function openLetter(campaign) {
+        const total = population();
+        const content = panel(
+            '',
+            preview(campaign, definitions, [
+                total === null
+                    ? `${campaign.delivered.toLocaleString()} delivered so far`
+                    : `${campaign.delivered.toLocaleString()} of ${total.toLocaleString()} knights on this server received it`,
+                `Window ${date(campaign.starts)} → ${date(campaign.ends)} (${zone})`
+            ]),
+            facts([
+                ['Status', mailingStatus(campaign, data.now)],
+                ['Sender', displaySender(campaign)],
+                ['Custom sender', strip(campaign.senderLabel) || 'none; the stock sender name is used'],
+                ['Starts', date(campaign.starts)],
+                ['Ends', date(campaign.ends)],
+                ['Crowns', Number(campaign.crowns).toLocaleString()],
+                ['Energy', Number(campaign.energy).toLocaleString()],
+                [
+                    'Gifts',
+                    campaign.gifts.length
+                        ? `${countOf(campaign.gifts.length, 'stack')}, ${unitCount(units(campaign.gifts))}`
+                        : 'none'
+                ],
+                ['Delivered', deliveredLabel(campaign)],
+                ['Created', date(campaign.created)],
+                ['Last saved', date(campaign.updated)]
+            ]),
+            toolbar(
+                button(
+                    'Edit this mailing',
+                    () => compose('campaign', campaign),
+                    'secondary',
+                    () => campaign.enabled
+                ),
+                button('Inspect recipients', () => openDeliveries(campaign), 'secondary')
+            )
+        );
+        openDialog({
+            title: strip(campaign.subject) || 'Mail campaign',
+            description:
+                'This is the letter as the client shows it. Editing changes what knights who have not received it yet will get.',
+            content,
+            submit: 'Close',
+            notifySaved: false,
+            onSubmit: async () => {}
+        });
+    }
 
     const table = new DataTable(
         [
@@ -203,8 +428,11 @@ export async function mount(ctx) {
                 'Subject',
                 (campaign) => {
                     const cell = el('div', null, 'mail-subject-cell');
+                    const name = button(campaign.subject, () => openLetter(campaign), 'link');
+                    name.querySelector('.ui-icon')?.remove();
+                    name.title = 'Read this letter as the client shows it';
                     cell.append(
-                        el('strong', campaign.subject),
+                        name,
                         el('small', campaign.body.replace(/\s+/g, ' ').slice(0, 90), 'muted')
                     );
                     return cell;
@@ -237,16 +465,20 @@ export async function mount(ctx) {
                     const cell = el('div', null, 'mail-gifts-cell');
                     cell.append(el('span', unitCount(units(campaign.gifts)), 'muted'));
                     for (const gift of campaign.gifts)
-                        cell.append(
-                            itemLine(definitions.get(gift.config), { config: gift.config })
-                        );
+                        cell.append(itemLine(definitions.get(gift.config), { config: gift.config }));
                     return cell;
                 },
                 (campaign) => units(campaign.gifts)
             ],
             [
                 'Delivered',
-                (campaign) => campaign.delivered.toLocaleString(),
+                (campaign) => {
+                    const label = deliveredLabel(campaign);
+                    // Zero reads neutral and the Inspect action still opens the
+                    // roster; a delivered count is the drill-down.
+                    if (!campaign.delivered) return el('span', label, 'muted');
+                    return button(label, () => openDeliveries(campaign), 'link');
+                },
                 (campaign) => campaign.delivered
             ],
             [
@@ -263,6 +495,16 @@ export async function mount(ctx) {
             id: 'mail-campaigns',
             caption: 'Mail campaigns',
             exportName: 'mail-campaigns',
+            // An empty list says what a mailing is and where knights come from,
+            // instead of guessing that it fills on its own.
+            empty: {
+                title: 'No mailings yet',
+                hint: 'A mailing is a letter every knight receives once while its window is open. Knights are created in the game client, and a knight created later still receives an open mailing.',
+                icon: 'mailing'
+            },
+            // The delivered cell reads "42 of N", so the population is part of what
+            // a row shows and must re-render when the roster is counted.
+            presentationKey: () => String(population()),
             actions: (get) => [
                 button(
                     'Edit',
@@ -270,24 +512,8 @@ export async function mount(ctx) {
                     'secondary',
                     () => get().enabled
                 ),
-                button(
-                    'Duplicate',
-                    () => {
-                        const source = get();
-                        const now = Date.now();
-                        compose('campaign', {
-                            ...source,
-                            id: 0,
-                            updated: 0,
-                            delivered: 0,
-                            enabled: false,
-                            subject: `${source.subject} (copy)`.slice(0, 50),
-                            starts: now + 3600_000,
-                            ends: now + 7 * 86400_000
-                        });
-                    },
-                    'secondary'
-                ),
+                button('Inspect recipients', () => openDeliveries(get()), 'secondary'),
+                button('Duplicate', () => duplicate(get()), 'secondary'),
                 button(
                     'Cancel',
                     () =>
@@ -314,246 +540,450 @@ export async function mount(ctx) {
     );
     table.node.classList.add('mail-table');
 
+    /** A copy is a new mailing that delivers again, so say so and open a future window. */
+    function duplicate(source) {
+        const soon = Math.ceil((Date.now() + 3_600_000) / 900_000) * 900_000;
+        compose(
+            'campaign',
+            {
+                ...source,
+                id: 0,
+                created: soon,
+                updated: 0,
+                delivered: 0,
+                enabled: true,
+                subject: `${source.subject} (copy)`.slice(0, limits.subject),
+                starts: soon,
+                ends: soon + 7 * 86_400_000
+            },
+            {
+                banner: `This is a new mailing, not a resumption. Saving it delivers again, including to the ${source.delivered.toLocaleString()} knight(s) that already received the original. The window below starts in the future, so nothing is delivered until it opens.`
+            }
+        );
+    }
+
     function renderSummary() {
         const counts = { Active: 0, Scheduled: 0, Ended: 0, Cancelled: 0 };
-        const population = roster?.length ? ` of ${roster.length.toLocaleString()}` : '';
         let delivered = 0;
         for (const campaign of data.campaigns) {
             counts[mailingStatus(campaign, data.now)]++;
             delivered += campaign.delivered;
         }
-        const summaryPanel = panel(
-            'Delivery status',
+        const total = population();
+        const countKnights = button(
+            'Count knights',
+            async () => {
+                countKnights.setBusy(true);
+                try {
+                    await rosterRows();
+                } finally {
+                    countKnights.setBusy(false);
+                }
+                if (ctx.alive()) {
+                    renderSummary();
+                    table.update(data.campaigns);
+                }
+            },
+            'quiet'
+        );
+        countKnights.title = 'Reads the roster once, so the delivered counts read "42 of N".';
+        const content = [
             guidance,
             toolbar(
                 ...Object.entries(counts).map(([name, count]) =>
-                    badge(`${count} ${name.toLowerCase()}`, name === 'Active' ? 'good' : '')
+                    badge(
+                        `${count} ${name.toLowerCase()}`,
+                        name === 'Active' && count > 0 ? 'good' : ''
+                    )
                 ),
                 badge(
-                    `${delivered.toLocaleString()}${population} letter${delivered === 1 ? '' : 's'} delivered`,
-                    'gold'
+                    total === null
+                        ? `${countOf(delivered, 'letter')} delivered`
+                        : `${delivered.toLocaleString()} of ${countOf(total, 'knight')} reached`,
+                    delivered ? 'gold' : ''
                 ),
-                ...(roster
-                    ? []
-                    : [
-                          button(
-                              'Count knights',
-                              async () => {
-                                  await rosterRows();
-                                  if (ctx.alive()) renderSummary();
-                              },
-                              'quiet'
-                          )
-                      ])
-            ),
-            el(
-                'small',
-                'Editing an active mailing changes what knights who have not received it yet will get. Delivered letters stay untouched.',
-                'muted'
-            ),
-            ...(data.campaigns.length
-                ? []
-                : [
-                      el(
-                          'p',
-                          'No mailings yet. Create a windowed mailing for every knight, or send a one-off letter to a single knight.',
-                          'empty'
-                      )
-                  ])
-        );
+                ...(roster ? [] : [countKnights])
+            )
+        ];
+        if (roster && !roster.length)
+            content.push(
+                el(
+                    'p',
+                    'No knights exist on this server yet, so a mailing saved now delivers to nobody until a knight is created in the game client.',
+                    'muted'
+                )
+            );
+        const summaryPanel = panel('Delivery status', ...content);
         summaryPanel.classList.add('stack');
         summary.replaceChildren(summaryPanel);
     }
 
-    /** Direct sends made in this session, so a multi-knight batch has a receipt. */
-    function renderRecentSends() {
-        if (!recentSends.length) {
-            recentSendsHost.replaceChildren();
-            return;
-        }
-        const table = new DataTable(
-            [
-                ['Knight', (row) => row.knight],
-                ['Account', (row) => row.username],
-                ['Subject', (row) => row.subject],
-                ['Sent', (row) => date(row.at), (row) => row.at],
-                [
-                    'Result',
-                    (row) => {
-                        // The receipt keeps the reason, so a failure is still
-                        // explainable after the toast is gone.
-                        const cell = el('div', null, 'mail-send-result');
-                        cell.append(badge(row.ok ? 'Queued' : 'Refused', row.ok ? 'good' : 'bad'));
-                        cell.append(
-                            el(
-                                'small',
-                                row.ok ? 'waits while offline' : row.reason || 'refused',
-                                'muted'
+    function renderReceipts() {
+        const header = toolbar();
+        if (receipts.length)
+            header.append(
+                button(
+                    'Clear',
+                    () => {
+                        if (
+                            !window.confirm(
+                                `Clear ${countOf(receipts.length, 'local receipt')}? The delivery counts on this page come from the server and are not affected.`
                             )
-                        );
-                        return cell;
+                        )
+                            return;
+                        receipts = [];
+                        saveReceipts(receipts);
+                        renderReceipts();
                     },
-                    (row) => (row.ok ? 'Queued' : 'Refused ' + (row.reason || ''))
-                ]
-            ],
-            {
-                key: (row) => String(row.at) + row.knight,
-                id: 'mail-recent-sends',
-                caption: 'Direct mail sent from this session',
-                search: false,
-                persist: false,
-                pageSize: 5
-            }
-        );
-        table.update([...recentSends].slice(0, 25));
-        recentSendsHost.replaceChildren(
-            panel('Recent direct mail', el('small', 'Session only, newest first. Refusals keep the reason in the toast.', 'muted'), table.node)
-        );
-    }
-
-    function renderWelcome() {
-        const welcome = data.welcome;
-        const status = welcome.enabled
-            ? `Applies to knights created after ${date(welcome.enabledAt)}`
-            : welcome.enabledAt
-              ? `Stopped ${date(welcome.disabledAt)}; knights created while it was enabled still receive it`
-              : 'New knights receive no automatic mail';
+                    'secondary'
+                )
+            );
         const content = [
             el(
                 'small',
-                'Optional. Only knights created while this is enabled receive it; existing knights are not mailed. It arrives once, on the knight’s first visit. Disabling stops new copies but keeps eligibility for knights created while it was enabled.',
+                'Letters sent directly from this browser, newest first, kept in this browser only. A mailing’s own deliveries are counted from the server and listed under Inspect recipients.',
                 'muted'
-            ),
-            toolbar(
-                badge(welcome.enabled ? 'Enabled' : 'Disabled', welcome.enabled ? 'good' : ''),
-                el('span', status, 'muted')
             )
         ];
-        if (welcome.subject || welcome.body || welcome.gifts.length)
+        if (!receipts.length)
             content.push(
-                preview(
-                    {
-                        ...welcome,
-                        senderLabel: welcome.senderLabel
-                    },
-                    definitions
+                el(
+                    'p',
+                    'Nothing sent from this browser yet. A direct letter, a batch send or a test copy adds a receipt here.',
+                    'empty'
                 )
             );
+        else {
+            const table = new DataTable(
+                [
+                    ['Knight', (row) => row.knight],
+                    ['Account', (row) => row.username],
+                    ['Subject', (row) => row.subject],
+                    ['Sent', (row) => date(row.at), (row) => row.at],
+                    [
+                        'Result',
+                        (row) => {
+                            // The receipt keeps the reason, so a refusal is still
+                            // explainable after the toast is gone.
+                            const cell = el('div', null, 'mail-send-result');
+                            cell.append(
+                                badge(row.ok ? 'Delivered' : 'Refused', row.ok ? 'good' : 'bad'),
+                                el('small', row.ok ? 'in the inbox' : row.reason || 'refused', 'muted')
+                            );
+                            return cell;
+                        },
+                        (row) => (row.ok ? 'Delivered' : 'Refused ' + (row.reason || ''))
+                    ]
+                ],
+                {
+                    key: (row) => String(row.at) + row.knight,
+                    id: 'mail-receipts',
+                    caption: 'Direct mail receipts',
+                    search: false,
+                    persist: false,
+                    pageSize: 10
+                }
+            );
+            table.update(receipts);
+            content.push(table.node);
+        }
+        receiptsHost.replaceChildren(panel('Delivery receipts', header, ...content));
+    }
+
+    const welcomeDetails = el('details');
+    const welcomeSummary = el('summary');
+    function renderWelcome() {
+        const welcome = data.welcome;
+        text(
+            welcomeSummary,
+            'Welcome mail · ' +
+                (welcome.enabled
+                    ? `on since ${date(welcome.enabledAt)}`
+                    : welcome.enabledAt
+                      ? `off${welcome.disabledAt ? ` since ${date(welcome.disabledAt)}` : ''}`
+                      : 'never sent')
+        );
+        const status = welcome.enabled
+            ? `Knights created after ${date(welcome.enabledAt)} receive it once, on their first visit.`
+            : welcome.enabledAt
+              ? `Knights created while it was enabled still receive it; knights created after ${
+                    welcome.disabledAt ? date(welcome.disabledAt) : 'it was switched off'
+                } do not.`
+              : 'Knights created now receive no automatic mail.';
+        const content = [el('small', status, 'muted')];
+        const gifts = welcome.gifts || [];
+        if (strip(welcome.subject) || strip(welcome.body) || gifts.length)
+            content.push(preview({ ...welcome, gifts }, definitions));
         content.push(
             toolbar(button('Edit welcome mail', () => compose('welcome', welcome), 'secondary'))
         );
-        const card = panel('New knight welcome mail', ...content);
+        const card = panel('', ...content);
         card.classList.add('stack');
         welcomeHost.replaceChildren(card);
     }
 
-    async function compose(mode, record = null) {
+    async function compose(mode, record = null, options = {}) {
         if (mode === 'direct') roster = null;
         const rows = mode === 'direct' ? await rosterRows() : [];
-        if (mode === 'direct' && !rows.length)
-            throw new Error('Create a knight before sending direct mail.');
-        const draft = draftOf(mode, record);
+        if (mode === 'direct' && !rows.length) {
+            // A server with no knights is the normal dev state: say so instead of
+            // opening a composer that cannot send to anybody.
+            openDialog({
+                title: 'Send mail to a knight',
+                content: emptyState({
+                    title: 'No knights exist yet',
+                    message:
+                        'Knights are created in the game client. Once one exists, its name appears here and you can write to it.',
+                    icon: 'knights'
+                }),
+                submit: 'Close',
+                notifySaved: false,
+                onSubmit: async () => {}
+            });
+            return;
+        }
+        const draft = draftOf(mode, record, senders);
         const node = el('div', null, 'stack'),
             header = el('div', null, 'form-grid'),
             gifts = el('div', null, 'stack'),
-            unitLabel = el('small', '', 'muted');
+            unitLabel = el('small', '', 'muted'),
+            results = el('div', null, 'stack'),
+            chosen = new Set(),
+            batch = new Map();
+        let attempted = [];
         const enabled =
             mode === 'welcome' ? input('Enable welcome mail', draft.enabled, 'checkbox') : null;
         const subject = input('Subject', draft.subject);
-        subject.maxLength = 50;
+        const subjectCount = el('small', '', 'muted');
+        subjectCount.id = 'mail-subject-count';
+        subject.setAttribute('aria-describedby', subjectCount.id);
         const body = input('Body', draft.body, 'textarea');
         body.rows = 12;
-        body.maxLength = 8096;
-        const sender = select('Sender', SENDERS, String(draft.sender));
+        const bodyCount = el('small', '', 'muted');
+        bodyCount.id = 'mail-body-count';
+        body.setAttribute('aria-describedby', bodyCount.id);
+        const sender = select(
+            'Sender',
+            senders.map((id) => [String(id), senderName(id)]),
+            String(draft.sender)
+        );
         const customSender = input('Custom sender (optional)', draft.senderLabel);
-        customSender.maxLength = 40;
-        customSender.placeholder = 'Overrides the system sender name';
+        customSender.placeholder = 'Overrides the stock sender name';
         const starts =
             mode === 'campaign' ? input('Starts', localDate(draft.starts), 'datetime-local') : null;
         const ends =
             mode === 'campaign' ? input('Ends', localDate(draft.ends), 'datetime-local') : null;
-        const crowns = input('Crowns', draft.crowns, 'number', {
-            min: 0,
-            max: 2147483647,
-            step: 1
-        });
-        const energy = input('Energy', draft.energy, 'number', {
-            min: 0,
-            max: 2147483647,
-            step: 1
-        });
-        let filter, target, chosen;
+        const crowns = input('Crowns', draft.crowns, 'number', { min: 0, max: 2147483647, step: 1 });
+        const energy = input('Energy', draft.energy, 'number', { min: 0, max: 2147483647, step: 1 });
+
+        // The server refuses text over the shipped limits, so the counter says the
+        // same number and turns red instead of the field silently truncating.
+        const syncCounter = (control, counter, limit) => {
+            const length = control.value.length;
+            text(counter, `${length.toLocaleString()} / ${limit.toLocaleString()} characters`);
+            counter.classList.toggle('error', length > limit);
+        };
+        const counters = () => {
+            syncCounter(subject, subjectCount, limits.subject);
+            syncCounter(body, bodyCount, limits.body);
+        };
+        subject.addEventListener('input', counters);
+        body.addEventListener('input', counters);
+        counters();
+
+        const keyOf = (row) => `${row.username}|${row.name}`;
+        function currentMessage() {
+            return {
+                sender: Number(sender.value),
+                senderLabel: customSender.value,
+                subject: subject.value,
+                body: body.value,
+                crowns: Number(crowns.value || 0),
+                energy: Number(energy.value || 0),
+                gifts: draft.gifts
+            };
+        }
+        function letterValues() {
+            const message = currentMessage();
+            return {
+                sender: message.sender,
+                senderLabel: message.senderLabel,
+                subject: message.subject,
+                body: message.body,
+                crowns: message.crowns,
+                energy: message.energy,
+                items: mailingItems(draft.gifts)
+            };
+        }
+        /** Client mirrors of the server's own sentences, so a refusal is not a round trip. */
+        function checkLetter() {
+            const requiresText = mode !== 'welcome' || enabled.checked || draft.enabledAt;
+            if (requiresText && !strip(subject.value)) throw new Error('Subject is required');
+            if (requiresText && !strip(body.value)) throw new Error('Body is required');
+            if (strip(subject.value).length > limits.subject)
+                throw new Error(`Subject must be at most ${limits.subject} characters`);
+            if (strip(body.value).length > limits.body)
+                throw new Error(
+                    mode === 'welcome'
+                        ? 'Welcome mail is too long'
+                        : `Body must be at most ${limits.body} characters`
+                );
+            if (strip(customSender.value).length > limits.senderLabel)
+                throw new Error(`Sender name must be at most ${limits.senderLabel} characters`);
+            if (Number(crowns.value) < 0 || Number(energy.value) < 0)
+                throw new Error('Crowns and energy cannot be negative');
+            if (draft.gifts.length > limits.units)
+                throw new Error(`Add at most ${limits.units} gift stacks`);
+            if (units(draft.gifts) > limits.units)
+                throw new Error(`A mailing can carry at most ${limits.units} item units`);
+        }
+
+        /** Delivers to `keys`, never rewriting a knight that already succeeded here. */
+        async function send(keys, values, label) {
+            const outcome = { sent: 0, refused: [], stopped: null };
+            for (const [index, key] of keys.entries()) {
+                // Resume and retry share this loop: a knight that already has the
+                // letter in this batch is skipped, never written twice.
+                if (batch.get(key)?.ok === true) continue;
+                const line = $('#dialog-progress');
+                if (line) {
+                    line.hidden = false;
+                    text(line, `${label} ${index + 1} of ${keys.length}…`);
+                }
+                const [username, knight] = key.split('|');
+                try {
+                    await write('mail-send', { ...values, username, knight });
+                    batch.set(key, { ok: true });
+                    outcome.sent++;
+                    recordReceipt({ knight, username, subject: strip(values.subject), ok: true });
+                } catch (error) {
+                    const reason = error.message || 'refused';
+                    batch.set(key, { ok: false, reason });
+                    recordReceipt({
+                        knight,
+                        username,
+                        subject: strip(values.subject),
+                        ok: false,
+                        reason
+                    });
+                    // "No such knight" is about this one recipient; anything else is
+                    // the letter, which would be refused for everybody.
+                    if (error.status === 404 || /no such knight|unknown knight/i.test(reason))
+                        outcome.refused.push({ key, knight, username, reason });
+                    else {
+                        outcome.stopped = error;
+                        break;
+                    }
+                }
+            }
+            return outcome;
+        }
+
+        function renderResults() {
+            results.replaceChildren();
+            if (!attempted.length) return;
+            const entry = (key) => batch.get(key);
+            const sent = attempted.filter((key) => entry(key)?.ok === true),
+                refused = attempted.filter((key) => entry(key)?.ok === false),
+                pending = attempted.filter((key) => !entry(key));
+            const list = el('div', null, 'stack');
+            for (const key of attempted) {
+                const state = entry(key),
+                    [username, knight] = key.split('|');
+                const row = el('div', null, 'mail-send-result');
+                row.append(
+                    el('strong', knight),
+                    el('small', username, 'muted'),
+                    state
+                        ? badge(state.ok ? 'Delivered' : 'Refused', state.ok ? 'good' : 'bad')
+                        : badge('Not sent', ''),
+                    ...(state?.reason ? [el('small', state.reason, 'muted')] : [])
+                );
+                list.append(row);
+            }
+            const actions = toolbar();
+            if (refused.length)
+                actions.append(
+                    button(`Retry refused (${refused.length})`, () => retry(refused), 'secondary')
+                );
+            if (pending.length)
+                actions.append(
+                    button(`Resume remaining (${pending.length})`, () => retry(pending), 'secondary')
+                );
+            results.append(
+                panel(
+                    'This batch',
+                    el(
+                        'small',
+                        `${sent.length} delivered · ${refused.length} refused · ${pending.length} not sent. A knight that already succeeded is never written twice.`,
+                        'muted'
+                    ),
+                    list,
+                    actions
+                )
+            );
+        }
+
+        async function retry(keys) {
+            const outcome = await send(keys, letterValues(), 'Sending');
+            attempted = [...new Set([...attempted, ...keys])];
+            renderResults();
+            renderReceipts();
+            if (outcome.stopped)
+                toast(outcome.stopped.message || 'That send was refused.', { type: 'error' });
+            else if (outcome.sent < keys.length)
+                toast(`${outcome.sent} of ${keys.length} delivered; the batch list keeps each refusal.`, {
+                    type: 'error'
+                });
+            else toast(`All ${keys.length} delivered.`, { type: 'success' });
+        }
+
         if (mode === 'direct') {
-            // Direct mail can go to one knight or a checked subset; the list keeps
-            // the account and online state next to the name.
-            filter = input('Filter knights');
-            target = el('div', null, 'mail-recipients');
+            const filter = input('Filter knights');
+            const target = el('div', null, 'mail-recipients');
             target.setAttribute('role', 'group');
             target.setAttribute('aria-label', 'Recipients');
-            chosen = new Set(draft.recipient ? [draft.recipient] : []);
             const countLabel = el('small', '', 'muted');
-            const recipientPanel = panel(
-                'To',
-                el(
-                    'small',
-                    'Written straight to each knight’s inbox; offline knights read it when they return.',
-                    'muted'
-                ),
-                el('div', null, 'form-grid'),
-                toolbar(
-                    button(
-                        'Select all shown',
-                        () => {
-                            for (const row of visibleRows()) chosen.add(`${row.username}|${row.name}`);
-                            fill();
-                        },
-                        'quiet',
-                        () => rows.length > 0
-                    ),
-                    button(
-                        'Clear',
-                        () => {
-                            chosen.clear();
-                            fill();
-                        },
-                        'quiet',
-                        () => chosen.size > 0
-                    )
-                ),
-                countLabel
-            );
-            recipientPanel.classList.add('stack');
-            const recipientForm = recipientPanel.querySelector('.form-grid');
-            recipientForm.append(label('Filter', filter));
+            countLabel.setAttribute('role', 'status');
+            countLabel.setAttribute('aria-live', 'polite');
+            const tools = toolbar();
+            const view = { online: false, master: false };
+            let shownRows = [];
             const visibleRows = () => {
                 const query = filter.value.trim().toLowerCase();
-                return rows.filter((row) =>
-                    `${row.name} ${row.username}`.toLowerCase().includes(query)
+                return rows.filter(
+                    (row) =>
+                        (!view.online || row.online) &&
+                        (!view.master || row.gameMaster) &&
+                        `${row.name} ${row.username}`.toLowerCase().includes(query)
                 );
             };
             const syncCount = () => {
-                // The roster size is part of the count, so "Select all shown" is
-                // never mistaken for "everybody".
                 text(
                     countLabel,
                     chosen.size
-                        ? `${chosen.size} of ${rows.length} knight${rows.length === 1 ? '' : 's'} selected`
-                        : `Choose at least one knight · ${rows.length} on this server`
+                        ? `${chosen.size.toLocaleString()} of ${countOf(rows.length, 'knight')} selected`
+                        : `Choose at least one knight · ${countOf(rows.length, 'knight')} on this server`
                 );
                 countLabel.classList.toggle('error', chosen.size === 0);
             };
             const fill = () => {
                 const matches = visibleRows();
-                // A roster of thousands must not be built on every keystroke.
-                const shown = matches.slice(0, 200);
+                shownRows = matches.slice(0, ROSTER_ROWS);
                 target.replaceChildren(
-                    ...shown.map((row) => {
-                        const key = `${row.username}|${row.name}`;
+                    ...shownRows.map((row) => {
+                        const key = keyOf(row);
                         const box = input(`Send to ${row.name}`, chosen.has(key), 'checkbox');
                         const name = el('span', null, 'mail-recipient-name');
                         name.append(
                             el('strong', row.name),
-                            el('small', `${row.username} · ${row.online ? 'online' : 'offline'}`, 'muted')
+                            el(
+                                'small',
+                                `${row.username} · ${row.online ? 'online' : 'offline'}${
+                                    row.gameMaster ? ' · game master' : ''
+                                }`,
+                                'muted'
+                            )
                         );
                         const rowLabel = el('label', null, 'mail-recipient');
                         box.onchange = () => {
@@ -565,56 +995,237 @@ export async function mount(ctx) {
                         return rowLabel;
                     })
                 );
-                if (!matches.length) target.append(el('p', 'No knight matches this filter.', 'muted'));
-                else if (matches.length > shown.length)
+                if (!matches.length)
                     target.append(
                         el(
                             'p',
-                            `${matches.length - shown.length} more knights are hidden; narrow the filter to reach them.`,
+                            rows.length
+                                ? 'No knight matches this view; clear a filter to see more.'
+                                : 'No knights on this server yet.',
                             'muted'
                         )
                     );
-                draft.recipient = [...chosen][0] || '';
+                else if (matches.length > shownRows.length)
+                    target.append(
+                        el(
+                            'p',
+                            `${countOf(
+                                matches.length - shownRows.length,
+                                'more knight'
+                            )} hidden; “Select all shown” takes only the ${shownRows.length.toLocaleString()} above.`,
+                            'muted'
+                        )
+                    );
+                tools.replaceChildren(
+                    button(
+                        'Select all shown',
+                        () => {
+                            for (const row of shownRows) chosen.add(keyOf(row));
+                            fill();
+                        },
+                        'quiet',
+                        () => shownRows.length > 0
+                    ),
+                    ...(matches.length > shownRows.length
+                        ? [
+                              button(
+                                  `Select all ${matches.length.toLocaleString()} matching`,
+                                  () => {
+                                      for (const row of matches) chosen.add(keyOf(row));
+                                      fill();
+                                  },
+                                  'quiet'
+                              )
+                          ]
+                        : []),
+                    button(
+                        'Clear',
+                        () => {
+                            chosen.clear();
+                            fill();
+                        },
+                        'quiet',
+                        () => chosen.size > 0
+                    )
+                );
                 syncCount();
             };
+            const toggle = (name, key) => {
+                const node = button(
+                    name,
+                    () => {
+                        view[key] = !view[key];
+                        node.setAttribute('aria-pressed', String(view[key]));
+                        fill();
+                    },
+                    'secondary'
+                );
+                node.setAttribute('aria-pressed', String(view[key]));
+                node.classList.add('sm');
+                return node;
+            };
             filter.oninput = fill;
+
+            // A proof read: the operator's own knight first, so the letter can be
+            // checked in the client before it reaches anybody else.
+            const mine = rows.filter((row) => row.username === api.session?.username);
+            const pick =
+                mine.length > 1
+                    ? select(
+                          'Copy to',
+                          mine.map((row, index) => [String(index), row.name]),
+                          '0'
+                      )
+                    : null;
+            const myKnight = () => (pick ? mine[Number(pick.value)] || mine[0] : mine[0]);
+            const copy = button(
+                'Send a copy to me',
+                async () => {
+                    const knight = myKnight();
+                    copy.setBusy(true);
+                    try {
+                        checkLetter();
+                        await write('mail-send', {
+                            ...letterValues(),
+                            username: knight.username,
+                            knight: knight.name
+                        });
+                        recordReceipt({
+                            knight: knight.name,
+                            username: knight.username,
+                            subject: strip(subject.value),
+                            ok: true
+                        });
+                        renderReceipts();
+                        toast(`A copy is in ${knight.name}’s inbox; open the client to read it.`, {
+                            type: 'success'
+                        });
+                    } catch (error) {
+                        toast(error.message || 'The copy was refused.', { type: 'error' });
+                    } finally {
+                        copy.setBusy(false);
+                    }
+                },
+                'secondary',
+                () => mine.length > 0
+            );
+            copy.title = mine.length
+                ? 'Sends this exact letter to your own knight first, as a proof read in the client.'
+                : 'This account has no knight, so there is no inbox to test with. Create a knight in the game client.';
+            const recipientPanel = panel(
+                'To',
+                el(
+                    'small',
+                    'Written straight to each knight’s inbox; offline knights read it when they return. This is not a mailing, so it is sent once.',
+                    'muted'
+                ),
+                el('div', null, 'form-grid'),
+                toolbar(
+                    toggle('Online only', 'online'),
+                    toggle('Game masters', 'master'),
+                    el('span', null, 'spacer')
+                ),
+                target,
+                tools,
+                countLabel,
+                toolbar(
+                    copy,
+                    ...(pick ? [pick] : []),
+                    el(
+                        'small',
+                        mine.length
+                            ? `Copies go to ${mine.map((row) => row.name).join(', ')}.`
+                            : 'No knight on this account, so the copy is unavailable.',
+                        'muted'
+                    )
+                )
+            );
+            recipientPanel.classList.add('stack');
+            recipientPanel.querySelector('.form-grid').append(label('Filter', filter));
             fill();
             node.append(recipientPanel);
         }
-        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time';
-        const enabledRow = mode === 'welcome' ? toolbar(label('Enabled', enabled)) : null;
-        const zoneNote =
-            mode === 'campaign'
-                ? el('small', `Start and end are read in this browser's timezone (${zone}).`, 'muted')
-                : null;
-        if (mode === 'campaign') header.append(label('Starts', starts), label('Ends', ends));
-        header.append(
-            label('From', sender),
-            label('Custom sender', customSender),
-            label('Subject', subject)
-        );
-        subject.parentElement.classList.add('wide');
 
-        let previewHost = preview(draft, definitions);
+        const messagePanel = panel(
+            'Message',
+            el('div', null, 'mail-compose-split'),
+            el(
+                'small',
+                'Leading and trailing spaces are removed on save, so both views below show the stripped text the client receives.',
+                'muted'
+            )
+        );
+        const split = messagePanel.querySelector('.mail-compose-split');
+        const plain = el('pre', null, 'mail-plain');
+        const gameHost = el('div', null, 'mail-preview-host');
+        const notesHost = el('div', null, 'stack');
+        const viewTabs = toolbar(
+            button('In-game', () => showPreview('game'), 'quiet'),
+            button('Stored text', () => showPreview('plain'), 'quiet')
+        );
+        let previewMode = 'game';
+        const previewNotes = () => {
+            const notes = [];
+            if (subject.value !== strip(subject.value) || body.value !== strip(body.value))
+                notes.push('Leading and trailing spaces are removed on save.');
+            if (mode === 'campaign') {
+                const start = new Date(starts.value).getTime(),
+                    end = new Date(ends.value).getTime();
+                notes.push(
+                    (population() === null
+                        ? 'Knight count unknown; use Count knights on the page.'
+                        : `${countOf(population(), 'knight')} on this server receive it once.`) +
+                        ` Window ${sentTime(start)} → ${sentTime(end)} (${zone}).`
+                );
+            } else if (mode === 'welcome')
+                notes.push('Sent once, on the first visit of a knight created while it is enabled.');
+            else notes.push('Sent once to each chosen knight, online or offline.');
+            return notes;
+        };
+        function showPreview(view) {
+            previewMode = view;
+            for (const [index, tab] of [...viewTabs.querySelectorAll('button')].entries())
+                tab.setAttribute('aria-pressed', String(index === (view === 'game' ? 0 : 1)));
+            gameHost.hidden = view !== 'game';
+            plain.hidden = view !== 'plain';
+            if (view === 'plain') plain.textContent = letterText(currentMessage());
+        }
         const refreshPreview = () => {
-            const next = preview(
-                {
-                    subject: subject.value,
-                    body: body.value,
-                    sender: Number(sender.value),
-                    senderLabel: customSender.value,
-                    crowns: Number(crowns.value || 0),
-                    energy: Number(energy.value || 0),
-                    gifts: draft.gifts
-                },
-                definitions
+            gameHost.replaceChildren(preview(currentMessage(), definitions));
+            notesHost.replaceChildren(
+                ...previewNotes().map((note) => el('small', note, 'muted'))
             );
-            previewHost.replaceWith(next);
-            previewHost = next;
             if (previewMode === 'plain') showPreview('plain');
         };
-        for (const control of [subject, body, sender, customSender, crowns, energy])
-            control.addEventListener('input', refreshPreview);
+        for (const control of [subject, body, sender, customSender, crowns, energy, starts, ends])
+            if (control) control.addEventListener('input', refreshPreview);
+        refreshPreview();
+        const previewPanel = el('div', null, 'stack');
+        // The same letter as the client renders it and as stored text, because the
+        // in-game view normalises whitespace and the stored row carries the prefix.
+        previewPanel.append(viewTabs, gameHost, plain, notesHost);
+        plain.hidden = true;
+        previewPanel.querySelectorAll('button').forEach((tab) => tab.classList.add('sm'));
+        showPreview('game');
+        const bodyField = label('Body', body);
+        bodyField.append(bodyCount);
+        split.append(bodyField, label('Preview', previewPanel));
+
+        const pickerDetails = el('details');
+        const attachments = panel(
+            'Attachments',
+            el('div', null, 'form-grid'),
+            el(
+                'small',
+                `Up to ${limits.units} item units. Gifts stay in the inbox until claimed; stock item expiry applies after claiming.`,
+                'muted'
+            ),
+            unitLabel,
+            gifts,
+            pickerDetails
+        );
+        const extras = attachments.querySelector('.form-grid');
+        extras.append(label('Crowns', crowns), label('Energy', energy));
 
         function renderGifts() {
             gifts.replaceChildren(
@@ -657,9 +1268,9 @@ export async function mount(ctx) {
             const total = units(draft.gifts);
             text(
                 unitLabel,
-                `${draft.gifts.length} gift stack${draft.gifts.length === 1 ? '' : 's'} · ${total} of 14 units`
+                `${countOf(draft.gifts.length, 'gift stack')} · ${total} of ${limits.units} units`
             );
-            unitLabel.classList.toggle('error', total > 14);
+            unitLabel.classList.toggle('error', total > limits.units);
         }
         const picker = itemPicker(
             (definition) => {
@@ -668,79 +1279,16 @@ export async function mount(ctx) {
                     (gift) => gift.config === definition.config && !gift.bound
                 );
                 if (existing) existing.count = Math.min(999, existing.count + 1);
-                else
-                    draft.gifts.push({
-                        config: definition.config,
-                        count: 1,
-                        bound: false
-                    });
+                else draft.gifts.push({ config: definition.config, count: 1, bound: false });
                 renderGifts();
                 refreshPreview();
             },
             { grantable: true }
         );
         renderGifts();
-        const pickerDetails = el('details');
         pickerDetails.append(el('summary', 'Add a gift item'), picker.node);
-        const messagePanel = panel(
-            'Message',
-            el('div', null, 'mail-compose-split'),
-            el(
-                'small',
-                'Subject and body are shown as written. Up to 50 and 8,096 characters.',
-                'muted'
-            )
-        );
-        const split = messagePanel.querySelector('.mail-compose-split');
-        // The same letter as the client renders it and as plain text, because the
-        // in-game view normalises whitespace and strips markup-ish characters.
-        const plain = el('pre', null, 'mail-plain');
-        const viewTabs = toolbar(
-            button('In-game', () => showPreview('game'), 'quiet'),
-            button('Plain text', () => showPreview('plain'), 'quiet')
-        );
-        let previewMode = 'game';
-        function showPreview(mode) {
-            previewMode = mode;
-            for (const [index, node] of [...viewTabs.querySelectorAll('button')].entries())
-                node.setAttribute('aria-pressed', String(index === (mode === 'game' ? 0 : 1)));
-            gameHost.hidden = mode !== 'game';
-            plain.hidden = mode !== 'plain';
-            if (mode === 'plain') {
-                // Stock senders store the body behind the game's tainted-literal
-                // prefix; a custom sender stores it verbatim (StaffMail.mailText).
-                const stored = customSender.value ? body.value : '%uplink:~' + body.value;
-                plain.textContent =
-                    `sender: ${customSender.value || 'SystemSender ' + Number(sender.value)}\n` +
-                    `senderLabel: ${customSender.value || '(none — literal prefix)'}\n` +
-                    `subject: ${subject.value}\n` +
-                    `body: ${stored}`;
-            }
-        }
-        const gameHost = el('div', null, 'mail-preview-host');
-        gameHost.append(previewHost);
-        const previewPanel = el('div', null, 'stack-tight');
-        previewPanel.append(viewTabs, gameHost, plain);
-        plain.hidden = true;
-        previewPanel.querySelectorAll('button').forEach((node) => node.classList.add('sm'));
-        showPreview('game');
-        split.append(label('Body', body), label('Preview', previewPanel));
-        const attachments = panel(
-            'Attachments',
-            el('div', null, 'form-grid'),
-            el(
-                'small',
-                'Up to 14 item units. Gifts stay in the inbox until claimed; stock item expiry applies after claiming.',
-                'muted'
-            ),
-            unitLabel,
-            gifts,
-            pickerDetails
-        );
-        const extras = attachments.querySelector('.form-grid');
-        extras.append(label('Crowns', crowns), label('Energy', energy));
-        // Templates fill the subject and body in one click; the preview updates
-        // with them, so nothing is sent blind.
+
+        // Templates fill the subject and body in one click; the preview follows.
         const templateRow = toolbar(
             el('small', 'Start from', 'muted'),
             ...TEMPLATES.map((template) =>
@@ -748,13 +1296,16 @@ export async function mount(ctx) {
                     template.label,
                     () => {
                         if (
-                            body.value.trim() &&
-                            body.value.trim() !== template.body.trim() &&
-                            !window.confirm('Replace the current subject and body with this template?')
+                            strip(body.value) &&
+                            strip(body.value) !== strip(template.body) &&
+                            !window.confirm(
+                                'Replace the current subject and body with this template?'
+                            )
                         )
                             return;
                         subject.value = template.subject;
                         body.value = template.body;
+                        counters();
                         refreshPreview();
                     },
                     'secondary'
@@ -762,18 +1313,71 @@ export async function mount(ctx) {
             )
         );
         templateRow.classList.add('mail-templates');
-        templateRow.querySelectorAll('button').forEach((node) => node.classList.add('sm'));
+        templateRow.querySelectorAll('button').forEach((item) => item.classList.add('sm'));
         messagePanel.prepend(templateRow);
         messagePanel.classList.add('stack');
         attachments.classList.add('stack');
-        if (enabledRow) node.append(enabledRow);
-        if (zoneNote) {
-            zoneNote.classList.add('wide');
-            header.append(zoneNote);
-        }
-        node.append(header, messagePanel, attachments);
 
-        const initial = JSON.stringify(snapshot());
+        const enabledRow = mode === 'welcome' ? toolbar(label('Enabled', enabled)) : null;
+        const subjectField = label('Subject', subject);
+        subjectField.classList.add('wide');
+        subjectField.append(subjectCount);
+        if (mode === 'campaign') header.append(label('Starts', starts), label('Ends', ends));
+        header.append(label('From', sender), label('Custom sender', customSender), subjectField);
+        if (mode === 'campaign') {
+            // The store has no draft flag: a saved mailing is live for its window, so
+            // a window that contains now delivers on save and needs saying out loud.
+            const armNote = el('p', '', 'warning');
+            armNote.classList.add('wide');
+            const syncArm = () => {
+                const start = new Date(starts.value).getTime();
+                text(
+                    armNote,
+                    Number.isFinite(start)
+                        ? `Saving delivers to every knight whose window is open; the window you chose starts ${date(
+                              start
+                          )}${
+                              start <= Date.now()
+                                  ? ' — that is now, so saving delivers immediately'
+                                  : ' — nothing is delivered before then'
+                          }.`
+                        : 'Choose a start and end; saving arms the mailing for that window.'
+                );
+            };
+            starts.addEventListener('input', syncArm);
+            syncArm();
+            const draftButton = button(
+                'Save as draft',
+                () => {
+                    // A draft is a window that opens later, so saving cannot deliver.
+                    const soon = Math.ceil((Date.now() + 3_600_000) / 900_000) * 900_000;
+                    starts.value = localDate(soon);
+                    ends.value = localDate(soon + 30 * 86_400_000);
+                    syncArm();
+                    refreshPreview();
+                    const submit = $('#submit-dialog');
+                    if (submit && !submit.disabled) submit.click();
+                },
+                'secondary'
+            );
+            draftButton.title =
+                'Moves the window one hour ahead and thirty days long, then saves; nothing is delivered before it opens.';
+            header.append(
+                armNote,
+                toolbar(
+                    draftButton,
+                    el(
+                        'small',
+                        'Saves with a window that starts later, so no knight receives it yet.',
+                        'muted'
+                    )
+                )
+            );
+        }
+        if (options.banner) node.append(el('p', options.banner, 'warning'));
+        if (enabledRow) node.append(enabledRow);
+        node.append(header, messagePanel, attachments, results);
+
         function snapshot() {
             return [
                 mode === 'welcome' ? enabled.checked : '',
@@ -781,7 +1385,7 @@ export async function mount(ctx) {
                 subject.value,
                 body.value,
                 Number(sender.value),
-                customSender.value.trim(),
+                strip(customSender.value),
                 starts?.value || '',
                 ends?.value || '',
                 Number(crowns.value || 0),
@@ -789,23 +1393,26 @@ export async function mount(ctx) {
                 draft.gifts
             ];
         }
+        const initial = JSON.stringify(snapshot());
         openDialog({
             title:
                 mode === 'welcome'
                     ? 'Welcome mail'
                     : mode === 'direct'
                       ? 'Send mail to a knight'
-                      : record
+                      : record?.id
                         ? 'Edit mailing'
-                        : 'New mailing',
+                        : record
+                          ? 'Duplicate mailing'
+                          : 'New mailing',
             description:
                 mode === 'welcome'
                     ? 'Sent once to knights created while it is enabled.'
                     : mode === 'direct'
-                      ? 'Delivered immediately to the selected knight, whether they are online or offline.'
-                      : record
+                      ? 'Delivered immediately to each selected knight, whether they are online or offline.'
+                      : record?.id
                         ? 'Knights who already received this mailing keep the old letter.'
-                        : 'Save first, then every knight receives it once while the window is open.',
+                        : 'Saving arms the mailing for the window below; every knight receives it once while that window is open.',
             content: node,
             notifySaved: false,
             submit:
@@ -813,89 +1420,89 @@ export async function mount(ctx) {
                     ? 'Save welcome mail'
                     : mode === 'direct'
                       ? 'Send mail'
-                      : record
+                      : record?.id
                         ? 'Save mailing'
                         : 'Create mailing',
             isDirty: () => JSON.stringify(snapshot()) !== initial,
             dispose: () => picker.dispose(),
             after: () => refresh(),
-            onSubmit: async (form, progress) => {
-                const requiresText = mode !== 'welcome' || enabled.checked || draft.enabledAt;
-                if (requiresText && !subject.value.trim()) throw new Error('Subject is required.');
-                if (requiresText && !body.value.trim()) throw new Error('Body is required.');
-                if (units(draft.gifts) > 14)
-                    throw new Error('A mailing can carry at most 14 item units.');
-                if (mode === 'campaign') {
-                    const start = new Date(starts.value).getTime(),
-                        end = new Date(ends.value).getTime();
-                    if (!(end > start)) throw new Error('The window must end after it starts.');
-                    if (end <= Date.now())
-                        throw new Error('The window has already ended; choose a later end.');
-                }
-                const values = {
-                    sender: Number(sender.value),
-                    senderLabel: customSender.value,
-                    subject: subject.value,
-                    body: body.value,
-                    crowns: Math.max(0, Number(crowns.value) || 0),
-                    energy: Math.max(0, Number(energy.value) || 0),
-                    items: mailingItems(draft.gifts)
-                };
+            onSubmit: async () => {
+                checkLetter();
+                const values = letterValues();
                 if (mode === 'direct') {
-                    const recipients = [...chosen];
-                    if (!recipients.length) throw new Error('Choose at least one knight.');
-                    let sent = 0;
-                    const failed = [];
-                    for (const [index, key] of recipients.entries()) {
-                        progress(index + 1, recipients.length, 'Sending');
-                        const [username, knight] = key.split('|');
-                        try {
-                            await api.change('mail-send', { ...values, username, knight });
-                            sent++;
-                            recentSends.unshift({
-                                knight,
-                                username,
-                                subject: values.subject,
-                                at: Date.now(),
-                                ok: true
-                            });
-                        } catch (error) {
-                            failed.push(`${knight}: ${error.message || 'refused'}`);
-                            recentSends.unshift({
-                                knight,
-                                username,
-                                subject: values.subject,
-                                at: Date.now(),
-                                ok: false,
-                                reason: error.message || 'refused'
-                            });
-                        }
+                    const recipients = [...chosen].filter(
+                        (key) => batch.get(key)?.ok !== true
+                    );
+                    if (!recipients.length)
+                        throw new Error(
+                            batch.size
+                                ? 'Every selected knight already received this letter in this batch.'
+                                : 'Choose at least one knight.'
+                        );
+                    // A mass send is never one click: name the count before writing.
+                    if (
+                        recipients.length > 1 &&
+                        !window.confirm(`Send this letter to ${recipients.length} knights?`)
+                    )
+                        // An empty message keeps the editor open without a red line.
+                        throw new Error('');
+                    attempted = [...new Set([...attempted, ...recipients])];
+                    const outcome = await send(recipients, values, 'Sending');
+                    renderResults();
+                    renderReceipts();
+                    if (outcome.stopped) throw outcome.stopped;
+                    if (outcome.refused.length) {
+                        const pending =
+                            recipients.length - outcome.sent - outcome.refused.length;
+                        throw new Error(
+                            `${outcome.sent} of ${recipients.length} delivered; ${
+                                outcome.refused.length
+                            } refused${pending ? `, ${pending} not sent` : ''}. ${
+                                outcome.refused[0].reason
+                            }`
+                        );
                     }
                     changed(
-                        failed.length
-                            ? `${sent} of ${recipients.length} sent; ${failed.slice(0, 2).join(' · ')}`
-                            : sent === 1
-                              ? `Mail queued for ${recipients[0].split('|')[1]}. It waits while they are offline.`
-                              : `${sent} knights will receive this mail.`
+                        recipients.length === 1
+                            ? `Mail queued for ${
+                                  recipients[0].split('|')[1]
+                              }. It waits while they are offline.`
+                            : `${recipients.length} knights will receive this mail.`
                     );
-                    renderRecentSends();
                 } else if (mode === 'welcome') {
-                    await api.change('mail-welcome-save', { ...values, enabled: enabled.checked });
-                    changed(enabled.checked ? 'Welcome mail saved.' : 'Welcome mail disabled.');
+                    await write('mail-welcome-save', { ...values, enabled: enabled.checked });
+                    changed(
+                        enabled.checked
+                            ? 'Welcome mail saved. New knights receive it on their first visit.'
+                            : 'Welcome mail disabled; knights created while it was on still receive it.'
+                    );
                 } else {
                     const start = new Date(starts.value).getTime(),
                         end = new Date(ends.value).getTime();
                     if (!Number.isFinite(start) || !Number.isFinite(end))
                         throw new Error('Choose a valid start and end time.');
-                    if (end <= start) throw new Error('The mailing must end after it starts.');
-                    await api.change('mail-save', {
+                    if (end <= start) throw new Error('The mailing must end after it starts');
+                    if (end <= Date.now())
+                        throw new Error('The window has already ended; choose a later end.');
+                    if (
+                        start <= Date.now() &&
+                        !window.confirm(
+                            'This window starts in the past, so saving delivers to every knight with mail open now. Save anyway?'
+                        )
+                    )
+                        throw new Error('');
+                    await write('mail-save', {
                         ...values,
                         id: draft.id,
                         revision: draft.revision,
                         starts: start,
                         ends: end
                     });
-                    changed(record ? 'Mailing saved.' : 'Mailing created.');
+                    // Nothing is delivered before the window opens, which is
+                    // the only draft the store can express.
+                    if (start > Date.now())
+                        changed(`Saved as a draft: nothing is delivered before ${date(start)}.`);
+                    else changed('Mailing saved; knights receive it on their next visit.');
                 }
                 picker.dispose();
             }
@@ -913,18 +1520,35 @@ export async function mount(ctx) {
     await loadDefinitions(data.campaigns);
     renderSummary();
     renderWelcome();
+    renderReceipts();
     table.update(data.campaigns);
+    welcomeDetails.append(welcomeSummary, welcomeHost);
+    const newMailing = button('New mailing', () => compose('campaign'), 'primary');
+    newMailing.title = 'Write a letter every knight receives once while the window is open.';
+    // Reading the roster is a request, so the trigger says it is working instead
+    // of looking dead for the length of a knights-all read.
+    const directMail = button(
+        'Send to knight',
+        async () => {
+            directMail.setBusy(true);
+            try {
+                await compose('direct');
+            } finally {
+                directMail.setBusy(false);
+            }
+        },
+        'secondary'
+    );
+    directMail.title =
+        'Write a one-off letter to one knight; it waits in the inbox while they are offline.';
     const mailings = panel(
         'Mailings',
-        toolbar(
-            button('New mailing', () => compose('campaign'), 'primary'),
-            button('Send to knight', () => compose('direct'), 'secondary')
-        ),
-        table.node
+        toolbar(newMailing, directMail),
+        table.node,
+        welcomeDetails
     );
     mailings.classList.add('stack');
-    renderRecentSends();
-    node.append(summary, welcomeHost, mailings, recentSendsHost);
+    node.append(summary, mailings, receiptsHost);
     return {
         node,
         interval: 30000,

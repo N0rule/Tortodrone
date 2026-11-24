@@ -21,22 +21,18 @@ export async function mount(ctx) {
         detail = el('div'),
         controls = toolbar();
     let rows = [],
+        identities,
+        shownFor,
         selected = ctx.params.get('username'),
         selection = 0,
         detailSignature;
-    if (ctx.admin)
-        controls.append(
-            button(
-                'Create account',
-                () =>
-                    edit('Create game account', 'account-create', [
-                        field('username', 'Username'),
-                        field('password', 'Password', '', 'password'),
-                        field('gm', 'Game Master', false, 'checkbox')
-                    ]),
-                'primary'
-            )
-        );
+    const createAccount = () =>
+        edit('Create game account', 'account-create', [
+            field('username', 'Username'),
+            field('password', 'Password', '', 'password'),
+            field('gm', 'Game Master', false, 'checkbox')
+        ]);
+    if (ctx.admin) controls.append(button('Create account', createAccount, 'primary'));
     const table = new DataTable(
         [
             ['Account', (r) => r.username],
@@ -51,6 +47,12 @@ export async function mount(ctx) {
             id: 'accounts',
             caption: 'Game accounts',
             exportName: 'accounts',
+            empty: {
+                title: 'No game accounts exist yet',
+                hint: 'Accounts are created here, or registered by the game client when a player signs up.',
+                action: ctx.admin ? { label: 'Create account', run: () => createAccount() } : undefined,
+                icon: 'accounts'
+            },
             selectable: true,
             bulkActions: (selected) => [
                 button(
@@ -135,7 +137,10 @@ export async function mount(ctx) {
         }
         const knights = await ctx.request('knights', { username: account.username });
         if (id !== selection) return;
-        const signature = JSON.stringify([account, knights]);
+        const identity = (identities ?? []).find(
+            (candidate) => candidate.username === account.username
+        );
+        const signature = JSON.stringify([account, knights, identity ?? null]);
         if (detailSignature === signature) return;
         detailSignature = signature;
         const fixed = { username: account.username, accountId: account.id },
@@ -197,6 +202,27 @@ export async function mount(ctx) {
             }
         };
         actions.prepend(label('Game Master', gm), feedback);
+        // One person can be a game account, an audit actor and a WebUI identity,
+        // so the detail links all three views of them.
+        const links = toolbar(button('Back to accounts', () => ctx.go('accounts'), 'secondary'));
+        // The audit trail and the identity store are administrator-only pages, so
+        // hide those jumps from a moderator instead of bouncing them to the overview.
+        if (ctx.admin)
+            links.append(
+                button(
+                    'Audit for this account',
+                    () => ctx.go('audit', { actor: account.username }),
+                    'secondary'
+                )
+            );
+        if (identity)
+            links.append(
+                button(
+                    'Open WebUI identity',
+                    () => ctx.go('webui-users', { user: identity.username }),
+                    'secondary'
+                )
+            );
         const roster = new DataTable(
             [
                 ['Knight', (k) => k.name],
@@ -207,6 +233,11 @@ export async function mount(ctx) {
                 caption: 'Knights on this account',
                 exportName: 'account-roster',
                 search: false,
+                empty: {
+                    title: 'No knights on this account',
+                    hint: 'Knights are created in the game client and appear here after the first login.',
+                    icon: 'knights'
+                },
                 actions: (get) => [
                     button('Open profile', () =>
                         ctx.go('knights', { username: account.username, knight: get().name })
@@ -217,19 +248,40 @@ export async function mount(ctx) {
         roster.update(knights);
         const view = panel(
             account.username,
+            links,
             facts([
                 ['Permission', account.gameMaster ? 'Game Master' : 'Player'],
                 ['Created', date(account.createdAt)],
-                ['Knights', account.knights]
+                ['Knights', account.knights],
+                [
+                    'WebUI identity',
+                    identity
+                        ? badge(
+                              identity.role.toLowerCase(),
+                              identity.role === 'ADMINISTRATOR' ? 'gold' : ''
+                          )
+                        : ctx.admin
+                          ? 'No WebUI identity'
+                          : 'Administrators only'
+                ]
             ]),
             actions,
             roster.node
         );
-        view.classList.add('account-detail', 'stack');
+        // Inspect panes share one treatment: the panel itself, no accent border.
+        view.classList.add('stack');
         detail.replaceChildren(view);
+        // The pane sits under the table, so a selection scrolls it into view once.
+        if (shownFor !== account.username) {
+            shownFor = account.username;
+            view.scrollIntoView({ block: 'nearest' });
+        }
     }
     async function refresh() {
         rows = await ctx.request('accounts');
+        // The WebUI identity store is administrator-only: read it only for an
+        // administrator, so a moderator never gets a link that fails.
+        if (ctx.admin) identities = await ctx.request('webui-users');
         table.update(rows);
         if (selected) await show();
     }

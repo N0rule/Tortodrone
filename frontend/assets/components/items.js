@@ -1,5 +1,7 @@
 import { setSymbols, symbol } from './symbols.js';
-import { el, number, heat } from '../ui.js';
+import { el, number, heat, $, toolbar, button, details, report } from '../ui.js';
+import { openDialog } from './dialog.js';
+import { go } from '../router.js';
 import { api } from '../api.js';
 let manifest = { items: {}, ui: {}, sprites: {} };
 const definitions = new Map();
@@ -47,15 +49,135 @@ export function icon(config, rarity = 0) {
     if (rarity > 0) root.append(el('span', '★'.repeat(Math.min(5, rarity)), 'stars'));
     return root;
 }
-export function itemLine(definition, item) {
+/**
+ * One item, with its name as the drill-down into the shared inspector.
+ * @param {any} [definition] the catalogue definition, when the caller already has it
+ * @param {any} [item] a knight's item instance, when the caller has one
+ * @param {{actions?: Node[], label?: string}} [options]
+ */
+export function itemLine(definition, item, { actions, label } = {}) {
     const root = el('div', null, 'item-line'),
         names = el('div');
-    names.append(
-        el('strong', definition?.name || item?.config?.split('/').at(-1) || 'Unknown item')
-    );
+    const config = definition?.config || item?.config;
+    const name = definition?.name || config?.split('/').at(-1) || 'Unknown item';
+    // One dialog exists at a time, so only a name outside an editor can drill: a
+    // link inside a dialog would replace the editor the operator is filling in.
+    if (config && !document.querySelector('#dialog')?.open) {
+        // The name is the drill-down: one control, one inspector, everywhere an
+        // item is listed. `.link` is the existing link-styled button variant.
+        const control = el('button', label || name, 'link');
+        control.type = 'button';
+        control.title = 'Inspect ' + (label || name);
+        control.onclick = () =>
+            inspectItemName(config, { definition, item, actions }).catch(report);
+        names.append(control);
+    } else names.append(el('strong', label || name));
     if (definition?.category) names.append(el('small', definition.category));
-    root.append(icon(definition?.config || item?.config, definition?.rarity), names);
+    root.append(icon(config, definition?.rarity), names);
     return root;
+}
+
+/** The cross-page jumps every item offers; callers may pass their own instead. */
+export function itemLinks(config, name, { catalogue = true } = {}) {
+    const links = [];
+    // The depot and catalogue pages are administrator-only, and the router sends
+    // any other role to the overview: offer only jumps that can be taken.
+    if (api.session?.role !== 'ADMINISTRATOR') return links;
+    if (name) links.push(button('Where it is sold', () => go('depot', { search: name }), 'secondary'));
+    if (catalogue)
+        links.push(button('Open in catalogue', () => go('content', { item: config }), 'secondary'));
+    return links;
+}
+
+/**
+ * An item that only has a config string still needs the fields an owned item
+ * carries, so the shared inspector can render it read only.
+ */
+function plainItem(config, item) {
+    return {
+        config,
+        level: 0,
+        heatProgress: 0,
+        variants: [],
+        count: 1,
+        equippedSlot: null,
+        bound: false,
+        bindOnEquip: false,
+        cursed: false,
+        starter: false,
+        permanent: false,
+        expiresAt: null,
+        accessory: '',
+        additionalAccessories: [],
+        ...item,
+        config
+    };
+}
+
+/** A config the catalogue cannot describe is still shown, as the record it is. */
+function recordOf(config) {
+    const content = el('div', null, 'stack');
+    content.append(
+        el(
+            'p',
+            'The catalogue has no definition for this configuration, so only the requested path is known.',
+            'muted'
+        ),
+        details('Requested configuration', { config })
+    );
+    openDialog({
+        title: config,
+        content,
+        submit: 'Close',
+        notifySaved: false,
+        onSubmit: async () => {}
+    });
+}
+
+/**
+ * THE item inspector. Every item name in the console opens this dialog, so a
+ * depot offer, an auction listing and a catalogue entry never lead to three
+ * different dead ends. The definition is read lazily when a caller only has a
+ * config, and a config the catalogue cannot describe degrades to that record.
+ * @param {string} config
+ * @param {{definition?: any, item?: any, actions?: Node[]}} [options]
+ */
+export async function inspectItemName(config, { definition, item, actions } = {}) {
+    if (!config) return;
+    let def = definition;
+    if (def === undefined) {
+        try {
+            def = (await definitionsFor([config])).get(config);
+        } catch {
+            def = null;
+        }
+    }
+    if (!def) return recordOf(config);
+    let inspect;
+    try {
+        // Imported here because the gear editor imports this module back.
+        ({ inspectItem: inspect } = await import('./gear-editor.js'));
+    } catch {
+        return recordOf(config);
+    }
+    await inspect(def, plainItem(config, item), {}, false);
+    // The inspector owns its own dialog, so the cross-links join that same body
+    // rather than building a second view of one item.
+    const host = $('#fields'),
+        inspector = host?.querySelector('.gear-inspector');
+    if (!inspector) return;
+    if (!item)
+        // Without an instance the ownership facts describe a copy nobody holds.
+        inspector.prepend(
+            el(
+                'small',
+                'Catalogue definition: the ownership facts below describe a fresh, ' +
+                    'unowned copy of this item.',
+                'muted'
+            )
+        );
+    const links = actions ?? itemLinks(config, def.name);
+    if (links.length) host.append(toolbar(...links));
 }
 export function currency(kind, value) {
     const root = el('span', null, 'currency'),

@@ -15,7 +15,11 @@ public final class AdminService implements AutoCloseable {
     private final AccountStore accounts;
     private final ServerControl control;
     private final Path deployment;
+    /** Retained log lines; the stream reports its own bounds instead of pretending to be complete. */
+    private static final int LOG_CAPACITY = 1000;
+
     private final ArrayDeque<ServerLog.Event> logs = new ArrayDeque<>();
+    private long logsDropped;
     private final AutoCloseable subscription;
     private final NewsEditor news;
     private final WelcomeEditor welcome;
@@ -23,6 +27,7 @@ public final class AdminService implements AutoCloseable {
     private final MetricHistory history;
     private final org.tortodrone.resources.ContentRegistry validatedContent;
     private final Path data;
+    private Path logDirectory;
 
     public AdminService(AccountStore accounts, ServerControl control, ServerLog log, Path deployment)
             throws IOException {
@@ -71,9 +76,13 @@ public final class AdminService implements AutoCloseable {
         welcome = new WelcomeEditor(config);
         views = new AdminViews(accounts, control, validatedContent);
         history = new MetricHistory(control);
+        this.logDirectory = log.directory();
         subscription = log.subscribe(e -> {
             synchronized (logs) {
-                if (logs.size() == 1000) logs.removeFirst();
+                if (logs.size() == LOG_CAPACITY) {
+                    logs.removeFirst();
+                    logsDropped++;
+                }
                 logs.addLast(e);
             }
         });
@@ -142,20 +151,37 @@ public final class AdminService implements AutoCloseable {
             case "identity" -> identity();
             case "logs" -> {
                 synchronized (logs) {
-                    yield List.copyOf(logs);
+                    var payload = new LinkedHashMap<String, Object>();
+                    payload.put("events", List.copyOf(logs));
+                    payload.put("capacity", LOG_CAPACITY);
+                    payload.put("dropped", logsDropped);
+                    payload.put("retained", logs.size());
+                    payload.put(
+                            "since",
+                            logs.isEmpty() ? 0 : logs.getFirst().timestamp().toEpochMilli());
+                    payload.put("now", System.currentTimeMillis());
+                    payload.put("file", logFile());
+                    yield payload;
                 }
             }
+            case "logs-file" -> logTail(p.optional("limit").isEmpty() ? 500 : p.integer("limit"));
             case "news" -> news.read();
             case "mail" -> {
                 var house = accounts.auctions();
-                yield Map.of(
-                        "now",
-                        System.currentTimeMillis(),
-                        "campaigns",
-                        house.campaigns().list(),
-                        "welcome",
-                        house.campaigns().welcome());
+                var payload = new LinkedHashMap<String, Object>();
+                payload.put("now", System.currentTimeMillis());
+                payload.put("campaigns", house.campaigns().list());
+                payload.put("welcome", house.campaigns().welcome());
+                // Shipped, not mirrored: a client-side copy of the sender union is a label
+                // waiting to be invented after the server adds one.
+                payload.put("senders", MailCampaignStore.SENDERS);
+                payload.put("limits", mailLimits());
+                yield payload;
             }
+            case "mail-deliveries" ->
+                Map.of(
+                        "campaign", p.number("id"),
+                        "recipients", accounts.auctions().campaigns().deliveries(p.number("id")));
             case "welcome" -> welcome.read();
             case "content" -> {
                 var c = validatedContent == null
@@ -177,6 +203,61 @@ public final class AdminService implements AutoCloseable {
         };
     }
 
+    /** Fixed limits the composer mirrors, so a counter and a refusal agree. */
+    private static Map<String, Object> mailLimits() {
+        return Map.of(
+                "subject", MailCampaignStore.MAX_SUBJECT,
+                "body", MailCampaignStore.MAX_BODY,
+                "units", MailCampaignStore.MAX_UNITS,
+                "senderLabel", MailCampaignStore.MAX_SENDER_LABEL);
+    }
+
+    /** The on-disk log this buffer mirrors, published so the UI can say where the rest lives. */
+    private Map<String, Object> logFile() {
+        Path path = logDirectory == null ? null : logDirectory.resolve("latest.log");
+        var file = new LinkedHashMap<String, Object>();
+        file.put("path", "data/logs/latest.log");
+        boolean exists = path != null && Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS);
+        file.put("exists", exists);
+        file.put("bytes", 0L);
+        file.put("modified", 0L);
+        if (exists) {
+            try {
+                file.put("bytes", Files.size(path));
+                file.put("modified", Files.getLastModifiedTime(path).toMillis());
+            } catch (IOException ignored) {
+                // A file racing rotation is not worth failing the stream for.
+            }
+        }
+        return file;
+    }
+
+    /** The tail of the real log file, verbatim, for operators who need more than the buffer. */
+    private Object logTail(int limit) throws IOException {
+        if (logDirectory == null) throw new IOException("No log directory is available");
+        Path path = logDirectory.resolve("latest.log");
+        if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS))
+            throw new IOException("No log file is available yet");
+        int bounded = Math.max(1, Math.min(limit, 2000));
+        var lines = new ArrayDeque<String>();
+        try (var reader = Files.newBufferedReader(path, java.nio.charset.StandardCharsets.UTF_8)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (lines.size() == bounded) lines.removeFirst();
+                lines.addLast(line);
+            }
+        }
+        return Map.of(
+                "path",
+                "data/logs/latest.log",
+                "lines",
+                List.copyOf(lines),
+                "limit",
+                bounded,
+                "modified",
+                Files.getLastModifiedTime(path).toMillis());
+    }
+
     /**
      * The handshake identity is public material: a remote operator needs the modulus and exponent to
      * point a client at this server without shell access. Only the public half is ever reported, and
@@ -185,25 +266,43 @@ public final class AdminService implements AutoCloseable {
     private Object identity() throws IOException {
         Path directory = data == null ? null : data.resolve("keys");
         Path publicFile = directory == null ? null : directory.resolve("public.txt");
+        Path privateFile = directory == null ? null : directory.resolve("private.pk8");
         var result = new LinkedHashMap<String, Object>();
-        result.put("algorithm", "RSA");
-        result.put("bits", 2048);
+        // Whether a signing key exists is asked once, so every branch tells the same truth
+        // instead of a corrupt public.txt reporting that no keypair is stored at all.
+        boolean keyStored = privateFile != null && Files.isRegularFile(privateFile, LinkOption.NOFOLLOW_LINKS);
+        result.put("keyStored", keyStored);
+        // Only the public file is named: the private half is reported as a
+        // boolean and a timestamp, never as a path or a filename.
+        result.put("file", "data/keys/public.txt");
         result.put("fingerprintAlgorithm", "SHA-256");
+        result.put("fingerprintNote", "SHA-256 of the DER SubjectPublicKeyInfo in data/keys/public.txt");
+        if (keyStored) {
+            try {
+                result.put("keyModified", Files.getLastModifiedTime(privateFile).toMillis());
+                result.put(
+                        "publicModified", Files.getLastModifiedTime(publicFile).toMillis());
+            } catch (IOException ignored) {
+                // Missing timestamp is not a reason to refuse the panel.
+            }
+        }
         if (publicFile == null
                 || !Files.isRegularFile(publicFile, LinkOption.NOFOLLOW_LINKS)
                 || Files.size(publicFile) > 4096) {
             result.put("available", false);
             result.put("reason", "No server keypair is stored yet; it is created on the next start.");
-            result.put("keyStored", false);
             return result;
         }
-        String value = Files.readString(publicFile, java.nio.charset.StandardCharsets.US_ASCII)
-                .trim();
+        byte[] raw = Files.readAllBytes(publicFile);
+        // The hash an operator can reproduce with one plain command, unlike the DER fingerprint.
+        result.put("fileBytes", raw.length);
+        result.put("fileSha256", HexFormat.of().formatHex(digest(raw)));
+        result.put("fileSha256Command", "sha256sum data/keys/public.txt");
+        String value = new String(raw, java.nio.charset.StandardCharsets.US_ASCII).trim();
         int separator = value.indexOf('#');
         if (separator < 2 || separator == value.length() - 1) {
             result.put("available", false);
             result.put("reason", "keys/public.txt is not in modulus#exponent form.");
-            result.put("keyStored", false);
             return result;
         }
         String modulusHex = value.substring(0, separator).toLowerCase(Locale.ROOT);
@@ -216,7 +315,6 @@ public final class AdminService implements AutoCloseable {
         } catch (NumberFormatException invalid) {
             result.put("available", false);
             result.put("reason", "keys/public.txt does not parse as hexadecimal numbers.");
-            result.put("keyStored", false);
             return result;
         }
         // A handshake key is an RSA key: a large odd modulus and an odd exponent.
@@ -229,11 +327,12 @@ public final class AdminService implements AutoCloseable {
                 || exponent.compareTo(BigInteger.valueOf(65537)) > 0) {
             result.put("available", false);
             result.put("reason", "keys/public.txt does not hold a usable RSA public key.");
-            result.put("keyStored", false);
             return result;
         }
         result.put("available", true);
+        result.put("algorithm", "RSA");
         result.put("publicKey", modulusHex + "#" + exponentHex);
+        result.put("modulusChars", modulusHex.length());
         result.put("modulus", modulusHex);
         result.put("exponent", exponentHex);
         result.put("bits", modulus.bitLength());
@@ -243,19 +342,38 @@ public final class AdminService implements AutoCloseable {
         } catch (IOException | RuntimeException invalid) {
             result.put("available", false);
             result.put("reason", "keys/public.txt does not encode as an X.509 public key.");
-            result.put("keyStored", false);
             return result;
         }
         result.put("fingerprint", fingerprint(der));
+        result.put("fingerprintHex", HexFormat.of().formatHex(digest(der)));
         result.put("fingerprintBase64", Base64.getEncoder().encodeToString(digest(der)));
         result.put("derBase64", Base64.getEncoder().encodeToString(der));
+        // Does the public half still match the private key that is actually signing handshakes?
+        // A replaced file would otherwise publish a confident fingerprint for an unused key.
+        result.put("pairMatches", pairMatches(privateFile, modulus, exponent));
         // Only whether a signing key exists is published; no private material
         // and no path to it ever crosses the HTTP boundary.
-        result.put("keyStored", Files.isRegularFile(directory.resolve("private.pk8"), LinkOption.NOFOLLOW_LINKS));
-        result.put("file", "data/keys/public.txt");
-        result.put("modified", Files.getLastModifiedTime(publicFile).toMillis());
-        result.put("bytes", value.length());
+        result.put("bytes", raw.length);
         return result;
+    }
+
+    /**
+     * Compares the stored public half with the private key on disk, in the same way a start would.
+     * Returns {@code null} when nothing can be compared (missing or unreadable private key).
+     */
+    private static Boolean pairMatches(Path privateFile, BigInteger modulus, BigInteger exponent) {
+        if (privateFile == null || !Files.isRegularFile(privateFile, LinkOption.NOFOLLOW_LINKS)) return null;
+        try {
+            byte[] encoded = Files.readAllBytes(privateFile);
+            if (encoded.length > 16384) return null;
+            var key = java.security.KeyFactory.getInstance("RSA")
+                    .generatePrivate(new java.security.spec.PKCS8EncodedKeySpec(encoded));
+            if (!(key instanceof java.security.interfaces.RSAPrivateCrtKey crt)) return null;
+            return crt.getModulus().equals(modulus) && crt.getPublicExponent().equals(exponent);
+        } catch (Exception unreadable) {
+            // An unreadable private key is reported as unknown, never as a mismatch.
+            return null;
+        }
     }
 
     /** X.509 SubjectPublicKeyInfo bytes, the form openssl prints a fingerprint of. */
@@ -294,7 +412,7 @@ public final class AdminService implements AutoCloseable {
     public static WebIdentityStore.Role permission(String route, boolean write) {
         if (!write)
             return switch (route) {
-                case "status", "logs", "metrics", "identity" -> WebIdentityStore.Role.VIEWER;
+                case "status", "logs", "logs-file", "metrics", "identity" -> WebIdentityStore.Role.VIEWER;
                 case "accounts",
                         "knights",
                         "knight",

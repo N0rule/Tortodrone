@@ -255,8 +255,8 @@ export async function runTerminal({ disposable = false } = {}) {
             'One terminal contains commands and live output'
         );
         const line = stream.output.children[2];
-        // Tailing is on by default; this action turns following off.
-        click('Stop tailing');
+        // Tailing is on by default; this toggle turns following off.
+        click('Tail');
         stream.output.scrollTop = 80;
         const anchor = [...stream.output.children].find(
             (n) => n.getBoundingClientRect().top >= stream.output.getBoundingClientRect().top + 2
@@ -290,8 +290,12 @@ export async function runTerminal({ disposable = false } = {}) {
             { ...next, message: 'Paused addition', line: 'Paused addition' }
         ]);
         check(!stream.output.textContent.includes('Paused addition'), 'Paused output stays frozen');
-        // The same control flips to Resume while paused.
-        click('Resume');
+        check(
+            stream.node.textContent.includes('1 new'),
+            'A paused tail reports how far behind it is'
+        );
+        // The same control resumes, and the rows it withheld appear.
+        click('Pause');
         check(stream.output.textContent.includes('Paused addition'), 'Resume displays latest logs');
         const search = host.querySelector('[aria-label="Search output"]');
         change(search, 'help');

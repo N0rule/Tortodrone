@@ -47,9 +47,10 @@ select,
 textarea {
     font: inherit;
 }
-/* One control language: a neutral surface button by default, a filled primary
-   accent, a quiet text button, and an outlined destructive action. Sizes come
-   from the control tokens so toolbars and dialog footers share a height. */
+/* One control language: a neutral surface button by default, one filled primary
+   accent per surface, a quiet text button, and a filled destructive action that
+   cannot be confused with either. Sizes come from the control tokens so toolbars
+   and dialog footers share a height. */
 button,
 .button {
     --control-bg: var(--raised);
@@ -93,6 +94,8 @@ button:focus-visible,
     outline: 2px solid var(--cyan);
     outline-offset: 2px;
 }
+/* Only a control that cannot act fades. A pending one keeps its colour and grows
+   a spinner (below), because a greyed-out button reads as "broken", not "busy". */
 button:disabled,
 .button[aria-disabled='true'] {
     cursor: not-allowed;
@@ -100,10 +103,14 @@ button:disabled,
     box-shadow: none;
 }
 /* A pending control keeps its label and grows a spinner instead of going blank. */
-button[aria-busy='true'] {
+button[aria-busy='true'],
+.button[aria-busy='true'] {
+    cursor: progress;
+    opacity: 1;
     pointer-events: none;
 }
-button[aria-busy='true']::before {
+button[aria-busy='true']::before,
+.button[aria-busy='true']::before {
     content: '';
     inline-size: 12px;
     block-size: 12px;
@@ -117,8 +124,25 @@ button[aria-busy='true']::before {
         transform: rotate(1turn);
     }
 }
-html[data-motion='reduce'] button[aria-busy='true']::before {
-    animation-duration: 2s;
+/* A frozen arc is worse than no spinner, so users who ask for no motion get a
+   text ellipsis that says "still working" without animating. */
+@media (prefers-reduced-motion: reduce) {
+    button[aria-busy='true']::before,
+    .button[aria-busy='true']::before {
+        content: '…';
+        inline-size: auto;
+        block-size: auto;
+        border: 0;
+        animation: none;
+    }
+}
+html[data-motion='reduce'] button[aria-busy='true']::before,
+html[data-motion='reduce'] .button[aria-busy='true']::before {
+    content: '…';
+    inline-size: auto;
+    block-size: auto;
+    border: 0;
+    animation: none;
 }
 button.primary,
 .button.primary {
@@ -130,16 +154,16 @@ button.primary,
 }
 button.primary:not(:disabled):hover,
 .button.primary:not(:disabled):hover {
-    background: color-mix(in srgb, var(--action) 84%, #ffffff);
-    border-color: color-mix(in srgb, var(--action) 84%, #ffffff);
+    background: var(--action-hover);
+    border-color: var(--action-hover);
 }
 /* The neutral variant every `button()` gets by default: the same surface as a
-   plain button, one step softer at the edge so a toolbar has depth without noise. */
+   plain button with a boundary that is visible on the surface it sits on. */
 button.secondary,
 .button.secondary {
     --control-bg: var(--raised);
     --control-fg: var(--text);
-    --control-border: color-mix(in srgb, var(--line-bright) 82%, transparent);
+    --control-border: var(--line-bright);
 }
 button.secondary:not(:disabled):hover,
 .button.secondary:not(:disabled):hover {
@@ -157,15 +181,18 @@ button.quiet:not(:disabled):hover,
     background: var(--raised);
     border-color: transparent;
 }
+/* Destructive is a filled tint, not a quiet button in red ink: it has to look
+   like a decision. The fill is opaque so the ink stays at 5.54:1 (dark) and
+   5.50:1 (light) whatever sits behind the control. */
 button.danger,
 .button.danger {
-    --control-bg: transparent;
+    --control-bg: color-mix(in srgb, var(--bad) 14%, var(--surface));
     --control-fg: var(--bad);
-    --control-border: color-mix(in srgb, var(--bad) 70%, transparent);
+    --control-border: var(--bad);
 }
 button.danger:not(:disabled):hover,
 .button.danger:not(:disabled):hover {
-    background: color-mix(in srgb, var(--bad) 16%, transparent);
+    background: color-mix(in srgb, var(--bad) 22%, var(--surface));
     border-color: var(--bad);
 }
 /* A link-styled control keeps every state the bordered variants have. */
@@ -198,12 +225,20 @@ button[aria-pressed='true'],
     border-color: var(--cyan);
     color: var(--text);
 }
+/* Hover deepens the pressed fill instead of replacing it, so a pressed control
+   never flickers back to looking unpressed. */
+button[aria-pressed='true']:not(:disabled):hover,
+.button[aria-pressed='true']:not(:disabled):hover {
+    background: color-mix(in srgb, var(--cyan) 26%, var(--raised));
+    border-color: var(--cyan);
+    color: var(--text);
+}
 button.sm,
 .button.sm {
     min-block-size: var(--control-sm);
     padding: 0 10px;
     font-size: 12px;
-    border-radius: 7px;
+    border-radius: var(--radius-control);
 }
 button.lg,
 .button.lg {
@@ -222,6 +257,7 @@ button.icon.sm {
 button.icon svg {
     inline-size: 16px;
     block-size: 16px;
+    flex: 0 0 auto;
 }
 input,
 select,
@@ -233,14 +269,21 @@ select,
 textarea {
     width: 100%;
     min-width: 0;
-    padding: 9px 11px;
+    /* A field and the button beside it share one height, so a toolbar reads as a
+       row instead of a staircase. */
+    min-block-size: var(--control);
+    padding: 6px 11px;
     color: var(--text);
     background: var(--inset);
     border: 1px solid var(--line-bright);
-    border-radius: var(--radius);
+    border-radius: var(--radius-control);
 }
 input[type='checkbox'] {
-    width: auto;
+    /* One size, one accent colour, wherever a checkbox appears. */
+    inline-size: 16px;
+    block-size: 16px;
+    min-block-size: 0;
+    padding: 0;
     accent-color: var(--cyan);
 }
 input[type='range'] {
@@ -317,10 +360,12 @@ dd {
 .error {
     color: var(--bad);
 }
+/* Caution, not gold: this must never be mistaken for the primary action. */
 .warning {
-    color: var(--gold);
+    color: var(--warn);
+    background: color-mix(in srgb, var(--warn) 10%, transparent);
     padding: 12px;
-    border: 1px solid var(--gold);
+    border: 1px solid var(--warn);
     border-radius: var(--radius);
 }
 .skip {

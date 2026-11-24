@@ -1,8 +1,9 @@
-import { el, button, toolbar, panel, badge, date, localDate, text, tabs } from '../ui.js';
+import { el, button, toolbar, badge, date, localDate, text, tabs, $ } from '../ui.js';
 import { DataTable } from '../components/table.js';
-import { field, edit, confirm, conflict } from '../components/dialog.js';
+import { field, edit, confirm, conflict, closeDialog } from '../components/dialog.js';
 import { itemForm } from '../components/gear-editor.js';
 import { itemLine, currency, definitionsFor } from '../components/items.js';
+import { route, go } from '../router.js';
 const promotionState = (p) =>
     p.cancelled
         ? 'Cancelled'
@@ -11,6 +12,14 @@ const promotionState = (p) =>
           : p.ends <= Date.now()
             ? 'Expired'
             : 'Active';
+/** The URL names the catalogue tab `catalogue`; the page keeps `effective`. */
+const tabNames = {
+    offers: 'offers',
+    promotions: 'promotions',
+    catalogue: 'effective',
+    effective: 'effective'
+};
+const urlTab = (id) => (id === 'effective' ? 'catalogue' : id);
 function fields(o) {
     const g = o?.good || {};
     return [
@@ -31,11 +40,80 @@ export async function mount(ctx) {
         revision = el('span', null, 'muted');
     let data,
         definitions = new Map(),
-        tab = 'offers';
+        tab = 'offers',
+        appliedSearch = null,
+        focusedOffer = null;
+    /**
+     * Rewrite this page's address, keeping the params this action does not own, so
+     * a tab switch never drops a search the operator arrived with.
+     */
+    function here(changes = {}, drop = []) {
+        const params = route().params;
+        for (const name of drop) params.delete(name);
+        for (const [name, value] of Object.entries(changes)) params.set(name, String(value));
+        go('depot', Object.fromEntries(params));
+    }
     const fixed = () => ({ revision: data.snapshot.revision });
     const item = (o) => itemLine(definitions.get(o.good.item), { config: o.good.item });
     const price = (o) =>
         toolbar(currency('crowns', o.good.price), currency('energy', o.good.energy));
+    const offerName = (o) => definitions.get(o.good.item)?.name || o.good.item;
+    const offerLabel = (o) => `${offerName(o)} · offer #${o.id} · ${o.good.price} Crowns`;
+    /** One editor for the row action and for a deep link into a single offer. */
+    function editOffer(o) {
+        itemForm('Edit offer #' + o.id, 'depot-save', fields(o), { ...fixed(), id: o.id }, o.good.item);
+        // The editor is shared with the offer list, so the way back leads the same
+        // dialog body instead of becoming a second surface to learn.
+        $('#fields')?.prepend(
+            toolbar(
+                button(
+                    'Back to offers',
+                    () => {
+                        if (closeDialog()) here({}, ['offer']);
+                    },
+                    'secondary'
+                )
+            )
+        );
+    }
+    function createOffer() {
+        itemForm('Create Depot offer', 'depot-save', fields(), { ...fixed(), id: -1 });
+    }
+    /** Promotions are scheduled from an offer, whichever tab starts the action. */
+    function schedulePromotion(offer) {
+        const options = data.snapshot.offers.map((o) => [String(o.id), offerLabel(o)]);
+        if (!options.length) {
+            // Nothing can be discounted yet: send the operator to the step that
+            // creates the offer instead of failing silently.
+            ctx.notify('Create a depot offer before scheduling a promotion.', true);
+            here({ tab: 'offers' }, ['offer']);
+            return;
+        }
+        const chosen = offer || data.snapshot.offers[0];
+        edit(
+            offer ? 'Promotion · ' + offerName(offer) : 'Schedule promotion',
+            'promotion-create',
+            [
+                field('offerId', 'Offer', String(chosen.id), 'text', options),
+                field('starts', 'Starts', localDate(Date.now()), 'datetime-local'),
+                field('ends', 'Ends', localDate(Date.now() + 86400000), 'datetime-local'),
+                field('crowns', 'Promotional Crowns', Math.max(0, chosen.good.price), 'number', null, {
+                    min: 0,
+                    step: 1
+                }),
+                field('energy', 'Promotional Energy', chosen.good.energy, 'number', null, {
+                    min: 0,
+                    step: 1
+                }),
+                field('referencePrice', 'Reference price (optional)', '', 'number', null, {
+                    min: 0,
+                    step: 1
+                }),
+                field('featured', 'Featured', true, 'checkbox')
+            ],
+            { ...fixed() }
+        );
+    }
     const offers = new DataTable(
         [
             ['Item', item, (o) => definitions.get(o.good.item)?.name || o.good.item],
@@ -56,55 +134,15 @@ export async function mount(ctx) {
             id: 'depot-offers',
             caption: 'Depot offers',
             exportName: 'depot-offers',
+            empty: {
+                title: 'No depot offers are defined',
+                hint: 'An offer stocks one item in the Supply Depot; players only see enabled offers.',
+                action: { label: 'Create offer', run: () => createOffer() },
+                icon: 'depot'
+            },
             actions: (get) => [
-                button('Edit', () => {
-                    const o = get();
-                    itemForm(
-                        'Edit offer #' + o.id,
-                        'depot-save',
-                        fields(o),
-                        { ...fixed(), id: o.id },
-                        o.good.item
-                    );
-                }),
-                button('Schedule promotion', () => {
-                    const o = get();
-                    edit(
-                        'Promotion · ' + (definitions.get(o.good.item)?.name || 'Offer #' + o.id),
-                        'promotion-create',
-                        [
-                            field('starts', 'Starts', localDate(Date.now()), 'datetime-local'),
-                            field(
-                                'ends',
-                                'Ends',
-                                localDate(Date.now() + 86400000),
-                                'datetime-local'
-                            ),
-                            field(
-                                'crowns',
-                                'Promotional Crowns',
-                                Math.max(0, o.good.price),
-                                'number',
-                                null,
-                                { min: 0, step: 1 }
-                            ),
-                            field('energy', 'Promotional Energy', o.good.energy, 'number', null, {
-                                min: 0,
-                                step: 1
-                            }),
-                            field(
-                                'referencePrice',
-                                'Reference price (optional)',
-                                '',
-                                'number',
-                                null,
-                                { min: 0, step: 1 }
-                            ),
-                            field('featured', 'Featured', true, 'checkbox')
-                        ],
-                        { ...fixed(), offerId: o.id }
-                    );
-                })
+                button('Edit', () => editOffer(get())),
+                button('Schedule promotion', () => schedulePromotion(get()))
             ],
             filters: [
                 [
@@ -133,9 +171,7 @@ export async function mount(ctx) {
                     cell.append(
                         el(
                             'strong',
-                            offer
-                                ? definitions.get(offer.good.item)?.name || offer.good.item
-                                : `Offer #${p.offerId}`
+                            offer ? offerName(offer) : `Offer #${p.offerId}`
                         )
                     );
                     cell.append(el('small', `offer #${p.offerId}`, 'muted'));
@@ -156,21 +192,21 @@ export async function mount(ctx) {
             id: 'promotions',
             caption: 'Scheduled promotions',
             exportName: 'promotions',
+            empty: {
+                title: 'No promotions are scheduled',
+                hint: 'A promotion discounts one offer between two dates; schedule the first from any offer.',
+                action: {
+                    label: 'Schedule promotion',
+                    run: () => schedulePromotion(null)
+                },
+                icon: 'add'
+            },
             actions: (get) => [
                 button(
-                    'Show offer',
-                    () => {
-                        const offer = data.snapshot.offers.find((o) => o.id === get().offerId);
-                        tab = 'offers';
-                        show();
-                        if (offer) {
-                            offers.query.value =
-                                definitions.get(offer.good.item)?.name || offer.good.item;
-                            offers.query.dispatchEvent(new Event('input'));
-                        }
-                        offers.node.scrollIntoView({ block: 'center' });
-                    },
-                    'secondary'
+                    'Open offer',
+                    () => here({ tab: 'offers', offer: get().offerId }),
+                    'secondary',
+                    () => data.snapshot.offers.some((o) => o.id === get().offerId)
                 ),
                 button(
                     'Cancel',
@@ -228,6 +264,12 @@ export async function mount(ctx) {
             id: 'depot-effective',
             caption: 'Effective catalogue: what a player sees today',
             exportName: 'depot-catalogue',
+            empty: {
+                title: 'The player catalogue is empty',
+                hint: 'Enable a depot offer to publish it to the catalogue players browse in game.',
+                action: { label: 'Show offers', run: () => here({ tab: 'offers' }, ['offer']) },
+                icon: 'depot'
+            },
             actions: (get) => [
                 button(
                     'Open offer',
@@ -235,13 +277,7 @@ export async function mount(ctx) {
                         const offer = data.snapshot.offers.find(
                             (candidate) => candidate.good.item === get().good.item
                         );
-                        if (!offer) return;
-                        tab = 'offers';
-                        show();
-                        offers.query.value =
-                            definitions.get(offer.good.item)?.name || offer.good.item;
-                        offers.query.dispatchEvent(new Event('input'));
-                        offers.node.scrollIntoView({ block: 'center' });
+                        if (offer) here({ tab: 'offers', offer: offer.id });
                     },
                     'secondary'
                 )
@@ -254,30 +290,78 @@ export async function mount(ctx) {
             tab === 'offers' ? offers.node : tab === 'promotions' ? promotions.node : effective.node
         );
     }
+    const tabBar = tabs(
+        [
+            ['offers', 'Offers'],
+            ['promotions', 'Promotions'],
+            ['effective', 'Player catalogue & Specials']
+        ],
+        tab,
+        // The tab is page state, so it belongs in the address: a reload or a shared
+        // link lands on the same view.
+        (id) => here({ tab: urlTab(id) }, ['offer'])
+    );
+    /** Sync the strip in place: rebuilding it would drop keyboard focus. */
+    function paintTabs() {
+        for (const control of tabBar.children) {
+            const selected = control.dataset.tab === tab;
+            control.setAttribute('aria-selected', selected);
+            control.tabIndex = selected ? 0 : -1;
+        }
+    }
     node.append(
         toolbar(
-            button(
-                'Create offer',
-                () => itemForm('Create Depot offer', 'depot-save', fields(), { ...fixed(), id: -1 }),
-                'primary'
-            ),
+            button('Create offer', () => createOffer(), 'primary'),
+            button('Schedule promotion', () => schedulePromotion(null)),
             revision
         ),
-        tabs(
-            [
-                ['offers', 'Offers'],
-                ['promotions', 'Promotions'],
-                ['effective', 'Player catalogue & Specials']
-            ],
-            tab,
-            (id) => {
-                tab = id;
-                show();
-            }
-        ),
+        tabBar,
         content
     );
+    paintTabs();
     show();
+    /**
+     * Closing the deep-linked offer editor drops `?offer=`, so the address never
+     * names an offer that is no longer on screen. A replacement editor opens in
+     * the same tick, so the check is deferred and skipped while one is open.
+     */
+    function unlinkOfferOnClose() {
+        const dialog = $('#dialog'),
+            previous = dialog.onclose;
+        dialog.onclose = (event) => {
+            previous?.call(dialog, event);
+            setTimeout(() => {
+                if (dialog.open || !route().params.has('offer')) return;
+                here({}, ['offer']);
+            }, 0);
+        };
+    }
+    function focusOffer(id) {
+        if (id === focusedOffer) return;
+        focusedOffer = id;
+        if (id == null) return;
+        const offer = data.snapshot.offers.find((o) => o.id === id);
+        if (!offer) {
+            ctx.notify(`Offer #${id} is not in the current depot snapshot.`);
+            return;
+        }
+        tab = 'offers';
+        paintTabs();
+        show();
+        editOffer(offer);
+        unlinkOfferOnClose();
+    }
+    /**
+     * A search that came from the address is re-applied on every visit and cleared
+     * when it is gone; a search the operator typed is left alone.
+     */
+    function applySearch(params) {
+        const next = params.get('search');
+        if (next === null && appliedSearch === null) return;
+        appliedSearch = next;
+        offers.setQuery(next ?? '');
+        effective.setQuery(next ?? '');
+    }
     async function refresh() {
         data = await ctx.request('depot');
         definitions = await definitionsFor(data.snapshot.offers.map((o) => o.good.item));
@@ -291,5 +375,18 @@ export async function mount(ctx) {
         text(revision, `Revision ${data.snapshot.revision}`);
     }
     await refresh();
-    return { node, refresh, interval: 10000 };
+    /** Deep links re-apply the tab, the search and the focused offer in place. */
+    function applyParams(params) {
+        const requested = tabNames[params.get('tab') || ''] || 'offers';
+        if (requested !== tab) {
+            tab = requested;
+            paintTabs();
+            show();
+        }
+        applySearch(params);
+        const offer = Number(params.get('offer'));
+        focusOffer(Number.isInteger(offer) && offer > 0 ? offer : null);
+    }
+    applyParams(ctx.params);
+    return { node, refresh, interval: 10000, navigate: applyParams };
 }

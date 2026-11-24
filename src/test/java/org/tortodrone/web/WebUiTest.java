@@ -196,20 +196,19 @@ public final class WebUiTest {
                                     == 400,
                             "console full shutdown requires its own phrase");
                     for (String command : List.of(
-                            "help; stop", "status\nstop", "account password operator secret", "../secret", "kick -1"))
+                            "help; stop", "status\nstop", "account password operator secret", "../secret", "kick -1")) {
+                        var refused = post(
+                                "console",
+                                Map.of("command", command, "commandConfirmation", command, "confirmation", "console"));
+                        check(refused.status == 400, "console refuses unsupported syntax and unsafe arguments");
+                        // A prompt must answer with the prompt's own words, not the
+                        // generic field-validation sentence.
                         check(
-                                post(
-                                                        "console",
-                                                        Map.of(
-                                                                "command",
-                                                                command,
-                                                                "commandConfirmation",
-                                                                command,
-                                                                "confirmation",
-                                                                "console"))
-                                                .status
-                                        == 400,
-                                "console refuses unsupported syntax and unsafe arguments");
+                                refused.body.contains("Unsupported command; use help")
+                                        || refused.body.contains("Invalid command")
+                                        || refused.body.contains("Invalid session"),
+                                "console refusals name the reason at the prompt");
+                    }
                     var create = Map.of(
                             "username",
                             "Alice",

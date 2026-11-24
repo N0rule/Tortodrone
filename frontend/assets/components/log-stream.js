@@ -1,9 +1,16 @@
 import { el, input, select, toolbar, button, text, download, copy, clock as clockTime } from '../ui.js';
 
+const LEVELS = ['All', 'INFO', 'WARN', 'ERROR', 'DEBUG', 'COMMAND'];
+
 /**
- * A terminal surface rather than a list of cards: a fixed width gutter for time
- * and severity, monospaced output that keeps its columns, a status line, and the
- * keys a console user reaches for (Ctrl+F search, Ctrl+L clear, End to tail).
+ * A terminal surface rather than a list of cards: a gutter for time, severity and
+ * thread, monospaced output that keeps its columns, a status line, and the keys a
+ * console user reaches for (Ctrl+F search, Ctrl+L clear, End to tail).
+ *
+ * Two things this file refuses to do, because a log viewer that lies is worse than
+ * no log viewer: it never claims a buffer is complete (it names its capacity, how
+ * many lines were evicted and where the full file is), and it never freezes on
+ * pause (a paused tail keeps reading and says how far behind it is).
  *
  * `commands` receives command/output entries (the Console page) and renders them
  * as a prompt line plus an indented response, never as a separate list.
@@ -13,11 +20,15 @@ export function logStream({
     title = 'Server output',
     prompt = 'tortodrone',
     severity: initialSeverity = 'All',
-    search: initialSearch = ''
+    search: initialSearch = '',
+    raw = false,
+    fill = false,
+    onLoadFile = null,
+    onLink = null
 } = {}) {
     const node = el('div', null, 'terminal-shell stack-tight'),
         bar = el('div', null, 'terminal-bar'),
-        dots = el('span', null, 'terminal-dots'),
+        led = el('span', null, 'terminal-led'),
         titleNode = el('span', title, 'terminal-title'),
         barMeta = el('span', null, 'terminal-bar-meta'),
         tools = toolbar(),
@@ -26,72 +37,82 @@ export function logStream({
         state = el('span', null, 'terminal-state'),
         statusLeft = el('span', null, 'terminal-hint'),
         statusRight = el('span', null, 'terminal-tail'),
+        source = el('span', null, 'terminal-source'),
+        announce = el('span', null, 'visually-hidden'),
         jump = el('button', 'Jump to latest', 'terminal-jump');
     tools.classList.add('terminal-tools');
-    dots.setAttribute('aria-hidden', 'true');
-    for (const dot of ['close', 'minimise', 'maximise']) {
-        const span = el('span');
-        span.dataset.dot = dot;
-        dots.append(span);
-    }
-    bar.append(dots, titleNode, barMeta);
-    // A pure stream would talk over a screen reader thousands of times; the console
-    // announces its command responses, the status line announces everything else.
-    // `role=log` is a live region by definition: only the console, which answers
-    // one command at a time, uses it. The plain stream stays a labelled group.
+    // One indicator that means something: it reflects the real stream state instead
+    // of three decorative window dots an operator will try to click.
+    led.setAttribute('aria-hidden', 'true');
+    bar.append(led, titleNode, barMeta);
+    // A live region on the whole stream would read every polled server line aloud.
+    // The structure stays semantic (role=log for the console, a labelled group for
+    // the stream) while announcements go through the small region below.
     output.setAttribute('role', commands ? 'log' : 'group');
     output.setAttribute('aria-label', title);
-    output.setAttribute('aria-live', commands ? 'polite' : 'off');
-    if (commands) output.setAttribute('aria-atomic', 'false');
+    output.setAttribute('aria-live', 'off');
+    announce.setAttribute('role', 'status');
+    announce.setAttribute('aria-live', 'polite');
     output.tabIndex = 0;
     jump.type = 'button';
     jump.hidden = true;
-    jump.setAttribute('aria-label', 'Jump to the newest line');
+    jump.setAttribute('aria-label', 'Jump to latest');
     footer.setAttribute('role', 'status');
-    footer.setAttribute('aria-live', 'polite');
-    statusLeft.textContent = 'Ctrl+F search · Ctrl+L clear · End tail';
-    footer.append(state, statusLeft, statusRight);
-    node.append(bar, tools, output, jump, footer);
+    statusLeft.textContent = 'Ctrl+F search · Ctrl+L clear · End tail · p pause';
+    footer.append(state, statusLeft, statusRight, source);
+    node.append(bar, tools, output, announce, jump, footer);
 
     const search = input('Search output'),
-        severity = select('Severity', ['All', 'INFO', 'WARN', 'ERROR', 'DEBUG', 'COMMAND'], 'All'),
+        severity = select('Severity', LEVELS, 'All'),
         count = el('small', null, 'terminal-count');
     search.placeholder = 'Search output';
     search.classList.add('terminal-search');
     search.title = 'Search the output (Ctrl+F)';
     if (initialSearch) search.value = initialSearch;
-    if (['All', 'INFO', 'WARN', 'ERROR', 'DEBUG', 'COMMAND'].includes(initialSeverity))
-        severity.value = initialSeverity;
+    if (LEVELS.includes(initialSeverity)) severity.value = initialSeverity;
 
     let paused = false,
         auto = true,
         rows = [],
         pending = [],
+        frozen = null,
+        fresh = 0,
         dropped = 0,
+        capacity = 1000,
+        retained = 0,
+        file = null,
+        rawMode = raw,
         clearing = new Set();
 
     const cache = new Map();
     const pause = button('Pause', () => {
         paused = !paused;
-        text(pause, paused ? 'Resume' : 'Pause');
-        pause.title = paused ? 'Show incoming lines again' : 'Freeze the visible output';
+        pause.setAttribute('aria-pressed', String(paused));
+        // Remember exactly what was on screen, so "3 new" counts arrived lines
+        // rather than the difference between two bounded buffers.
+        frozen = paused ? new Set(rows.map(key)) : null;
+        if (!paused) fresh = 0;
+        pause.title = paused
+            ? 'Show what has arrived since you paused'
+            : 'Freeze the view; the stream keeps reading';
         if (!paused) update(pending);
         renderStatus();
     });
-    pause.title = 'Freeze the visible output';
-    const follow = button('Stop tailing', () => {
-        auto = !auto;
-        text(follow, auto ? 'Stop tailing' : 'Start tailing');
-        follow.title = auto
-            ? 'Keep the newest line in view'
-            : 'Follow new lines again from the bottom';
+    pause.setAttribute('aria-pressed', 'false');
+    pause.title = 'Freeze the view; the stream keeps reading';
+    const follow = button('Tail', () => setTail(!auto));
+    follow.setAttribute('aria-pressed', 'true');
+    follow.title = 'Follow the newest line';
+
+    function setTail(value) {
+        auto = value;
+        follow.setAttribute('aria-pressed', String(auto));
         if (auto) {
             output.scrollTop = output.scrollHeight;
             jump.hidden = true;
         }
         renderStatus();
-    });
-    follow.title = 'Keep the newest line in view';
+    }
 
     function matches(row) {
         if (severity.value !== 'All' && row.level !== severity.value) return false;
@@ -128,72 +149,146 @@ export function logStream({
         return textValue;
     }
 
+    /** The exact line the server wrote to data/logs/latest.log, for raw mode and Copy. */
+    const rawLine = (row) =>
+        row.entry ? row.entry.command + '\n' + (row.entry.output ?? '') : row.line ?? row.message ?? '';
+
     function renderStatus() {
         const visible = [...rows, ...commandRows()].filter(matches).length;
         text(
             barMeta,
-            `${visible} ${visible === 1 ? 'line' : 'lines'}${paused ? ' · paused' : ''}`
+            `${visible} ${visible === 1 ? 'line' : 'lines'}${paused ? ' · paused' : ''}${
+                paused && fresh ? ` · ${fresh} new` : ''
+            }`
         );
-        text(statusRight, auto ? 'tail' : 'scrolled back');
+        text(statusRight, auto ? 'tail' : `scrolled back${fresh && paused ? ` · ${fresh} new` : ''}`);
         statusRight.dataset.state = auto ? 'tail' : 'paused';
+        const bounds = [];
+        if (dropped) bounds.push(`${retained} of ${capacity}, ${dropped} older dropped`);
+        else if (retained) bounds.push(`${retained} buffered`);
+        if (file?.path)
+            bounds.push(
+                `${file.path}${file.exists ? '' : ' (not written yet)'}`
+            );
+        text(source, bounds.join(' · '));
+        led.dataset.state = state.classList.contains('error')
+            ? 'offline'
+            : paused
+              ? 'paused'
+              : auto
+                ? 'live'
+                : 'back';
+        statusRight.title = file?.path ? 'The complete log lives in ' + file.path : '';
     }
 
+    function lineFor(row, id) {
+        const line = el('div', null, 'terminal-line level-' + row.level);
+        const time = el('time', clockTime(row.timestamp), 'log-time');
+        time.dateTime = row.timestamp;
+        time.title = new Date(row.timestamp).toLocaleString();
+        const level = el('span', row.level === 'COMMAND' ? 'cmd' : row.level, 'log-level');
+        const thread = el('span', row.thread || '', 'log-thread');
+        thread.title = row.thread || '';
+        const message = el('span', null, 'log-message');
+        if (row.entry) {
+            message.replaceChildren(el('span', `${prompt}$ ${row.entry.command}`, 'command'));
+            // A command that has not answered yet shows a running marker instead of
+            // an empty response block.
+            if (row.entry.pending) message.append(el('span', 'running…', 'command-pending'));
+            else message.append(el('pre', formatOutput(row.entry.output), 'command-response'));
+        } else if (rawMode) message.textContent = row.line ?? row.message ?? '';
+        else message.textContent = row.message ?? row.line;
+        if (!row.entry && rawMode) line.classList.add('raw');
+        line.append(time, level, thread, message);
+        if (row.entry?.links?.length && onLink) {
+            const links = el('span', null, 'command-links');
+            for (const link of row.entry.links) {
+                const go = el('button', link.label, 'link');
+                go.type = 'button';
+                go.onclick = () => onLink(link);
+                links.append(go);
+            }
+            message.append(links);
+        }
+        line.title = new Date(row.timestamp).toLocaleString();
+        line.dataset.sig = signature(row);
+        return line;
+    }
+
+    /**
+     * Everything that can change about a row once it is on screen. The console
+     * mutates its pending entry in place when the answer lands; without this the
+     * cached node kept saying "running…" forever.
+     */
+    const signature = (row) =>
+        [
+            rawMode ? 'r' : 'p',
+            row.level,
+            row.entry?.pending ? 'pending' : 'settled',
+            row.entry?.error ? 'error' : '',
+            row.entry ? String(row.entry.output).length : '',
+            row.entry?.links?.length || 0,
+            row.entry ? '' : (row.line ?? '') + '|' + (row.message ?? ''),
+            row.thread ?? ''
+        ].join('·');
+
     function display(force = false) {
-        const retained = [...rows, ...commandRows()].sort(
+        const retained_rows = [...rows, ...commandRows()].sort(
                 (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
             ),
-            visible = retained.filter(matches),
+            visible = retained_rows.filter(matches),
             atBottom = output.scrollHeight - output.scrollTop - output.clientHeight < 35;
         const anchor = [...output.children].find(
                 (n) => n.offsetTop >= output.offsetTop + output.scrollTop
             ),
             before = anchor?.getBoundingClientRect().top;
         const occurrences = new Map(),
-            desired = visible.map((row) => {
-                const signature = key(row),
-                    occurrence = occurrences.get(signature) || 0;
-                occurrences.set(signature, occurrence + 1);
-                const id = signature + ':' + occurrence;
-                let line = cache.get(id);
-                if (!line) {
-                    line = el('div', null, 'terminal-line level-' + row.level);
-                    const time = el('time', clockTime(row.timestamp), 'log-time');
-                    time.dateTime = row.timestamp;
-                    const level = el('span', row.level === 'COMMAND' ? 'cmd' : row.level, 'log-level');
-                    const thread = el('span', row.thread || '', 'log-thread');
-                    thread.title = row.thread || '';
-                    const message = el('span', null, 'log-message');
-                    if (row.entry) {
-                        message.replaceChildren(
-                            el('span', `${prompt}$ ${row.entry.command}`, 'command')
-                        );
-                        // A command that has not answered yet shows a running
-                        // marker instead of an empty response block.
-                        if (row.entry.pending)
-                            message.append(el('span', 'running…', 'command-pending'));
-                        else
-                            message.append(
-                                el('pre', formatOutput(row.entry.output), 'command-response')
-                            );
-                    } else message.textContent = row.message ?? row.line;
-                    line.append(time, level, thread, message);
-                    line.title = row.timestamp || '';
-                    cache.set(id, line);
-                }
-                return line;
-            });
+            desired = [];
+        let day = '';
+        for (const row of visible) {
+            const stamp = new Date(row.timestamp);
+            const dayStamp = stamp.toDateString();
+            if (day && dayStamp !== day) {
+                // A buffer that spans midnight is unreadable without the date, and
+                // only the boundary needs one: the first row is today by default.
+                const divider = el('div', null, 'log-day');
+                divider.textContent = stamp.toLocaleDateString(undefined, {
+                    weekday: 'short',
+                    day: '2-digit',
+                    month: 'short'
+                });
+                desired.push(divider);
+            }
+            day = dayStamp;
+            const id = key(row),
+                occurrence = occurrences.get(id) || 0;
+            occurrences.set(id, occurrence + 1);
+            const slot = id + ':' + occurrence;
+            let line = cache.get(slot);
+            if (line && line.dataset.sig !== signature(row)) line = null;
+            if (!line) {
+                line = lineFor(row, slot);
+                cache.set(slot, line);
+            }
+            desired.push(line);
+        }
         const wanted = new Set(desired);
-        for (const child of [...output.children]) if (!wanted.has(child)) child.remove();
+        for (const child of [...output.children])
+            if (!wanted.has(child) && !child.classList.contains('log-day')) child.remove();
+        for (const child of [...output.children])
+            if (child.classList.contains('log-day') && !wanted.has(child)) child.remove();
         desired.forEach((child, i) => {
             if (output.children[i] !== child)
                 output.insertBefore(child, output.children[i] || null);
         });
-        for (const [id, line] of cache) if (!wanted.has(line)) cache.delete(id);
+        for (const [slot, line] of cache) if (!wanted.has(line)) cache.delete(slot);
         if (!auto && anchor?.isConnected && before != null)
             output.scrollTop += anchor.getBoundingClientRect().top - before;
         text(
             count,
-            `${visible.length} of ${retained.length}${dropped ? ` · last 1000, ${dropped} older not shown` : ''}`
+            `${visible.length} of ${retained_rows.length}${
+                dropped ? ` · ${dropped} older dropped` : ''
+            }`
         );
         renderStatus();
         if (auto && (atBottom || force)) {
@@ -206,47 +301,65 @@ export function logStream({
         jump.hidden = auto || atBottom;
     }
 
+    /**
+     * Accepts the log payload ({events, capacity, dropped, retained, file}) or a
+     * bare array. While paused the rows are frozen but the count of new lines is
+     * tracked, so a paused tail reports how far behind it is instead of pretending
+     * that nothing arrived.
+     */
     function update(incoming) {
-        pending = incoming;
+        const payload = Array.isArray(incoming) ? { events: incoming } : incoming || {};
+        const events = payload.events || [];
+        if (typeof payload.capacity === 'number') capacity = payload.capacity;
+        if (typeof payload.dropped === 'number') dropped = payload.dropped;
+        if (typeof payload.retained === 'number') retained = payload.retained;
+        if (payload.file) file = payload.file;
+        pending = events;
+        const current = new Set(events.map(key));
+        clearing = new Set([...clearing].filter((k) => current.has(k)));
+        const kept = events.filter((r) => !clearing.has(key(r)));
         if (paused) {
+            fresh = frozen ? kept.filter((row) => !frozen.has(key(row))).length : 0;
             renderStatus();
             return;
         }
-        const kept = incoming.filter((r) => !clearing.has(key(r)));
-        dropped = Math.max(0, kept.length - 1000);
-        rows = kept.slice(-1000);
+        rows = kept.slice(-capacity);
+        fresh = 0;
         display();
-        const current = new Set(incoming.map(key));
-        clearing = new Set([...clearing].filter((k) => current.has(k)));
     }
 
-    // Filtering must not yank a reader who scrolled back up to the bottom.
+    /** Filtering must not yank a reader who scrolled back up to the bottom. */
     search.oninput = severity.onchange = () => display();
     output.addEventListener('scroll', () => {
         const away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
         jump.hidden = !away;
-        if (auto && away) {
-            auto = false;
-            text(follow, 'Start tailing');
-            renderStatus();
-        }
+        if (auto && away) setTail(false);
     });
-    // Terminal keys: search, clear, tail. Ignored while a field has focus.
+    // Terminal keys: search, clear, tail, home, leave. Fields keep their own keys.
     node.addEventListener('keydown', (event) => {
+        const typing =
+            event.target instanceof HTMLInputElement ||
+            event.target instanceof HTMLTextAreaElement ||
+            event.target instanceof HTMLSelectElement;
         if (!event.ctrlKey && !event.metaKey) {
-            const inside = event.target === output || event.target === node;
-            if (event.key === 'End' && inside) {
+            if (typing) return;
+            if (event.key === 'End') {
                 event.preventDefault();
-                auto = true;
-                text(follow, 'Stop tailing');
+                setTail(true);
                 output.scrollTop = output.scrollHeight;
-                renderStatus();
-            } else if (event.key === 'p' && inside) {
+            } else if (event.key === 'Home') {
+                event.preventDefault();
+                setTail(false);
+                output.scrollTop = 0;
+            } else if (event.key === 'p' || event.key === 'P') {
                 event.preventDefault();
                 pause.click();
+            } else if (event.key === 'Escape') {
+                output.blur();
             }
             return;
         }
+        if (typing) return;
         const keyName = event.key.toLowerCase();
         if (keyName === 'f') {
             event.preventDefault();
@@ -258,8 +371,7 @@ export function logStream({
         }
     });
     jump.onclick = () => {
-        auto = true;
-        text(follow, 'Stop tailing');
+        setTail(true);
         output.scrollTop = output.scrollHeight;
         jump.hidden = true;
         renderStatus();
@@ -271,43 +383,137 @@ export function logStream({
         pending = [];
         rows = [];
         commands.length = 0;
+        fresh = 0;
         display(true);
     }
 
-    tools.append(
-        search,
-        severity,
-        pause,
-        follow,
-        button('Clear', clear),
+    const transcript = (rawOnly) =>
+        [...rows, ...commandRows()]
+            .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
+            .filter(matches)
+            .map((row) =>
+                rawOnly
+                    ? rawLine(row)
+                    : `${row.timestamp} [${row.level}] ${row.thread ? row.thread + ' ' : ''}${
+                          row.entry ? rawLine(row) : (row.message ?? row.line)
+                      }`
+            )
+            .join('\n');
+
+    // Secondary actions stay behind one menu: a tail needs Pause, Tail and Jump,
+    // not nine equal buttons in a row.
+    const menu = el('details', null, 'terminal-menu'),
+        menuToggle = el('summary', 'More', 'terminal-menu-toggle'),
+        menuBody = el('div', null, 'terminal-menu-body');
+    menuToggle.title = 'Copy, export, raw lines and file history';
+    const rawToggle = button(rawMode ? 'Show parsed lines' : 'Show raw lines', () => {
+        rawMode = !rawMode;
+        text(rawToggle, rawMode ? 'Show parsed lines' : 'Show raw lines');
+        rawToggle.setAttribute('aria-pressed', String(rawMode));
+        cache.clear();
+        display();
+    });
+    rawToggle.setAttribute('aria-pressed', String(rawMode));
+    rawToggle.title = 'Render the exact text the server wrote to its log file';
+    menuBody.append(
+        rawToggle,
         button('Copy', () =>
-            copy(
-                [...rows, ...commandRows()]
-                    .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
-                    .filter(matches)
-                    .map(
-                        (r) =>
-                            `${r.timestamp} [${r.level}] ${r.thread ? r.thread + ' ' : ''}${r.message ?? r.line}`
-                    )
-                    .join('\n'),
-                'Visible output copied.'
-            )
+            copy(transcript(rawMode), rawMode ? 'Raw lines copied.' : 'Visible output copied.')
         ),
-        button('Export', () =>
-            download(
-                'tortodrone-log.txt',
-                [...rows, ...commandRows()]
-                    .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
-                    .filter(matches)
-                    .map((r) => `${r.timestamp} [${r.level}] ${r.message ?? r.line}`)
-                    .join('\n')
-            )
-        ),
-        count
+        button('Export', () => download('tortodrone-log.txt', transcript(rawMode)))
     );
+    if (onLoadFile) {
+        const load = button('Load last 500 from file', async () => {
+            load.disabled = true;
+            try {
+                const result = await onLoadFile(500);
+                if (!result?.lines?.length) {
+                    announce.textContent = 'The log file has no lines yet.';
+                    return;
+                }
+                const stamp = new Date(result.modified || Date.now()).toISOString();
+                const entries = result.lines.map((line, position) => {
+                    const match = /^\[([^\]]+)\]\s*\[([^/\]]+)\/([^\]]+)\]:?\s*(.*)$/.exec(line);
+                    return {
+                        id: `file-${position}-${line.length}`,
+                        timestamp: match ? fileStamp(match[1]) : stamp,
+                        level: (match?.[2] || 'INFO').toUpperCase(),
+                        thread: match?.[3] || '',
+                        message: match ? match[4] : line,
+                        line
+                    };
+                });
+                update({
+                    events: [...entries, ...(Array.isArray(pending) ? pending : [])],
+                    capacity: Math.max(capacity, entries.length),
+                    retained: entries.length,
+                    file
+                });
+                announce.textContent = `Loaded ${entries.length} lines from ${result.path}.`;
+            } catch (error) {
+                announce.textContent = 'Could not read the log file: ' + error.message;
+            } finally {
+                load.disabled = false;
+            }
+        });
+        menuBody.append(load);
+    }
+    menu.append(menuToggle, menuBody);
+    tools.append(search, severity, pause, follow, menu, count);
+
+    /** Parse the file's own `[24-11-2026 04:53:11]` prefix into an instant. */
+    function fileStamp(value) {
+        const match = /(\d{2})-(\d{2})-(\d{4}) (\d{2}):(\d{2}):(\d{2})/.exec(value);
+        if (!match) return new Date().toISOString();
+        const [, day, month, year, hour, minute, second] = match;
+        return new Date(
+            Number(year),
+            Number(month) - 1,
+            Number(day),
+            Number(hour),
+            Number(minute),
+            Number(second)
+        ).toISOString();
+    }
+
+    /**
+     * Fit the shell to the space the page actually leaves it.
+     *
+     * A fixed `calc(100dvh - 210px)` is a guess about the chrome above the pane,
+     * and on a phone the guess is wrong by 80px: the console prompt lands below
+     * the fold. Measuring the pane's own top is right at every width.
+     */
+    let fitting = 0;
+    function fit() {
+        // A page mounts its node after this component returns, so the first frame
+        // may arrive before the shell is in the document: wait for it instead of
+        // measuring a detached element at 0,0.
+        if (!node.isConnected) {
+            if (fitting++ < 120) requestAnimationFrame(fit);
+            return;
+        }
+        fitting = 0;
+        const top = node.getBoundingClientRect().top;
+        // The chrome (bar, tools, prompt, status) is fixed height, so the shell can
+        // never be shorter than it without clipping the prompt: on a landscape
+        // phone the page scrolls a little instead of hiding the cursor.
+        const fixed = [...node.children]
+            .filter((child) => !child.classList.contains('terminal-body'))
+            .reduce((total, child) => total + child.offsetHeight, 0);
+        const floor = Math.max(window.innerHeight < 520 ? 180 : 240, fixed + 56);
+        node.style.blockSize = Math.max(floor, window.innerHeight - top - 18) + 'px';
+        node.style.minHeight = '0';
+    }
+    if (fill) {
+        node.classList.add('terminal-fill');
+        window.addEventListener('resize', fit);
+        requestAnimationFrame(fit);
+    }
+
     renderStatus();
     return {
         node,
+        fit,
         update,
         output,
         footer,
@@ -315,16 +521,24 @@ export function logStream({
         redraw: () => display(),
         tools,
         clear,
+        announce: (message) => {
+            announce.textContent = message;
+        },
         focusSearch: () => search.focus(),
         /** Re-apply a deep-linked filter without reloading the page. */
         filter({ severity: level, search: term } = {}) {
-            if (level && ['All', 'INFO', 'WARN', 'ERROR', 'DEBUG', 'COMMAND'].includes(level))
-                severity.value = level;
+            if (level && LEVELS.includes(level)) severity.value = level;
             if (typeof term === 'string') search.value = term;
             display();
         },
         get paused() {
             return paused;
+        },
+        get raw() {
+            return rawMode;
+        },
+        get fill() {
+            return fill;
         }
     };
 }

@@ -450,6 +450,19 @@ export async function mount(ctx) {
     }
     updatePacks();
     showSlot();
+    /**
+     * `#news?pack=` selects a pack by the number the selector shows, so a review
+     * link lands on the banner under discussion without discarding a draft.
+     */
+    function applyParams(params) {
+        const wanted = Number(params.get('pack'));
+        if (!Number.isInteger(wanted) || wanted < 1) return;
+        const next = Math.min(wanted - 1, draft.packs.length - 1);
+        if (next === pack) return;
+        pack = next;
+        packs.value = String(pack);
+        showSlot();
+    }
     async function refresh() {
         const latest = await ctx.request('news');
         if (latest.revision !== revision) {
@@ -483,5 +496,6 @@ export async function mount(ctx) {
             }
         }
     }
-    return { node, refresh, isDirty, interval: 15000 };
+    applyParams(ctx.params);
+    return { node, refresh, isDirty, interval: 15000, navigate: applyParams };
 }

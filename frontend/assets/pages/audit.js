@@ -3,11 +3,21 @@ import { DataTable } from '../components/table.js';
 export async function mount(ctx) {
     const node = el('div', null, 'stack'),
         detail = el('div', null, 'stack');
-    // The target is written as username:knight:id, so a detail pane can offer the
-    // exact page that owns the record instead of a dead string.
+    // The target names what was acted on: "username", "username:knight", a mailing's
+    // subject, or nothing at all when the action has no subject. Older rows still
+    // carry the "username:knight:id" shape, so a trailing numeric id is dropped.
     const parseTarget = (target) => {
-        const [username = '', knight = ''] = String(target || '').split(':');
-        return { username: username.trim(), knight: knight.trim() };
+        const parts = String(target || '')
+            .split(':')
+            .map((part) => part.trim());
+        const [first = '', second = ''] = parts;
+        const looksLikeAccount = first && !first.includes(' ') && parts.length < 3;
+        const looksLikeKnight = second && !/^\d+$/.test(second);
+        return {
+            username: looksLikeAccount ? first : '',
+            knight: looksLikeKnight ? second : '',
+            label: String(target || '').trim()
+        };
     };
     const showDetail = (row) => {
         if (!row) {
@@ -39,7 +49,19 @@ export async function mount(ctx) {
                     'secondary'
                 )
             );
-        links.append(button('Copy event', () => copy(JSON.stringify(row, null, 2), 'Event copied.'), 'quiet'));
+        // The table's search covers every column, so "who else did this" needs no
+        // second control, just a button that fills it in.
+        links.append(
+            button(
+                'Find this action',
+                () => {
+                    table.query.value = row.action;
+                    table.query.dispatchEvent(new Event('input'));
+                },
+                'quiet'
+            ),
+            button('Copy event', () => copy(JSON.stringify(row, null, 2), 'Event copied.'), 'quiet')
+        );
         detail.replaceChildren(
             panel(
                 'Event detail',
@@ -47,7 +69,7 @@ export async function mount(ctx) {
                     ['Time', date(row.time)],
                     ['Actor', row.actor],
                     ['Action', row.action],
-                    ['Target', row.target || 'None recorded'],
+                    ['Target', parseTarget(row.target).label || 'No subject recorded'],
                     ['Outcome', badge(row.outcome, row.outcome === 'committed' ? 'good' : '')],
                     [
                         'Note',
@@ -65,7 +87,7 @@ export async function mount(ctx) {
             ['Time', (r) => date(r.time), (r) => r.time],
             ['Actor', (r) => r.actor],
             ['Action', (r) => r.action],
-            ['Target', (r) => r.target],
+            ['Target', (r) => parseTarget(r.target).label || '—'],
             [
                 'Outcome',
                 (r) =>
@@ -105,9 +127,9 @@ export async function mount(ctx) {
     await refresh();
     /** Deep links (#audit?actor=…) re-filter the trail in place. */
     function applyParams(params) {
-        const value = params.get('actor');
-        if (value == null) return;
-        table.query.value = value;
+        // Navigating back to a bare #audit clears the filter instead of leaving the
+        // previous actor's rows on screen.
+        table.query.value = params.get('actor') || '';
         table.query.dispatchEvent(new Event('input'));
     }
     return { node, refresh, interval: 10000, navigate: applyParams };

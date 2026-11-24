@@ -4,19 +4,28 @@
     --surface: #1d3446;
     --raised: #29495e;
     --inset: #102330;
+    /* --line is a decorative rule; --line-bright is a component boundary and has
+       to clear 3:1 against both surface (4.31) and raised (3.18). */
     --line: #3b586c;
-    --line-bright: #6a8ba0;
+    --line-bright: #779aaf;
     --text: #edf4f6;
     --muted: #b0c5d1;
     --cyan: #78dce8;
     --gold: #edc777;
     --action: #edc777;
     --action-text: #152c3b;
+    /* Hover only ever moves the primary fill away from its own ink: up in the
+       dark theme (9.70:1), down in the light one (7.87:1 on white). */
+    --action-hover: #f0d08d;
+    /* Caution is its own ink, not a second gold: 6.67:1 on surface, 4.93:1 on
+       raised, so a warning can never be mistaken for the primary action. */
+    --warn: #f5ab63;
     --scrim: #07151fc9;
     --good: #8fd9ae;
     --bad: #ffb0ad;
     --purple: #e2bcf5;
     --shadow: 0 12px 32px #030d1680;
+    /* Three radii, three jobs: surfaces, controls, pills. Anything else is drift. */
     --radius: 6px;
     --radius-control: 8px;
     --radius-pill: 999px;
@@ -25,17 +34,25 @@
     --control-lg: 44px;
     --elev-1: 0 1px 2px #030d1640;
     --elev-2: 0 6px 18px #030d1640;
+    /* Bars, sliders and effect chips carry meaning, so their ink is a token too:
+       a fill that only reads in one theme reads as a bug in the other. */
+    --meter: #e6bc62;
+    --meter-edge: #f5da98;
+    --effect-bg: #48391f;
+    --effect-fg: #f1d48d;
+    --effect-line: #8a6a32;
+    --effect-strong: #e1c792;
     /* Terminal surface: the log and console panes are their own material, so the
        palette is defined per theme instead of baked into the panes. */
     --term-bg: #08131c;
     --term-bg-top: #0f2231;
     --term-fg: #d6e4ee;
-    --term-time: #6d8ba1;
+    --term-time: #7c9bb1;
     --term-level: #8fa8b9;
     --term-info: #7fc6dc;
     --term-warn: #edc777;
     --term-error: #ffb0ad;
-    --term-debug: #7d93a3;
+    --term-debug: #8aa3b4;
     --term-command: #5ee0a6;
     --term-input: #7de9ff;
     --term-response: #cfe0ec;
@@ -45,8 +62,12 @@
     --term-scroll-bg: #0a1721;
     --space: 20px;
     --row: 12px;
-    --font: 'Trebuchet MS', 'Segoe UI', sans-serif;
-    --mono: 'Cascadia Code', 'DejaVu Sans Mono', monospace;
+    /* The platform face, because a shipped-in-2005 display font is the loudest
+       "dated" signal on the page; no webfont is loaded, so nothing is delayed. */
+    --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --mono:
+        ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Cascadia Mono',
+        'DejaVu Sans Mono', monospace;
 }
 [data-theme='light'] {
     color-scheme: light;
@@ -55,27 +76,35 @@
     --raised: #dce8ef;
     --inset: #f1f6f9;
     --line: #bdcfdc;
-    --line-bright: #6f8b9e;
+    --line-bright: #678193;
     --text: #203a4d;
     --muted: #3f5c70;
     --cyan: #00677b;
     --gold: #795411;
     --action: #805a16;
     --action-text: #ffffff;
+    --action-hover: #6b4c12;
+    --warn: #933f00;
     --good: #1d6539;
     --bad: #a52f2d;
     --purple: #6b3f8f;
     --shadow: 0 12px 32px #24465d1a;
+    --meter: #9a6c12;
+    --meter-edge: #6f4d0a;
+    --effect-bg: #f5e6b6;
+    --effect-fg: #674614;
+    --effect-line: #a97f27;
+    --effect-strong: #755321;
     /* A paper-and-ink terminal keeps the same structure and severity semantics. */
     --term-bg: #f8fafc;
     --term-bg-top: #eef3f7;
     --term-fg: #1c2f3d;
-    --term-time: #5b7285;
+    --term-time: #52697b;
     --term-level: #52697b;
     --term-info: #0c6076;
     --term-warn: #7d5500;
     --term-error: #9e2b26;
-    --term-debug: #5b7285;
+    --term-debug: #52697b;
     --term-command: #0a6b51;
     --term-input: #08566a;
     --term-response: #24384a;

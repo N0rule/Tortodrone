@@ -3,11 +3,18 @@ import { $, el, input, select, label, changed } from '../ui.js';
 
 let active = null,
     cleanup;
+/**
+ * Open the shared editor dialog. `variant` picks the submit button's weight:
+ * 'primary' for an ordinary save, 'danger' for a decision that destroys
+ * something. A destructive dialog also parks focus on Cancel, so Enter on an
+ * untouched form does not perform the destructive action.
+ */
 export function openDialog({
     title,
     content,
     description = '',
-    submit = 'Save changes',
+    submit = 'Confirm',
+    variant = 'primary',
     onSubmit,
     revision,
     target,
@@ -36,8 +43,12 @@ export function openDialog({
     $('#dialog-progress').textContent = '';
     $('#dialog-progress').hidden = true;
     $('#dialog-conflict').hidden = true;
-    $('#submit-dialog').textContent = submit;
-    $('#submit-dialog').disabled = false;
+    const submitButton = $('#submit-dialog');
+    submitButton.textContent = submit;
+    // The variant lives here, not in index.html: one dialog markup serves a save
+    // and a delete, so the class has to follow the caller.
+    submitButton.className = variant === 'danger' ? 'danger' : 'primary';
+    submitButton.disabled = false;
     $('#fields').replaceChildren(content);
     const state = { revision, target, isDirty, pending: false, conflicted: false };
     active = state;
@@ -102,6 +113,7 @@ export function openDialog({
         }
     };
     dialog.showModal();
+    if (variant === 'danger') $('#cancel-dialog').focus();
     return true;
 }
 export function dialogDirty() {
@@ -141,7 +153,14 @@ export const field = (key, title, value = '', type = 'text', options, constraint
     options,
     constraints
 });
-export function edit(title, route, fields = [], fixed = {}, description = '', after) {
+/**
+ * The one-field-shape editor. `options` may be a variant string or an object
+ * `{ variant, submit }`, so a caller can decide how the action reads without a
+ * longer argument list.
+ */
+export function edit(title, route, fields = [], fixed = {}, description = '', after, options = {}) {
+    const { variant, submit } =
+        typeof options === 'string' ? { variant: options } : { variant: 'primary', ...options };
     const content = el('div', null, 'form-grid'),
         controls = new Map();
     const initial = new Map();
@@ -168,6 +187,8 @@ export function edit(title, route, fields = [], fixed = {}, description = '', af
         title,
         content,
         description,
+        submit: submit || 'Save changes',
+        variant,
         revision: fixed.revision,
         target: fixed.worldId ?? route,
         isDirty: () =>
@@ -199,21 +220,47 @@ export function edit(title, route, fields = [], fixed = {}, description = '', af
 /**
  * A confirmation dialog that does not map onto one server route, used by bulk
  * actions. `onSubmit` performs the work; the dialog closes only when it resolves.
- * @param {{title: string, description: string, label?: string, content?: Node, onSubmit: () => Promise<any>}} options
+ * @param {{title: string, description: string, label?: string, content?: Node, onSubmit: Function}} options
+ *   `variant` may be 'primary' or 'danger'.
  */
-export function confirmAction({ title, description, label = 'Confirm', content, onSubmit }) {
+export function confirmAction({
+    title,
+    description,
+    label = 'Confirm',
+    content,
+    variant = 'primary',
+    onSubmit
+}) {
     const body = el('div', null, 'stack');
     if (content) body.append(content);
     body.append(el('p', description, 'muted'));
-    return openDialog({ title, content: body, submit: label, onSubmit });
+    return openDialog({ title, content: body, submit: label, variant, onSubmit });
 }
 
+/* A retype gate ("Type the name", "Repeat the command") is the shape this UI uses
+   to mark an action as destructive; a confirm password is not one. */
+function isDestructive(fields) {
+    return fields.some(
+        (field) =>
+            field?.key !== 'passwordConfirmation' &&
+            (String(field?.key || '').endsWith('Confirmation') ||
+                /^Type /.test(String(field?.title || '')))
+    );
+}
+/**
+ * Confirm one server action. A gated action destroys something, so it submits as
+ * a danger action; anything else stays a primary "Confirm" instead of pretending
+ * to be a save.
+ */
 export function confirm(title, route, fixed = {}, extra = [], description = '') {
+    const destructive = isDestructive(extra);
     edit(
         title,
         route,
         extra,
         fixed,
-        description || 'Review the target before confirming this action.'
+        description || 'Review the target before confirming this action.',
+        undefined,
+        { variant: destructive ? 'danger' : 'primary', submit: 'Confirm' }
     );
 }

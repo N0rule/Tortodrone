@@ -6,8 +6,9 @@
     padding: 20px 24px;
     background: var(--raised);
     border: 1px solid var(--line-bright);
-    border-left: 4px solid var(--gold);
-    border-radius: 5px;
+    /* One accent width across the product, and one radius ramp. */
+    border-left: 3px solid var(--gold);
+    border-radius: var(--radius);
 }
 .server-strip strong {
     font-size: 22px;
@@ -18,8 +19,8 @@
 .metric-strip {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    border: 1px solid var(--line);
-    border-radius: 5px;
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius);
     background: var(--surface);
 }
 .metric {
@@ -32,7 +33,8 @@
 .metric strong {
     display: block;
     font-size: 29px;
-    font-weight: 400;
+    /* The same weight as every other headline number in the product. */
+    font-weight: 600;
     color: var(--text);
     font-variant-numeric: tabular-nums;
 }
@@ -48,7 +50,7 @@
     border: 1px solid var(--line-bright);
     border-top: 3px solid var(--gold);
     background: var(--surface);
-    border-radius: 5px;
+    border-radius: var(--radius);
 }
 .knight-name {
     font-size: 28px;
@@ -141,7 +143,7 @@
     padding: 10px;
     border: 2px solid var(--line-bright);
     background: var(--inset);
-    border-radius: 8px;
+    border-radius: var(--radius-control);
 }
 .news-preview .news-slot {
     display: grid;
@@ -151,7 +153,7 @@
     overflow: hidden;
     background: var(--surface);
     border: 1px solid var(--line-bright);
-    border-radius: 4px;
+    border-radius: var(--radius);
     color: var(--muted);
 }
 .news-preview .news-slot[aria-pressed='true'] {
@@ -174,15 +176,16 @@
     max-height: 100%;
     object-fit: none;
 }
-/* Terminal surface: window chrome, a monospaced grid with a fixed gutter, and a
-   status line, so Logs and Console read as one console instead of two panels. */
+/* Terminal surface: one real indicator, a monospaced grid with a fixed gutter, and
+   a status line that names the buffer's bounds, so Logs and Console read as one
+   console instead of two panels. */
 .terminal-shell {
     position: relative;
     display: flex;
     flex-direction: column;
     /* Fill the reading area on both Logs and Console so the surface reads as a
        terminal window instead of a strip of rows above empty canvas. */
-    min-height: clamp(340px, 62vh, 760px);
+    min-height: min(480px, 62dvh);
     border: 1px solid var(--line-bright);
     border-radius: var(--radius-control);
     background: var(--inset);
@@ -192,36 +195,59 @@
 .terminal-bar {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+    gap: 9px;
+    padding: 7px 12px;
     background: color-mix(in srgb, var(--surface) 80%, var(--inset));
     border-bottom: 1px solid var(--line);
 }
-.terminal-dots {
-    display: inline-flex;
-    gap: 6px;
-}
-.terminal-dots span {
-    inline-size: 10px;
-    block-size: 10px;
+/* The stream's real state, not a drawing of window buttons that do nothing. */
+.terminal-led {
+    inline-size: 8px;
+    block-size: 8px;
+    flex: 0 0 8px;
     border-radius: 50%;
-    background: var(--line-bright);
-    opacity: 0.75;
+    background: var(--term-time);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--term-time) 25%, transparent);
 }
-.terminal-dots span[data-dot='close'] {
-    background: color-mix(in srgb, var(--bad) 70%, var(--line-bright));
+.terminal-led[data-state='live'] {
+    background: var(--good);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--good) 25%, transparent);
+    animation: terminal-pulse 2.4s ease-in-out infinite;
 }
-.terminal-dots span[data-dot='minimise'] {
-    background: color-mix(in srgb, var(--gold) 70%, var(--line-bright));
+.terminal-led[data-state='paused'] {
+    background: var(--term-warn);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--term-warn) 28%, transparent);
 }
-.terminal-dots span[data-dot='maximise'] {
-    background: color-mix(in srgb, var(--good) 70%, var(--line-bright));
+.terminal-led[data-state='offline'] {
+    background: var(--bad);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--bad) 28%, transparent);
+}
+@keyframes terminal-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.45;
+    }
+}
+[data-motion='reduced'] .terminal-led {
+    animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    .terminal-led {
+        animation: none;
+    }
 }
 .terminal-title {
-    font-size: 12px;
+    font-family: var(--mono);
+    font-size: 11.5px;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .terminal-bar-meta {
     margin-left: auto;
@@ -229,15 +255,22 @@
     font-size: 11px;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 .terminal-tools {
-    padding: 8px 12px;
+    padding: 7px 12px;
     gap: 8px;
     border-bottom: 1px solid var(--line);
     background: color-mix(in srgb, var(--surface) 55%, var(--inset));
 }
 .terminal-tools input[type='search'] {
-    flex: 1 1 200px;
+    flex: 1 1 180px;
+    min-inline-size: 0;
+}
+.terminal-tools select {
+    flex: 0 0 auto;
+    inline-size: auto;
+    min-inline-size: 84px;
 }
 .terminal-count {
     margin-left: auto;
@@ -245,21 +278,72 @@
     font-size: 11px;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+/* Copy, export, raw lines and file history are secondary to reading the stream,
+   so they live behind one menu instead of in a row of equal buttons. */
+.terminal-menu {
+    position: relative;
+}
+.terminal-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    block-size: var(--control-sm, 34px);
+    padding: 0 12px;
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius-control);
+    background: var(--raised);
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    list-style: none;
+}
+.terminal-menu-toggle::-webkit-details-marker {
+    display: none;
+}
+.terminal-menu-toggle::after {
+    content: '▾';
+    font-size: 10px;
+    color: var(--muted);
+}
+.terminal-menu-toggle:hover {
+    border-color: var(--cyan);
+}
+.terminal-menu[open] .terminal-menu-toggle {
+    border-color: var(--cyan);
+}
+.terminal-menu-body {
+    position: absolute;
+    z-index: 6;
+    inset-inline-end: 0;
+    inset-block-start: calc(100% + 6px);
+    display: grid;
+    gap: 4px;
+    min-inline-size: 208px;
+    padding: 6px;
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+.terminal-menu-body button {
+    justify-content: flex-start;
+    inline-size: 100%;
+    text-align: start;
 }
 .terminal-body {
     flex: 1 1 auto;
-    min-height: 220px;
+    min-height: 160px;
     overscroll-behavior: contain;
     overflow: auto;
-    padding: 10px 14px 14px;
-    background: radial-gradient(
-        circle at 50% 0%,
-        var(--term-bg-top) 0%,
-        var(--term-bg) 70%
-    );
+    padding: 10px 12px 12px;
+    background: radial-gradient(circle at 50% 0%, var(--term-bg-top) 0%, var(--term-bg) 70%);
     color: var(--term-fg);
-    font: 12.5px/1.5 var(--mono);
+    font: 13px/1.4 var(--mono);
     font-variant-ligatures: none;
+    font-variant-numeric: tabular-nums;
     tab-size: 4;
     scrollbar-color: var(--term-scroll) var(--term-scroll-bg);
     scrollbar-gutter: stable;
@@ -271,7 +355,7 @@
 }
 .terminal-line {
     display: grid;
-    grid-template-columns: 74px 52px 84px minmax(0, 1fr);
+    grid-template-columns: 66px 42px minmax(72px, 128px) minmax(0, 1fr);
     gap: 10px;
     padding: 1px 6px;
     border-radius: 3px;
@@ -294,18 +378,25 @@
     text-transform: uppercase;
     padding-top: 2px;
 }
+/* Colour carries severity in the level column only: a long warning must not turn
+   into a gold paragraph, which is what made the column meaningless. */
 .terminal-line.level-INFO .log-level {
     color: var(--term-info);
 }
-.terminal-line.level-WARN .log-level,
-.terminal-line.level-WARN .log-message {
+.terminal-line.level-WARN .log-level {
     color: var(--term-warn);
 }
-.terminal-line.level-ERROR .log-level,
-.terminal-line.level-ERROR .log-message {
+.terminal-line.level-ERROR .log-level {
     color: var(--term-error);
 }
-.terminal-line.level-DEBUG {
+.terminal-line.level-ERROR .log-message {
+    color: var(--term-fg);
+    font-weight: 600;
+}
+.terminal-line.level-DEBUG .log-level {
+    color: var(--term-debug);
+}
+.terminal-line.level-DEBUG .log-message {
     color: var(--term-debug);
 }
 .terminal-line.level-COMMAND .log-level {
@@ -315,6 +406,7 @@
     margin-top: 6px;
 }
 .log-thread {
+    min-inline-size: 0;
     color: var(--term-level);
     font-size: 11px;
     overflow: hidden;
@@ -323,11 +415,37 @@
     padding-top: 1px;
 }
 .log-message {
+    color: var(--term-fg);
     /* Keep columns aligned: wrap at spaces, break a long token only if it cannot
        fit, never mid-token when there is an alternative. */
     white-space: pre-wrap;
     overflow-wrap: break-word;
     word-break: normal;
+}
+/* Raw mode is the file's own text: a stack trace must keep its indentation. */
+.terminal-line.raw .log-message {
+    white-space: pre;
+    overflow-x: auto;
+    text-indent: 0;
+}
+/* A day change is a real boundary in a buffer that spans midnight. */
+.log-day {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0 4px;
+    padding: 0 6px;
+    color: var(--term-time);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+.log-day::after {
+    content: '';
+    flex: 1;
+    block-size: 1px;
+    background: var(--term-line);
 }
 .terminal .command,
 .command {
@@ -340,6 +458,7 @@
     margin: 2px 0 6px;
     padding-left: 10px;
     color: var(--term-debug);
+    font-style: italic;
     border-left: 2px solid var(--term-line);
 }
 .command-response {
@@ -352,13 +471,25 @@
     overflow: visible;
     background: transparent;
 }
+/* A command's output names pages, so it is not a dead end. */
+.command-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-top: 6px;
+}
+.command-links .link {
+    padding: 0;
+    font-family: var(--mono);
+    font-size: 11.5px;
+}
 .terminal-jump {
     position: absolute;
     /* Clears the console prompt when one is present, and the status bar always. */
-    inset-block-end: calc(var(--prompt-height, 0px) + 44px);
+    inset-block-end: calc(var(--prompt-height, 0px) + 42px);
     inset-inline-end: 18px;
-    min-block-size: 30px;
-    padding: 0 12px;
+    min-block-size: 36px;
+    padding: 0 14px;
     border-radius: var(--radius-pill);
     font-size: 12px;
     box-shadow: var(--elev-2);
@@ -368,7 +499,8 @@
 }
 .terminal-status {
     display: flex;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 4px 12px;
     align-items: center;
     padding: 6px 12px;
     border-top: 1px solid var(--line);
@@ -410,6 +542,8 @@
     background: var(--bad);
 }
 .terminal-hint {
+    flex: 1 1 120px;
+    min-inline-size: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -420,17 +554,32 @@
     border-radius: var(--radius-pill);
     background: var(--raised);
     color: var(--text);
+    white-space: nowrap;
 }
 .terminal-tail[data-state='paused'] {
     background: color-mix(in srgb, var(--gold) 28%, transparent);
     color: var(--gold);
 }
+/* Where the rest of the log lives: the buffer is a window, not the whole file. */
+.terminal-source {
+    flex: 1 0 100%;
+    color: var(--term-time);
+    font-size: 10.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.terminal-source:empty {
+    display: none;
+}
 /* A page whose only content is the stream fills the reading area, so Logs and
-   Console have the same weight in the layout. */
+   Console have the same weight in the layout. The height itself is measured by
+   the component (`fit()`), because only it knows how much chrome the page left
+   above the pane; this is the floor for the first paint. */
 .terminal-fill,
 .console-workspace {
-    min-height: 480px;
-    height: max(480px, calc(100dvh - 210px));
+    height: min(62dvh, 720px);
+    min-height: 240px;
 }
 /* The console is the terminal: the prompt line belongs inside the shell, right
    above the status bar, the way a shell keeps its cursor on the last line. */
@@ -438,29 +587,33 @@
     min-height: 0;
     height: auto;
 }
+.console-prompt-block {
+    border-top: 1px solid var(--term-line);
+    background: var(--term-bg);
+}
 .console-prompt {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
-    border-top: 1px solid var(--term-line);
-    background: var(--term-bg);
+    padding: 8px 12px 4px;
 }
 .console-prompt-label {
     font-family: var(--mono);
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--term-command);
     white-space: nowrap;
 }
 .console-input {
     flex: 1;
+    min-inline-size: 0;
     min-block-size: var(--control);
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 6px;
+    border-radius: var(--radius-control);
     color: var(--term-fg);
     font-family: var(--mono);
-    font-size: 12.5px;
+    font-size: 13px;
+    caret-color: var(--term-input);
     padding: 0 8px;
 }
 .console-input::placeholder {
@@ -470,6 +623,17 @@
     border-color: var(--cyan);
     outline: none;
 }
+/* Discoverable commands beat a native autocomplete popup that fights Tab. */
+.console-hint {
+    margin: 0;
+    padding: 0 12px 8px;
+    color: var(--term-time);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 .console-connection {
     color: var(--good);
     margin-left: auto;
@@ -477,38 +641,15 @@
 .console-connection.error {
     color: var(--bad);
 }
-.chart-current {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 24px;
-    margin-bottom: 10px;
-}
-.chart-current > div {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-}
-.chart-current strong {
-    font-size: clamp(22px, 2.3vw, 30px);
-    font-weight: 600;
-    line-height: 1.2;
-    color: var(--cyan);
-    font-variant-numeric: tabular-nums;
-}
-.chart-current .secondary-value strong {
-    color: var(--gold);
-}
-.chart-current small {
-    color: var(--muted);
-}
 @media (max-width: 600px) {
     .terminal-body {
         padding: 8px;
-        font-size: 11.5px;
+        font-size: 12px;
+        line-height: 1.45;
     }
     .terminal-line {
-        grid-template-columns: 54px 38px minmax(0, 1fr);
-        gap: 5px;
+        grid-template-columns: 50px 36px minmax(0, 1fr);
+        gap: 6px;
     }
     .log-thread {
         display: none;
@@ -518,27 +659,92 @@
     }
     .log-level {
         font-size: 9px;
+        letter-spacing: 0.02em;
     }
+    /* One row of controls: a phone cannot afford four wrapped rows of chrome
+       above the output it came to read. */
     .terminal-tools {
-        padding: 7px 8px;
+        padding: 6px 8px;
+        gap: 4px;
+        flex-wrap: nowrap;
+    }
+    .terminal-tools input[type='search'] {
+        flex: 1 1 auto;
+        min-inline-size: 0;
+    }
+    .terminal-tools select {
+        inline-size: 68px;
+        min-inline-size: 0;
+        padding-inline: 4px;
+        font-size: 12px;
+    }
+    .terminal-tools button,
+    .terminal-menu-toggle {
+        padding-inline: 8px;
+        font-size: 12px;
+    }
+    .terminal-count {
+        display: none;
     }
     .terminal-hint {
         display: none;
     }
     .console-prompt {
-        padding: 7px 9px;
+        padding: 7px 9px 3px;
     }
+    .console-hint {
+        padding: 0 9px 7px;
+    }
+    .terminal-fill,
     .console-workspace {
-        height: max(420px, calc(100dvh - 190px));
-        min-height: 420px;
+        height: min(58dvh, 620px);
+        min-height: 240px;
     }
 }
 @media (max-width: 430px) {
-    /* Below a phone's width the timestamp loses its column before the message does. */
+    /* A log without times is not a log: the thread column goes first, and the
+       timestamp keeps its own narrow column. */
     .terminal-line {
-        grid-template-columns: 38px minmax(0, 1fr);
+        grid-template-columns: 42px 30px minmax(0, 1fr);
+        gap: 5px;
     }
     .log-time {
+        font-size: 9.5px;
+    }
+    .terminal-jump {
+        inset-inline-end: 10px;
+    }
+}
+/* A landscape phone (or a short desktop window) is wider than it is tall: the
+   chrome shrinks so the prompt keeps a row of output above it. */
+@media (max-height: 520px) {
+    .terminal-fill,
+    .console-workspace {
+        height: 200px;
+        min-height: 180px;
+    }
+    .terminal-shell {
+        min-height: 0;
+    }
+    .terminal-bar {
+        padding: 3px 10px;
+    }
+    .terminal-tools {
+        padding: 3px 8px;
+    }
+    .terminal-status {
+        padding: 2px 10px;
+    }
+    .terminal-body {
+        min-height: 56px;
+        padding: 6px 10px;
+    }
+    .console-prompt {
+        padding: 4px 9px 2px;
+    }
+    .console-hint,
+    .terminal-hint,
+    .terminal-source {
         display: none;
     }
 }
@@ -850,10 +1056,10 @@
     align-items: center;
     gap: 8px;
     padding: 7px 9px;
-    color: #f1d48d;
-    background: #48391f;
-    border: 1px solid #8a6a32;
-    border-left: 3px solid #c69e50;
+    color: var(--effect-fg);
+    background: var(--effect-bg);
+    border: 1px solid var(--effect-line);
+    border-left: 3px solid var(--effect-line);
     border-radius: 3px;
     font-size: 12px;
     font-weight: 400;
@@ -870,16 +1076,8 @@
 }
 .variant-effect .effect-strength {
     font-size: 10px;
-    color: #e1c792;
+    color: var(--effect-strong);
     margin: 0;
-}
-[data-theme='light'] .variant-effect {
-    color: #674614;
-    background: #f5e6b6;
-    border-color: #bc9851;
-}
-[data-theme='light'] .effect-strength {
-    color: #755321;
 }
 .variant-remove {
     padding: 0 5px;
@@ -1009,9 +1207,6 @@
 .grant-options .check {
     white-space: nowrap;
 }
-.grant-options input[type='checkbox'] {
-    width: auto;
-}
 .log-time {
     white-space: nowrap;
 }
@@ -1022,35 +1217,39 @@
 }
 .gear-control input[type='range']::-webkit-slider-runnable-track {
     height: 10px;
-    background: linear-gradient(to right, #e6bc62 var(--fill, 0%), var(--inset) var(--fill, 0%));
+    background: linear-gradient(
+        to right,
+        var(--meter) var(--fill, 0%),
+        var(--inset) var(--fill, 0%)
+    );
     border: 1px solid var(--line-bright);
-    border-radius: 5px;
+    border-radius: var(--radius);
 }
 .gear-control input[type='range']::-webkit-slider-thumb {
     appearance: none;
     height: 18px;
     width: 18px;
     margin-top: -5px;
-    background: #e6bc62;
-    border: 2px solid #f5da98;
+    background: var(--meter);
+    border: 2px solid var(--meter-edge);
     border-radius: 50%;
 }
 .gear-control input[type='range']::-moz-range-track {
     height: 10px;
     background: var(--inset);
     border: 1px solid var(--line-bright);
-    border-radius: 5px;
+    border-radius: var(--radius);
 }
 .gear-control input[type='range']::-moz-range-progress {
     height: 10px;
-    background: #e6bc62;
-    border-radius: 5px;
+    background: var(--meter);
+    border-radius: var(--radius);
 }
 .gear-control input[type='range']::-moz-range-thumb {
     height: 16px;
     width: 16px;
-    background: #e6bc62;
-    border: 2px solid #f5da98;
+    background: var(--meter);
+    border: 2px solid var(--meter-edge);
     border-radius: 50%;
 }
 @media (max-width: 600px) {
@@ -1074,7 +1273,7 @@
     gap: 10px;
     padding: 18px;
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: var(--radius);
     background: var(--inset);
 }
 .mail-preview .mail-subject {
@@ -1125,8 +1324,6 @@
     border-bottom: 1px solid var(--line);
 }
 .mail-gift input[type='checkbox'] {
-    width: 18px;
-    height: 18px;
     margin: 0;
 }
 .mail-gift:last-child {
@@ -1221,11 +1418,13 @@
 .mail-recipients {
     display: grid;
     gap: 2px;
-    max-height: 220px;
+    /* A roster box five rows tall cannot be searched through; give it the height
+       of the screen it is on and let it scroll. */
+    max-height: min(46dvh, 340px);
     overflow: auto;
     padding: 6px;
     background: var(--inset);
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-bright);
     border-radius: var(--radius-control);
 }
 .mail-recipient {
@@ -1233,7 +1432,7 @@
     align-items: center;
     gap: 10px;
     padding: 6px 8px;
-    border-radius: 6px;
+    border-radius: var(--radius);
     cursor: pointer;
 }
 .mail-recipient:hover {
@@ -1260,4 +1459,29 @@
 .mail-templates small {
     align-self: center;
     margin-right: 4px;
+}
+/* Identity surfaces: a mismatch warning has to outrank every other fact on the
+   panel, and a 64-character hash has to be selectable without scrolling. */
+.identity-warning {
+    margin: 0 0 8px;
+    padding: 8px 10px;
+    border-left: 3px solid var(--bad);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--bad) 12%, transparent);
+    color: var(--text);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+.identity-warning[hidden] {
+    display: none;
+}
+.identity-file-hash {
+    font-family: var(--mono);
+    font-size: 11px;
+    overflow-wrap: anywhere;
+    user-select: all;
+}
+dd .bad {
+    color: var(--bad);
+    font-weight: 600;
 }

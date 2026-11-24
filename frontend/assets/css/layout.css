@@ -54,7 +54,7 @@
     color: var(--muted);
     padding: 7px 12px;
     border: 1px solid transparent;
-    border-radius: 4px;
+    border-radius: var(--radius);
 }
 /* Short viewports: tighten the list so every destination stays above the footer
    instead of the last items hiding behind a scrollbar. */
@@ -82,7 +82,7 @@
 }
 #navigation a[aria-current='page'] {
     color: var(--gold);
-    border-color: var(--line);
+    border-color: var(--line-bright);
     background: var(--raised);
     box-shadow: inset 3px 0 var(--gold);
 }
@@ -133,6 +133,23 @@
 #close-navigation,
 #navigation-backdrop {
     display: none;
+}
+/* The shipped symbol pack has no navigation bar glyph, so the mobile toggle draws
+   three hairlines in currentColor rather than falling back to a text character. */
+#menu {
+    inline-size: var(--control-sm);
+    block-size: var(--control-sm);
+    padding: 0;
+}
+#menu::before {
+    content: '';
+    inline-size: 15px;
+    block-size: 1.5px;
+    background: currentColor;
+    border-radius: var(--radius-pill);
+    box-shadow:
+        0 -5px currentColor,
+        0 5px currentColor;
 }
 main {
     max-width: 1560px;
@@ -202,7 +219,7 @@ main {
     border: 1px solid var(--line-bright);
     border-top: 3px solid var(--gold);
     background: var(--surface);
-    border-radius: 7px;
+    border-radius: var(--radius);
     box-shadow: var(--shadow);
 }
 .login-panel h1 {
@@ -224,7 +241,7 @@ main {
     background: var(--raised);
     border: 1px solid var(--line-bright);
     border-left: 3px solid var(--cyan);
-    border-radius: 4px;
+    border-radius: var(--radius);
     margin-bottom: 15px;
 }
 @media (min-width: 1700px) {
@@ -255,7 +272,7 @@ main {
         display: flex;
     }
     #close-navigation {
-        display: block;
+        display: inline-flex;
         align-self: flex-end;
         margin: -12px 0 12px;
     }
@@ -274,7 +291,7 @@ main {
         filter: none;
     }
     #menu {
-        display: block;
+        display: inline-flex;
     }
     .topbar {
         padding: 0 16px;
@@ -329,16 +346,20 @@ main {
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
+/* A 34px target with 16px art: comfortable to hit, quiet on the bar. */
 #shortcuts {
     display: inline-grid;
     place-items: center;
-    width: 28px;
-    height: 28px;
+    inline-size: var(--control-sm);
+    block-size: var(--control-sm);
     padding: 0;
     color: var(--muted);
-    border: 1px solid var(--line);
-    border-radius: 50%;
-    font-weight: 700;
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius-pill);
+}
+#shortcuts .ui-icon {
+    inline-size: 16px;
+    block-size: 16px;
 }
 .search-trigger {
     display: flex;
@@ -349,15 +370,15 @@ main {
     padding: 7px 10px 7px 12px;
     color: var(--muted);
     background: var(--inset);
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-bright);
     border-radius: var(--radius);
     box-shadow: none;
     font-weight: 400;
     text-align: left;
 }
-.search-trigger:hover {
+.search-trigger:not(:disabled):hover {
     color: var(--text);
-    border-color: var(--line-bright);
+    border-color: var(--cyan);
 }
 .search-trigger .ui-icon {
     flex: 0 0 18px;

@@ -39,7 +39,16 @@ public final class AdminHandler implements HttpHandler {
             try {
                 handleTrusted(e);
             } catch (IllegalArgumentException invalid) {
-                send(e, 400, Map.of("error", "Invalid request fields"));
+                // A refused field and an unknown route are different problems: a typo in a link
+                // must not read as "this form is wrong".
+                String known = safeValidation(invalid.getMessage());
+                if ("Unknown resource".equals(known)) {
+                    // A typo in a link is not a field problem: answer the route
+                    // question the client actually asked.
+                    send(e, 404, Map.of("error", known));
+                } else {
+                    send(e, 400, Map.of("error", known == null ? "Invalid request fields" : known));
+                }
             } catch (IOException invalid) {
                 String message = safeValidation(invalid.getMessage());
                 send(
@@ -84,8 +93,17 @@ public final class AdminHandler implements HttpHandler {
                     "This mailing changed or was already cancelled; reopen it",
                     "Welcome mail is too long",
                     "Unknown knight",
+                    "No such knight",
                     "Unknown mailing",
                     "Invalid gift list",
+                    // Console refusals are read by an operator at a prompt, so the prompt's own
+                    // words come back instead of the generic field-validation sentence.
+                    "Unsupported command; use help",
+                    "Invalid command",
+                    "Repeat the exact command to confirm",
+                    "Invalid session",
+                    "Unknown resource",
+                    "Unknown action",
                     "welcome-message must be at most 256 characters",
                     "welcome-message must not contain control characters",
                     "welcome-message must not contain invalid text" -> message;
@@ -245,9 +263,7 @@ public final class AdminHandler implements HttpHandler {
             send(e, 200, result);
             return;
         }
-        String target = route.equals("console")
-                ? AdminConsole.auditTarget(p.optional("command"))
-                : p.optional("username") + ":" + p.optional("knight") + ":" + p.optional("id");
+        String target = route.equals("console") ? AdminConsole.auditTarget(p.optional("command")) : auditTarget(p);
         identities.audit(s.identity().username(), route, target, "requested");
         Object result;
         try {
@@ -266,6 +282,23 @@ public final class AdminHandler implements HttpHandler {
             return;
         }
         send(e, 200, result);
+    }
+
+    /**
+     * Names what was acted on, and nothing else.
+     *
+     * <p>The previous form always joined username, knight and id, so every route that sends none of
+     * them recorded "::0" or "::999" and 54 of 71 real audit rows had an unreadable target. A target
+     * that carries no information is worse than an empty one: the page chained links to nothing.
+     */
+    private static String auditTarget(AdminService.Input p) {
+        String username = p.optional("username");
+        String knight = p.optional("knight");
+        if (!username.isEmpty()) return knight.isEmpty() ? username : username + ":" + knight;
+        String subject = p.optional("subject");
+        String id = p.optional("id");
+        if (!id.isEmpty()) return subject.isEmpty() ? "mailing " + id : subject;
+        return subject;
     }
 
     private Object identityChange(String route, AdminService.Input p, WebIdentityStore.Identity actor)

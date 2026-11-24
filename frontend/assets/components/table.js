@@ -40,6 +40,18 @@ function storageKey(id) {
     return 'tortodrone-table-' + id;
 }
 
+/**
+ * An empty list needs its own sentence: one shared line is wrong somewhere.
+ * A string is read as the supporting sentence, an object as {title, hint, action}.
+ * @param {string|{title?: string, hint?: string, icon?: string,
+ *     action?: {label: string, run: () => void}}|undefined} value
+ */
+function emptySpec(value) {
+    if (!value) return null;
+    if (typeof value === 'string') return { title: 'Nothing to show yet', hint: value };
+    return value;
+}
+
 function loadState(id) {
     if (!id) return null;
     try {
@@ -62,7 +74,8 @@ function saveState(id, state) {
  * Keyed rows and persistent controls. Updating data never replaces the table or
  * its inputs. Every table adds a caption, a scrollable labelled region, a live
  * result count, optional row selection with bulk actions, and CSV/JSON export of
- * exactly the filtered rows.
+ * exactly the filtered rows. Pass `empty` for a specific sentence about why this
+ * list is empty and what creates its records.
  */
 export class DataTable {
     constructor(
@@ -81,7 +94,8 @@ export class DataTable {
             exportName = id,
             persist = true,
             initialQuery = '',
-            onRefresh
+            empty,
+            onRefresh,
         } = {}
     ) {
         Object.assign(this, {
@@ -94,7 +108,9 @@ export class DataTable {
             caption,
             selectable: selectable && !!bulkActions,
             bulkActions,
-            exportName: exportName || caption || 'records'
+            onRefresh,
+            exportName: exportName || caption || 'records',
+            emptyText: emptySpec(empty)
         });
         this.describe = new Map();
         this.rows = [];
@@ -340,6 +356,43 @@ export class DataTable {
         this.render();
     }
 
+    /**
+     * Deep links drive the same controls the operator would, so page state has a
+     * single owner and the URL never disagrees with the list. An empty value
+     * clears the control, which is how a stale filter stops surviving a visit.
+     */
+    setQuery(value) {
+        if (!this.query) return;
+        const next = String(value ?? '');
+        if (this.query.value === next) return;
+        this.query.value = next;
+        this.page = 1;
+        this.render();
+    }
+
+    /** Set a named filter when the value is one of its options; '' resets it. */
+    setFilter(name, value) {
+        const control = this.filtersByName?.[name];
+        if (!control) return;
+        const next = value == null || value === '' ? (this.filtersInitial[name] ?? 'All') : String(value);
+        if (![...control.options].some((option) => option.value === next)) return;
+        if (control.value === next) return;
+        control.value = next;
+        this.page = 1;
+        this.remember();
+        this.render();
+    }
+
+    /** Reset the search and every filter to the view the table opened with. */
+    clearFilters() {
+        if (this.query) this.query.value = '';
+        for (const [control, name] of this.choices) {
+            control.value = this.filtersInitial[name] ?? control.options[0].value;
+        }
+        this.page = 1;
+        this.render();
+    }
+
     /** Rows after search, filters and sorting, across every page. */
     filteredRows() {
         let rows = filterRows(this.rows, {
@@ -471,27 +524,22 @@ export class DataTable {
                               : 'Loosen the filters, or clear them to see every record.',
                           action: {
                               label: 'Clear filters',
-                              run: () => {
-                                  if (this.query) this.query.value = '';
-                                  for (const [control, name] of this.choices) {
-                                      control.value = this.filtersInitial[name] ?? control.options[0].value;
-                                  }
-                                  this.page = 1;
-                                  this.render();
-                              }
+                              run: () => this.clearFilters()
                           },
                           icon: 'search',
                           compact: true
                       })
                     : emptyState({
-                          title: 'Nothing to show yet',
-                          message: onRefresh
-                              ? 'This list fills as the server creates records. Refresh to check again.'
-                              : 'This list fills as the server creates records; it updates on its own.',
-                          action: onRefresh
-                              ? { label: 'Refresh', run: () => onRefresh() }
-                              : undefined,
-                          icon: 'details',
+                          title: this.emptyText?.title || 'Nothing to show yet',
+                          message:
+                              this.emptyText?.hint ||
+                              'No records exist in this view. Check the server state, then refresh.',
+                          action:
+                              this.emptyText?.action ||
+                              (this.onRefresh
+                                  ? { label: 'Refresh', run: () => this.onRefresh() }
+                                  : undefined),
+                          icon: this.emptyText?.icon || 'details',
                           compact: true
                       })
             );

@@ -11,27 +11,74 @@ export function text(node, value) {
     const next = String(value ?? '—');
     if (node.textContent !== next) node.textContent = next;
 }
-export function button(label, action, className = 'secondary', available) {
+/* Label-to-icon is only a fallback: callers that care name the art themselves.
+   Read actions get read art, so "Inspect" is never drawn with a pencil. */
+function guessIcon(label) {
+    if (/^(Edit|Change)\b/.test(label)) return 'edit';
+    if (/^(Add|Grant|New)\b/.test(label)) return 'add';
+    if (/^(Save|Equip)\b/.test(label)) return 'save';
+    if (/^(Remove|Unequip|Delete|Revoke)\b/.test(label)) return 'remove';
+    if (/^(Inspect|View|Details|Review)\b/.test(label)) return 'search';
+    return null;
+}
+/* A disabled control explains itself. The reason rides on the button's title and
+   on a visually hidden note beside it, so a hover and a screen reader both say
+   what is missing. The note sits outside the button so it cannot leak into the
+   accessible name. */
+const reasonNotes = new WeakMap();
+let reasonSeq = 0;
+function explain(node, why) {
+    let note = reasonNotes.get(node);
+    if (!why) {
+        node.removeAttribute('title');
+        node.removeAttribute('aria-describedby');
+        // An unreferenced hidden note would still be read out, so it goes with the
+        // reason it was carrying.
+        if (note?.isConnected) note.remove();
+        reasonNotes.delete(node);
+        return;
+    }
+    node.setAttribute('title', why);
+    if (!note) {
+        note = el('span', why, 'visually-hidden');
+        note.id = 'control-reason-' + ++reasonSeq;
+        reasonNotes.set(node, note);
+    } else if (note.textContent !== why) {
+        note.textContent = why;
+    }
+    // The button is often built before it is inserted, so the note is retried once
+    // the caller has put it somewhere.
+    const place = () => {
+        if (reasonNotes.get(node) !== note) return;
+        if (!note.isConnected && node.parentNode) node.parentNode.append(note);
+        if (note.isConnected) node.setAttribute('aria-describedby', note.id);
+    };
+    place();
+    if (!note.isConnected) queueMicrotask(place);
+}
+export function button(label, action, className = 'secondary', available, options = {}) {
+    const settings = typeof options === 'string' ? { icon: options } : options;
     const node = el('button', label, className);
     node.type = 'button';
-    const actionIcon = /^(Edit|Inspect)/.test(label)
-        ? 'edit'
-        : /^(Add|Grant)/.test(label)
-          ? 'add'
-          : /^(Save|Equip)\b/.test(label)
-            ? 'save'
-            : /^(Remove|Unequip|Delete)/.test(label)
-              ? 'remove'
-              : null;
-    if (actionIcon) node.prepend(symbol(actionIcon));
+    const icon = settings.icon === undefined ? guessIcon(label) : settings.icon;
+    if (icon) node.prepend(symbol(icon));
     if (available) {
-        node.refreshAvailability = () => {
-            node.disabled = !available();
+        // `available` answers true when the action may run. A string answer means
+        // "no, because …", and an explicit reason overrides it. `unavailable`
+        // names the usual blocker for a control that is switched off by context.
+        node.refreshAvailability = (reason) => {
+            const answer = available();
+            const usable = typeof answer === 'string' ? false : Boolean(answer);
+            node.disabled = !usable;
+            explain(
+                node,
+                usable ? '' : reason || (typeof answer === 'string' ? answer : settings.unavailable)
+            );
         };
         node.refreshAvailability();
     }
     // A pending control shows a spinner and refuses further clicks, so a slow
-    // write cannot be submitted twice.
+    // write cannot be submitted twice. It keeps its colour: see base.css.
     node.setBusy = (busy) => {
         if (busy) node.setAttribute('aria-busy', 'true');
         else node.removeAttribute('aria-busy');
@@ -186,13 +233,41 @@ export function changed(message = 'Changes saved.') {
 }
 /** Copy text and confirm once, with a fallback for browsers without the async API. */
 export async function copy(value, message = 'Copied to the clipboard.') {
-    try {
-        await navigator.clipboard.writeText(value);
+    if (await writeClipboard(value)) {
         toast(message, { type: 'success' });
+        return;
+    }
+    toast('This browser blocked clipboard access. Select the text and copy it manually.', {
+        type: 'error'
+    });
+}
+/**
+ * The async clipboard API only exists in a secure context, so a documented plain
+ * HTTP LAN setup would silently lose every copy button. Fall back to the legacy
+ * selection command, which still works there.
+ */
+async function writeClipboard(value) {
+    try {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(value);
+            return true;
+        }
     } catch {
-        toast('This browser blocked clipboard access. Select the text and copy it manually.', {
-            type: 'error'
-        });
+        /* fall through to the legacy path */
+    }
+    try {
+        const field = el('textarea');
+        field.value = value;
+        field.setAttribute('readonly', '');
+        field.style.position = 'fixed';
+        field.style.insetBlockStart = '-1000px';
+        document.body.append(field);
+        field.select();
+        const copied = document.execCommand('copy');
+        field.remove();
+        return copied;
+    } catch {
+        return false;
     }
 }
 export function download(name, content, type = 'text/plain') {
@@ -238,4 +313,45 @@ export function tabs(options, value, onChange) {
         };
     }
     return root;
+}
+
+/* ---------------------------------------------------------------------------
+   Shell chrome. The static markup carries labels only; the art comes from the
+   client symbol pack, so a shell control never falls back to a text glyph.
+   --------------------------------------------------------------------------- */
+export function paintShell() {
+    for (const [selector, name] of [
+        ['#close-dialog', 'close'],
+        ['#shortcuts-close', 'close'],
+        ['#shortcuts', 'keyboard'],
+        ['#close-navigation', 'close']
+    ]) {
+        const node = $(selector);
+        if (node && !node.querySelector('.ui-icon')) node.prepend(symbol(name));
+    }
+    syncAppearances();
+}
+
+/* The appearance toggles name the action they perform, so the pressed state is
+   the only place the current setting is announced. preferences.js paints
+   data-theme/data-density before styles, so that is the source of truth. */
+const appearances = [
+    ['#theme', 'theme', 'light'],
+    ['#density', 'density', 'compact']
+];
+function syncAppearances() {
+    for (const [selector, key, on] of appearances) {
+        const node = $(selector);
+        if (node)
+            node.setAttribute('aria-pressed', String(document.documentElement.dataset[key] === on));
+    }
+}
+// The regression programs import this module in Node for its pure helpers, so
+// nothing here may touch the DOM at import time outside a browser.
+if (typeof document !== 'undefined') {
+    paintShell();
+    new MutationObserver(syncAppearances).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme', 'data-density']
+    });
 }

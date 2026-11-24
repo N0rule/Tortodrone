@@ -110,20 +110,37 @@ export async function mount(ctx) {
     // for; it sits on the page they land on.
     const identityFingerprint = el('code', null, 'identity-fingerprint'),
         identityNote = el('p', null, 'muted identity-note'),
+        identityWarning = el('p', null, 'identity-warning'),
         identityKey = el('textarea', null, 'identity-key'),
         identityActions = toolbar();
     identityKey.readOnly = true;
     identityKey.spellcheck = false;
-    identityKey.rows = 3;
     identityKey.hidden = true;
+    identityKey.rows = 6;
     identityKey.setAttribute('aria-label', 'Server public key, modulus and exponent');
+    identityWarning.hidden = true;
+    const identityBits = el('span'),
+        identityExponent = el('span'),
+        identityFileHash = el('code', null, 'identity-file-hash'),
+        identityModified = el('span'),
+        identityPair = el('span');
     const identityFacts = facts([
         ['Fingerprint (SHA-256)', identityFingerprint],
-        ['Key', ''],
-        ['Public file modified', ''],
+        ['Key', identityBits],
+        ['Exponent', identityExponent],
+        ['Public file SHA-256', identityFileHash],
+        ['Public file modified', identityModified],
+        ['Signing key', identityPair],
         ['Recorded in', 'data/keys/public.txt']
     ]);
-    const identityPanel = panel('Server identity', identityNote, identityFacts, identityActions, identityKey);
+    const identityPanel = panel(
+        'Server identity',
+        identityNote,
+        identityFacts,
+        identityActions,
+        identityWarning,
+        identityKey
+    );
     // Handlers read the current key at click time, so a rotated key is the one an
     // operator copies; the panels are built once and never hold stale values.
     let identityLoaded = false,
@@ -217,32 +234,72 @@ export async function mount(ctx) {
         identityCurrent ? `${identityCurrent.modulus}#${identityCurrent.exponent}` : '';
     async function renderIdentity(identity) {
         if (!identity.available) {
+            // A degraded panel still tells the operator what exists on disk: "no
+            // key" and "a key I cannot read" are different problems.
             text(identityFingerprint, 'Unavailable');
             text(
                 identityNote,
                 identity.reason ||
                     'The server has not created its keypair yet; it is created on the next start.'
             );
+            text(identityBits, identity.keyStored ? 'signing key present' : 'no keypair yet');
+            text(identityExponent, '—');
+            text(identityFileHash, '—');
+            text(identityModified, '—');
+            text(identityPair, identity.keyStored ? 'unknown' : 'absent');
+            identityKey.value = '';
+            identityKey.hidden = true;
+            toggleKey.textContent = 'Show full key';
+            toggleKey.setAttribute('aria-expanded', 'false');
+            identityWarning.hidden = false;
+            identityWarning.textContent = identity.keyStored
+                ? 'A signing key is stored but its public half could not be read. Nothing here is served to clients until data/keys/public.txt is fixed.'
+                : 'Nothing here is served to clients yet: the first start creates data/keys/private.pk8 and data/keys/public.txt.';
             identityActions.replaceChildren();
             identityLoaded = false;
             identityCurrent = null;
             return;
         }
         text(identityFingerprint, identity.fingerprint);
-        identityFingerprint.title = identity.fingerprintBase64;
+        identityFingerprint.title = identity.fingerprintHex || identity.fingerprint;
         text(
             identityNote,
-            `RSA ${identity.bits}-bit · the public half only. Clients use this to trust the server; the private key never leaves the server.`
+            `The public half only. Paste these characters into a client's server key to trust this server; the private key never leaves the machine.`
         );
-        const cells = identityFacts.querySelectorAll('dd');
-        cells[1].textContent = `RSA ${identity.bits}-bit, exponent 0x${identity.exponent}`;
-        cells[2].textContent = date(identity.modified);
+        text(identityBits, `RSA ${identity.bits}-bit`);
+        text(identityExponent, `0x${identity.exponent} (${Number.parseInt(identity.exponent, 16)})`);
+        text(identityFileHash, identity.fileSha256 || '—');
+        identityFileHash.title = identity.fileSha256Command
+            ? `Verify on the host with: ${identity.fileSha256Command}`
+            : '';
+        text(identityModified, date(identity.publicModified || identity.modified));
+        text(
+            identityPair,
+            identity.pairMatches === false
+                ? 'does not match the public file'
+                : identity.pairMatches === true
+                  ? 'matches the public file'
+                  : 'unreadable'
+        );
+        identityPair.classList.toggle('bad', identity.pairMatches === false);
+        identityWarning.hidden = identity.pairMatches !== false;
+        identityWarning.textContent =
+            'The stored public half no longer matches the private key that signs handshakes. Restart the server to regenerate the pair, or delete data/keys and let it create a fresh one; clients using the value below will fail until you do.';
         identityCurrent = identity;
-        identityKey.value = `${identity.modulus}#${identity.exponent}`;
+        const keyText = `${identity.modulus}#${identity.exponent}`;
+        // A five-second poll must not eat a selection the operator is copying:
+        // only rewrite the field when it is not focused and the value changed.
+        if (!identityKey.hidden && document.activeElement !== identityKey && identityKey.value !== keyText)
+            identityKey.value = keyText;
+        else if (identityKey.hidden && identityKey.value !== keyText) identityKey.value = keyText;
         if (!identityLoaded) {
             identityLoaded = true;
             identityActions.append(
-                button('Copy public key', () => copy(currentKey(), 'Server public key copied.'), 'primary'),
+                button(
+                    'Copy public key',
+                    () => copy(currentKey(), 'Server public key copied.'),
+                    'primary'
+                ),
                 button(
                     'Download public.txt',
                     () => download('public.txt', currentKey() + '\n'),
@@ -252,6 +309,11 @@ export async function mount(ctx) {
                 button(
                     'Copy fingerprint',
                     () => copy(identityCurrent?.fingerprint ?? '', 'Fingerprint copied.'),
+                    'secondary'
+                ),
+                button(
+                    'Copy file hash',
+                    () => copy(identityCurrent?.fileSha256 ?? '', 'Public file hash copied.'),
                     'secondary'
                 )
             );
@@ -288,7 +350,9 @@ export async function mount(ctx) {
         text(counters[5][1], 'full pursuit and attack');
         monsters.update(s.scenes);
         for (const c of [cpu, memory, population, activity]) c.update(history);
-        warnings.update(logs.filter((r) => ['WARN', 'ERROR'].includes(r.level)).reverse());
+        warnings.update(
+            (logs.events || logs).filter((r) => ['WARN', 'ERROR'].includes(r.level)).reverse()
+        );
         const signature = JSON.stringify(s.database);
         if (signature !== diagnosticSignature) {
             text(

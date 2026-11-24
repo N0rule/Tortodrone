@@ -1,3 +1,4 @@
+import { symbol } from './symbols.js';
 /**
  * Transient notifications. One region owns every toast so assistive technology
  * hears each message exactly once, and the region is created on first use so a
@@ -59,9 +60,11 @@ export function toast(message, options = {}) {
     const body = build('div', null, 'toast-body');
     body.append(build('p', message, 'toast-message'));
     if (options.detail) body.append(build('p', options.detail, 'toast-detail'));
-    const close = build('button', '×', 'quiet toast-dismiss');
+    // Client art, not a text multiplication sign, so the control matches the shell.
+    const close = build('button', null, 'quiet toast-dismiss');
     close.type = 'button';
     close.setAttribute('aria-label', 'Dismiss notification');
+    close.append(symbol('close'));
     close.onclick = () => dismiss(node);
     node.append(body, close);
     if (options.action) {

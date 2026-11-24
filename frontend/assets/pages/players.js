@@ -19,6 +19,11 @@ export async function mount(ctx) {
             id: 'sessions',
             caption: 'Live sessions',
             exportName: 'sessions',
+            empty: {
+                title: 'No player sessions are connected',
+                hint: 'Sessions appear as players connect; a disconnect keeps the account and knight.',
+                icon: 'players'
+            },
             initialQuery: ctx.params.get('scene') || '',
             actions: ctx.moderator
                 ? (get) => [
@@ -139,6 +144,11 @@ export async function mount(ctx) {
             id: 'scene-population',
             caption: 'Scene population',
             exportName: 'scenes',
+            empty: {
+                title: 'No scene instances are running',
+                hint: 'Scenes appear once the world starts them; the overview shows map state.',
+                icon: 'overview'
+            },
             actions: (get) => [
                 button(
                     'Players here',
@@ -162,13 +172,14 @@ export async function mount(ctx) {
         ctx.connection(s.state, s.state === 'RUNNING');
     }
     await refresh();
-    /** Deep links (#players?scene=…) re-filter in place. */
+    /**
+     * Deep links (#players?scene=…) re-filter in place. The param owns the filter,
+     * so it is cleared when the link no longer carries one.
+     */
     function applyParams(params) {
         const value = params.get('scene');
-        if (value == null) return;
-        players.query.value = value;
-        players.query.dispatchEvent(new Event('input'));
-        players.node.scrollIntoView({ block: 'start' });
+        players.setQuery(value ?? '');
+        if (value) players.node.scrollIntoView({ block: 'start' });
     }
     return { node, refresh, interval: 4000, navigate: applyParams };
 }

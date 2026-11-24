@@ -66,7 +66,7 @@
                             disabled
                     /></label>
                 </div>
-                <button type="submit" disabled>Sign in</button>
+                <button type="submit" class="primary" disabled>Sign in</button>
                 <p id="login-error" class="error" role="alert"></p>
                 <small id="login-help"></small>
             </form>
@@ -75,7 +75,7 @@
             <button id="navigation-backdrop" tabindex="-1" aria-label="Close navigation"></button>
             <aside id="sidebar">
                 <button id="close-navigation" class="quiet" aria-label="Close navigation">
-                    Close ×
+                    Close
                 </button>
                 <a class="brand" href="#overview"
                     ><img src="/admin/assets/icons/mark.svg" alt="" />Tortodrone</a
@@ -84,8 +84,11 @@
                 <footer>
                     <span id="identity"></span>
                     <div class="preference-controls">
-                        <button id="theme" class="quiet">Light theme</button
-                        ><button id="density" class="quiet">Compact view</button>
+                        <button id="theme" class="quiet" aria-pressed="false">
+                            Light theme</button
+                        ><button id="density" class="quiet" aria-pressed="false">
+                            Compact view
+                        </button>
                     </div>
                     <button id="logout" class="quiet">Sign out</button>
                 </footer>
@@ -98,8 +101,7 @@
                         aria-label="Toggle navigation"
                         aria-expanded="false"
                         aria-controls="sidebar"
-                    >
-                        ☰</button
+                    ></button
                     ><button id="search" class="search-trigger" aria-keyshortcuts="Control+K">
                         <span>Search or jump to…</span><kbd class="kbd">Ctrl K</kbd></button
                     ><span class="topbar-meta"
@@ -110,8 +112,7 @@
                             class="quiet"
                             aria-label="Keyboard shortcuts"
                             aria-keyshortcuts="?"
-                        >
-                            <span aria-hidden="true">?</span></button
+                        ></button
                         ><time id="clock"></time
                     ></span>
                 </header>
@@ -122,9 +123,12 @@
                             <h1 id="title" tabindex="-1">Overview</h1>
                             <p id="page-description" class="page-description"></p>
                         </div>
-                        <button id="refresh" class="secondary sm" title="Reload this page (R)">
-                            <span>Refresh</span>
-                        </button>
+                        <button
+                            id="refresh"
+                            class="quiet icon sm"
+                            aria-label="Refresh page data"
+                            title="Reload this page (R)"
+                        ></button>
                     </div>
                     <div id="notice" role="status" aria-live="polite" hidden></div>
                     <div id="page-status" class="visually-hidden" role="status" aria-live="polite"></div>
@@ -136,9 +140,12 @@
             <form id="editor">
                 <div class="dialog-heading">
                     <h2 id="dialog-title"></h2>
-                    <button type="button" id="close-dialog" class="quiet" aria-label="Close dialog">
-                        ×
-                    </button>
+                    <button
+                        type="button"
+                        id="close-dialog"
+                        class="quiet icon"
+                        aria-label="Close dialog"
+                    ></button>
                 </div>
                 <div id="dialog-description"></div>
                 <div id="dialog-conflict" role="alert" class="warning" hidden></div>
@@ -147,16 +154,19 @@
                 <p id="dialog-error" role="alert" class="error"></p>
                 <div class="dialog-actions">
                     <button type="button" id="cancel-dialog" class="secondary">Cancel</button
-                    ><button type="submit" id="submit-dialog" class="primary">Save changes</button>
+                    ><button type="submit" id="submit-dialog">Save changes</button>
                 </div>
             </form>
         </dialog>
         <dialog id="shortcut-dialog" class="shortcuts" aria-labelledby="shortcuts-title">
             <div class="dialog-heading">
                 <h2 id="shortcuts-title">Keyboard shortcuts</h2>
-                <button type="button" id="shortcuts-close" class="quiet" aria-label="Close shortcuts">
-                    ×
-                </button>
+                <button
+                    type="button"
+                    id="shortcuts-close"
+                    class="quiet icon"
+                    aria-label="Close shortcuts"
+                ></button>
             </div>
             <p class="muted">
                 Shortcuts are ignored while you are typing in a field. Press

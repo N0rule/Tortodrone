@@ -63,11 +63,27 @@ for pointer users.
 ## Server identity
 
 Operators used to SSH into the host to read `data/keys/public.txt`; the Overview
-page now shows it. The panel reports the algorithm and size, the creation time,
-the file that holds it, the `modulus#exponent` pair the client trusts, and the
-**SHA-256 fingerprint over the DER SubjectPublicKeyInfo** — the same value
-`openssl rsa -pubin -inform DER -in key.der -noout -text` prints as it does for
-TLS certificates, written as upper-case colon-separated byte pairs.
+page now shows it. The panel reports the key size and exponent, when the file was
+last written, the file that holds it, the `modulus#exponent` pair the client
+trusts, and two independently reproducible hashes:
+
+- **SHA-256 over the DER SubjectPublicKeyInfo**, written as upper-case
+  colon-separated byte pairs, which is what a certificate fingerprint looks like.
+  Reproduce it with
+  `openssl pkey -pubin -inform DER -in key.der -outform DER | openssl dgst -sha256`
+  where `key.der` is the DER half of `public.txt`. Note that
+  `openssl rsa -pubin -inform DER -in key.der -noout -text` prints the modulus and
+  exponent and **no** fingerprint, so it cannot confirm this value.
+- **SHA-256 of `public.txt` itself**, so one plain command on the host confirms
+  the panel: `sha256sum data/keys/public.txt`. The panel shows the command in the
+  hash's tooltip.
+
+The panel also reports whether the stored public half still matches the private
+key that signs handshakes (`pairMatches`), and raises a warning when it does not:
+a `public.txt` replaced while the server is running otherwise publishes a
+confident fingerprint for a key clients are not using. To rotate, stop the
+server, remove `data/keys/private.pk8` and `data/keys/public.txt`, start it again,
+and hand clients the new key — every client pinned to the old key must be updated.
 
 - **Never exposed:** the private key, its path and the reverse-proxy secret. The
   panel only reports whether a signing key is stored (`keyStored`). Every API
@@ -85,18 +101,36 @@ TLS certificates, written as upper-case colon-separated byte pairs.
 ## Terminal surface
 
 Logs and Console share one component, `assets/components/log-stream.js`, and read
-as a terminal window rather than a table: window dots and a title bar with the
-live line count, a monospaced grid (`time · level · message`), severity colouring,
-and a status line with the key hints and the tail state. Both pages fill the
-reading area (`calc(100dvh - 210px)`, at least 480 px) so the surface has the same
-weight on either page.
+as a terminal window rather than a table: a live indicator whose colour is the
+stream's real state, a title bar with the visible line count, a monospaced grid
+(`time · level · thread · message`), severity in the level column, and a status
+line with the key hints and the tail state. Both pages fill the reading area
+(`calc(100dvh - 210px)`, at least 62dvh and 260 px) so the surface has the same
+weight on either page, and a landscape phone gets the height it actually has.
+
+Severity is carried by the level column, not by the message: a long warning stays
+readable text instead of turning into a gold paragraph. A buffer that crosses
+midnight gains a day divider, and `Show raw lines` renders the exact text the
+server wrote to `data/logs/latest.log` — the form you grep and paste into a bug
+report, including a stack trace's indentation.
 
 | Keys | Action |
 | --- | --- |
 | `Ctrl`/`⌘` + `F` | Focus the output search |
 | `Ctrl`/`⌘` + `L` | Clear the visible output |
 | `End` | Resume tailing the newest line |
+| `Home` | Jump to the oldest retained line and stop following |
 | `p` | Pause or resume the stream |
+| `Esc` | Leave the output pane |
+
+The status line never claims more than it has: it reports the buffer's capacity
+and how many lines were evicted (`1000 of 1000, 42 older dropped`) and names the
+file that holds the complete log. `More → Load last 500 from file` reads that file
+verbatim, so a fresh page is not limited to the lines logged since the last
+restart. **Pause** freezes the view but not the tail: polling continues, the
+status line counts what arrived (`12 new`) and resuming shows it, which is what
+distinguishes a pause from a silent gap. A failed read backs off instead of
+polling every four seconds, and the first success clears the error notice.
 
 The palette is theme-aware: dark theme keeps an ink-black pane, light theme
 switches to a paper-and-ink pane with the same structure and severity semantics,
@@ -122,19 +156,33 @@ row (Maintenance, Compensation, Event, Season start), sender and subject, the bo
 beside a preview, and attachments.
 
 - **Preview:** an **In-game** view (what the client renders) and a **Plain text**
-  view (the exact characters that reach the mailbox), toggled with pressed-state
-  buttons and kept current while typing.
+  view (the exact characters that reach the mailbox, including the `%uplink:~`
+  prefix on both subject and body for the stock senders), toggled with pressed-state
+  buttons and kept current while typing. Both views show the stripped value and say
+  that leading and trailing spaces are removed on save, and each footer names the
+  reach (`N knights receive it once`) and the window in local time.
+- **Counters:** subject and body carry `n / limit` counters that turn into the
+  error style past the limit, and the server's own refusal sentence is printed
+  verbatim rather than a generic conflict.
 - **Recipients:** direct mail offers a filterable knight list with per-knight
-  checkboxes, *Select all* and *Clear*, and sends sequentially with progress in
-  the dialog (`#dialog-progress`, `aria-busy` on the submit button).
-- **Time:** campaign windows are read in the browser's timezone, named in the
-  form, and the list shows each mailing's window in local time.
-- **Revisions:** an in-flight mailing can be duplicated, and editing an active one
-  only affects knights who have not received it yet — the panel says so.
-- **Receipts:** a multi-knight send keeps one row per recipient for the session,
-  including the refusal reason, so a batch is explainable after the toast is gone.
-- **Windows:** a new campaign opens on the next quarter hour rather than "now", so
-  a saved window is never already past.
+  checkboxes, *Online only* / *Game masters* quick filters, *Select all shown*
+  (the rendered rows only) and a separate *Select all N matching* when more are
+  hidden, plus *Send a copy to me*. A batch asks for confirmation naming the
+  recipient count, reports per recipient, toasts an error when any recipient was
+  refused, and offers *Retry refused* / *Resume remaining* without ever re-sending
+  a knight that already received the letter in that batch.
+- **Delivered:** each campaign shows `delivered of population`, and *Inspect
+  recipients* reads `mail-deliveries` for the per-knight roster — the count alone
+  cannot answer "who did not get it".
+- **Reading a letter:** the campaign name opens a read-only rendering of what was
+  sent, with its window, sender, gifts and counts, and an *Edit* action inside.
+- **Drafts:** *Save as draft* sets a deliberate future window and says so; saving a
+  window that already contains now asks a second time. *Duplicate* opens a new
+  mailing with an empty future window and warns that the original already reached
+  its recipients.
+- **Receipts:** a browser-local panel (localStorage, capped, clearable) keeps the
+  per-recipient result of every direct send, so a batch is explainable after the
+  toast is gone; the authoritative server counts live under *Inspect recipients*.
 
 ## Preferences
 

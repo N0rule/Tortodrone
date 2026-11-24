@@ -199,6 +199,13 @@ async function refresh() {
             await target.refresh();
             if (id === generation && current !== 'overview' && current !== 'players')
                 connection('Connected');
+            // A recovered poll ends the error it raised; a sticky notice that
+            // outlives the failure trains operators to ignore notices.
+            const notice = $('#notice');
+            if (notice && !notice.hidden && notice.classList.contains('error')) {
+                notice.hidden = true;
+                notice.classList.remove('error');
+            }
         } catch (error) {
             if (id === generation && error.name !== 'AbortError') {
                 connection('Reconnecting', false);
@@ -260,6 +267,17 @@ async function navigate() {
     const next = route(),
         spec = pageFor(next.name);
     if (!spec) {
+        // A denied link is not an empty click: say which role the page needs.
+        const denied = sections
+            .flatMap((section) => section.pages)
+            .find((page) => page.name === next.name);
+        const needs = ['a viewer', 'a moderator', 'an administrator'][denied?.rank ?? 2];
+        notify(
+            denied
+                ? `You do not have access to ${denied.title}. It needs ${needs} role.`
+                : 'That page does not exist.',
+            true
+        );
         go('overview');
         return;
     }

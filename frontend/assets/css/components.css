@@ -1,6 +1,6 @@
 .panel {
     background: var(--surface);
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-bright);
     border-radius: var(--radius);
     box-shadow: var(--elev-1);
     padding: var(--space);
@@ -23,8 +23,9 @@
     align-items: center;
     gap: 6px;
     padding: 3px 8px;
-    border: 1px solid var(--line);
-    border-radius: 4px;
+    /* A pill is a small component, so its edge is a component boundary. */
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius);
     font-size: 11px;
     color: var(--muted);
     white-space: nowrap;
@@ -41,8 +42,8 @@
     color: var(--good);
 }
 .badge.gold {
-    color: var(--gold);
-    border-color: var(--gold);
+    color: var(--warn);
+    border-color: var(--warn);
 }
 .badge.cyan {
     color: var(--cyan);
@@ -74,7 +75,7 @@
 }
 .table-wrap {
     overflow: auto;
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-bright);
     border-radius: var(--radius);
 }
 table {
@@ -92,9 +93,13 @@ th {
     white-space: nowrap;
     font-weight: 400;
 }
+/* A sortable header lines up with the data under it and keeps the caret on the
+   far edge, where it reads as a column control rather than a stray glyph. */
 th button {
     padding: 10px 12px;
     width: 100%;
+    justify-content: space-between;
+    gap: 8px;
     text-align: left;
     border: 0;
     color: inherit;
@@ -138,7 +143,13 @@ td button {
     padding: 0 10px;
     min-block-size: var(--control-sm);
     font-size: 12px;
-    border-radius: 7px;
+    border-radius: var(--radius-control);
+}
+/* Three small buttons in a row read as broken when only two carry art, so dense
+   cell toolbars stay text-only; page-level toolbars keep their icons. */
+td .toolbar .ui-icon,
+.data-table tr .toolbar .ui-icon {
+    display: none;
 }
 /* The paging bar is the compact end of the control scale. */
 .pagination button,
@@ -181,11 +192,23 @@ td button {
     border-color: transparent;
     box-shadow: none;
 }
+/* Hovering must not outline an unselected tab: the shared button hover paints a
+   cyan edge, which reads as "selected" on a tab strip. */
+.tabs button:not(:disabled):hover {
+    color: var(--text);
+    background: color-mix(in srgb, var(--raised) 60%, transparent);
+    border-color: transparent;
+}
 .tabs button[aria-selected='true'] {
     color: var(--gold);
     background: var(--raised);
-    border-color: var(--line);
+    border-color: var(--line-bright);
     box-shadow: inset 0 -2px var(--gold);
+}
+.tabs button[aria-selected='true']:hover {
+    color: var(--gold);
+    background: var(--raised);
+    border-color: var(--line-bright);
 }
 .item-icon {
     position: relative;
@@ -196,7 +219,7 @@ td button {
     flex-shrink: 0;
     background: var(--inset);
     border: 1px solid var(--line-bright);
-    border-radius: 5px;
+    border-radius: var(--radius);
 }
 .item-icon img {
     width: 48px;
@@ -238,7 +261,7 @@ td button {
     text-align: left;
     color: var(--text);
     background: var(--surface);
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-bright);
     padding: 13px;
     font-weight: 400;
     box-shadow: none;
@@ -258,8 +281,8 @@ td button {
 .heat {
     width: 100%;
     height: 6px;
-    border: 1px solid var(--line);
-    border-radius: 3px;
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius);
     overflow: hidden;
     background: var(--inset);
 }
@@ -267,10 +290,10 @@ td button {
     background: var(--inset);
 }
 .heat::-webkit-progress-value {
-    background: #e6bc62;
+    background: var(--meter);
 }
 .heat::-moz-progress-bar {
-    background: #e6bc62;
+    background: var(--meter);
 }
 .currency {
     display: inline-flex;
@@ -291,7 +314,7 @@ dialog {
     background: var(--surface);
     border: 1px solid var(--line-bright);
     border-top: 3px solid var(--gold);
-    border-radius: 7px;
+    border-radius: var(--radius);
     padding: 24px;
     box-shadow: var(--shadow);
 }
@@ -334,8 +357,8 @@ dialog::backdrop {
     max-height: 230px;
     overflow: auto;
     padding: 10px;
-    border: 1px solid var(--line);
-    border-radius: 4px;
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius);
 }
 .choice-list label {
     display: flex;
@@ -396,16 +419,13 @@ dialog::backdrop {
     flex: 0 0 20px;
     vertical-align: middle;
 }
+/* The button's own gap spaces the icon; an extra margin would double it. The
+   basis follows the size, so flexbox cannot stretch the art past 17px. */
 button > .ui-icon,
 .tabs .ui-icon {
-    margin-right: 7px;
-    width: 17px;
-    height: 17px;
-}
-[role='switch'] {
-    accent-color: var(--cyan);
-    width: 20px;
-    height: 20px;
+    inline-size: 17px;
+    block-size: 17px;
+    flex: 0 0 auto;
 }
 img.ui-icon {
     object-fit: contain;
@@ -449,7 +469,7 @@ a:focus-visible {
     background: var(--inset);
     border: 1px solid var(--line-bright);
     border-bottom-width: 2px;
-    border-radius: 4px;
+    border-radius: var(--radius);
     font: 600 11px/1.6 var(--mono);
     white-space: nowrap;
 }
@@ -482,8 +502,6 @@ a:focus-visible {
     padding-inline: 12px 4px;
 }
 .select-column input {
-    width: 18px;
-    height: 18px;
     cursor: pointer;
 }
 th.select-column {
@@ -499,7 +517,7 @@ caption {
     gap: 8px;
     padding: var(--space);
     background: var(--surface);
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-bright);
     border-radius: var(--radius);
 }
 .skeleton-row {
@@ -511,7 +529,7 @@ caption {
 .skeleton-bar {
     height: 12px;
     width: var(--skeleton-split, 88%);
-    border-radius: 6px;
+    border-radius: var(--radius);
     background: linear-gradient(90deg, var(--raised), var(--inset), var(--raised));
     background-size: 300% 100%;
     animation: skeleton-shimmer 1.6s ease-in-out infinite;
@@ -610,7 +628,7 @@ caption {
     color: var(--text);
     background: var(--surface);
     border: 1px solid var(--line-bright);
-    border-left: 4px solid var(--cyan);
+    border-left: 3px solid var(--cyan);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     pointer-events: auto;
@@ -639,14 +657,17 @@ caption {
     color: var(--muted);
     font-size: 12px;
 }
+/* A dismiss control keeps a 34px target while its art stays 16px. */
 .toast-dismiss {
     align-self: start;
-    min-inline-size: 28px;
-    min-block-size: 28px;
+    min-inline-size: var(--control-sm);
+    min-block-size: var(--control-sm);
     padding: 0;
-    font-size: 15px;
-    line-height: 1;
     border-radius: var(--radius-control);
+}
+.toast-dismiss .ui-icon {
+    inline-size: 16px;
+    block-size: 16px;
 }
 .toast-action {
     justify-self: start;
@@ -692,7 +713,7 @@ caption {
     padding: 0;
     overflow: hidden;
     border-top-width: 1px;
-    border-radius: 8px;
+    border-radius: var(--radius);
 }
 .palette::backdrop {
     background: #020c16c4;
@@ -742,7 +763,7 @@ caption {
     align-items: baseline;
     gap: 10px;
     padding: 9px 12px;
-    border-radius: 4px;
+    border-radius: var(--radius);
     cursor: pointer;
 }
 .palette-option.active,
@@ -870,7 +891,7 @@ caption {
         gap: 5px;
         padding: 12px 14px;
         background: var(--surface);
-        border: 1px solid var(--line);
+        border: 1px solid var(--line-bright);
         border-radius: var(--radius);
     }
     .data-table tr:hover td {
@@ -935,7 +956,8 @@ caption {
     }
 }
 
-/* Selection checkboxes keep a 24px hit area inside dense rows. */
+/* Selection checkboxes keep a 24px hit area inside dense rows; the box itself is
+   the one size and one accent colour base.css defines. */
 .select-target {
     display: inline-flex;
     align-items: center;
@@ -945,9 +967,6 @@ caption {
 }
 .select-target > input {
     margin: 0;
-    inline-size: 18px;
-    block-size: 18px;
-    accent-color: var(--accent);
 }
 
 /* Server identity: the fingerprint is meant to be read aloud, so it wraps in
@@ -960,7 +979,7 @@ caption {
     display: block;
     padding: 6px 8px;
     background: var(--inset);
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-bright);
     border-radius: var(--radius);
     font-family: var(--mono);
     font-size: 12px;
