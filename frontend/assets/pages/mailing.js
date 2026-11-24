@@ -1107,10 +1107,19 @@ function deliveredLabel(campaign) {
                 throw invalid(`A mailing can carry at most ${limits.units} item units`);
         }
 
-        /** Delivers to `keys`, never rewriting a knight that already succeeded here. */
-        async function send(keys, values, label) {
-            const outcome = { sent: 0, refused: [], stopped: null };
+        /**
+         * Delivers to `keys`, never rewriting a knight that already succeeded here.
+         * `run` is the dialog's stop signal: checked between recipients, so a stop
+         * leaves at most the one request already in flight and every finished outcome
+         * intact for Resume.
+         */
+        async function send(keys, values, label, run = null) {
+            const outcome = { sent: 0, refused: [], stopped: null, cancelled: 0 };
             for (const [index, key] of keys.entries()) {
+                if (run?.stopped) {
+                    outcome.cancelled = keys.length - index;
+                    break;
+                }
                 // Resume and retry share this loop: a knight that already has the
                 // letter in this batch is skipped, never written twice.
                 if (batch.get(key)?.ok === true) continue;
@@ -1773,7 +1782,8 @@ function deliveredLabel(campaign) {
             isDirty: () => JSON.stringify(snapshot()) !== initial,
             dispose: () => picker.dispose(),
             after: () => refresh(),
-            onSubmit: async () => {
+            stoppable: true,
+            onSubmit: async (form, progress, run) => {
                 checkLetter();
                 const values = letterValues();
                 // A confirmation the operator can read, inside the editor: pressing Save
@@ -1801,7 +1811,7 @@ function deliveredLabel(campaign) {
                         );
                     }
                     attempted = [...new Set([...attempted, ...recipients])];
-                    const outcome = await send(recipients, values, 'Sending');
+                    const outcome = await send(recipients, values, 'Sending', run);
                     renderResults();
                     renderReceipts();
                     if (outcome.stopped) throw outcome.stopped;
@@ -1815,6 +1825,16 @@ function deliveredLabel(campaign) {
                                 outcome.refused[0].reason
                             }`
                         );
+                    }
+                    if (outcome.cancelled) {
+                        // A stop is not a failure: name what landed and leave the rest
+                        // listed, so Resume picks up exactly where it stopped.
+                        changed(
+                            `Stopped after ${outcome.sent} of ${recipients.length}. ${
+                                outcome.cancelled
+                            } knight${outcome.cancelled === 1 ? '' : 's'} did not receive it, and the batch list keeps every outcome — Resume sends the rest.`
+                        );
+                        return;
                     }
                     changed(
                         recipients.length === 1

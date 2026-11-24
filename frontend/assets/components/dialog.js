@@ -21,7 +21,13 @@ export function openDialog({
     after,
     dispose,
     isDirty,
-    notifySaved = true
+    notifySaved = true,
+    // A run that can take minutes says so, and can be given up on. `stoppable` puts a
+    // Stop control beside the progress line; `onSubmit` reads `run.stopped` between
+    // iterations. Before this, a 200-knight send held the operator in a modal that
+    // refused Close, Cancel and Escape while it worked, and there was nothing else to
+    // press.
+    stoppable = false
 }) {
     const dialog = $('#dialog'),
         form = $('#editor');
@@ -58,7 +64,18 @@ export function openDialog({
     // copy of the same action, and it comes back for every other dialog.
     $('#close-dialog').hidden = readOnly;
     $('#fields').replaceChildren(content);
-    const state = { revision, target, isDirty, pending: false, conflicted: false };
+    const state = { revision, target, isDirty, pending: false, conflicted: false, stop: false };
+    const stopButton = $('#dialog-stop');
+    if (stopButton) {
+        stopButton.hidden = true;
+        stopButton.textContent = 'Stop';
+        stopButton.removeAttribute('aria-disabled');
+        stopButton.onclick = () => {
+            state.stop = true;
+            stopButton.textContent = 'Stopping…';
+            stopButton.setAttribute('aria-disabled', 'true');
+        };
+    }
     active = state;
     cleanup = dispose;
     form.onsubmit = async (event) => {
@@ -76,8 +93,14 @@ export function openDialog({
             node.hidden = false;
             node.textContent = `${label} ${done} of ${total}…`;
         };
+        state.stop = false;
+        if (stoppable && stopButton) stopButton.hidden = false;
         try {
-            const result = await onSubmit(form, progress);
+            const result = await onSubmit(form, progress, {
+                get stopped() {
+                    return state.stop;
+                }
+            });
             if (active !== state) return;
             dialog.close();
             if (notifySaved) changed();
@@ -101,6 +124,7 @@ export function openDialog({
             $('#submit-dialog').removeAttribute('aria-busy');
             const progressNode = $('#dialog-progress');
             if (progressNode) progressNode.hidden = true;
+            if (stopButton) stopButton.hidden = true;
             if (active === state) $('#submit-dialog').disabled = state.conflicted;
         }
     };

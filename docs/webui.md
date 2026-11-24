@@ -25,8 +25,8 @@ repeats the section as an eyebrow, the title as the `h1`, and one sentence
 describing what the page is for.
 
 The top bar holds the command palette trigger, the connection state, the shortcut
-reference and the clock. Below 760 px the sidebar becomes a drawer with a scrim,
-Escape closes it and focus returns to the menu button.
+reference and the clock. At 900 px and below the sidebar becomes a drawer with a
+scrim, Escape closes it and focus returns to the menu button.
 
 ## Command palette
 
@@ -111,6 +111,17 @@ weight on either page, and a landscape phone gets the height it actually has.
 The severity filter carries the per-level counts (`ERROR (3)`, `All (1000)`), counted
 over the search-filtered rows: finding three errors among a thousand lines used to
 mean choosing ERROR and counting what was left.
+
+Logs also filters by **Period** (`All time`, `Last 5 minutes`, `Last hour`, `Last 24
+hours`): a thousand retained lines span days on a quiet server, and severity plus free
+text could not narrow that at all. A line whose timestamp cannot be parsed is never
+hidden by a window.
+
+Every control that shapes the pane is in the address, not just the two the filters
+own: `#logs?severity=WARN&search=timeout&period=Last+hour&raw=1&wrap=0` is the view
+an operator is looking at, so a copied link arrives at it. `raw` and `wrap` used to be
+read from the URL and never written back, which meant a pane could show parsed,
+wrapped lines under an address that said otherwise.
 
 Severity is carried by the level column, not by the message: a long warning stays
 readable text instead of turning into a gold paragraph. A buffer that crosses
@@ -230,6 +241,13 @@ hours`, `Last 7 days`). The buckets exist because the table's filters are select
 whose timestamp cannot be parsed is never folded into "recent", it stays visible under
 every window.
 
+The read is capped at the newest 500 rows (`WebIdentityStore` orders by id and limits),
+and the page says so above the table instead of claiming to hold every privileged
+request: below the cap it reports how many events exist, at the cap it says that older
+rows stay in `data/webui.sqlite` and that the page cannot page back to them yet.
+**Pause** stops the ten-second poll, because it used to re-insert rows at the top under
+whoever was reading them.
+
 ## Player Mail
 
 Compose is a three-mode editor: windowed **Campaign**, **Direct** mail to one
@@ -300,6 +318,20 @@ user agent and viewport for support reports.
 
 ## Tables
 
+Every list is one `DataTable`: sticky header, sortable columns with `aria-sort`,
+optional row selection with a bulk bar, filters, paging, and a CSV/JSON export of
+whatever the current filter leaves. **Rows per page** is the table's own: it is
+remembered beside its sort and filters, and Preferences owns only the default a *new*
+table starts at. A pager that wrote the global preference silently reset the
+operator's default for every other table, which is the opposite of what Preferences
+promised.
+
+The item catalogue is the one list that is read through a window rather than a table
+(the picker is a 24-tile grid), so it carries its own **Export**: it walks the
+server's 100-row pages and downloads the filtered set as CSV, up to 1,000 rows, and
+the toast says how many of how many it wrote. A partial file that claims to be whole
+would be worse than no file.
+
 Every record list shares one table component and therefore one behaviour set:
 
 - **Search** is debounced and matches every field; `Esc` in the search box clears it.
@@ -329,6 +361,30 @@ Every record list shares one table component and therefore one behaviour set:
 - Unsaved editors, navigation away with pending edits and sign-out all confirm
   before discarding a draft. Revision conflicts keep the draft and explain how to
   reload the record.
+- A confirmation says what it destroys, and carries the weight of it: the submit is
+  a `danger` control, its label names the deed (`Stop the listener`, `Disconnect`,
+  `Cancel promotion`) instead of a generic "Confirm", and a destructive dialog parks
+  focus on Cancel so Enter on an untouched form cannot perform it. Learned from a
+  review: a retype field was the only signal for destructiveness, so stopping the
+  listener, kicking every selected session and cancelling an auction all promoted the
+  same gold button as a save. The Game Master grant is behind this too — it used to
+  post on a single click of a switch.
+- A long sequential run reports progress (`Sending 8 of 200…`) and can be stopped:
+  **Stop** beside the progress line ends the batch after the request in flight, keeps
+  every outcome already recorded, and leaves the remaining knights listed for
+  **Resume**. A modal that refuses Close, Cancel and Escape while it works, with no
+  control that ends it, is a trap.
+- A disabled control stays focusable and explains itself: `aria-disabled` plus a
+  visible note and `aria-describedby`, instead of a native `disabled` that removes the
+  control and its reason from the tab order together.
+- One empty-state idiom for the whole application — icon, title, message, and the
+  action that would fill the region. A bare "No items match these filters." line is a
+  dead end; the catalogue, the gear grid and the receipt list now offer the reset that
+  makes something match, or say honestly that nothing can be granted from here.
+- Every timestamp carries its zone (`03/12/2026, 14:00 GMT+3`). The server stores
+  promotion and auction windows as Unix milliseconds UTC, so a bare `14:00` meant two
+  different instants to the operator who scheduled it and the colleague they sent the
+  link to.
 - Sessions expire after 30 idle minutes; at five minutes remaining the interface
   warns once and a refresh extends it. Expiry returns to the sign-in screen and
   announces the reason.
@@ -348,7 +404,7 @@ administrator can therefore confirm the transport in use without reading
 | --- | --- |
 | 1560 px and up | Content column capped so tables and charts keep a readable measure. |
 | 901–1559 px | Sidebar stays fixed; two-column page sections keep their columns. |
-| 900 px and below | Sidebar becomes a drawer with a scrim and `inert` background, and the top bar's **Menu** button opens it (`(max-width: 900px)` in both `layout.css` and `app.js`); tables become labelled cards (`.data-table` at `components.css`, the 900 px block); search takes its own line; touch targets grow to 36 px. |
+| 900 px and below | Sidebar becomes a drawer with a scrim and `inert` background, and the top bar's **Menu** button opens it (`(max-width: 900px)` in both `layout.css` and `app.js`); tables become labelled cards (`.data-table` at `components.css`, the 900 px block); search takes its own line; table card actions reach a 36 px target. |
 | 1000 px and below | The search trigger keeps its words and drops the `Ctrl K` chip, which a phone cannot press. |
 | 360 px | The narrowest supported width: every page fits without horizontal scrolling, which `shell.js` asserts. |
 
@@ -361,13 +417,23 @@ administrator can therefore confirm the transport in use without reading
   so keyboard users can pan wide tables.
 - Every control has a programmatic name, including icon-only buttons (menu,
   shortcuts, dismiss).
-- Focus is visible everywhere, moves to the page heading on navigation, and is
-  trapped by dialogs; the mobile drawer closes with Escape and restores focus.
+- Focus is visible on every interactive control, in both themes, at every
+  specificity: a page that needs to suppress a ring has to say why. The one place
+  it is suppressed is the page heading, which is focused only so a screen reader
+  starts reading at the top — it is not a control, and the page name is announced
+  through `#page-status` instead. The skip link lands on `#main` with an inset ring,
+  so a keyboard user can see that the jump happened. Dialogs trap focus; the mobile
+  drawer closes with Escape and restores focus to the button that opened it.
+- A control that cannot act stays focusable and says why (`aria-disabled` plus a
+  description) rather than disappearing from the tab order as `disabled` would.
+- A tab strip names the region it switches: `aria-controls` on each tab, and
+  `role="tabpanel"` with `aria-labelledby` following the selection.
 - Status text does not rely on colour alone, both themes meet AA contrast, and
   `prefers-reduced-motion` plus the preference switch disable animation.
-- Row-selection checkboxes draw at 18px inside a 24px label, and table rows are
+- Row-selection checkboxes draw at 16px inside a 24px label, and table rows are
   spaced further apart than the 24px target circle, so WCAG 2.2 target size is
-  met by the spacing exception while dense tables stay readable.
+  met by the spacing exception while dense tables stay readable. On a coarse
+  pointer every control, including the drawer's page links, reaches 44px.
 - Charts are focusable images with a description: arrow keys, Home and End move
   through samples and the readout becomes a polite live region only while the
   keyboard is inspecting, so pointer movement never floods a screen reader.
@@ -405,17 +471,20 @@ Conventions worth keeping:
 
 ## Payload and caching
 
-Measured from a `./gradlew buildWebui` deployment of this branch:
+Counted from this tree, which is what `buildWebui` copies: `wc -c` for the raw
+size and `gzip -9 | wc -c` for the compressed one.
 
-| Asset class | Size | Transport |
-| --- | --- | --- |
-| `index.html` | 9.4 kB | Gzip when the browser offers it, `must-revalidate` |
-| JavaScript (34 modules) | 296 kB | Gzip, `must-revalidate`, ETag per encoding |
-| CSS (5 sheets) | 51 kB | Gzip, `must-revalidate`, ETag per encoding |
-| Icons and artwork (5081 files, 87 MB on disk) | median icon 16 kB | `max-age=31536000, immutable` for the content-hashed `assets/game/icons/<hash>` paths |
+| Asset class | Raw | Gzip | Transport |
+| --- | --- | --- | --- |
+| `index.html` | 9 860 B | 2 234 B | Gzip when the browser offers it, `must-revalidate` |
+| JavaScript (33 files under `frontend/assets`) | 566 261 B | 142 532 B | Gzip, `must-revalidate`, ETag per encoding |
+| CSS (5 sheets) | 111 441 B | 26 265 B | Gzip, `must-revalidate`, ETag per encoding |
+| Icons and artwork (5081 files, 87 MB on disk) | median icon 16 kB | n/a | `max-age=31536000, immutable` for the content-hashed `assets/game/icons/<hash>` paths |
 
-Gzip is applied to text assets over 1 kB: `app.js` goes from 24 334 to 6 535
-bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
+The JavaScript column is every module at once, which no single page loads: a
+VIEWER never fetches `mailing.js`, and there is no bundler, so the number grows
+with each page module. Gzip is applied to text assets over 1 kB: `app.js` alone
+goes from 30 306 to 8 688 bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
 cache never serves one representation for the other and revalidation still
 answers `304`. Every non-hashed asset revalidates, so an upgrade is visible on the
 next load without a hard refresh; hashed artwork is cached for a year. Only the
@@ -449,11 +518,7 @@ operation cannot ship without a control. The mapping in brief:
 ## Verification
 
 ```sh
-node --test src/test/webui/news-test.mjs src/test/webui/chart-test.mjs \
-  src/test/webui/table-test.mjs src/test/webui/mailing-test.mjs \
-  src/test/webui/table-filter-test.mjs src/test/webui/palette-test.mjs \
-  src/test/webui/export-test.mjs src/test/webui/prefs-test.mjs \
-  src/test/webui/routes-test.mjs src/test/webui/responsive-test.mjs
+node --test src/test/webui/*-test.mjs
 node src/test/webui/assets-check.mjs dist/webui
 node --check frontend/assets/app.js
 ./gradlew testUnit -PunitTests=WebUiTest,WebAdminServiceTest,WebIdentityStoreTest
@@ -461,10 +526,13 @@ node --check frontend/assets/app.js
 ```
 
 `responsive-test.mjs` pins the mobile contract (card rows with `data-label`,
-hidden header row, 36 px touch targets taken from the `--control*` tokens, no
-`min-width` wider than 360 px) and
+hidden header row, 36 px targets from the `--control*` tokens at default size and
+44 px on a coarse pointer, and no `min-width`/`min-inline-size` wider than 360 px
+in any of the four sheets) and
 `routes-test.mjs` pins endpoint coverage; both fail loudly if a refactor drops
-either. The browser `shell.js` group ends with a sweep over every navigable page,
+either. The glob is deliberate: a written-out list once named a file that did not
+exist, and `node --test` exits 0 when a path is missing, so the documented command
+verified less than it claimed. The browser `shell.js` group ends with a sweep over every navigable page,
 checking one visible `h1`, a caption and scoped headers on each table, unique ids,
 no horizontal overflow, and the session facts on WebUI Access.
 

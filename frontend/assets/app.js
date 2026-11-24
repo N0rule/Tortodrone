@@ -105,7 +105,7 @@ const pages = [
         section: 'Content',
         rank: 2,
         module: content,
-        description: 'Validated items, maps and merchant stock.'
+        description: 'Validated item catalogue, merchant stock and content warnings.'
     },
     {
         name: 'console',

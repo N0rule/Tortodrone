@@ -1,7 +1,7 @@
 import { api } from '../api.js';
 import { el, text, toolbar, button, routeLink, badge, panel, facts, date } from '../ui.js';
 import { DataTable } from '../components/table.js';
-import { openDialog, edit, confirm, field } from '../components/dialog.js';
+import { openDialog, edit, confirm, field, closeDialog } from '../components/dialog.js';
 import { route, go } from '../router.js';
 export async function mount(ctx) {
     const node = el('div', null, 'stack');
@@ -227,10 +227,14 @@ export async function mount(ctx) {
     function applyParams(params) {
         const wanted = params.get('user');
         if (wanted === inspected) return;
+        const previous = inspected;
         inspected = wanted;
         const row = rows.find((candidate) => candidate.username === wanted);
         if (!row) {
             if (wanted) ctx.notify(`No WebUI identity is named ${wanted}.`, true);
+            // Losing `?user=` closes the identity pane; without this, history Back left
+            // it describing a user the address no longer named.
+            else if (previous) closeDialog();
             return;
         }
         inspect(row);

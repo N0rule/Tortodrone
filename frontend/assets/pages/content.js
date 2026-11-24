@@ -1,11 +1,13 @@
 import { el, toolbar, badge, details, facts, panel, button, copy, report, routeLink } from '../ui.js';
 import { itemPicker } from '../components/item-picker.js';
 import { definitionsFor, itemLine, itemLinks, inspectItemName } from '../components/items.js';
-import { openDialog } from '../components/dialog.js';
+import { openDialog, closeDialog } from '../components/dialog.js';
 import { DataTable } from '../components/table.js';
 import { route, go } from '../router.js';
 export async function mount(ctx) {
-    let data = await ctx.request('content'),
+    // Read once, in `refresh()` below. The page used to issue the same `content` read
+    // twice per mount — once here, once a few lines down — for the same answer.
+    let data = null,
         appliedSearch = ctx.params.get('search'),
         opened = null;
     const node = el('div', null, 'stack'),
@@ -214,7 +216,13 @@ export async function mount(ctx) {
     function paintSummary() {
         summary.replaceChildren(
             toolbar(
-                badge(`${data.maps} maps`),
+                // A count is what the server sends, and the page used to look like it
+                // was hiding a map list. Say what the number is and where the maps
+                // actually live.
+                Object.assign(badge(`${data.maps} compiled scenes`), {
+                    title:
+                        'Scenes compiled into the content pack. This page validates them; the scene files themselves are in the pack on disk.'
+                }),
                 badge(`${data.items.toLocaleString()} items`),
                 badge(
                     data.warnings.length ? `${data.warnings.length} warnings` : 'Content validated',
@@ -224,11 +232,9 @@ export async function mount(ctx) {
             ...data.warnings.map((warning) => el('p', warning, 'warning'))
         );
     }
-    paintSummary();
     // The page is a catalogue of stations at the top and an item search below it: the
     // picker used to sit above the table and pushed every merchant row past the fold.
     node.append(summary, panel('Merchant catalogue', stationTable.node), picker.node);
-    stationTable.update(merchants());
     async function refresh() {
         data = await ctx.request('content');
         if (!ctx.alive()) return;
@@ -257,7 +263,15 @@ export async function mount(ctx) {
             item = params.get('item');
         const key = station ? 'station:' + station : item ? 'item:' + item : null;
         if (key === opened) return;
+        const previous = opened;
         opened = key;
+        if (!key) {
+            // The address no longer names a record, so the pane describing one has to
+            // go with it: history Back used to leave an inspector open on something the
+            // URL had already dropped.
+            if (previous) closeDialog();
+            return;
+        }
         if (station) {
             const found = merchants().find((entry) => keyOf(entry) === station);
             if (found) openStation(found);

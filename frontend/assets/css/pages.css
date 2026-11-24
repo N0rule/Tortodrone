@@ -123,8 +123,11 @@ button.metric:focus-visible {
     box-shadow: var(--elev-1);
     text-align: left;
     white-space: normal;
-    padding: 14px;
-    min-height: 110px;
+    /* One definition: the same rule used to be declared again ~1,000 lines below with
+       a different padding and min-height, so an edit to this block looked applied and
+       was not. */
+    padding: 16px;
+    min-height: 140px;
 }
 .equipment-slot .slot-label {
     color: var(--muted);
@@ -143,6 +146,7 @@ button.metric:focus-visible {
 }
 .equipment-slot.empty-slot {
     border-style: dashed;
+    align-items: center;
 }
 .equipment-slot.empty-slot .item-icon {
     border-style: dashed;
@@ -1167,10 +1171,6 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     font-size: 16px;
     font-weight: 600;
 }
-.equipment-slot {
-    min-height: 140px;
-    padding: 16px;
-}
 .equipment-slot .item-icon {
     width: 64px;
     height: 64px;
@@ -1178,10 +1178,6 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
 .equipment-slot .item-icon img {
     width: 56px;
     height: 56px;
-}
-.equipment-slot.empty-slot {
-    opacity: 1;
-    align-items: center;
 }
 .equipment-slot.locked-slot {
     border-style: solid;
@@ -1969,7 +1965,12 @@ dd .bad {
     .tabs button,
     .terminal-tools button,
     .terminal-tools select,
-    .terminal-menu-toggle {
+    .terminal-menu-toggle,
+    /* The drawer's page switcher is the most-tapped control on a phone, and it was
+       the one target the list above left out: `#navigation a` is padding-only, so it
+       stood at ~35px, and the short-viewport compaction in layout.css cut it to ~27px
+       on every landscape phone. `min-block-size` outranks the padding either way. */
+    #navigation a {
         min-block-size: var(--control-lg);
     }
 }

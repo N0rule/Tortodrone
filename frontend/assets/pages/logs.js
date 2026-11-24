@@ -25,7 +25,9 @@ export async function mount(ctx) {
         title: 'tortodrone — server log',
         severity: ctx.params.get('severity') || 'All',
         search: ctx.params.get('search') || '',
+        period: ctx.params.get('period') || 'All time',
         raw: ctx.params.get('raw') === '1',
+        wrap: ctx.params.get('wrap') !== '0',
         fill: true,
         onLoadFile: (limit) => ctx.request('logs-file', { limit: String(limit) }),
         // Below 601px these three cost a whole row of chrome the pane cannot spare,
@@ -40,14 +42,21 @@ export async function mount(ctx) {
         // The filter is the view, so it belongs in the address: the operator can copy
         // what they are looking at instead of describing it to a colleague. Replace
         // rather than push, so a typed search does not stack history entries.
-        onFilter: ({ severity, search }) => {
-            // Only the two params this filter owns are rewritten: `raw=1` describes the
-            // same pane and used to be dropped by the first keystroke.
+        onFilter: ({ severity, search, period, raw, wrap }) => {
+            // Every control that shapes the pane is written back, not only the two the
+            // filters used to own: a URL could say `raw=1` while the pane showed parsed
+            // lines, and the toggles never appeared in a copied link at all.
             const params = route().params;
             if (severity && severity !== 'All') params.set('severity', severity);
             else params.delete('severity');
             if (search) params.set('search', search);
             else params.delete('search');
+            if (period && period !== 'All time') params.set('period', period);
+            else params.delete('period');
+            if (raw) params.set('raw', '1');
+            else params.delete('raw');
+            if (wrap === false) params.set('wrap', '0');
+            else params.delete('wrap');
             const hash = '#logs' + (params.size ? '?' + params : '');
             if (location.hash !== hash) window.history.replaceState(null, '', hash);
         }
@@ -95,7 +104,10 @@ export async function mount(ctx) {
             stream.fit();
             stream.filter({
                 severity: params.get('severity') || 'All',
-                search: params.get('search') || ''
+                search: params.get('search') || '',
+                period: params.get('period') || 'All time',
+                raw: params.get('raw') === '1',
+                wrap: params.get('wrap') !== '0'
             });
         }
     };

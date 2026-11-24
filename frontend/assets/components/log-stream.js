@@ -21,6 +21,8 @@ export function logStream({
     prompt = 'tortodrone',
     severity: initialSeverity = 'All',
     search: initialSearch = '',
+    period: initialPeriod = 'All time',
+    wrap: initialWrap = true,
     raw = false,
     fill = false,
     hint = 'Ctrl+F search · Ctrl+L clear · End tail · Home top · p pause · Esc leave',
@@ -98,6 +100,10 @@ export function logStream({
         // COMMAND rows only exist on the Console, so Logs does not offer a filter
         // that can never match.
         severity = select('Severity', commands ? LEVELS : LEVELS.filter((l) => l !== 'COMMAND'), 'All');
+    // A 1000-line buffer spans days on a quiet server, and severity plus free text
+    // could not narrow it: "what happened in the last hour" meant reading timestamps.
+    const period = select('Period', ['All time', 'Last 5 minutes', 'Last hour', 'Last 24 hours'], 'All time');
+    period.title = 'Narrow the pane to lines newer than a window';
     search.placeholder = 'Search output';
     search.classList.add('terminal-search');
     search.title = 'Search the output (Ctrl+F)';
@@ -108,6 +114,8 @@ export function logStream({
         (option) => option.value === initialSeverity
     );
     if (severityOffered) severity.value = initialSeverity;
+    if ([...period.options].some((option) => option.value === initialPeriod))
+        period.value = initialPeriod;
 
     let paused = false,
         auto = true,
@@ -120,6 +128,7 @@ export function logStream({
         retained = 0,
         file = null,
         rawMode = raw,
+        initialWrapMode = initialWrap !== false,
         lastRowAt = 0,
         fileRows = [],
         retainedCount = 0,
@@ -127,7 +136,7 @@ export function logStream({
         clearing = new Set(),
         // A stack trace or a long JSON line is unreadable when it reflows; the toggle
         // swaps `pre-wrap` for one scrollable row, the way a terminal does.
-        wrapMode = true,
+        wrapMode = initialWrapMode,
         // A console shows its own answers first: the server log underneath is context,
         // and mixing the two buried every answer under live INFO chatter. (`source` is
         // already the status strip, hence `sourceMode`.)
@@ -171,11 +180,24 @@ export function logStream({
         renderStatus();
     }
 
+    const PERIODS = {
+        'Last 5 minutes': 5 * 60_000,
+        'Last hour': 3_600_000,
+        'Last 24 hours': 86_400_000
+    };
     function matches(row) {
         // The gutter is painted, so search has to see it: typing a level name returned
         // "no line matches" over 500 rows of exactly that level.
 
         if (severity.value !== 'All' && row.level !== severity.value) return false;
+        const span = PERIODS[period.value];
+        if (span) {
+            const at =
+                typeof row.timestamp === 'number' ? row.timestamp : Date.parse(row.timestamp);
+            // A line whose time cannot be parsed is never hidden by a window: it stays
+            // visible, the same rule the audit trail follows.
+            if (Number.isFinite(at) && Date.now() - at > span) return false;
+        }
         const needle = search.value.toLowerCase();
         if (!needle) return true;
         // Search what a reader can see: the message (or the command and its
@@ -734,7 +756,14 @@ export function logStream({
         display();
         // The view in front of the operator is what they copy or bookmark, so the
         // address follows the filters instead of only being read from.
-        if (onFilter) onFilter({ severity: severity.value, search: search.value });
+        if (onFilter)
+            onFilter({
+                severity: severity.value,
+                search: search.value,
+                period: period.value,
+                raw: rawMode,
+                wrap: wrapMode
+            });
     };
     // Typing a term repaints and rewrites the address; per keystroke over a 1000-line
     // buffer that is a rebuild of every row on every letter. A select is a deliberate
@@ -744,7 +773,7 @@ export function logStream({
         clearTimeout(filterTimer);
         filterTimer = setTimeout(applyFilters, 120);
     };
-    severity.onchange = applyFilters;
+    severity.onchange = period.onchange = applyFilters;
     output.addEventListener('scroll', () => {
         const away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
         jump.hidden = !away;
@@ -919,6 +948,16 @@ export function logStream({
         rawToggle.setAttribute('aria-pressed', String(rawMode));
         cache.clear();
         display();
+        // The pane and the address have to agree: both toggles used to be read from
+        // the URL and never written back to it.
+        if (onFilter)
+            onFilter({
+                severity: severity.value,
+                search: search.value,
+                period: period.value,
+                raw: rawMode,
+                wrap: wrapMode
+            });
     });
     rawToggle.setAttribute('aria-pressed', String(rawMode));
     rawToggle.title = 'Render the exact text the server wrote to its log file';
@@ -933,6 +972,14 @@ export function logStream({
         output.classList.toggle('no-wrap', !wrapMode);
         cache.clear();
         display();
+        if (onFilter)
+            onFilter({
+                severity: severity.value,
+                search: search.value,
+                period: period.value,
+                raw: rawMode,
+                wrap: wrapMode
+            });
     });
     wrapToggle.setAttribute('aria-pressed', String(!wrapMode));
     wrapToggle.title = 'Show long lines as one scrollable row instead of reflowing them';
@@ -1016,7 +1063,16 @@ export function logStream({
         menuBody.append(load);
     }
     menu.append(menuToggle, menuBody);
-    tools.append(search, matchCount, severity, ...(tail ? [pause, follow] : []), menu, undoClear, ...extras);
+    tools.append(
+        search,
+        matchCount,
+        severity,
+        ...(tail ? [period] : []),
+        ...(tail ? [pause, follow] : []),
+        menu,
+        undoClear,
+        ...extras
+    );
 
     /** Parse the file's own `[24-11-2026 04:53:11]` prefix into an instant. */
     function fileStamp(value) {
@@ -1111,10 +1167,26 @@ export function logStream({
         },
         focusSearch: () => search.focus(),
         /** Re-apply a deep-linked filter without reloading the page. */
-        filter({ severity: level, search: term } = {}) {
+        filter({ severity: level, search: term, period: span, raw, wrap } = {}) {
             if (level && LEVELS.includes(level) && severity.querySelector(`option[value="${level}"]`))
             severity.value = level;
             if (typeof term === 'string') search.value = term;
+            if (span && [...period.options].some((option) => option.value === span))
+                period.value = span;
+            // Raw and wrap are panes, not filters, but they are in the address: a link
+            // that says raw has to arrive raw.
+            if (typeof raw === 'boolean' && raw !== rawMode) {
+                rawMode = raw;
+                text(rawToggle, rawMode ? 'Show parsed lines' : 'Show raw lines');
+                rawToggle.setAttribute('aria-pressed', String(rawMode));
+            }
+            if (typeof wrap === 'boolean' && wrap !== wrapMode) {
+                wrapMode = wrap;
+                text(wrapToggle, wrapMode ? 'No wrapping' : 'Wrap long lines');
+                wrapToggle.setAttribute('aria-pressed', String(!wrapMode));
+                output.classList.toggle('no-wrap', !wrapMode);
+            }
+            cache.clear();
             display();
         },
         get paused() {

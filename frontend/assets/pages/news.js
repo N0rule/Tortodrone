@@ -80,7 +80,17 @@ export async function mount(ctx) {
     // Declared before the panel that holds it: the panel list is built above the rest of
     // this function, and a `const` placed after it is a temporal-dead-zone error on mount.
     const library = el('div', null, 'news-library');
-    library.setAttribute('role', 'list');
+    // Not `role="list"`: a tile is a `<button>`, and putting `listitem` on it (below)
+    // replaced the button role, so the only control that arms a banner announced
+    // itself as "list item" and gave no hint it could be pressed. A named group of
+    // buttons is what this is.
+    library.setAttribute('role', 'group');
+    library.setAttribute('aria-label', 'Images on the server');
+    const libraryFilter = input('Filter the image library', '');
+    libraryFilter.type = 'search';
+    libraryFilter.placeholder = 'Filter by name';
+    libraryFilter.oninput = () => renderLibrary();
+    const libraryCount = el('span', null, 'muted');
     const fields = panel(
         '',
         title,
@@ -189,7 +199,9 @@ export async function mount(ctx) {
                 'muted'
             ),
             // The library used to be an upload field and a sentence: the only way to see
-            // what was already on the server was the picker's option text.
+            // what was already on the server was the picker's option text. Up to 128
+            // images can be stored, so it has a filter of its own.
+            toolbar(libraryFilter, libraryCount),
             library
         ),
         advanced,
@@ -217,6 +229,16 @@ export async function mount(ctx) {
         return '';
     }
     function renderLibrary() {
+        const needle = libraryFilter.value.trim().toLowerCase();
+        const shown = needle
+            ? data.images.filter((info) => info.image.toLowerCase().includes(needle))
+            : data.images;
+        text(
+            libraryCount,
+            data.images.length
+                ? `${shown.length.toLocaleString()} of ${data.images.length.toLocaleString()} images`
+                : ''
+        );
         if (!data.images.length) {
             library.replaceChildren(
                 el(
@@ -227,12 +249,17 @@ export async function mount(ctx) {
             );
             return;
         }
+        if (!shown.length) {
+            library.replaceChildren(
+                el('p', 'No image name matches “' + libraryFilter.value.trim() + '”.', 'muted')
+            );
+            return;
+        }
         const max = slot === 'featured' ? [570, 300] : [280, 190];
         library.replaceChildren(
-            ...data.images.map((info) => {
+            ...shown.map((info) => {
                 const tile = el('button', null, 'news-library-tile');
                 tile.type = 'button';
-                tile.setAttribute('role', 'listitem');
                 const thumb = el('img');
                 thumb.loading = 'lazy';
                 thumb.alt = '';

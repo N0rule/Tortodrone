@@ -124,6 +124,7 @@ public final class ContentMigrationTest {
      * from a guess about where a whole-content copy or a parse lands.
      */
     private static final long START = System.nanoTime();
+
     private static long last = START;
 
     private static void lap(String what) {

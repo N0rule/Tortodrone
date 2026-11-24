@@ -387,6 +387,16 @@ dialog::backdrop {
     justify-content: space-between;
     gap: 12px;
 }
+/* A long batch reports its progress and offers the way out of it on the same line:
+   before this, a 200-knight send held the operator in a modal that refused Close,
+   Cancel and Escape while it worked, with no control that could stop it. */
+.dialog-progress-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
 .dialog-heading h2 {
     margin: 0;
 }

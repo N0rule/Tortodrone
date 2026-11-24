@@ -295,6 +295,17 @@ button.secondary,
        panel it actually sits on rather than the canvas. */
     --control-border: color-mix(in srgb, var(--line-bright) 80%, var(--raised));
 }
+/* That mix is measured against --surface, where it reaches 3.50:1 (dark) and 3.09:1
+   (light). On a host that *is* --raised it lands at 2.59:1 and 2.48:1 — under the 3:1
+   a control boundary needs (WCAG 1.4.11) — because the mix moves the boundary toward
+   the very colour it has to stand out from. The hosts that paint --raised name
+   themselves here and take the flat token: 3.18:1 and 3.28:1. */
+.bulk-bar button.secondary,
+.bulk-bar .button.secondary,
+#notice button.secondary,
+.refusal button.secondary {
+    --control-border: var(--line-bright);
+}
 button:where(.secondary):not(:disabled):not([aria-disabled='true']):hover,
 .button:where(.secondary):not(:disabled):not([aria-disabled='true']):hover {
     border-color: var(--line-bright);

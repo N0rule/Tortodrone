@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 const root = new URL('../../../', import.meta.url).pathname;
 const components = readFileSync(`${root}frontend/assets/css/components.css`, 'utf8');
 const base = readFileSync(`${root}frontend/assets/css/base.css`, 'utf8');
+const layout = readFileSync(`${root}frontend/assets/css/layout.css`, 'utf8');
 const table = readFileSync(`${root}frontend/assets/components/table.js`, 'utf8');
 const pages = readFileSync(`${root}frontend/assets/css/pages.css`, 'utf8');
 const html = readFileSync(`${root}frontend/index.html`, 'utf8');
@@ -87,9 +88,28 @@ test('page grids collapse before they can overflow', () => {
 });
 
 test('the shell fits a 360px viewport', () => {
-    // Wide min-widths are the usual cause of horizontal overflow on phones.
-    for (const css of [base, components]) {
-        for (const match of css.matchAll(/min-width:\s*(\d+)px/g))
-            assert.ok(Number(match[1]) <= 360, `min-width:${match[1]}px overflows a 360px viewport`);
+    // Wide minimums are the usual cause of horizontal overflow on phones, and they are
+    // written both ways: `min-width` and `min-inline-size`. Scanning two of the four
+    // sheets, in one spelling only, promised more than it checked.
+    const sheets = { 'base.css': base, 'layout.css': layout, 'components.css': components, 'pages.css': pages };
+    for (const [name, css] of Object.entries(sheets)) {
+        // Breakpoint *conditions* are not declarations: `@media (min-width: 1700px)`
+        // is how a wide layout is opted into, not a 1,700px floor on every screen.
+        const declarations = css.replace(/@media[^{]*\{/g, '{');
+        for (const match of declarations.matchAll(/min-(?:width|inline-size):\s*(\d+)px/g))
+            assert.ok(
+                Number(match[1]) <= 360,
+                `${name}: min-${match[0].split(':')[0].replace('min-', '')} of ${match[1]}px overflows a 360px viewport`
+            );
     }
+});
+
+test('every touch target the coarse-pointer block sizes covers the drawer too', () => {
+    // `#navigation a` is padding-only, so the short-viewport compaction in layout.css
+    // left it at ~27px on a landscape phone — the most-tapped control on the device,
+    // and the one selector the coarse-pointer list did not name.
+    const coarse = pages.slice(pages.indexOf('@media (pointer: coarse)'));
+    assert.match(coarse, /#navigation a\s*\{[^}]*min-block-size:\s*var\(--control-lg\)/);
+    const tokens = readFileSync(`${root}frontend/assets/css/tokens.css`, 'utf8');
+    assert.match(tokens, /--control-lg:\s*4[4-9]px/, 'the coarse-pointer step must clear 44px');
 });

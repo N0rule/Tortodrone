@@ -2,6 +2,8 @@ import { api } from '../api.js';
 import { el, input, select, toolbar, button, text, report } from '../ui.js';
 import { itemTile } from './items.js';
 import { emptyState } from './states.js';
+import { exportRows } from './export.js';
+import { toast } from './toast.js';
 
 /** Bounded server pages; obsolete search results never replace the latest results. */
 export function itemPicker(
@@ -28,7 +30,68 @@ export function itemPicker(
             page++;
             return load();
         });
-    const paging = toolbar(count, previous, next);
+    /**
+     * The catalogue is the one list in the application with no export: it is read
+     * through a 24-tile window, so an operator who wanted the set had to page and
+     * transcribe. The server pages at 100 rows per request, so the export walks the
+     * pages it is allowed to and says so when the set is larger than it fetched —
+     * a partial file that claims to be whole is worse than no file.
+     */
+    const EXPORT_CAP = 1000;
+    const exportButton = button(
+        'Export',
+        async () => {
+            exportButton.setBusy?.(true);
+            try {
+                const rows = [];
+                let total = null;
+                for (let at = 1; rows.length < EXPORT_CAP; at++) {
+                    const chunk = await api.request('catalogue', {
+                        search: search.value,
+                        category: categories.value,
+                        page: at,
+                        size: 100,
+                        slot: compatibleSlot ?? ''
+                    });
+                    total = chunk.total;
+                    if (!chunk.entries.length) break;
+                    rows.push(...chunk.entries);
+                    if (rows.length >= chunk.total) break;
+                }
+                const kept = rows.slice(0, EXPORT_CAP);
+                exportRows(
+                    'catalogue',
+                    kept,
+                    [
+                        ['Name', (row) => row.name],
+                        ['Config', (row) => row.config],
+                        ['Category', (row) => row.category],
+                        ['Grantable', (row) => (row.grantable ? 'yes' : 'no')],
+                        ['Unavailable because', (row) => row.reason ?? '']
+                    ]
+                );
+                toast(
+                    `Exported ${kept.length.toLocaleString()} of ${Number(
+                        total ?? kept.length
+                    ).toLocaleString()} items.`,
+                    total > kept.length
+                        ? {
+                              type: 'info',
+                              detail: `The server pages the catalogue, so this file stops at ${EXPORT_CAP.toLocaleString()} rows: narrow the search to export the rest.`
+                          }
+                        : { type: 'success' }
+                );
+            } catch (error) {
+                report(error);
+            } finally {
+                exportButton.setBusy?.(false);
+            }
+        },
+        'secondary'
+    );
+    exportButton.title =
+        'Download every item matching the search and category, up to 1,000 rows as CSV';
+    const paging = toolbar(count, exportButton, previous, next);
     node.append(toolbar(search, categories), grid, paging);
     async function load() {
         clearTimeout(timer);

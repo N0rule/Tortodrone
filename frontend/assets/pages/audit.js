@@ -1,4 +1,16 @@
-import { el, date, badge, panel, facts, toolbar, button, routeLink, copy, landOn } from '../ui.js';
+import {
+    el,
+    date,
+    badge,
+    panel,
+    facts,
+    toolbar,
+    button,
+    routeLink,
+    copy,
+    text,
+    landOn
+} from '../ui.js';
 import { route } from '../router.js';
 import { DataTable } from '../components/table.js';
 export async function mount(ctx) {
@@ -217,12 +229,43 @@ export async function mount(ctx) {
     // The trail is the page; the inspector appears above it once a row is chosen, so
     // the first thing an operator reads is the events, not an empty pane.
     detail.hidden = true;
+    // The read is capped at the newest 500 rows and this page used to say "Every
+    // privileged request" over it: an operator on a busy server read the bottom row as
+    // the beginning of the trail. The cap, and where the rest lives, are stated.
+    const CAP = 500;
+    const scope = el('small', null, 'muted');
+    let paused = false,
+        reading = false;
+    const pause = button('Pause', () => {
+        paused = !paused;
+        text(pause, paused ? 'Resume' : 'Pause');
+        describeScope();
+        if (!paused) refresh().catch(() => {});
+    });
+    pause.setAttribute('aria-label', 'Pause the audit trail');
+    function describeScope() {
+        const count = table.rows.length;
+        scope.textContent = paused
+            ? `Paused: the trail shown here is the ${count} row${count === 1 ? '' : 's'} that were on screen when you paused. Nothing is being read.`
+            : count >= CAP
+              ? `Showing the newest ${CAP} events only — older rows are still in data/webui.sqlite, but this page cannot page back to them yet.`
+              : `Every recorded event (${count}) is on this page: the server keeps the newest ${CAP}.`;
+    }
     // The inspector sits above the trail: appended after sixty rows it was 2,200px
     // below the fold, so the citation link a row emits looked like a dead click.
-    node.append(detail, table.node);
+    node.append(detail, toolbar(scope, pause), table.node);
     let pendingEvent = null;
     async function refresh() {
-        table.update(await ctx.request('audit'));
+        // A pause is a real pause: the ten-second poll used to re-insert rows at the
+        // top under whoever was reading them.
+        if (paused || reading) return;
+        reading = true;
+        try {
+            table.update(await ctx.request('audit'));
+        } finally {
+            reading = false;
+        }
+        describeScope();
         // A cold load applies the address before the trail exists; the event it names
         // is opened as soon as there are rows to find it in.
         if (pendingEvent !== null) {

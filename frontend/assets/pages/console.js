@@ -58,6 +58,15 @@ export function reset() {
         /* nothing to clear */
     }
 }
+/**
+ * The verbs that change server state, held statically rather than read from the command
+ * list. The list is a server read, and a failed read used to leave `metadata.actions`
+ * empty — which sent `shutdown` and `restart` straight past the confirmation dialog to
+ * `AdminConsole`, whose answer is "Repeat the exact command to confirm", a refusal the
+ * page had no field for. The dialog is the thing that cannot depend on the read.
+ */
+const STATEFUL = new Set(['start', 'stop', 'restart', 'kick', 'shutdown']);
+
 export async function mount(ctx) {
     // The prompt is the console: a failed command list must not replace the page an
     // operator reaches for when the server is misbehaving with an error card.
@@ -430,7 +439,7 @@ export async function mount(ctx) {
             return;
         }
         if (!value) return;
-        if (metadata.actions.includes(value.split(/\s+/)[0])) {
+        if (STATEFUL.has(value.split(/\s+/)[0]) || metadata.actions.includes(value.split(/\s+/)[0])) {
             // A cancelled confirmation never enters ↑ history: nothing ran.
             edit(
                 'Confirm command · ' + value,
