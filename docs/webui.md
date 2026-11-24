@@ -108,6 +108,10 @@ line with the key hints and the tail state. Both pages fill the reading area
 (`calc(100dvh - 210px)`, at least 62dvh and 260 px) so the surface has the same
 weight on either page, and a landscape phone gets the height it actually has.
 
+The severity filter carries the per-level counts (`ERROR (3)`, `All (1000)`), counted
+over the search-filtered rows: finding three errors among a thousand lines used to
+mean choosing ERROR and counting what was left.
+
 Severity is carried by the level column, not by the message: a long warning stays
 readable text instead of turning into a gold paragraph. A buffer that crosses
 midnight gains a day divider, and `Show raw lines` renders the exact text the
@@ -154,8 +158,9 @@ Console keeps its prompt inside the shell and nothing else: a `tortodrone$` labe
 a borderless monospace field, and **Enter** to submit — there is no Run button, no
 Help button and no row of command chips, because `help` prints the command list into
 the transcript where a shell prints it. `Tab` completes from the server's route list,
-prints its candidates when they are ambiguous, and says so plainly when a command
-takes an argument the page cannot guess; `↑`/`↓` walk the history, `Ctrl`/`⌘` + `R` searches it backwards from
+prints its candidates when they are ambiguous, and completes the argument of the one
+command that has one — `kick` — from the live session ids the server reports, so a
+kick no longer asks the operator to go and look an id up; `↑`/`↓` walk the history, `Ctrl`/`⌘` + `R` searches it backwards from
 whatever is in the prompt (each press steps to an older match, and reaching the
 browser with it used to reload the page mid-command), `Esc` clears the prompt, and
 `Ctrl`/`⌘` + `L`/`C` clear the screen and cancel — `Ctrl`/`⌘` + `Shift` + `C` is the

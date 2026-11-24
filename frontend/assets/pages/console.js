@@ -250,6 +250,41 @@ export async function mount(ctx) {
         stream.redraw();
     }
     let completion = { list: [], at: -1 };
+    // Session ids, read once and kept: they arrive with `status`, and re-reading them on
+    // every Tab would line up a request behind each keystroke.
+    let sessions = null;
+    async function completeSession(prefix) {
+        if (sessions === null) {
+            text(feedback, 'Reading sessions…');
+            try {
+                const status = await ctx.request('status');
+                sessions = (status.sessions || []).map((row) => String(row.id));
+            } catch {
+                sessions = [];
+            }
+            text(feedback, 'Connected');
+        }
+        const matches = sessions.filter((id) => id.startsWith(prefix.toLowerCase()));
+        if (!matches.length) {
+            notice(
+                sessions.length
+                    ? `No live session starts with “${prefix}”. Type a session id, or run players to list them.`
+                    : 'No player session is connected, so there is no id to complete.'
+            );
+            return;
+        }
+        if (completion.at === -1 || !matches.includes(completion.list[completion.at])) {
+            completion = { list: matches, at: -1 };
+        }
+        if (completion.list.length > 1 && completion.at === completion.list.length - 1) {
+            notice(completion.list.map((id) => 'kick ' + id).join('   '));
+            return;
+        }
+        completion.at = (completion.at + 1) % completion.list.length;
+        const next = `kick ${completion.list[completion.at]}`;
+        command.value = commandDraft = next;
+        command.setSelectionRange(next.length, next.length);
+    }
     // Reverse history search. Ctrl+R is the reflex a terminal user has, and reaching
     // the browser with it reloads the page and loses whatever was being typed.
     let scanning = null;
@@ -279,7 +314,7 @@ export async function mount(ctx) {
         completion = { list: [], at: -1 };
         scanning = null;
     };
-    command.onkeydown = (event) => {
+    command.onkeydown = async (event) => {
         if (event.ctrlKey && event.key.toLowerCase() === 'l') {
             event.preventDefault();
             stream.clear();
@@ -334,12 +369,18 @@ export async function mount(ctx) {
                 return;
             }
             if (typed.includes(' ')) {
-                // `kick 42` is a command plus an argument this page cannot guess, so
-                // Tab says so in the pane, not only to a screen reader.
+                const [verb, ...argument] = typed.split(/\s+/);
                 event.preventDefault();
+                // `kick` is the one command with an argument, and the page can read the
+                // session ids it needs: the server names them in `status`. Completing them
+                // beats the old notice that told the operator to go and look.
+                if (verb === 'kick' && metadata.actions.includes('kick')) {
+                    await completeSession(argument[0] || '');
+                    return;
+                }
                 notice(
                     'Tab completes command names. ' +
-                        typed.split(/\s+/)[0] +
+                        verb +
                         ' takes an argument the page cannot guess; help lists the syntax.'
                 );
                 return;
@@ -442,6 +483,8 @@ export async function mount(ctx) {
         } finally {
             pending = false;
             running = '';
+            // A kick changes the roster, so a cache from before it may name a dead session.
+            sessions = null;
             busy(false);
         }
     };
