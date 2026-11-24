@@ -15,6 +15,7 @@ public final class ContentMigrationTest {
         try {
             Path root = home.resolve("old"), candidate = home.resolve("candidate");
             ContentFixture.copy(ContentFixture.path(""), root.resolve("defaults"));
+            lap("fixture copy");
             Files.move(root.resolve("defaults/maps/advanced_training"), root.resolve("defaults/maps/294"));
             Path data = root.resolve("data");
             Files.createDirectories(data.resolve("keys"));
@@ -23,15 +24,20 @@ public final class ContentMigrationTest {
             Files.writeString(data.resolve("server.properties"), "server-port=47699\n");
             Files.writeString(data.resolve("server.lock"), "");
             var original = bytes(root);
+            lap("hash every source file");
             var old = MigrationPackLoader.load(root);
+            lap("load the old pack");
             try (var channel = FileChannel.open(data.resolve("server.lock"), StandardOpenOption.WRITE);
                     var lock = channel.lock()) {
                 failure(() -> ContentMigration.migrate(root, candidate, null));
                 check(!Files.exists(candidate), "locked source cannot publish a candidate");
             }
             ContentMigration.migrate(root, candidate, null);
+            lap("migrate to a candidate");
             unchanged(original, root);
+            lap("compare every source byte");
             var converted = ContentManager.load(candidate);
+            lap("load the candidate content");
             var oldStats = old.scenes().scene(294).content().stats();
             var migratedStats = converted.scenes().scene(294).content().stats();
             for (var stat : oldStats.entrySet())
@@ -84,11 +90,17 @@ public final class ContentMigrationTest {
             Yaml.write(portalFile, portals);
             ContentFixture.delete(candidate.resolve("content/maps/training/scene_294"));
             MapImport.install(ContentFixture.path("maps/advanced_training"), candidate, "imported_training", null);
+            long imported = System.nanoTime();
             check(
                     ContentManager.load(candidate).scenes().scene(294).version() == 359
                             && Files.exists(
                                     candidate.resolve("content/maps/training/imported_training/npcs/konway.yml")),
                     "validated compatible map imports without a content pack");
+            System.out.printf(
+                    Locale.ROOT,
+                    "  phase %-28s %.2fs%n",
+                    "load after map import",
+                    (System.nanoTime() - imported) / 1e9);
             check(
                     Files.readString(candidate.resolve(
                                     "content/maps/training/imported_training/native/import-report.txt"))
@@ -103,6 +115,21 @@ public final class ContentMigrationTest {
         } finally {
             ContentFixture.delete(home);
         }
+    }
+
+    /**
+     * Phase timing. This program is the longest in the gate (348 s on the reference
+     * machine) and the suite can only report its total, so each expensive step says what
+     * it cost: the answer to "why is migration slow" has to come from the program, not
+     * from a guess about where a whole-content copy or a parse lands.
+     */
+    private static final long START = System.nanoTime();
+    private static long last = START;
+
+    private static void lap(String what) {
+        long now = System.nanoTime();
+        System.out.printf(Locale.ROOT, "  phase %-28s %.2fs%n", what, (now - last) / 1e9);
+        last = now;
     }
 
     private static Map<Path, byte[]> bytes(Path root) throws IOException {
