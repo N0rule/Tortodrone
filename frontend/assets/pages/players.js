@@ -1,6 +1,7 @@
-import { el, panel, button, duration, status } from '../ui.js';
+import { api } from '../api.js';
+import { el, panel, button, copy, duration, status } from '../ui.js';
 import { DataTable } from '../components/table.js';
-import { confirm } from '../components/dialog.js';
+import { confirm, confirmAction } from '../components/dialog.js';
 export async function mount(ctx) {
     const node = el('div', null, 'stack');
     const players = new DataTable(
@@ -48,6 +49,54 @@ export async function mount(ctx) {
                           : [])
                   ]
                 : undefined,
+            selectable: ctx.moderator,
+            bulkActions: ctx.moderator
+                ? (selected) => [
+                      button(
+                          'Disconnect selected',
+                          () => {
+                              const rows = selected();
+                              confirmAction({
+                                  title: `Disconnect ${rows.length} session${rows.length === 1 ? '' : 's'}`,
+                                  description:
+                                      'Each selected connection is dropped immediately. Authenticated players can reconnect at once.',
+                                  label: 'Disconnect',
+                                  onSubmit: async () => {
+                                      let done = 0,
+                                          failed = 0;
+                                      for (const row of rows) {
+                                          try {
+                                              await api.change('kick', { session: row.id });
+                                              done++;
+                                          } catch {
+                                              failed++;
+                                          }
+                                      }
+                                      ctx.toast(
+                                          `Disconnected ${done} session${done === 1 ? '' : 's'}` +
+                                              (failed ? `, ${failed} could not be closed` : '.'),
+                                          { type: failed ? 'error' : 'success' }
+                                      );
+                                  }
+                              });
+                          },
+                          'danger',
+                          () => selected().length > 0
+                      ),
+                      button(
+                          'Copy session IDs',
+                          () =>
+                              copy(
+                                  selected()
+                                      .map((row) => row.id)
+                                      .join('\n'),
+                                  'Session IDs copied.'
+                              ),
+                          'secondary',
+                          () => selected().length > 0
+                      )
+                  ]
+                : undefined,
             filters: [
                 [
                     'State',
@@ -72,7 +121,12 @@ export async function mount(ctx) {
             ['Population', (r) => r.players],
             ['State', (r) => r.state]
         ],
-        { key: (r) => r.instanceId }
+        {
+            key: (r) => r.instanceId,
+            id: 'scene-population',
+            caption: 'Scene population',
+            exportName: 'scenes'
+        }
     );
     node.append(players.node, panel('Scene population', scenes.node));
     async function refresh() {

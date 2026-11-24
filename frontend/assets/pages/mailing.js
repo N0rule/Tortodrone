@@ -227,6 +227,9 @@ export async function mount(ctx) {
             ]
         ],
         {
+            id: 'mail-campaigns',
+            caption: 'Mail campaigns',
+            exportName: 'mail-campaigns',
             actions: (get) => [
                 button(
                     'Edit',

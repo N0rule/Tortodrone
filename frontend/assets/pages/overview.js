@@ -113,7 +113,13 @@ export async function mount(ctx) {
                 (r) => r.monsters.tickP99Millis
             ]
         ],
-        { key: (r) => `${r.templateId}:${r.instanceId}`, pageSize: 8 }
+        {
+            key: (r) => `${r.templateId}:${r.instanceId}`,
+            pageSize: 8,
+            id: 'overview-monsters',
+            caption: 'Scene monster runtime',
+            exportName: 'scene-monsters'
+        }
     );
     const warnings = new DataTable(
         [
@@ -121,7 +127,13 @@ export async function mount(ctx) {
             ['Severity', (r) => r.level],
             ['Message', (r) => r.message]
         ],
-        { key: (r) => `${r.timestamp}:${r.thread}:${r.message}`, pageSize: 8 }
+        {
+            key: (r) => `${r.timestamp}:${r.thread}:${r.message}`,
+            pageSize: 8,
+            id: 'overview-warnings',
+            caption: 'Recent warnings and errors',
+            exportName: 'recent-warnings'
+        }
     );
     node.append(
         strip,

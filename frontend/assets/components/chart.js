@@ -19,7 +19,8 @@ function svg(tag, attrs = {}) {
     return node;
 }
 export function chart(title, unit, series) {
-    const node = el('section', null, 'panel'),
+    const slug = 'chart-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        node = el('section', null, 'panel'),
         heading = el('h2', title),
         readout = el('div', 'Waiting for samples', 'chart-legend'),
         current = el('div', null, 'chart-current'),
@@ -30,12 +31,18 @@ export function chart(title, unit, series) {
             current.append(row);
             return value;
         });
+    heading.id = slug + '-heading';
+    readout.id = slug + '-readout';
+    // Only keyboard inspection announces: pointer movement would flood a reader.
+    readout.setAttribute('aria-live', 'off');
     const graph = svg('svg', {
         viewBox: '0 0 600 190',
         class: 'chart',
         role: 'img',
         tabindex: 0,
-        'aria-label': title + ' history; use arrow keys to inspect samples'
+        'aria-label': title + ' history; use arrow keys to inspect samples',
+        'aria-describedby': readout.id,
+        'aria-labelledby': heading.id
     });
     const lines = svg('g'),
         paths = series.map((s, i) =>
@@ -81,6 +88,7 @@ export function chart(title, unit, series) {
     graph.onpointermove = (event) => {
         if (!samples.length) return;
         inspecting = true;
+        readout.setAttribute('aria-live', 'off');
         const x = new DOMPoint(event.clientX, event.clientY).matrixTransform(
             graph.getScreenCTM().inverse()
         ).x;
@@ -97,6 +105,7 @@ export function chart(title, unit, series) {
         if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
             event.preventDefault();
             inspecting = true;
+            readout.setAttribute('aria-live', 'polite');
             inspect(
                 event.key === 'Home'
                     ? 0

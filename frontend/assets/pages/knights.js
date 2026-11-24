@@ -14,7 +14,8 @@ import {
     select,
     tabs,
     text,
-    number
+    number,
+    copy
 } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { edit, confirm, field, conflict, openDialog } from '../components/dialog.js';
@@ -77,6 +78,41 @@ export async function mount(ctx) {
         ],
         {
             key: (k) => `${k.accountId}:${k.id}`,
+            id: 'knights',
+            caption: 'Knights',
+            exportName: 'knights',
+            selectable: true,
+            bulkActions: (selected) => [
+                button(
+                    'Copy names',
+                    () => copy(selected().map((k) => k.name).join('\n'), 'Knight names copied.'),
+                    'secondary',
+                    () => selected().length > 0
+                ),
+                button(
+                    'Copy accounts',
+                    () =>
+                        copy(
+                            [...new Set(selected().map((k) => k.username))].join('\n'),
+                            'Account names copied.'
+                        ),
+                    'secondary',
+                    () => selected().length > 0
+                ),
+                button(
+                    'Open profile',
+                    () => {
+                        const [first] = selected();
+                        if (first)
+                            ctx.go('knights', {
+                                username: first.username,
+                                knight: first.name
+                            });
+                    },
+                    'secondary',
+                    () => selected().length === 1
+                )
+            ],
             actions: (get) => [
                 button('Open profile', () =>
                     ctx.go('knights', { username: get().username, knight: get().name })

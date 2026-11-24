@@ -109,6 +109,7 @@ public final class WebUiAssetsExport {
                         Map.entry("mailing", "mail"),
                         Map.entry("content", "arsenal"),
                         Map.entry("console", "settings"),
+                        Map.entry("settings", "settings"),
                         Map.entry("logs", "notice"),
                         Map.entry("webui-users", "settings"),
                         Map.entry("details", "help"),

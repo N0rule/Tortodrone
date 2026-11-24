@@ -2,7 +2,9 @@
 try {
     for (const [key, values, fallback] of [
         ['theme', ['dark', 'light'], 'dark'],
-        ['density', ['comfortable', 'compact'], 'comfortable']
+        ['density', ['comfortable', 'compact'], 'comfortable'],
+        ['motion', ['auto', 'reduce'], 'auto'],
+        ['clock', ['24-hour', '12-hour'], '24-hour']
     ]) {
         const value = localStorage.getItem('tortodrone-' + key);
         document.documentElement.dataset[key] = values.includes(value) ? value : fallback;

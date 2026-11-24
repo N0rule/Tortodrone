@@ -5,6 +5,7 @@ import { openDialog } from '../components/dialog.js';
 export async function mount(ctx) {
     const data = await ctx.request('content'),
         node = el('div', null, 'stack');
+    const initial = ctx.params.get('search') || '';
     const picker = itemPicker((def) =>
         openDialog({
             title: def.name,
@@ -16,7 +17,8 @@ export async function mount(ctx) {
             submit: 'Close',
             notifySaved: false,
             onSubmit: async () => {}
-        })
+        }),
+        { query: initial }
     );
     node.append(
         toolbar(

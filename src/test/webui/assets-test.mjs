@@ -20,6 +20,7 @@ const symbols = [
         'console',
         'logs',
         'webui-users',
+        'settings',
         'audit',
         'equipment',
         'inventory',

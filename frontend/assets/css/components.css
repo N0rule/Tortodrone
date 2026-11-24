@@ -111,8 +111,14 @@ td {
     border-top: 1px solid var(--line);
     vertical-align: middle;
 }
+tbody tr:nth-child(even) td {
+    background: color-mix(in srgb, var(--raised) 22%, transparent);
+}
 tr:hover td {
     background: color-mix(in srgb, var(--raised) 50%, transparent);
+}
+td:first-of-type {
+    overflow-wrap: anywhere;
 }
 td .toolbar {
     flex-wrap: nowrap;
@@ -124,11 +130,24 @@ td button {
 .pagination {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     justify-content: flex-end;
     gap: 10px;
     padding-top: 12px;
     color: var(--muted);
     font-size: 12px;
+}
+.pagination .table-count {
+    margin-right: auto;
+    white-space: nowrap;
+}
+.pagination select {
+    flex: 0 1 190px;
+    width: auto;
+    min-width: 120px;
+}
+.pagination button {
+    flex: 0 0 auto;
 }
 .tabs {
     display: flex;
@@ -386,4 +405,504 @@ button > svg.ui-icon {
 a:focus-visible {
     outline: 2px solid var(--cyan);
     outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Shared primitives added with the interaction polish: an unannounced
+   utility class, keyboard caps, pulse/skeleton placeholders, empty and error
+   states, transient toasts, the command palette and the bulk-selection bar.
+   --------------------------------------------------------------------------- */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+.kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    color: var(--muted);
+    background: var(--inset);
+    border: 1px solid var(--line-bright);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    font: 600 11px/1.6 var(--mono);
+    white-space: nowrap;
+}
+.notice-inline {
+    padding: 12px 15px;
+    color: var(--muted);
+    background: var(--raised);
+    border-left: 3px solid var(--gold);
+    border-radius: var(--radius);
+}
+.data-table {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    min-width: 0;
+}
+.table-tools .spacer {
+    margin-left: auto;
+}
+.table-count {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+.table-wrap:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+.select-column {
+    width: 1%;
+    padding-inline: 12px 4px;
+}
+.select-column input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+th.select-column {
+    padding-top: 10px;
+}
+caption {
+    text-align: left;
+}
+
+/* Skeletons keep the final height so a first read does not shift the layout. */
+.skeleton {
+    display: grid;
+    gap: 8px;
+    padding: var(--space);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+.skeleton-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 14px;
+}
+.skeleton-bar {
+    height: 12px;
+    width: var(--skeleton-split, 88%);
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--raised), var(--inset), var(--raised));
+    background-size: 300% 100%;
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+.skeleton-head .skeleton-bar {
+    height: 10px;
+    opacity: 0.6;
+}
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: 0 0;
+    }
+}
+.waiting {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 40px;
+    color: var(--muted);
+}
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--line-bright);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Empty and error states always offer a next step instead of a dead end. */
+.empty-state {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+}
+.empty-state.compact {
+    padding: 26px 15px;
+}
+.empty-state .ui-icon {
+    width: 34px;
+    height: 34px;
+    color: var(--line-bright);
+}
+.empty-title {
+    margin: 0;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+}
+.empty-message {
+    margin: 0;
+    max-width: 52ch;
+    font-size: 13px;
+}
+.empty-state button {
+    margin-top: 6px;
+}
+.error-state .ui-icon {
+    color: var(--bad);
+}
+.empty-row td {
+    padding: 0;
+    border-top: 0;
+}
+.empty-row:hover td {
+    background: transparent;
+}
+
+/* Transient notifications. The region is created on demand. */
+.toasts {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 60;
+    display: grid;
+    gap: 10px;
+    width: min(390px, calc(100vw - 24px));
+    pointer-events: none;
+}
+.toast {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px;
+    padding: 12px 10px 12px 15px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line-bright);
+    border-left: 4px solid var(--cyan);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    pointer-events: auto;
+    animation: toast-in 140ms ease-out;
+}
+.toast.leaving {
+    animation: toast-out 120ms ease-in forwards;
+}
+.toast-success {
+    border-left-color: var(--good);
+}
+.toast-error {
+    border-left-color: var(--bad);
+}
+.toast-body {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+.toast-message {
+    margin: 0;
+    font-weight: 600;
+}
+.toast-detail {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+.toast-dismiss {
+    align-self: start;
+    padding: 0 6px;
+    font-size: 16px;
+    line-height: 1;
+}
+.toast-action {
+    justify-self: start;
+    margin-top: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+}
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+}
+@keyframes toast-out {
+    to {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}
+
+/* Bulk selection bar, shown only when at least one row is selected. */
+.bulk-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: var(--raised);
+    border: 1px solid var(--line-bright);
+    border-left: 3px solid var(--gold);
+    border-radius: var(--radius);
+    font-size: 13px;
+}
+.bulk-bar .toolbar {
+    margin-left: auto;
+}
+
+/* Command palette: one combobox driving a grouped listbox. */
+.palette {
+    width: min(680px, calc(100vw - 24px));
+    max-height: min(70dvh, 640px);
+    padding: 0;
+    overflow: hidden;
+    border-top-width: 1px;
+    border-radius: 8px;
+}
+.palette::backdrop {
+    background: #020c16c4;
+}
+.palette-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+}
+.palette-field .ui-icon {
+    color: var(--muted);
+}
+.palette-field input {
+    flex: 1;
+    padding: 6px 0;
+    background: transparent;
+    border: 0;
+    font-size: 16px;
+}
+.palette-field input:focus-visible {
+    outline: none;
+}
+#palette-list {
+    margin: 0;
+    padding: 6px;
+    max-height: min(52dvh, 470px);
+    overflow: auto;
+    list-style: none;
+}
+#palette-list ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.palette-group {
+    padding: 10px 10px 6px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.palette-option {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.palette-option.active,
+.palette-option[aria-selected='true'] {
+    background: var(--raised);
+    box-shadow: inset 3px 0 var(--gold);
+}
+.palette-kind {
+    min-width: 84px;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.palette-title {
+    font-weight: 600;
+}
+.palette-empty {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 30px 16px;
+}
+.palette-empty .ui-icon {
+    width: 30px;
+    height: 30px;
+    color: var(--line-bright);
+}
+.palette-status {
+    margin: 0;
+    padding: 0 16px 8px;
+    min-height: 20px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.palette-hints {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+}
+.palette-hints .muted {
+    margin-left: auto;
+}
+.palette-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Preferences page rows. */
+.setting {
+    display: grid;
+    gap: 4px;
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+}
+.setting:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+}
+.setting label {
+    grid-template-columns: 1fr minmax(150px, 210px);
+    align-items: center;
+    gap: 16px;
+    color: var(--text);
+    font-size: 14px;
+}
+.setting select {
+    width: 100%;
+}
+.setting-help {
+    font-size: 12px;
+}
+
+/* Shortcut reference dialog. */
+.shortcuts table {
+    margin-top: 12px;
+}
+.shortcuts td {
+    vertical-align: top;
+}
+.shortcuts th {
+    color: var(--muted);
+    font-weight: 400;
+}
+
+@media (max-width: 760px) {
+    .toasts {
+        right: 8px;
+        left: 8px;
+        bottom: 8px;
+        width: auto;
+    }
+    /* Rows become labelled cards; the paging bar keeps sorting available. */
+    .data-table .table-wrap {
+        overflow: visible;
+        border: 0;
+    }
+    .data-table table {
+        display: block;
+    }
+    .data-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+    .data-table tbody {
+        display: grid;
+        gap: 10px;
+    }
+    .data-table tr {
+        display: grid;
+        gap: 5px;
+        padding: 12px 14px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+    }
+    .data-table tr:hover td {
+        background: transparent;
+    }
+    .data-table td {
+        display: grid;
+        grid-template-columns: minmax(84px, 38%) 1fr;
+        gap: 10px;
+        padding: 2px 0;
+        border: 0;
+        overflow-wrap: anywhere;
+    }
+    .data-table td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 12px;
+    }
+    .data-table td:empty {
+        display: none;
+    }
+    .data-table td.select-column,
+    .data-table td:last-child:has(.toolbar) {
+        display: block;
+        padding-top: 6px;
+    }
+    .data-table td.select-column::before,
+    .data-table td:has(.toolbar)::before {
+        content: none;
+    }
+    .data-table td .toolbar {
+        flex-wrap: wrap;
+    }
+    .pagination {
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+    /* Search takes its own line; the remaining controls share the next one. */
+    .data-table .table-tools input[type='search'] {
+        flex: 1 1 100%;
+        width: 100%;
+        max-width: none;
+    }
+    .data-table .table-tools .spacer {
+        display: none;
+    }
+    .data-table .table-tools button {
+        flex: 1 1 auto;
+    }
+    .pagination select {
+        flex: 1 1 140px;
+        width: auto;
+    }
+    .setting label {
+        grid-template-columns: 1fr;
+    }
+    .empty-state {
+        padding: 28px 12px;
+    }
+    .bulk-bar .toolbar {
+        margin-left: 0;
+    }
 }

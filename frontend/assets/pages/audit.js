@@ -23,6 +23,9 @@ export async function mount(ctx) {
         ],
         {
             key: (r) => r.id,
+            id: 'audit',
+            caption: 'Audit trail',
+            exportName: 'audit-trail',
             filters: [
                 [
                     'Outcome',

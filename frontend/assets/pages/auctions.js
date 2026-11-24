@@ -43,6 +43,9 @@ export async function mount(ctx) {
         {
             key: (r) => r.listing.id,
             presentationKey: (r) => state(r.listing),
+            id: 'auctions',
+            caption: 'Auction listings',
+            exportName: 'auctions',
             actions: (get) => [
                 button('Inspect', () => {
                     selected = get().listing.id;
@@ -98,7 +101,12 @@ export async function mount(ctx) {
                 ['State', (d) => (d.claimed ? 'Claimed' : 'Pending')],
                 ['Details', (d) => details('Delivery record', d)]
             ],
-            { key: (d) => d.id }
+            {
+                key: (d) => d.id,
+                id: 'auction-deliveries',
+                caption: 'Auction deliveries',
+                exportName: 'auction-deliveries'
+            }
         );
         deliveryTable.update(deliveries);
         detail.replaceChildren(

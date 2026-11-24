@@ -53,6 +53,9 @@ export async function mount(ctx) {
             ]
         ],
         {
+            id: 'depot-offers',
+            caption: 'Depot offers',
+            exportName: 'depot-offers',
             actions: (get) => [
                 button('Edit', () => {
                     const o = get();
@@ -162,7 +165,13 @@ export async function mount(ctx) {
                 (o) => (o.sale ? 'Promotion sale' : o.featured ? 'Featured' : 'Regular')
             ]
         ],
-        { key: (o) => o.id }
+        {
+            key: (o) => o.id,
+            id: 'depot-effective',
+            caption: 'Effective catalogue',
+            exportName: 'depot-catalogue',
+            search: false
+        }
     );
     const content = el('div');
     function show() {

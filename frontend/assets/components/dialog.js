@@ -182,6 +182,18 @@ export function edit(title, route, fields = [], fixed = {}, description = '', af
         after
     });
 }
+/**
+ * A confirmation dialog that does not map onto one server route, used by bulk
+ * actions. `onSubmit` performs the work; the dialog closes only when it resolves.
+ * @param {{title: string, description: string, label?: string, content?: Node, onSubmit: () => Promise<any>}} options
+ */
+export function confirmAction({ title, description, label = 'Confirm', content, onSubmit }) {
+    const body = el('div', null, 'stack');
+    if (content) body.append(content);
+    body.append(el('p', description, 'muted'));
+    return openDialog({ title, content: body, submit: label, onSubmit });
+}
+
 export function confirm(title, route, fixed = {}, extra = [], description = '') {
     edit(
         title,

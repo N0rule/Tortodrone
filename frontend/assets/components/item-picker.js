@@ -3,11 +3,15 @@ import { el, input, select, toolbar, button, text, report } from '../ui.js';
 import { itemTile } from './items.js';
 
 /** Bounded server pages; obsolete search results never replace the latest results. */
-export function itemPicker(onChoose, { grantable = false, compatibleSlot = null } = {}) {
+export function itemPicker(
+    onChoose,
+    { grantable = false, compatibleSlot = null, query = '' } = {}
+) {
     const node = el('div', null, 'stack'),
         search = input('Search items'),
         categories = select('Item category', [['', 'All categories']], '');
     search.placeholder = 'Search by item name';
+    if (query) search.value = query;
     const grid = el('div', null, 'item-grid'),
         count = el('span', null, 'muted');
     let page = 1,

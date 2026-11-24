@@ -19,6 +19,9 @@ export async function mount(ctx) {
         ],
         {
             key: (r) => r.username,
+            id: 'webui-users',
+            caption: 'WebUI identities',
+            exportName: 'webui-identities',
             actions: (get) => [
                 button('Reset password', () =>
                     edit('Password · ' + get().username, 'webui-user-password', passwords(), {

@@ -1,4 +1,5 @@
 import { symbol } from './components/symbols.js';
+import { toast } from './components/toast.js';
 export const $ = (selector) => document.querySelector(selector);
 export function el(tag, text, className) {
     const node = document.createElement(tag);
@@ -155,8 +156,21 @@ export function report(error) {
     else notify(error.message || 'Operation unavailable', true);
 }
 export function changed(message = 'Changes saved.') {
-    notify(message);
+    // A transient confirmation, so the sticky page notice stays reserved for
+    // errors the operator must act on.
+    toast(message, { type: 'success' });
     document.dispatchEvent(new Event('data-changed'));
+}
+/** Copy text and confirm once, with a fallback for browsers without the async API. */
+export async function copy(value, message = 'Copied to the clipboard.') {
+    try {
+        await navigator.clipboard.writeText(value);
+        toast(message, { type: 'success' });
+    } catch {
+        toast('This browser blocked clipboard access. Select the text and copy it manually.', {
+            type: 'error'
+        });
+    }
 }
 export function download(name, content, type = 'text/plain') {
     const url = URL.createObjectURL(new Blob([content], { type }));

@@ -205,3 +205,21 @@ dd {
         transition: none !important;
     }
 }
+
+/* Users may override the system motion preference; both routes disable motion. */
+html[data-motion='reduce'],
+html[data-motion='reduce'] * {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+}
+kbd {
+    font-family: var(--mono);
+}
+time {
+    font-variant-numeric: tabular-nums;
+}
+:target {
+    scroll-margin-top: 70px;
+}
