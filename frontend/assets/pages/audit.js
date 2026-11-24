@@ -262,7 +262,11 @@ export async function mount(ctx) {
             }
         },
         'secondary',
-        () => !exhausted
+        () => !exhausted,
+        // Without this the control is `aria-disabled` with no explanation on every trail
+        // shorter than 500 rows — which is every fresh deployment — and a press answered
+        // with the generic "not available on this server yet".
+        { unavailable: 'That is the whole trail — there is nothing older to read.' }
     );
     more.title = 'Read the next 500 events older than the ones on screen';
     more.setAttribute('aria-label', 'Read older audit events');
@@ -287,7 +291,7 @@ export async function mount(ctx) {
             pages > 1 ? ` over ${pages} pages` : ''
         }.`;
         scope.textContent = paused
-            ? `Paused: ${tail} The ten-second poll and the automatic refresh a write triggers are paused with it; the header's Refresh and Older events still work.`
+            ? `Paused: ${tail} The ten-second tick is paused; the header's Refresh, a write's own refresh and Older events still read.`
             : exhausted
               ? `${tail} That is the whole trail — Older events found nothing more.`
               : `${tail} The server sends the newest ${CAP} at a time; Older events reads back through data/webui.sqlite.`;
@@ -339,7 +343,6 @@ export async function mount(ctx) {
     // A cold load carries the address too. Without this the inspector a row's own
     // href names stayed empty until the operator clicked it again.
     if (ctx.params.size) applyParams(ctx.params);
-    document.addEventListener('data-changed', forced);
     /** Deep links (#audit?actor=…) re-filter the trail in place. */
     function applyParams(params) {
         // Navigating back to a bare #audit clears the filter instead of leaving the
@@ -364,15 +367,14 @@ export async function mount(ctx) {
             } else pendingEvent = wanted;
         }
     }
-    function forced() {
-        return refresh(true).catch(() => {});
-    }
     return {
-        node: node,
-        // The shell's Refresh button is a deliberate read, so a pause does not swallow
-        // it; the poll goes through `interval` and is skipped while paused.
+        node,
+        // The shell's Refresh button and the refresh a write triggers are deliberate
+        // reads, so a pause does not swallow them; the ten-second tick goes through
+        // `poll` and is, which is the whole point of the pause. The shell already
+        // refreshes every page on `data-changed`, so no listener of our own.
         refresh: () => refresh(true),
-        dispose: () => document.removeEventListener('data-changed', forced),
+        poll: () => refresh(false),
         interval: 10000,
         navigate: applyParams
     };

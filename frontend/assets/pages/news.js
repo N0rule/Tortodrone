@@ -279,12 +279,25 @@ export async function mount(ctx) {
                     ),
                     el('small', uses.length ? `used by ${uses.join(', ')}` : 'not used yet', 'muted')
                 );
-                if (!draft.packs.length || tooBig) {
-                    // aria-disabled, not disabled: the reason has to stay reachable.
+                const refusal = tooBig
+                    ? `${info.width} × ${info.height} does not fit this slot (${max[0]} × ${max[1]}).`
+                    : draft.packs.length
+                      ? ''
+                      : 'Save a pack before choosing an image.';
+                if (refusal) {
+                    // aria-disabled, not disabled: the reason has to stay reachable. The
+                    // reason is printed in the tile and named by `aria-describedby`,
+                    // because an aria-disabled tile that keeps no click handler is
+                    // focusable, silent, and looks identical to a working one — `title`
+                    // alone is hover-only and a phone never hovers.
+                    const note = el('small', refusal, 'muted');
+                    note.id = 'news-tile-refusal-' + info.image.replace(/[^a-z0-9]+/gi, '-');
                     tile.setAttribute('aria-disabled', 'true');
-                    tile.title = tooBig
-                        ? `${info.width} × ${info.height} does not fit this slot (${max[0]} × ${max[1]}).`
-                        : 'Save a pack before choosing an image.';
+                    tile.dataset.usable = 'false';
+                    tile.setAttribute('aria-describedby', note.id);
+                    tile.title = refusal;
+                    tile.onclick = () => notify(refusal, true);
+                    tile.append(note);
                     return tile;
                 }
                 tile.title = `Put ${info.image} in this slot`;

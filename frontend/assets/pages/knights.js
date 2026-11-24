@@ -459,8 +459,12 @@ export async function mount(ctx) {
                     slot.title = `Slot ${index} is not unlocked for this Knight.`;
                     slot.dataset.reason = slot.title;
                 } else {
+                    // The reason goes with the refusal: a slot that unlocked kept its
+                    // "not unlocked for this Knight" tooltip while the click worked.
                     slot.removeAttribute('aria-disabled');
+                    slot.removeAttribute('title');
                     delete slot.dataset.usable;
+                    delete slot.dataset.reason;
                 }
                 return slot;
             });

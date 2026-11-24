@@ -193,7 +193,13 @@ function clock() {
     $('#clock').dateTime = now.toISOString();
 }
 
-async function refresh() {
+/**
+ * `polled` distinguishes the ten-second tick from the operator pressing Refresh. A page
+ * that can be paused needs both: the header's Refresh is a deliberate read and must go
+ * through, while the tick is what a pause is for. A page that has no opinion gets the
+ * same read either way — `poll()` falls back to `refresh()`.
+ */
+async function refresh(polled = false) {
     if (!api.session || !controller?.refresh) return;
     if (refreshJob?.id === generation) {
         refreshJob.repeat = true;
@@ -206,7 +212,8 @@ async function refresh() {
     $('#refresh').disabled = true;
     job.promise = (async () => {
         try {
-            await target.refresh();
+            if (polled && target.poll) await target.poll();
+            else await target.refresh();
             if (id === generation && current !== 'overview' && current !== 'players')
                 connection('Connected');
             // A recovered poll ends the error it raised; a sticky notice that
@@ -226,7 +233,7 @@ async function refresh() {
             if (id === generation) $('#refresh').disabled = false;
             if (refreshJob === job) {
                 refreshJob = null;
-                if (job.repeat && id === generation) refresh();
+                if (job.repeat && id === generation) refresh(polled);
             }
         }
     })();
@@ -237,7 +244,7 @@ function poll() {
     clearTimeout(timer);
     timer = setTimeout(async () => {
         const id = generation;
-        if (api.session && !document.hidden) await refresh();
+        if (api.session && !document.hidden) await refresh(true);
         if (api.session && id === generation) poll();
     }, (controller?.interval || 15000) * prefs.read('pollScale'));
 }

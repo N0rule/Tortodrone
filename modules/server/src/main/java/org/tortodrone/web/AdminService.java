@@ -298,7 +298,15 @@ public final class AdminService implements AutoCloseable {
                 || !Files.isRegularFile(publicFile, LinkOption.NOFOLLOW_LINKS)
                 || Files.size(publicFile) > 4096) {
             result.put("available", false);
-            result.put("reason", "No server keypair is stored yet; it is created on the next start.");
+            // "No keypair yet" and "a keypair I cannot hand out" are different
+            // problems with different fixes, and the panel below this sentence
+            // prints which one it is: saying "no keypair" over "signing key
+            // present" is the contradiction an operator would chase first.
+            result.put(
+                    "reason",
+                    keyStored
+                            ? "The signing key is stored but data/keys/public.txt is missing or unreadable; no client can be handed a key until it is restored."
+                            : "No server keypair is stored yet; it is created on the next start.");
             return result;
         }
         byte[] raw = Files.readAllBytes(publicFile);

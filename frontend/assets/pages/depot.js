@@ -4,6 +4,11 @@ import { field, edit, confirm, conflict, closeDialog, openDialog } from '../comp
 import { itemForm } from '../components/gear-editor.js';
 import { itemLine, currency, definitionsFor } from '../components/items.js';
 import { route, go } from '../router.js';
+// The window is compared with this browser's clock; the server keeps the
+// authoritative times, so every state badge says where the judgement came from
+// instead of asserting server truth a skewed laptop can contradict.
+const CLOCK_NOTE =
+    'Worked out by comparing the promotion window with this browser’s clock; the server keeps the authoritative times.';
 const promotionState = (p) =>
     p.cancelled
         ? 'Cancelled'
@@ -12,6 +17,11 @@ const promotionState = (p) =>
           : p.ends <= Date.now()
             ? 'Expired'
             : 'Active';
+/** A state badge that says where the judgement came from. */
+const promotionBadge = (p) => {
+    const state = promotionState(p);
+    return Object.assign(badge(state, state === 'Active' ? 'good' : ''), { title: CLOCK_NOTE });
+};
 /** The URL names the catalogue tab `catalogue`; the page keeps `effective`. */
 const tabNames = {
     offers: 'offers',
@@ -92,8 +102,10 @@ export async function mount(ctx) {
         else
             for (const p of promotionsFor) {
                 const row = el('div', null, 'offer-reference');
+                const summary = el('strong', `${promotionState(p)} · ${p.crowns} Crowns`);
+                summary.title = CLOCK_NOTE;
                 row.append(
-                    el('strong', `${promotionState(p)} · ${p.crowns} Crowns`),
+                    summary,
                     el(
                         'small',
                         `${date(p.starts)} → ${date(p.ends)} · promotion #${p.id}`,
@@ -251,10 +263,7 @@ export async function mount(ctx) {
                 },
                 (p) => p.offerId
             ],
-            [
-                'State',
-                (p) => badge(promotionState(p), promotionState(p) === 'Active' ? 'good' : '')
-            ],
+            ['State', (p) => promotionBadge(p)],
             ['Starts', (p) => date(p.starts), (p) => p.starts],
             ['Ends', (p) => date(p.ends), (p) => p.ends],
             ['Price', (p) => toolbar(currency('crowns', p.crowns), currency('energy', p.energy))]
@@ -278,7 +287,11 @@ export async function mount(ctx) {
                     'Open offer',
                     () => here({ tab: 'offers', offer: get().offerId }),
                     'secondary',
-                    () => data.snapshot.offers.some((o) => o.id === get().offerId)
+                    () => data.snapshot.offers.some((o) => o.id === get().offerId),
+                    {
+                        unavailable:
+                            'The offer this promotion discounts is not in the current snapshot, so there is nothing to open.'
+                    }
                 ),
                 button(
                     'Cancel',
@@ -292,7 +305,11 @@ export async function mount(ctx) {
                             { destructive: true, submit: 'Cancel promotion' }
                         ),
                     'secondary',
-                    () => !get().cancelled
+                    () => !get().cancelled,
+                    {
+                        unavailable:
+                            'This promotion is already cancelled, and a cancelled promotion cannot be reinstated — scheduling a new one is the only way back.'
+                    }
                 )
             ],
             filters: [

@@ -23,7 +23,7 @@ import { toast } from '../components/toast.js';
 // server action), `confirmAction` takes an options object (a local, irreversible edit).
 // They were imported under one name, so the receipts Clear handed an options object to
 // the positional form: `api.change(undefined, {})` and nothing was ever cleared.
-import { openDialog, confirm, confirmAction } from '../components/dialog.js';
+import { openDialog, closeDialog, confirm, confirmAction } from '../components/dialog.js';
 import { emptyState, errorState, waiting } from '../components/states.js';
 import { itemPicker } from '../components/item-picker.js';
 import { currency, itemLine } from '../components/items.js';
@@ -428,6 +428,7 @@ function deliveredLabel(campaign) {
 
     /** The stored letter, read-only: what a knight actually receives. */
     function openLetter(campaign) {
+        openedLetter = campaign?.id ?? null;
         const total = population();
         const content = panel(
             '',
@@ -1785,7 +1786,9 @@ function deliveredLabel(campaign) {
             isDirty: () => JSON.stringify(snapshot()) !== initial,
             dispose: () => picker.dispose(),
             after: () => refresh(),
-            stoppable: true,
+            // Only a direct send loops, and only a loop can be stopped. Campaign and
+            // welcome saves showed a Stop beside a progress line that never ran.
+            stoppable: mode === 'direct',
             onSubmit: async (form, progress, run) => {
                 checkLetter();
                 const values = letterValues();
@@ -1967,6 +1970,8 @@ function deliveredLabel(campaign) {
         .catch(() => {
             if (ctx.alive()) renderSummary();
         });
+    /** Which letter the address is currently naming, so Back can close it. */
+    let openedLetter = null;
     /**
      * The address owns the view: the section it names scrolls into place and the
      * letter it names opens. A cold load and an in-app link then behave alike, which
@@ -1987,7 +1992,17 @@ function deliveredLabel(campaign) {
         };
         if (tab) arrive();
         const campaign = Number(params.get('campaign'));
-        if (!Number.isInteger(campaign) || campaign <= 0) return;
+        if (!Number.isInteger(campaign) || campaign <= 0) {
+            // The address stopped naming a letter, so the letter goes with it. Only
+            // Content and Access did this; history Back out of `#mailing?campaign=7`
+            // left a live editor on screen with Edit, Recipients and Duplicate on it,
+            // describing a mailing the URL had already dropped.
+            if (openedLetter !== null) {
+                openedLetter = null;
+                closeDialog();
+            }
+            return;
+        }
         const match = data.campaigns.find((row) => row.id === campaign);
         if (match) openLetter(match);
         else

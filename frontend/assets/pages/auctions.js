@@ -161,10 +161,16 @@ export async function mount(ctx) {
                     'secondary'
                 ),
                 button(
-                    'Settle this listing',
+                    // The press settles every expired listing, not this one: the row
+                    // it was pressed on cannot be the label's whole claim.
+                    `Settle all expired (including #${a.id})`,
                     () => settle(a.id),
                     'secondary',
-                    () => state(a) === 'Awaiting settlement'
+                    () => state(a) === 'Awaiting settlement',
+                    {
+                        unavailable:
+                            'This listing is not awaiting settlement, so there is nothing of its own to settle here; the toolbar settles whatever has expired.'
+                    }
                 ),
                 button(
                     'Cancel listing',
@@ -247,10 +253,14 @@ export async function mount(ctx) {
             actions: (get) => [
                 routeLink('Inspect', 'auctions', { listing: get().listing.id }, 'button secondary'),
                 button(
-                    'Settle expired',
+                    `Settle all expired (including #${get().listing.id})`,
                     () => settle(get().listing.id),
                     'secondary',
-                    () => state(get().listing) === 'Awaiting settlement'
+                    () => state(get().listing) === 'Awaiting settlement',
+                    {
+                        unavailable:
+                            'This listing is not awaiting settlement, so there is nothing of its own to settle here; the toolbar settles whatever has expired.'
+                    }
                 ),
                 button(
                     'Cancel',
@@ -304,7 +314,7 @@ export async function mount(ctx) {
                 // says why it is off instead.
                 () =>
                     rows.some((r) => r.listing.expires <= Date.now()) ||
-                    'No expired listings to settle.',
+                    'No listing has expired, so there is nothing to settle.',
                 { unavailable: 'No expired listings to settle.' }
             )
         ),

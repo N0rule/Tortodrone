@@ -53,7 +53,14 @@ export async function mount(ctx) {
                           'Account',
                           () => ctx.go('accounts', { username: get().username }),
                           'secondary',
-                          () => !!get().username
+                          () => !!get().username,
+                          // A row action with a bare boolean used to refuse with
+                          // "That action is not available on this server yet", which
+                          // was false: the action exists, this row has no username.
+                          {
+                              unavailable:
+                                  'This session has no account: it has not authenticated yet, so there is nothing to open.'
+                          }
                       ),
                       button(
                           'Knight',
@@ -61,7 +68,11 @@ export async function mount(ctx) {
                               get().knight &&
                               ctx.go('knights', { username: get().username, knight: get().knight }),
                           'secondary',
-                          () => !!get().username && !!get().knight
+                          () => !!get().username && !!get().knight,
+                          {
+                              unavailable:
+                                  'This session has no knight to open: either its account is not known yet or no knight has been selected.'
+                          }
                       ),
                       ...(ctx.moderator
                           ? [

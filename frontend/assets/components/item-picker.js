@@ -3,6 +3,7 @@ import { el, input, select, toolbar, button, text, report } from '../ui.js';
 import { itemTile } from './items.js';
 import { emptyState } from './states.js';
 import { exportRows } from './export.js';
+import { DataTable } from './table.js';
 import { toast } from './toast.js';
 
 /** Bounded server pages; obsolete search results never replace the latest results. */
@@ -42,53 +43,60 @@ export function itemPicker(
      * a partial file that claims to be whole is worse than no file.
      */
     const EXPORT_CAP = 1000;
+    const COLUMNS = [
+        ['Name', (row) => row.name, (row) => row.name],
+        ['Config', (row) => row.config],
+        [
+            'Category',
+            (row) => row.category,
+            (row) => row.category
+        ],
+        ['Grantable', (row) => (row.grantable ? 'yes' : 'no'), (row) => (row.grantable ? 1 : 0)],
+        ['Unavailable because', (row) => row.reason ?? '']
+    ];
     // The walk can be ten requests in a row, so it carries its own signal: leaving the
     // page must stop it, not download a file and toast for a page that is gone.
     let exportRequest = null;
+    /**
+     * Read the filtered catalogue, 100 rows at a time. Both the export and the ordered
+     * view are this walk: the catalogue was only ever a 24-tile window in server order,
+     * so "every item by category" meant exporting a CSV and opening it elsewhere.
+     */
+    async function walk(signal) {
+        const rows = [];
+        let total = null;
+        for (let at = 1; rows.length < EXPORT_CAP; at++) {
+            const chunk = await api.request(
+                'catalogue',
+                {
+                    search: search.value,
+                    category: categories.value,
+                    page: at,
+                    size: 100,
+                    slot: compatibleSlot ?? ''
+                },
+                false,
+                signal
+            );
+            total = chunk.total;
+            if (!chunk.entries.length) break;
+            rows.push(...chunk.entries);
+            if (rows.length >= chunk.total) break;
+        }
+        return { rows: rows.slice(0, EXPORT_CAP), total: Number(total ?? rows.length) };
+    }
     const exportButton = button(
         'Export',
         async () => {
             exportButton.setBusy?.(true);
             exportRequest?.abort();
-            const walk = (exportRequest = new AbortController());
+            const current = (exportRequest = new AbortController());
             try {
-                const rows = [];
-                let total = null;
-                for (let at = 1; rows.length < EXPORT_CAP; at++) {
-                    const chunk = await api.request(
-                        'catalogue',
-                        {
-                            search: search.value,
-                            category: categories.value,
-                            page: at,
-                            size: 100,
-                            slot: compatibleSlot ?? ''
-                        },
-                        false,
-                        walk.signal
-                    );
-                    total = chunk.total;
-                    if (!chunk.entries.length) break;
-                    rows.push(...chunk.entries);
-                    if (rows.length >= chunk.total) break;
-                }
-                const kept = rows.slice(0, EXPORT_CAP);
-                exportRows(
-                    'catalogue',
-                    kept,
-                    [
-                        ['Name', (row) => row.name],
-                        ['Config', (row) => row.config],
-                        ['Category', (row) => row.category],
-                        ['Grantable', (row) => (row.grantable ? 'yes' : 'no')],
-                        ['Unavailable because', (row) => row.reason ?? '']
-                    ]
-                );
+                const { rows, total } = await walk(current.signal);
+                exportRows('catalogue', rows, COLUMNS);
                 toast(
-                    `Exported ${kept.length.toLocaleString()} of ${Number(
-                        total ?? kept.length
-                    ).toLocaleString()} items.`,
-                    total > kept.length
+                    `Exported ${rows.length.toLocaleString()} of ${total.toLocaleString()} items.`,
+                    total > rows.length
                         ? {
                               type: 'info',
                               detail: `The server pages the catalogue, so this file stops at ${EXPORT_CAP.toLocaleString()} rows: narrow the search to export the rest.`
@@ -99,7 +107,7 @@ export function itemPicker(
                 // A walk this page cancelled is not a failure to report.
                 if (error.name !== 'AbortError') report(error);
             } finally {
-                if (exportRequest === walk) exportRequest = null;
+                if (exportRequest === current) exportRequest = null;
                 exportButton.setBusy?.(false);
             }
         },
@@ -107,8 +115,52 @@ export function itemPicker(
     );
     exportButton.title =
         'Download every item matching the search and category, up to 1,000 rows as CSV';
+
+    /**
+     * The same set, in an order a person can read: sortable columns, a pager, and the
+     * table's own CSV/JSON export. Built on first open and then kept, so opening it
+     * twice does not walk the catalogue twice.
+     */
+    const tableHost = el('div'),
+        asTable = el('details', null, 'catalogue-table');
+    asTable.append(el('summary', 'As a table'), tableHost);
+    let table = null;
+    asTable.ontoggle = async () => {
+        if (!asTable.open || table) return;
+        tableHost.append(el('p', 'Reading the catalogue…', 'muted'));
+        try {
+            const { rows, total } = await walk();
+            table = new DataTable(COLUMNS, {
+                id: 'catalogue-as-table',
+                caption: 'Catalogue items',
+                key: (row) => row.config,
+                pageSize: 30,
+                persist: false,
+                exportName: 'content-items',
+                empty: {
+                    title: 'No item matches these filters',
+                    hint: 'Clear the search or the category above.',
+                    icon: 'search'
+                }
+            });
+            table.update(rows);
+            tableHost.replaceChildren(
+                el(
+                    'small',
+                    `${rows.length.toLocaleString()} of ${total.toLocaleString()} items, newest walk of the same filter. The grid above pages the server; this table is the set it fetched.`,
+                    'muted'
+                ),
+                table.node
+            );
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                tableHost.replaceChildren(el('p', error.message, 'error'));
+                report(error);
+            }
+        }
+    };
     const paging = toolbar(count, ...(exportable ? [exportButton] : []), previous, next);
-    node.append(toolbar(search, categories), grid, paging);
+    node.append(toolbar(search, categories), grid, ...(exportable ? [asTable] : []), paging);
     async function load() {
         clearTimeout(timer);
         const id = ++generation;
