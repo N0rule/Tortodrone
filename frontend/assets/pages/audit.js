@@ -189,6 +189,26 @@ export async function mount(ctx) {
                     'Outcome',
                     ['All', 'requested', 'committed', 'refused', 'denied', 'authenticated'],
                     (r, v) => v === 'All' || r.outcome === v
+                ],
+                [
+                    // The trail was searchable and outcome-filtered but had no time
+                    // dimension at all, so "what happened yesterday" meant scrolling.
+                    // Buckets rather than two date fields: the table's filters are
+                    // selects, and a range picker nobody can use is worse than none.
+                    'Period',
+                    ['All time', 'Last hour', 'Last 24 hours', 'Last 7 days'],
+                    (r, v) => {
+                        const span = {
+                            'Last hour': 3_600_000,
+                            'Last 24 hours': 86_400_000,
+                            'Last 7 days': 604_800_000
+                        }[v];
+                        if (!span) return true;
+                        const at = Date.parse(r.time);
+                        // A row whose time cannot be parsed is never silently dropped
+                        // into "recent": it stays visible under every window.
+                        return !Number.isFinite(at) || Date.now() - at <= span;
+                    }
                 ]
             ]
         }

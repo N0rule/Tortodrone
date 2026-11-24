@@ -210,6 +210,26 @@ Every write that gets no answer says so: the dialog error line and the page noti
 report that the change may or may not have been stored, and ask the operator to reopen
 the record before saving again, because a lost reply is not a lost write.
 
+## Uplink News
+
+The banner editor is a preview plus a picker, and the **Image library** under it is a
+grid of what is actually on the server: each tile shows the image itself, its path, its
+pixel size and weight, and which pack slots already use it, so replacing an image is an
+informed act rather than a guess about a filename. A tile in the current slot is
+selectable straight from the grid, and a tile that cannot be used says why (too large
+for the slot, or no pack saved yet) instead of going quiet.
+
+A banner's **Link URL** must start with `https://` (or `http://` for an internal host):
+the client opens it in the player's browser, so anything else is refused in the field
+and blocks the publish with the offending pack slots named.
+
+## Audit Trail
+
+The trail filters by outcome and by **Period** (`All time`, `Last hour`, `Last 24
+hours`, `Last 7 days`). The buckets exist because the table's filters are selects: a row
+whose timestamp cannot be parsed is never folded into "recent", it stays visible under
+every window.
+
 ## Player Mail
 
 Compose is a three-mode editor: windowed **Campaign**, **Direct** mail to one
@@ -377,6 +397,11 @@ Conventions worth keeping:
   HTML.
 - Pure helpers (`score`, `rank`, `filterRows`, `sortRows`, `toCsv`, preference
   coercion) stay free of DOM access so `node:test` can cover them.
+- A `const`/`let` used while the page mounts is declared *above* its first use.
+  `mount()` runs top to bottom, so a declaration placed after the panel list or the
+  block that calls it is a temporal-dead-zone `ReferenceError` at mount: it has
+  already cost this UI two dialogs that opened nothing at all, and no linter is in
+  the build to catch it.
 
 ## Payload and caching
 

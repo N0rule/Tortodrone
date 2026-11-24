@@ -77,6 +77,10 @@ export async function mount(ctx) {
         mark();
         showSlot();
     });
+    // Declared before the panel that holds it: the panel list is built above the rest of
+    // this function, and a `const` placed after it is a temporal-dead-zone error on mount.
+    const library = el('div', null, 'news-library');
+    library.setAttribute('role', 'list');
     const fields = panel(
         '',
         title,
@@ -181,12 +185,88 @@ export async function mount(ctx) {
             label('Upload PNG or JPEG (up to 1 MiB)', file),
             el(
                 'small',
-                'Featured: 570 × 300. Spotlights: 280 × 190. Smaller images retain their native dimensions.'
-            )
+                'Featured: 570 × 300. Spotlights: 280 × 190. Smaller images retain their native dimensions.',
+                'muted'
+            ),
+            // The library used to be an upload field and a sentence: the only way to see
+            // what was already on the server was the picker's option text.
+            library
         ),
         advanced,
         welcomePanel
     );
+    /** Every place a banner already names this image, so replacing it is informed. */
+    function usageOf(name) {
+        const uses = [];
+        draft.packs.forEach((row, index) => {
+            for (const [slotName, value] of [
+                ['featured', row.featured],
+                ['left', row.spotlights?.left],
+                ['right', row.spotlights?.right]
+            ])
+                if (value && value.image === name) uses.push(`pack ${index + 1} ${slotName}`);
+        });
+        return uses;
+    }
+    /** A banner link is pasted into the client, so it has to be a web link. */
+    function checkUrl(value) {
+        const trimmed = String(value ?? '').trim();
+        if (!trimmed) return '';
+        if (!/^https?:\/\//i.test(trimmed))
+            return 'A banner link must start with https:// (http:// for an internal host): the client opens it in the player’s browser.';
+        return '';
+    }
+    function renderLibrary() {
+        if (!data.images.length) {
+            library.replaceChildren(
+                el(
+                    'p',
+                    'No image has been uploaded yet. Upload a PNG or JPEG above; it appears here and in the image picker.',
+                    'muted'
+                )
+            );
+            return;
+        }
+        const max = slot === 'featured' ? [570, 300] : [280, 190];
+        library.replaceChildren(
+            ...data.images.map((info) => {
+                const tile = el('button', null, 'news-library-tile');
+                tile.type = 'button';
+                tile.setAttribute('role', 'listitem');
+                const thumb = el('img');
+                thumb.loading = 'lazy';
+                thumb.alt = '';
+                thumb.src = '/news/' + info.image.split('/').map(encodeURIComponent).join('/');
+                const uses = usageOf(info.image),
+                    tooBig = info.width > max[0] || info.height > max[1];
+                tile.append(
+                    thumb,
+                    el('span', info.image, 'news-library-name'),
+                    el(
+                        'small',
+                        `${info.width} × ${info.height} · ${(info.bytes / 1024).toFixed(1)} KiB`,
+                        'muted'
+                    ),
+                    el('small', uses.length ? `used by ${uses.join(', ')}` : 'not used yet', 'muted')
+                );
+                if (!draft.packs.length || tooBig) {
+                    // aria-disabled, not disabled: the reason has to stay reachable.
+                    tile.setAttribute('aria-disabled', 'true');
+                    tile.title = tooBig
+                        ? `${info.width} × ${info.height} does not fit this slot (${max[0]} × ${max[1]}).`
+                        : 'Save a pack before choosing an image.';
+                    return tile;
+                }
+                tile.title = `Put ${info.image} in this slot`;
+                tile.onclick = () => {
+                    image.value = info.image;
+                    // Reuse the picker's own change handler: one writer for the draft.
+                    image.dispatchEvent(new Event('change'));
+                };
+                return tile;
+            })
+        );
+    }
     const banner = () =>
         !draft.packs[pack]
             ? null
@@ -280,6 +360,7 @@ export async function mount(ctx) {
                 : `Maximum ${max[0]} × ${max[1]}`
         );
         text(error, value?.image && !info ? 'Selected image is missing or invalid.' : '');
+        renderLibrary();
         renderPreview();
     }
     function choose(name) {
@@ -304,6 +385,16 @@ export async function mount(ctx) {
                 mark();
                 removeSpotlight.disabled = slot === 'featured' || !banner();
                 renderPreview();
+                if (control === url) {
+                    const problem = checkUrl(url.value);
+                    text(
+                        error,
+                        problem ||
+                            (image.value && !data.images.some((i) => i.image === image.value)
+                                ? 'Selected image is missing or invalid.'
+                                : '')
+                    );
+                }
                 if (control === image) {
                     const info = data.images.find((i) => i.image === image.value);
                     text(
@@ -359,6 +450,26 @@ export async function mount(ctx) {
     };
     function review(route, values) {
         if (stale) return;
+        if (route === 'news-visual-save') {
+            const broken = draft.packs
+                .flatMap((row, index) =>
+                    [
+                        ['featured', row.featured],
+                        ['left', row.spotlights?.left],
+                        ['right', row.spotlights?.right]
+                    ]
+                        .filter(([, value]) => value && checkUrl(value.url))
+                        .map(([slotName]) => `pack ${index + 1} ${slotName}`)
+                )
+                .slice(0, 3);
+            if (broken.length) {
+                notify(
+                    `A banner link must start with https:// before this can be published: ${broken.join(', ')}.`,
+                    true
+                );
+                return;
+            }
+        }
         if (
             route === 'news-visual-save' &&
             raw.value !== data.yaml &&

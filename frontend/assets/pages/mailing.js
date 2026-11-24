@@ -841,8 +841,10 @@ function deliveredLabel(campaign) {
         try {
             rows = await ctx.request('mail-welcome-deliveries');
         } catch (error) {
+            // The campaign drill-down offers a retry; this one dead-ended in a
+            // sentence, so a flaky read left the dialog with nothing to do but close.
             host.replaceChildren(
-                el('p', error.message || 'The delivery roster is unavailable.', 'error')
+                errorState({ error, retry: () => openWelcomeDeliveries() })
             );
             return;
         }
@@ -891,7 +893,10 @@ function deliveredLabel(campaign) {
 
     const welcomeDetails = el('details');
     const welcomeSummary = el('summary');
-    welcomeSummary.append(routeLink('Link to this section', 'mailing', { tab: 'welcome' }, 'link'));
+    // The link lives in the panel toolbar, not in the summary: `renderWelcome` writes
+    // the summary with `text()`, which replaces its children, so a link appended there
+    // was wiped before it was ever painted (and a link inside a summary also toggles the
+    // disclosure it sits in).
     function renderWelcome() {
         const welcome = data.welcome;
         text(
@@ -927,7 +932,8 @@ function deliveredLabel(campaign) {
                               'secondary'
                           )
                       ]
-                    : [])
+                    : []),
+                routeLink('Link to this section', 'mailing', { tab: 'welcome' }, 'link')
             )
         );
         const card = panel('', ...content);
