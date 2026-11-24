@@ -89,7 +89,8 @@ export async function mount(ctx) {
     }
     const stream = logStream({
             commands: outputHistory,
-            title: 'tortodrone — console',
+            // The same separator the banner below prints: one pane, one voice.
+            title: 'tortodrone · console',
             fill: true,
             // A console has no tail to follow and nothing to freeze, but it still
             // opens at the prompt: the newest line and the banner belong on screen.

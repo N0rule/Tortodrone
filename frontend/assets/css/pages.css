@@ -601,14 +601,19 @@ button.metric:focus-visible {
     color: var(--term-fg);
 }
 /* The window's controls move into the bar on a find-bar pane, where they shrink to the
-   bar's own line: a 36px button in a 26px title bar draws a header over it. */
-.terminal-bar > .terminal-menu,
-.terminal-bar > .terminal-menu .terminal-menu-toggle,
-.terminal-bar > button {
-    block-size: 20px;
-    min-block-size: 20px;
-    padding: 0 8px;
-    font-size: 11px;
+   bar's own line: a 36px button in a 26px title bar draws a header over it. Only where
+   the pointer is precise, though — on a phone this menu is the console's only route to
+   Copy, Export and Clear, and 20px was both under the project's own 44px touch floor and
+   under WCAG's 24px minimum. */
+@media (pointer: fine) {
+    .terminal-bar > .terminal-menu,
+    .terminal-bar > .terminal-menu .terminal-menu-toggle,
+    .terminal-bar > button {
+        block-size: 20px;
+        min-block-size: 20px;
+        padding: 0 8px;
+        font-size: 11px;
+    }
 }
 .terminal-body {
     flex: 1 1 auto;
@@ -1266,7 +1271,11 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
        of the way across: the menu drew at x -102, 257px wide, with every row clipped to
        "…pane" and the three cross-links entirely off screen. It hangs off the bar here
        and spans it, which is also where a phone expects a sheet from a toolbar. */
-    .terminal-tools {
+    .terminal-tools,
+    /* The console's bar carries the menu, so it needs the same anchoring: with only the
+       tools bar made relative, the popover resolved against the page and opened 298px
+       below an 844px screen, with five of its six rows unreachable. */
+    .terminal-bar {
         position: relative;
     }
     .terminal-menu {
@@ -1275,6 +1284,14 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     .terminal-menu-body {
         inset-inline: 0;
         max-inline-size: none;
+    }
+    /* The find bar's own fields and the bar's menu are the page's controls on a phone,
+       so they take the touch floor the rest of the product uses. */
+    .terminal-tools.terminal-find input:not(:disabled),
+    .terminal-tools.terminal-find select:not(:disabled),
+    .terminal-bar > .terminal-menu .terminal-menu-toggle,
+    .terminal-bar > button {
+        min-block-size: var(--control-lg);
     }
     /* The cross-links sit in the pane's own bar on a phone, at the height of a link
        rather than of a control, so they cost one short row and not a 44px one. */
@@ -1307,6 +1324,9 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     .terminal-count {
         display: none;
     }
+    /* A touch screen has no Ctrl, no Tab and no arrows, so the key legend is a list of
+       keys this device cannot press. `help` is how the commands are found here, and the
+       banner says so. */
     .terminal-hint {
         display: none;
     }
@@ -1375,6 +1395,9 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
         padding: 4px 9px 2px;
     }
     .console-hint,
+    /* A touch screen has no Ctrl, no Tab and no arrows, so the key legend is a list of
+       keys this device cannot press. `help` is how the commands are found here, and the
+       banner says so. */
     .terminal-hint {
         display: none;
     }
@@ -2255,6 +2278,9 @@ dd .bad {
    the prompt stays on screen. */
 @media (max-height: 470px) {
     .console-hint,
+    /* A touch screen has no Ctrl, no Tab and no arrows, so the key legend is a list of
+       keys this device cannot press. `help` is how the commands are found here, and the
+       banner says so. */
     .terminal-hint {
         display: none;
     }
@@ -2326,9 +2352,17 @@ dd .bad {
     .terminal-status {
         padding: 1px 10px;
     }
-    /* The page heading above already names the page, so the pane's own title bar is
-       the first thing to go on a 390px-tall screen: it was 32px of a 185px shell. */
+    /* The bar used to be dropped on a 390px-tall screen because it was only a title.
+       It holds the pane's own menu now — Copy, Export, Clear, the answers/server-log
+       switch — so hiding it left the console with no reachable action at all. It loses
+       the pulse light and the counter instead, which is what a short screen cannot
+       afford; 26px buys the rest. */
     .terminal-bar {
+        block-size: 26px;
+        padding-block: 0;
+    }
+    .terminal-bar .terminal-led,
+    .terminal-bar .terminal-bar-meta {
         display: none;
     }
     /* The "More" summary sat 23px taller than the buttons beside it and pushed the
