@@ -243,13 +243,17 @@ hours`, `Last 7 days`). The buckets exist because the table's filters are select
 whose timestamp cannot be parsed is never folded into "recent", it stays visible under
 every window.
 
-The read is capped at the newest 500 rows (`WebIdentityStore` orders by id and limits),
-and both the page description and the line above the table say so instead of claiming to
-hold every privileged request: below the cap it reports how many events exist, at the cap
-it says that older rows stay in `data/webui.sqlite` and that the page cannot page back to
-them yet. **Pause** stops the ten-second poll and the automatic refresh a write triggers,
-because those re-inserted rows at the top under whoever was reading them; the header's
-own Refresh still works, because a button that says Refresh has to refresh.
+The server sends 500 rows at a time (`WebIdentityStore.audit(before)` takes the oldest id
+already on screen as an exclusive cursor), and **Older events** walks back through the
+trail, so nothing is unreachable: it disables itself the first time a page comes back
+short, which is how the end is known without counting the table. The line above the list
+says how many events are loaded, over how many pages, and whether that is all of them.
+
+**Pause** stops the ten-second poll and the automatic refresh a write triggers, because
+those re-inserted rows at the top under whoever was reading them. It does not stop the
+operator: the header's Refresh and Older events still read, because a button that says
+Refresh has to refresh. A poll replaces the newest page and keeps every page paged back
+to.
 
 ## Player Mail
 

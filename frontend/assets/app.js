@@ -121,7 +121,7 @@ const pages = [
         section: 'Operations',
         rank: 2,
         module: audit,
-        description: 'The newest 500 privileged requests, with their recorded outcomes.'
+        description: 'Privileged requests and their recorded outcomes, newest first.'
     },
     {
         name: 'webui-users',

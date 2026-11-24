@@ -282,7 +282,9 @@ public final class AdminHandler implements HttpHandler {
         }
         if (!post) {
             Object result = switch (route) {
-                case "audit" -> identities.audit();
+                // `before` is the oldest id already on screen; the WebUI pages back with
+                // it, because one 500-row page was the whole trail.
+                case "audit" -> identities.audit(p.optional("before").isEmpty() ? 0 : p.number("before"));
                 // Preserve all 64 revision bits across the JavaScript JSON boundary.
                 case "webui-users" ->
                     identities.list().stream()

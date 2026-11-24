@@ -235,7 +235,37 @@ export async function mount(ctx) {
     const CAP = 500;
     const scope = el('small', null, 'muted');
     let paused = false,
-        reading = false;
+        reading = false,
+        // Pages the operator asked for, older than the live first page. Kept apart so a
+        // poll can replace the newest page without dropping what was paged back to.
+        older = [],
+        exhausted = false;
+    const more = button(
+        'Older events',
+        async () => {
+            const ids = table.rows.map((r) => r.id);
+            if (!ids.length) return;
+            more.setBusy?.(true);
+            try {
+                const page = await ctx.request('audit', { before: Math.min(...ids) });
+                // A short page is the end of the trail: say so instead of offering a
+                // button that will fetch nothing for ever.
+                exhausted = page.length < CAP;
+                older = [...older, ...page];
+                table.update([...table.rows, ...page]);
+                more.refreshAvailability?.();
+                describeScope();
+            } catch (error) {
+                ctx.report(error);
+            } finally {
+                more.setBusy?.(false);
+            }
+        },
+        'secondary',
+        () => !exhausted
+    );
+    more.title = 'Read the next 500 events older than the ones on screen';
+    more.setAttribute('aria-label', 'Read older audit events');
     const pause = button('Pause', () => {
         paused = !paused;
         // The accessible name is the label, not a fixed string: it said "Pause the
@@ -252,15 +282,19 @@ export async function mount(ctx) {
     pause.setAttribute('aria-pressed', 'false');
     function describeScope() {
         const count = table.rows.length;
+        const pages = Math.max(1, Math.ceil(count / CAP));
+        const tail = `${count.toLocaleString()} event${count === 1 ? '' : 's'} loaded${
+            pages > 1 ? ` over ${pages} pages` : ''
+        }.`;
         scope.textContent = paused
-            ? `Paused: the trail shown here is the ${count} row${count === 1 ? '' : 's'} that were on screen when you paused. The ten-second poll and the header's Refresh are paused with it — press Resume to read again.`
-            : count >= CAP
-              ? `Showing the newest ${CAP} events only — older rows are still in data/webui.sqlite, but this page cannot page back to them yet.`
-              : `Every recorded event (${count}) is on this page: the server keeps the newest ${CAP}.`;
+            ? `Paused: ${tail} The ten-second poll and the automatic refresh a write triggers are paused with it; the header's Refresh and Older events still work.`
+            : exhausted
+              ? `${tail} That is the whole trail — Older events found nothing more.`
+              : `${tail} The server sends the newest ${CAP} at a time; Older events reads back through data/webui.sqlite.`;
     }
     // The inspector sits above the trail: appended after sixty rows it was 2,200px
     // below the fold, so the citation link a row emits looked like a dead click.
-    node.append(detail, toolbar(scope, pause), table.node);
+    node.append(detail, toolbar(scope, more, pause), table.node);
     let pendingEvent = null;
     /**
      * `force` is the operator asking: the header's Refresh button, a `data-changed`
@@ -274,11 +308,20 @@ export async function mount(ctx) {
         // reading them; a pause stops that, not the operator's own refresh.
         if (reading || (paused && !force)) return;
         reading = true;
+        let fresh;
         try {
-            table.update(await ctx.request('audit'));
+            fresh = await ctx.request('audit');
         } finally {
             reading = false;
         }
+        // The newest page is re-read; the pages the operator paged back to are kept, or a
+        // poll would silently throw away everything below the first 500 rows.
+        table.update([...fresh, ...older]);
+        // A short first page is the end of the trail. Once the operator has paged back,
+        // only the page they read decides that.
+        if (!older.length) exhausted = fresh.length < CAP;
+        // `available` was sampled when the button was built, so it has to be re-asked.
+        more.refreshAvailability?.();
         describeScope();
         // A cold load applies the address before the trail exists; the event it names
         // is opened as soon as there are rows to find it in.

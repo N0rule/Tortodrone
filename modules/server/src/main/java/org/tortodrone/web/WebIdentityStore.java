@@ -362,24 +362,39 @@ public final class WebIdentityStore implements WebIdentities {
     }
 
     public List<Map<String, Object>> audit() throws IOException {
+        return audit(0);
+    }
+
+    /**
+     * One page of the trail, newest first. `before` is an exclusive upper bound on the id,
+     * so the page after this one is `audit(lastRowId)`: the WebUI could only ever read the
+     * newest 500 events, and an operator on a busy server had no way to reach anything
+     * older than the last few days.
+     */
+    public List<Map<String, Object>> audit(long before) throws IOException {
         var result = new ArrayList<Map<String, Object>>();
+        var sql = before > 0
+                ? "SELECT * FROM audit WHERE id < ? ORDER BY id DESC LIMIT 500"
+                : "SELECT * FROM audit ORDER BY id DESC LIMIT 500";
         try (var c = connect();
-                var s = c.createStatement();
-                var r = s.executeQuery("SELECT * FROM audit ORDER BY id DESC LIMIT 500")) {
-            while (r.next())
-                result.add(Map.of(
-                        "id",
-                        r.getLong("id"),
-                        "time",
-                        r.getLong("time"),
-                        "actor",
-                        r.getString("actor"),
-                        "action",
-                        r.getString("action"),
-                        "target",
-                        r.getString("target"),
-                        "outcome",
-                        r.getString("outcome")));
+                var p = c.prepareStatement(sql)) {
+            if (before > 0) p.setLong(1, before);
+            try (var r = p.executeQuery()) {
+                while (r.next())
+                    result.add(Map.of(
+                            "id",
+                            r.getLong("id"),
+                            "time",
+                            r.getLong("time"),
+                            "actor",
+                            r.getString("actor"),
+                            "action",
+                            r.getString("action"),
+                            "target",
+                            r.getString("target"),
+                            "outcome",
+                            r.getString("outcome")));
+            }
         } catch (SQLException e) {
             throw new IOException("Audit unavailable", e);
         }
