@@ -66,7 +66,6 @@ button,
     background: var(--control-bg);
     border: 1px solid var(--control-border);
     border-radius: var(--radius-control);
-    box-shadow: var(--elev-1);
     font-weight: 600;
     font-size: 13px;
     line-height: 1.2;
@@ -126,6 +125,7 @@ button.primary,
     --control-bg: var(--action);
     --control-fg: var(--action-text);
     --control-border: var(--action);
+    box-shadow: var(--elev-1);
     font-weight: 700;
 }
 button.primary:not(:disabled):hover,
@@ -155,15 +155,28 @@ button.danger:not(:disabled):hover,
     background: color-mix(in srgb, var(--bad) 16%, transparent);
     border-color: var(--bad);
 }
-button.link {
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+/* A link-styled control keeps every state the bordered variants have. */
+button.link,
+.button.link {
+    --control-bg: transparent;
+    --control-border: transparent;
     color: var(--cyan);
-    padding: 0;
     min-block-size: 0;
+    padding: 0;
+    box-shadow: none;
     text-align: left;
     text-decoration: underline;
+}
+button.link:not(:disabled):hover,
+.button.link:not(:disabled):hover {
+    background: transparent;
+    border-color: transparent;
+    text-decoration: underline;
+}
+button.link:disabled,
+.button.link[aria-disabled='true'] {
+    color: var(--muted);
+    text-decoration: none;
 }
 /* A toggled control (Tail, Pause, density) reads as pressed, not hovered. */
 button[aria-pressed='true'],
@@ -201,16 +214,6 @@ input,
 select,
 textarea {
     font: inherit;
-}
-button.link {
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-    color: var(--cyan);
-    padding: 0;
-    min-block-size: 0;
-    text-align: left;
-    text-decoration: underline;
 }
 input,
 select,

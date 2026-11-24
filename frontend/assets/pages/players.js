@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { el, panel, button, copy, duration, status } from '../ui.js';
 import { DataTable } from '../components/table.js';
+import { go } from '../router.js';
 import { confirm, confirmAction } from '../components/dialog.js';
 export async function mount(ctx) {
     const node = el('div', null, 'stack');
@@ -137,7 +138,15 @@ export async function mount(ctx) {
             key: (r) => r.instanceId,
             id: 'scene-population',
             caption: 'Scene population',
-            exportName: 'scenes'
+            exportName: 'scenes',
+            actions: (get) => [
+                button(
+                    'Players here',
+                    () => go('players', { scene: get().name }),
+                    'secondary'
+                ),
+                button('Monsters', () => go('overview', { scene: get().name }), 'quiet')
+            ]
         }
     );
     node.append(players.node, panel('Scene population', scenes.node));

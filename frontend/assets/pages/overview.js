@@ -120,7 +120,7 @@ export async function mount(ctx) {
     const identityFacts = facts([
         ['Fingerprint (SHA-256)', identityFingerprint],
         ['Key', ''],
-        ['Created', ''],
+        ['Public file modified', ''],
         ['Recorded in', 'data/keys/public.txt']
     ]);
     const identityPanel = panel('Server identity', identityNote, identityFacts, identityActions, identityKey);
@@ -166,6 +166,9 @@ export async function mount(ctx) {
             id: 'overview-monsters',
             caption: 'Scene monster runtime',
             exportName: 'scene-monsters',
+            // A scene name in the URL pre-filters the runtime table, so the
+            // Players page can link straight to one scene here.
+            initialQuery: ctx.params.get('scene') || '',
             actions: (get) => [
                 button(
                     'Players here',
@@ -229,7 +232,9 @@ export async function mount(ctx) {
         cells[2].textContent = date(identity.modified);
         const key = `${identity.modulus}#${identity.exponent}`;
         identityKey.value = key;
-        if (!identityLoaded) {
+        // Reconcile on every refresh: a key generated after the first load must
+        // still grow its actions, and a key that disappears must lose them.
+        if (identity.available && !identityLoaded) {
             identityLoaded = true;
             identityActions.append(
                 button('Copy public key', () => copy(key, 'Server public key copied.'), 'primary'),

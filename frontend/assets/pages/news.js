@@ -114,8 +114,11 @@ export async function mount(ctx) {
     );
     welcomePanel.classList.add('stack');
     const file = input('Upload News image', '', 'file', { accept: 'image/png,image/jpeg' });
-    const save = button('Review and save News', () =>
-        review('news-visual-save', { catalog: JSON.stringify(newsDocument(draft)) })
+    // The one action this page exists for carries the primary weight.
+    const save = button(
+        'Review and save News',
+        () => review('news-visual-save', { catalog: JSON.stringify(newsDocument(draft)) }),
+        'primary'
     );
     const reload = button('Load latest News', async () => {
         if (

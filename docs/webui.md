@@ -70,7 +70,13 @@ the file that holds it, the `modulus#exponent` pair the client trusts, and the
 TLS certificates, written as upper-case colon-separated byte pairs.
 
 - **Never exposed:** the private key, its path and the reverse-proxy secret. The
-  panel only reports whether a signing key is stored (`keyStored`).
+  panel only reports whether a signing key is stored (`keyStored`). Every API
+  answer carries `Cache-Control: no-store`, and `HEAD` answers with the same
+  headers and no body.
+- **Degrades honestly:** a missing file, a `public.txt` that does not parse, or a
+  modulus/exponent pair that cannot be a handshake key all return
+  `available: false` with a reason instead of failing the route, and the panel
+  re-checks on every refresh so a key generated later grows its actions.
 - **Permission:** `VIEWER`. A signed-out request gets `401`, so the fingerprint is
   never public.
 - **Actions:** copy the public key, download `public.txt`, reveal the full key in a
@@ -91,6 +97,10 @@ weight on either page.
 | `Ctrl`/`⌘` + `L` | Clear the visible output |
 | `End` | Resume tailing the newest line |
 | `p` | Pause or resume the stream |
+
+The palette is theme-aware: dark theme keeps an ink-black pane, light theme
+switches to a paper-and-ink pane with the same structure and severity semantics,
+all driven by `--term-*` tokens so contrast can be checked per theme.
 
 Filtering never moves the viewport: the stream stays anchored while rows are
 hidden, and a **Jump to latest** pill appears when new rows arrive off-screen.
@@ -121,6 +131,10 @@ beside a preview, and attachments.
   form, and the list shows each mailing's window in local time.
 - **Revisions:** an in-flight mailing can be duplicated, and editing an active one
   only affects knights who have not received it yet — the panel says so.
+- **Receipts:** a multi-knight send keeps one row per recipient for the session,
+  including the refusal reason, so a batch is explainable after the toast is gone.
+- **Windows:** a new campaign opens on the next quarter hour rather than "now", so
+  a saved window is never already past.
 
 ## Preferences
 

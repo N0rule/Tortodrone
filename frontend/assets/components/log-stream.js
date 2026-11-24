@@ -42,6 +42,8 @@ export function logStream({
     jump.type = 'button';
     jump.hidden = true;
     jump.setAttribute('aria-label', 'Jump to the newest line');
+    footer.setAttribute('role', 'status');
+    footer.setAttribute('aria-live', 'polite');
     statusLeft.textContent = 'Ctrl+F search · Ctrl+L clear · End tail';
     footer.append(state, statusLeft, statusRight);
     node.append(bar, tools, output, jump, footer);
@@ -51,6 +53,7 @@ export function logStream({
         count = el('small', null, 'terminal-count');
     search.placeholder = 'Search output';
     search.classList.add('terminal-search');
+    search.title = 'Search the output (Ctrl+F)';
     if (initialSearch) search.value = initialSearch;
     if (['All', 'INFO', 'WARN', 'ERROR', 'DEBUG', 'COMMAND'].includes(initialSeverity))
         severity.value = initialSeverity;
@@ -98,6 +101,22 @@ export function logStream({
             entry
         }));
 
+    // A structured answer reads far better indented, the way a shell would print it.
+    function formatOutput(value) {
+        const textValue = typeof value === 'string' ? value : String(value ?? '');
+        const trimmed = textValue.trim();
+        const structured =
+            (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+            (trimmed.startsWith('[') && trimmed.endsWith(']'));
+        if (structured)
+            try {
+                return JSON.stringify(JSON.parse(trimmed), null, 2);
+            } catch {
+                /* keep the raw text when it is not valid JSON */
+            }
+        return textValue;
+    }
+
     function renderStatus() {
         const visible = [...rows, ...commandRows()].filter(matches).length;
         text(
@@ -134,7 +153,7 @@ export function logStream({
                     if (row.entry) {
                         message.replaceChildren(
                             el('span', `${prompt}$ ${row.entry.command}`, 'command'),
-                            el('pre', row.entry.output, 'command-response')
+                            el('pre', formatOutput(row.entry.output), 'command-response')
                         );
                     } else message.textContent = row.message ?? row.line;
                     line.append(time, level, message);
@@ -225,6 +244,7 @@ export function logStream({
 
     function clear() {
         clearing = new Set(pending.map(key));
+        pending = [];
         rows = [];
         commands.length = 0;
         display(true);

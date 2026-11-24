@@ -149,8 +149,10 @@ function draftOf(mode, campaign) {
         senderLabel: '',
         subject: '',
         body: '',
-        starts: Date.now(),
-        ends: Date.now() + 30 * 86_400_000,
+        // The window opens on the next quarter hour, so a draft is never saved
+        // with a start that has already passed, and runs for thirty days.
+        starts: Math.ceil((Date.now() + 3_600_000) / 900_000) * 900_000,
+        ends: Math.ceil((Date.now() + 3_600_000) / 900_000) * 900_000 + 30 * 86_400_000,
         crowns: 0,
         energy: 0,
         gifts: [],
@@ -187,7 +189,9 @@ export async function mount(ctx) {
                 try {
                     definitions.set(config, await ctx.request('item', { config }));
                 } catch (error) {
-                    if (error.name !== 'AbortError') definitions.set(config, null);
+                    // Keep the config in the map so the row can say the definition is
+                    // unavailable instead of silently rendering nothing.
+                    if (error.name !== 'AbortError') definitions.set(config, { config, unavailable: true });
                 }
             })
         );
@@ -362,7 +366,21 @@ export async function mount(ctx) {
                 ['Sent', (row) => date(row.at), (row) => row.at],
                 [
                     'Result',
-                    (row) => badge(row.ok ? 'Queued' : 'Refused', row.ok ? 'good' : 'bad')
+                    (row) => {
+                        // The receipt keeps the reason, so a failure is still
+                        // explainable after the toast is gone.
+                        const cell = el('div', null, 'mail-send-result');
+                        cell.append(badge(row.ok ? 'Queued' : 'Refused', row.ok ? 'good' : 'bad'));
+                        cell.append(
+                            el(
+                                'small',
+                                row.ok ? 'waits while offline' : row.reason || 'refused',
+                                'muted'
+                            )
+                        );
+                        return cell;
+                    },
+                    (row) => (row.ok ? 'Queued' : 'Refused ' + (row.reason || ''))
                 ]
             ],
             {
@@ -664,10 +682,12 @@ export async function mount(ctx) {
             gameHost.hidden = mode !== 'game';
             plain.hidden = mode !== 'plain';
             if (mode === 'plain')
+                // Verbatim: no trimming, no invented placeholders, so wrapping and
+                // blank lines are exactly what the client mailbox receives.
                 plain.textContent =
-                    `${customSender.value.trim() || senderName(Number(sender.value))}\n` +
-                    `${subject.value.trim() || '(no subject)'}\n\n` +
-                    `${body.value.trim() || '(no body)'}`;
+                    `From: ${customSender.value || senderName(Number(sender.value))}\n` +
+                    `Subject: ${subject.value}\n\n` +
+                    body.value;
         }
         const gameHost = el('div', null, 'mail-preview-host');
         gameHost.append(previewHost);

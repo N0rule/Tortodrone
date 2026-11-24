@@ -21,10 +21,28 @@
     --radius-control: 8px;
     --radius-pill: 999px;
     --control: 36px;
-    --control-sm: 32px;
+    --control-sm: 34px;
     --control-lg: 44px;
     --elev-1: 0 1px 2px #030d1640;
     --elev-2: 0 6px 18px #030d1640;
+    /* Terminal surface: the log and console panes are their own material, so the
+       palette is defined per theme instead of baked into the panes. */
+    --term-bg: #08131c;
+    --term-bg-top: #0f2231;
+    --term-fg: #d6e4ee;
+    --term-time: #6d8ba1;
+    --term-level: #8fa8b9;
+    --term-info: #7fc6dc;
+    --term-warn: #edc777;
+    --term-error: #ffb0ad;
+    --term-debug: #7d93a3;
+    --term-command: #5ee0a6;
+    --term-input: #7de9ff;
+    --term-response: #cfe0ec;
+    --term-line: #2f5468;
+    --term-hover: #ffffff08;
+    --term-scroll: #44647c;
+    --term-scroll-bg: #0a1721;
     --space: 20px;
     --row: 12px;
     --font: 'Trebuchet MS', 'Segoe UI', sans-serif;
@@ -48,6 +66,23 @@
     --bad: #a52f2d;
     --purple: #6b3f8f;
     --shadow: 0 12px 32px #24465d1a;
+    /* A paper-and-ink terminal keeps the same structure and severity semantics. */
+    --term-bg: #f8fafc;
+    --term-bg-top: #eef3f7;
+    --term-fg: #1c2f3d;
+    --term-time: #5b7285;
+    --term-level: #52697b;
+    --term-info: #0c6076;
+    --term-warn: #7d5500;
+    --term-error: #9e2b26;
+    --term-debug: #5b7285;
+    --term-command: #0a6b51;
+    --term-input: #08566a;
+    --term-response: #24384a;
+    --term-line: #b7c8d6;
+    --term-hover: #1c2f3d0d;
+    --term-scroll: #9db3c2;
+    --term-scroll-bg: #e7eef4;
 }
 [data-density='compact'] {
     --space: 13px;

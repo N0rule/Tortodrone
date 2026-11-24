@@ -120,8 +120,10 @@ tr:hover td {
 td:first-of-type {
     overflow-wrap: anywhere;
 }
+/* Row actions wrap instead of being clipped when a table is dense or narrow. */
 td .toolbar {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    row-gap: 4px;
 }
 /* Row actions use the small control size so dense tables stay scannable. */
 td button {
@@ -631,9 +633,12 @@ caption {
 }
 .toast-dismiss {
     align-self: start;
-    padding: 0 6px;
-    font-size: 16px;
+    min-inline-size: 28px;
+    min-block-size: 28px;
+    padding: 0;
+    font-size: 15px;
     line-height: 1;
+    border-radius: var(--radius-control);
 }
 .toast-action {
     justify-self: start;

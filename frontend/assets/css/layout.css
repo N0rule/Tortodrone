@@ -109,8 +109,10 @@
     flex-wrap: wrap;
 }
 #sidebar footer button {
+    min-block-size: var(--control-sm);
+    padding: 0 8px;
+    border-radius: var(--radius-control);
     font-size: 12px;
-    padding: 7px 5px;
     text-align: left;
 }
 .workspace {

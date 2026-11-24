@@ -439,6 +439,8 @@ public final class AdminHandler implements HttpHandler {
     private static void send(HttpExchange e, int status, Object result) throws IOException {
         byte[] b = WebJson.encode(result).getBytes(StandardCharsets.UTF_8);
         e.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+        // Session-scoped answers, including the server identity, are never cacheable.
+        e.getResponseHeaders().set("Cache-Control", "no-store");
         if (e.getRequestMethod().equals("HEAD")) {
             e.getResponseHeaders().set("Content-Length", Integer.toString(b.length));
             e.sendResponseHeaders(status, -1);

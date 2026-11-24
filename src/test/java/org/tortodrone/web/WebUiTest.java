@@ -67,6 +67,8 @@ public final class WebUiTest {
                             + publicKey.getPublicExponent().toString(16));
             String expectedFingerprint = fingerprint(java.security.MessageDigest.getInstance("SHA-256")
                     .digest(pair.getPublic().getEncoded()));
+            String goodPublicKey = publicKey.getModulus().toString(16) + "#"
+                    + publicKey.getPublicExponent().toString(16);
             firstRunSetup(root, news, frontend);
             var identities = new WebIdentityStore(data);
             identities.put("administrator", PASSWORD.toCharArray(), WebIdentityStore.Role.ADMINISTRATOR);
@@ -309,6 +311,30 @@ public final class WebUiTest {
                                     && !identity.body.contains("private")
                                     && !identity.body.contains("PRIVATE"),
                             "administrator reads the public server identity without private material");
+                    // The identity route must stay truthful when the key file is
+                    // broken, missing, or replaced, and HEAD must match GET.
+                    var head = request("HEAD", "/admin/api/identity", null, authenticated());
+                    check(
+                            head.status == 200
+                                    && "no-store".equals(head.headers.get("cache-control"))
+                                    && !head.body.contains("fingerprint"),
+                            "HEAD answers like GET without a body and is never cached");
+                    Files.writeString(data.resolve("keys/public.txt"), "not-hex#zz");
+                    check(
+                            get("identity").body.contains("\"available\":false"),
+                            "a malformed key file is reported as unavailable, not as an error");
+                    Files.writeString(data.resolve("keys/public.txt"), "0f#03");
+                    check(
+                            get("identity").body.contains("\"available\":false"),
+                            "a modulus that cannot be a handshake key is reported as unavailable");
+                    Files.delete(data.resolve("keys/public.txt"));
+                    check(
+                            get("identity").body.contains("\"available\":false"),
+                            "a missing key file is reported as unavailable");
+                    Files.writeString(data.resolve("keys/public.txt"), goodPublicKey);
+                    check(
+                            get("identity").body.contains("\"available\":true"),
+                            "a restored key file makes the identity available again");
                     check(
                             post("logout", Map.of()).status == 200
                                     && get("status").status == 401

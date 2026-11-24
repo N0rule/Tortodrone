@@ -123,7 +123,26 @@ export async function mount(ctx) {
     const promotions = new DataTable(
         [
             ['Promotion', (p) => p.id],
-            ['Offer', (p) => p.offerId],
+            [
+                'Offer',
+                (p) => {
+                    // A promotion that only shows an offer id is a dead end: name the
+                    // item it discounts and keep the id beside it.
+                    const offer = data.snapshot.offers.find((o) => o.id === p.offerId);
+                    const cell = el('div', null, 'offer-reference');
+                    cell.append(
+                        el(
+                            'strong',
+                            offer
+                                ? definitions.get(offer.good.item)?.name || offer.good.item
+                                : `Offer #${p.offerId}`
+                        )
+                    );
+                    cell.append(el('small', `offer #${p.offerId}`, 'muted'));
+                    return cell;
+                },
+                (p) => p.offerId
+            ],
             [
                 'State',
                 (p) => badge(promotionState(p), promotionState(p) === 'Active' ? 'good' : '')
@@ -138,6 +157,17 @@ export async function mount(ctx) {
             caption: 'Scheduled promotions',
             exportName: 'promotions',
             actions: (get) => [
+                button(
+                    'Show offer',
+                    () => {
+                        tab = 'offers';
+                        show();
+                        offers.query.value = String(get().offerId);
+                        offers.query.dispatchEvent(new Event('input'));
+                        offers.node.scrollIntoView({ block: 'center' });
+                    },
+                    'secondary'
+                ),
                 button(
                     'Cancel',
                     () =>
@@ -202,8 +232,10 @@ export async function mount(ctx) {
     }
     node.append(
         toolbar(
-            button('Create offer', () =>
-                itemForm('Create Depot offer', 'depot-save', fields(), { ...fixed(), id: -1 })
+            button(
+                'Create offer',
+                () => itemForm('Create Depot offer', 'depot-save', fields(), { ...fixed(), id: -1 }),
+                'primary'
             ),
             revision
         ),

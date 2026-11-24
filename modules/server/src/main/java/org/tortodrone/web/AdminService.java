@@ -219,12 +219,33 @@ public final class AdminService implements AutoCloseable {
             result.put("keyStored", false);
             return result;
         }
+        // A handshake key is an RSA key: a large odd modulus and an odd exponent.
+        // Anything else stays "unavailable" instead of failing the route later.
+        if (modulus.signum() <= 0
+                || !modulus.testBit(0)
+                || modulus.bitLength() < 512
+                || exponent.signum() <= 0
+                || !exponent.testBit(0)
+                || exponent.compareTo(BigInteger.valueOf(65537)) > 0) {
+            result.put("available", false);
+            result.put("reason", "keys/public.txt does not hold a usable RSA public key.");
+            result.put("keyStored", false);
+            return result;
+        }
         result.put("available", true);
         result.put("publicKey", modulusHex + "#" + exponentHex);
         result.put("modulus", modulusHex);
         result.put("exponent", exponentHex);
         result.put("bits", modulus.bitLength());
-        byte[] der = der(modulus, exponent);
+        byte[] der;
+        try {
+            der = der(modulus, exponent);
+        } catch (IOException | RuntimeException invalid) {
+            result.put("available", false);
+            result.put("reason", "keys/public.txt does not encode as an X.509 public key.");
+            result.put("keyStored", false);
+            return result;
+        }
         result.put("fingerprint", fingerprint(der));
         result.put("fingerprintBase64", Base64.getEncoder().encodeToString(digest(der)));
         result.put("derBase64", Base64.getEncoder().encodeToString(der));
