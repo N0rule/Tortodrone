@@ -29,6 +29,21 @@ export async function loadAssets() {
         /* Every icon has a local fallback. */
     }
 }
+/**
+ * The tile a config with no client art wears: the frame stays, the picture becomes
+ * the item's initial. Hidden from assistive technology, which reads the name beside
+ * it, and announced to nobody as a picture — there is no picture.
+ */
+function fallbackLetter(root, config) {
+    const name = String(config ?? '')
+        .split('/')
+        .at(-1)
+        .replaceAll('_', ' ')
+        .trim();
+    root.dataset.missing = 'true';
+    root.setAttribute('aria-hidden', 'true');
+    root.append(el('span', name.slice(0, 1).toUpperCase() || '?', 'item-icon-letter'));
+}
 function path(value) {
     return typeof value === 'string' && /^[A-Za-z0-9_./-]+$/.test(value) && !value.includes('..')
         ? '/admin/assets/game/' + value
@@ -37,9 +52,10 @@ function path(value) {
 export function icon(config) {
     const root = el('span', null, 'item-icon'),
         source = path(manifest.items?.[config]);
-    // Only client art may appear here. An item the pack has no picture of gets no
-    // icon at all: the name beside it is the label, and a drawn stand-in would be
-    // artwork this project never made.
+    // Only client art may appear here. An item the pack has no picture of keeps the
+    // frame and takes the first letter of its own name: an empty bordered box reads
+    // as a broken image, and a row without a frame breaks the column every other row
+    // aligns to. The letter is typography over the name, not art invented for it.
     if (source) {
         const image = el('img');
         image.src = source;
@@ -49,9 +65,10 @@ export function icon(config) {
         image.onerror = () => {
             image.onerror = null;
             image.remove();
+            fallbackLetter(root, config);
         };
         root.append(image);
-    }
+    } else fallbackLetter(root, config);
     // Rarity is a number the game shows as stars; a glyph is not client art, and the
     // word is what a screen reader can say, so it is written out — on its own line, by
     // the callers that have room for one. Overlaid on the frame it covered the art at

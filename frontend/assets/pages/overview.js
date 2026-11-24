@@ -192,8 +192,7 @@ export async function mount(ctx) {
     const diagnosticsBody = el('div', null, 'stack'),
         diagnosticsFacts = facts([]);
     let diagnosticsSignature = '',
-        uptimeSeconds = 0,
-        listenerPort = '';
+        uptimeSeconds = 0;
     const diagnosticsRaw = el('div');
     const diagnostics = el('details', null, 'stack-tight');
     diagnostics.append(
@@ -224,102 +223,30 @@ export async function mount(ctx) {
         );
         diagnosticsRaw.replaceChildren(details('Raw runtime payload', database ?? {}));
     }
-    // The handshake identity is the one thing an operator otherwise has to SSH in
-    // for; it sits on the page they land on.
-    const identityFingerprint = el('code', null, 'identity-fingerprint'),
-        identityNote = el('p', null, 'muted identity-note'),
+    /* The handshake key is the one thing an operator otherwise has to SSH in for, and
+       the page they land on is where they look for it — but it is a value they copy
+       once a month, so it earns one selectable line and the copy beside it. The file
+       hash, the modification date, the pair status and three explainer notes described
+       the key rather than being the key, and together they made the largest block on
+       the landing page. The fingerprint is still one hover away, and the mismatch
+       warning still opens in full, because that is the state where the key matters. */
+    const identityKey = el('code', null, 'identity-key'),
+        identityHint = el('p', null, 'identity-hint'),
+        identityState = el('p', null, 'identity-state'),
         identityWarning = el('p', null, 'identity-warning'),
-        identityKey = el('textarea', null, 'identity-key'),
         identityActions = toolbar();
-    identityKey.readOnly = true;
-    identityKey.spellcheck = false;
-    // Six rows is the whole key at a desktop width; `field-sizing: content` grows it
-    // further on a narrow screen, so the trailing exponent is never behind a
-    // scrollbar. The box used to show 80px of a 120px value.
-    identityKey.rows = 6;
     identityKey.setAttribute('aria-label', 'Server public key, modulus and exponent');
+    identityKey.tabIndex = 0;
+    identityState.hidden = true;
     identityWarning.hidden = true;
-    const identityBits = el('span'),
-        identityFileHash = el('code', null, 'identity-file-hash'),
-        identityModified = el('span'),
-        identityPair = el('span');
-    // A value an action acts on sits beside the action: the fingerprint and the
-    // file hash are what two of these controls copy, so hiding them behind a
-    // disclosure made the operator open a toggle to see what he was copying.
-    const identityPairValue = (value, action) => {
-        const row = el('div', null, 'identity-value');
-        row.append(value, action);
-        return row;
-    };
-    const identityFacts = facts([
-        [
-            'Fingerprint (SHA-256)',
-            identityPairValue(
-                identityFingerprint,
-                button(
-                    'Copy fingerprint',
-                    () => copy(identityCurrent?.fingerprint ?? '', 'Fingerprint copied.'),
-                    'quiet sm'
-                )
-            )
-        ],
-        ['Key', identityBits],
-        [
-            'Public file SHA-256',
-            identityPairValue(
-                identityFileHash,
-                button(
-                    'Copy file hash',
-                    () => copy(identityCurrent?.fileSha256 ?? '', 'Public file hash copied.'),
-                    'quiet sm'
-                )
-            )
-        ],
-        ['Public file modified', identityModified],
-        ['Signing key', identityPair],
-        ['Recorded in', 'data/keys/public.txt']
-    ]);
-    // The field's label names the key it holds, so the mismatch state cannot hand
-    // out one key under the name of another.
-    /* A note opens with the name of the row it explains. Three paragraphs under a
-       twelve-row grid, each one starting mid-thought about a value several rows above
-       it, made the reader hunt for what "both hashes" meant. */
-    const identityNoteRow = (term) => {
-        const row = el('div', null, 'identity-note');
-        row.append(el('dt', term), el('dd', null, 'muted identity-caption'));
-        return row.lastChild;
-    };
-    const identityFieldLabel = el('p', null, 'muted identity-field-label'),
-        identityCaption = identityNoteRow('Fingerprint and file hash'),
-        identityReach = identityNoteRow('Client address'),
-        identityRotation = identityNoteRow('Rotating the key'),
-        // Three notes under one value grid: as three stacked blocks they made a
-        // narrow column of prose beside half a card of white space.
-        identityNotes = el('dl', null, 'identity-notes');
-    identityNotes.append(
-        identityCaption.parentElement,
-        identityReach.parentElement,
-        identityRotation.parentElement
-    );
-    // Only the mismatch branch used to warn. A deliberate rotation of a healthy pair
-    // looks exactly like a healthy card, and every pinned client breaks silently.
-    text(
-        identityRotation,
-        'If this fingerprint has changed since a client was set up, that client must be re-keyed before it can connect: the fingerprint, not the file path, is what it trusts.'
-    );
-    // One sentence for the key, one for where it goes: the card is read, not studied.
-    const IDENTITY_NOTE =
-        "The public half only. Paste it into the client's Add Server dialog under game.publicKey on every machine that plays here — the private key never leaves this server.";
-    text(identityNote, IDENTITY_NOTE);
+    const identityRow = el('div', null, 'identity-value');
+    identityRow.append(identityKey, identityActions);
     const identityPanel = panel(
         'Server identity',
-        identityNote,
-        identityFieldLabel,
-        identityKey,
-        identityActions,
         identityWarning,
-        identityFacts,
-        identityNotes
+        identityState,
+        identityRow,
+        identityHint
     );
     // One panel, one address: `#overview?panel=identity` is the link to hand a
     // colleague who only needs the key. Not `identity` — the footer's session line
@@ -420,14 +347,17 @@ export async function mount(ctx) {
         }
     );
     node.append(
+        // The page opens on the process, then on its numbers. The key is a value an
+        // operator copies once a month, so it closes the page instead of standing
+        // between the operator and every figure the console reports.
         strip,
-        identityPanel,
         metrics,
         toolbar(range, el('small', 'Measured every 5 seconds · retained in memory for 1 hour')),
         charts,
         panel('Scene monster runtime', monsters.node),
         panel('Recent warnings and errors', warnings.node),
-        diagnostics
+        diagnostics,
+        identityPanel
     );
     let diagnosticSignature;
     const currentKey = () =>
@@ -442,66 +372,30 @@ export async function mount(ctx) {
     async function renderIdentity(identity) {
         if (!identity.available) {
             // A degraded panel still tells the operator what exists on disk: "no
-            // key" and "a key I cannot read" are different problems.
-            text(identityFingerprint, 'Unavailable');
+            // key" and "a key I cannot read" are different problems, and one line
+            // each is all either of them needs.
+            identityState.hidden = false;
             text(
-                identityNote,
+                identityState,
                 identity.reason ||
                     'The server has not created its keypair yet; it is created on the next start.'
             );
-            text(identityBits, identity.keyStored ? 'signing key present' : 'no keypair yet');
-            text(identityFileHash, '—');
-            text(identityModified, '—');
-            text(identityPair, identity.keyStored ? 'unknown' : 'absent');
-            identityKey.value = '';
-            text(identityFieldLabel, 'No public key is available on this server yet.');
-            identityWarning.hidden = false;
-            identityWarning.textContent = identity.keyStored
-                ? 'A signing key is stored but its public half could not be read. Nothing here is served to clients until data/keys/public.txt is fixed.'
-                : 'Nothing here is served to clients yet: the first start creates data/keys/private.pk8 and data/keys/public.txt.';
+            text(identityKey, '—');
+            identityKey.dataset.state = 'empty';
+            identityKey.removeAttribute('title');
+            text(
+                identityHint,
+                identity.keyStored
+                    ? 'Nothing here is served to clients until data/keys/public.txt is readable.'
+                    : 'Nothing here is served to clients yet: the first start writes data/keys/public.txt.'
+            );
             identityActions.replaceChildren();
+            identityWarning.hidden = true;
             identityLoaded = false;
             identityCurrent = null;
             return;
         }
-        text(identityFingerprint, identity.fingerprint);
-        identityFingerprint.title = identity.fingerprintHex || identity.fingerprint;
-        // One row, not two: the exponent of an RSA handshake key is always 65537 and
-        // the facts grid was mostly whitespace.
-        text(
-            identityBits,
-            `RSA ${identity.bits}-bit · exponent 0x${identity.exponent} (${Number.parseInt(identity.exponent, 16)})`
-        );
-        text(identityFileHash, identity.fileSha256 || '—');
-        identityFileHash.title = identity.fileSha256Command
-            ? `Verify on the host with: ${identity.fileSha256Command}`
-            : '';
-        text(identityModified, date(identity.publicModified || identity.modified));
-        // An explanation that only exists in a title is invisible on a touch screen,
-        // to keyboard focus and in print.
-        text(
-            identityCaption,
-            [
-                // The file holds a hex modulus and exponent, not a DER blob: the server's
-                // own note still claimed the fingerprint was computed from data the file
-                // does not contain, and concatenating it contradicted this sentence.
-                'Both hashes are SHA-256 over the key text: the fingerprint over the structure the server builds from it.',
-                identity.fileSha256Command
-                    ? `${identity.fileSha256Command} on the host reproduces the file hash.`
-                    : ''
-            ]
-                .filter(Boolean)
-                .join(' ')
-        );
-        text(
-            identityPair,
-            identity.pairMatches === false
-                ? 'does not match the public file'
-                : identity.pairMatches === true
-                  ? 'matches the public file'
-                  : 'unreadable'
-        );
-        identityPair.classList.toggle('bad', identity.pairMatches === false);
+        identityState.hidden = true;
         const mismatch = identity.pairMatches === false;
         identityWarning.hidden = !mismatch;
         // A mismatch can appear while the page is open, so it is announced.
@@ -510,39 +404,35 @@ export async function mount(ctx) {
         identityWarning.textContent = mismatch
             ? `The stored public half does not match the private key that signs handshakes, so the server will refuse to start until the pair matches again.${
                   identity.expectedPublicKey
-                      ? ' The field below, Copy and Download all use the key the private half implies — the one clients must trust.'
+                      ? ' The key below, Copy and Download all use the key the private half implies — the one clients must trust.'
                       : ''
-              } The fingerprint and file hash below still describe data/keys/public.txt, so they are stale until you stop the server, restore the matching public.txt from your backup and start it again. Deleting data/keys lets the next start create a fresh pair, but every client pinned to the old key — including the one you are about to set up — must be re-keyed.`
+              } Stop the server, restore the matching public.txt from your backup and start it again. Deleting data/keys lets the next start create a fresh pair, but every client pinned to the old key — including the one you are about to set up — must be re-keyed.`
             : '';
         identityCurrent = identity;
-        text(identityNote, IDENTITY_NOTE);
-        text(
-            identityFieldLabel,
-            mismatch
-                ? 'Key the private half implies: paste this one into the client.'
-                : 'Public key: modulus and exponent, in the form the client stores.'
-        );
-        // A five-second poll must not eat a selection the operator is copying:
-        // only rewrite the field when it is not focused and the value changed.
-        text(
-            identityReach,
-            `Clients dial this machine's own address${
-                listenerPort ? ` on port ${listenerPort}` : ' on the game port below'
-            }; a bind address of 0.0.0.0 above means "every interface", not a destination.`
-        );
+        // The port is on the strip above; this line says where the key goes, and one
+        // sentence that fits on one line is read where two wrapped ones are skimmed.
+        text(identityHint, "Paste it under game.publicKey in the client's Add Server dialog.");
         const shown = trustedKey();
-        if (document.activeElement !== identityKey && identityKey.value !== shown)
-            identityKey.value = shown;
+        // A five-second poll must not eat a selection the operator is copying:
+        // the line is rewritten only when it is unfocused and the value changed.
+        if (document.activeElement !== identityKey && identityKey.textContent !== shown) {
+            text(identityKey, shown);
+            identityKey.dataset.state = mismatch ? 'mismatch' : 'ready';
+            // The fingerprint is what a client pins, and what a rotation breaks. It
+            // costs no layout to keep it on the value it belongs to.
+            identityKey.title = identity.fingerprint
+                ? `SHA-256 ${identity.fingerprint}`
+                : 'Server public key';
+        }
         if (!identityLoaded) {
             identityLoaded = true;
             identityActions.append(
                 // One gold control per page: the server strip owns the primary, and a
-                // copy is not the page's next action. Three controls that all hand this
-                // identity to someone else carried three different weights, which made
-                // a choice of equals look like a hierarchy. They are one weight; the
-                // per-value copies in the table are the quiet ones.
+                // copy is not the page's next action. The two secondary hand-offs sit
+                // beside it as quiet words, so the row reads as one action and two
+                // conveniences instead of three controls of equal weight.
                 button(
-                    'Copy public key',
+                    'Copy key',
                     () => copy(trustedKey(), 'Server public key copied.'),
                     'secondary'
                 ),
@@ -557,27 +447,31 @@ export async function mount(ctx) {
                                 `${location.origin}${location.pathname}#overview?panel=identity`,
                                 'Link copied.'
                             ),
-                        'secondary'
+                        'quiet'
                     );
                     control.setAttribute('aria-label', 'Copy link to the server identity');
                     control.title = 'Copy a link to the server identity';
                     return control;
                 })(),
-                button(
-                    'Download public.txt',
-                    // Normally the server sends the file's own bytes, so `sha256sum`
-                    // on the download matches the printed hash. In the mismatch state
-                    // the file is the stale half, and the button hands out the key the
-                    // warning above promises.
-                    () =>
-                        download(
-                            'public.txt',
-                            identityCurrent?.pairMatches === false
-                                ? trustedKey()
-                                : (identityCurrent?.fileText ?? trustedKey())
-                        ),
-                    'secondary'
-                )
+                (() => {
+                    const control = button(
+                        'Download',
+                        // Normally the server sends the file's own bytes, so `sha256sum`
+                        // on the download matches the printed hash. In the mismatch
+                        // state the file is the stale half, and the button hands out the
+                        // key the warning above promises.
+                        () =>
+                            download(
+                                'public.txt',
+                                identityCurrent?.pairMatches === false
+                                    ? trustedKey()
+                                    : (identityCurrent?.fileText ?? trustedKey())
+                            ),
+                        'quiet'
+                    );
+                    control.title = 'Download public.txt';
+                    return control;
+                })()
             );
         }
     }
@@ -591,11 +485,6 @@ export async function mount(ctx) {
         renderIdentity(identity);
         text(state, s.state);
         text(endpoint, s.endpoint || 'Listener stopped');
-        // The port a client dials is the listener's own; the host in that string is
-        // the bind address, which is why the identity panel says so out loud.
-        listenerPort = String(s.endpoint || '').includes(':')
-            ? String(s.endpoint).split(':').pop()
-            : '';
         const running = s.state === 'RUNNING';
         if (running !== listenerRunning) {
             listenerRunning = running;

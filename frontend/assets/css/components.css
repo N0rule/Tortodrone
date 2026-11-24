@@ -1,12 +1,17 @@
 .panel {
     background: var(--surface);
-    /* The panel owns the bright boundary; the controls inside it are defined by
-       their fill and their shadow. Two roles, two colours. */
-    border: 1px solid var(--line-bright);
+    /* A panel is a region of the page, not a card on it: a quiet edge and the large
+       radius hold it together without drawing four lines around every block, and the
+       controls inside keep the bright boundary that locates them. */
+    border: 1px solid var(--line-panel);
     border-radius: var(--radius);
-    box-shadow: var(--elev-1);
     padding: var(--space);
     min-width: 0;
+}
+/* Panels nested in a panel are a region inside a region; the fill says so. */
+.panel .panel {
+    background: var(--inset);
+    border-color: transparent;
 }
 .panel-heading {
     display: flex;
@@ -104,8 +109,8 @@
 }
 .table-wrap {
     overflow: auto;
-    border: 1px solid var(--line-bright);
-    border-radius: var(--radius);
+    border: 1px solid var(--line-panel);
+    border-radius: var(--radius-control);
     /* The table is a panel, so a cell can be painted opaque and still match: without
        a background here the sticky actions column had to guess what was behind its
        row, and guessed a hard light stripe across every tinted row. */
@@ -116,13 +121,22 @@ table {
     border-collapse: collapse;
     font-size: 13px;
 }
+/* One frame per surface: a table inside a panel leans on the panel's edge instead of
+   drawing a second box a few pixels inside the first. */
+.panel .table-wrap {
+    border: 0;
+    border-radius: 0;
+}
 th {
     position: sticky;
     top: 0;
     z-index: 1;
     text-align: left;
-    background: var(--raised);
+    /* A label row, not a band: on the panel's own fill, under one hairline, the header
+       names the columns and the data stays the loudest thing on the table. */
+    background: var(--surface);
     color: var(--muted);
+    border-block-end: 1px solid var(--line-bright);
     white-space: nowrap;
     font-weight: 400;
 }
@@ -133,7 +147,7 @@ th {
    guard is scoped there: hovering the *sorted* column used to repaint its cyan ink as
    body text and lose the marker under the pointer. */
 th[aria-sort='none'] button:not(:disabled):not([aria-disabled='true']):hover {
-    background: color-mix(in srgb, var(--raised) 68%, var(--line-bright));
+    background: var(--inset);
     color: var(--text);
 }
 th[aria-sort='ascending'] button:not(:disabled):not([aria-disabled='true']):hover,
@@ -248,12 +262,8 @@ td {
 tbody tr {
     --row-tint: transparent;
 }
-tbody tr:nth-child(even) {
-    --row-tint: color-mix(in srgb, var(--raised) 22%, transparent);
-}
-tbody tr:hover,
-tbody tr:nth-child(even):hover {
-    --row-tint: color-mix(in srgb, var(--raised) 50%, transparent);
+tbody tr:hover {
+    --row-tint: color-mix(in srgb, var(--raised) 45%, transparent);
 }
 tbody td {
     background: var(--row-tint);
@@ -396,17 +406,35 @@ td .toolbar .button .ui-icon,
     position: relative;
     display: inline-grid;
     place-items: center;
-    width: 56px;
-    height: 56px;
+    width: var(--icon-tile);
+    height: var(--icon-tile);
     flex-shrink: 0;
     background: var(--inset);
-    border: 1px solid var(--line-bright);
-    border-radius: var(--radius);
+    /* The frame is a container for art, so its edge stays quiet: six thumbnails a row
+       with --line-bright edges read as six boxes, and the picture inside is the point. */
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
 }
+/* The art keeps a 4px inset at every size, so a 36px row thumbnail and a 112px
+   sprite portrait are the same picture at two scales instead of two crops. */
 .item-icon img {
-    width: 48px;
-    height: 48px;
+    width: calc(100% - 8px);
+    height: calc(100% - 8px);
     object-fit: contain;
+}
+/* A config the pack has no picture of: the frame stays so the column keeps its
+   rhythm, dashed so it says "not the ordinary case", and the picture becomes the
+   item's initial — typography over the name, not art invented for it. */
+.item-icon[data-missing] {
+    border-style: dashed;
+    color: var(--muted);
+}
+.item-icon-letter {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    text-transform: uppercase;
 }
 /* Rarity is a line under the art, not a chip on it: at the 32px size tiles use the
    overlay covered the picture, and at 56px it hung below the frame over the row rule. */
@@ -438,12 +466,8 @@ td .toolbar .button .ui-icon,
     min-width: 0;
 }
 .item-line.compact .item-icon {
-    width: 32px;
-    height: 32px;
-}
-.item-line.compact .item-icon img {
-    width: 26px;
-    height: 26px;
+    width: var(--icon-row);
+    height: var(--icon-row);
 }
 .item-line.compact .item-rarity {
     display: none;
@@ -1410,144 +1434,58 @@ caption {
     margin: 0;
 }
 
-/* Server identity: the fingerprint is meant to be read aloud, so it wraps in
-   groups instead of forcing a horizontal scrollbar. */
-.identity-note {
-    margin: 0 0 4px;
-    max-width: 78ch;
-}
-.identity-fingerprint {
-    /* Inline, so the Copy beside it sits on the same line instead of wrapping
-       under a full-width block. */
-    display: inline-block;
-    max-inline-size: 100%;
-    padding: 6px 8px;
-    background: var(--inset);
-    border: 1px solid var(--line-bright);
-    border-radius: var(--radius);
-    font-family: var(--mono);
-    font-size: 12.5px;
-    line-height: 1.7;
-    overflow-wrap: anywhere;
-    user-select: all;
-}
-/* The key is the reason the panel exists: mono, always visible, one gesture from
-   selected, and wrapped so a 518-character value never scrolls sideways. */
-.identity-key {
-    inline-size: 100%;
-    /* Sized to its value: the key is 518 characters and six wrapped lines, and a
-       120px box hid the exponent every client needs — the one thing the card exists
-       to show. */
-    min-block-size: 6lh;
-    block-size: auto;
-    field-sizing: content;
-    margin: 0 0 10px;
-    padding: 10px 12px;
-    background: var(--inset);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-control);
-    font-family: var(--mono);
-    font-size: 12.5px;
-    line-height: 1.6;
-    overflow-wrap: anywhere;
-    /* A value, not a draft: the native drag grip invited the operator to reshape the
-       card, and nothing else on the page can be resized by accident. */
-    resize: none;
-    user-select: all;
-}
-.identity-key[hidden] {
-    display: none;
-}
-/* On a phone the key is 345px of a 702px first screen and it pushed everything else
-   below the fold. It keeps its own scroll instead, at the height of the copy row: the
-   button beside it still copies the whole value. */
-@media (max-width: 520px) {
-    .identity-key {
-        field-sizing: fixed;
-        block-size: 8lh;
-        overflow: auto;
-        resize: none;
-    }
-}
-/* A value and the control that acts on it stay on one line: the copy button is
-   useless if the thing it copies is behind a toggle. The control sits on the same
-   edge in every row — pinned after the value it landed wherever the value ended, so
-   the two copy buttons on one card never lined up. */
+/* The server key is a value, not a section: one selectable line with the copy on its
+   trailing edge. It scrolls sideways instead of wrapping into six lines, because the
+   landing page is a report on the process and the key is one fact in it. */
 .identity-value {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
     flex-wrap: wrap;
 }
-.identity-value > code {
+.identity-key {
+    flex: 1 1 260px;
     min-inline-size: 0;
-    overflow-wrap: anywhere;
-}
-.identity-value > button {
-    flex: 0 0 auto;
-    margin-inline-start: auto;
-}
-.identity-field-label {
-    margin: 0;
-    font-size: 12px;
-}
-/* An explanation of a value belongs on the page, not in a tooltip. */
-.identity-caption {
-    /* Load-bearing explanation, so the body step and a readable measure — not the
-       smallest caption size on the page. Declared once: the 11.5px override that used
-       to follow this comment was the value that won. */
+    padding: 9px 12px;
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    color: var(--text);
+    font-family: var(--mono);
     font-size: 12.5px;
-    line-height: 1.5;
-    max-inline-size: 76ch;
-    margin: 0;
+    line-height: 1.6;
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-bright) transparent;
+    user-select: all;
 }
-/* Three notes, side by side: the card is wide and they are short, and stacked they
-   left half of it empty and pushed the value grid out of reading order. */
-.identity-notes {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 4px 36px;
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid var(--line);
+.identity-key:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 1px;
 }
-/* One note, headed by the row it explains. */
-.identity-note {
-    display: grid;
-    gap: 3px;
-    align-content: start;
+.identity-key[data-state='empty'] {
+    color: var(--muted);
 }
-/* A caption is a word at the caption size, in the same voice everywhere: tracked
-   all-caps mono in four different modules made four typographic systems out of one. */
-.identity-note dt {
+.identity-hint {
+    margin: 9px 0 0;
     color: var(--muted);
     font-size: 12.5px;
-    font-weight: 600;
+    max-inline-size: 72ch;
 }
+.identity-state {
+    margin: 0 0 10px;
+    color: var(--muted);
+    font-size: 13px;
+    max-inline-size: 72ch;
+}
+/* The signed-in name and its role, on the preferences page and in the sidebar. */
 .identity-session {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: 2px 8px;
-}
-.identity-note dd {
-    margin: 0;
-    max-inline-size: 60ch;
-}
-/* Derived facts are reference material, not the headline: one row until asked. */
-.identity-details {
-    margin-top: 12px;
-    border-top: 1px solid var(--line);
-    padding-top: 8px;
-}
-.identity-details > summary {
-    cursor: pointer;
-    color: var(--muted);
-    font-size: 12.5px;
-}
-.identity-details > summary:hover {
-    color: var(--text);
 }
 
 /* A filter says what it filters: the select's only visible text was its value. */

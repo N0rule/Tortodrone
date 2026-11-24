@@ -58,9 +58,9 @@
     align-items: center;
     gap: 11px;
     color: var(--muted);
-    padding: 7px 12px;
+    padding: 7px 11px;
     border: 1px solid transparent;
-    border-radius: var(--radius);
+    border-radius: var(--radius-control);
 }
 /* Short viewports: tighten the list so every destination stays above the footer
    instead of the last items hiding behind a scrollbar. */
@@ -86,11 +86,14 @@
     color: var(--text);
     text-decoration: none;
 }
+/* The current page is a filled row with its name in gold. It used to carry a gold
+   bar on its leading edge as well: three signals for one state, and the bar was the
+   only thing on the rail that was drawn rather than written. */
 #navigation a[aria-current='page'] {
     color: var(--gold);
-    border-color: var(--line-bright);
     background: var(--raised);
-    box-shadow: inset 3px 0 var(--gold-rule);
+    border-color: var(--line-panel);
+    font-weight: 600;
 }
 .nav-icon {
     display: inline-block;
@@ -106,7 +109,7 @@
     padding: 20px 8px 0;
     color: var(--muted);
     font-size: 12.5px;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--line-panel);
     flex-shrink: 0;
     overflow-wrap: anywhere;
 }
@@ -150,7 +153,7 @@
     top: 0;
     z-index: 20;
     padding: 0 30px;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--line-panel);
     color: var(--muted);
     font-size: 12.5px;
     background: var(--surface);
@@ -181,9 +184,9 @@ main {
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    margin-bottom: 22px;
-    padding-bottom: 18px;
-    border-bottom: 1px solid var(--line);
+    margin-bottom: 26px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line-panel);
     /* The page travels with its name and its one action. On a 328-row depot the
        title and the primary control used to scroll away on the first wheel notch. */
     position: sticky;
@@ -440,13 +443,15 @@ main {
 /* A named group, not a shout. Tracked capitals above every group were the same
    template device the page heading used, and the rail is the one place the group is
    named, so it carries the name in sentence case over its own hairline. */
+/* A group label, not a divider: on the rail's own fill with air above it, the name
+   groups the list under it. Five rules plus fourteen links made the rail a table of
+   contents; the reader needs the names, not the boxes. */
 .nav-heading {
-    margin: 10px 0 0;
-    padding: 10px 12px 4px;
+    margin: 14px 0 2px;
+    padding: 0 11px;
     color: var(--muted);
     font-size: 11.5px;
     font-weight: 600;
-    border-top: 1px solid var(--line);
 }
 .nav-heading:first-child {
     margin-top: 0;

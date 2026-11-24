@@ -13,6 +13,10 @@
        to clear 3:1 against both surface (4.31) and raised (3.18). */
     --line: #3b586c;
     --line-bright: #779aaf;
+    /* The edge of a container, as opposed to the edge of a control. Panels, tables and
+       strip frames use this; anything an operator clicks keeps --line-bright, because a
+       control's boundary is what locates it. */
+    --line-panel: #46647a;
     /* A rule between two rows of data is a boundary the reader has to see, not a
        decorative hairline: this one clears 3:1 against the surface and against the
        zebra tint (3.44 and 3.21), where --line sat at 1.71. */
@@ -41,11 +45,19 @@
     --bad: #ffb0ad;
     --purple: #e2bcf5;
     --shadow: 0 12px 32px #030d1680;
-    /* Three radii, three jobs: surfaces, controls, pills. Anything else is drift. */
-    --radius: 6px;
+    /* Three radii, three jobs: surfaces, controls, pills. Anything else is drift.
+       The surface step is the large one: a 12px corner on a 1,200px panel reads as a
+       soft edge, while an 8px one a few pixels off the controls beside it read as a
+       mistake. */
+    --radius: 12px;
     --radius-control: 8px;
     --radius-pill: 999px;
     --control: 36px;
+    /* The sizes client art is drawn at, one per job: a row thumbnail, a tile, an
+       equipped slot. Two lists picking their own 30px and 34px was drift, not design. */
+    --icon-row: 36px;
+    --icon-tile: 56px;
+    --icon-slot: 64px;
     /* A ramp of three real steps: 32 / 36 / 44. 34 against 36 was a 2px difference
        that read as misalignment rather than as a smaller control. */
     --control-sm: 32px;
@@ -78,7 +90,10 @@
     --term-hover: #ffffff08;
     --term-scroll: #44647c;
     --term-scroll-bg: #0a1721;
-    --space: 20px;
+    /* The page's breathing room, in one number: block gaps and the padding inside a
+       panel are the same value, so a panel's edge never sits closer to its content than
+       two panels sit to each other. */
+    --space: 24px;
     /* Table cell padding above and below its content. A row is as tall as the tallest
        thing in it — usually the 36px row action — so 12px here measured 60px rows for
        one line of text: twelve visible rows per screen, and a 30-row list that scrolled
@@ -99,6 +114,7 @@
     --inset: #f1f6f9;
     --line: #bdcfdc;
     --line-bright: #678193;
+    --line-panel: #cfdde7;
     --line-data: #7f93a2;
     --text: #203a4d;
     --muted: #3f5c70;
@@ -157,6 +173,6 @@
     --term-scroll-bg: #e7eef4;
 }
 [data-density='compact'] {
-    --space: 13px;
+    --space: 15px;
     --row: 3px;
 }

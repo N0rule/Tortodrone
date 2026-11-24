@@ -5,8 +5,10 @@
     gap: 20px;
     padding: 20px 24px;
     background: var(--raised);
-    border: 1px solid var(--line-bright);
-    /* One accent width across the product, and one radius ramp. */
+    /* One accent width across the product, and one radius ramp. The edge is a
+       container's, not a control's: the strip is the loudest block on the page
+       already, and it does not need a drawn frame to say so. */
+    border: 1px solid transparent;
     border-left: 3px solid var(--gold-rule);
     border-radius: var(--radius);
 }
@@ -46,14 +48,11 @@
     display: grid;
     /* auto-fit so a strip of any length (4, 5 or 6 tiles) fills its row instead
        of leaving a hole where the fourth column used to be. */
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1px;
-    border: 1px solid var(--line-bright);
-    border-radius: var(--radius);
-    /* The gap is the divider: one hairline between every pair of tiles no
-       matter how many columns the strip ends up with. */
-    background: var(--line);
-    overflow: hidden;
+    grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+    /* Six tiles with air between them, each one its own surface. A 1px gap painted
+       in the rule colour made one long band with five seams in it, which read as a
+       form row rather than as six figures an operator can compare. */
+    gap: 10px;
 }
 .metric {
     /* A grid, not the inherited inline-flex: the label, the number and the caption
@@ -67,20 +66,21 @@
        while the strip looked left-aligned. */
     justify-content: start;
     align-content: start;
-    padding: var(--space);
+    padding: 18px 20px 20px;
     background: var(--surface);
+    border: 1px solid var(--line-panel);
+    border-radius: var(--radius);
 }
 /* The tiles are buttons: the page's most inviting targets lead to their source. */
 button.metric {
     text-align: start;
-    border: 0;
-    border-radius: 0;
     color: inherit;
     font: inherit;
     cursor: pointer;
 }
-button.metric:hover {
+button.metric:not(:disabled):not([aria-disabled='true']):hover {
     background: var(--inset);
+    border-color: var(--line-bright);
 }
 button.metric:focus-visible {
     outline: 2px solid var(--cyan);
@@ -103,7 +103,7 @@ button.metric:focus-visible {
     justify-content: space-between;
     gap: 22px;
     padding: 22px;
-    border: 1px solid var(--line-bright);
+    border: 1px solid var(--line-panel);
     border-top: 3px solid var(--gold-rule);
     background: var(--surface);
     border-radius: var(--radius);
@@ -1345,6 +1345,9 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
         width: 72px;
         height: 72px;
     }
+    .sprite-overview .item-icon-letter {
+        font-size: 24px;
+    }
     .sprite-overview dl {
         display: block;
     }
@@ -1391,12 +1394,8 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     font-weight: 600;
 }
 .equipment-slot .item-icon {
-    width: 64px;
-    height: 64px;
-}
-.equipment-slot .item-icon img {
-    width: 56px;
-    height: 56px;
+    width: var(--icon-slot);
+    height: var(--icon-slot);
 }
 .equipment-slot.locked-slot {
     border-style: solid;
@@ -1424,8 +1423,8 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     gap: 16px;
 }
 .gear-card .item-line .item-icon {
-    width: 64px;
-    height: 64px;
+    width: var(--icon-slot);
+    height: var(--icon-slot);
 }
 .gear-card .item-line strong {
     font-size: 20px;
@@ -1937,35 +1936,21 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     align-self: center;
     margin-right: 4px;
 }
-/* Identity surfaces: a mismatch warning has to outrank every other fact on the
-   panel, and a 64-character hash has to be selectable without scrolling. */
+/* A broken keypair outranks every other fact on the page, so it opens the panel in
+   the danger ink; the ordinary case says nothing at all. */
 .identity-warning {
-    margin: 0 0 8px;
-    padding: 8px 10px;
+    margin: 0 0 12px;
+    padding: 9px 12px;
     border-left: 3px solid var(--bad);
     border-radius: var(--radius);
     background: color-mix(in srgb, var(--bad) 12%, transparent);
     color: var(--text);
     font-size: 12.5px;
-    line-height: 1.5;
+    line-height: 1.55;
+    max-inline-size: 88ch;
 }
 .identity-warning[hidden] {
     display: none;
-}
-/* Two hashes, two rows, one treatment: the fingerprint's box is the shape a value in
-   this card has, and the file hash sat beside it as borderless 11.5px text. */
-.identity-file-hash {
-    display: inline-block;
-    max-inline-size: 100%;
-    padding: 6px 8px;
-    background: var(--inset);
-    border: 1px solid var(--line-bright);
-    border-radius: var(--radius);
-    font-family: var(--mono);
-    font-size: 12.5px;
-    line-height: 1.7;
-    overflow-wrap: anywhere;
-    user-select: all;
 }
 dd .bad {
     color: var(--bad);
