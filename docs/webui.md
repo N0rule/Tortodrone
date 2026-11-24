@@ -138,11 +138,25 @@ all driven by `--term-*` tokens so contrast can be checked per theme.
 
 Filtering never moves the viewport: the stream stays anchored while rows are
 hidden, and a **Jump to latest** pill appears when new rows arrive off-screen.
-Console keeps its prompt inside the shell — `tortodrone$` label, a borderless
-monospace field and a primary **Run** button — with `Tab` completion from the
-server's route list, `↑`/`↓` history, and `Ctrl`/`⌘` + `L`/`C` for clear and
-cancel. The connection state lives in the status line (`● Connected`,
-`Executing…`, `Disconnected · reason`).
+Console keeps its prompt inside the shell and nothing else: a `tortodrone$` label,
+a borderless monospace field, and **Enter** to submit — there is no Run button, no
+Help button and no row of command chips, because `help` prints the command list into
+the transcript where a shell prints it. `Tab` completes from the server's route list,
+prints its candidates when they are ambiguous, and says so plainly when a command
+takes an argument the page cannot guess; `↑`/`↓` walk the history, `Esc` clears the
+prompt, and `Ctrl`/`⌘` + `L`/`C` clear the screen and cancel. A structured answer is
+printed as aligned key/value pairs rather than prettified JSON, so `status` fits on
+one screen. The connection state lives in the status line (`● Connected`,
+`Executing…`, `Disconnected · reason`), and an expired session puts **Sign in again**
+there instead of printing *Sign in required* after every command.
+
+`Ctrl`/`⌘` + `L` is the only clear, and it is one number: the visible lines leave the
+pane, the note says how many are held, and **Restore** puts the same lines back — the
+bar, the note and the pill count the same set.
+
+The severity and search fields write their state back into the address, so
+`#logs?severity=WARN&search=timeout` is what the operator is looking at and can be
+copied.
 
 Deep links land on a filtered view: `#logs?severity=WARN` and
 `#logs?search=timeout` are used by the Overview warnings table, and
@@ -155,6 +169,9 @@ knight, and the **Welcome** letter. Each mode shares the same layout — a templ
 row (Maintenance, Compensation, Event, Season start), sender and subject, the body
 beside a preview, and attachments.
 
+- **Window presets:** **Start now**, **Start in 1 hour** and **Start tomorrow** fill
+  the delivery window and never save: the old "+1 hour" button armed a thirty-day
+  mailing behind a click that described something else.
 - **Preview:** an **In-game** view (what the client renders) and a **Plain text**
   view (the exact characters that reach the mailbox, including the `%uplink:~`
   prefix on both subject and body for the stock senders), toggled with pressed-state
