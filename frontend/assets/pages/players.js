@@ -4,11 +4,13 @@ import { DataTable } from '../components/table.js';
 import { go } from '../router.js';
 import { confirm, confirmAction, openDialog } from '../components/dialog.js';
 // Auctions and Depot disclose that a derived time is this browser's clock against a
-// window the server owns. A session's age is the same kind of number — the server
-// normally sends it, and this page computes it from `connectedAt` when it does not —
-// so it says so instead of a fast laptop reporting an hour-old two-minute session.
+// window the server owns. A session's age is the same kind of number and the stronger
+// case for saying so: `status` sends the connection time, never the age, so the duration
+// is entirely this page's arithmetic — a laptop an hour fast reports an hour-old
+// two-minute session. (The first version of this note claimed the server sent the age;
+// no route does, which is the same kind of sentence as the bug it was meant to fix.)
 const CLOCK_NOTE =
-    'The server sends each session’s age; where it does not, this is this browser’s clock against the connection time the server recorded, so a wrong clock here shows a wrong duration.';
+    'This browser’s clock against the connection time the server recorded: the server sends when a session started, not how long it has run, so a wrong clock here shows a wrong duration.';
 const durationCell = (seconds) => Object.assign(el('span', duration(seconds)), { title: CLOCK_NOTE });
 export async function mount(ctx) {
     const node = el('div', null, 'stack');
@@ -310,10 +312,12 @@ export async function mount(ctx) {
         players.update(
             s.sessions.map((r) => ({
                 ...r,
-                // The server usually sends the age; when it does not, this is the
-                // browser's clock against the recorded connection time, which is why
-                // every duration on this page says where it came from.
-                elapsedSeconds: Math.floor((Date.now() - new Date(r.connectedAt)) / 1000)
+                // Derived here, from the connection time the server recorded — which is
+                // why every duration on this page says where it came from. A value the
+                // server ever does send wins over the arithmetic.
+                elapsedSeconds:
+                    r.elapsedSeconds ??
+                    Math.max(0, Math.floor((Date.now() - new Date(r.connectedAt)) / 1000))
             }))
         );
         scenes.update(s.scenes);

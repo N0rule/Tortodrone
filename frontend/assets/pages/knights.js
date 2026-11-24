@@ -824,9 +824,22 @@ export async function mount(ctx) {
                                   'Edit progression',
                                   editProgress,
                                   'secondary',
-                                  () => !!ctx.admin
+                                  () => !!ctx.admin,
+                                  {
+                                      unavailable:
+                                          'Changing a knight’s level, skills or sprites needs an administrator role. A moderator can read this page but not rewrite it.'
+                                  }
                               ),
-                              button('Grant item', () => grantItem(fixed()), 'secondary', () => !!ctx.admin)
+                              button(
+                                  'Grant item',
+                                  () => grantItem(fixed()),
+                                  'secondary',
+                                  () => !!ctx.admin,
+                                  {
+                                      unavailable:
+                                          'Granting an item needs an administrator role; a moderator can inspect this knight but cannot put anything in its inventory.'
+                                  }
+                              )
                           ),
                           details('Identifiers and revision', {
                               worldId: p.worldId,

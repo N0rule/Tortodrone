@@ -177,12 +177,14 @@ export function itemPicker(
      * category retires it instead of leaving a set on screen under a caption that
      * claims to match the controls above it — the failure this page keeps repeating.
      */
-    function retireTable() {
+    function retireTable(rebuild = true) {
         if (!table && !tableRequest) return;
         tableRequest?.abort();
         table = null;
         tableHost.replaceChildren();
-        if (asTable.open) buildTable();
+        // A keystroke retires the set without starting a ten-page walk; the debounced
+        // search asks for the rebuild once the typing stops.
+        if (rebuild && asTable.open) buildTable();
     }
     const paging = toolbar(count, ...(exportable ? [exportButton] : []), previous, next);
     node.append(toolbar(search, categories), grid, ...(exportable ? [asTable] : []), paging);
@@ -266,11 +268,12 @@ export function itemPicker(
     search.oninput = () => {
         generation++;
         request?.abort();
-        retireTable();
+        retireTable(false);
         clearTimeout(timer);
         timer = setTimeout(() => {
             page = 1;
             load().catch(report);
+            if (asTable.open && !table) buildTable();
         }, 250);
     };
     categories.onchange = () => {
