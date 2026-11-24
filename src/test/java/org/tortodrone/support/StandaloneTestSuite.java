@@ -44,8 +44,12 @@ public final class StandaloneTestSuite {
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
                 .forEach(entry ->
                         System.out.printf(Locale.ROOT, "  %.2fs %s%n", entry.getValue() / 1e9, entry.getKey()));
+        // Only a whole-suite run rewrites the record. A shard that recorded itself would
+        // shift the weights of the shards around it, and then "shard 2 of 4" would select
+        // different programs on the next run: the slices must be a pure function of the
+        // record, or a local sequence of shard runs silently duplicates and drops programs.
         String timings = System.getProperty("unitTimings", "");
-        if (!timings.isEmpty()) {
+        if (!timings.isEmpty() && Boolean.getBoolean("unitRecordTimings")) {
             var file = java.nio.file.Path.of(timings);
             try {
                 java.nio.file.Files.createDirectories(file.getParent());

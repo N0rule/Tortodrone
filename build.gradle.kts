@@ -455,8 +455,13 @@ val testUnit = tasks.register<JavaExec>("testUnit") {
     // scope and invalidated the configuration cache.
     systemProperty("unitShard", "${shardIndex + 1}/$shardCount")
     systemProperty("unitPrograms", selectedUnitPrograms.size.toString())
-    // Where the suite records durations for the next sharded run.
+    // Where the suite records durations: only a whole-suite run writes it, so a shard
+    // cannot change the selection of another shard.
     systemProperty("unitTimings", unitTimings.get().asFile.absolutePath)
+    systemProperty(
+        "unitRecordTimings",
+        (shardCount == 1 && selectedUnitPrograms.size == unitProgramNames.size).toString()
+    )
     args(programs)
 }
 val serverPath = publicOutput.file("tortodrone.jar").asFile.absolutePath
