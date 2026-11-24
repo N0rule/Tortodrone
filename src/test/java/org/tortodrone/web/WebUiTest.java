@@ -545,23 +545,25 @@ public final class WebUiTest {
             check(
                     request("POST", "/admin/api/webui-user-create", form(create), h).status == 200,
                     "administrator creates more WebUI accounts");
+            // A named refusal carries 422, so the operator reads the rule instead of
+            // the generic "refresh and verify the selection".
+            var lastAdminRefusal = request(
+                    "POST",
+                    "/admin/api/webui-user-delete",
+                    form(Map.of(
+                            "username",
+                            "FirstAdmin",
+                            "revision",
+                            row.get("revision"),
+                            "nameConfirmation",
+                            "FirstAdmin",
+                            "confirmation",
+                            "webui-user-delete")),
+                    h);
+            check(lastAdminRefusal.status == 422, "cannot revoke last administrator remotely");
             check(
-                    request(
-                                            "POST",
-                                            "/admin/api/webui-user-delete",
-                                            form(Map.of(
-                                                    "username",
-                                                    "FirstAdmin",
-                                                    "revision",
-                                                    row.get("revision"),
-                                                    "nameConfirmation",
-                                                    "FirstAdmin",
-                                                    "confirmation",
-                                                    "webui-user-delete")),
-                                            h)
-                                    .status
-                            == 409,
-                    "cannot revoke last administrator remotely");
+                    String.valueOf(lastAdminRefusal.body).contains("at least one WebUI administrator"),
+                    "the last-administrator refusal states the rule");
             var viewer = request(
                     "POST",
                     "/admin/api/login",

@@ -53,6 +53,9 @@ export function openDialog({
     submitButton.className = variant === 'danger' ? 'danger' : readOnly ? 'secondary' : 'primary';
     submitButton.disabled = false;
     $('#cancel-dialog').hidden = readOnly;
+    // A read-only inspector closes from the footer: the heading's X is the third
+    // copy of the same action, and it comes back for every other dialog.
+    $('#close-dialog').hidden = readOnly;
     $('#fields').replaceChildren(content);
     const state = { revision, target, isDirty, pending: false, conflicted: false };
     active = state;

@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, panel, button, copy, duration, status, facts, date } from '../ui.js';
+import { el, panel, button, routeLink, copy, duration, status, facts, date } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { go } from '../router.js';
 import { confirm, confirmAction, openDialog } from '../components/dialog.js';
@@ -18,21 +18,19 @@ export async function mount(ctx) {
                     return open;
                 }
             ],
-            ['Account', (r) => (r.username ? entityLink(r.username, () => ctx.go('accounts', { username: r.username })) : '—')],
+            ['Account', (r) => (r.username ? entityLink(r.username, 'accounts', { username: r.username }) : '—')],
             [
                 'Knight',
                 (r) =>
                     r.username && r.knight
-                        ? entityLink(r.knight, () =>
-                              ctx.go('knights', { username: r.username, knight: r.knight })
-                          )
+                        ? entityLink(r.knight, 'knights', { username: r.username, knight: r.knight })
                         : r.knight || '—'
             ],
             [
                 'Scene',
                 (r) =>
                     r.scene
-                        ? entityLink(r.scene, () => ctx.go('players', { scene: r.scene }))
+                        ? entityLink(r.scene, 'players', { scene: r.scene })
                         : '—'
             ],
             ['Instance', (r) => r.instanceId ?? '—'],
@@ -157,13 +155,8 @@ export async function mount(ctx) {
     );
 
 
-    /** A cell that names an entity links to the page that owns it. */
-    function entityLink(label, open) {
-        const node = el('button', label, 'link');
-        node.type = 'button';
-        node.onclick = open;
-        return node;
-    }
+    /** A cell that names an entity links to the page that owns it, as a real link. */
+    const entityLink = (label, name, values) => routeLink(label, name, values);
 
     /** Everything recorded about one connection, with the routes out of it. */
     function inspectSession(row) {

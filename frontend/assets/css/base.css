@@ -124,6 +124,21 @@ th .unavailable-reason {
     clip-path: inset(50%);
     white-space: nowrap;
 }
+/* A disabled button cannot be hovered, so a caller with no other channel shows the
+   reason under the control instead of only in its title. */
+td .unavailable-reason.shown,
+th .unavailable-reason.shown {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    display: block;
+    margin-block-start: 3px;
+    max-inline-size: 24ch;
+    font-size: 11px;
+}
 /* A pending control keeps its label and grows a spinner instead of going blank. */
 button[aria-busy='true'],
 .button[aria-busy='true'] {
@@ -216,6 +231,19 @@ button.danger:not(:disabled):hover,
 .button.danger:not(:disabled):hover {
     background: color-mix(in srgb, var(--bad) 22%, var(--surface));
     border-color: var(--bad);
+}
+/* A drill-down is a real link wearing a control: the anchor must not underline
+   over the button it draws, and a link-styled one underlines as it always did. */
+a.button,
+a.button:hover {
+    text-decoration: none;
+    color: var(--control-fg);
+}
+a.link {
+    text-decoration: underline;
+}
+a.link:hover {
+    color: var(--cyan);
 }
 /* A link-styled control keeps every state the bordered variants have. */
 button.link,

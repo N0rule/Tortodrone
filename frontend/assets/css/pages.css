@@ -784,9 +784,9 @@ button.metric:focus-visible {
 }
 @media (max-width: 430px) {
     /* A log without times is not a log: the thread column goes first, and the
-       timestamp keeps its own narrow column. */
+       timestamp keeps a column wide enough to print h:mm:ss without clipping. */
     .terminal-line {
-        grid-template-columns: 42px 30px minmax(0, 1fr);
+        grid-template-columns: 52px 30px minmax(0, 1fr);
         gap: 5px;
     }
     .log-time {
@@ -794,6 +794,15 @@ button.metric:focus-visible {
     }
     .terminal-jump {
         inset-inline-end: 10px;
+    }
+    /* Search takes a row of its own: squeezing it beside the controls left a
+       47px field that could not show a single word of the term it held. */
+    .terminal-tools {
+        flex-wrap: wrap;
+    }
+    .terminal-tools input[type='search'] {
+        flex: 1 1 100%;
+        order: -1;
     }
 }
 /* A landscape phone (or a short desktop window) is wider than it is tall: the
@@ -1348,10 +1357,15 @@ button.metric:focus-visible {
     background: color-mix(in srgb, var(--cyan) 7%, transparent);
 }
 
+/* The cap belongs to the letter itself, not to one of the three places that show
+   it: a maximum-length body added 2,400px inside the read dialog and pushed the
+   facts the operator opened it for off the screen. */
 .mail-preview {
     display: grid;
     gap: 10px;
     padding: 18px;
+    max-block-size: 20rem;
+    overflow: auto;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--inset);
@@ -1378,8 +1392,6 @@ button.metric:focus-visible {
 .mail-preview-host {
     display: block;
     min-width: 0;
-    max-block-size: 20rem;
-    overflow: auto;
     border: 1px solid var(--line);
     border-radius: var(--radius-control);
 }

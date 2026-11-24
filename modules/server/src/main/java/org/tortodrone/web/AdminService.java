@@ -306,6 +306,12 @@ public final class AdminService implements AutoCloseable {
         result.put("fileBytes", raw.length);
         result.put("fileSha256", HexFormat.of().formatHex(digest(raw)));
         result.put("fileSha256Command", "sha256sum data/keys/public.txt");
+        // The download hands the operator the file, not a re-encoding of it: a copy
+        // restored from backup with a trailing newline or uppercase hex still starts,
+        // and a re-encoded download would no longer hash to the printed value.
+        String fileText = new String(raw, java.nio.charset.StandardCharsets.US_ASCII);
+        if (java.util.Arrays.equals(fileText.getBytes(java.nio.charset.StandardCharsets.US_ASCII), raw))
+            result.put("fileText", fileText);
         String value = new String(raw, java.nio.charset.StandardCharsets.US_ASCII).trim();
         int separator = value.indexOf('#');
         if (separator < 2 || separator == value.length() - 1) {

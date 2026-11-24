@@ -87,6 +87,8 @@ const pages = [
         section: 'Content',
         rank: 2,
         module: mailing,
+        // `#mail` is what people type and what older notes link to.
+        alias: ['mail'],
         description: 'Campaigns, direct mail and the new-knight welcome letter.'
     },
     {
@@ -533,10 +535,20 @@ const APPEARANCE = [
     ['density', 'comfortable', 'compact']
 ];
 function preferences() {
-    for (const [key] of APPEARANCE) {
+    for (const [key, off, on] of APPEARANCE) {
         const node = $('#' + key);
-        if (node)
-            node.title = key === 'theme' ? 'Switch the light theme' : 'Switch compact density';
+        if (!node) continue;
+        // The title names what a click does, so it can never contradict the switch
+        // it sits on (a light theme used to offer to "switch the light theme").
+        const on2 = prefs.read(key) === on;
+        node.title =
+            key === 'theme'
+                ? on2
+                    ? 'Switch to the dark theme'
+                    : 'Switch to the light theme'
+                : on2
+                  ? 'Switch to comfortable density'
+                  : 'Switch to compact density';
     }
 }
 for (const [key, off, on] of APPEARANCE) {
@@ -716,7 +728,9 @@ setInterval(async () => {
     try {
         const session = await api.request('session');
         if (!api.session) return;
-        api.session.expires = session.expires;
+        // Take the whole session, not just its expiry: a rotated CSRF token lives
+        // here, and holding a stale one makes every write fail until a reload.
+        api.session = { ...api.session, ...session };
         const left = session.expires - Date.now();
         if (left < 5 * 60_000 && left > 0 && !expiryWarned) {
             expiryWarned = true;

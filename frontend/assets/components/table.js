@@ -496,6 +496,10 @@ export class DataTable {
                     const td = el('td');
                     const controls = this.actions(() => entry.record);
                     entry.actions = controls;
+                    for (const control of controls) {
+                        const label = control.textContent?.trim();
+                        if (label) control.dataset.actionLabel = label;
+                    }
                     td.append(toolbar(...controls));
                     row.append(td);
                 }
@@ -504,6 +508,16 @@ export class DataTable {
             entry.record = record;
             for (const action of entry.actions || []) action.refreshAvailability?.();
             if (entry.box) entry.box.checked = this.selected.has(key);
+            // A bare "Edit" repeated down a list says nothing out loud; the row's own
+            // subject rides on each control's accessible name.
+            const subject = String(entry.cells[0]?.textContent || '').trim();
+            if (subject)
+                for (const control of entry.actions || [])
+                    if (control.dataset.actionLabel)
+                        control.setAttribute(
+                            'aria-label',
+                            `${control.dataset.actionLabel} · ${subject}`
+                        );
             const signature = this.describeRow(record) + this.presentationKey(record);
             if (entry.signature !== signature) {
                 this.columns.forEach(([name, fn], index) => {

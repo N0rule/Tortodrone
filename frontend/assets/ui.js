@@ -1,4 +1,5 @@
 import { symbol } from './components/symbols.js';
+import { href } from './router.js';
 import { toast } from './components/toast.js';
 export const $ = (selector) => document.querySelector(selector);
 export function el(tag, text, className) {
@@ -37,16 +38,30 @@ function explain(node, why) {
     if (!why) {
         node.removeAttribute('title');
         node.removeAttribute('aria-describedby');
+        node.__reasonNote?.remove();
+        node.__reasonNote = null;
         node.ownerDocument?.getElementById(id)?.remove();
         const stale = node.parentNode?.querySelector?.(`[id="${id}"]`);
         stale?.remove();
         return;
     }
     node.setAttribute('title', why);
-    let note = node.ownerDocument?.getElementById(id);
+    // The note is a sibling of its control, so the node's own parent is the first
+    // place to look: a page built as a detached fragment is not reachable by id
+    // from the document, and a second lookup there minted a second copy of the same
+    // sentence until one row carried the reason twice.
+    let note =
+        node.__reasonNote ||
+        node.parentNode?.querySelector?.(`[id="${id}"]`) ||
+        node.ownerDocument?.getElementById(id) ||
+        null;
     if (!note) {
         note = el('span', why, 'unavailable-reason');
         note.id = id;
+        // Held on the control itself: the note is written before the control is in
+        // the document, and a second lookup from the document then made a second
+        // copy of the same sentence.
+        node.__reasonNote = note;
     } else if (note.textContent !== why) {
         note.textContent = why;
     }
@@ -55,6 +70,9 @@ function explain(node, why) {
     // been inserted yet, and a page built in one task and mounted in the next would
     // otherwise never announce its reason.
     node.setAttribute('aria-describedby', note.id);
+    // Most callers keep the reason off screen (base.css clips it inside a table
+    // cell); a caller with no other channel asks for it shown.
+    note.classList.toggle('shown', node.dataset.reasonShown === 'true');
     // It follows its own control, not the end of the row: an operator reading
     // "The listener is already running." must not find it beside Shut down.
     const place = () => {
@@ -76,6 +94,7 @@ export function button(label, action, className = 'secondary', available, option
     // No client art for this job means no icon, never a drawn stand-in.
     const art = icon ? symbol(icon) : null;
     if (art) node.prepend(art);
+    if (settings.showReason) node.dataset.reasonShown = 'true';
     if (available) {
         // `available` answers true when the action may run. A string answer means
         // "no, because …", and an explicit reason overrides it. `unavailable`
@@ -106,6 +125,15 @@ export function button(label, action, className = 'secondary', available, option
             report(error);
         }
     });
+    return node;
+}
+/**
+ * A drill-down as a real link. Same look as the text link it replaces, but the
+ * href is a route, so the browser owns middle-click, new tabs and copying.
+ */
+export function routeLink(label, name, values = {}, className = 'link') {
+    const node = el('a', label, className);
+    node.href = href(name, values);
     return node;
 }
 export function toolbar(...nodes) {
@@ -236,8 +264,20 @@ export function notify(message, error = false) {
     node.classList.toggle('error', error);
 }
 export function report(error) {
-    if (error.status === 401) document.dispatchEvent(new Event('session-expired'));
-    else notify(error.message || 'Operation unavailable', true);
+    if (error?.status === 401) {
+        document.dispatchEvent(new Event('session-expired'));
+        return;
+    }
+    // An ApiError carries a sentence the server wrote for an operator. Anything
+    // else is a bug in this bundle: its message ("Cannot read properties of
+    // undefined…") tells the operator nothing he can act on, so say what happened
+    // in words and keep the stack for the console.
+    if (typeof error?.status === 'number') {
+        notify(error.message || 'Operation unavailable', true);
+        return;
+    }
+    if (error) console.error('Unexpected WebUI failure', error);
+    notify('The WebUI could not finish that action. Nothing was changed; reload the page and try again.', true);
 }
 export function changed(message = 'Changes saved.') {
     // A transient confirmation, so the sticky page notice stays reserved for
@@ -345,7 +385,22 @@ export function paintShell() {
         const art = node && !node.querySelector('.ui-icon') ? symbol(name) : null;
         if (art) node.prepend(art);
     }
+    paintBrand();
     syncAppearances();
+}
+/**
+ * The brand is one piece of client art in three places: both wordmarks and the tab
+ * icon. A pack with no brand art leaves the words alone rather than standing a
+ * drawing in for them, so this runs again once the pack has loaded.
+ */
+export function paintBrand() {
+    const mark = symbol('brand');
+    if (!mark) return;
+    for (const slot of document.querySelectorAll('.brand-mark'))
+        if (!slot.querySelector('.ui-icon')) slot.append(mark.cloneNode(true));
+    const image = mark.querySelector('image');
+    const favicon = $('#favicon');
+    if (favicon && image) favicon.href = image.getAttribute('href');
 }
 
 /* The appearance toggles name the action they perform, so the pressed state is
@@ -375,4 +430,5 @@ if (typeof document !== 'undefined') {
         attributes: true,
         attributeFilter: ['data-theme', 'data-density']
     });
+    document.addEventListener('symbols-ready', paintBrand);
 }

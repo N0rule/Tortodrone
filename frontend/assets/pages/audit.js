@@ -1,4 +1,4 @@
-import { el, date, badge, panel, facts, toolbar, button, copy } from '../ui.js';
+import { el, date, badge, panel, facts, toolbar, button, routeLink, copy } from '../ui.js';
 import { DataTable } from '../components/table.js';
 export async function mount(ctx) {
     const node = el('div', null, 'stack'),
@@ -36,7 +36,9 @@ export async function mount(ctx) {
     const placeholder = () =>
         el('p', 'Select an event to inspect its recorded outcome and related records.', 'muted');
     const showDetail = (row) => {
-        if (selected) selected.classList.remove('inspected');
+        // `row` is the record, not an element: table.markInspected owns the
+        // highlight, and touching it here threw on the second Inspect and left the
+        // pane pinned to the first event.
         selected = row || null;
         // No row, no pane: an empty inspector above the trail is the first thing an
         // operator sees on a page that has nothing to inspect yet.
@@ -52,37 +54,34 @@ export async function mount(ctx) {
         const target = parseTarget(row.target);
         const links = toolbar();
         const owner = ownerOf(row.action);
-        if (owner)
-            links.append(button(owner.label, () => ctx.go(owner.page), 'secondary'));
+        // Every route out of the inspector is a real link, so the operator can
+        // middle-click it into a second tab while he keeps reading.
+        if (owner) links.append(routeLink(owner.label, owner.page, {}, 'button secondary'));
         // Only an account-scoped action names an account. A console command or a
         // mail subject is a word, not a username, and must not offer a link that
         // lands on "No such account".
         const accountScoped = /^(account|knight|login|logout|webui-user)/.test(row.action);
         if (target.username && !target.knight && accountScoped)
             links.append(
-                button(
+                routeLink(
                     'Open account',
-                    () => ctx.go('accounts', { username: target.username }),
-                    'secondary'
+                    'accounts',
+                    { username: target.username },
+                    'button secondary'
                 )
             );
         if (target.label)
             links.append(
-                button(
-                    'Filter by this target',
-                    () => ctx.go('audit', { target: target.label }),
-                    'quiet'
-                )
+                routeLink('Filter by this target', 'audit', { target: target.label }, 'button quiet')
             );
-        links.append(
-            button('Filter by actor', () => ctx.go('audit', { actor: row.actor }), 'quiet')
-        );
+        links.append(routeLink('Filter by actor', 'audit', { actor: row.actor }, 'button quiet'));
         if (target.username && target.knight)
             links.append(
-                button(
+                routeLink(
                     'Open knight',
-                    () => ctx.go('knights', { username: target.username, knight: target.knight }),
-                    'secondary'
+                    'knights',
+                    { username: target.username, knight: target.knight },
+                    'button secondary'
                 )
             );
         // The table's search covers every column, so "who else did this" needs no

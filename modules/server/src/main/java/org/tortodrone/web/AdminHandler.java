@@ -110,11 +110,22 @@ public final class AdminHandler implements HttpHandler {
                     "Unsupported command; use help",
                     "Invalid command",
                     "Repeat the exact command to confirm",
+                    // The confirmation refusal is the sentence an operator needs: it
+                    // names what was missing, not "invalid request fields".
+                    "Confirmation did not match the action",
+                    "Process shutdown confirmation required",
+                    "Session already disconnected",
+                    "Account name confirmation required",
+                    "Knight name confirmation required",
+                    "Username confirmation required",
                     "Invalid session",
                     "Unknown resource",
                     "Unknown action",
                     // A refused password is a field problem with its own sentence; the
                     // generic conflict advice does not apply to a form with no revision.
+                    // The identity store's own rule, so the last administrator hears
+                    // the rule instead of "refresh and verify the selection".
+                    "Keep at least one WebUI administrator",
                     "Passwords need 8-128 characters",
                     "Passwords do not match",
                     "Password contains control characters",
@@ -124,7 +135,18 @@ public final class AdminHandler implements HttpHandler {
             case "e.existing_accessory" ->
                 "An accessory already occupies that location. Remove attached accessories before adding a replacement.";
             case "e.cant_use_accessory" -> "This accessory is not compatible with the selected equipment.";
-            default -> null;
+            default -> {
+                // Two mail refusals name the field or the item they are about, so
+                // they cannot be written as fixed cases. An operator who pasted an
+                // invisible character must be told which field holds it.
+                if (message.endsWith(" contains unsupported control characters"))
+                    yield message.replace(
+                            " contains unsupported control characters",
+                            " contains a character the game cannot display. Remove it and save again.");
+                if (message.startsWith("Gift is not grantable: "))
+                    yield "This gift cannot be granted. Choose an item the game can deliver.";
+                yield null;
+            }
         };
     }
 

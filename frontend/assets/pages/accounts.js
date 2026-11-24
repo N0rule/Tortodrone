@@ -3,6 +3,7 @@ import {
     el,
     toolbar,
     button,
+    routeLink,
     panel,
     facts,
     badge,
@@ -85,7 +86,9 @@ export async function mount(ctx) {
                     : [])
             ],
             actions: (get) => [
-                button('Inspect', () => ctx.go('accounts', { username: get().username }))
+                // A row's name is its address here: an anchor keeps "open in new tab"
+                // and "copy link address" working on the listing itself.
+                routeLink('Inspect', 'accounts', { username: get().username }, 'button')
             ]
         }
     );
@@ -234,24 +237,26 @@ export async function mount(ctx) {
         actions.prepend(label('Game Master', gm), feedback);
         // One person can be a game account, an audit actor and a WebUI identity,
         // so the detail links all three views of them.
-        const links = toolbar(button('Back to accounts', () => ctx.go('accounts'), 'secondary'));
+        const links = toolbar(routeLink('Back to accounts', 'accounts', {}, 'button secondary'));
         // The audit trail and the identity store are administrator-only pages, so
         // hide those jumps from a moderator instead of bouncing them to the overview.
         if (ctx.admin)
             links.append(
-                button(
+                // A game account is what an action was done TO, never who did it.
+                routeLink(
                     'Audit events naming this account',
-                    // A game account is what an action was done TO, never who did it.
-                    () => ctx.go('audit', { target: account.username }),
-                    'secondary'
+                    'audit',
+                    { target: account.username },
+                    'button secondary'
                 )
             );
         if (identity)
             links.append(
-                button(
+                routeLink(
                     'Open WebUI identity',
-                    () => ctx.go('webui-users', { user: identity.username }),
-                    'secondary'
+                    'webui-users',
+                    { user: identity.username },
+                    'button secondary'
                 )
             );
         const roster = new DataTable(
@@ -270,8 +275,11 @@ export async function mount(ctx) {
                     icon: 'knights'
                 },
                 actions: (get) => [
-                    button('Open profile', () =>
-                        ctx.go('knights', { username: account.username, knight: get().name })
+                    routeLink(
+                        'Open profile',
+                        'knights',
+                        { username: account.username, knight: get().name },
+                        'button'
                     )
                 ]
             }

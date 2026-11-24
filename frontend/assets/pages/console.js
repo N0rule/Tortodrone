@@ -61,7 +61,7 @@ export async function mount(ctx) {
     // Mobile keyboards capitalise the first word and the server refuses `Status`.
     command.setAttribute('autocapitalize', 'off');
     command.setAttribute('enterkeyhint', 'send');
-    command.placeholder = 'help';
+    command.placeholder = 'Type a command, or press Tab';
     command.classList.add('console-input');
     // One completion mechanism, and it is the one a terminal user already knows:
     // Tab. A native <datalist> popup would compete with it and cannot be styled.
@@ -229,6 +229,12 @@ export async function mount(ctx) {
         }
         pending = true;
         run.setBusy(true);
+        // Record the command when it is submitted, not when its answer lands: the
+        // echo already exists by then, so the old guard dropped every command and
+        // ↑ showed nothing.
+        if (history.at(-1) !== value) history.push(value);
+        if (history.length > 100) history.shift();
+        index = history.length;
         echo(value);
         text(feedback, 'Executing…');
         try {

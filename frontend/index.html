@@ -7,7 +7,7 @@
         <meta name="description" content="Tortodrone server administration" />
         <title>Tortodrone</title>
         <script src="/admin/assets/preferences.js"></script>
-        <link rel="icon" href="/admin/assets/icons/mark.svg" type="image/svg+xml" />
+        <link id="favicon" rel="icon" href="data:," />
         <link rel="modulepreload" href="/admin/assets/app.js" />
         <link rel="stylesheet" href="/admin/assets/css/tokens.css" />
         <link rel="stylesheet" href="/admin/assets/css/base.css" />
@@ -26,7 +26,7 @@
         </noscript>
         <div id="login" class="login">
             <form id="login-form" method="post" class="login-panel">
-                <div class="brand"><img src="/admin/assets/icons/mark.svg" alt="" />Tortodrone</div>
+                <div class="brand"><span class="brand-mark"></span>Tortodrone</div>
                 <h1 id="login-title">Sign in</h1>
                 <p id="login-description">WebUI access</p>
                 <label
@@ -78,15 +78,15 @@
                     Close
                 </button>
                 <a class="brand" href="#overview"
-                    ><img src="/admin/assets/icons/mark.svg" alt="" />Tortodrone</a
+                    ><span class="brand-mark"></span>Tortodrone</a
                 >
                 <nav id="navigation" aria-label="Administration sections"></nav>
                 <footer>
                     <span id="identity"></span>
                     <div class="preference-controls">
-                        <button id="theme" class="quiet" aria-pressed="false">
+                        <button id="theme" class="quiet" role="switch" aria-checked="false">
                             Light theme</button
-                        ><button id="density" class="quiet" aria-pressed="false">
+                        ><button id="density" class="quiet" role="switch" aria-checked="false">
                             Compact view
                         </button>
                     </div>
@@ -157,12 +157,9 @@
         <dialog id="shortcut-dialog" class="shortcuts" aria-labelledby="shortcuts-title">
             <div class="dialog-heading">
                 <h2 id="shortcuts-title">Keyboard shortcuts</h2>
-                <button
-                    type="button"
-                    id="shortcuts-close"
-                    class="quiet icon"
-                    aria-label="Close shortcuts"
-                ></button>
+                <button type="button" id="shortcuts-close" class="quiet sm">
+                    Close</button
+                >
             </div>
             <p class="muted">
                 Shortcuts are ignored while you are typing in a field. Press

@@ -45,13 +45,8 @@ export function symbol(name) {
     return fallback(name);
 }
 function fallback(name) {
-    // The product mark is the app's own logo, not game art, so it survives.
-    if (name === 'brand') {
-        const image = document.createElement('img');
-        image.src = '/admin/assets/icons/mark.svg';
-        image.alt = '';
-        return image;
-    }
+    // No drawn stand-in exists, the brand included: a job the pack has no art for
+    // gets no icon at all and its control keeps its word.
     const wanted = alias[name] || name;
     const key = wanted.startsWith('slot-') ? wanted : 'nav-' + wanted;
     const prepared = asset(masks[key]),
@@ -115,14 +110,9 @@ function nativeSymbol(file, name, prepared) {
     image.addEventListener(
         'error',
         () => {
-            if (name === 'brand') {
-                image.removeAttribute('filter');
-                image.setAttribute('href', '/admin/assets/icons/mark.svg');
-            } else {
-                // The art is the only thing that may appear here, so a broken file
-                // leaves no icon at all: the control keeps its label.
-                root.remove();
-            }
+            // The art is the only thing that may appear here, so a broken file
+            // leaves no icon at all: the control keeps its label.
+            root.remove();
         },
         { once: true }
     );

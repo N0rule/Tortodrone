@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, text, toolbar, button, badge, panel, facts, date } from '../ui.js';
+import { el, text, toolbar, button, routeLink, badge, panel, facts, date } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { openDialog, edit, confirm, field } from '../components/dialog.js';
 import { route, go } from '../router.js';
@@ -89,14 +89,19 @@ export async function mount(ctx) {
             ),
             toolbar(
                 button('Back to identities', () => here({}, ['user']), 'secondary'),
-                button(
+                routeLink(
                     'Audit for this identity',
-                    () => ctx.go('audit', { actor: row.username }),
-                    'secondary'
+                    'audit',
+                    { actor: row.username },
+                    'button secondary'
                 ),
                 button('Reset password', () => resetPassword(row)),
-                button('Change role', () => changeRole(row)),
-                button('Revoke identity', () => revoke(row), 'danger')
+                button('Change role', () => changeRole(row), 'secondary', () => !lastAdmin(row), {
+                    unavailable: LAST_ADMIN
+                }),
+                button('Revoke identity', () => revoke(row), 'danger', () => !lastAdmin(row), {
+                    unavailable: LAST_ADMIN
+                })
             )
         );
         openDialog({
@@ -108,6 +113,12 @@ export async function mount(ctx) {
         });
         unlinkOnClose();
     }
+    // "At least one administrator must remain" is a rule, not an error message: the
+    // page states it and the two controls it forbids say it too.
+    const LAST_ADMIN = 'At least one WebUI administrator must remain.';
+    // The store ships the role as the enum name; the badge lowercases it for display.
+    const isAdmin = (row) => String(row?.role || '').toUpperCase() === 'ADMINISTRATOR';
+    const lastAdmin = (row) => isAdmin(row) && rows.filter(isAdmin).length <= 1;
     const table = new DataTable(
         [
             ['Username', (r) => r.username],
@@ -118,11 +129,7 @@ export async function mount(ctx) {
                 (r) =>
                     toolbar(
                         roleBadge(r.role),
-                        button(
-                            'Audit',
-                            () => ctx.go('audit', { actor: r.username }),
-                            'quiet'
-                        )
+                        routeLink('Audit', 'audit', { actor: r.username }, 'button quiet')
                     ),
                 (r) => r.role
             ]
@@ -148,8 +155,14 @@ export async function mount(ctx) {
             actions: (get) => [
                 button('Inspect', () => here({ user: get().username })),
                 button('Reset password', () => resetPassword(get())),
-                button('Change role', () => changeRole(get())),
-                button('Revoke', () => revoke(get()), 'danger')
+                // The server refuses to remove the last administrator, so the
+                // control says so instead of spending a round trip on a 409.
+                button('Change role', () => changeRole(get()), 'secondary', () => !lastAdmin(get()), {
+                    unavailable: LAST_ADMIN
+                }),
+                button('Revoke', () => revoke(get()), 'danger', () => !lastAdmin(get()), {
+                    unavailable: LAST_ADMIN
+                })
             ]
         }
     );

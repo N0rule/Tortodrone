@@ -1007,6 +1007,22 @@ caption {
 .identity-key[hidden] {
     display: none;
 }
+/* A value and the control that acts on it stay on one line: the copy button is
+   useless if the thing it copies is behind a toggle. */
+.identity-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.identity-value > code {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+}
+.identity-field-label {
+    margin: 0;
+    font-size: 12px;
+}
 /* Derived facts are reference material, not the headline: one row until asked. */
 .identity-details {
     margin-top: 12px;

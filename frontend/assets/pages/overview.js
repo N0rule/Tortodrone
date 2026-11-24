@@ -3,6 +3,7 @@ import {
     panel,
     toolbar,
     button,
+    routeLink,
     select,
     text,
     duration,
@@ -192,29 +193,57 @@ export async function mount(ctx) {
         identityFileHash = el('code', null, 'identity-file-hash'),
         identityModified = el('span'),
         identityPair = el('span');
+    // A value an action acts on sits beside the action: the fingerprint and the
+    // file hash are what two of these controls copy, so hiding them behind a
+    // disclosure made the operator open a toggle to see what he was copying.
+    const identityPairValue = (value, action) => {
+        const row = el('div', null, 'identity-value');
+        row.append(value, action);
+        return row;
+    };
     const identityFacts = facts([
-        ['Fingerprint (SHA-256)', identityFingerprint],
+        [
+            'Fingerprint (SHA-256)',
+            identityPairValue(
+                identityFingerprint,
+                button(
+                    'Copy',
+                    () => copy(identityCurrent?.fingerprint ?? '', 'Fingerprint copied.'),
+                    'quiet sm'
+                )
+            )
+        ],
         ['Key', identityBits],
         ['Exponent', identityExponent],
-        ['Public file SHA-256', identityFileHash],
+        [
+            'Public file SHA-256',
+            identityPairValue(
+                identityFileHash,
+                button(
+                    'Copy',
+                    () => copy(identityCurrent?.fileSha256 ?? '', 'Public file hash copied.'),
+                    'quiet sm'
+                )
+            )
+        ],
         ['Public file modified', identityModified],
         ['Signing key', identityPair],
         ['Recorded in', 'data/keys/public.txt']
     ]);
-    // The key itself is the point of the panel, so it is on the page, not behind a
-    // toggle; the derived facts collapse underneath it.
-    const identityDetails = el('details', null, 'identity-details');
-    identityDetails.append(el('summary', 'Key details'), identityFacts);
+    // The field's label names the key it holds, so the mismatch state cannot hand
+    // out one key under the name of another.
+    const identityFieldLabel = el('p', null, 'muted identity-field-label');
     const IDENTITY_NOTE =
         "The public half only. Paste it into the client's Add Server dialog, in the Public key field (game.publicKey), on every machine that plays here. The private key never leaves the server.";
     text(identityNote, IDENTITY_NOTE);
     const identityPanel = panel(
         'Server identity',
         identityNote,
+        identityFieldLabel,
         identityKey,
         identityActions,
         identityWarning,
-        identityDetails
+        identityFacts
     );
     // Handlers read the current key at click time, so a rotated key is the one an
     // operator copies; the panels are built once and never hold stale values.
@@ -276,10 +305,11 @@ export async function mount(ctx) {
                     },
                     'secondary'
                 ),
-                button(
+                routeLink(
                     'Players here',
-                    () => ctx.go('players', { scene: get().name }),
-                    'secondary'
+                    'players',
+                    { scene: get().name },
+                    'button secondary'
                 )
             ]
         }
@@ -297,11 +327,12 @@ export async function mount(ctx) {
             caption: 'Recent warnings and errors',
             exportName: 'recent-warnings',
             actions: (get) => [
-                button(
+                routeLink(
                     'Open in Logs',
                     // The row names a line; the log page can filter to that line.
-                    () => ctx.go('logs', { severity: get().level, search: get().message }),
-                    'secondary'
+                    'logs',
+                    { severity: get().level, search: get().message },
+                    'button secondary'
                 )
             ]
         }
@@ -342,6 +373,7 @@ export async function mount(ctx) {
             text(identityModified, '—');
             text(identityPair, identity.keyStored ? 'unknown' : 'absent');
             identityKey.value = '';
+            text(identityFieldLabel, 'No public key is available on this server yet.');
             identityWarning.hidden = false;
             identityWarning.textContent = identity.keyStored
                 ? 'A signing key is stored but its public half could not be read. Nothing here is served to clients until data/keys/public.txt is fixed.'
@@ -379,14 +411,20 @@ export async function mount(ctx) {
         if (mismatch) identityWarning.setAttribute('role', 'alert');
         else identityWarning.removeAttribute('role');
         identityWarning.textContent = mismatch
-            ? `The stored public half does not match the private key that signs handshakes, so the server refuses to start and the value below is not the key clients need.${
+            ? `The stored public half does not match the private key that signs handshakes, so the server refuses to start.${
                   identity.expectedPublicKey
-                      ? ` The key the private half implies is ${identity.expectedPublicKey.slice(0, 24)}… — copy that one instead.`
+                      ? ' The field below, Copy and Download all use the key the private half implies — the one clients must trust.'
                       : ''
-              } Stop the server and restore the matching public.txt from your backup, then start it again. Deleting data/keys lets the next start create a fresh pair, but every client pinned to the old key — including the one you are about to set up — must be re-keyed.`
+              } The fingerprint and file hash below still describe data/keys/public.txt, so they are stale until you stop the server, restore the matching public.txt from your backup and start it again. Deleting data/keys lets the next start create a fresh pair, but every client pinned to the old key — including the one you are about to set up — must be re-keyed.`
             : '';
         identityCurrent = identity;
         text(identityNote, IDENTITY_NOTE);
+        text(
+            identityFieldLabel,
+            mismatch
+                ? 'Key the private half implies: paste this one into the client.'
+                : 'Public key: modulus and exponent, in the form the client stores.'
+        );
         // A five-second poll must not eat a selection the operator is copying:
         // only rewrite the field when it is not focused and the value changed.
         const shown = trustedKey();
@@ -402,19 +440,9 @@ export async function mount(ctx) {
                 ),
                 button(
                     'Download public.txt',
-                    // Byte-for-byte what the panel hashes: no trailing newline, so
-                    // `sha256sum` on the download matches the SHA-256 above.
-                    () => download('public.txt', trustedKey()),
-                    'secondary'
-                ),
-                button(
-                    'Copy fingerprint',
-                    () => copy(identityCurrent?.fingerprint ?? '', 'Fingerprint copied.'),
-                    'secondary'
-                ),
-                button(
-                    'Copy file hash',
-                    () => copy(identityCurrent?.fileSha256 ?? '', 'Public file hash copied.'),
+                    // The server sends the file's own bytes, so `sha256sum` on the
+                    // download matches the SHA-256 printed above it.
+                    () => download('public.txt', identityCurrent?.fileText ?? trustedKey()),
                     'secondary'
                 )
             );

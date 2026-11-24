@@ -1,23 +1,7 @@
 import { symbol } from '../components/symbols.js';
 import { api } from '../api.js';
 import { itemPicker } from '../components/item-picker.js';
-import {
-    el,
-    button,
-    toolbar,
-    panel,
-    badge,
-    status,
-    facts,
-    details,
-    input,
-    select,
-    tabs,
-    text,
-    number,
-    copy,
-    date
-} from '../ui.js';
+import { el, button, routeLink, toolbar, panel, badge, status, facts, details, input, select, tabs, text, number, copy, date } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { edit, confirm, field, conflict, openDialog } from '../components/dialog.js';
 import {
@@ -124,8 +108,11 @@ export async function mount(ctx) {
                 )
             ],
             actions: (get) => [
-                button('Open profile', () =>
-                    ctx.go('knights', { username: get().username, knight: get().name })
+                routeLink(
+                    'Open profile',
+                    'knights',
+                    { username: get().username, knight: get().name },
+                    'button'
                 )
             ],
             filters: [
@@ -689,10 +676,11 @@ export async function mount(ctx) {
                           facts([
                               [
                                   'Account',
-                                  button(
+                                  routeLink(
                                       view.username,
-                                      () => ctx.go('accounts', { username: view.username }),
-                                      'quiet'
+                                      'accounts',
+                                      { username: view.username },
+                                      'quiet link'
                                   )
                               ],
                               ['Guild', view.guild || 'No guild'],
@@ -708,10 +696,11 @@ export async function mount(ctx) {
                               ['Sprites', view.sprites.length]
                           ]),
                           toolbar(
-                              button(
+                              routeLink(
                                   'Audit events naming this knight',
-                                  () => ctx.go('audit', { target: view.username }),
-                                  'secondary'
+                                  'audit',
+                                  { target: view.username },
+                                  'button secondary'
                               ),
                               button(
                                   'Edit progression',
@@ -785,7 +774,10 @@ export async function mount(ctx) {
             result = await ctx.request('knight-view', { username, knight });
         } catch (error) {
             if (id !== requestId) return;
-            if (error?.status !== 404) throw error;
+            // The server answers a missing knight with 422 and a stale one with
+            // 409; both mean "this link is out of date", which is exactly the
+            // panel below. Only a real failure replaces the page.
+            if (![404, 409, 422].includes(error?.status)) throw error;
             // A stale or mistyped link names a knight that is gone; the roster is
             // still the useful page, so the miss renders beside it instead of
             // replacing it.
@@ -801,16 +793,14 @@ export async function mount(ctx) {
                         `There is no knight named “${knight}” on account “${username}”. It may have been deleted, renamed, or the link may be stale.`,
                         'muted'
                     ),
+                    el('p', error.message, 'muted small'),
                     toolbar(
-                        button(
-                            'Back to all knights',
-                            () => ctx.go('knights'),
-                            'secondary'
-                        ),
-                        button(
+                        routeLink('Back to all knights', 'knights', {}, 'button secondary'),
+                        routeLink(
                             'Open this account',
-                            () => ctx.go('accounts', { username }),
-                            'secondary'
+                            'accounts',
+                            { username },
+                            'button secondary'
                         )
                     )
                 )

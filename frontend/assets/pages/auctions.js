@@ -265,7 +265,17 @@ export async function mount(ctx) {
     node.append(
         toolbar(
             button('Schedule featured auction', () => scheduleFeatured()),
-            button('Settle expired', () => settle(null))
+            button(
+                'Settle expired',
+                () => settle(null),
+                'secondary',
+                // A no-op that opens a confirmation looks like a broken button, so it
+                // says why it is off instead.
+                () =>
+                    rows.some((r) => r.listing.expires <= Date.now()) ||
+                    'No expired listings to settle.',
+                { unavailable: 'No expired listings to settle.' }
+            )
         ),
         table.node
     );

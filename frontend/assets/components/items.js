@@ -1,4 +1,4 @@
-import { setSymbols, symbol } from './symbols.js';
+import { setSymbols } from './symbols.js';
 import { el, number, heat, $, toolbar, button, details, report } from '../ui.js';
 import { openDialog } from './dialog.js';
 import { go } from '../router.js';
@@ -21,9 +21,9 @@ export async function loadAssets() {
         if (response.ok) {
             manifest = await response.json();
             setSymbols(manifest.symbols, manifest.ui);
-            if (manifest.symbols?.brand)
-                for (const image of document.querySelectorAll('.brand > img'))
-                    image.replaceWith(symbol('brand'));
+            // The shell paints before the pack is known, so it is repainted now: the
+            // wordmarks and the tab icon are the client's mark, not a drawing.
+            document.dispatchEvent(new Event('symbols-ready'));
         }
     } catch {
         /* Every icon has a local fallback. */
@@ -36,17 +36,25 @@ function path(value) {
 }
 export function icon(config, rarity = 0) {
     const root = el('span', null, 'item-icon'),
-        image = el('img');
-    image.src = path(manifest.items?.[config]) || '/admin/assets/icons/fallback.svg';
-    image.alt = '';
-    image.loading = 'lazy';
-    image.decoding = 'async';
-    image.onerror = () => {
-        image.onerror = null;
-        image.src = '/admin/assets/icons/fallback.svg';
-    };
-    root.append(image);
-    if (rarity > 0) root.append(el('span', '★'.repeat(Math.min(5, rarity)), 'stars'));
+        source = path(manifest.items?.[config]);
+    // Only client art may appear here. An item the pack has no picture of gets no
+    // icon at all: the name beside it is the label, and a drawn stand-in would be
+    // artwork this project never made.
+    if (source) {
+        const image = el('img');
+        image.src = source;
+        image.alt = '';
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        image.onerror = () => {
+            image.onerror = null;
+            image.remove();
+        };
+        root.append(image);
+    }
+    // Rarity is a number the game shows as stars; a glyph is not client art, so it
+    // is written out for the reader instead.
+    if (rarity > 0) root.append(el('span', `${rarity}★`, 'stars'));
     return root;
 }
 /**
@@ -181,27 +189,34 @@ export async function inspectItemName(config, { definition, item, actions } = {}
 }
 export function currency(kind, value) {
     const root = el('span', null, 'currency'),
-        image = el('img');
-    image.src = path(manifest.ui?.[kind]) || `/admin/assets/icons/${kind}.svg`;
-    image.alt = kind;
-    image.onerror = () => {
-        image.onerror = null;
-        image.src = `/admin/assets/icons/${kind}.svg`;
-    };
-    root.append(image, el('span', number(value)));
+        source = path(manifest.ui?.[kind]);
+    if (source) {
+        const image = el('img');
+        image.src = source;
+        image.alt = '';
+        image.onerror = () => {
+            image.onerror = null;
+            image.remove();
+        };
+        root.append(image);
+    }
+    // The amount carries the unit, so a missing coin icon still reads "1,200 crowns".
+    root.append(el('span', number(value)), el('span', ' ' + kind, 'muted'));
     return root;
 }
 export function spriteIcon(config, iconTier) {
     const root = el('span', null, 'item-icon'),
-        image = el('img');
-    image.src =
-        path(manifest.sprites?.[`${config}:${iconTier}`]) || '/admin/assets/icons/fallback.svg';
-    image.alt = '';
-    image.onerror = () => {
-        image.onerror = null;
-        image.src = '/admin/assets/icons/fallback.svg';
-    };
-    root.append(image);
+        source = path(manifest.sprites?.[`${config}:${iconTier}`]);
+    if (source) {
+        const image = el('img');
+        image.src = source;
+        image.alt = '';
+        image.onerror = () => {
+            image.onerror = null;
+            image.remove();
+        };
+        root.append(image);
+    }
     return root;
 }
 export function itemTile(def, item, onClick) {
@@ -261,18 +276,25 @@ export function gearProgress(def, item) {
 export function variantEffect(config, def) {
     const meta = def?.variantDisplay?.[config],
         node = el('div', null, 'variant-effect');
-    const image = el('img');
-    image.src = path(manifest.ui?.variants) || '/admin/assets/icons/variant.svg';
-    image.alt = '';
-    image.setAttribute('aria-hidden', 'true');
-    image.onerror = () => {
-        image.onerror = null;
-        image.src = '/admin/assets/icons/variant.svg';
-    };
+    const source = path(manifest.ui?.variants);
     const label = meta?.label || variantName(config),
         separator = label.lastIndexOf(': ');
     node.append(
-        image,
+        ...(source
+            ? [
+                  (() => {
+                      const image = el('img');
+                      image.src = source;
+                      image.alt = '';
+                      image.setAttribute('aria-hidden', 'true');
+                      image.onerror = () => {
+                          image.onerror = null;
+                          image.remove();
+                      };
+                      return image;
+                  })()
+              ]
+            : []),
         el('span', separator < 0 ? label : label.slice(0, separator + 2), 'effect-name')
     );
     if (separator >= 0) node.append(el('small', label.slice(separator + 2), 'effect-strength'));

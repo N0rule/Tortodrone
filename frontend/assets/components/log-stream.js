@@ -29,7 +29,7 @@ export function logStream({
     const node = el('div', null, 'terminal-shell stack-tight'),
         bar = el('div', null, 'terminal-bar'),
         led = el('span', null, 'terminal-led'),
-        titleNode = el('span', title, 'terminal-title'),
+        titleNode = el('h2', title, 'terminal-title'),
         barMeta = el('span', null, 'terminal-bar-meta'),
         tools = toolbar(),
         output = el('div', null, 'terminal-body'),
@@ -190,11 +190,13 @@ export function logStream({
             statusRight,
             paused
                 ? `paused${fresh ? ` · ${fresh} new` : ''}`
-                : !auto && away
-                  ? 'scrolled back'
-                  : 'tail'
+                : auto
+                  ? 'tail'
+                  : away
+                    ? 'scrolled back'
+                    : 'tail off'
         );
-        statusRight.dataset.state = paused || (!auto && away) ? 'paused' : 'tail';
+        statusRight.dataset.state = paused || !auto ? 'paused' : 'tail';
         undoClear.hidden = !clearing.size;
         text(
             undoClear,
@@ -259,7 +261,8 @@ export function logStream({
         time.title = new Date(row.timestamp).toLocaleString();
         const level = el('span', row.level === 'COMMAND' ? 'cmd' : row.level, 'log-level');
         level.title = row.level;
-        const thread = el('span', row.thread || '', 'log-thread');
+        const thread = el('span', null, 'log-thread');
+        thread.append(painted(row.thread || ''));
         thread.title = row.thread || '';
         const message = el('span', null, 'log-message');
         if (row.entry) {
@@ -310,7 +313,10 @@ export function logStream({
         ].join('·');
 
     function display(force = false) {
-        const retained_rows = [...rows, ...commandRows()].sort(
+        const retained_rows = [
+                ...rows,
+                ...commandRows().filter((row) => !clearing.has(key(row)))
+            ].sort(
                 (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
             ),
             visible = retained_rows.filter(matches),
@@ -436,7 +442,7 @@ export function logStream({
         if (typeof payload.retained === 'number') retained = payload.retained;
         if (payload.file) file = payload.file;
         pending = events;
-        const current = new Set(events.map(key));
+        const current = new Set([...events.map(key), ...commandRows().map(key)]);
         clearing = new Set([...clearing].filter((k) => current.has(k)));
         const kept = events.filter((r) => !clearing.has(key(r)));
         if (paused) {
@@ -513,10 +519,11 @@ export function logStream({
     };
 
     function clear() {
-        clearing = new Set(pending.map(key));
-        pending = [];
-        rows = [];
-        if (commands) commands.length = 0;
+        // Hiding, never deleting: the cleared keys are remembered so Ctrl+L is
+        // reversible, and the console's own transcript (which lives in `commands`)
+        // is kept, so Restore can bring it back.
+        for (const row of [...pending, ...commandRows()]) clearing.add(key(row));
+        frozen = null;
         fresh = 0;
         display(true);
     }

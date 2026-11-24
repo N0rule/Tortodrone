@@ -3,6 +3,7 @@ import {
     $,
     el,
     button,
+    routeLink,
     input,
     select,
     label,
@@ -18,7 +19,7 @@ import {
 import { DataTable } from '../components/table.js';
 import { toast } from '../components/toast.js';
 import { openDialog, confirm as confirmAction } from '../components/dialog.js';
-import { emptyState, waiting } from '../components/states.js';
+import { emptyState, errorState, waiting } from '../components/states.js';
 import { itemPicker } from '../components/item-picker.js';
 import { currency, itemLine } from '../components/items.js';
 
@@ -48,8 +49,12 @@ const TEMPLATES = [
         body: 'A new season opens today.\n\nPrestige, gear and rewards reset as usual; your account and inventory stay exactly as they are.'
     }
 ];
-/** The server ships the supported sender ordinals; these are their stock names. */
-const SENDER_NAMES = { 6: 'Spiral HQ', 5: 'Haven Treasury', 4: 'Spiral Knights Support' };
+/**
+ * The server ships the supported sender ordinals. Only the ordinal the game's own
+ * SystemSender names is labelled here; a second invented name would make the
+ * preview assert a sender the knight never sees, so the rest show their ordinal.
+ */
+const SENDER_NAMES = { 6: 'Spiral HQ' };
 /** Mirrors of the shipped limits, used only when an older server omits them. */
 const FALLBACK_LIMITS = { subject: 50, body: 8096, units: 14, senderLabel: 40 };
 /** StaffMail stores both fields behind the game's tainted-literal prefix. */
@@ -72,13 +77,8 @@ const unitCount = (value) => `${value} unit${value === 1 ? '' : 's'}`;
 const moment = (value) => (Number.isFinite(value) ? date(value) : 'an unchosen time');
 const sentTime = (value) => moment(value);
 const countOf = (value, noun) => `${Number(value).toLocaleString()} ${noun}${value === 1 ? '' : 's'}`;
-/** A cell that names an entity links to the page that owns it. */
-const entityLink = (label, open) => {
-    const node = el('button', label, 'link');
-    node.type = 'button';
-    node.onclick = open;
-    return node;
-};
+/** A cell that names an entity links to the page that owns it, as a real link. */
+const entityLink = (label, name, values) => routeLink(label, name, values);
 
 function loadReceipts() {
     try {
@@ -332,7 +332,7 @@ export async function mount(ctx) {
             rows = await ctx.request('mail-deliveries', { id: campaign.id });
         } catch (error) {
             host.replaceChildren(
-                el('p', error.message || 'The delivery roster is unavailable.', 'error')
+                errorState({ error, retry: () => openDeliveries(campaign) })
             );
             return;
         }
@@ -356,12 +356,7 @@ export async function mount(ctx) {
                     'Knight',
                     (row) =>
                         row.knight
-                            ? entityLink(row.knight, () =>
-                                  ctx.go('knights', {
-                                      username: row.username || '',
-                                      knight: row.knight
-                                  })
-                              )
+                            ? entityLink(row.knight, 'knights', { username: row.username || '', knight: row.knight })
                             : el('span', 'deleted knight', 'muted'),
                     (row) => row.knight || ''
                 ],
@@ -369,9 +364,7 @@ export async function mount(ctx) {
                     'Account',
                     (row) =>
                         row.username
-                            ? entityLink(row.username, () =>
-                                  ctx.go('accounts', { username: row.username })
-                              )
+                            ? entityLink(row.username, 'accounts', { username: row.username })
                             : el('span', 'unknown account', 'muted'),
                     (row) => row.username || ''
                 ],
@@ -413,7 +406,7 @@ export async function mount(ctx) {
                 total === null
                     ? `${campaign.delivered.toLocaleString()} delivered so far`
                     : `${campaign.delivered.toLocaleString()} of ${total.toLocaleString()} knights on this server received it`,
-                `Window ${moment(campaign.starts)} → ${moment(campaign.ends)} (${zone})`
+                `Window · ${zone}`
             ]),
             facts([
                 ['Status', mailingStatus(campaign, data.now)],
@@ -438,9 +431,25 @@ export async function mount(ctx) {
                     'Edit this mailing',
                     () => compose('campaign', campaign),
                     'secondary',
-                    () => campaign.enabled
+                    () => campaign.enabled,
+                    {
+                        showReason: true,
+                        unavailable:
+                            'Cancelled mailings cannot be edited. Duplicate this one to send it again.'
+                    }
                 ),
-                button('Inspect recipients', () => openDeliveries(campaign), 'secondary')
+                button('Recipients', () => openDeliveries(campaign), 'secondary'),
+                // A cancelled mailing is only useful as a copy, and that was the one
+                // action the dialog did not offer.
+                button(
+                    'Duplicate',
+                    () => {
+                        document.querySelector('#close-dialog')?.click();
+                        duplicate(campaign);
+                    },
+                    'secondary',
+                    () => !campaign.enabled
+                )
             )
         );
         openDialog({
@@ -473,7 +482,9 @@ export async function mount(ctx) {
             ],
             ['Sender', displaySender, displaySender],
             [
-                'Delivery window',
+                // One zone for the whole column, instead of a suffix per cell that
+                // the letter dialog repeats differently.
+                `Delivery window · ${zone}`,
                 (campaign) => {
                     const cell = el('div', null, 'mail-window');
                     cell.append(
@@ -543,9 +554,15 @@ export async function mount(ctx) {
                     () => compose('campaign', get()),
                     'secondary',
                     () => get().enabled,
-                    { unavailable: 'Cancelled mailings cannot be edited. Duplicate it to send it again.' }
+                    {
+                        // A dead grey button explains itself on screen, not only to a
+                        // screen reader: a disabled control cannot even be hovered.
+                        showReason: true,
+                        unavailable:
+                            'Cancelled mailings cannot be edited. Duplicate it to send it again.'
+                    }
                 ),
-                button('Inspect recipients', () => openDeliveries(get()), 'secondary'),
+                button('Recipients', () => openDeliveries(get()), 'secondary'),
                 button('Duplicate', () => duplicate(get()), 'secondary'),
                 button(
                     'Cancel',
@@ -559,7 +576,7 @@ export async function mount(ctx) {
                         ),
                     'secondary',
                     () => get().enabled,
-                    { unavailable: 'This mailing is already cancelled.' }
+                    { showReason: true, unavailable: 'This mailing is already cancelled.' }
                 )
             ],
             filters: [
@@ -605,10 +622,11 @@ export async function mount(ctx) {
         }
         const total = population();
         const countKnights = button(
-            'Count knights',
+            'Retry the knight count',
             async () => {
                 countKnights.setBusy(true);
                 try {
+                    roster = null;
                     await rosterRows();
                 } finally {
                     countKnights.setBusy(false);
@@ -620,7 +638,7 @@ export async function mount(ctx) {
             },
             'quiet'
         );
-        countKnights.title = 'Reads the roster once, so the delivered counts read "42 of N".';
+        countKnights.title = 'The roster read failed; this retries it once.';
         const content = [
             guidance,
             toolbar(
@@ -633,7 +651,9 @@ export async function mount(ctx) {
                 badge(
                     total === null
                         ? `${countOf(delivered, 'letter')} delivered`
-                        : `${delivered.toLocaleString()} of ${countOf(total, 'knight')} reached`,
+                        : delivered === 0
+                          ? 'Nothing delivered yet'
+                          : `${delivered.toLocaleString()} of ${countOf(total, 'knight')} reached`,
                     delivered ? 'gold' : ''
                 ),
                 ...(roster ? [] : [countKnights])
@@ -694,21 +714,14 @@ export async function mount(ctx) {
                         'Knight',
                         (row) =>
                             row.knight
-                                ? entityLink(row.knight, () =>
-                                      ctx.go('knights', {
-                                          username: row.username || '',
-                                          knight: row.knight
-                                      })
-                                  )
+                                ? entityLink(row.knight, 'knights', { username: row.username || '', knight: row.knight })
                                 : el('span', 'deleted knight', 'muted')
                     ],
                     [
                         'Account',
                         (row) =>
                             row.username
-                                ? entityLink(row.username, () =>
-                                      ctx.go('accounts', { username: row.username })
-                                  )
+                                ? entityLink(row.username, 'accounts', { username: row.username })
                                 : el('span', 'unknown account', 'muted')
                     ],
                     ['Subject', (row) => row.subject],
@@ -784,12 +797,7 @@ export async function mount(ctx) {
                     'Knight',
                     (row) =>
                         row.knight
-                            ? entityLink(row.knight, () =>
-                                  ctx.go('knights', {
-                                      username: row.username || '',
-                                      knight: row.knight
-                                  })
-                              )
+                            ? entityLink(row.knight, 'knights', { username: row.username || '', knight: row.knight })
                             : el('span', 'deleted knight', 'muted'),
                     (row) => row.knight || ''
                 ],
@@ -797,9 +805,7 @@ export async function mount(ctx) {
                     'Account',
                     (row) =>
                         row.username
-                            ? entityLink(row.username, () =>
-                                  ctx.go('accounts', { username: row.username })
-                              )
+                            ? entityLink(row.username, 'accounts', { username: row.username })
                             : el('span', 'unknown account', 'muted'),
                     (row) => row.username || ''
                 ],
@@ -958,8 +964,25 @@ export async function mount(ctx) {
             };
         }
         /** Client mirrors of the server's own sentences, so a refusal is not a round trip. */
+        // A control character (a U+0092 pasted from a Windows-1252 source, say) is
+        // invisible in the field and the server refuses the whole letter for it, so
+        // the composer counts and strips it before saving.
+        const CONTROL = /[\u0000-\u001f\u007f-\u009f]/g;
+        function cleanField(control, fieldName) {
+            const raw = control.value;
+            const found = raw.match(CONTROL);
+            if (!found) return;
+            control.value = raw.replace(CONTROL, '');
+            refreshPreview();
+            throw new Error(
+                `${fieldName} contained ${found.length === 1 ? 'a character' : `${found.length} characters`} the game cannot display. ${found.length === 1 ? 'It has' : 'They have'} been removed; check the text and save again.`
+            );
+        }
         function checkLetter() {
             const requiresText = mode !== 'welcome' || enabled.checked || draft.enabledAt;
+            cleanField(subject, 'Subject');
+            cleanField(body, 'Body');
+            cleanField(customSender, 'Sender name');
             if (requiresText && !strip(subject.value)) throw new Error('Subject is required');
             if (requiresText && !strip(body.value)) throw new Error('Body is required');
             if (strip(subject.value).length > limits.subject)
@@ -1313,13 +1336,16 @@ export async function mount(ctx) {
             if (mode === 'campaign') {
                 const start = new Date(starts.value).getTime(),
                     end = new Date(ends.value).getTime();
+                const knights = population();
                 notes.push(
-                    (population() === null
-                        ? 'Reaches every knight on this server once, including knights created later; the count is loading.'
-                        : `Reaches every knight on this server once, including knights created later (${countOf(
-                              population(),
-                              'knight'
-                          )} exist right now).`) +
+                    (knights === null
+                        ? 'Reaches every knight on this server once, including knights created later; the knight count is unavailable.'
+                        : knights === 0
+                          ? 'Reaches nobody yet: no knight exists on this server. A knight created while the window is open still receives it.'
+                          : `Reaches every knight on this server once, including knights created later (${countOf(
+                                knights,
+                                'knight'
+                            )} exist right now).`) +
                         ` Window ${sentTime(start)} → ${sentTime(end)} (${zone}).`
                 );
             } else if (mode === 'welcome')
@@ -1479,13 +1505,11 @@ export async function mount(ctx) {
                 text(
                     armNote,
                     Number.isFinite(start)
-                        ? `Saving delivers to every knight whose window is open; the window you chose starts ${date(
-                              start
-                          )}${
+                        ? `Every knight receives this once while the window is open.${
                               start <= Date.now()
-                                  ? ' — that is now, so saving delivers immediately'
-                                  : ' — nothing is delivered before then'
-                          }.`
+                                  ? ' The window has already started, so saving delivers on their next visit.'
+                                  : ` Nothing is delivered before ${date(start)}.`
+                          }`
                         : 'Choose a start and end; saving arms the mailing for that window.'
                 );
             };
@@ -1668,7 +1692,20 @@ export async function mount(ctx) {
     renderReceipts();
     table.update(data.campaigns);
     welcomeDetails.append(welcomeSummary, welcomeHost);
-    const newMailing = button('New mailing', () => compose('campaign'), 'primary');
+    const newMailing = button(
+        'New mailing',
+        async () => {
+            // The composer opens at once; the reach count fills in when the roster
+            // lands, so the button never looks dead for the length of that read.
+            newMailing.setBusy(true);
+            try {
+                await compose('campaign');
+            } finally {
+                newMailing.setBusy(false);
+            }
+        },
+        'primary'
+    );
     newMailing.title = 'Write a letter every knight receives once while the window is open.';
     // Reading the roster is a request, so the trigger says it is working instead
     // of looking dead for the length of a knights-all read.
@@ -1686,6 +1723,15 @@ export async function mount(ctx) {
     );
     directMail.title =
         'Write a one-off letter to one knight; it waits in the inbox while they are offline.';
+    // A director with no knights cannot send anything, and a modal that only says
+    // "no knights" wastes the read that the page already had.
+    directMail.refreshAvailability = () => {
+        const empty = roster !== null && roster.length === 0;
+        directMail.disabled = empty;
+        directMail.title = empty
+            ? 'No knight exists on this server yet; knights are created in the game client.'
+            : 'Write a one-off letter to one knight; it waits in the inbox while they are offline.';
+    };
     const mailings = panel(
         'Mailings',
         toolbar(newMailing, directMail),
@@ -1696,6 +1742,19 @@ export async function mount(ctx) {
     node.append(summary, mailings, receiptsHost);
     // The page's three parts are linkable, so a colleague can be sent straight to
     // the section that answers their question.
+    // The delivered counts are a one-request read the page already needs; a button
+    // that has to be pressed before the numbers mean anything made the page's own
+    // claims optional.
+    rosterRows()
+        .then(() => {
+            if (!ctx.alive()) return;
+            directMail.refreshAvailability?.();
+            renderSummary();
+            table.update(data.campaigns);
+        })
+        .catch(() => {
+            if (ctx.alive()) renderSummary();
+        });
     const tab = ctx.params.get('tab');
     if (tab === 'welcome') {
         welcomeDetails.open = true;
