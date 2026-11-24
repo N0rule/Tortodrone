@@ -25,7 +25,8 @@ export function logStream({
     fill = false,
     hint = 'Ctrl+F search · Ctrl+L clear · End tail · Home top · p pause · Esc leave',
     onLoadFile = null,
-    onLink = null
+    onLink = null,
+    onFilter = null
 } = {}) {
     const node = el('div', null, 'terminal-shell stack-tight'),
         bar = el('div', null, 'terminal-bar'),
@@ -152,20 +153,49 @@ export function logStream({
             entry
         }));
 
-    // A structured answer reads far better indented, the way a shell would print it.
+    // A shell prints `key: value` in aligned columns, not fifty lines of braces: the
+    // pretty-printed dump made one `status` answer taller than the pane.
     function formatOutput(value) {
         const textValue = typeof value === 'string' ? value : String(value ?? '');
         const trimmed = textValue.trim();
         const structured =
             (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
             (trimmed.startsWith('[') && trimmed.endsWith(']'));
-        if (structured)
-            try {
-                return JSON.stringify(JSON.parse(trimmed), null, 2);
-            } catch {
-                /* keep the raw text when it is not valid JSON */
-            }
+        if (!structured) return textValue;
+        try {
+            return align(JSON.parse(trimmed));
+        } catch {
+            /* keep the raw text when it is not valid JSON */
+        }
         return textValue;
+    }
+
+    /** The scalar as a terminal prints it: booleans bare, nothing a JSON parser needs. */
+    const cell = (value) => {
+        if (value === null || value === undefined) return '—';
+        if (typeof value === 'string') return value;
+        return String(value);
+    };
+
+    /** Key/value pairs in two aligned columns, nesting by indentation. */
+    function align(value, indent = '') {
+        if (value === null || typeof value !== 'object') return indent + cell(value);
+        if (Array.isArray(value)) {
+            if (!value.length) return indent + '—';
+            if (value.every((item) => item === null || typeof item !== 'object'))
+                return indent + value.map(cell).join(', ');
+            return value.map((item) => align(item, indent)).join('\n');
+        }
+        const entries = Object.entries(value);
+        if (!entries.length) return indent + '—';
+        const width = Math.max(...entries.map(([key]) => key.length));
+        return entries
+            .map(([key, item]) => {
+                const label = indent + key.padEnd(width);
+                const nested = item !== null && typeof item === 'object';
+                return nested ? `${label}:\n${align(item, indent + '  ')}` : `${label}: ${cell(item)}`;
+            })
+            .join('\n');
     }
 
     /** The exact line the server wrote to data/logs/latest.log, for raw mode and Copy. */
@@ -176,18 +206,21 @@ export function logStream({
     const cleared = (row) => clearing.has(key(row));
 
     function renderStatus() {
-        // A cleared line is not in the pane, so it is not in the count either.
+        // One count, derived from what is painted: the bar, the empty note and the
+        // Restore pill all read the same set, so Ctrl+L can no longer report 0, 12
+        // and 14 lines for one screen.
         const visible = [...rows, ...commandRows()].filter((row) => matches(row) && !cleared(row))
             .length,
             total = retainedCount || visible,
             away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
-        // One place counts lines, and it says how many the filter hid rather than
-        // counting and then erasing the number.
+        // A cleared screen says nothing about counts: the pill is the whole story.
         text(
             barMeta,
-            `${visible} ${visible === 1 ? 'line' : 'lines'}${
-                visible !== total ? ` of ${total}` : ''
-            }${paused ? ' · paused' : ''}${paused && fresh ? ` · ${fresh} new` : ''}`
+            clearing.size
+                ? ''
+                : `${visible} ${visible === 1 ? 'line' : 'lines'}${
+                      visible !== total ? ` of ${total}` : ''
+                  }${paused ? ' · paused' : ''}${paused && fresh ? ` · ${fresh} new` : ''}`
         );
         // The pill names what the pane is doing, not what the tail wants to do.
         text(
@@ -214,11 +247,10 @@ export function logStream({
         if (fileRows.length) bounds.push(`${fileRows.length} loaded from the file`);
         if (file?.path) {
             const size = file.bytes ? `${Math.round(file.bytes / 1024)} KB` : null;
-            const stamp = file.modified ? clockTime(new Date(file.modified).toISOString()) : null;
+            const name = file.path.split(/[\\/]/).pop();
             bounds.push(
-                [file.path, size, stamp && `written ${stamp}`]
-                    .filter(Boolean)
-                    .join(' · ') + (file.exists === false ? ' (not written yet)' : '')
+                [name, size].filter(Boolean).join(' · ') +
+                    (file.exists === false ? ' (not written yet)' : '')
             );
         }
         text(source, bounds.join(' · '));
@@ -377,12 +409,7 @@ export function logStream({
                 // Clearing hid the lines; saying "nothing has been logged" would be
                 // a lie about a buffer that is still there.
                 note.append(
-                    el(
-                        'span',
-                        retained
-                            ? `${retained} lines are buffered but cleared from view. `
-                            : 'Lines are cleared from view. '
-                    )
+                    el('span', `${clearing.size} ${clearing.size === 1 ? 'line is' : 'lines are'} cleared from view. `)
                 );
                 const again = el('button', 'Restore them', 'link');
                 again.type = 'button';
@@ -471,7 +498,12 @@ export function logStream({
     }
 
     /** Filtering must not yank a reader who scrolled back up to the bottom. */
-    search.oninput = severity.onchange = () => display();
+    search.oninput = severity.onchange = () => {
+        display();
+        // The view in front of the operator is what they copy or bookmark, so the
+        // address follows the filters instead of only being read from.
+        if (onFilter) onFilter({ severity: severity.value, search: search.value });
+    };
     // The hint says Esc leaves; from the search field that means back to the pane.
     search.onkeydown = (event) => {
         if (event.key !== 'Escape') return;
@@ -568,7 +600,9 @@ export function logStream({
         // Hiding, never deleting: the cleared keys are remembered so Ctrl+L is
         // reversible, and the console's own transcript (which lives in `commands`)
         // is kept, so Restore can bring it back.
-        for (const row of [...pending, ...commandRows()]) clearing.add(key(row));
+        // Only what is on screen: adding the whole pending buffer made the pill
+        // count lines the pane had never shown.
+        for (const row of [...rows, ...commandRows()]) clearing.add(key(row));
         frozen = null;
         fresh = 0;
         display(true);
@@ -698,7 +732,9 @@ export function logStream({
             return;
         }
         fitting = 0;
-        const top = node.getBoundingClientRect().top;
+        // The pane's place in the document, not its place in the viewport: measuring
+        // the latter resized the terminal by 3px every time the page scrolled.
+        const top = node.getBoundingClientRect().top + window.scrollY;
         // The chrome (bar, tools, prompt, status) is fixed height, so the shell can
         // never be shorter than it without clipping the prompt: on a landscape
         // phone the page scrolls a little instead of hiding the cursor.

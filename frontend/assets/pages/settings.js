@@ -148,12 +148,16 @@ export async function mount(ctx) {
             button(
                 'Reset preferences',
                 () => {
+                    // Local and reversible, so it is not the red button — but it still
+                    // asks, like every other action that throws work away.
+                    if (!window.confirm('Reset every preference in this browser to its default?'))
+                        return;
                     prefs.reset();
                     paint();
                     text(feedback, 'Preferences reset to their defaults.');
                     toast('Preferences reset.');
                 },
-                'danger'
+                'secondary'
             )
         ),
         feedback

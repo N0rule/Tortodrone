@@ -1,6 +1,6 @@
-import { el, button, toolbar, badge, date, localDate, text, tabs, $ } from '../ui.js';
+import { el, button, toolbar, badge, date, localDate, text, tabs, facts, panel, routeLink, copy, $ } from '../ui.js';
 import { DataTable } from '../components/table.js';
-import { field, edit, confirm, conflict, closeDialog } from '../components/dialog.js';
+import { field, edit, confirm, conflict, closeDialog, openDialog } from '../components/dialog.js';
 import { itemForm } from '../components/gear-editor.js';
 import { itemLine, currency, definitionsFor } from '../components/items.js';
 import { route, go } from '../router.js';
@@ -79,6 +79,58 @@ export async function mount(ctx) {
     function createOffer() {
         itemForm('Create Depot offer', 'depot-save', fields(), { ...fixed(), id: -1 });
     }
+    /**
+     * An offer opens as a record before it opens as a form: a price, a limit and a
+     * list of discounts are things to read, and every deep link used to land the
+     * operator inside an editor with the server snapshot under their cursor.
+     */
+    function showOffer(offer) {
+        const promotionsFor = data.promotions.filter((p) => p.offerId === offer.id);
+        const list = el('div', null, 'stack-tight');
+        if (!promotionsFor.length)
+            list.append(el('p', 'No promotion discounts this offer.', 'muted'));
+        else
+            for (const p of promotionsFor) {
+                const row = el('div', null, 'offer-reference');
+                row.append(
+                    el('strong', `${promotionState(p)} · ${p.crowns} Crowns`),
+                    el(
+                        'small',
+                        `${date(p.starts)} → ${date(p.ends)} · promotion #${p.id}`,
+                        'muted'
+                    )
+                );
+                list.append(row);
+            }
+        openDialog({
+            title: `${offerName(offer)} · offer #${offer.id}`,
+            content: panel(
+                '',
+                el('p', offer.enabled ? 'Enabled in the Depot.' : 'Disabled.', 'muted'),
+                facts([
+                    ['Item', offerName(offer)],
+                    ['Quantity', String(offer.good.count)],
+                    ['Price', `${offer.good.price} Crowns${offer.good.energy ? ` + ${offer.good.energy} Energy` : ''}`],
+                    ['Lifetime limit', offer.good.limit ? String(offer.good.limit) : 'Unlimited'],
+                    ['Featured', offer.featured ? 'yes' : 'no'],
+                    ['Promotion only', offer.promotionOnly ? 'yes' : 'no'],
+                    ['Promotions', promotionsFor.length ? String(promotionsFor.length) : 'none'],
+                    ['Offer id', String(offer.id)]
+                ]),
+                el('h3', 'Promotions'),
+                list,
+                toolbar(
+                    button('Edit this offer', () => editOffer(offer), 'primary'),
+                    button('Schedule promotion', () => schedulePromotion(offer), 'secondary'),
+                    button('Copy offer id', () => copy(String(offer.id), 'Offer id copied.'), 'quiet')
+                )
+            ),
+            submit: 'Close',
+            notifySaved: false,
+            onSubmit: async () => {}
+        });
+        unlinkOfferOnClose();
+    }
     /** Promotions are scheduled from an offer, whichever tab starts the action. */
     function schedulePromotion(offer) {
         const options = data.snapshot.offers.map((o) => [String(o.id), offerLabel(o)]);
@@ -140,7 +192,10 @@ export async function mount(ctx) {
                 action: { label: 'Create offer', run: () => createOffer() },
                 icon: 'depot'
             },
-            actions: (get) => [button('Edit', () => editOffer(get()))],
+            actions: (get) => [
+                routeLink('Inspect', 'depot', { offer: get().id }, 'button secondary'),
+                button('Edit', () => editOffer(get()))
+            ],
             filters: [
                 [
                     'Availability',
@@ -191,7 +246,7 @@ export async function mount(ctx) {
             exportName: 'promotions',
             empty: {
                 title: 'No promotions are scheduled',
-                hint: 'A promotion discounts one offer between two dates; schedule the first from any offer.',
+                hint: 'A promotion discounts one offer between two dates. Create an offer on the Offers tab, then schedule its promotion from that offer.',
                 action: {
                     label: 'Schedule promotion',
                     run: () => schedulePromotion(null)
@@ -339,7 +394,7 @@ export async function mount(ctx) {
             }, 0);
         };
     }
-    function focusOffer(id) {
+    function focusOffer(id, fromAddress = true) {
         if (id === focusedOffer) return;
         focusedOffer = id;
         if (id == null) return;
@@ -351,7 +406,10 @@ export async function mount(ctx) {
         tab = 'offers';
         paintTabs();
         show();
-        editOffer(offer);
+        // The address names a record, so the record is what opens: an editor behind a
+        // load is a write form the operator never asked for.
+        if (fromAddress) showOffer(offer);
+        else editOffer(offer);
         unlinkOfferOnClose();
     }
     /**
@@ -379,7 +437,7 @@ export async function mount(ctx) {
         );
         promotions.update(data.promotions);
         effective.update(data.effective.offers.filter((o) => o.enabled));
-        text(revision, `Revision ${data.snapshot.revision}`);
+        text(revision, `Content revision ${data.snapshot.revision}`);
     }
     await refresh();
     /** Deep links re-apply the tab, the search and the focused offer in place. */

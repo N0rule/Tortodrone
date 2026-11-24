@@ -261,7 +261,7 @@ button.metric:focus-visible {
         opacity: 0.45;
     }
 }
-[data-motion='reduced'] .terminal-led {
+[data-motion='reduce'] .terminal-led {
     animation: none;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -357,7 +357,9 @@ button.metric:focus-visible {
     padding: 10px 12px 12px;
     background: radial-gradient(circle at 50% 0%, var(--term-bg-top) 0%, var(--term-bg) 70%);
     color: var(--term-fg);
-    font: 13px/1.4 var(--mono);
+    /* 1.2 is the leading a terminal uses: at 1.4 plus a per-row padding the pane
+       showed 16 lines where a 13px terminal shows 20. */
+    font: 13px/1.2 var(--mono);
     font-variant-ligatures: none;
     font-variant-numeric: tabular-nums;
     tab-size: 4;
@@ -373,7 +375,7 @@ button.metric:focus-visible {
     display: grid;
     grid-template-columns: 66px 42px minmax(72px, 128px) minmax(0, 1fr);
     gap: 10px;
-    padding: 1px 6px;
+    padding: 0 6px;
     border-radius: 3px;
     align-items: start;
 }
@@ -544,7 +546,7 @@ button.metric:focus-visible {
     flex-wrap: wrap;
     gap: 4px 12px;
     align-items: center;
-    padding: 6px 12px;
+    padding: 4px 12px;
     border-top: 1px solid var(--line);
     background: color-mix(in srgb, var(--surface) 80%, var(--inset));
     font-family: var(--mono);
@@ -606,7 +608,11 @@ button.metric:focus-visible {
 }
 /* Where the rest of the log lives: the buffer is a window, not the whole file. */
 .terminal-source {
-    flex: 1 0 100%;
+    /* Shares the row when the pane is wide and wraps when it is not: as a
+       forced full-width line it alone made the status bar two rows tall and 52px
+       of every page that shows a stream. */
+    flex: 1 1 240px;
+    min-inline-size: 0;
     color: var(--term-time);
     font-size: 10.5px;
     overflow: hidden;
@@ -822,7 +828,9 @@ button.metric:focus-visible {
     /* A log without times is not a log: the thread column goes first, and the
        timestamp keeps a column wide enough to print h:mm:ss without clipping. */
     .terminal-line {
-        grid-template-columns: 52px 30px minmax(0, 1fr);
+        /* `ERROR` and `DEBUG` measure 32.6px: a 30px track ellipsised the severity
+           that made the line urgent. */
+        grid-template-columns: 52px 34px minmax(0, 1fr);
         gap: 5px;
     }
     .log-time {
@@ -1547,9 +1555,19 @@ button.metric:focus-visible {
     margin-left: 4px;
     color: var(--muted);
 }
-@media (max-width: 760px) {
+/* The split is a desktop convenience: below 900px the form is one column, so the
+   letter and the fields you type it into are visible at the same time. 760px was
+   too late — 844x390 is the tightest supported size and it fell in the two-column
+   branch with a 351px-tall dialog. */
+@media (max-width: 900px) {
     .mail-compose-split {
         grid-template-columns: minmax(0, 1fr);
+    }
+    .mail-preview {
+        max-block-size: 12rem;
+    }
+    .mail-compose-split textarea {
+        min-height: 160px;
     }
 }
 
@@ -1679,6 +1697,8 @@ dd .bad {
        onto its own line cost 108px of a 390px-tall screen and left the pane with a
        single line of output. */
     .terminal-tools {
+        flex: 0 0 auto;
+        min-block-size: 40px;
         flex-wrap: nowrap;
         gap: 6px;
         padding: 2px 8px;
@@ -1699,10 +1719,52 @@ dd .bad {
         padding-inline: 7px;
     }
     .terminal-body {
-        min-height: 60px;
+        min-block-size: 60px;
         padding: 4px 10px;
     }
     .terminal-status {
         padding: 1px 10px;
+    }
+    /* The page heading above already names the page, so the pane's own title bar is
+       the first thing to go on a 390px-tall screen: it was 32px of a 185px shell. */
+    .terminal-bar {
+        display: none;
+    }
+    /* The "More" summary sat 23px taller than the buttons beside it and pushed the
+       strip to 63px; it is a control like its neighbours, so it measures like one. */
+    .terminal-menu {
+        align-self: center;
+    }
+    .terminal-menu-toggle {
+        display: flex;
+        align-items: center;
+        min-block-size: 32px;
+        padding-block: 0;
+    }
+}
+
+/* The heading is paid for on every screen, and on a 390px-tall viewport it left the
+   first table row below the fold: below 900px wide the description joins the title
+   line instead of owning one, and on a landscape phone the heading keeps its name. */
+@media (max-width: 900px) {
+    .page-heading {
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+    }
+    .page-description {
+        display: none;
+    }
+}
+@media (max-height: 470px) {
+    .page-heading {
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+    }
+    .eyebrow,
+    .page-description {
+        display: none;
+    }
+    main {
+        padding-top: 12px;
     }
 }

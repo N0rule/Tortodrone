@@ -1,4 +1,4 @@
-import { el, toolbar, button, badge, facts, details, date, localDate } from '../ui.js';
+import { el, toolbar, button, badge, facts, details, date, localDate, routeLink } from '../ui.js';
 import { api } from '../api.js';
 import { DataTable } from '../components/table.js';
 import { openDialog, confirmAction, field } from '../components/dialog.js';
@@ -215,7 +215,7 @@ export async function mount(ctx) {
                 icon: 'auctions'
             },
             actions: (get) => [
-                button('Inspect', () => here({ listing: get().listing.id })),
+                routeLink('Inspect', 'auctions', { listing: get().listing.id }, 'button secondary'),
                 button(
                     'Settle',
                     () => settle(get().listing.id),
@@ -264,7 +264,7 @@ export async function mount(ctx) {
     }
     node.append(
         toolbar(
-            button('Schedule featured auction', () => scheduleFeatured()),
+            button('Schedule featured auction', () => scheduleFeatured(), 'primary'),
             button(
                 'Settle expired',
                 () => settle(null),

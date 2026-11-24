@@ -202,6 +202,11 @@ export async function mount(ctx) {
         if (!ctx.alive()) return;
         paintSummary();
         stationTable.update(merchants());
+        if (!coldApplied) {
+            coldApplied = true;
+            opened = null;
+            applyParams(ctx.params);
+        }
     }
     /**
      * Deep links select a station, open one item, or drive the catalogue search,
@@ -224,6 +229,9 @@ export async function mount(ctx) {
             else ctx.notify(`Station ${station} is not in the exported catalogue.`, true);
         } else if (item) showItem(item);
     }
-    applyParams(ctx.params);
+    // The catalogue is not here yet: merchants() is empty until the first poll, so a
+    // cold-linked station was reported as "not in the exported catalogue" for a
+    // station the page was about to draw. The address is applied once there is data.
+    let coldApplied = false;
     return { node, dispose: () => picker.dispose(), refresh, navigate: applyParams };
 }

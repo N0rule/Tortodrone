@@ -278,7 +278,12 @@ async function navigate() {
         // A denied link is not an empty click: say which role the page needs. The
         // redirect to Overview hides the page notice, so the sentence travels as a
         // toast, which navigation does not clear.
-        const denied = pages.find((page) => page.name === next.name);
+        // `#access` and `#mail` are aliases: matching the raw name told a moderator
+        // that a page they were looking at does not exist. Resolve the alias first,
+        // and only call it unknown when no page owns that spelling.
+        const denied =
+            pages.find((page) => page.name === next.name || page.alias?.includes(next.name)) ||
+            null;
         const needs = ['a viewer', 'a moderator', 'an administrator'][denied?.rank ?? 2];
         toast(
             denied
@@ -298,7 +303,10 @@ async function navigate() {
         location.hash = acceptedHash;
         return;
     }
-    if (location.hash !== acceptedHash && !closeDialog()) {
+    // Only a page change has to close the open editor. A link inside the same page
+    // that names a record (a mailing, an offer) is handled by that page's navigate,
+    // and closing the dialog first is what made those links look inert.
+    if (location.hash !== acceptedHash && current !== spec.name && !closeDialog()) {
         location.hash = acceptedHash;
         return;
     }
@@ -354,6 +362,9 @@ async function navigate() {
         connection,
         toast,
         announce,
+        // An expired session is recoverable from a page, not only by a reload: the
+        // console offers "Sign in again" through this.
+        reauth: signedOut,
         alive: () => generation === id && !!api.session,
         request: async (...args) => {
             const value = await api.request(args[0], args[1], false, requests.signal);

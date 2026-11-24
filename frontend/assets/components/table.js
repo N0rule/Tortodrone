@@ -149,12 +149,17 @@ export class DataTable {
             const start = values.includes(savedValue) ? savedValue : (initial ?? values[0]);
             const control = select(name, values, start);
             control.dataset.filter = name;
+            // The visible text of a filter was only its value ("All"), so what it
+            // filtered was a screen-reader detail: the label is written in front of
+            // it. Not a <label> wrapper, which would replace the select's own name.
+            const wrap = el('span', null, 'filter-label');
+            wrap.append(el('span', name, 'filter-label-text'), control);
             control.onchange = () => {
                 this.page = 1;
                 this.remember();
                 this.render();
             };
-            this.controls.append(control);
+            this.controls.append(wrap);
             this.filtersByName[name] = control;
             this.filtersInitial[name] = start;
             return [control, name, match];

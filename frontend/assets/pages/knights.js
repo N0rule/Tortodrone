@@ -494,7 +494,14 @@ export async function mount(ctx) {
                 id: 'knight-inventory',
                 caption: 'Owned inventory',
                 exportName: 'knight-inventory',
-                actions: (get) => [button('Inspect', () => inspect(get()))]
+                actions: (get) => [
+                    routeLink(
+                        'Inspect',
+                        'knights',
+                        { username: get().username, knight: get().name },
+                        'button secondary'
+                    )
+                ]
             }
         );
         let page = 1;

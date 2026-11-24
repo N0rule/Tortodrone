@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, button, input, text } from '../ui.js';
+import { el, input, text } from '../ui.js';
 import { edit, field } from '../components/dialog.js';
 import { logStream } from '../components/log-stream.js';
 
@@ -36,7 +36,7 @@ export async function mount(ctx) {
             fill: true,
             // The Console has no tail to follow and nothing to pause: advertising
             // those keys here promised behaviour this page does not have.
-            hint: 'Ctrl+F search · Ctrl+L clear · Tab completes · ↑ ↓ history · the transcript keeps the last 50 answers',
+            hint: 'Ctrl+F search · Ctrl+L clear · Tab completes · ↑ ↓ history · help lists the commands',
             onLink: (link) => ctx.go(link.page, link.params || {})
         }),
         feedback = el('small', listError ? 'Command list unavailable' : 'Connected');
@@ -52,58 +52,33 @@ export async function mount(ctx) {
             autocorrect: 'off',
             spellcheck: false
         }),
-        run = el('button', 'Run', 'primary'),
         words = [...metadata.read, ...metadata.actions];
-    run.type = 'submit';
-    // It is a bare submit button, not ui.js's control, so it carries its own busy
-    // state: the spinner from base.css, the label kept, and no second submit.
-    run.setBusy = (busy) => {
-        if (busy) run.setAttribute('aria-busy', 'true');
-        else run.removeAttribute('aria-busy');
+    // Enter submits, the way it does in a shell: no button beside the prompt. The
+    // form still carries the busy flag so the field reports what it is doing.
+    const busy = (value) => {
+        if (value) form.setAttribute('aria-busy', 'true');
+        else form.removeAttribute('aria-busy');
     };
     // Mobile keyboards capitalise the first word and the server refuses `Status`.
     command.setAttribute('autocapitalize', 'off');
     command.setAttribute('enterkeyhint', 'send');
     command.placeholder = 'Type a command, or press Tab';
     command.classList.add('console-input');
-    // One completion mechanism, and it is the one a terminal user already knows:
-    // Tab. A native <datalist> popup would compete with it and cannot be styled.
-    // Every command is also a control that fills the prompt, because a list of
-    // names in running text is not something you can act on.
-    const hint = el('p', null, 'console-hint'),
-        chip = (name, label) => {
-            const node = el('button', label ?? name, 'link sm');
-            node.type = 'button';
-            node.addEventListener('click', () => {
-                command.value = commandDraft = name;
-                command.focus();
-                command.setSelectionRange(name.length, name.length);
-            });
-            return node;
-        },
-        fillHint = () => {
-            hint.replaceChildren();
-            hint.append(el('span', 'Tab completes · ↑ ↓ history'));
-            if (listError) {
-                hint.append(
-                    el(
-                        'span',
-                        'The list of commands could not be loaded' +
-                            (listError.message ? ` (${listError.message})` : '') +
-                            '. A command still runs once the server answers.'
-                    )
-                );
-                return;
-            }
-            for (const name of metadata.read) hint.append(chip(name));
-            for (const name of metadata.actions)
-                hint.append(chip(name, name === 'kick' ? 'kick <session>' : name));
-            if (metadata.actions.length) hint.append(el('span', 'ask to confirm'));
-        };
-    fillHint();
     const promptLabel = el('span', 'tortodrone$', 'console-prompt-label');
     promptLabel.setAttribute('aria-hidden', 'true');
-    form.append(promptLabel, command, run);
+    form.append(promptLabel, command);
+    // A command list that failed to load is said once, in the transcript, instead of
+    // replacing the prompt with an error card.
+    if (listError)
+        outputHistory.push({
+            time: Date.now(),
+            command: 'help',
+            output:
+                'The list of commands could not be loaded' +
+                (listError.message ? ` (${listError.message})` : '') +
+                '. A command still runs once the server answers.',
+            error: true
+        });
     let index = history.length,
         draft = '',
         pending = false;
@@ -190,11 +165,39 @@ export async function mount(ctx) {
             // recomputing the prefix from the completed word left one candidate, so
             // Tab could never reach the second match.
             const typed = command.value.trim();
-            if (!typed || typed.includes(' ')) return;
-            if (!completion.list.includes(typed))
-                completion = { list: words.filter((name) => name.startsWith(typed)), at: -1 };
+            if (!typed) return;
+            if (typed.includes(' ')) {
+                // `kick 42` is a command plus an argument this page cannot guess, so
+                // Tab says so instead of silently doing nothing.
+                event.preventDefault();
+                stream.announce(
+                    'Tab completes command names. ' +
+                        typed.split(/\s+/)[0] +
+                        ' takes an argument the page cannot guess; help lists the syntax.'
+                );
+                return;
+            }
+            if (!completion.list.includes(typed)) {
+                const prefix = typed.toLowerCase();
+                completion = {
+                    list: words.filter((name) => name.toLowerCase().startsWith(prefix)),
+                    at: -1
+                };
+            }
             if (!completion.list.length) return;
             event.preventDefault();
+            // A second Tab on a sole candidate prints the ambiguous set, the way a
+            // shell lists them, instead of cycling invisibly.
+            if (completion.list.length > 1 && completion.at === completion.list.length - 1) {
+                outputHistory.push({
+                    time: Date.now(),
+                    command: typed,
+                    output: completion.list.join('  '),
+                    error: false
+                });
+                stream.redraw();
+                return;
+            }
             completion.at = (completion.at + 1) % completion.list.length;
             const next = completion.list[completion.at];
             command.value = commandDraft = next;
@@ -245,7 +248,7 @@ export async function mount(ctx) {
             return;
         }
         pending = true;
-        run.setBusy(true);
+        busy(true);
         // Record the command when it is submitted, not when its answer lands: the
         // echo already exists by then, so the old guard dropped every command and
         // ↑ showed nothing.
@@ -262,35 +265,21 @@ export async function mount(ctx) {
             if (command.value.trim() === value) command.value = commandDraft = '';
         } catch (error) {
             record(value, { output: error.message }, true, ctx.alive());
+            // A refusal clears the prompt exactly like a success does: the command is
+            // in ↑ and in the transcript, so leaving it in the field made the two
+            // outcomes behave differently for no reason.
+            command.value = commandDraft = '';
             // The prompt already printed the refusal; a second global notice for the
             // same refusal is noise, so only a broken server is reported globally.
             if (error.status >= 500) ctx.report(error);
         } finally {
             pending = false;
-            run.setBusy(false);
+            busy(false);
         }
     };
-    const help = button('Help', async () => {
-        if (pending) return;
-        pending = true;
-        run.setBusy(true);
-        try {
-            const result = await api.consoleCommand('help');
-            if (ctx.alive()) record('help', result);
-        } catch (error) {
-            if (ctx.alive()) {
-                record('help', { output: error.message }, true);
-                ctx.report(error);
-            }
-        } finally {
-            pending = false;
-            run.setBusy(false);
-        }
-    });
-    stream.tools.prepend(help);
     stream.state.append(feedback);
     const prompt = el('div', null, 'console-prompt-block');
-    prompt.append(form, hint);
+    prompt.append(form);
     stream.node.insertBefore(prompt, stream.footer);
     const node = stream.node;
     node.classList.add('console-workspace');
@@ -321,14 +310,30 @@ export async function mount(ctx) {
             failures++;
             text(feedback, 'Disconnected · ' + error.message);
             feedback.classList.add('error');
+            // A 401 is not a flaky server: every command from here prints "Sign in
+            // required" into the transcript, so the pane offers the way back.
+            if (error.status === 401 && ctx.reauth && !feedback.parentElement.querySelector('.console-reauth')) {
+                const again = el('button', 'Sign in again', 'link console-reauth');
+                again.type = 'button';
+                again.onclick = () => ctx.reauth();
+                feedback.after(again);
+            }
             throw error;
         }
     }
     await refresh();
     // The prompt is the reason the page exists; a page that opens with the keys
     // nowhere near it asks for a click before it can be used.
-    if (typeof requestAnimationFrame === 'function')
-        requestAnimationFrame(() => requestAnimationFrame(() => command.focus()));
+    const claim = (attempt = 0) => {
+        if (!node.isConnected) return;
+        const active = document.activeElement;
+        const taken = active && active !== document.body && active !== command && !/^H[1-6]$/.test(active.tagName);
+        if (taken) return;
+        command.focus();
+        if (document.activeElement !== command && attempt < 3)
+            requestAnimationFrame(() => claim(attempt + 1));
+    };
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => claim());
     return {
         node,
         refresh,

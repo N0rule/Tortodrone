@@ -107,7 +107,7 @@ function normalized(error) {
     // A dead server must not reach the operator as "Failed to fetch".
     if (!error?.status)
         return new Error(
-            'The server did not answer, so nothing was sent. Check the connection, then use Resume or save again.'
+            'The server did not answer. The change may or may not have been stored, so reopen this record and read its current state before saving again — saving twice sends the letter twice.'
         );
     if (error.status !== 409) return error;
     // Only the sentences that say the record moved earn reload advice, and it is
@@ -309,7 +309,9 @@ export async function mount(ctx) {
 
     function deliveredLabel(campaign) {
         const total = population();
-        return total === null
+        // A server with no knights delivered "0 of 0", which reads as a failure
+        // rather than as "there is nobody to deliver to".
+        return total === null || total === 0
             ? campaign.delivered.toLocaleString()
             : `${campaign.delivered.toLocaleString()} of ${total.toLocaleString()}`;
     }
@@ -462,8 +464,9 @@ export async function mount(ctx) {
         );
         openDialog({
             title: strip(campaign.subject) || 'Mail campaign',
-            description:
-                'This is the letter as the client shows it. Editing changes what knights who have not received it yet will get.',
+            description: campaign.enabled
+                ? 'This is the letter as the client shows it from this server. Editing changes what knights who have not received it yet will get.'
+                : 'This mailing is cancelled and will not be delivered. It is kept so it can be read or duplicated.',
             content,
             submit: 'Close',
             notifySaved: false,
@@ -477,8 +480,9 @@ export async function mount(ctx) {
                 'Subject',
                 (campaign) => {
                     const cell = el('div', null, 'mail-subject-cell');
-                    const name = button(campaign.subject, () => openLetter(campaign), 'link');
-                    name.querySelector('.ui-icon')?.remove();
+                    const name = routeLink(campaign.subject, 'mailing', {
+                        campaign: campaign.id
+                    });
                     name.title = 'Read this letter as the client shows it';
                     cell.append(
                         name,
@@ -1563,31 +1567,33 @@ export async function mount(ctx) {
             };
             starts.addEventListener('input', syncArm);
             syncArm();
-            const draftButton = button(
-                'Schedule for later (+1 hour)',
-                () => {
-                    // A draft is a window that opens later, so saving cannot deliver.
-                    const soon = Math.ceil((Date.now() + 3_600_000) / 900_000) * 900_000;
-                    starts.value = localDate(soon);
-                    ends.value = localDate(soon + 30 * 86_400_000);
-                    syncArm();
-                    refreshPreview();
-                    const submit = $('#submit-dialog');
-                    if (submit && !submit.disabled) submit.click();
-                },
-                'secondary'
-            );
-            draftButton.title =
-                'Moves the window one hour ahead and thirty days long, then saves; nothing is delivered before it opens, but from then on every knight receives it.';
+            // The window has three shapes an operator asks for by name, and picking one
+            // only fills the fields: the old button saved a thirty-day mailing behind a
+            // click that said "+1 hour".
+            const preset = (label, startAt, endAt, hint) => {
+                const node = button(
+                    label,
+                    () => {
+                        starts.value = localDate(startAt);
+                        ends.value = localDate(endAt);
+                        syncArm();
+                        refreshPreview();
+                    },
+                    'secondary'
+                );
+                node.title = hint;
+                return node;
+            };
+            const hour = 3_600_000,
+                day = 86_400_000,
+                soon = Math.ceil((Date.now() + hour) / 900_000) * 900_000;
             header.append(
                 armNote,
                 toolbar(
-                    draftButton,
-                    el(
-                        'small',
-                        'Saves with a window that starts later, so no knight receives it yet.',
-                        'muted'
-                    )
+                    preset('Start now', Date.now(), Date.now() + 7 * day, 'A window that is open now: saving delivers it to every knight on their next visit, for a week.'),
+                    preset('Start in 1 hour', soon, soon + day, 'A window that opens in an hour and closes a day later; nothing is delivered before it opens.'),
+                    preset('Start tomorrow', Date.now() + day, Date.now() + 8 * day, 'A window that opens tomorrow and closes a week later.'),
+                    el('small', 'These fill the window; nothing is delivered until you save.', 'muted')
                 )
             );
         }
@@ -1805,34 +1811,41 @@ export async function mount(ctx) {
         .catch(() => {
             if (ctx.alive()) renderSummary();
         });
-    const tab = ctx.params.get('tab');
-    // The node is not in the document yet, so scrolling now does nothing: the
-    // arrival is scheduled for the frame after insertion.
-    const arrive = () => {
-        if (tab === 'welcome') {
-            welcomeDetails.open = true;
-            welcomeDetails.scrollIntoView({ block: 'start' });
-        } else if (tab === 'receipts') receiptsHost.scrollIntoView({ block: 'start' });
-        else if (tab === 'mailings') mailings.scrollIntoView({ block: 'start' });
-    };
-    if (tab) {
-        if (typeof requestAnimationFrame === 'function')
-            requestAnimationFrame(() => requestAnimationFrame(arrive));
-        else queueMicrotask(arrive);
-    }
-    // A letter is addressable too, so "this is the one I mean" can be a link.
-    const campaign = Number(ctx.params.get('campaign'));
-    if (Number.isInteger(campaign) && campaign > 0) {
+    /**
+     * The address owns the view: the section it names scrolls into place and the
+     * letter it names opens. A cold load and an in-app link then behave alike, which
+     * is the whole point of putting the letter in the URL.
+     */
+    function applyParams(params) {
+        const tab = params.get('tab');
+        // The node may not be in the document yet, so scrolling now does nothing:
+        // the arrival is scheduled for the frame after insertion.
+        const arrive = () => {
+            if (tab === 'welcome') {
+                welcomeDetails.open = true;
+                welcomeDetails.scrollIntoView({ block: 'start' });
+            } else if (tab === 'receipts') receiptsHost.scrollIntoView({ block: 'start' });
+            else if (tab === 'mailings') mailings.scrollIntoView({ block: 'start' });
+        };
+        if (tab) {
+            if (typeof requestAnimationFrame === 'function')
+                requestAnimationFrame(() => requestAnimationFrame(arrive));
+            else queueMicrotask(arrive);
+        }
+        const campaign = Number(params.get('campaign'));
+        if (!Number.isInteger(campaign) || campaign <= 0) return;
         const match = data.campaigns.find((row) => row.id === campaign);
-        if (match) queueMicrotask(() => openLetter(match));
+        if (match) openLetter(match);
         else
             ctx.notify(
                 `There is no mailing #${campaign} on this server; the list below is the whole set.`
             );
     }
+    applyParams(ctx.params);
     return {
         node,
         interval: 30000,
-        refresh
+        refresh,
+        navigate: applyParams
     };
 }

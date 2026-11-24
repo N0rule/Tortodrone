@@ -12,25 +12,12 @@ import {
     date,
     copy,
     download,
-    number
+    number,
+    sceneLabel
 } from '../ui.js';
 import { chart } from '../components/chart.js';
 import { confirm, field, openDialog } from '../components/dialog.js';
 import { DataTable } from '../components/table.js';
-
-/**
- * A scene id names a place, not a label: "%town:m.haven_town_square" is the key the
- * server uses, and an operator should read "Haven Town Square".
- */
-const sceneLabel = (name) => {
-    const id = String(name || '')
-        .replace(/^%/, '')
-        .replace(/^[a-z]+:/, '')
-        .replace(/^[a-z]\./, '');
-    const words = id.split(/[_.\s]+/).filter(Boolean);
-    if (!words.length) return String(name || '');
-    return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-};
 
 export async function mount(ctx) {
     const node = el('div', null, 'stack'),
@@ -208,7 +195,10 @@ export async function mount(ctx) {
         identityActions = toolbar();
     identityKey.readOnly = true;
     identityKey.spellcheck = false;
-    identityKey.rows = 4;
+    // Six rows is the whole key at a desktop width; `field-sizing: content` grows it
+    // further on a narrow screen, so the trailing exponent is never behind a
+    // scrollbar. The box used to show 80px of a 120px value.
+    identityKey.rows = 6;
     identityKey.setAttribute('aria-label', 'Server public key, modulus and exponent');
     identityWarning.hidden = true;
     const identityBits = el('span'),
@@ -229,7 +219,7 @@ export async function mount(ctx) {
             identityPairValue(
                 identityFingerprint,
                 button(
-                    'Copy',
+                    'Copy fingerprint',
                     () => copy(identityCurrent?.fingerprint ?? '', 'Fingerprint copied.'),
                     'quiet sm'
                 )
@@ -241,7 +231,7 @@ export async function mount(ctx) {
             identityPairValue(
                 identityFileHash,
                 button(
-                    'Copy',
+                    'Copy file hash',
                     () => copy(identityCurrent?.fileSha256 ?? '', 'Public file hash copied.'),
                     'quiet sm'
                 )
@@ -255,7 +245,14 @@ export async function mount(ctx) {
     // out one key under the name of another.
     const identityFieldLabel = el('p', null, 'muted identity-field-label'),
         identityCaption = el('p', null, 'muted identity-caption'),
-        identityReach = el('p', null, 'muted identity-caption');
+        identityReach = el('p', null, 'muted identity-caption'),
+        identityRotation = el('p', null, 'muted identity-caption');
+    // Only the mismatch branch used to warn. A deliberate rotation of a healthy pair
+    // looks exactly like a healthy card, and every pinned client breaks silently.
+    text(
+        identityRotation,
+        'If this fingerprint has changed since a client was set up, that client must be re-keyed before it can connect: the fingerprint, not the file path, is what it trusts.'
+    );
     const IDENTITY_NOTE =
         "The public half only. Paste it into the client's Add Server dialog, in the Public key field (game.publicKey), on every machine that plays here. The private key never leaves the server.";
     text(identityNote, IDENTITY_NOTE);
@@ -268,8 +265,12 @@ export async function mount(ctx) {
         identityWarning,
         identityCaption,
         identityFacts,
-        identityReach
+        identityReach,
+        identityRotation
     );
+    // One panel, one address: `#overview?panel=identity` is the link to hand a
+    // colleague who only needs the key.
+    identityPanel.id = 'identity';
     // Handlers read the current key at click time, so a rotated key is the one an
     // operator copies; the panels are built once and never hold stale values.
     let identityLoaded = false,
@@ -428,9 +429,13 @@ export async function mount(ctx) {
         text(
             identityCaption,
             [
+                // The file holds a hex modulus and exponent, not a DER blob: the old
+                // wording claimed the fingerprint was computed from data that the file
+                // does not contain.
+                'The fingerprint is the SHA-256 of the DER SubjectPublicKeyInfo this server builds from the modulus and exponent below.',
                 identity.fingerprintNote || '',
                 identity.fileSha256Command
-                    ? `Reproduce the file hash on the host with: ${identity.fileSha256Command}`
+                    ? `Type ${identity.fileSha256Command} on the host to reproduce the file hash beside it.`
                     : ''
             ]
                 .filter(Boolean)
@@ -571,8 +576,13 @@ export async function mount(ctx) {
     }
     range.onchange = () => ctx.refresh();
     await refresh();
-    /** Deep links (#overview?scene=…) focus the scene runtime table. */
+    applyParams(ctx.params);
+    /** Deep links (#overview?scene=…, ?panel=identity) focus one block of the page. */
     function applyParams(params) {
+        // The key card has an address, so "send me the key" is a link rather than a
+        // scroll position someone has to describe.
+        if (params.get('panel') === 'identity')
+            requestAnimationFrame(() => identityPanel.scrollIntoView({ block: 'start' }));
         const value = params.get('scene');
         if (value == null) return;
         monsters.query.value = value;

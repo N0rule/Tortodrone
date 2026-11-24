@@ -131,6 +131,20 @@ export function button(label, action, className = 'secondary', available, option
  * A drill-down as a real link. Same look as the text link it replaces, but the
  * href is a route, so the browser owns middle-click, new tabs and copying.
  */
+/**
+ * A scene id names a place, not a label: "%town:m.haven_town_square" is the key the
+ * server uses, and an operator should read "Haven Town Square" here, on the overview
+ * and in a table cell alike.
+ */
+export function sceneLabel(name) {
+    const id = String(name || '')
+        .replace(/^%/, '')
+        .replace(/^[a-z]+:/, '')
+        .replace(/^[a-z]\./, '');
+    const words = id.split(/[_\s.]+/).filter(Boolean);
+    if (!words.length) return String(name || '');
+    return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
 export function routeLink(label, name, values = {}, className = 'link') {
     const node = el('a', label, className);
     node.href = href(name, values);

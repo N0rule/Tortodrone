@@ -55,7 +55,10 @@ button,
 .button {
     --control-bg: var(--raised);
     --control-fg: var(--text);
-    --control-border: var(--line-bright);
+    /* A control is defined by its own fill and its own depth, not by the brightest
+       boundary on the page: a 1px --line-bright outline on all 330 of them made the
+       whole product a field of identical bright rectangles. */
+    --control-border: var(--line);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -72,21 +75,24 @@ button,
     line-height: 1.2;
     letter-spacing: 0.01em;
     white-space: nowrap;
+    box-shadow: var(--elev-1);
     transition:
         background-color 120ms ease,
         border-color 120ms ease,
         color 120ms ease,
-        box-shadow 120ms ease,
-        transform 60ms ease;
+        box-shadow 120ms ease;
 }
+/* Hover is a fill step, not a second accent: cyan stays the colour of focus and of
+   the pressed state, so "hovered", "focused" and "on" stop looking the same. */
 button:not(:disabled):hover,
 .button:not(:disabled):hover {
-    border-color: var(--cyan);
-    background: color-mix(in srgb, var(--raised) 72%, var(--line-bright));
+    border-color: var(--line-bright);
+    background: color-mix(in srgb, var(--raised) 82%, var(--line-bright));
 }
 button:not(:disabled):active,
 .button:not(:disabled):active {
-    transform: translateY(1px);
+    background: color-mix(in srgb, var(--raised) 88%, var(--inset));
+    border-color: var(--cyan);
     box-shadow: none;
 }
 button:focus-visible,
@@ -114,6 +120,25 @@ button:disabled,
     color: var(--muted);
     align-self: center;
     max-inline-size: 44ch;
+}
+/* A reason that is always on costs a whole line of a phone screen to explain a
+   control nobody is reaching for, so outside a table it follows hover and focus. */
+.toolbar > .unavailable-reason {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+.toolbar:hover > .unavailable-reason,
+.toolbar:focus-within > .unavailable-reason,
+.toolbar:has(button:focus-visible) > .unavailable-reason {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    clip-path: none;
+    white-space: normal;
 }
 td .unavailable-reason,
 th .unavailable-reason {
@@ -209,6 +234,7 @@ html[data-motion='reduce'] .button[aria-busy='true']::before {
 }
 button.primary,
 .button.primary {
+    box-shadow: var(--elev-2);
     --control-bg: var(--action);
     --control-fg: var(--action-text);
     --control-border: var(--action);

@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, panel, button, routeLink, copy, duration, status, facts, date } from '../ui.js';
+import { el, panel, button, routeLink, copy, duration, status, facts, date, sceneLabel } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { go } from '../router.js';
 import { confirm, confirmAction, openDialog } from '../components/dialog.js';
@@ -30,7 +30,7 @@ export async function mount(ctx) {
                 'Scene',
                 (r) =>
                     r.scene
-                        ? entityLink(r.scene, 'players', { scene: r.scene })
+                        ? entityLink(sceneLabel(r.scene), 'players', { scene: r.scene })
                         : '—'
             ],
             ['Instance', (r) => r.instanceId ?? '—'],
@@ -223,7 +223,7 @@ export async function mount(ctx) {
                     ['Session', String(row.id)],
                     ['Account', row.username || 'not signed in'],
                     ['Knight', row.knight || 'none selected'],
-                    ['Scene', row.scene || 'not in a scene'],
+                    ['Scene', row.scene ? sceneLabel(row.scene) : 'not in a scene'],
                     ['Instance', String(row.instanceId ?? '—')],
                     ['State', status(row.state, true)],
                     ['Connected', row.connectedAt ? date(row.connectedAt) : '—'],
@@ -237,7 +237,11 @@ export async function mount(ctx) {
 
     const scenes = new DataTable(
         [
-            ['Scene', (r) => r.name],
+            [
+                'Scene',
+                (r) => routeLink(sceneLabel(r.name), 'players', { scene: r.name }),
+                (r) => sceneLabel(r.name)
+            ],
             ['Template', (r) => r.templateId],
             ['Instance', (r) => r.instanceId],
             ['Population', (r) => r.players],

@@ -202,6 +202,9 @@ export async function mount(ctx) {
         }
     }
     await refresh();
+    // A cold load carries the address too. Without this the inspector a row's own
+    // href names stayed empty until the operator clicked it again.
+    if (ctx.params.size) applyParams(ctx.params);
     /** Deep links (#audit?actor=…) re-filter the trail in place. */
     function applyParams(params) {
         // Navigating back to a bare #audit clears the filter instead of leaving the
