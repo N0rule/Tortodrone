@@ -66,7 +66,13 @@ const displaySender = (value) =>
     strip(value.senderLabel) ? strip(value.senderLabel) : senderName(value.sender);
 const units = (gifts) => gifts.reduce((total, gift) => total + Number(gift.count || 0), 0);
 const unitCount = (value) => `${value} unit${value === 1 ? '' : 's'}`;
-const sentTime = (value) => (Number.isFinite(value) ? date(value) : 'an unchosen time');
+// A delivery window is a moment, and the input side is a datetime-local: showing a
+// bare date on read-back hid the hour the operator had just picked.
+const moment = (value) =>
+    Number.isFinite(value)
+        ? new Date(value).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
+        : 'an unchosen time';
+const sentTime = (value) => moment(value);
 const countOf = (value, noun) => `${Number(value).toLocaleString()} ${noun}${value === 1 ? '' : 's'}`;
 
 function loadReceipts() {
@@ -325,7 +331,10 @@ export async function mount(ctx) {
             host.replaceChildren(
                 emptyState({
                     title: 'No delivery yet',
-                    message: 'The window is open and knights receive it when they next log in.',
+                    message:
+                        mailingStatus(campaign, data.now) === 'Scheduled'
+                            ? `Nothing is delivered before ${moment(campaign.starts)}; after that each knight receives it once, on their next login.`
+                            : 'Knights receive a mailing on their next login while its window is open. Check the window and status above.',
                     icon: 'mailing'
                 })
             );
@@ -366,7 +375,7 @@ export async function mount(ctx) {
                         : `${countOf(recipients.length, 'recipient')} of ${countOf(total, 'knight')}`,
                     'gold'
                 ),
-                el('span', `${date(campaign.starts)} → ${date(campaign.ends)}`, 'muted')
+                el('span', `${moment(campaign.starts)} → ${moment(campaign.ends)}`, 'muted')
             ),
             table.node
         );
@@ -381,14 +390,14 @@ export async function mount(ctx) {
                 total === null
                     ? `${campaign.delivered.toLocaleString()} delivered so far`
                     : `${campaign.delivered.toLocaleString()} of ${total.toLocaleString()} knights on this server received it`,
-                `Window ${date(campaign.starts)} → ${date(campaign.ends)} (${zone})`
+                `Window ${moment(campaign.starts)} → ${moment(campaign.ends)} (${zone})`
             ]),
             facts([
                 ['Status', mailingStatus(campaign, data.now)],
                 ['Sender', displaySender(campaign)],
                 ['Custom sender', strip(campaign.senderLabel) || 'none; the stock sender name is used'],
-                ['Starts', date(campaign.starts)],
-                ['Ends', date(campaign.ends)],
+                ['Starts', moment(campaign.starts)],
+                ['Ends', moment(campaign.ends)],
                 ['Crowns', Number(campaign.crowns).toLocaleString()],
                 ['Energy', Number(campaign.energy).toLocaleString()],
                 [
@@ -445,9 +454,9 @@ export async function mount(ctx) {
                 (campaign) => {
                     const cell = el('div', null, 'mail-window');
                     cell.append(
-                        el('span', date(campaign.starts)),
+                        el('span', moment(campaign.starts)),
                         el('span', '→', 'muted'),
-                        el('span', date(campaign.ends))
+                        el('span', moment(campaign.ends))
                     );
                     return cell;
                 },
@@ -690,6 +699,66 @@ export async function mount(ctx) {
         receiptsHost.replaceChildren(panel('Delivery receipts', header, ...content));
     }
 
+
+    /** One row per knight that received the welcome letter. */
+    async function openWelcomeDeliveries() {
+        const host = el('div', null, 'stack');
+        host.append(waiting('Reading deliveries…'));
+        openDialog({
+            title: 'Recipients · welcome mail',
+            description:
+                'One row per knight that received the welcome letter automatically, oldest first.',
+            content: host,
+            submit: 'Close',
+            notifySaved: false,
+            onSubmit: async () => {}
+        });
+        let rows;
+        try {
+            rows = await ctx.request('mail-welcome-deliveries');
+        } catch (error) {
+            host.replaceChildren(
+                el('p', error.message || 'The delivery roster is unavailable.', 'error')
+            );
+            return;
+        }
+        const recipients = rows.recipients || [];
+        if (!recipients.length) {
+            host.replaceChildren(
+                emptyState({
+                    title: 'No delivery yet',
+                    message:
+                        'A knight created after the letter was enabled receives it on their first visit.',
+                    icon: 'mailing'
+                })
+            );
+            return;
+        }
+        const table = new DataTable(
+            [
+                [
+                    'Knight',
+                    (row) => row.knight || el('span', 'deleted knight', 'muted'),
+                    (row) => row.knight || ''
+                ],
+                [
+                    'Account',
+                    (row) => row.username || el('span', 'unknown account', 'muted'),
+                    (row) => row.username || ''
+                ],
+                ['Sent', (row) => sentTime(row.sent), (row) => row.sent]
+            ],
+            {
+                key: (row) => String(row.worldId),
+                caption: 'Knights that received the welcome letter',
+                exportName: 'mail-welcome-deliveries',
+                pageSize: 25
+            }
+        );
+        table.update(recipients);
+        host.replaceChildren(table.node);
+    }
+
     const welcomeDetails = el('details');
     const welcomeSummary = el('summary');
     function renderWelcome() {
@@ -715,7 +784,20 @@ export async function mount(ctx) {
         if (strip(welcome.subject) || strip(welcome.body) || gifts.length)
             content.push(preview({ ...welcome, gifts }, definitions));
         content.push(
-            toolbar(button('Edit welcome mail', () => compose('welcome', welcome), 'secondary'))
+            toolbar(
+                button('Edit welcome mail', () => compose('welcome', welcome), 'secondary'),
+                // The welcome letter records its deliveries too; a count nobody can
+                // open is the same hole the campaigns had.
+                ...(welcome.enabledAt
+                    ? [
+                          button(
+                              'Who received it',
+                              () => openWelcomeDeliveries(),
+                              'secondary'
+                          )
+                      ]
+                    : [])
+            )
         );
         const card = panel('', ...content);
         card.classList.add('stack');

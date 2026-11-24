@@ -25,25 +25,44 @@ export async function mount(ctx) {
         version = el('span', null, 'muted');
     server.append(state, endpoint);
     strip.append(server, version);
+    // The three listener controls are weighted by what the server is doing: the
+    // one an operator most likely wants next is filled, the impossible one is off
+    // and says why. They read `listenerRunning`, refreshed with every poll.
+    let listenerRunning = null;
+    const listenerButtons = new Map();
+    const listenerButton = (title, route) => {
+        const node = button(
+            title,
+            () =>
+                confirm(
+                    title + ' game listener',
+                    route,
+                    {},
+                    [],
+                    route === 'start'
+                        ? 'Start the game listener.'
+                        : 'Connected players will be disconnected. HTTP administration remains available.'
+                ),
+            'secondary',
+            () => {
+                // Before the first status lands the controls stay usable: guessing
+                // "off" would flash a disabled Start on every page load.
+                if (listenerRunning === null) return true;
+                if (route === 'start')
+                    return listenerRunning ? 'The listener is already running.' : true;
+                if (route === 'stop')
+                    return listenerRunning ? true : 'The listener is already stopped.';
+                return true;
+            }
+        );
+        listenerButtons.set(route, node);
+        return node;
+    };
     if (ctx.admin)
         strip.append(
             toolbar(
-                ...[
-                    ['Start', 'start'],
-                    ['Stop', 'stop'],
-                    ['Restart', 'restart']
-                ].map(([title, route]) =>
-                    button(title, () =>
-                        confirm(
-                            title + ' game listener',
-                            route,
-                            {},
-                            [],
-                            route === 'start'
-                                ? 'Start the game listener.'
-                                : 'Connected players will be disconnected. HTTP administration remains available.'
-                        )
-                    )
+                ...['start', 'stop', 'restart'].map((route) =>
+                    listenerButton(route[0].toUpperCase() + route.slice(1), route)
                 ),
                 button(
                     'Shut down',
@@ -61,18 +80,35 @@ export async function mount(ctx) {
         );
     const metrics = el('div', null, 'metric-strip'),
         counters = [];
-    for (const title of [
-        'Online players',
-        'Active scenes',
-        'Listener uptime',
-        'Database health',
-        'Live monsters',
-        'Engaged monsters'
+    // Each tile is the most inviting click target on the landing page, so each one
+    // goes where its number comes from instead of being a decorated div.
+    for (const [title, destination, hint] of [
+        ['Online players', 'players', 'Open live sessions'],
+        ['Active scenes', 'players', 'Open scene population'],
+        ['Listener uptime', 'settings', 'Open the WebUI session details'],
+        ['Database health', 'diagnostics', 'Open database operations and runtime details'],
+        ['Live monsters', 'overview', 'Open scene monster runtime'],
+        ['Engaged monsters', 'overview', 'Open scene monster runtime']
     ]) {
-        const n = el('div', null, 'metric'),
+        const n = el('button', null, 'metric'),
             value = el('strong'),
             sub = el('small');
+        n.type = 'button';
+        n.title = hint;
         n.append(el('span', title, 'muted'), value, sub);
+        n.onclick = () => {
+            if (destination === 'diagnostics') {
+                diagnostics.open = true;
+                diagnostics.scrollIntoView({ block: 'center' });
+                return;
+            }
+            if (destination === 'overview') {
+                monsters.node.scrollIntoView({ block: 'start' });
+                monsters.node.querySelector('table th button')?.focus();
+                return;
+            }
+            ctx.go(destination);
+        };
         metrics.append(n);
         counters.push([value, sub]);
     }
@@ -162,7 +198,15 @@ export async function mount(ctx) {
     toggleKey.setAttribute('aria-expanded', 'false');
     const monsters = new DataTable(
         [
-            ['Scene', (r) => r.name],
+            [
+                'Scene',
+                (r) => {
+                    const open = el('button', r.name, 'link');
+                    open.type = 'button';
+                    open.onclick = () => ctx.go('players', { scene: r.name });
+                    return open;
+                }
+            ],
             ['State', (r) => r.state],
             ['Players', (r) => r.players],
             ['Live', (r) => r.monsters.total],
@@ -213,7 +257,8 @@ export async function mount(ctx) {
             actions: (get) => [
                 button(
                     'Open in Logs',
-                    () => ctx.go('logs', { severity: get().level }),
+                    // The row names a line; the log page can filter to that line.
+                    () => ctx.go('logs', { severity: get().level, search: get().message }),
                     'secondary'
                 )
             ]
@@ -282,9 +327,18 @@ export async function mount(ctx) {
                   : 'unreadable'
         );
         identityPair.classList.toggle('bad', identity.pairMatches === false);
-        identityWarning.hidden = identity.pairMatches !== false;
-        identityWarning.textContent =
-            'The stored public half no longer matches the private key that signs handshakes. Restart the server to regenerate the pair, or delete data/keys and let it create a fresh one; clients using the value below will fail until you do.';
+        const mismatch = identity.pairMatches === false;
+        identityWarning.hidden = !mismatch;
+        // A mismatch can appear while the page is open, so it is announced.
+        if (mismatch) identityWarning.setAttribute('role', 'alert');
+        else identityWarning.removeAttribute('role');
+        identityWarning.textContent = mismatch
+            ? `The stored public half does not match the private key that signs handshakes, so the server refuses to start and the value below is not the key clients need.${
+                  identity.expectedPublicKey
+                      ? ` The key the private half implies is ${identity.expectedPublicKey.slice(0, 24)}… — copy that one instead.`
+                      : ''
+              } Stop the server, restore the matching public.txt from backup (or delete data/keys and let the next start create a fresh pair), then start it again.`
+            : '';
         identityCurrent = identity;
         const keyText = `${identity.modulus}#${identity.exponent}`;
         // A five-second poll must not eat a selection the operator is copying:
@@ -297,8 +351,14 @@ export async function mount(ctx) {
             identityActions.append(
                 button(
                     'Copy public key',
-                    () => copy(currentKey(), 'Server public key copied.'),
-                    'primary'
+                    () =>
+                        copy(
+                            identityCurrent?.pairMatches === false && identityCurrent?.expectedPublicKey
+                                ? identityCurrent.expectedPublicKey
+                                : currentKey(),
+                            'Server public key copied.'
+                        ),
+                    'secondary'
                 ),
                 button(
                     'Download public.txt',
@@ -329,6 +389,19 @@ export async function mount(ctx) {
         renderIdentity(identity);
         text(state, s.state);
         text(endpoint, s.endpoint || 'Listener stopped');
+        const running = s.state === 'RUNNING';
+        if (running !== listenerRunning) {
+            listenerRunning = running;
+            for (const [route, node] of listenerButtons) {
+                // One weight on the row: the next sensible action is filled, the
+                // others stay neutral. Both classes set the same custom property,
+                // so they are swapped rather than stacked.
+                const lead = running ? route === 'restart' : route === 'start';
+                node.classList.toggle('primary', lead);
+                node.classList.toggle('secondary', !lead);
+                node.refreshAvailability?.();
+            }
+        }
         text(version, `Tortodrone ${s.version}`);
         text(counters[0][0], s.sessions.filter((p) => p.knightId != null).length);
         text(counters[0][1], `${s.sessions.length} connections`);

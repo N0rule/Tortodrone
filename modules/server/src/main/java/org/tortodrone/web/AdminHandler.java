@@ -96,6 +96,15 @@ public final class AdminHandler implements HttpHandler {
                     "No such knight",
                     "Unknown mailing",
                     "Invalid gift list",
+                    "Choose a valid delivery window",
+                    "The mailing must end after it starts",
+                    "The delivery window is too long",
+                    "Sender name contains unsupported characters",
+                    "Sender name must be at most 40 characters",
+                    "Add at most 14 gift stacks",
+                    "Choose a gift item",
+                    "Gift quantities must be between 1 and 999",
+                    "A mailing can carry at most 14 item units",
                     // Console refusals are read by an operator at a prompt, so the prompt's own
                     // words come back instead of the generic field-validation sentence.
                     "Unsupported command; use help",

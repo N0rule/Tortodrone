@@ -28,6 +28,7 @@ public final class AdminService implements AutoCloseable {
     private final org.tortodrone.resources.ContentRegistry validatedContent;
     private final Path data;
     private Path logDirectory;
+    private PairCheck pairCache;
 
     public AdminService(AccountStore accounts, ServerControl control, ServerLog log, Path deployment)
             throws IOException {
@@ -178,6 +179,8 @@ public final class AdminService implements AutoCloseable {
                 payload.put("limits", mailLimits());
                 yield payload;
             }
+            case "mail-welcome-deliveries" ->
+                Map.of("recipients", accounts.auctions().campaigns().welcomeDeliveries());
             case "mail-deliveries" ->
                 Map.of(
                         "campaign", p.number("id"),
@@ -277,13 +280,18 @@ public final class AdminService implements AutoCloseable {
         result.put("file", "data/keys/public.txt");
         result.put("fingerprintAlgorithm", "SHA-256");
         result.put("fingerprintNote", "SHA-256 of the DER SubjectPublicKeyInfo in data/keys/public.txt");
+        // The public file's timestamp is reported whether or not a signing key is
+        // stored: a public.txt without its private half is still a fact worth seeing.
+        try {
+            result.put("publicModified", Files.getLastModifiedTime(publicFile).toMillis());
+        } catch (IOException ignored) {
+            // A missing timestamp is not a reason to refuse the panel.
+        }
         if (keyStored) {
             try {
                 result.put("keyModified", Files.getLastModifiedTime(privateFile).toMillis());
-                result.put(
-                        "publicModified", Files.getLastModifiedTime(publicFile).toMillis());
             } catch (IOException ignored) {
-                // Missing timestamp is not a reason to refuse the panel.
+                // Same.
             }
         }
         if (publicFile == null
@@ -350,7 +358,11 @@ public final class AdminService implements AutoCloseable {
         result.put("derBase64", Base64.getEncoder().encodeToString(der));
         // Does the public half still match the private key that is actually signing handshakes?
         // A replaced file would otherwise publish a confident fingerprint for an unused key.
-        result.put("pairMatches", pairMatches(privateFile, modulus, exponent));
+        PairCheck check = pair(privateFile, modulus, exponent);
+        result.put("pairMatches", check.matches());
+        // When the files disagree, the key that actually signs handshakes is the one an
+        // operator needs, so publish what the private half implies.
+        result.put("expectedPublicKey", check.expectedPublicKey());
         // Only whether a signing key exists is published; no private material
         // and no path to it ever crosses the HTTP boundary.
         result.put("bytes", raw.length);
@@ -358,23 +370,53 @@ public final class AdminService implements AutoCloseable {
     }
 
     /**
-     * Compares the stored public half with the private key on disk, in the same way a start would.
-     * Returns {@code null} when nothing can be compared (missing or unreadable private key).
+     * The public half the private key actually implies, and whether the stored file agrees.
+     *
+     * <p>Parsing a PKCS#8 key on every Overview poll would be waste, so the answer is cached
+     * against the private key's size and modification time: a rotation changes those, which is
+     * exactly when the cache must miss.
      */
-    private static Boolean pairMatches(Path privateFile, BigInteger modulus, BigInteger exponent) {
-        if (privateFile == null || !Files.isRegularFile(privateFile, LinkOption.NOFOLLOW_LINKS)) return null;
+    private PairCheck pair(Path privateFile, BigInteger modulus, BigInteger exponent) {
+        if (privateFile == null || !Files.isRegularFile(privateFile, LinkOption.NOFOLLOW_LINKS)) {
+            return new PairCheck(null, null, null);
+        }
+        String stamp;
+        try {
+            stamp = Files.size(privateFile)
+                    + ":"
+                    + Files.getLastModifiedTime(privateFile).toMillis()
+                    + ":"
+                    + modulus.bitLength()
+                    + ":"
+                    + exponent;
+        } catch (IOException unreadable) {
+            return new PairCheck(null, null, null);
+        }
+        PairCheck cached = pairCache;
+        if (cached != null && stamp.equals(cached.stamp())) return cached;
+        PairCheck fresh;
         try {
             byte[] encoded = Files.readAllBytes(privateFile);
-            if (encoded.length > 16384) return null;
+            if (encoded.length > 16384) throw new IOException("private key too large");
             var key = java.security.KeyFactory.getInstance("RSA")
                     .generatePrivate(new java.security.spec.PKCS8EncodedKeySpec(encoded));
-            if (!(key instanceof java.security.interfaces.RSAPrivateCrtKey crt)) return null;
-            return crt.getModulus().equals(modulus) && crt.getPublicExponent().equals(exponent);
+            if (!(key instanceof java.security.interfaces.RSAPrivateCrtKey crt))
+                throw new IOException("not an RSA private key");
+            fresh = new PairCheck(
+                    stamp,
+                    crt.getModulus().toString(16) + "#"
+                            + crt.getPublicExponent().toString(16),
+                    crt.getModulus().equals(modulus) && crt.getPublicExponent().equals(exponent));
         } catch (Exception unreadable) {
             // An unreadable private key is reported as unknown, never as a mismatch.
-            return null;
+            fresh = new PairCheck(stamp, null, null);
         }
+        pairCache = fresh;
+        return fresh;
     }
+
+    /** Cached answer for {@link #pair}: the private key's own public half and its verdict. */
+    private record PairCheck(String stamp, String expectedPublicKey, Boolean matches) {}
 
     /** X.509 SubjectPublicKeyInfo bytes, the form openssl prints a fingerprint of. */
     private static byte[] der(BigInteger modulus, BigInteger exponent) throws IOException {

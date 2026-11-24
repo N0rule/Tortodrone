@@ -327,6 +327,17 @@ export class DataTable {
         }
     }
 
+    /** Mark the one row an inspector describes, and clear the previous mark. */
+    markInspected(record) {
+        const key = record ? String(this.key(record)) : null;
+        this.inspected = key;
+        for (const [entryKey, entry] of this.cache) {
+            entry.node.classList.toggle('inspected', entryKey === key);
+            if (entryKey === key) entry.node.setAttribute('aria-current', 'true');
+            else entry.node.removeAttribute('aria-current');
+        }
+    }
+
     remember() {
         saveState(this.id, {
             sort: this.sort,
@@ -457,6 +468,7 @@ export class DataTable {
             let entry = this.cache.get(key);
             if (!entry) {
                 const row = el('tr');
+                row.dataset.key = key;
                 entry = { node: row, record, signature: '', cells: [] };
                 if (this.selectable) {
                     const cell = el('td', null, 'select-column');

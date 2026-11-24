@@ -127,7 +127,9 @@ const pages = [
         section: 'Operations',
         rank: 2,
         module: access,
-        description: 'Identities, roles and session revocation.'
+        // `#access` is the name links and the docs use; keep both spellings working.
+        alias: ['access'],
+        description: 'Identities, roles and sessions.'
     },
     {
         name: 'settings',
@@ -152,7 +154,11 @@ let generation = 0,
 
 const rank = () => ['VIEWER', 'MODERATOR', 'ADMINISTRATOR'].indexOf(api.session?.role);
 const mobile = matchMedia('(max-width: 760px)');
-const pageFor = (name) => pages.find((page) => page.name === name && page.rank <= rank());
+const pageFor = (name) =>
+    pages.find(
+        (page) =>
+            (page.name === name || page.alias?.includes(name)) && page.rank <= rank()
+    );
 
 function announce(message) {
     text($('#page-status'), message);
@@ -268,9 +274,7 @@ async function navigate() {
         spec = pageFor(next.name);
     if (!spec) {
         // A denied link is not an empty click: say which role the page needs.
-        const denied = sections
-            .flatMap((section) => section.pages)
-            .find((page) => page.name === next.name);
+        const denied = pages.find((page) => page.name === next.name);
         const needs = ['a viewer', 'a moderator', 'an administrator'][denied?.rank ?? 2];
         notify(
             denied

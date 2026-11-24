@@ -132,7 +132,29 @@ export async function mount(ctx) {
             account = rows.find((a) => a.username === selected);
         if (!account) {
             detailSignature = null;
-            detail.replaceChildren();
+            detail.replaceChildren(
+                selected
+                    ? panel(
+                          'No such account',
+                          el(
+                              'p',
+                              `No game account is named “${selected}”. It may have been deleted, or the link may be stale.`,
+                              'muted'
+                          ),
+                          toolbar(
+                              button(
+                                  'Back to accounts',
+                                  () => {
+                                      selected = null;
+                                      table.markInspected?.(null);
+                                      show();
+                                  },
+                                  'secondary'
+                              )
+                          )
+                      )
+                    : el('p', 'Select an account to see its knights and actions.', 'muted')
+            );
             return;
         }
         const knights = await ctx.request('knights', { username: account.username });
@@ -210,8 +232,9 @@ export async function mount(ctx) {
         if (ctx.admin)
             links.append(
                 button(
-                    'Audit for this account',
-                    () => ctx.go('audit', { actor: account.username }),
+                    'Audit events naming this account',
+                    // A game account is what an action was done TO, never who did it.
+                    () => ctx.go('audit', { target: account.username }),
                     'secondary'
                 )
             );

@@ -54,20 +54,28 @@ export async function mount(ctx) {
     const hint = el('p', null, 'console-hint');
     hint.textContent =
         'Tab completes a command · ↑ ↓ history · ' +
-        words.filter((name) => !metadata.actions.includes(name)).join(' · ');
+        metadata.read.join(' · ') +
+        ' · ' +
+        metadata.actions.map((name) => (name === 'kick' ? 'kick <session>' : name)).join(' · ') +
+        ' (asked to confirm)';
     const promptLabel = el('span', 'tortodrone$', 'console-prompt-label');
     promptLabel.setAttribute('aria-hidden', 'true');
     form.append(promptLabel, command, run);
     let index = history.length,
         draft = '',
         pending = false;
-    function record(value, result, error = false) {
+    function record(value, result, error = false, paint = true) {
         // Replace the echoed prompt line when one is still pending, so a slow
         // command shows its prompt immediately and never double-prints. The stream
         // notices the mutation through a row signature, not an object identity.
-        const pendingEcho = outputHistory.findLast?.(
-            (entry) => entry.pending && entry.command === value
-        );
+        let pendingEcho = null;
+        for (let index = outputHistory.length - 1; index >= 0; index--) {
+            const entry = outputHistory[index];
+            if (entry.pending && entry.command === value) {
+                pendingEcho = entry;
+                break;
+            }
+        }
         const links = RELATED[value.split(/\s+/)[0]] || [];
         if (pendingEcho) {
             pendingEcho.output = result.output;
@@ -87,6 +95,7 @@ export async function mount(ctx) {
         if (history.length > 100) history.shift();
         index = history.length;
         if (outputHistory.length > 50) outputHistory.shift();
+        if (!paint) return;
         stream.redraw();
         // Announced once, briefly: the stream itself is not a live region, so a
         // screen reader hears the answer and not every polled server line.
@@ -100,6 +109,7 @@ export async function mount(ctx) {
     function echo(value) {
         outputHistory.push({ time: Date.now(), command: value, output: '', error: false, pending: true });
         if (outputHistory.length > 50) outputHistory.shift();
+        if (!paint) return;
         stream.redraw();
     }
     command.oninput = () => {
@@ -113,6 +123,10 @@ export async function mount(ctx) {
         }
         if (event.ctrlKey && event.key.toLowerCase() === 'c') {
             event.preventDefault();
+            if (pending) {
+                stream.announce('A command is already running; its answer will arrive.');
+                return;
+            }
             command.value = commandDraft = '';
             text(feedback, 'Connected');
             return;
@@ -147,7 +161,11 @@ export async function mount(ctx) {
     form.onsubmit = async (event) => {
         event.preventDefault();
         const value = command.value.trim();
-        if (!value || pending) return;
+        if (pending) {
+            stream.announce('A command is already running; wait for its answer.');
+            return;
+        }
+        if (!value) return;
         if (metadata.actions.includes(value.split(/\s+/)[0])) {
             // A cancelled confirmation never enters ↑ history: nothing ran.
             edit(
@@ -168,26 +186,29 @@ export async function mount(ctx) {
             return;
         }
         pending = true;
-        run.disabled = true;
+        run.setBusy(true);
         echo(value);
         text(feedback, 'Executing…');
         try {
             const result = await api.consoleCommand(value);
-            if (!ctx.alive()) return;
-            record(value, result);
+            // The answer still belongs in the transcript even if another page is on
+            // screen now: an echo stuck on "running…" is a lie about the server.
+            record(value, result, false, ctx.alive());
             if (command.value.trim() === value) command.value = commandDraft = '';
         } catch (error) {
-            record(value, { output: error.message }, true);
-            ctx.report(error);
+            record(value, { output: error.message }, true, ctx.alive());
+            // The prompt already printed the refusal; a second global notice for the
+            // same refusal is noise, so only a broken server is reported globally.
+            if (error.status >= 500) ctx.report(error);
         } finally {
             pending = false;
-            run.disabled = false;
+            run.setBusy(false);
         }
     };
     const help = button('Help', async () => {
         if (pending) return;
         pending = true;
-        run.disabled = true;
+        run.setBusy(true);
         try {
             const result = await api.consoleCommand('help');
             if (ctx.alive()) record('help', result);
@@ -198,7 +219,7 @@ export async function mount(ctx) {
             }
         } finally {
             pending = false;
-            run.disabled = false;
+            run.setBusy(false);
         }
     });
     stream.tools.prepend(help);
@@ -217,13 +238,17 @@ export async function mount(ctx) {
     measurePrompt();
     if (typeof ResizeObserver === 'function') new ResizeObserver(measurePrompt).observe(prompt);
     else window.addEventListener('resize', measurePrompt);
+    let failures = 0;
     async function refresh() {
         try {
             // A paused stream still reads; it just stops painting new rows.
             stream.update(await ctx.request('logs'));
-            text(feedback, stream.paused ? 'Display paused · still reading' : 'Connected');
+            failures = 0;
+            if (!pending)
+                text(feedback, stream.paused ? 'Display paused · still reading' : 'Connected');
             feedback.classList.remove('error');
         } catch (error) {
+            failures++;
             text(feedback, 'Disconnected · ' + error.message);
             feedback.classList.add('error');
             throw error;
@@ -233,7 +258,10 @@ export async function mount(ctx) {
     return {
         node,
         refresh,
-        interval: 3000,
+        // A dead server is not polled every three seconds forever.
+        get interval() {
+            return failures ? Math.min(3000 * 2 ** failures, 60000) : 3000;
+        },
         dispose() {
             commandDraft = command.value;
         }

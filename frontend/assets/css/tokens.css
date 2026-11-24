@@ -1,3 +1,8 @@
+/* The type ramp, and the only sizes the product uses. Anything that wants a new
+   size argues with this list first: ten steps, no near-duplicates.
+   10.5 micro label / 11.5 caption / 12.5 dense body / 13 control and body /
+   14 lead-in / 16 subhead / 20 section title / 23 page title /
+   28 headline number / 32 page hero. */
 :root {
     color-scheme: dark;
     --canvas: #142635;

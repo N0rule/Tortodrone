@@ -144,6 +144,29 @@ public final class MailCampaignStore {
         });
     }
 
+    /** One row per knight that received the welcome letter, newest last. */
+    public List<Map<String, Object>> welcomeDeliveries() throws IOException {
+        return database.read(c -> {
+            var rows = new ArrayList<Map<String, Object>>();
+            try (var s = c.createStatement();
+                    var r = s.executeQuery("SELECT d.world_id,d.sent,w.account_id,w.knight_id,"
+                            + "k.name,a.username FROM mail_welcome_deliveries d"
+                            + " LEFT JOIN world_characters w ON w.world_id=d.world_id"
+                            + " LEFT JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id"
+                            + " LEFT JOIN accounts a ON a.id=w.account_id ORDER BY d.sent")) {
+                while (r.next()) {
+                    var row = new LinkedHashMap<String, Object>();
+                    row.put("worldId", r.getLong("world_id"));
+                    row.put("sent", r.getLong("sent"));
+                    row.put("knight", r.getString("name"));
+                    row.put("username", r.getString("username"));
+                    rows.add(row);
+                }
+            }
+            return List.copyOf(rows);
+        });
+    }
+
     /** Creates ({@code id == 0}) or updates a campaign. {@code revision} is the previous updated stamp. */
     public Campaign save(
             long id,

@@ -1,16 +1,40 @@
 import { api } from '../api.js';
-import { el, panel, button, copy, duration, status } from '../ui.js';
+import { el, panel, button, copy, duration, status, facts, date } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { go } from '../router.js';
-import { confirm, confirmAction } from '../components/dialog.js';
+import { confirm, confirmAction, openDialog } from '../components/dialog.js';
 export async function mount(ctx) {
     const node = el('div', null, 'stack');
     const players = new DataTable(
         [
-            ['Session', (r) => r.id],
-            ['Account', (r) => r.username || '—'],
-            ['Knight', (r) => r.knight || '—'],
-            ['Scene', (r) => r.scene || '—'],
+            [
+                'Session',
+                (r) => {
+                    // A session id is not a dead number: it names a connection whose
+                    // facts (and its owner) are worth one click.
+                    const open = el('button', String(r.id), 'link');
+                    open.type = 'button';
+                    open.onclick = () => inspectSession(r);
+                    return open;
+                }
+            ],
+            ['Account', (r) => (r.username ? entityLink(r.username, () => ctx.go('accounts', { username: r.username })) : '—')],
+            [
+                'Knight',
+                (r) =>
+                    r.username && r.knight
+                        ? entityLink(r.knight, () =>
+                              ctx.go('knights', { username: r.username, knight: r.knight })
+                          )
+                        : r.knight || '—'
+            ],
+            [
+                'Scene',
+                (r) =>
+                    r.scene
+                        ? entityLink(r.scene, () => ctx.go('players', { scene: r.scene }))
+                        : '—'
+            ],
             ['Instance', (r) => r.instanceId ?? '—'],
             ['Duration', (r) => duration(r.elapsedSeconds), (r) => r.connectedAt],
             ['State', (r) => status(r.state, true)]
@@ -131,6 +155,93 @@ export async function mount(ctx) {
             ]
         }
     );
+
+
+    /** A cell that names an entity links to the page that owns it. */
+    function entityLink(label, open) {
+        const node = el('button', label, 'link');
+        node.type = 'button';
+        node.onclick = open;
+        return node;
+    }
+
+    /** Everything recorded about one connection, with the routes out of it. */
+    function inspectSession(row) {
+        const links = el('div', null, 'toolbar');
+        if (row.username)
+            links.append(
+                button(
+                    'Open account',
+                    () => {
+                        document.querySelector('#close-dialog')?.click();
+                        ctx.go('accounts', { username: row.username });
+                    },
+                    'secondary'
+                )
+            );
+        if (row.username && row.knight)
+            links.append(
+                button(
+                    'Open knight',
+                    () => {
+                        document.querySelector('#close-dialog')?.click();
+                        ctx.go('knights', { username: row.username, knight: row.knight });
+                    },
+                    'secondary'
+                )
+            );
+        if (row.scene)
+            links.append(
+                button(
+                    'Players in this scene',
+                    () => {
+                        document.querySelector('#close-dialog')?.click();
+                        ctx.go('players', { scene: row.scene });
+                    },
+                    'secondary'
+                )
+            );
+        if (ctx.moderator)
+            links.append(
+                button(
+                    'Disconnect',
+                    () => {
+                        document.querySelector('#close-dialog')?.click();
+                        confirm(
+                            'Disconnect session ' + row.id,
+                            'kick',
+                            { session: row.id },
+                            [],
+                            `Disconnect ${row.knight || row.username || 'this connection'}.`
+                        );
+                    },
+                    'danger'
+                )
+            );
+        links.append(button('Copy session id', () => copy(String(row.id)), 'quiet'));
+        openDialog({
+            title: 'Session ' + row.id,
+            submit: 'Close',
+            content: el(
+                'div',
+                null,
+                'stack',
+                facts([
+                    ['Session', String(row.id)],
+                    ['Account', row.username || 'not signed in'],
+                    ['Knight', row.knight || 'none selected'],
+                    ['Scene', row.scene || 'not in a scene'],
+                    ['Instance', String(row.instanceId ?? '—')],
+                    ['State', status(row.state, true)],
+                    ['Connected', row.connectedAt ? date(row.connectedAt) : '—'],
+                    ['Duration', duration(row.elapsedSeconds)]
+                ]),
+                links
+            ),
+            onSubmit: async () => true
+        });
+    }
+
     const scenes = new DataTable(
         [
             ['Scene', (r) => r.name],

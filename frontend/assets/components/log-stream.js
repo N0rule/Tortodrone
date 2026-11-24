@@ -16,7 +16,7 @@ const LEVELS = ['All', 'INFO', 'WARN', 'ERROR', 'DEBUG', 'COMMAND'];
  * as a prompt line plus an indented response, never as a separate list.
  */
 export function logStream({
-    commands = [],
+    commands = null,
     title = 'Server output',
     prompt = 'tortodrone',
     severity: initialSeverity = 'All',
@@ -58,12 +58,14 @@ export function logStream({
     jump.hidden = true;
     jump.setAttribute('aria-label', 'Jump to latest');
     footer.setAttribute('role', 'status');
-    statusLeft.textContent = 'Ctrl+F search · Ctrl+L clear · End tail · p pause';
+    statusLeft.textContent = 'Ctrl+F search · Ctrl+L clear · End tail · Home top · p pause · Esc leave';
     footer.append(state, statusLeft, statusRight, source);
     node.append(bar, tools, output, announce, jump, footer);
 
-    const search = input('Search output'),
-        severity = select('Severity', LEVELS, 'All'),
+    const search = input('Search output', '', 'search'),
+        // COMMAND rows only exist on the Console, so Logs does not offer a filter
+        // that can never match.
+        severity = select('Severity', commands ? LEVELS : LEVELS.filter((l) => l !== 'COMMAND'), 'All'),
         count = el('small', null, 'terminal-count');
     search.placeholder = 'Search output';
     search.classList.add('terminal-search');
@@ -82,6 +84,8 @@ export function logStream({
         retained = 0,
         file = null,
         rawMode = raw,
+        lastRowAt = 0,
+        fileRows = [],
         clearing = new Set();
 
     const cache = new Map();
@@ -125,7 +129,7 @@ export function logStream({
     }
     const key = (row) => row.id || `${row.timestamp}:${row.thread}:${row.level}:${row.line}`;
     const commandRows = () =>
-        commands.map((entry) => ({
+        (commands || []).map((entry) => ({
             id: 'command-' + entry.time + '-' + entry.command,
             timestamp: new Date(entry.time).toISOString(),
             level: entry.error ? 'ERROR' : 'COMMAND',
@@ -155,28 +159,49 @@ export function logStream({
 
     function renderStatus() {
         const visible = [...rows, ...commandRows()].filter(matches).length;
+        // One place counts lines. The tools row used to repeat it.
         text(
             barMeta,
             `${visible} ${visible === 1 ? 'line' : 'lines'}${paused ? ' · paused' : ''}${
                 paused && fresh ? ` · ${fresh} new` : ''
             }`
         );
-        text(statusRight, auto ? 'tail' : `scrolled back${fresh && paused ? ` · ${fresh} new` : ''}`);
+        text(count, '');
+        // Paused is not tailing: the pill says what the pane is actually doing.
+        text(
+            statusRight,
+            paused
+                ? `paused${fresh ? ` · ${fresh} new` : ''}`
+                : auto
+                  ? 'tail'
+                  : 'scrolled back'
+        );
         statusRight.dataset.state = auto ? 'tail' : 'paused';
         const bounds = [];
         if (dropped) bounds.push(`${retained} of ${capacity}, ${dropped} older dropped`);
         else if (retained) bounds.push(`${retained} buffered`);
-        if (file?.path)
+        if (file?.path) {
+            const size = file.bytes ? `${Math.round(file.bytes / 1024)} KB` : null;
+            const stamp = file.modified ? clockTime(new Date(file.modified).toISOString()) : null;
             bounds.push(
-                `${file.path}${file.exists ? '' : ' (not written yet)'}`
+                [file.path, size, stamp && `written ${stamp}`]
+                    .filter(Boolean)
+                    .join(' · ') + (file.exists === false ? ' (not written yet)' : '')
             );
+        }
         text(source, bounds.join(' · '));
-        led.dataset.state = state.classList.contains('error')
+        // The console puts its connection text inside the state line, so the LED
+        // has to look for the error class on either of them.
+        const offline = state.classList.contains('error') || !!state.querySelector('.error');
+        const recent = Date.now() - lastRowAt < 2500;
+        led.dataset.state = offline
             ? 'offline'
             : paused
               ? 'paused'
               : auto
-                ? 'live'
+                ? recent
+                    ? 'live'
+                    : 'idle'
                 : 'back';
         statusRight.title = file?.path ? 'The complete log lives in ' + file.path : '';
     }
@@ -187,6 +212,7 @@ export function logStream({
         time.dateTime = row.timestamp;
         time.title = new Date(row.timestamp).toLocaleString();
         const level = el('span', row.level === 'COMMAND' ? 'cmd' : row.level, 'log-level');
+        level.title = row.level;
         const thread = el('span', row.thread || '', 'log-thread');
         thread.title = row.thread || '';
         const message = el('span', null, 'log-message');
@@ -272,6 +298,13 @@ export function logStream({
             }
             desired.push(line);
         }
+        if (!desired.length) {
+            const note = el('p', null, 'log-empty');
+            note.textContent = retained_rows.length
+                ? 'No line matches this filter. Clear the search or choose another severity.'
+                : 'Nothing has been logged yet. Lines appear as the server writes them.';
+            desired.push(note);
+        }
         const wanted = new Set(desired);
         for (const child of [...output.children])
             if (!wanted.has(child) && !child.classList.contains('log-day')) child.remove();
@@ -299,6 +332,10 @@ export function logStream({
                 });
         }
         jump.hidden = auto || atBottom;
+        // The live pulse follows traffic, not a timer: settle it back once the
+        // last line is a few seconds old.
+        clearTimeout(settle);
+        settle = setTimeout(renderStatus, 2600);
     }
 
     /**
@@ -309,7 +346,11 @@ export function logStream({
      */
     function update(incoming) {
         const payload = Array.isArray(incoming) ? { events: incoming } : incoming || {};
-        const events = payload.events || [];
+        const live = payload.events || [];
+        // File history is older than the live buffer by construction, and a poll
+        // that carried no file history must not erase it.
+        const seen = new Set(live.map(key));
+        const events = [...fileRows.filter((row) => !seen.has(key(row))), ...live];
         if (typeof payload.capacity === 'number') capacity = payload.capacity;
         if (typeof payload.dropped === 'number') dropped = payload.dropped;
         if (typeof payload.retained === 'number') retained = payload.retained;
@@ -325,6 +366,7 @@ export function logStream({
         }
         rows = kept.slice(-capacity);
         fresh = 0;
+        if (events.length) lastRowAt = Date.now();
         display();
     }
 
@@ -341,6 +383,22 @@ export function logStream({
             event.target instanceof HTMLInputElement ||
             event.target instanceof HTMLTextAreaElement ||
             event.target instanceof HTMLSelectElement;
+        // Search and clear are how a terminal is used, so they work from the prompt
+        // as well; the unmodified keys must stay with whatever field has focus.
+        if ((event.ctrlKey || event.metaKey) && !event.altKey) {
+            const shortcut = event.key.toLowerCase();
+            if (shortcut === 'f') {
+                event.preventDefault();
+                search.focus();
+                search.select();
+                return;
+            }
+            if (shortcut === 'l' && event.target !== search) {
+                event.preventDefault();
+                clear();
+                return;
+            }
+        }
         if (!event.ctrlKey && !event.metaKey) {
             if (typing) return;
             if (event.key === 'End') {
@@ -359,16 +417,6 @@ export function logStream({
             }
             return;
         }
-        if (typing) return;
-        const keyName = event.key.toLowerCase();
-        if (keyName === 'f') {
-            event.preventDefault();
-            search.focus();
-            search.select();
-        } else if (keyName === 'l') {
-            event.preventDefault();
-            clear();
-        }
     });
     jump.onclick = () => {
         setTail(true);
@@ -382,7 +430,7 @@ export function logStream({
         clearing = new Set(pending.map(key));
         pending = [];
         rows = [];
-        commands.length = 0;
+        if (commands) commands.length = 0;
         fresh = 0;
         display(true);
     }
@@ -432,23 +480,24 @@ export function logStream({
                     return;
                 }
                 const stamp = new Date(result.modified || Date.now()).toISOString();
+                // `[24-11-2026 05:29:49] [ServerMain/INFO]: message` — the thread
+                // comes before the slash and the level after it.
                 const entries = result.lines.map((line, position) => {
                     const match = /^\[([^\]]+)\]\s*\[([^/\]]+)\/([^\]]+)\]:?\s*(.*)$/.exec(line);
                     return {
                         id: `file-${position}-${line.length}`,
                         timestamp: match ? fileStamp(match[1]) : stamp,
-                        level: (match?.[2] || 'INFO').toUpperCase(),
-                        thread: match?.[3] || '',
+                        level: (match?.[3] || 'INFO').trim().toUpperCase(),
+                        thread: (match?.[2] || '').trim(),
                         message: match ? match[4] : line,
-                        line
+                        line,
+                        fromFile: true
                     };
                 });
-                update({
-                    events: [...entries, ...(Array.isArray(pending) ? pending : [])],
-                    capacity: Math.max(capacity, entries.length),
-                    retained: entries.length,
-                    file
-                });
+                // Kept hold of, so the next poll (which only knows the live buffer)
+                // cannot silently delete what was just loaded from disk.
+                fileRows = entries;
+                update({ events: pending, capacity, dropped, retained, file });
                 announce.textContent = `Loaded ${entries.length} lines from ${result.path}.`;
             } catch (error) {
                 announce.textContent = 'Could not read the log file: ' + error.message;
@@ -483,7 +532,8 @@ export function logStream({
      * and on a phone the guess is wrong by 80px: the console prompt lands below
      * the fold. Measuring the pane's own top is right at every width.
      */
-    let fitting = 0;
+    let fitting = 0,
+        settle = 0;
     function fit() {
         // A page mounts its node after this component returns, so the first frame
         // may arrive before the shell is in the document: wait for it instead of
@@ -527,7 +577,8 @@ export function logStream({
         focusSearch: () => search.focus(),
         /** Re-apply a deep-linked filter without reloading the page. */
         filter({ severity: level, search: term } = {}) {
-            if (level && LEVELS.includes(level)) severity.value = level;
+            if (level && LEVELS.includes(level) && severity.querySelector(`option[value="${level}"]`))
+            severity.value = level;
             if (typeof term === 'string') search.value = term;
             display();
         },

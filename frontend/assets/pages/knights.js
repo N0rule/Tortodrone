@@ -15,7 +15,8 @@ import {
     tabs,
     text,
     number,
-    copy
+    copy,
+    date
 } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { edit, confirm, field, conflict, openDialog } from '../components/dialog.js';
@@ -25,7 +26,8 @@ import {
     itemTile,
     icon,
     variantEffects,
-    gearProgress
+    gearProgress,
+    inspectItemName
 } from '../components/items.js';
 import { inspectItem, grantItem } from '../components/gear-editor.js';
 import { spriteCard } from '../components/sprite-card.js';
@@ -615,6 +617,41 @@ export async function mount(ctx) {
         update();
         return { node, update };
     }
+
+    /** Learned recipes as named rows, each one a route into the item it makes. */
+    function recipeList(recipes) {
+        const node = el('div', null, 'stack-tight');
+        node.append(el('h3', `Learned recipes (${recipes.length})`));
+        if (!recipes.length) {
+            node.append(
+                el(
+                    'p',
+                    'This knight has not learned a recipe yet. Recipes are learned at the forge in the game client.',
+                    'muted'
+                )
+            );
+            return node;
+        }
+        const list = el('ul', null, 'recipe-list');
+        for (const recipe of recipes) {
+            const row = el('li', null, 'recipe-row');
+            const open = el('button', recipe.config, 'link');
+            open.type = 'button';
+            open.onclick = () => inspectItemName(recipe.config);
+            row.append(
+                open,
+                el(
+                    'small',
+                    `${recipe.crafted ? 'crafted' : 'not crafted'} · expires ${recipe.expires ? date(recipe.expires) : 'never'}`,
+                    'muted'
+                )
+            );
+            list.append(row);
+        }
+        node.append(list);
+        return node;
+    }
+
     function simpleSection() {
         const node = el('div');
         function update() {
@@ -629,6 +666,9 @@ export async function mount(ctx) {
                               ['Saved loadouts', p.town.loadouts.length],
                               ['Learned recipes', p.town.recipes.length]
                           ]),
+                          // A count nobody can open is trivia: each learned recipe
+                          // names an item, so each one leads to that item.
+                          recipeList(p.town.recipes),
                           details('Saved loadouts (read only)', p.town.loadouts)
                       )
                     : panel(
@@ -656,8 +696,8 @@ export async function mount(ctx) {
                           ]),
                           toolbar(
                               button(
-                                  'Audit for this knight',
-                                  () => ctx.go('audit', { actor: view.username }),
+                                  'Audit events naming this knight',
+                                  () => ctx.go('audit', { target: view.username }),
                                   'secondary'
                               ),
                               button(

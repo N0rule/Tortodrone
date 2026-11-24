@@ -457,7 +457,12 @@ export async function mount(ctx) {
     function applyParams(params) {
         const wanted = Number(params.get('pack'));
         if (!Number.isInteger(wanted) || wanted < 1) return;
-        const next = Math.min(wanted - 1, draft.packs.length - 1);
+        // A link to a pack that does not exist must not silently open the last one.
+        if (wanted > draft.packs.length) {
+            notify(`This banner has no pack ${wanted}; showing pack 1 instead.`, true);
+            return;
+        }
+        const next = wanted - 1;
         if (next === pack) return;
         pack = next;
         packs.value = String(pack);

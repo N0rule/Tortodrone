@@ -21,40 +21,52 @@ function guessIcon(label) {
     if (/^(Inspect|View|Details|Review)\b/.test(label)) return 'search';
     return null;
 }
-/* A disabled control explains itself. The reason rides on the button's title and
-   on a visually hidden note beside it, so a hover and a screen reader both say
-   what is missing. The note sits outside the button so it cannot leak into the
-   accessible name. */
-const reasonNotes = new WeakMap();
+/* A disabled control explains itself, out loud and on screen. The reason rides on
+   the button's title, on a note beside it, and on its aria-describedby, so a
+   hover, a glance and a screen reader all say what is missing. The note sits
+   outside the button so it cannot leak into the accessible name; base.css hides
+   it again inside table cells, where a caption per row would wreck the columns. */
 let reasonSeq = 0;
+/* One note per control, found by its own id rather than by module bookkeeping: a
+   note written by an earlier render of the same control is swept away instead of
+   piling up beside it, and a reason that no longer applies cannot outlive the
+   state change that lifted it. */
 function explain(node, why) {
-    let note = reasonNotes.get(node);
+    if (!node.dataset.reasonId) node.dataset.reasonId = String(++reasonSeq);
+    const id = 'control-reason-' + node.dataset.reasonId;
     if (!why) {
         node.removeAttribute('title');
         node.removeAttribute('aria-describedby');
-        // An unreferenced hidden note would still be read out, so it goes with the
-        // reason it was carrying.
-        if (note?.isConnected) note.remove();
-        reasonNotes.delete(node);
+        node.ownerDocument?.getElementById(id)?.remove();
+        const stale = node.parentNode?.querySelector?.(`[id="${id}"]`);
+        stale?.remove();
         return;
     }
     node.setAttribute('title', why);
+    let note = node.ownerDocument?.getElementById(id);
     if (!note) {
-        note = el('span', why, 'visually-hidden');
-        note.id = 'control-reason-' + ++reasonSeq;
-        reasonNotes.set(node, note);
+        note = el('span', why, 'unavailable-reason');
+        note.id = id;
     } else if (note.textContent !== why) {
         note.textContent = why;
     }
-    // The button is often built before it is inserted, so the note is retried once
-    // the caller has put it somewhere.
+    // The note is described straight away, even while the page it belongs to is
+    // still a detached fragment: `isConnected` is false for a subtree that has not
+    // been inserted yet, and a page built in one task and mounted in the next would
+    // otherwise never announce its reason.
+    node.setAttribute('aria-describedby', note.id);
+    // It follows its own control, not the end of the row: an operator reading
+    // "The listener is already running." must not find it beside Shut down.
     const place = () => {
-        if (reasonNotes.get(node) !== note) return;
-        if (!note.isConnected && node.parentNode) node.parentNode.append(note);
-        if (note.isConnected) node.setAttribute('aria-describedby', note.id);
+        if (node.getAttribute('title') !== why) return;
+        if (!note.isConnected && node.parentNode) node.parentNode.insertBefore(note, node.nextSibling);
     };
     place();
-    if (!note.isConnected) queueMicrotask(place);
+    if (!note.isConnected) {
+        queueMicrotask(place);
+        if (!note.isConnected && typeof requestAnimationFrame === 'function')
+            requestAnimationFrame(place);
+    }
 }
 export function button(label, action, className = 'secondary', available, options = {}) {
     const settings = typeof options === 'string' ? { icon: options } : options;

@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, panel, toolbar, button, select, text, label, date } from '../ui.js';
+import { el, panel, toolbar, button, select, text, label, date, copy } from '../ui.js';
 import { toast } from '../components/toast.js';
 import * as prefs from '../prefs.js';
 
@@ -149,8 +149,9 @@ export async function mount(ctx) {
                         userAgent: navigator.userAgent,
                         viewport: `${window.innerWidth}×${window.innerHeight}`
                     };
-                    await navigator.clipboard.writeText(JSON.stringify(report, null, 2));
-                    toast('Diagnostics copied to the clipboard.');
+                    // The shared helper falls back to the legacy command, which is
+                    // the only thing that works over plain HTTP.
+                    await copy(JSON.stringify(report, null, 2), 'Diagnostics copied.');
                 },
                 'secondary'
             ),

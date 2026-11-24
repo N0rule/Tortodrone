@@ -11,36 +11,65 @@ export async function mount(ctx) {
             .split(':')
             .map((part) => part.trim());
         const [first = '', second = ''] = parts;
-        const looksLikeAccount = first && !first.includes(' ') && parts.length < 3;
-        const looksLikeKnight = second && !/^\d+$/.test(second);
         return {
-            username: looksLikeAccount ? first : '',
-            knight: looksLikeKnight ? second : '',
+            // "name:name" is a knight; a bare word is a record name, and only the
+            // recorded action can say which kind of record it is.
+            username: second ? first : /^[^\s]+$/.test(first) ? first : '',
+            knight: second && /^[^\s]+$/.test(second) ? second : '',
             label: String(target || '').trim()
         };
     };
+    /** The page that owns what an action changed, so the trail is not a dead end. */
+    const ownerOf = (action) => {
+        const table = [
+            [/^mail/, ['mailing', 'Open Player Mail']],
+            [/^(depot|offer|promotion)/, ['depot', 'Open the Depot']],
+            [/^auction/, ['auctions', 'Open auctions']],
+            [/^(news|welcome)/, ['news', 'Open News']],
+            [/^content/, ['content', 'Open Content']],
+            [/^(webui-user|login|logout)/, ['webui-users', 'Open WebUI identities']]
+        ];
+        const match = table.find(([pattern]) => pattern.test(action));
+        return match ? { page: match[1][0], label: match[1][1] } : null;
+    };
+    let selected = null;
+    const placeholder = () =>
+        el('p', 'Select an event to inspect its recorded outcome and related records.', 'muted');
     const showDetail = (row) => {
+        if (selected) selected.classList.remove('inspected');
+        selected = row || null;
         if (!row) {
-            detail.replaceChildren(
-                el('p', 'Select an event to inspect its recorded outcome and related records.', 'muted')
-            );
+            detail.replaceChildren(placeholder());
             return;
         }
+        // The pane sits above a long table, so it says which row it describes and
+        // takes the reader to itself instead of painting off-screen.
+        detail.scrollIntoView({ block: 'nearest' });
+        table.markInspected?.(row);
         const target = parseTarget(row.target);
         const links = toolbar();
-        if (target.username)
+        const owner = ownerOf(row.action);
+        if (owner)
+            links.append(button(owner.label, () => ctx.go(owner.page), 'secondary'));
+        if (target.username && !target.knight)
             links.append(
                 button(
                     'Open account',
                     () => ctx.go('accounts', { username: target.username }),
                     'secondary'
-                ),
+                )
+            );
+        if (target.label)
+            links.append(
                 button(
-                    'Filter by actor',
-                    () => ctx.go('audit', { actor: row.actor }),
+                    'Filter by this target',
+                    () => ctx.go('audit', { target: target.label }),
                     'quiet'
                 )
             );
+        links.append(
+            button('Filter by actor', () => ctx.go('audit', { actor: row.actor }), 'quiet')
+        );
         if (target.username && target.knight)
             links.append(
                 button(
@@ -85,9 +114,27 @@ export async function mount(ctx) {
     const table = new DataTable(
         [
             ['Time', (r) => date(r.time), (r) => r.time],
-            ['Actor', (r) => r.actor],
+            [
+                'Actor',
+                (r) => {
+                    const open = el('button', r.actor, 'link');
+                    open.type = 'button';
+                    open.onclick = () => ctx.go('audit', { actor: r.actor });
+                    return open;
+                }
+            ],
             ['Action', (r) => r.action],
-            ['Target', (r) => parseTarget(r.target).label || '—'],
+            [
+                'Target',
+                (r) => {
+                    const label = parseTarget(r.target).label;
+                    if (!label) return '—';
+                    const open = el('button', label, 'link');
+                    open.type = 'button';
+                    open.onclick = () => ctx.go('audit', { target: label });
+                    return open;
+                }
+            ],
             [
                 'Outcome',
                 (r) =>
@@ -106,7 +153,12 @@ export async function mount(ctx) {
             id: 'audit',
             caption: 'Audit trail',
             exportName: 'audit-trail',
-            initialQuery: ctx.params.get('actor') || '',
+            initialQuery: ctx.params.get('actor') || ctx.params.get('target') || '',
+            empty: {
+                title: 'No audit events match this view',
+                hint: 'Every WebUI write is recorded here. Clear the search to see the whole trail.',
+                icon: 'audit'
+            },
             actions: (get) => [
                 button('Inspect', () => showDetail(get()), 'secondary')
             ],
@@ -128,9 +180,11 @@ export async function mount(ctx) {
     /** Deep links (#audit?actor=…) re-filter the trail in place. */
     function applyParams(params) {
         // Navigating back to a bare #audit clears the filter instead of leaving the
-        // previous actor's rows on screen.
-        table.query.value = params.get('actor') || '';
+        // previous actor's rows on screen. `target` names a record (a game account
+        // or knight); `actor` names the WebUI identity that acted.
+        table.query.value = params.get('actor') || params.get('target') || '';
         table.query.dispatchEvent(new Event('input'));
+        showDetail(null);
     }
     return { node, refresh, interval: 10000, navigate: applyParams };
 }

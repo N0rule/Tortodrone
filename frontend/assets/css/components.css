@@ -26,7 +26,7 @@
     /* A pill is a small component, so its edge is a component boundary. */
     border: 1px solid var(--line-bright);
     border-radius: var(--radius);
-    font-size: 11px;
+    font-size: 11.5px;
     color: var(--muted);
     white-space: nowrap;
 }
@@ -142,7 +142,7 @@ td .toolbar {
 td button {
     padding: 0 10px;
     min-block-size: var(--control-sm);
-    font-size: 12px;
+    font-size: 12.5px;
     border-radius: var(--radius-control);
 }
 /* Three small buttons in a row read as broken when only two carry art, so dense
@@ -155,7 +155,7 @@ td .toolbar .ui-icon,
 .pagination button,
 .pagination select {
     min-block-size: var(--control-sm);
-    font-size: 12px;
+    font-size: 12.5px;
 }
 .pagination {
     display: flex;
@@ -165,7 +165,7 @@ td .toolbar .ui-icon,
     gap: 10px;
     padding-top: 12px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 12.5px;
 }
 .pagination .table-count {
     margin-right: auto;
@@ -229,7 +229,7 @@ td .toolbar .ui-icon,
 .item-icon .stars {
     position: absolute;
     bottom: -5px;
-    font-size: 9px;
+    font-size: 10.5px;
     letter-spacing: -1px;
     color: var(--gold);
     text-shadow: 0 1px 2px #000;
@@ -276,7 +276,7 @@ td .toolbar .ui-icon,
     font-size: 13px;
 }
 .item-tile small {
-    font-size: 11px;
+    font-size: 11.5px;
 }
 .heat {
     width: 100%;
@@ -399,7 +399,7 @@ dialog::backdrop {
     display: flex;
     justify-content: space-between;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 12.5px;
 }
 @media (max-width: 600px) {
     .form-grid {
@@ -587,7 +587,7 @@ caption {
 .empty-title {
     margin: 0;
     color: var(--text);
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
 }
 .empty-message {
@@ -655,7 +655,7 @@ caption {
 .toast-detail {
     margin: 0;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 12.5px;
 }
 /* A dismiss control keeps a 34px target while its art stays 16px. */
 .toast-dismiss {
@@ -673,7 +673,7 @@ caption {
     justify-self: start;
     margin-top: 4px;
     padding: 5px 10px;
-    font-size: 12px;
+    font-size: 12.5px;
 }
 @keyframes toast-in {
     from {
@@ -753,7 +753,7 @@ caption {
 .palette-group {
     padding: 10px 10px 6px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -774,7 +774,7 @@ caption {
 .palette-kind {
     min-width: 84px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 11.5px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -797,7 +797,7 @@ caption {
     padding: 0 16px 8px;
     min-height: 20px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 12.5px;
 }
 .palette-hints {
     display: flex;
@@ -806,7 +806,7 @@ caption {
     gap: 14px;
     padding: 10px 16px;
     border-top: 1px solid var(--line);
-    font-size: 12px;
+    font-size: 12.5px;
 }
 .palette-hints .muted {
     margin-left: auto;
@@ -839,7 +839,7 @@ caption {
     width: 100%;
 }
 .setting-help {
-    font-size: 12px;
+    font-size: 12.5px;
 }
 
 /* Shortcut reference dialog. */
@@ -908,7 +908,7 @@ caption {
     .data-table td::before {
         content: attr(data-label);
         color: var(--muted);
-        font-size: 12px;
+        font-size: 12.5px;
     }
     .data-table td:empty {
         display: none;
@@ -982,7 +982,7 @@ caption {
     border: 1px solid var(--line-bright);
     border-radius: var(--radius);
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 12.5px;
     line-height: 1.7;
     overflow-wrap: anywhere;
     user-select: all;
@@ -993,7 +993,7 @@ caption {
     margin-top: 10px;
     padding: 10px 12px;
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 12.5px;
     line-height: 1.6;
     resize: vertical;
 }
