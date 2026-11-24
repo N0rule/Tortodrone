@@ -97,9 +97,10 @@ th {
 }
 /* A sortable header lines up with the data under it and keeps the caret on the
    far edge, where it reads as a column control rather than a stray glyph. */
-/* `th` is already --raised, so the generic `.quiet` hover painted the same colour
-   and a sortable header gave no feedback at all. */
-th button:not([aria-sort]):not(:disabled):hover {
+/* `th` is already --raised, so the generic `.quiet` hover painted the same colour and
+   a sortable header gave no feedback at all. The `aria-sort` guard is gone: that
+   attribute lives on the `th`, never on this button. */
+th button:not(:disabled):not([aria-disabled='true']):hover {
     background: color-mix(in srgb, var(--raised) 68%, var(--line-bright));
     color: var(--text);
 }
@@ -237,7 +238,7 @@ td .toolbar .button .ui-icon,
 }
 /* Hovering must not outline an unselected tab: the shared button hover paints a
    cyan edge, which reads as "selected" on a tab strip. */
-.tabs button:not(:disabled):hover {
+.tabs button:not(:disabled):not([aria-disabled='true']):not([aria-selected='true']):hover {
     color: var(--text);
     background: color-mix(in srgb, var(--raised) 60%, transparent);
     border-color: transparent;
@@ -275,7 +276,8 @@ td .toolbar .button .ui-icon,
     font-size: 10.5px;
     letter-spacing: -1px;
     color: var(--gold);
-    text-shadow: 0 1px 2px #000;
+    /* A black halo under gold stars was a dirty outline on the light theme. */
+    text-shadow: var(--star-halo, 0 1px 2px #000);
 }
 .item-line {
     display: flex;

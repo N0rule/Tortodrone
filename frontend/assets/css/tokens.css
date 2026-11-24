@@ -100,6 +100,8 @@
        dark shadow and read as if they were floating under the wrong light. */
     --elev-1: 0 1px 2px #24465d26;
     --elev-2: 0 6px 18px #24465d24;
+    /* Stars and rating pips sit on gold and white, where a black halo is dirt. */
+    --star-halo: 0 1px 1px #7a5a1033;
     --meter: #9a6c12;
     --meter-edge: #6f4d0a;
     --effect-bg: #f5e6b6;

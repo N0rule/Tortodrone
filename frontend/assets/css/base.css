@@ -196,8 +196,10 @@ td .unavailable-reason.shown {
     padding: 4px 7px;
     background: var(--raised);
     border: 1px solid var(--line-bright);
-    border-radius: 6px;
-    box-shadow: 0 8px 18px rgb(0 0 0 / 38%);
+    border-radius: var(--radius);
+    /* A 38% black halo in the light theme was 2.7x heavier than the themed elevation
+       beside it: the shadow is a theme token, like every other one here. */
+    box-shadow: var(--elev-2);
 }
 /* A disabled note in a toolbar takes its own line, so the controls it sits between
    still read as one group. */
@@ -219,6 +221,12 @@ button[aria-busy='true'],
     border-color: var(--control-border);
     /* No `pointer-events: none`: it made `cursor: progress` a lie, and ui.js already
        refuses a second press while the control is busy. */
+}
+/* The disabled rule clears the shadow, so a busy primary lost its only lift while it
+   was the most important control on screen. */
+button[aria-busy='true']:where(.primary),
+.button[aria-busy='true']:where(.primary) {
+    box-shadow: var(--elev-2);
 }
 button[aria-busy='true']::before,
 .button[aria-busy='true']::before {
@@ -265,8 +273,12 @@ button.primary,
     --control-border: var(--action);
     font-weight: 700;
 }
-button.primary:not(:disabled):not([aria-disabled='true']):hover,
-.button.primary:not(:disabled):not([aria-disabled='true']):hover {
+/* `:where()` keeps the variant class out of the specificity count, so a component
+   that knows its own host (a table header, a tab) can still paint its hover: at full
+   class weight these rules beat `th button:hover` and `.tabs button:hover` and made
+   both of those comments promises the cascade did not keep. */
+button:where(.primary):not(:disabled):not([aria-disabled='true']):hover,
+.button:where(.primary):not(:disabled):not([aria-disabled='true']):hover {
     background: var(--action-hover);
     border-color: var(--action-hover);
 }
@@ -278,12 +290,13 @@ button.secondary,
     --control-fg: var(--text);
     /* This is the default control in the whole UI, so its boundary is what decides
        whether the product reads as flat: --line is 1.71:1 against a panel and turned
-       every toolbar into labels with a smudge around them. The mix clears 3:1 against
-       the panel it sits on without competing with a primary's fill. */
-    --control-border: color-mix(in srgb, var(--line-bright) 62%, var(--raised));
+       every toolbar into labels with a smudge around them. 62% measured 2.86:1 dark and
+       2.47:1 light against --surface; 80% measures 3.50:1 and 3.09:1, which is the
+       panel it actually sits on rather than the canvas. */
+    --control-border: color-mix(in srgb, var(--line-bright) 80%, var(--raised));
 }
-button.secondary:not(:disabled):not([aria-disabled='true']):hover,
-.button.secondary:not(:disabled):not([aria-disabled='true']):hover {
+button:where(.secondary):not(:disabled):not([aria-disabled='true']):hover,
+.button:where(.secondary):not(:disabled):not([aria-disabled='true']):hover {
     border-color: var(--line-bright);
     background: color-mix(in srgb, var(--raised) 76%, var(--line-bright));
 }
@@ -293,9 +306,12 @@ button.quiet,
     --control-border: transparent;
     box-shadow: none;
 }
-button.quiet:not(:disabled):not([aria-disabled='true']):hover,
-.button.quiet:not(:disabled):not([aria-disabled='true']):hover {
-    background: var(--raised);
+button:where(.quiet):not(:disabled):not([aria-disabled='true']):hover,
+.button:where(.quiet):not(:disabled):not([aria-disabled='true']):hover {
+    /* `--raised` is the colour of the host a quiet control usually sits on (a table
+       header, a hovered row), so the fill said nothing at all there. A tint that is
+       lighter than both the surface and the raised step reads as hover either way. */
+    background: color-mix(in srgb, var(--raised) 55%, var(--line-bright));
     border-color: transparent;
 }
 /* Destructive is a filled tint, not a quiet button in red ink: it has to look
@@ -307,8 +323,8 @@ button.danger,
     --control-fg: var(--bad);
     --control-border: var(--bad);
 }
-button.danger:not(:disabled):not([aria-disabled='true']):hover,
-.button.danger:not(:disabled):not([aria-disabled='true']):hover {
+button:where(.danger):not(:disabled):not([aria-disabled='true']):hover,
+.button:where(.danger):not(:disabled):not([aria-disabled='true']):hover {
     background: color-mix(in srgb, var(--bad) 22%, var(--surface));
     border-color: var(--bad);
 }
