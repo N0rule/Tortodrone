@@ -162,5 +162,13 @@ export async function mount(ctx) {
         ctx.connection(s.state, s.state === 'RUNNING');
     }
     await refresh();
-    return { node, refresh, interval: 4000 };
+    /** Deep links (#players?scene=…) re-filter in place. */
+    function applyParams(params) {
+        const value = params.get('scene');
+        if (value == null) return;
+        players.query.value = value;
+        players.query.dispatchEvent(new Event('input'));
+        players.node.scrollIntoView({ block: 'start' });
+    }
+    return { node, refresh, interval: 4000, navigate: applyParams };
 }

@@ -140,8 +140,17 @@ const timeFormat = new Intl.DateTimeFormat(preferredLocale, {
     minute: '2-digit',
     hourCycle: 'h23'
 });
+// Log lines carry their own HH:MM:SS, so the terminal clock keeps seconds and
+// can order rows inside one minute.
+const clockFormat = new Intl.DateTimeFormat(preferredLocale, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23'
+});
 export const date = (value) => (value ? dateFormat.format(new Date(value)) : '—');
 export const time = (value) => (value ? timeFormat.format(new Date(value)) : '—');
+export const clock = (value) => (value ? clockFormat.format(new Date(value)) : '—');
 export const calendarDate = (value = Date.now()) => calendarFormat.format(new Date(value));
 export function duration(seconds) {
     seconds = Math.max(0, seconds);

@@ -1,4 +1,4 @@
-import { el, input, select, toolbar, button, text, download, time as clockTime } from '../ui.js';
+import { el, input, select, toolbar, button, text, download, copy, clock as clockTime } from '../ui.js';
 
 /**
  * A terminal surface rather than a list of cards: a fixed width gutter for time
@@ -35,9 +35,14 @@ export function logStream({
         dots.append(span);
     }
     bar.append(dots, titleNode, barMeta);
-    output.setAttribute('role', 'log');
+    // A pure stream would talk over a screen reader thousands of times; the console
+    // announces its command responses, the status line announces everything else.
+    // `role=log` is a live region by definition: only the console, which answers
+    // one command at a time, uses it. The plain stream stays a labelled group.
+    output.setAttribute('role', commands ? 'log' : 'group');
     output.setAttribute('aria-label', title);
-    output.setAttribute('aria-live', 'off');
+    output.setAttribute('aria-live', commands ? 'polite' : 'off');
+    if (commands) output.setAttribute('aria-atomic', 'false');
     output.tabIndex = 0;
     jump.type = 'button';
     jump.hidden = true;
@@ -62,34 +67,40 @@ export function logStream({
         auto = true,
         rows = [],
         pending = [],
+        dropped = 0,
         clearing = new Set();
 
     const cache = new Map();
     const pause = button('Pause', () => {
         paused = !paused;
         text(pause, paused ? 'Resume' : 'Pause');
-        pause.setAttribute('aria-pressed', String(paused));
+        pause.title = paused ? 'Show incoming lines again' : 'Freeze the visible output';
         if (!paused) update(pending);
         renderStatus();
     });
-    pause.setAttribute('aria-pressed', 'false');
-    const follow = button('Tail on', () => {
+    pause.title = 'Freeze the visible output';
+    const follow = button('Stop tailing', () => {
         auto = !auto;
-        text(follow, auto ? 'Tail on' : 'Tail off');
-        follow.setAttribute('aria-pressed', String(!auto));
+        text(follow, auto ? 'Stop tailing' : 'Start tailing');
+        follow.title = auto
+            ? 'Keep the newest line in view'
+            : 'Follow new lines again from the bottom';
         if (auto) {
             output.scrollTop = output.scrollHeight;
             jump.hidden = true;
         }
         renderStatus();
     });
-    follow.setAttribute('aria-pressed', 'false');
+    follow.title = 'Keep the newest line in view';
 
     function matches(row) {
-        return (
-            (severity.value === 'All' || row.level === severity.value) &&
-            row.line.toLowerCase().includes(search.value.toLowerCase())
-        );
+        if (severity.value !== 'All' && row.level !== severity.value) return false;
+        const needle = search.value.toLowerCase();
+        if (!needle) return true;
+        // Search what a reader can see: the message (or the command and its
+        // response) plus the thread; never the hidden raw line.
+        const visible = row.entry ? `${row.entry.command} ${row.entry.output}` : row.message ?? row.line;
+        return `${row.thread ?? ''} ${visible}`.toLowerCase().includes(needle);
     }
     const key = (row) => row.id || `${row.timestamp}:${row.thread}:${row.level}:${row.line}`;
     const commandRows = () =>
@@ -149,14 +160,23 @@ export function logStream({
                     const time = el('time', clockTime(row.timestamp), 'log-time');
                     time.dateTime = row.timestamp;
                     const level = el('span', row.level === 'COMMAND' ? 'cmd' : row.level, 'log-level');
+                    const thread = el('span', row.thread || '', 'log-thread');
+                    thread.title = row.thread || '';
                     const message = el('span', null, 'log-message');
                     if (row.entry) {
                         message.replaceChildren(
-                            el('span', `${prompt}$ ${row.entry.command}`, 'command'),
-                            el('pre', formatOutput(row.entry.output), 'command-response')
+                            el('span', `${prompt}$ ${row.entry.command}`, 'command')
                         );
+                        // A command that has not answered yet shows a running
+                        // marker instead of an empty response block.
+                        if (row.entry.pending)
+                            message.append(el('span', 'running…', 'command-pending'));
+                        else
+                            message.append(
+                                el('pre', formatOutput(row.entry.output), 'command-response')
+                            );
                     } else message.textContent = row.message ?? row.line;
-                    line.append(time, level, message);
+                    line.append(time, level, thread, message);
                     line.title = row.timestamp || '';
                     cache.set(id, line);
                 }
@@ -171,7 +191,10 @@ export function logStream({
         for (const [id, line] of cache) if (!wanted.has(line)) cache.delete(id);
         if (!auto && anchor?.isConnected && before != null)
             output.scrollTop += anchor.getBoundingClientRect().top - before;
-        text(count, `${visible.length} of ${retained.length}`);
+        text(
+            count,
+            `${visible.length} of ${retained.length}${dropped ? ` · last 1000, ${dropped} older not shown` : ''}`
+        );
         renderStatus();
         if (auto && (atBottom || force)) {
             output.scrollTop = output.scrollHeight;
@@ -189,7 +212,9 @@ export function logStream({
             renderStatus();
             return;
         }
-        rows = incoming.filter((r) => !clearing.has(key(r))).slice(-1000);
+        const kept = incoming.filter((r) => !clearing.has(key(r)));
+        dropped = Math.max(0, kept.length - 1000);
+        rows = kept.slice(-1000);
         display();
         const current = new Set(incoming.map(key));
         clearing = new Set([...clearing].filter((k) => current.has(k)));
@@ -202,21 +227,21 @@ export function logStream({
         jump.hidden = !away;
         if (auto && away) {
             auto = false;
-            text(follow, 'Tail off');
-            follow.setAttribute('aria-pressed', 'true');
+            text(follow, 'Start tailing');
             renderStatus();
         }
     });
     // Terminal keys: search, clear, tail. Ignored while a field has focus.
     node.addEventListener('keydown', (event) => {
         if (!event.ctrlKey && !event.metaKey) {
-            if (event.key === 'End' && event.target === output) {
+            const inside = event.target === output || event.target === node;
+            if (event.key === 'End' && inside) {
                 event.preventDefault();
                 auto = true;
-                text(follow, 'Tail on');
+                text(follow, 'Stop tailing');
                 output.scrollTop = output.scrollHeight;
                 renderStatus();
-            } else if (event.key === 'p' && event.target === output) {
+            } else if (event.key === 'p' && inside) {
                 event.preventDefault();
                 pause.click();
             }
@@ -234,8 +259,7 @@ export function logStream({
     });
     jump.onclick = () => {
         auto = true;
-        text(follow, 'Tail on');
-        follow.setAttribute('aria-pressed', 'false');
+        text(follow, 'Stop tailing');
         output.scrollTop = output.scrollHeight;
         jump.hidden = true;
         renderStatus();
@@ -257,12 +281,16 @@ export function logStream({
         follow,
         button('Clear', clear),
         button('Copy', () =>
-            navigator.clipboard.writeText(
+            copy(
                 [...rows, ...commandRows()]
                     .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
                     .filter(matches)
-                    .map((r) => `${r.timestamp} [${r.level}] ${r.message ?? r.line}`)
-                    .join('\n')
+                    .map(
+                        (r) =>
+                            `${r.timestamp} [${r.level}] ${r.thread ? r.thread + ' ' : ''}${r.message ?? r.line}`
+                    )
+                    .join('\n'),
+                'Visible output copied.'
             )
         ),
         button('Export', () =>
@@ -288,6 +316,13 @@ export function logStream({
         tools,
         clear,
         focusSearch: () => search.focus(),
+        /** Re-apply a deep-linked filter without reloading the page. */
+        filter({ severity: level, search: term } = {}) {
+            if (level && ['All', 'INFO', 'WARN', 'ERROR', 'DEBUG', 'COMMAND'].includes(level))
+                severity.value = level;
+            if (typeof term === 'string') search.value = term;
+            display();
+        },
         get paused() {
             return paused;
         }

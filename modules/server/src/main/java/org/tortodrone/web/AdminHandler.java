@@ -75,6 +75,17 @@ public final class AdminHandler implements HttpHandler {
                     "Uploaded images must be at most 1 MiB",
                     "Image exceeds the 570 by 300 featured slot",
                     "News image library is full",
+                    // Mail refusals are user-facing: an operator must see why a letter
+                    // or a mailing was refused instead of a generic 409.
+                    "Choose a supported sender",
+                    "Crowns and energy cannot be negative",
+                    "This mailing changed; reopen it",
+                    "This mailing changed or was cancelled; reopen it",
+                    "This mailing changed or was already cancelled; reopen it",
+                    "Welcome mail is too long",
+                    "Unknown knight",
+                    "Unknown mailing",
+                    "Invalid gift list",
                     "welcome-message must be at most 256 characters",
                     "welcome-message must not contain control characters",
                     "welcome-message must not contain invalid text" -> message;

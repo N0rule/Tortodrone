@@ -23,5 +23,16 @@ export async function mount(ctx) {
     await refresh();
     // The log is the whole page, so it fills the reading area like the console.
     stream.node.classList.add('terminal-fill');
-    return { node: stream.node, refresh, interval: 4000 };
+    return {
+        node: stream.node,
+        refresh,
+        interval: 4000,
+        // A deep link such as #logs?severity=WARN re-filters in place.
+        navigate(params) {
+            stream.filter({
+                severity: params.get('severity') || 'All',
+                search: params.get('search') || ''
+            });
+        }
+    };
 }

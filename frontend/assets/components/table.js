@@ -80,7 +80,8 @@ export class DataTable {
             bulkActions,
             exportName = id,
             persist = true,
-            initialQuery = ''
+            initialQuery = '',
+            onRefresh
         } = {}
     ) {
         Object.assign(this, {
@@ -484,9 +485,12 @@ export class DataTable {
                       })
                     : emptyState({
                           title: 'Nothing to show yet',
-                          message:
-                              'This list fills as the server creates records. Refresh to check again.',
-                          action: { label: 'Refresh', run: () => this.node.dispatchEvent(new Event('table-refresh', { bubbles: true })) },
+                          message: onRefresh
+                              ? 'This list fills as the server creates records. Refresh to check again.'
+                              : 'This list fills as the server creates records; it updates on its own.',
+                          action: onRefresh
+                              ? { label: 'Refresh', run: () => onRefresh() }
+                              : undefined,
                           icon: 'details',
                           compact: true
                       })

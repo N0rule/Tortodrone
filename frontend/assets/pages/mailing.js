@@ -316,6 +316,7 @@ export async function mount(ctx) {
 
     function renderSummary() {
         const counts = { Active: 0, Scheduled: 0, Ended: 0, Cancelled: 0 };
+        const population = roster?.length ? ` of ${roster.length.toLocaleString()}` : '';
         let delivered = 0;
         for (const campaign of data.campaigns) {
             counts[mailingStatus(campaign, data.now)]++;
@@ -329,9 +330,21 @@ export async function mount(ctx) {
                     badge(`${count} ${name.toLowerCase()}`, name === 'Active' ? 'good' : '')
                 ),
                 badge(
-                    `${delivered.toLocaleString()} letter${delivered === 1 ? '' : 's'} delivered`,
+                    `${delivered.toLocaleString()}${population} letter${delivered === 1 ? '' : 's'} delivered`,
                     'gold'
-                )
+                ),
+                ...(roster
+                    ? []
+                    : [
+                          button(
+                              'Count knights',
+                              async () => {
+                                  await rosterRows();
+                                  if (ctx.alive()) renderSummary();
+                              },
+                              'quiet'
+                          )
+                      ])
             ),
             el(
                 'small',
@@ -519,18 +532,22 @@ export async function mount(ctx) {
                 );
             };
             const syncCount = () => {
+                // The roster size is part of the count, so "Select all shown" is
+                // never mistaken for "everybody".
                 text(
                     countLabel,
                     chosen.size
-                        ? `${chosen.size} knight${chosen.size === 1 ? '' : 's'} selected`
-                        : 'Choose at least one knight'
+                        ? `${chosen.size} of ${rows.length} knight${rows.length === 1 ? '' : 's'} selected`
+                        : `Choose at least one knight · ${rows.length} on this server`
                 );
                 countLabel.classList.toggle('error', chosen.size === 0);
             };
             const fill = () => {
                 const matches = visibleRows();
+                // A roster of thousands must not be built on every keystroke.
+                const shown = matches.slice(0, 200);
                 target.replaceChildren(
-                    ...matches.map((row) => {
+                    ...shown.map((row) => {
                         const key = `${row.username}|${row.name}`;
                         const box = input(`Send to ${row.name}`, chosen.has(key), 'checkbox');
                         const name = el('span', null, 'mail-recipient-name');
@@ -549,6 +566,14 @@ export async function mount(ctx) {
                     })
                 );
                 if (!matches.length) target.append(el('p', 'No knight matches this filter.', 'muted'));
+                else if (matches.length > shown.length)
+                    target.append(
+                        el(
+                            'p',
+                            `${matches.length - shown.length} more knights are hidden; narrow the filter to reach them.`,
+                            'muted'
+                        )
+                    );
                 draft.recipient = [...chosen][0] || '';
                 syncCount();
             };
@@ -681,13 +706,16 @@ export async function mount(ctx) {
                 node.setAttribute('aria-pressed', String(index === (mode === 'game' ? 0 : 1)));
             gameHost.hidden = mode !== 'game';
             plain.hidden = mode !== 'plain';
-            if (mode === 'plain')
-                // Verbatim: no trimming, no invented placeholders, so wrapping and
-                // blank lines are exactly what the client mailbox receives.
+            if (mode === 'plain') {
+                // Stock senders store the body behind the game's tainted-literal
+                // prefix; a custom sender stores it verbatim (StaffMail.mailText).
+                const stored = customSender.value ? body.value : '%uplink:~' + body.value;
                 plain.textContent =
-                    `From: ${customSender.value || senderName(Number(sender.value))}\n` +
-                    `Subject: ${subject.value}\n\n` +
-                    body.value;
+                    `sender: ${customSender.value || 'SystemSender ' + Number(sender.value)}\n` +
+                    `senderLabel: ${customSender.value || '(none — literal prefix)'}\n` +
+                    `subject: ${subject.value}\n` +
+                    `body: ${stored}`;
+            }
         }
         const gameHost = el('div', null, 'mail-preview-host');
         gameHost.append(previewHost);
@@ -749,7 +777,7 @@ export async function mount(ctx) {
         function snapshot() {
             return [
                 mode === 'welcome' ? enabled.checked : '',
-                mode === 'direct' ? target.value : '',
+                mode === 'direct' ? [...chosen].sort().join(',') : '',
                 subject.value,
                 body.value,
                 Number(sender.value),
@@ -797,6 +825,13 @@ export async function mount(ctx) {
                 if (requiresText && !body.value.trim()) throw new Error('Body is required.');
                 if (units(draft.gifts) > 14)
                     throw new Error('A mailing can carry at most 14 item units.');
+                if (mode === 'campaign') {
+                    const start = new Date(starts.value).getTime(),
+                        end = new Date(ends.value).getTime();
+                    if (!(end > start)) throw new Error('The window must end after it starts.');
+                    if (end <= Date.now())
+                        throw new Error('The window has already ended; choose a later end.');
+                }
                 const values = {
                     sender: Number(sender.value),
                     senderLabel: customSender.value,

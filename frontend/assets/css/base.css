@@ -133,6 +133,19 @@ button.primary:not(:disabled):hover,
     background: color-mix(in srgb, var(--action) 84%, #ffffff);
     border-color: color-mix(in srgb, var(--action) 84%, #ffffff);
 }
+/* The neutral variant every `button()` gets by default: the same surface as a
+   plain button, one step softer at the edge so a toolbar has depth without noise. */
+button.secondary,
+.button.secondary {
+    --control-bg: var(--raised);
+    --control-fg: var(--text);
+    --control-border: color-mix(in srgb, var(--line-bright) 82%, transparent);
+}
+button.secondary:not(:disabled):hover,
+.button.secondary:not(:disabled):hover {
+    border-color: var(--cyan);
+    background: color-mix(in srgb, var(--raised) 76%, var(--line-bright));
+}
 button.quiet,
 .button.quiet {
     --control-bg: transparent;

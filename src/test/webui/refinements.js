@@ -250,12 +250,13 @@ export async function runTerminal({ disposable = false } = {}) {
         stream.update(rows);
         check(stream.output.children.length === 1001, 'Logs and command history are bounded');
         check(
-            host.querySelectorAll('.terminal').length === 1 &&
+            host.querySelectorAll('.terminal-shell').length === 1 &&
                 stream.output.textContent.includes('> help'),
             'One terminal contains commands and live output'
         );
         const line = stream.output.children[2];
-        click('Autoscroll on');
+        // Tailing is on by default; this action turns following off.
+        click('Stop tailing');
         stream.output.scrollTop = 80;
         const anchor = [...stream.output.children].find(
             (n) => n.getBoundingClientRect().top >= stream.output.getBoundingClientRect().top + 2
@@ -289,6 +290,7 @@ export async function runTerminal({ disposable = false } = {}) {
             { ...next, message: 'Paused addition', line: 'Paused addition' }
         ]);
         check(!stream.output.textContent.includes('Paused addition'), 'Paused output stays frozen');
+        // The same control flips to Resume while paused.
         click('Resume');
         check(stream.output.textContent.includes('Paused addition'), 'Resume displays latest logs');
         const search = host.querySelector('[aria-label="Search output"]');
@@ -304,7 +306,7 @@ export async function runTerminal({ disposable = false } = {}) {
         );
         severity.value = 'All';
         severity.dispatchEvent(new Event('change'));
-        click('Clear display');
+        click('Clear');
         stream.update([
             ...rows,
             next,

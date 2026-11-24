@@ -103,5 +103,12 @@ export async function mount(ctx) {
         table.update(await ctx.request('audit'));
     }
     await refresh();
-    return { node, refresh, interval: 10000 };
+    /** Deep links (#audit?actor=…) re-filter the trail in place. */
+    function applyParams(params) {
+        const value = params.get('actor');
+        if (value == null) return;
+        table.query.value = value;
+        table.query.dispatchEvent(new Event('input'));
+    }
+    return { node, refresh, interval: 10000, navigate: applyParams };
 }

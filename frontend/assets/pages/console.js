@@ -43,10 +43,27 @@ export async function mount(ctx) {
         draft = '',
         pending = false;
     function record(value, result, error = false) {
-        outputHistory.push({ time: Date.now(), command: value, output: result.output, error });
+        // Replace the echoed prompt line when one is still pending, so a slow
+        // command shows its prompt immediately and never double-prints.
+        const pendingEcho = outputHistory.findLast?.(
+            (entry) => entry.pending && entry.command === value
+        );
+        if (pendingEcho) {
+            pendingEcho.output = result.output;
+            pendingEcho.error = error;
+            pendingEcho.pending = false;
+        } else {
+            outputHistory.push({ time: Date.now(), command: value, output: result.output, error });
+        }
         if (outputHistory.length > 50) outputHistory.shift();
         stream.redraw();
         text(feedback, error ? 'Command failed' : 'Connected');
+    }
+    /** Echo the prompt line before the server answers, the way a shell does. */
+    function echo(value) {
+        outputHistory.push({ time: Date.now(), command: value, output: '', error: false, pending: true });
+        if (outputHistory.length > 50) outputHistory.shift();
+        stream.redraw();
     }
     command.oninput = () => {
         commandDraft = command.value;
@@ -120,6 +137,7 @@ export async function mount(ctx) {
         }
         pending = true;
         run.disabled = true;
+        echo(value);
         text(feedback, 'Executing…');
         try {
             const result = await api.consoleCommand(value);
@@ -156,6 +174,12 @@ export async function mount(ctx) {
     stream.node.insertBefore(form, stream.footer);
     const node = stream.node;
     node.classList.add('console-workspace');
+    // The jump pill must sit above the prompt, whatever the prompt's height is.
+    const measurePrompt = () =>
+        node.style.setProperty('--prompt-height', form.offsetHeight + 'px');
+    measurePrompt();
+    if (typeof ResizeObserver === 'function') new ResizeObserver(measurePrompt).observe(form);
+    else window.addEventListener('resize', measurePrompt);
     async function refresh() {
         try {
             if (!stream.paused) stream.update(await ctx.request('logs'));

@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, text, toolbar, button, panel, facts, date } from '../ui.js';
+import { el, text, toolbar, button, badge, panel, facts, date } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { edit, confirm, field } from '../components/dialog.js';
 export async function mount(ctx) {
@@ -16,14 +16,34 @@ export async function mount(ctx) {
     const table = new DataTable(
         [
             ['Username', (r) => r.username],
-            ['Role', (r) => r.role]
+            [
+                'Role',
+                (r) =>
+                    badge(
+                        r.role.toLowerCase(),
+                        r.role === 'ADMINISTRATOR' ? 'gold' : r.role === 'MODERATOR' ? 'cyan' : ''
+                    ),
+                (r) => r.role
+            ]
         ],
         {
             key: (r) => r.username,
             id: 'webui-users',
             caption: 'WebUI identities',
             exportName: 'webui-identities',
+            filters: [
+                [
+                    'Role',
+                    ['All', 'ADMINISTRATOR', 'MODERATOR', 'VIEWER'],
+                    (r, value) => value === 'All' || r.role === value
+                ]
+            ],
             actions: (get) => [
+                button(
+                    'Audit',
+                    () => ctx.go('audit', { actor: get().username }),
+                    'secondary'
+                ),
                 button('Reset password', () =>
                     edit('Password · ' + get().username, 'webui-user-password', passwords(), {
                         username: get().username,

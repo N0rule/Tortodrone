@@ -44,6 +44,11 @@
     color: var(--gold);
     border-color: var(--gold);
 }
+.badge.cyan {
+    color: var(--cyan);
+    border-color: color-mix(in srgb, var(--cyan) 45%, transparent);
+    background: color-mix(in srgb, var(--cyan) 14%, transparent);
+}
 .badge.bad {
     color: var(--bad);
 }
@@ -114,7 +119,10 @@ td {
 tbody tr:nth-child(even) td {
     background: color-mix(in srgb, var(--raised) 22%, transparent);
 }
-tr:hover td {
+/* The zebra rule out-specifies a bare `tr:hover td`, so hover is stated at the
+   same weight for even and odd rows. */
+tbody tr:nth-child(even):hover td,
+tbody tr:hover td {
     background: color-mix(in srgb, var(--raised) 50%, transparent);
 }
 td:first-of-type {

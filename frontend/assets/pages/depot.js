@@ -160,10 +160,14 @@ export async function mount(ctx) {
                 button(
                     'Show offer',
                     () => {
+                        const offer = data.snapshot.offers.find((o) => o.id === get().offerId);
                         tab = 'offers';
                         show();
-                        offers.query.value = String(get().offerId);
-                        offers.query.dispatchEvent(new Event('input'));
+                        if (offer) {
+                            offers.query.value =
+                                definitions.get(offer.good.item)?.name || offer.good.item;
+                            offers.query.dispatchEvent(new Event('input'));
+                        }
                         offers.node.scrollIntoView({ block: 'center' });
                     },
                     'secondary'
@@ -199,7 +203,24 @@ export async function mount(ctx) {
             ],
             [
                 'Promotion',
-                (o) => (o.promoHeader ? el('span', o.promoHeader, 'muted') : '—')
+                (o) => {
+                    if (!o.promotionId) return el('span', '—', 'muted');
+                    const cell = el('div', null, 'offer-reference');
+                    cell.append(el('strong', `#${o.promotionId}`));
+                    if (o.promotionEnds)
+                        cell.append(el('small', `ends ${date(o.promotionEnds)}`, 'muted'));
+                    else cell.append(el('small', o.sale ? 'sale price' : 'linked', 'muted'));
+                    return cell;
+                },
+                (o) => o.promotionId || 0
+            ],
+            [
+                'Was',
+                (o) =>
+                    o.originalPrice > 0
+                        ? toolbar(currency('crowns', o.originalPrice))
+                        : el('span', '—', 'muted'),
+                (o) => o.originalPrice || 0
             ]
         ],
         {
@@ -217,6 +238,9 @@ export async function mount(ctx) {
                         if (!offer) return;
                         tab = 'offers';
                         show();
+                        offers.query.value =
+                            definitions.get(offer.good.item)?.name || offer.good.item;
+                        offers.query.dispatchEvent(new Event('input'));
                         offers.node.scrollIntoView({ block: 'center' });
                     },
                     'secondary'

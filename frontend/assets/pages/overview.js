@@ -124,7 +124,10 @@ export async function mount(ctx) {
         ['Recorded in', 'data/keys/public.txt']
     ]);
     const identityPanel = panel('Server identity', identityNote, identityFacts, identityActions, identityKey);
-    let identityLoaded = false;
+    // Handlers read the current key at click time, so a rotated key is the one an
+    // operator copies; the panels are built once and never hold stale values.
+    let identityLoaded = false,
+        identityCurrent = null;
     const toggleKey = button(
         'Show full key',
         () => {
@@ -210,6 +213,8 @@ export async function mount(ctx) {
         diagnostics
     );
     let diagnosticSignature;
+    const currentKey = () =>
+        identityCurrent ? `${identityCurrent.modulus}#${identityCurrent.exponent}` : '';
     async function renderIdentity(identity) {
         if (!identity.available) {
             text(identityFingerprint, 'Unavailable');
@@ -219,6 +224,8 @@ export async function mount(ctx) {
                     'The server has not created its keypair yet; it is created on the next start.'
             );
             identityActions.replaceChildren();
+            identityLoaded = false;
+            identityCurrent = null;
             return;
         }
         text(identityFingerprint, identity.fingerprint);
@@ -230,23 +237,21 @@ export async function mount(ctx) {
         const cells = identityFacts.querySelectorAll('dd');
         cells[1].textContent = `RSA ${identity.bits}-bit, exponent 0x${identity.exponent}`;
         cells[2].textContent = date(identity.modified);
-        const key = `${identity.modulus}#${identity.exponent}`;
-        identityKey.value = key;
-        // Reconcile on every refresh: a key generated after the first load must
-        // still grow its actions, and a key that disappears must lose them.
-        if (identity.available && !identityLoaded) {
+        identityCurrent = identity;
+        identityKey.value = `${identity.modulus}#${identity.exponent}`;
+        if (!identityLoaded) {
             identityLoaded = true;
             identityActions.append(
-                button('Copy public key', () => copy(key, 'Server public key copied.'), 'primary'),
+                button('Copy public key', () => copy(currentKey(), 'Server public key copied.'), 'primary'),
                 button(
                     'Download public.txt',
-                    () => download('public.txt', key + '\n'),
+                    () => download('public.txt', currentKey() + '\n'),
                     'secondary'
                 ),
                 toggleKey,
                 button(
                     'Copy fingerprint',
-                    () => copy(identity.fingerprint, 'Fingerprint copied.'),
+                    () => copy(identityCurrent?.fingerprint ?? '', 'Fingerprint copied.'),
                     'secondary'
                 )
             );
@@ -296,5 +301,13 @@ export async function mount(ctx) {
     }
     range.onchange = () => ctx.refresh();
     await refresh();
-    return { node, refresh, interval: 5000 };
+    /** Deep links (#overview?scene=…) focus the scene runtime table. */
+    function applyParams(params) {
+        const value = params.get('scene');
+        if (value == null) return;
+        monsters.query.value = value;
+        monsters.query.dispatchEvent(new Event('input'));
+        monsters.node.scrollIntoView({ block: 'center' });
+    }
+    return { node, refresh, interval: 5000, navigate: applyParams };
 }
