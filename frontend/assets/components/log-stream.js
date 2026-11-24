@@ -124,7 +124,14 @@ export function logStream({
         fileRows = [],
         retainedCount = 0,
         lastPayload = null,
-        clearing = new Set();
+        clearing = new Set(),
+        // A stack trace or a long JSON line is unreadable when it reflows; the toggle
+        // swaps `pre-wrap` for one scrollable row, the way a terminal does.
+        wrapMode = true,
+        // A console shows its own answers first: the server log underneath is context,
+        // and mixing the two buried every answer under live INFO chatter. (`source` is
+        // already the status strip, hence `sourceMode`.)
+        sourceMode = commands ? 'answers' : 'both';
 
     const cache = new Map(),
         // Dividers are cached per day, so crossing midnight does not rebuild the
@@ -186,6 +193,17 @@ export function logStream({
             line: '> ' + entry.command + '\n' + entry.output,
             entry
         }));
+
+    /**
+     * The rows this pane is showing: a console can put its own answers above the
+     * server's lines, or show either alone. A log page always has both.
+     */
+    const allRows = () =>
+        sourceMode === 'answers'
+            ? commandRows()
+            : sourceMode === 'log'
+              ? rows
+              : [...rows, ...commandRows()];
 
     // A shell prints `key: value` in aligned columns, not fifty lines of braces: the
     // pretty-printed dump made one `status` answer taller than the pane.
@@ -292,11 +310,11 @@ export function logStream({
         // in the transcript, not answers, and counting them said "1 answer" for none.
         const answered = (row) => row.entry && row.entry.command && row.entry.command !== '';
         const counted = countAnswers
-                ? [...rows, ...commandRows()].filter(answered)
-                : [...rows, ...commandRows()],
+                ? allRows().filter(answered)
+                : allRows(),
             visible = counted.filter((row) => matches(row) && !cleared(row)).length,
             total = countAnswers
-                ? [...rows, ...commandRows()].filter(answered).length
+                ? allRows().filter(answered).length
                 : retainedCount || visible,
             away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
         // A cleared screen says nothing about counts: the pill is the whole story.
@@ -485,7 +503,7 @@ export function logStream({
         }
         // Cleared means cleared: filtering only the console's own rows left a paused
         // pane showing twelve lines under the words "0 lines of 12".
-        const retained_rows = [...rows, ...commandRows()]
+        const retained_rows = allRows()
             .filter((row) => !clearing.has(key(row)))
             .sort(
                 (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
@@ -662,7 +680,7 @@ export function logStream({
             output.focus({ preventScroll: true });
         }
     };
-    search.oninput = severity.onchange = () => {
+    const applyFilters = () => {
         matchIndex = -1;
         text(matchCount, '');
         display();
@@ -670,6 +688,15 @@ export function logStream({
         // address follows the filters instead of only being read from.
         if (onFilter) onFilter({ severity: severity.value, search: search.value });
     };
+    // Typing a term repaints and rewrites the address; per keystroke over a 1000-line
+    // buffer that is a rebuild of every row on every letter. A select is a deliberate
+    // act and applies at once.
+    let filterTimer = 0;
+    search.oninput = () => {
+        clearTimeout(filterTimer);
+        filterTimer = setTimeout(applyFilters, 120);
+    };
+    severity.onchange = applyFilters;
     output.addEventListener('scroll', () => {
         const away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
         jump.hidden = !away;
@@ -703,6 +730,13 @@ export function logStream({
                 event.preventDefault();
                 search.focus();
                 search.select();
+                return;
+            }
+            if (shortcut === 'c' && event.shiftKey) {
+                const selected = window.getSelection()?.toString() ?? '';
+                if (!selected.trim()) return;
+                event.preventDefault();
+                copy(selected, 'Selection copied.');
                 return;
             }
             if (shortcut === 'l') {
@@ -771,7 +805,7 @@ export function logStream({
         // is kept, so Restore can bring it back.
         // Only what is on screen: adding the whole pending buffer made the pill
         // count lines the pane had never shown.
-        for (const row of [...rows, ...commandRows()]) clearing.add(key(row));
+        for (const row of allRows()) clearing.add(key(row));
         frozen = null;
         fresh = 0;
         display(true);
@@ -783,10 +817,15 @@ export function logStream({
         else display(true);
     }
 
-    const transcript = (rawOnly) =>
-        [...rows, ...commandRows()]
+    /**
+     * What the pane is showing, as text. Cleared rows are excluded: `matches` only
+     * ever filtered the *filter*, so Copy and Export handed back lines the operator
+     * had explicitly cleared while the toast claimed "visible output copied".
+     */
+    const transcriptBody = (rawOnly) =>
+        allRows()
             .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
-            .filter(matches)
+            .filter((row) => matches(row) && !cleared(row))
             .map((row) =>
                 rawOnly
                     ? rawLine(row)
@@ -795,6 +834,23 @@ export function logStream({
                       }`
             )
             .join('\n');
+
+    /** An export is a file someone else reads, so it says what was filtered out. */
+    const transcriptFile = (rawOnly) => {
+        const header = [
+            `# ${title}`,
+            `# exported ${new Date().toISOString()}`,
+            `# severity=${severity.value} search=${search.value.trim() || '(none)'}`,
+            `# showing=${sourceMode} wrap=${wrapMode ? 'on' : 'off'}`,
+            `# capacity=${capacity} retained=${retained}${
+                dropped ? ` dropped=${dropped}` : ''
+            }${clearing.size ? ` cleared=${clearing.size}` : ''}`,
+            file?.path ? `# file=${file.path}` : null
+        ]
+            .filter(Boolean)
+            .join('\n');
+        return header + '\n' + transcriptBody(rawOnly);
+    };
 
     // Secondary actions stay behind one menu: a tail needs Pause, Tail and Jump,
     // not nine equal buttons in a row.
@@ -813,12 +869,57 @@ export function logStream({
     });
     rawToggle.setAttribute('aria-pressed', String(rawMode));
     rawToggle.title = 'Render the exact text the server wrote to its log file';
+    // Clear lives here as well as on Ctrl+L: on a phone the pane's hint line (the only
+    // place the shortcut was written) is hidden, so there was no way to clear at all.
+    const clearButton = button('Clear the pane', () => clear());
+    clearButton.title = 'Hide everything on screen (Ctrl+L); Restore brings it back';
+    const wrapToggle = button(wrapMode ? 'No wrapping' : 'Wrap long lines', () => {
+        wrapMode = !wrapMode;
+        text(wrapToggle, wrapMode ? 'No wrapping' : 'Wrap long lines');
+        wrapToggle.setAttribute('aria-pressed', String(!wrapMode));
+        output.classList.toggle('no-wrap', !wrapMode);
+        cache.clear();
+        display();
+    });
+    wrapToggle.setAttribute('aria-pressed', String(!wrapMode));
+    wrapToggle.title = 'Show long lines as one scrollable row instead of reflowing them';
+    output.classList.toggle('no-wrap', !wrapMode);
+    menuBody.append(clearButton, wrapToggle);
+    if (commands) {
+        const wedge = select('Show', ['Answers', 'Server log', 'Both'], 'Answers');
+        wedge.title = 'Answers to your commands, the server log behind them, or both';
+        wedge.onchange = () => {
+            sourceMode =
+                wedge.value === 'Answers' ? 'answers' : wedge.value === 'Server log' ? 'log' : 'both';
+            matchIndex = -1;
+            text(matchCount, '');
+            display(true);
+        };
+        menuBody.append(wedge);
+    }
     menuBody.append(
         rawToggle,
-        button('Copy', () =>
-            copy(transcript(rawMode), rawMode ? 'Raw lines copied.' : 'Visible output copied.')
-        ),
-        button('Export', () => download('tortodrone-log.txt', transcript(rawMode)))
+        button('Copy', () => {
+            const body = transcriptBody(rawMode);
+            const lines = body ? body.split('\n').length : 0;
+            copy(
+                body,
+                lines
+                    ? `${lines} ${lines === 1 ? 'line' : 'lines'} copied${
+                          clearing.size ? ', cleared lines left out' : ''
+                      }.`
+                    : 'Nothing to copy.'
+            );
+        }),
+        button('Export', () =>
+            download(
+                `tortodrone-${commands ? 'console' : 'log'}-${new Date()
+                    .toISOString()
+                    .slice(0, 19)
+                    .replace(/[:T]/g, '-')}.txt`,
+                transcriptFile(rawMode)
+            )
+        )
     );
     if (onLoadFile) {
         const load = button('Load last 500 from file', async () => {

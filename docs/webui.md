@@ -123,6 +123,18 @@ report, including a stack trace's indentation.
 | `p` | Pause or resume the stream |
 | `Esc` | Leave the output pane |
 
+The gutter is apparatus, so `time`, `level` and `thread` are not selectable: dragging
+a message out of the pane yields the message, not the four columns in front of it.
+`Ctrl`/`⌘` + `Shift` + `C` copies just the selection. **More → No wrapping** shows a
+stack trace or a long JSON line as one scrollable row instead of reflowing it.
+
+**More → Clear the pane** is the keyboard shortcut's control, because the hint line
+that documents `Ctrl+L` is hidden on a phone. Copy and Export hand back what is on
+screen: cleared rows are left out, an export names its filters, capacity, dropped and
+cleared counts in a header, and the filename carries the page and the time. Typing in
+the search field repaints after a 120 ms pause rather than on every keystroke, which
+used to rebuild every cached row per letter over a 1000-line buffer.
+
 The status line never claims more than it has: it reports the buffer's capacity
 and how many lines were evicted (`1000 of 1000, 42 older dropped`) and names the
 file that holds the complete log. `More → Load last 500 from file` reads that file
@@ -146,7 +158,12 @@ prints its candidates when they are ambiguous, and says so plainly when a comman
 takes an argument the page cannot guess; `↑`/`↓` walk the history, `Esc` clears the
 prompt, and `Ctrl`/`⌘` + `L`/`C` clear the screen and cancel. A structured answer is
 printed as aligned key/value pairs rather than prettified JSON, so `status` fits on
-one screen. The connection state lives in the status line (`● Connected`,
+one screen. **More → Show** decides what the pane is about: `Answers` (the default,
+because the server log underneath is context and used to bury every answer under live
+INFO chatter), `Server log`, or `Both`. A running command pulses its answer row and
+blinks a block cursor beside the prompt label — a still `running…` reads as a hang —
+and a second submit names the command that is still out instead of saying "a command
+is already running". The connection state lives in the status line (`● Connected`,
 `Executing…`, `Disconnected · reason`), and an expired session puts **Sign in again**
 there instead of printing *Sign in required* after every command.
 
@@ -214,10 +231,11 @@ beside a preview, and attachments.
   cannot answer "who did not get it".
 - **Reading a letter:** the campaign name opens a read-only rendering of what was
   sent, with its window, sender, gifts and counts, and an *Edit* action inside.
-- **Drafts:** *Save as draft* sets a deliberate future window and says so; saving a
-  window that already contains now asks a second time. *Duplicate* opens a new
-  mailing with an empty future window and warns that the original already reached
-  its recipients.
+- **Scheduling, not drafts:** there is no draft state. A campaign is either armed
+  for a window or cancelled, and *Save* sets a deliberate future window and says so;
+  saving a window that already contains now asks a second time. *Duplicate* opens a
+  new mailing with an empty future window and warns that the original already
+  reached its recipients.
 - **Receipts:** a browser-local panel (localStorage, capped, clearable) keeps the
   per-recipient result of every direct send, so a batch is explainable after the
   toast is gone; the authoritative server counts live under *Inspect recipients*.
@@ -235,7 +253,9 @@ the server and are not part of a WebUI identity.
 | Header clock | Date only, or date and local time. |
 | Rows per page | Default page size for new tables (15/30/60/120); each table also remembers its own. |
 | Refresh frequency | Multiplies the polling interval so metered links can poll less often. |
-| Destructive actions | Toggles the interface confirmation prompt. The server keeps its own required confirmation. |
+
+Every destructive action asks for confirmation in the interface; that is not a
+preference, and the server keeps its own required confirmation regardless.
 
 `Copy diagnostics` copies the version, role, session expiry, preference snapshot,
 user agent and viewport for support reports.

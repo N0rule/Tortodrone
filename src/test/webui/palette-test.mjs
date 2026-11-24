@@ -45,3 +45,14 @@ test('descriptions outside the title still match through the describe hook', () 
     assert.equal(rank(entries, 'offers', (entry) => entry.hint).length, 1);
     assert.equal(rank(entries, 'offers').length, 1);
 });
+
+test('the server identity is reachable by the words an operator types for it', () => {
+    // The key lives in an Overview panel; the palette entry is what makes it findable.
+    const identity = {
+        title: 'Server public key',
+        hint: 'Identity · fingerprint · modulus · ssh'
+    };
+    for (const query of ['key', 'public', 'identity', 'fingerprint', 'modulus', 'ssh'])
+        assert.equal(rank([identity], query).length, 1, `"${query}" finds the server key`);
+    assert.equal(rank([identity], 'zzzz').length, 0);
+});

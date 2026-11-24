@@ -23,6 +23,11 @@ const alias = {
     review: 'details',
     help: 'details',
     info: 'details',
+    // No client art is exported as nav-search or nav-warning, so the table's empty
+    // state and every error state fell through to no icon at all. `details` is the
+    // client's inspect glyph and is the closest thing the pack actually carries.
+    search: 'details',
+    warning: 'details',
     weapon: 'slot-weapon',
     helmet: 'slot-helmet',
     armor: 'slot-armor',

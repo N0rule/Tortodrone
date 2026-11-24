@@ -188,7 +188,10 @@ export async function mount(ctx) {
     }
     let index = history.length,
         draft = '',
-        pending = false;
+        pending = false,
+        // Which command is out. "A command is already running" is not an answer when
+        // the prompt is blank and the operator has forgotten what they sent.
+        running = '';
     function record(value, result, error = false, paint = true) {
         // Replace the echoed prompt line when one is still pending, so a slow
         // command shows its prompt immediately and never double-prints. The stream
@@ -264,7 +267,11 @@ export async function mount(ctx) {
             if (command.selectionStart !== command.selectionEnd) return;
             event.preventDefault();
             if (pending) {
-                stream.announce('A command is already running; its answer will arrive.');
+                stream.announce(
+                    running
+                        ? `Still waiting for “${running}”; its answer will land in the transcript.`
+                        : 'A command is already running; its answer will arrive.'
+                );
                 return;
             }
             command.value = commandDraft = '';
@@ -331,7 +338,11 @@ export async function mount(ctx) {
         event.preventDefault();
         const value = command.value.trim();
         if (pending) {
-            stream.announce('A command is already running; wait for its answer.');
+            stream.announce(
+                running
+                    ? `“${running}” is still running; Enter again once its answer lands.`
+                    : 'A command is already running; wait for its answer.'
+            );
             return;
         }
         if (!value) return;
@@ -359,6 +370,7 @@ export async function mount(ctx) {
             return;
         }
         pending = true;
+        running = value;
         busy(true);
         // Record the command when it is submitted, not when its answer lands: the
         // echo already exists by then, so the old guard dropped every command and
@@ -385,6 +397,7 @@ export async function mount(ctx) {
             if (error.status >= 500) ctx.report(error);
         } finally {
             pending = false;
+            running = '';
             busy(false);
         }
     };

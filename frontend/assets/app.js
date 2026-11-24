@@ -617,6 +617,17 @@ const palette = createPalette({
                 run: () => go(page.name)
             })),
         {
+            // The key an operator copies to add this server on another machine used
+            // to be reachable only by knowing it lives in an Overview panel. Palette
+            // matching covers `title` and `hint`, so the words people actually type
+            // (key, fingerprint, modulus, public) all land here.
+            id: 'identity',
+            title: 'Server public key',
+            hint: 'Identity · fingerprint · modulus · ssh',
+            group: 'Page',
+            run: () => go('overview', { panel: 'identity' })
+        },
+        {
             id: 'refresh',
             title: 'Refresh this page',
             hint: 'Action',

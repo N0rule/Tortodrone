@@ -96,6 +96,10 @@
     --bad: #a52f2d;
     --purple: #6b3f8f;
     --shadow: 0 12px 32px #24465d1a;
+    /* Elevation is a theme token, not a dark-theme constant: white surfaces kept the
+       dark shadow and read as if they were floating under the wrong light. */
+    --elev-1: 0 1px 2px #24465d26;
+    --elev-2: 0 6px 18px #24465d24;
     --meter: #9a6c12;
     --meter-edge: #6f4d0a;
     --effect-bg: #f5e6b6;

@@ -19,7 +19,11 @@ import {
 } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { toast } from '../components/toast.js';
-import { openDialog, confirm as confirmAction } from '../components/dialog.js';
+// Two different confirm shapes: `confirm` takes positional route fields (a gated
+// server action), `confirmAction` takes an options object (a local, irreversible edit).
+// They were imported under one name, so the receipts Clear handed an options object to
+// the positional form: `api.change(undefined, {})` and nothing was ever cleared.
+import { openDialog, confirm, confirmAction } from '../components/dialog.js';
 import { emptyState, errorState, waiting } from '../components/states.js';
 import { itemPicker } from '../components/item-picker.js';
 import { currency, itemLine } from '../components/items.js';
@@ -594,7 +598,7 @@ function deliveredLabel(campaign) {
                     'Cancel',
                     async () => {
                         try {
-                            await confirmAction(
+                            await confirm(
                                 'Cancel mailing · ' + get().subject,
                                 'mail-cancel',
                                 { id: get().id, revision: get().updated },
@@ -1170,6 +1174,19 @@ function deliveredLabel(campaign) {
             else toast(`All ${keys.length} delivered.`, { type: 'success' });
         }
 
+        // Declared before the direct-mode block, not after it: `fill()` runs inside that
+        // block and reads `attemptedSend` through `syncCount`, so a declaration further
+        // down was a temporal-dead-zone `ReferenceError` -- the dialog threw before it was
+        // ever inserted, and "Send to knight" opened nothing at all.
+        let before = '';
+        // Any edit withdraws an armed confirmation, so the second press sends what the
+        // operator is looking at rather than what they confirmed. `attemptedSend` keeps the
+        // recipient count neutral until a send has actually been tried.
+        let attemptedSend = false;
+        const armReset = () => {
+            if (before) before = '';
+        };
+
         if (mode === 'direct') {
             const filter = input('Filter knights');
             const target = el('div', null, 'mail-recipients');
@@ -1380,15 +1397,6 @@ function deliveredLabel(campaign) {
             node.append(recipientPanel);
         }
 
-        // Set when a dangerous submit asked for a second press, cleared by any edit.
-    let before = '';
-    const armReset = () => {
-        if (before) before = '';
-    };
-    // Any edit withdraws an armed confirmation, so the second press sends what the
-    // operator is looking at rather than what they confirmed. `attemptedSend` keeps the
-    // recipient count neutral until a send has actually been tried.
-    let attemptedSend = false;
     const messagePanel = panel(
             'Message',
             el('div', null, 'mail-compose-split'),

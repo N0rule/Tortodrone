@@ -209,9 +209,16 @@ td .unavailable-reason.shown {
 /* A pending control keeps its label and grows a spinner instead of going blank. */
 button[aria-busy='true'],
 .button[aria-busy='true'] {
+    /* The busy flag also sets aria-disabled, and that rule's grey repaint made every
+       spinner look broken rather than working. Declared later at equal specificity, so
+       the ink of the action survives while the spinner turns. */
     cursor: progress;
     opacity: 1;
-    pointer-events: none;
+    color: var(--control-fg);
+    background: var(--control-bg);
+    border-color: var(--control-border);
+    /* No `pointer-events: none`: it made `cursor: progress` a lie, and ui.js already
+       refuses a second press while the control is busy. */
 }
 button[aria-busy='true']::before,
 .button[aria-busy='true']::before {
@@ -258,8 +265,8 @@ button.primary,
     --control-border: var(--action);
     font-weight: 700;
 }
-button.primary:not(:disabled):hover,
-.button.primary:not(:disabled):hover {
+button.primary:not(:disabled):not([aria-disabled='true']):hover,
+.button.primary:not(:disabled):not([aria-disabled='true']):hover {
     background: var(--action-hover);
     border-color: var(--action-hover);
 }
@@ -269,11 +276,14 @@ button.secondary,
 .button.secondary {
     --control-bg: var(--raised);
     --control-fg: var(--text);
-    /* The panel keeps the bright boundary; the control inside it is a fill. */
-    --control-border: var(--line);
+    /* This is the default control in the whole UI, so its boundary is what decides
+       whether the product reads as flat: --line is 1.71:1 against a panel and turned
+       every toolbar into labels with a smudge around them. The mix clears 3:1 against
+       the panel it sits on without competing with a primary's fill. */
+    --control-border: color-mix(in srgb, var(--line-bright) 62%, var(--raised));
 }
-button.secondary:not(:disabled):hover,
-.button.secondary:not([aria-disabled='true']):hover {
+button.secondary:not(:disabled):not([aria-disabled='true']):hover,
+.button.secondary:not(:disabled):not([aria-disabled='true']):hover {
     border-color: var(--line-bright);
     background: color-mix(in srgb, var(--raised) 76%, var(--line-bright));
 }
@@ -283,8 +293,8 @@ button.quiet,
     --control-border: transparent;
     box-shadow: none;
 }
-button.quiet:not(:disabled):hover,
-.button.quiet:not(:disabled):hover {
+button.quiet:not(:disabled):not([aria-disabled='true']):hover,
+.button.quiet:not(:disabled):not([aria-disabled='true']):hover {
     background: var(--raised);
     border-color: transparent;
 }
@@ -297,8 +307,8 @@ button.danger,
     --control-fg: var(--bad);
     --control-border: var(--bad);
 }
-button.danger:not(:disabled):hover,
-.button.danger:not(:disabled):hover {
+button.danger:not(:disabled):not([aria-disabled='true']):hover,
+.button.danger:not(:disabled):not([aria-disabled='true']):hover {
     background: color-mix(in srgb, var(--bad) 22%, var(--surface));
     border-color: var(--bad);
 }
@@ -548,13 +558,7 @@ time {
 }
 
 /* A finger is not a mouse: on a coarse pointer every control keeps the large step,
-   because a 34px target is a miss on the surface most likely to be driven from a
-   phone. */
-@media (pointer: coarse) {
-    button,
-    .button,
-    select,
-    input[type='search'] {
-        min-block-size: var(--control-lg);
-    }
-}
+   because a 32px target is a miss on the surface most likely to be driven from a
+   phone. The rule lives at the end of pages.css, the last stylesheet, because a
+   single-class selector here lost to `td button` and `.pagination button` and the
+   documented touch size never applied to the controls it named. */
