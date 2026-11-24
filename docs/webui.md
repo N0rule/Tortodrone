@@ -287,8 +287,13 @@ beside a preview, and attachments.
   recipients* reads `mail-deliveries` for the per-knight roster, then diffs it
   against the knight roster it already holds for the reach figure — the count alone
   cannot answer "who did not get it", so a **Show not yet delivered (N)** toggle does,
-  with its own export. When the roster could not be read the dialog says that instead
-  of printing an empty list as if everybody had received it.
+  with its own export. The diff joins on the knight *name*, not on an id: a delivery
+  row's `worldId` is `world_characters.world_id` (a global sequence) while a roster
+  row's id is `knights.id` (restarts at 1 per account), and `global_knight_names`
+  makes the name unique across accounts. Comparing the two id spaces reported every
+  second account's first knight as already delivered. When the roster could not be
+  read the dialog says that instead of printing an empty list as if everybody had
+  received it.
 - **Reading a letter:** the campaign name opens a read-only rendering of what was
   sent, with its window, sender, gifts and counts, and an *Edit* action inside.
 - **Scheduling, not drafts:** there is no draft state. A campaign is either armed
@@ -524,7 +529,7 @@ the code it was supposed to describe.
 | Asset class | Raw | Gzip | Transport |
 | --- | --- | --- | --- |
 | `index.html` | 9 860 B | 2 234 B | Gzip when the browser offers it, `must-revalidate` |
-| JavaScript (33 files under `frontend/assets`) | 595 551 B | 150 701 B | Gzip, `must-revalidate`, ETag per encoding |
+| JavaScript (33 files under `frontend/assets`) | 596 425 B | 151 010 B | Gzip, `must-revalidate`, ETag per encoding |
 | CSS (5 sheets) | 113 738 B | 27 102 B | Gzip, `must-revalidate`, ETag per encoding |
 | Icons and artwork (5081 files, 87 MB on disk) | median icon 16 kB | n/a | `max-age=31536000, immutable` for the content-hashed `assets/game/icons/<hash>` paths |
 
