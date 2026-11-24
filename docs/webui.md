@@ -243,8 +243,13 @@ beside a preview, and attachments.
   reached its recipients.
 - **Proof read:** *Send a copy to me* exists in every compose mode, not just a
   direct send: a campaign reaches every knight, so the letter can be read in the
-  client first. It uses the roster the reach count already loaded.
-- **Receipts:** a browser-local panel (localStorage, capped, clearable) keeps the
+  client first. A copy is the letter alone — the composer's crowns, energy and gifts
+  are stripped, because a proof read must not pay out a campaign's loot — and it
+  still demands a subject and a body. The roster it picks from is the one the reach
+  count already loaded; *Retry the knight count* stays on screen and names the time
+  of the read it is showing, since a 30-second poll does not re-read every knight.
+- **Receipts:** a browser-local panel (localStorage, capped, clearable — clearing it
+  is a local act and says so instead of reporting a server save) keeps the
   per-recipient result of every direct send, so a batch is explainable after the
   toast is gone; the authoritative server counts live under *Inspect recipients*.
 

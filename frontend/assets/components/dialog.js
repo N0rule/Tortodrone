@@ -262,12 +262,16 @@ export function confirmAction({
     label = 'Confirm',
     content,
     variant = 'primary',
-    onSubmit
+    onSubmit,
+    notifySaved = true,
+    after
 }) {
     const body = el('div', null, 'stack');
     if (content) body.append(content);
     body.append(el('p', description, 'muted'));
-    return openDialog({ title, content: body, submit: label, variant, onSubmit });
+    // `notifySaved: false` is for an action that never reaches the server: clearing a
+    // browser-local list toasted "Changes saved." and refreshed the whole page.
+    return openDialog({ title, content: body, submit: label, variant, onSubmit, notifySaved, after });
 }
 
 /* A retype gate ("Type the name", "Repeat the command") is the shape this UI uses

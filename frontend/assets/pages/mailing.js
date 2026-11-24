@@ -279,10 +279,14 @@ export async function mount(ctx) {
         );
     guidance.append(el('summary', 'How delivery works'), guidanceText);
     let roster = null,
+        rosterReadAt = 0,
         receipts = loadReceipts();
 
     const rosterRows = async () => {
-        if (!roster) roster = await ctx.request('knights-all');
+        if (!roster) {
+            roster = await ctx.request('knights-all');
+            rosterReadAt = Date.now();
+        }
         return roster;
     };
     const population = () => (roster ? roster.length : null);
@@ -596,19 +600,16 @@ function deliveredLabel(campaign) {
                 button('Duplicate', () => duplicate(get()), 'secondary'),
                 button(
                     'Cancel',
-                    async () => {
-                        try {
-                            await confirm(
-                                'Cancel mailing · ' + get().subject,
-                                'mail-cancel',
-                                { id: get().id, revision: get().updated },
-                                [],
-                                'Knights who already received this mailing keep it. No further deliveries will be made.'
-                            );
-                        } catch (error) {
-                            throw normalized(error);
-                        }
-                    },
+                    // `confirm` only opens the dialog: the request runs inside it and
+                    // reports its own refusal, so a try/catch here was dead code.
+                    () =>
+                        confirm(
+                            'Cancel mailing · ' + get().subject,
+                            'mail-cancel',
+                            { id: get().id, revision: get().updated },
+                            [],
+                            'Knights who already received this mailing keep it. No further deliveries will be made.'
+                        ),
                     'secondary',
                     () => get().enabled,
                     { showReason: true, unavailable: 'This mailing is already cancelled.' }
@@ -677,7 +678,13 @@ function deliveredLabel(campaign) {
             },
             'quiet'
         );
-        countKnights.title = 'The roster read failed; this retries it once.';
+        // Reaching a figure this control can refresh, and saying when it was read, is
+        // better than re-reading every knight on a 30-second poll.
+        countKnights.title = rosterReadAt
+            ? `Re-read the knight roster. The reached figure is from ${new Date(
+                  rosterReadAt
+              ).toLocaleTimeString()}.`
+            : 'The roster read failed; this retries it once.';
         const content = [
             guidance,
             toolbar(
@@ -695,7 +702,10 @@ function deliveredLabel(campaign) {
                           : `${delivered.toLocaleString()} of ${countOf(total, 'knight')} reached`,
                     delivered ? 'gold' : ''
                 ),
-                ...(roster ? [] : [countKnights])
+                // Not `...(roster ? [] : [countKnights])`: once the first read succeeded
+                // the only control that could re-read the roster vanished, exactly when
+                // the "N of M reached" numbers started going stale.
+                countKnights
             )
         ];
         if (roster && !roster.length)
@@ -727,10 +737,18 @@ function deliveredLabel(campaign) {
                                 'These receipts are stored in this browser. The delivery counts on this page come from the server and are not affected.',
                             label: 'Clear receipts',
                             variant: 'danger',
+                            // Nothing is sent to the server, so nothing may claim a save or
+                            // reload the page: a local clear says what it did.
+                            notifySaved: false,
                             onSubmit: async () => {
+                                const cleared = receipts.length;
                                 receipts = [];
                                 saveReceipts(receipts);
                                 renderReceipts();
+                                toast(
+                                    `Cleared ${countOf(cleared, 'local receipt')} from this browser.`,
+                                    { type: 'success' }
+                                );
                             }
                         }),
                     'secondary'
@@ -1203,15 +1221,26 @@ function deliveredLabel(campaign) {
                   )
                 : null;
         const myKnight = () => (pick ? mine[Number(pick.value)] || mine[0] : mine[0]);
+        // A proof read is a proof read. `letterValues()` carries the composer's crowns,
+        // energy and gifts, so a copy of a campaign would have paid the operator's knight
+        // the campaign's own loot; a copy is the letter, and nothing else.
+        const proofLetter = (letter) =>
+            mode === 'direct' ? letter : { ...letter, crowns: 0, energy: 0, items: [] };
         const proofCopy = button(
             'Send a copy to me',
             async () => {
                 const knight = myKnight();
                 proofCopy.setBusy(true);
                 try {
+                    if (mode !== 'direct') {
+                        // `checkLetter` lets an unarmed welcome letter be empty, and a copy
+                        // of nothing is not a proof of anything.
+                        if (!strip(subject.value)) throw invalid('Subject is required');
+                        if (!strip(body.value)) throw invalid('Body is required');
+                    }
                     checkLetter();
                     await write('mail-send', {
-                        ...letterValues(),
+                        ...proofLetter(letterValues()),
                         username: knight.username,
                         knight: knight.name
                     });
@@ -1232,7 +1261,14 @@ function deliveredLabel(campaign) {
                 }
             },
             'secondary',
-            () => mine.length > 0
+            () => mine.length > 0,
+            {
+                showReason: true,
+                unavailable:
+                    roster === null
+                        ? 'The knight roster could not be read, so there is no inbox to test with.'
+                        : 'This account has no knight, so there is no inbox to test with. Create a knight in the game client.'
+            }
         );
         proofCopy.title = mine.length
             ? 'Sends this exact letter to your own knight first, as a proof read in the client.'

@@ -98,11 +98,15 @@ th {
 /* A sortable header lines up with the data under it and keeps the caret on the
    far edge, where it reads as a column control rather than a stray glyph. */
 /* `th` is already --raised, so the generic `.quiet` hover painted the same colour and
-   a sortable header gave no feedback at all. The `aria-sort` guard is gone: that
-   attribute lives on the `th`, never on this button. */
-th button:not(:disabled):not([aria-disabled='true']):hover {
+   a sortable header gave no feedback at all. `aria-sort` lives on the `th`, so the
+   guard is scoped there: hovering the *sorted* column used to repaint its cyan ink as
+   body text and lose the marker under the pointer. */
+th:not([aria-sort]) button:not(:disabled):not([aria-disabled='true']):hover {
     background: color-mix(in srgb, var(--raised) 68%, var(--line-bright));
     color: var(--text);
+}
+th[aria-sort] button:not(:disabled):not([aria-disabled='true']):hover {
+    background: color-mix(in srgb, var(--raised) 80%, var(--line-bright));
 }
 th button {
     padding: 10px 12px;
