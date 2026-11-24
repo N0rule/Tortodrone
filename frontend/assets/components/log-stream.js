@@ -29,7 +29,18 @@ export function logStream({
     onFilter = null,
     // The Console answers commands; it has no tail to follow and nothing to pause, so
     // those two controls are not built there at all (the page's own hint said so).
-    tail = true
+    tail = true,
+    // What the bar is counting. A console holds answers, which may each print many
+    // lines, so calling them "lines" was a number that never matched the pane.
+    countNoun = ['line', 'lines'],
+    // A console has no Tail control but still opens at its prompt, the way a
+    // terminal does: without this it opened on the oldest server line in the buffer
+    // and the prompt, the banner and the last answer were all below the fold.
+    autoScroll = false,
+    // Where to go next from what the pane shows. A warning in the log names a
+    // subsystem and stops there; the pages that explain it belong beside the pane,
+    // not in a sentence the operator has to translate into a route.
+    extras = []
 } = {}) {
     const node = el('div', null, 'terminal-shell stack-tight'),
         bar = el('div', null, 'terminal-bar'),
@@ -182,6 +193,47 @@ export function logStream({
         return String(value);
     };
 
+    /**
+     * A shell prints `613 MiB`, not `643825664`: the same figures the Overview formats
+     * were arriving as raw scalars, so one `status` answer was less readable than the
+     * card it links to.
+     */
+    const human = (key, value) => {
+        if (typeof value !== 'number' || !Number.isFinite(value)) return cell(value);
+        const name = String(key).toLowerCase();
+        // `heapCommitted` and `physicalTotal` are byte counts whose names do not end in
+        // `Bytes`: one `status` answer printed five nine-digit integers.
+        if (/bytes?$|size$|heap|physical|memory/.test(name) && Math.abs(value) >= 1024) {
+            const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
+            let size = Math.abs(value),
+                unit = 0;
+            while (size >= 1024 && unit < units.length - 1) {
+                size /= 1024;
+                unit++;
+            }
+            return `${value < 0 ? '-' : ''}${size.toFixed(unit ? 1 : 0)} ${units[unit]}`;
+        }
+        if (/nanos|ns$/.test(name)) return `${(value / 1e6).toFixed(2)} ms`;
+        if (/millis|ms$/.test(name)) return `${value.toFixed(1)} ms`;
+        if (/cpu|percent|ratio$/.test(name) && Math.abs(value) <= 1)
+            return `${(value * 100).toFixed(1)} %`;
+        if (/seconds|elapsed|uptime$/.test(name)) {
+            const total = Math.max(0, Math.round(value));
+            const days = Math.floor(total / 86400),
+                rest = total % 86400,
+                hours = Math.floor(rest / 3600),
+                minutes = Math.floor((rest % 3600) / 60);
+            if (days) return `${days}d ${hours}h`;
+            if (hours) return `${hours}h ${minutes}m`;
+            if (minutes) return `${minutes}m ${total % 60}s`;
+            return `${total}s`;
+        }
+        if (/count|total|used|free|available|max$/.test(name))
+            return Math.round(value).toLocaleString('en-US');
+        if (/fraction|load/.test(name)) return value.toFixed(2);
+        return Number.isInteger(value) ? value.toLocaleString('en-US') : String(value);
+    };
+
     /** Key/value pairs in two aligned columns, nesting by indentation. */
     function align(value, indent = '') {
         if (value === null || typeof value !== 'object') return indent + cell(value);
@@ -198,7 +250,9 @@ export function logStream({
             .map(([key, item]) => {
                 const label = indent + key.padEnd(width);
                 const nested = item !== null && typeof item === 'object';
-                return nested ? `${label}:\n${align(item, indent + '  ')}` : `${label}: ${cell(item)}`;
+                return nested
+                    ? `${label}:\n${align(item, indent + '  ')}`
+                    : `${label}: ${human(key, item)}`;
             })
             .join('\n');
     }
@@ -223,7 +277,7 @@ export function logStream({
             barMeta,
             clearing.size
                 ? ''
-                : `${visible} ${visible === 1 ? 'line' : 'lines'}${
+                : `${visible} ${visible === 1 ? countNoun[0] : countNoun[1]}${
                       visible !== total ? ` of ${total}` : ''
                   }${paused ? ' · paused' : ''}${paused && fresh ? ` · ${fresh} new` : ''}`
         );
@@ -321,6 +375,18 @@ export function logStream({
             // prompt line; the transcript is the record of what was issued.
             line.classList.add('notice');
             message.replaceChildren(el('pre', formatOutput(row.entry.output), 'command-response'));
+            // A notice may name the page that explains it; without its links the
+            // console's first line was the one place links were silently dropped.
+            if (row.entry.links?.length && onLink) {
+                const links = el('span', null, 'command-links');
+                for (const link of row.entry.links) {
+                    const go = el('button', link.label, 'link');
+                    go.type = 'button';
+                    go.onclick = () => onLink(link);
+                    links.append(go);
+                }
+                message.append(links);
+            }
             line.append(message);
             line.title = new Date(row.timestamp).toLocaleString();
             line.dataset.sig = signature(row);
@@ -374,7 +440,14 @@ export function logStream({
             search.value.trim().toLowerCase()
         ].join('·');
 
+    let firstPaint = true;
     function display(force = false) {
+        // The first paint always lands at the end: a pane that opens above its own
+        // prompt makes the operator scroll before they can type.
+        if (firstPaint) {
+            firstPaint = false;
+            if (autoScroll) force = true;
+        }
         // Cleared means cleared: filtering only the console's own rows left a paused
         // pane showing twelve lines under the words "0 lines of 12".
         const retained_rows = [...rows, ...commandRows()]
@@ -456,7 +529,7 @@ export function logStream({
         if (!auto && anchor?.isConnected && before != null)
             output.scrollTop += anchor.getBoundingClientRect().top - before;
         renderStatus();
-        if (auto && (atBottom || force)) {
+        if ((auto || autoScroll) && (atBottom || force)) {
             output.scrollTop = output.scrollHeight;
             if (!output.isConnected)
                 requestAnimationFrame(() => {
@@ -716,7 +789,7 @@ export function logStream({
         menuBody.append(load);
     }
     menu.append(menuToggle, menuBody);
-    tools.append(search, severity, ...(tail ? [pause, follow] : []), menu, undoClear);
+    tools.append(search, severity, ...(tail ? [pause, follow] : []), menu, undoClear, ...extras);
 
     /** Parse the file's own `[24-11-2026 04:53:11]` prefix into an instant. */
     function fileStamp(value) {

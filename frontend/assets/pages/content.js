@@ -122,7 +122,10 @@ export async function mount(ctx) {
         {
             key: keyOf,
             id: 'content-merchants',
+            // The item picker owns `?search=` on this page, so the merchant table owns
+            // its own param: one name, one owner, no view that cannot be named.
             address: true,
+            addressParam: 'merchant',
             caption: 'Merchant stations in the exported town catalogue',
             exportName: 'merchant-stations',
             pageSize: 10,
@@ -242,6 +245,9 @@ export async function mount(ctx) {
      * all in place. A param that is gone clears the state it owned.
      */
     function applyParams(params) {
+        // The merchant table owns `?merchant=`, and an in-app link has to drive it the
+        // same way a cold load does: the table read its parameter when it was built.
+        stationTable.setQuery(params.get('merchant') ?? '');
         const search = params.get('search');
         if (search !== null || appliedSearch !== null) {
             appliedSearch = search;

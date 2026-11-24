@@ -323,6 +323,9 @@ export async function mount(ctx) {
         refresh,
         interval: 30000,
         async navigate(params) {
+            // `?search=` belongs to the table: a link to a filtered list has to drive
+            // the box the same way a cold load does, or the address lies in-app.
+            table.setQuery(params.get('search') ?? '');
             selected = params.get('username');
             await show();
         }

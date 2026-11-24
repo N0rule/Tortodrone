@@ -174,8 +174,10 @@ export async function mount(ctx) {
                 // names the config it actually sells and its own id: two priced offers
                 // must never be visually identical.
                 (o) => {
+                    // One 13px line per row: 56px of art inside a table row made 328
+                    // offers a 99px-per-row, 22-page list.
                     const cell = el('div', null, 'offer-reference');
-                    cell.append(item(o));
+                    cell.append(el('span', offerName(o)));
                     const detail = String(o.good.item || '')
                         .split('/')
                         .filter(Boolean)

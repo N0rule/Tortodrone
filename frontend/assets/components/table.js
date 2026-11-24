@@ -100,8 +100,10 @@ export class DataTable {
             initialQuery = '',
             // `address: true` makes the query and the filters part of the URL: every
             // list that reads `?search=` on arrival must also write it back, or a
-            // shared link can disagree with the screen it was meant to name.
+            // shared link can disagree with the screen it was meant to name. A page
+            // with two tables gives one of them its own param name.
             address = false,
+            addressParam = 'search',
             empty,
             onRefresh,
         } = {}
@@ -143,8 +145,12 @@ export class DataTable {
         this.query = input('Search records');
         this.query.type = 'search';
         this.query.placeholder = 'Search records';
+        this.addressParam = addressParam;
         // A table that owns its address reads the search from it as well as writing it.
-        const fromAddress = this.address ? route().params.get('search') : null;
+        // The flag is read from the option, not from a field that is assigned further
+        // down: reading `this.address` here was always undefined, so the query never
+        // came back from a cold load while the filters did.
+        const fromAddress = address ? route().params.get(addressParam) : null;
         if (fromAddress) this.query.value = fromAddress;
         else if (initialQuery) this.query.value = initialQuery;
         this.controls = toolbar();
@@ -156,10 +162,13 @@ export class DataTable {
         this.choices = filters.map(([name, values, match, initial]) => {
             const savedValue = saved?.filters?.[name];
             const fromAddress = this.address ? route().params.get(name.toLowerCase()) : null;
-            const start = values.includes(savedValue)
-                ? savedValue
-                : values.includes(fromAddress)
-                  ? fromAddress
+            // The address outranks a remembered preference: a shared link that says
+            // `?availability=Disabled` has to show disabled offers even in a browser
+            // that last looked at enabled ones, or the link silently lies.
+            const start = values.includes(fromAddress)
+                ? fromAddress
+                : values.includes(savedValue)
+                  ? savedValue
                   : (initial ?? values[0]);
             const control = select(name, values, start);
             control.dataset.filter = name;
@@ -348,6 +357,7 @@ export class DataTable {
                     this.query.value = '';
                     this.page = 1;
                     this.render();
+                    this.syncAddress();
                 }
             };
         }
@@ -362,8 +372,9 @@ export class DataTable {
         if (!this.address) return;
         const params = route().params;
         const query = this.query?.value?.trim() || '';
-        if (query) params.set('search', query);
-        else params.delete('search');
+        const own = this.addressParam || 'search';
+        if (query) params.set(own, query);
+        else params.delete(own);
         for (const [control, name] of this.choices) {
             const chosen = control.value;
             const first = this.filtersInitial[name];
@@ -412,6 +423,10 @@ export class DataTable {
         this.rows = rows;
         this.describe = new Map();
         this.render();
+        // A remembered preference that the address does not mention is written into
+        // it once, so a copied link carries the table the operator is looking at
+        // instead of the table that browser happens to remember.
+        this.syncAddress();
     }
 
     /**

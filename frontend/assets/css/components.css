@@ -159,8 +159,11 @@ tbody tr:hover td.row-actions {
 td.row-actions .toolbar {
     column-gap: 4px;
 }
-/* Row actions use the small control size so dense tables stay scannable. */
-td button {
+/* Row actions use the small control size so dense tables stay scannable. Anchors
+   that route count as row actions too: a row that mixed a 36px/13px link with a
+   34px/12.5px button sat 1px off its own baseline. */
+td button,
+td .button {
     padding: 0 10px;
     min-block-size: var(--control-sm);
     font-size: 12.5px;

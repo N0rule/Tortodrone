@@ -156,11 +156,32 @@ bar, the note and the pill count the same set.
 
 The severity and search fields write their state back into the address, so
 `#logs?severity=WARN&search=timeout` is what the operator is looking at and can be
-copied.
+copied. `?raw=1` describes the same pane and survives a typed search.
 
-Deep links land on a filtered view: `#logs?severity=WARN` and
-`#logs?search=timeout` are used by the Overview warnings table, and
-`#players?scene=<name>` by the monster table.
+The bar also carries the three pages a line is *about* — **Audit trail**, **Accounts**,
+**Overview** — because a warning names a subsystem and stops there. A fresh console
+opens at its prompt with one banner line counting the commands, naming the keys, and
+linking the pages that explain an answer; every console answer that maps to a page ends
+with that link.
+
+Deep links land on a filtered view, and every filter is written back: `#logs?severity=WARN`,
+`#logs?search=timeout`, `#console?search=status`, `#accounts?search=aelric`,
+`#knights?status=Online`, `#mailing?search=hi`, `#content?search=Key` and
+`#depot?availability=Enabled` all round-trip, so what the operator sees is what the
+address says. A table owns its address through `address: true` (`assets/components/table.js`):
+it reads `?search=` and each filter on arrival and replaces them on every edit, keeping
+the params it does not own, so `?tab=`, `?offer=` and `?campaign=` survive. The address
+outranks a filter this browser remembered, so a shared link shows what it names; a read
+that lands writes the view it is showing into the address, so a copied link is never a
+promise the screen does not keep. An in-app link drives the same controls a cold load
+does, because the table read its parameter when it was built. A record
+that is named in the address — an offer, a station, a letter, an audit event, a knight,
+the key card — is applied on a cold load, after the page has attached, and scrolled
+into view; a record that no longer exists is reported in the frame the page paints.
+
+Every write that gets no answer says so: the dialog error line and the page notice
+report that the change may or may not have been stored, and ask the operator to reopen
+the record before saving again, because a lost reply is not a lost write.
 
 ## Player Mail
 
@@ -268,8 +289,9 @@ administrator can therefore confirm the transport in use without reading
 | Width | What changes |
 | --- | --- |
 | 1560 px and up | Content column capped so tables and charts keep a readable measure. |
-| 761–1559 px | Sidebar stays fixed; two-column page sections keep their columns. |
-| 760 px and below | Sidebar becomes a drawer with a scrim and `inert` background; tables become labelled cards (`.data-table` at `components.css`, the 760 px block); search takes its own line; touch targets grow to 36 px. |
+| 901–1559 px | Sidebar stays fixed; two-column page sections keep their columns. |
+| 900 px and below | Sidebar becomes a drawer with a scrim and `inert` background, and the top bar's **Menu** button opens it (`(max-width: 900px)` in both `layout.css` and `app.js`); tables become labelled cards (`.data-table` at `components.css`, the 900 px block); search takes its own line; touch targets grow to 36 px. |
+| 1000 px and below | The search trigger keeps its words and drops the `Ctrl K` chip, which a phone cannot press. |
 | 360 px | The narrowest supported width: every page fits without horizontal scrolling, which `shell.js` asserts. |
 
 ## Accessibility

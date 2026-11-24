@@ -155,7 +155,9 @@ let generation = 0,
     expiryWarned = false;
 
 const rank = () => ['VIEWER', 'MODERATOR', 'ADMINISTRATOR'].indexOf(api.session?.role);
-const mobile = matchMedia('(max-width: 760px)');
+// Matches the 900px card-and-sidebar breakpoint in layout.css: between 761px and
+    // 900px the sidebar is a drawer, so the toggle has to open it there too.
+const mobile = matchMedia('(max-width: 900px)');
 const pageFor = (name) =>
     pages.find(
         (page) =>

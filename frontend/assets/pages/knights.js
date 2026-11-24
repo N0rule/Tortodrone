@@ -847,6 +847,9 @@ export async function mount(ctx) {
         refresh,
         async navigate(next) {
             requestId++;
+            // The list keeps its search in the address; an in-app link has to move the
+            // box, not only a reloaded document.
+            roster.setQuery(next.get('search') ?? '');
             const nextTab = sectionNames.some(([id]) => id === next.get('tab'))
                 ? next.get('tab')
                 : 'equipment';

@@ -311,8 +311,12 @@ button.link,
     --control-bg: transparent;
     --control-border: transparent;
     color: var(--cyan);
-    min-block-size: 0;
-    padding: 0;
+    /* Link-styled, but still a control: the audit drill-downs are 17px tall with no
+       padding, under the 24x24 minimum, and they are the way into an event. */
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 24px;
+    padding: 2px 0;
     box-shadow: none;
     text-align: left;
     text-decoration: underline;
@@ -378,6 +382,15 @@ input,
 select,
 textarea {
     font: inherit;
+}
+/* `:user-invalid` only matches after a submit or a blur on a field the operator
+   touched, so a dialog no longer looks submittable while three fields are invalid
+   and says nothing about which. */
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid {
+    border-color: var(--bad);
+    box-shadow: 0 0 0 1px var(--bad);
 }
 input,
 select,

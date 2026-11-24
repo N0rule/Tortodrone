@@ -1,5 +1,17 @@
-import { text, $ } from '../ui.js';
+import { button, text, $ } from '../ui.js';
+import { route } from '../router.js';
 import { logStream } from '../components/log-stream.js';
+
+/**
+ * A warning in the log names a subsystem and stops there. These three pages are
+ * where an operator checks what the line is about, so they sit in the same bar as
+ * the search instead of being three routes to remember.
+ */
+const RELATED = [
+    ['audit', 'Audit trail'],
+    ['accounts', 'Accounts'],
+    ['overview', 'Overview']
+];
 
 /**
  * The log page is a tail, not a table: it fills the reading area, keeps the last
@@ -16,13 +28,22 @@ export async function mount(ctx) {
         raw: ctx.params.get('raw') === '1',
         fill: true,
         onLoadFile: (limit) => ctx.request('logs-file', { limit: String(limit) }),
+        extras: RELATED.map(([page, label]) => {
+            const go = button(label, () => ctx.go(page), 'link');
+            go.title = `Open ${label} — the page that explains what this line is about`;
+            return go;
+        }),
         // The filter is the view, so it belongs in the address: the operator can copy
         // what they are looking at instead of describing it to a colleague. Replace
         // rather than push, so a typed search does not stack history entries.
         onFilter: ({ severity, search }) => {
-            const params = new URLSearchParams();
+            // Only the two params this filter owns are rewritten: `raw=1` describes the
+            // same pane and used to be dropped by the first keystroke.
+            const params = route().params;
             if (severity && severity !== 'All') params.set('severity', severity);
+            else params.delete('severity');
             if (search) params.set('search', search);
+            else params.delete('search');
             const hash = '#logs' + (params.size ? '?' + params : '');
             if (location.hash !== hash) window.history.replaceState(null, '', hash);
         }

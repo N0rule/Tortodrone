@@ -1847,6 +1847,8 @@ export async function mount(ctx) {
      * is the whole point of putting the letter in the URL.
      */
     function applyParams(params) {
+        // The campaign table owns `?search=`; the composer reads `?campaign=`.
+        table.setQuery(params.get('search') ?? '');
         const tab = params.get('tab');
         // The node may not be in the document yet, so scrolling now does nothing:
         // the arrival is scheduled for the frame after insertion.

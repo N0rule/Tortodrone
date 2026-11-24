@@ -135,22 +135,13 @@
 #navigation-backdrop {
     display: none;
 }
-/* The shipped symbol pack has no navigation bar glyph, so the mobile toggle draws
-   three hairlines in currentColor rather than falling back to a text character. */
+/* The shipped symbol pack has no navigation glyph, and a hand-drawn hamburger is
+   invented art: the toggle says "Menu". It is hidden on a wide screen, where the
+   sidebar is always present. */
 #menu {
-    inline-size: var(--control-sm);
-    block-size: var(--control-sm);
-    padding: 0;
-}
-#menu::before {
-    content: '';
-    inline-size: 15px;
-    block-size: 1.5px;
-    background: currentColor;
-    border-radius: var(--radius-pill);
-    box-shadow:
-        0 -5px currentColor,
-        0 5px currentColor;
+    display: none;
+    min-inline-size: 0;
+    padding: 0 12px;
 }
 main {
     max-width: 1560px;
@@ -418,6 +409,11 @@ main {
 }
 @media (max-width: 1000px) {
     .search-trigger span {
+        /* The chip goes; the word stays, so the button is named by something a thumb
+           can act on. */
+        display: block;
+    }
+    .search-trigger .kbd {
         display: none;
     }
     .search-trigger {

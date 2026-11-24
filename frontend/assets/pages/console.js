@@ -70,8 +70,11 @@ export async function mount(ctx) {
             commands: outputHistory,
             title: 'tortodrone — console',
             fill: true,
-            // A console has no tail to follow and nothing to freeze.
+            // A console has no tail to follow and nothing to freeze, but it still
+            // opens at the prompt: the newest line and the banner belong on screen.
             tail: false,
+            autoScroll: true,
+            countNoun: ['answer', 'answers'],
             severity: ctx.params.get('severity') || 'All',
             search: ctx.params.get('search') || '',
             // The filter is part of the view: writing it into the address is what lets
@@ -131,18 +134,46 @@ export async function mount(ctx) {
             error: true
         });
     /** Write a line into the transcript that is not an answer to a command. */
-    const notice = (message) => {
-        outputHistory.push({ time: Date.now(), command: '', output: message, notice: true });
+    const notice = (message, kind = true) => {
+        outputHistory.push({ time: Date.now(), command: '', output: message, notice: kind });
         if (outputHistory.length > 50) outputHistory.shift();
         stream.redraw();
     };
     // The transcript outlives the document: a reload mid-command keeps the echo and
     // the answers, and says so, instead of dropping the only evidence it happened.
     if (restore()) {
+        // One notice per document: it is restored with the transcript, so re-saving it
+        // on every reload stacked a wall of identical lines that pushed the answers it
+        // was explaining out of the fifty-entry buffer.
+        for (let index = outputHistory.length - 1; index >= 0; index--)
+            if (outputHistory[index].notice === 'restore') outputHistory.splice(index, 1);
         notice(
-            'Answers issued before this page was reloaded are kept below. A command whose answer arrived while the page was gone shows only its echo — the audit trail has the outcome.'
+            'Answers issued before this page was reloaded are kept below. A command whose answer arrived while the page was gone shows only its echo — the audit trail has the outcome.',
+            'restore'
         );
         persist();
+    }
+    // A fresh console opened on a blank pane, with the ten commands, the Tab hint and
+    // the three pages that explain an answer all somewhere else. A shell prints a
+    // banner; this one prints one too, and its links are the answer to "now what".
+    if (!outputHistory.length) {
+        outputHistory.push({
+            time: Date.now(),
+            command: '',
+            notice: true,
+            output:
+                'tortodrone console · ' +
+                words.length +
+                ' commands\n' +
+                'Type a command and press Enter. help lists every command; Tab completes a name.\n' +
+                'Reads print an answer; writes ask for their argument first.',
+            links: [
+                { label: 'Accounts', page: 'accounts' },
+                { label: 'Audit trail', page: 'audit' },
+                { label: 'Server log', page: 'logs' }
+            ]
+        });
+        stream.redraw();
     }
     let index = history.length,
         draft = '',
