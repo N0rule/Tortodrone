@@ -164,6 +164,9 @@ th button {
     color: inherit;
     background: transparent;
     box-shadow: none;
+    /* The base control tracks 0.01em, which was there to open up tracked capitals.
+       Sentence-case headers kept the residue: 0.13px of air no one asked for. */
+    letter-spacing: 0;
     /* A sortable header is a control: 400 weight made it the one control on the page
        that did not look like one. */
     font-weight: 600;
@@ -415,11 +418,13 @@ td .toolbar .button .ui-icon,
     border: 1px solid var(--line);
     border-radius: var(--radius-control);
 }
-/* The art keeps a 4px inset at every size, so a 36px row thumbnail and a 112px
-   sprite portrait are the same picture at two scales instead of two crops. */
+/* The art keeps 2px of air inside its frame at every size, so a 36px row thumbnail and
+   a 112px sprite portrait are the same picture at two scales instead of two crops.
+   Measured inside the frame's own border, that draws a row thumbnail at 30px — big
+   enough to identify the item beside two lines of text, which 26px was not. */
 .item-icon img {
-    width: calc(100% - 8px);
-    height: calc(100% - 8px);
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
     object-fit: contain;
 }
 /* A config the pack has no picture of: the frame stays so the column keeps its
@@ -743,6 +748,19 @@ dialog[open]::backdrop {
 }
 .chart-current .secondary-value strong {
     color: var(--muted);
+}
+/* The colour a reading wears on the graph, beside the reading: one rule per series,
+   14x3px, in the same stroke the line is drawn in. */
+.chart-swatch {
+    align-self: center;
+    inline-size: 14px;
+    block-size: 3px;
+    flex: 0 0 14px;
+    border-radius: var(--radius-pill);
+    background: var(--cyan);
+}
+.chart-swatch.secondary-swatch {
+    background: var(--gold);
 }
 @media (max-width: 600px) {
     .form-grid {
@@ -1448,7 +1466,13 @@ caption {
     min-inline-size: 0;
     padding: 9px 12px;
     background: var(--inset);
-    border: 1px solid var(--line);
+    /* A value an operator clicks, focuses and copies: the boundary that locates a
+       control, not the quiet edge a container wears. */
+    border: 1px solid var(--line-bright);
+    /* The value is 518 characters in a 972px box and the scrollbar never renders, so
+       without this the key read as a string that had been cut in half. The fade says
+       the line continues; the mask moves with nothing, so the tail stays selectable. */
+    mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
     border-radius: var(--radius-control);
     color: var(--text);
     font-family: var(--mono);

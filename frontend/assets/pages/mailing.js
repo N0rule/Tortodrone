@@ -872,10 +872,13 @@ function deliveredLabel(campaign) {
             );
         else header.append();
         const content = [
+            // The body step and a measure, not the caption step across the whole panel:
+            // a 165-character sentence at 11.5px is a line of small print nobody
+            // finishes, which is the rule .prose-note was written for.
             el(
-                'small',
+                'p',
                 'Letters sent directly from this browser, newest first, kept in this browser only. A mailing’s own deliveries are counted from the server and listed under Recipients.',
-                'muted'
+                'muted prose-note'
             )
         ];
         if (!receipts.length)

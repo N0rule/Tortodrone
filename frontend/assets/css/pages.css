@@ -196,9 +196,11 @@ button.metric:focus-visible {
 }
 .news-preview {
     padding: 10px;
-    border: 2px solid var(--line-bright);
+    /* A container beside two panels, so it wears the container's edge and the
+       surface radius: 2px of --line-bright made a peer block look like a control. */
+    border: 1px solid var(--line-panel);
     background: var(--inset);
-    border-radius: var(--radius-control);
+    border-radius: var(--radius);
 }
 .news-preview .news-slot {
     display: grid;
@@ -1175,6 +1177,14 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
 .station-kind {
     white-space: nowrap;
 }
+/* Auto layout hands slack to whichever column asks for the most, and a timestamp
+   wrapped in a `time` element asked for 423px to print 175px of stamp: the widest
+   column in the audit trail carried its least interesting value. A cell whose only
+   content is a stamp now sizes to it. */
+td:has(> .time-stamp) {
+    inline-size: 1%;
+    white-space: nowrap;
+}
 /* The audit trail's scope line: a sentence about how much of the trail is on screen,
    on its own line above the two controls that move through it. */
 .audit-scope {
@@ -1354,12 +1364,6 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     .sprite-overview dt {
         margin-top: 8px;
     }
-}
-.gear-card .item-icon img,
-.sprite-overview .item-icon img,
-.sprite-skills .item-icon img {
-    width: calc(100% - 10px);
-    height: calc(100% - 10px);
 }
 
 /* A compact identity ledger, with the existing wallet kept alongside it. */

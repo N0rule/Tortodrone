@@ -159,11 +159,11 @@ export async function mount(ctx) {
         counters.push([value, sub]);
     }
     const range = select(
-        'Monitoring range',
+        'Chart range',
         [
-            [5, '5 minutes'],
-            [15, '15 minutes'],
-            [60, '1 hour']
+            [5, 'Last 5 minutes'],
+            [15, 'Last 15 minutes'],
+            [60, 'Last hour']
         ],
         5
     );
@@ -266,10 +266,12 @@ export async function mount(ctx) {
                 (r) => routeLink(sceneLabel(r.name), 'players', { scene: r.name })
             ],
             ['State', (r) => r.state],
-            ['Players', (r) => r.players],
-            ['Live', (r) => r.monsters.total],
-            ['Awake', (r) => r.monsters.awake],
-            ['Engaged', (r) => r.monsters.engaged]
+            // The four counts end on one edge, like every other numeric column in the
+            // product; this was the only table whose numbers sat left-aligned.
+            ['Players', (r) => r.players, (r) => r.players, 'end'],
+            ['Live', (r) => r.monsters.total, (r) => r.monsters.total, 'end'],
+            ['Awake', (r) => r.monsters.awake, (r) => r.monsters.awake, 'end'],
+            ['Engaged', (r) => r.monsters.engaged, (r) => r.monsters.engaged, 'end']
         ],
         {
             key: (r) => `${r.templateId}:${r.instanceId}`,
@@ -352,7 +354,16 @@ export async function mount(ctx) {
         // between the operator and every figure the console reports.
         strip,
         metrics,
-        toolbar(range, el('small', 'Measured every 5 seconds · retained in memory for 1 hour')),
+        // The chart range names what it ranges over. Alone on the row, `5 minutes`
+        // governed two panels below it with nothing between them to say so.
+        toolbar(
+            (() => {
+                const wrap = el('span', null, 'filter-label');
+                wrap.append(el('span', 'Chart range', 'filter-label-text'), range);
+                return wrap;
+            })(),
+            el('small', 'Measured every 5 seconds · retained in memory for 1 hour')
+        ),
         charts,
         panel('Scene monster runtime', monsters.node),
         panel('Recent warnings and errors', warnings.node),
@@ -513,7 +524,7 @@ export async function mount(ctx) {
         // the caption of a different kind of number than the four beside them.
         const monsterTotal = s.scenes.reduce((a, v) => a + v.monsters.total, 0);
         text(counters[4][0], monsterTotal);
-        text(counters[4][1], `${s.scenes.length} active scenes`);
+        text(counters[4][1], `${s.scenes.length} active ${s.scenes.length === 1 ? 'scene' : 'scenes'}`);
         text(
             counters[5][0],
             s.scenes.reduce((a, v) => a + v.monsters.engaged, 0)

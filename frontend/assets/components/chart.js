@@ -45,8 +45,13 @@ export function chart(title, unit, series) {
         current = el('div', null, 'chart-current'),
         currentValues = series.map((s, i) => {
             const row = el('div', null, i ? 'secondary-value' : ''),
-                value = el('strong', '—');
-            row.append(value, el('small', s.name + (unit.startsWith('events') ? ' / sample' : '')));
+                value = el('strong', '—'),
+                // A key: the number, the series' own colour and the word for it. Two
+                // lines of muted text over two lines of graph named neither, so a
+                // reader could see there were two series and not which was which.
+                swatch = el('span', null, i ? 'chart-swatch secondary-swatch' : 'chart-swatch');
+            swatch.setAttribute('aria-hidden', 'true');
+            row.append(swatch, value, el('small', s.name + (unit.startsWith('events') ? ' / sample' : '')));
             current.append(row);
             return value;
         });
@@ -181,15 +186,14 @@ export function chart(title, unit, series) {
                     label
                 );
             }
-            if (values.length)
-                for (const [value, x, anchor] of [
-                    [values[0], 45, 'start'],
-                    [values.at(-1), 580, 'end']
-                ]) {
-                    const label = svg('text', { x, y: 181, 'text-anchor': anchor });
-                    label.textContent = time(value.time);
-                    grid.push(label);
-                }
+            if (values.length) {
+                // The left label says when the window opens; where it ends is the
+                // readout under the graph's own subject, and printing that time at both
+                // ends of one axis was two answers to one question.
+                const label = svg('text', { x: 45, y: 181, 'text-anchor': 'start' });
+                label.textContent = time(values[0].time);
+                grid.push(label);
+            }
             lines.replaceChildren(...grid);
             series.forEach((s, at) => {
                 let d = '',

@@ -104,15 +104,27 @@ export async function mount(ctx) {
                         mark.classList.add('station-mark');
                         cell.append(mark);
                     }
-                    const label = station.name && station.name !== '~' ? station.name : station.actor;
+                    /* The readable name leads and the engine's identifier follows, in
+                       the mono face that says "this is a path". A station with no name
+                       of its own — most of them — used to put the whole actor path on
+                       the first line at full ink, so the string only the engine can
+                       read outranked every name on the page. Such a station is led by
+                       the last segment of its own path and the breadcrumb to it sits
+                       underneath. */
+                    const segments = String(station.actor || '')
+                        .split('/')
+                        .filter(Boolean);
+                    const named = Boolean(station.name) && station.name !== '~';
+                    const label = named ? station.name : segments.at(-1) || '—';
                     const link = routeLink(label, 'content', { station: keyOf(station) });
                     link.title = station.actor;
                     cell.append(link);
-                    if (station.name && station.name !== '~') {
+                    const trail = named ? station.actor : segments.slice(0, -1).join('/');
+                    if (trail) {
                         // The actor is a path, and a long one wrapped the cell to three
                         // lines beside a name of one: the row keeps its height and the
                         // whole path stays reachable as the tooltip.
-                        const actor = el('small', station.actor, 'muted');
+                        const actor = el('small', trail, 'muted');
                         actor.title = station.actor;
                         cell.append(actor);
                     }

@@ -114,7 +114,9 @@
     --inset: #f1f6f9;
     --line: #bdcfdc;
     --line-bright: #678193;
-    --line-panel: #cfdde7;
+    /* 1.18:1 was not a line: on white panels that lost their shadow, the container
+       edge has to be visible at 1x, and 2:1 on the canvas is the quietest that reads. */
+    --line-panel: #b4c9d6;
     --line-data: #7f93a2;
     --text: #203a4d;
     --muted: #3f5c70;
