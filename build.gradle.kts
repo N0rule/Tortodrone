@@ -208,6 +208,18 @@ val checkContentDuplication = tasks.register<JavaExec>("checkContentDuplication"
     mainClass.set("ContentAudit")
     workingDir = projectDir
     args("check")
+    // Same treatment as validateContent: this reads the content tree and writes nothing,
+    // so an unchanged tree should not pay for it on every Java task.
+    val stamp = layout.buildDirectory.file("content-duplication.stamp")
+    inputs.dir("content")
+    inputs.file("scripts/content/duplicate-allowlist.txt")
+    outputs.file(stamp)
+    outputs.cacheIf { false }
+    doLast {
+        val file = stamp.get().asFile
+        file.parentFile.mkdirs()
+        file.writeText("checked\n")
+    }
 }
 val reportContentDuplication = tasks.register<JavaExec>("reportContentDuplication") {
     group = "verification"
@@ -359,9 +371,36 @@ val selectedUnitPrograms = requestedUnitTests?.split(',')?.map { requested ->
         throw GradleException("Unknown or ambiguous unit test '$name'; use a test class name, separated by commas")
     matches.single()
 }?.distinct() ?: unitProgramNames
-// 271 standalone programs in one JVM is the gate's wall time. `-PunitShard=1/4` takes
-// every fourth program, so CI can run the shards as separate runners instead of paying
-// the sum of all of them on one machine.
+// 268 standalone programs in one JVM is the gate's wall time: a measured full run takes
+// 1883 s of program time (31m23s, wall 31m26s on an i5-8250U). `-PunitShard=i/n` slices
+// that into separate runners instead of paying the sum on one machine.
+// Shards are balanced by *time*, not by count, because the tail is a few simulations:
+// ContentMigrationTest (348 s) and SpatialIndexDifferentialTest (319 s) alone are 35% of
+// the gate, and the ten slowest programs are 53%. Assigning every fourth program by index
+// gives bins of 242/778/322/540 s; packing longest-first into the lightest bin gives four
+// bins of 471 s each, which is the floor set by "one program cannot be split".
+// Weights come from `scripts/tests/unit-timings.properties` (checked in, so CI and fresh
+// checkouts balance without a prior run), overridden by build/unit-timings.properties once
+// a local run has recorded fresher numbers. Refresh the checked-in file after re-running
+// `./gradlew testUnit`: it is written on every run.
+val unitTimings = layout.buildDirectory.file("unit-timings.properties")
+fun parseUnitTimings(file: File): Map<String, Long> =
+    if (!file.isFile) {
+        emptyMap()
+    } else {
+        file.readLines()
+            .mapNotNull { line ->
+                val parts = line.split('=')
+                if (parts.size == 2) parts[0].trim() to parts[1].trim().toLongOrNull() else null
+            }
+            .filter { (name, nanos) -> name.isNotEmpty() && nanos != null && nanos > 0 }
+            .associate { (name, nanos) -> name to nanos!! }
+    }
+// Fresh numbers win per program, missing names fall back to the checked-in baseline, so a
+// focused run (`-PunitTests=WebUiTest`) records one program without degrading the rest.
+val recordedUnitTimings: Map<String, Long> =
+    parseUnitTimings(layout.projectDirectory.file("scripts/tests/unit-timings.properties").asFile) +
+        parseUnitTimings(unitTimings.get().asFile)
 val requestedShard = providers.gradleProperty("unitShard").orNull
 val shardSelection = requestedShard?.split('/')?.map { it.trim().toIntOrNull() }?.let { parts ->
     val index = parts.getOrNull(0)
@@ -382,9 +421,33 @@ val testUnit = tasks.register<JavaExec>("testUnit") {
     workingDir = projectDir
     useBuildTemp()
     val (shardIndex, shardCount) = shardSelection
+    val timings = recordedUnitTimings
     val programs =
-        if (shardCount == 1) selectedUnitPrograms
-        else selectedUnitPrograms.filterIndexed { position, _ -> position % shardCount == shardIndex }
+        when {
+            shardCount == 1 -> selectedUnitPrograms
+            timings.isEmpty() ->
+                // No timing record yet: fall back to index modulo, which is at least
+                // deterministic and loses nothing.
+                selectedUnitPrograms.filterIndexed { position, _ -> position % shardCount == shardIndex }
+            else -> {
+                // Two passes, because a record is always incomplete: a program that has
+                // never been timed must not be treated as free, or one bin takes all of
+                // them. The untimed ones spread round-robin first; then the timed ones
+                // go longest-first into the lightest bin, so the shard walls land within
+                // one slow program of each other.
+                val bins = List(shardCount) { mutableListOf<String>() }
+                val loads = LongArray(shardCount)
+                val unknown = selectedUnitPrograms.filter { timings[it] == null }
+                val known = selectedUnitPrograms.filter { timings[it] != null }
+                unknown.forEachIndexed { position, name -> bins[position % shardCount].add(name) }
+                for (name in known.sortedByDescending { timings[it] ?: 0L }) {
+                    val lightest = loads.indices.minBy { loads[it] }
+                    bins[lightest].add(name)
+                    loads[lightest] += timings[name] ?: 0L
+                }
+                bins[shardIndex].sorted()
+            }
+        }
     if (programs.isEmpty())
         throw GradleException("Shard ${shardIndex + 1}/$shardCount selects no unit program")
     inputs.property("programs", programs)
@@ -392,6 +455,8 @@ val testUnit = tasks.register<JavaExec>("testUnit") {
     // scope and invalidated the configuration cache.
     systemProperty("unitShard", "${shardIndex + 1}/$shardCount")
     systemProperty("unitPrograms", selectedUnitPrograms.size.toString())
+    // Where the suite records durations for the next sharded run.
+    systemProperty("unitTimings", unitTimings.get().asFile.absolutePath)
     args(programs)
 }
 val serverPath = publicOutput.file("tortodrone.jar").asFile.absolutePath

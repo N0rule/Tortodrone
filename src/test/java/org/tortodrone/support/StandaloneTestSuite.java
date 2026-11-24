@@ -44,6 +44,22 @@ public final class StandaloneTestSuite {
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
                 .forEach(entry ->
                         System.out.printf(Locale.ROOT, "  %.2fs %s%n", entry.getValue() / 1e9, entry.getKey()));
+        String timings = System.getProperty("unitTimings", "");
+        if (!timings.isEmpty()) {
+            var file = java.nio.file.Path.of(timings);
+            try {
+                java.nio.file.Files.createDirectories(file.getParent());
+                var lines = new ArrayList<String>();
+                // Sorted, so the record stays diffable when it is copied into
+                // scripts/tests/unit-timings.properties as the checked-in baseline.
+                durations.entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .forEach(entry -> lines.add(entry.getKey() + "=" + entry.getValue()));
+                java.nio.file.Files.write(file, lines);
+            } catch (java.io.IOException ignored) {
+                // A missing record only falls the next sharded run back to index modulo.
+            }
+        }
         if (!failures.isEmpty()) throw new AssertionError("Unit test failures: " + String.join("; ", failures));
         System.out.println("PASS: " + tests.length + " standalone unit programs");
     }
