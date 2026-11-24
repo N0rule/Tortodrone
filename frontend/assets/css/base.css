@@ -145,6 +145,19 @@ tr:hover th .unavailable-reason.shown,
 tr:focus-within th .unavailable-reason.shown {
     display: block;
 }
+/* Shown as a floating note: revealing it inside the cell re-laid the whole table row
+   and moved the button the operator was reaching for. */
+td .unavailable-reason.shown {
+    position: absolute;
+    inset-block-start: calc(100% - 8px);
+    inset-inline-end: 6px;
+    z-index: 4;
+    padding: 4px 7px;
+    background: var(--raised);
+    border: 1px solid var(--line-bright);
+    border-radius: 6px;
+    box-shadow: 0 8px 18px rgb(0 0 0 / 38%);
+}
 /* A disabled note in a toolbar takes its own line, so the controls it sits between
    still read as one group. */
 .server-strip .toolbar .unavailable-reason {

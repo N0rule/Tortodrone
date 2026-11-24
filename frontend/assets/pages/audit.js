@@ -186,8 +186,20 @@ export async function mount(ctx) {
     // the first thing an operator reads is the events, not an empty pane.
     detail.hidden = true;
     node.append(table.node, detail);
+    let pendingEvent = null;
     async function refresh() {
         table.update(await ctx.request('audit'));
+        // A cold load applies the address before the trail exists; the event it names
+        // is opened as soon as there are rows to find it in.
+        if (pendingEvent !== null) {
+            const wanted = pendingEvent;
+            const row = table.rows.find((r) => r.id === wanted);
+            pendingEvent = null;
+            if (row) {
+                showDetail(row);
+                table.markInspected?.(row);
+            } else ctx.notify(`There is no audit event #${wanted} on this server.`);
+        }
     }
     await refresh();
     /** Deep links (#audit?actor=…) re-filter the trail in place. */
@@ -205,10 +217,7 @@ export async function mount(ctx) {
             if (row) {
                 showDetail(row);
                 table.markInspected?.(row);
-            } else
-                ctx.notify(
-                    `There is no audit event #${wanted} in the trail on this server; the list below is the whole set.`
-                );
+            } else pendingEvent = wanted;
         }
     }
     return { node, refresh, interval: 10000, navigate: applyParams };

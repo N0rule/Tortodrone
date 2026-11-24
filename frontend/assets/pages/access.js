@@ -153,7 +153,8 @@ export async function mount(ctx) {
                 ]
             ],
             actions: (get) => [
-                button('Inspect', () => here({ user: get().username })),
+                // The page's own address, so an inspection does not rename the route.
+                button('Inspect', () => go('access', { user: get().username })),
                 button('Reset password', () => resetPassword(get())),
                 // The server refuses to remove the last administrator, so the
                 // control says so instead of spending a round trip on a 409.

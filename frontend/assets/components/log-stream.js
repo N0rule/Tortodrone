@@ -320,10 +320,11 @@ export function logStream({
         ].join('·');
 
     function display(force = false) {
-        const retained_rows = [
-                ...rows,
-                ...commandRows().filter((row) => !clearing.has(key(row)))
-            ].sort(
+        // Cleared means cleared: filtering only the console's own rows left a paused
+        // pane showing twelve lines under the words "0 lines of 12".
+        const retained_rows = [...rows, ...commandRows()]
+            .filter((row) => !clearing.has(key(row)))
+            .sort(
                 (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
             ),
             visible = retained_rows.filter(matches),
@@ -471,6 +472,12 @@ export function logStream({
 
     /** Filtering must not yank a reader who scrolled back up to the bottom. */
     search.oninput = severity.onchange = () => display();
+    // The hint says Esc leaves; from the search field that means back to the pane.
+    search.onkeydown = (event) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        output.focus({ preventScroll: true });
+    };
     output.addEventListener('scroll', () => {
         const away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
         jump.hidden = !away;

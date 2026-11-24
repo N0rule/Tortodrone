@@ -18,6 +18,20 @@ import { chart } from '../components/chart.js';
 import { confirm, field, openDialog } from '../components/dialog.js';
 import { DataTable } from '../components/table.js';
 
+/**
+ * A scene id names a place, not a label: "%town:m.haven_town_square" is the key the
+ * server uses, and an operator should read "Haven Town Square".
+ */
+const sceneLabel = (name) => {
+    const id = String(name || '')
+        .replace(/^%/, '')
+        .replace(/^[a-z]+:/, '')
+        .replace(/^[a-z]\./, '');
+    const words = id.split(/[_.\s]+/).filter(Boolean);
+    if (!words.length) return String(name || '');
+    return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
 export async function mount(ctx) {
     const node = el('div', null, 'stack'),
         strip = el('div', null, 'server-strip'),
@@ -194,11 +208,10 @@ export async function mount(ctx) {
         identityActions = toolbar();
     identityKey.readOnly = true;
     identityKey.spellcheck = false;
-    identityKey.rows = 5;
+    identityKey.rows = 4;
     identityKey.setAttribute('aria-label', 'Server public key, modulus and exponent');
     identityWarning.hidden = true;
     const identityBits = el('span'),
-        identityExponent = el('span'),
         identityFileHash = el('code', null, 'identity-file-hash'),
         identityModified = el('span'),
         identityPair = el('span');
@@ -223,7 +236,6 @@ export async function mount(ctx) {
             )
         ],
         ['Key', identityBits],
-        ['Exponent', identityExponent],
         [
             'Public file SHA-256',
             identityPairValue(
@@ -266,12 +278,9 @@ export async function mount(ctx) {
         [
             [
                 'Scene',
-                (r) => {
-                    const open = el('button', r.name, 'link');
-                    open.type = 'button';
-                    open.onclick = () => ctx.go('players', { scene: r.name });
-                    return open;
-                }
+                // A real link, and the only one in this row: the same destination as a
+                // button beside it was a second control for one idea.
+                (r) => routeLink(sceneLabel(r.name), 'players', { scene: r.name })
             ],
             ['State', (r) => r.state],
             ['Players', (r) => r.players],
@@ -317,13 +326,9 @@ export async function mount(ctx) {
                         });
                     },
                     'secondary'
-                ),
-                routeLink(
-                    'Players here',
-                    'players',
-                    { scene: get().name },
-                    'button secondary'
                 )
+                // The scene name is the link to its players, so this row carries one
+                // destination, not the same one twice.
             ]
         }
     );
@@ -387,7 +392,6 @@ export async function mount(ctx) {
                     'The server has not created its keypair yet; it is created on the next start.'
             );
             text(identityBits, identity.keyStored ? 'signing key present' : 'no keypair yet');
-            text(identityExponent, '—');
             text(identityFileHash, '—');
             text(identityModified, '—');
             text(identityPair, identity.keyStored ? 'unknown' : 'absent');
@@ -408,8 +412,12 @@ export async function mount(ctx) {
             identityNote,
             `The public half only. Paste these characters into a client's server key to trust this server; the private key never leaves the machine.`
         );
-        text(identityBits, `RSA ${identity.bits}-bit`);
-        text(identityExponent, `0x${identity.exponent} (${Number.parseInt(identity.exponent, 16)})`);
+        // One row, not two: the exponent of an RSA handshake key is always 65537 and
+        // the facts grid was mostly whitespace.
+        text(
+            identityBits,
+            `RSA ${identity.bits}-bit · exponent 0x${identity.exponent} (${Number.parseInt(identity.exponent, 16)})`
+        );
         text(identityFileHash, identity.fileSha256 || '—');
         identityFileHash.title = identity.fileSha256Command
             ? `Verify on the host with: ${identity.fileSha256Command}`
@@ -461,8 +469,8 @@ export async function mount(ctx) {
         // only rewrite the field when it is not focused and the value changed.
         text(
             identityReach,
-            `Clients reach this server at this machine's own address with port ${
-                listenerPort || 'the game port'
+            `Clients dial this machine's own address${
+                listenerPort ? ` on port ${listenerPort}` : ' on the game port below'
             }; a bind address of 0.0.0.0 above means "every interface", not a destination.`
         );
         const shown = trustedKey();

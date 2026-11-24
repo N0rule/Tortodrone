@@ -391,8 +391,10 @@ export async function mount(ctx) {
             show();
         }
         applySearch(params);
-        const offer = Number(params.get('offer'));
-        // Offer ids start at 0, so > 0 made the first offer unreachable by link.
+        // `Number(null)` is 0, so an absent parameter used to pass the >= 0 guard and
+        // open offer #0's editor on every load of the depot.
+        const raw = params.get('offer'),
+            offer = raw === null || raw === '' ? null : Number(raw);
         focusOffer(Number.isInteger(offer) && offer >= 0 ? offer : null);
     }
     applyParams(ctx.params);

@@ -36,7 +36,7 @@ export async function mount(ctx) {
             fill: true,
             // The Console has no tail to follow and nothing to pause: advertising
             // those keys here promised behaviour this page does not have.
-            hint: 'Ctrl+F search · Ctrl+L clear · Tab completes · ↑ ↓ history',
+            hint: 'Ctrl+F search · Ctrl+L clear · Tab completes · ↑ ↓ history · the transcript keeps the last 50 answers',
             onLink: (link) => ctx.go(link.page, link.params || {})
         }),
         feedback = el('small', listError ? 'Command list unavailable' : 'Connected');
@@ -325,6 +325,10 @@ export async function mount(ctx) {
         }
     }
     await refresh();
+    // The prompt is the reason the page exists; a page that opens with the keys
+    // nowhere near it asks for a click before it can be used.
+    if (typeof requestAnimationFrame === 'function')
+        requestAnimationFrame(() => requestAnimationFrame(() => command.focus()));
     return {
         node,
         refresh,

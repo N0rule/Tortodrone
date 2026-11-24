@@ -1,4 +1,7 @@
-import { el, button, input, select, toolbar, text } from '../ui.js';
+import { el, button, input, select, toolbar, text, date } from '../ui.js';
+
+/** An epoch sort key exports as the timestamp the cell prints, not as milliseconds. */
+const stamp = (value) => date(value);
 import { emptyState } from './states.js';
 import { exportControls } from './export.js';
 import { read, write, schema } from '../prefs.js';
@@ -226,7 +229,9 @@ export class DataTable {
             row.append(cell);
         });
         if (actions) {
-            const cell = el('th', 'Actions');
+            // The header pins with its cells, or the label drifts off the column while
+            // the buttons stay put (and the column before it is painted underneath).
+            const cell = el('th', 'Actions', 'row-actions');
             cell.scope = 'col';
             row.append(cell);
         }
@@ -422,14 +427,19 @@ export class DataTable {
         return this.columns.map(([name, render, sortValue]) => [
             name,
             (row) => {
-                // The export must be the table the operator is looking at: render the
-                // cell and prefer its text, because the sort key is often a raw
-                // epoch or a count that no column ever shows.
+                // The export must be the table the operator is looking at. A scalar
+                // sort key IS the column's value (a subject, a count), so it wins; a
+                // cell that stacks several values (subject + snippet) would otherwise
+                // export as their concatenation, and an epoch key as its milliseconds.
+                const key = sortValue ? sortValue(row) : undefined;
+                if (typeof key === 'string' && key.trim()) return key;
+                if (typeof key === 'number' && Number.isFinite(key)) {
+                    if (key > 1e11) return stamp(key);
+                    return key;
+                }
                 const rendered = render(row);
                 if (rendered instanceof Node) return rendered.textContent ?? '';
-                if (rendered !== undefined && rendered !== null) return rendered;
-                const value = (sortValue || render)(row);
-                return value?.textContent ?? (value instanceof Node ? '' : value) ?? '';
+                return rendered ?? '';
             }
         ]);
     }

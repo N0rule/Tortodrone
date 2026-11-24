@@ -671,6 +671,8 @@ button.metric:focus-visible {
 /* The command list is the console's documentation, so it wraps instead of
    truncating, and each name is a control that fills the prompt. */
 .console-hint {
+    /* It is a <p>, so the global 78ch measure would cut the command list in half. */
+    max-width: none;
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
@@ -1652,4 +1654,55 @@ dd .bad {
 }
 .data-table tr.inspected > td:first-child {
     box-shadow: inset 3px 0 0 var(--cyan);
+}
+
+/* A landscape phone is the tightest case, and it comes last: these rules have to beat
+   the width-based heights above, so the shell takes what is left of the viewport and
+   the prompt stays on screen. */
+@media (max-height: 470px) {
+    .console-hint,
+    .terminal-hint {
+        display: none;
+    }
+    /* 205px is what the app header and the page heading take above the shell on a
+       landscape phone; the remainder is the shell, so nothing scrolls and the prompt
+       sits on screen with about five lines of output above it. */
+    .terminal-fill,
+    .console-workspace {
+        height: calc(100dvh - 205px);
+        min-height: 150px;
+    }
+    .terminal-bar {
+        padding: 2px 10px;
+    }
+    /* One row of controls, scrolled sideways if it must: letting the search wrap
+       onto its own line cost 108px of a 390px-tall screen and left the pane with a
+       single line of output. */
+    .terminal-tools {
+        flex-wrap: nowrap;
+        gap: 6px;
+        padding: 2px 8px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .terminal-tools::-webkit-scrollbar {
+        display: none;
+    }
+    .terminal-tools input[type='search'] {
+        flex: 1 1 120px;
+        order: 0;
+    }
+    .terminal-tools select {
+        min-inline-size: 72px;
+    }
+    .terminal-tools button {
+        padding-inline: 7px;
+    }
+    .terminal-body {
+        min-height: 60px;
+        padding: 4px 10px;
+    }
+    .terminal-status {
+        padding: 1px 10px;
+    }
 }
