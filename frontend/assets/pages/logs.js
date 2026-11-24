@@ -70,7 +70,9 @@ export async function mount(ctx) {
             if (failures === 0) stream.redraw();
         } catch (error) {
             failures++;
-            text(stream.state, 'Disconnected · ' + error.message);
+            // The same failure says the same thing in both panes, and no raw browser
+            // string: "Disconnected · Failed to fetch" was a TypeError read aloud.
+            text(stream.state, 'Offline · reconnecting');
             stream.state.classList.add('error');
             // Same reason, other direction: a dead stream must not keep a calm green
             // LED, so repaint the status and the LED with the error in place.

@@ -165,13 +165,17 @@ export function logStream({
     }
 
     function matches(row) {
+        // The gutter is painted, so search has to see it: typing a level name returned
+        // "no line matches" over 500 rows of exactly that level.
+
         if (severity.value !== 'All' && row.level !== severity.value) return false;
         const needle = search.value.toLowerCase();
         if (!needle) return true;
         // Search what a reader can see: the message (or the command and its
-        // response) plus the thread; never the hidden raw line.
+        // response), the thread and the level the gutter prints. Never the hidden raw
+        // line, and never a column that is not on screen.
         const visible = row.entry ? `${row.entry.command} ${row.entry.output}` : row.message ?? row.line;
-        return `${row.thread ?? ''} ${visible}`.toLowerCase().includes(needle);
+        return `${row.level ?? ''} ${row.thread ?? ''} ${visible}`.toLowerCase().includes(needle);
     }
     const key = (row) => row.id || `${row.timestamp}:${row.thread}:${row.level}:${row.line}`;
     const commandRows = () =>
@@ -284,12 +288,15 @@ export function logStream({
         // and 14 lines for one screen.
         // A console's own rows are answers; the log lines it streams are the server's
         // words behind them. Counting both gave "13 answers" on a console with none.
+        // An answer is a command's reply: the banner and the restore notice are lines
+        // in the transcript, not answers, and counting them said "1 answer" for none.
+        const answered = (row) => row.entry && row.entry.command && row.entry.command !== '';
         const counted = countAnswers
-                ? [...rows, ...commandRows()].filter((row) => row.entry)
+                ? [...rows, ...commandRows()].filter(answered)
                 : [...rows, ...commandRows()],
             visible = counted.filter((row) => matches(row) && !cleared(row)).length,
             total = countAnswers
-                ? [...rows, ...commandRows()].filter((row) => row.entry).length
+                ? [...rows, ...commandRows()].filter(answered).length
                 : retainedCount || visible,
             away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
         // A cleared screen says nothing about counts: the pill is the whole story.

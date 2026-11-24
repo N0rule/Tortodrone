@@ -274,6 +274,7 @@ button.metric:focus-visible {
     }
 }
 .terminal-title {
+    margin: 0;
     font-family: var(--mono);
     font-size: 11.5px;
     font-weight: 600;
@@ -390,7 +391,7 @@ button.metric:focus-visible {
     overscroll-behavior: contain;
     overflow: auto;
     padding: 10px 12px 12px;
-    background: radial-gradient(circle at 50% 0%, var(--term-bg-top) 0%, var(--term-bg) 70%);
+    background: var(--term-bg);
     color: var(--term-fg);
     /* 1.2 is the leading a terminal uses: at 1.4 plus a per-row padding the pane
        showed 16 lines where a 13px terminal shows 20. */
@@ -408,10 +409,9 @@ button.metric:focus-visible {
 }
 .terminal-line {
     display: grid;
-    grid-template-columns: 66px 42px minmax(72px, 128px) minmax(0, 1fr);
-    gap: 10px;
-    padding: 0 6px;
-    border-radius: 3px;
+    grid-template-columns: 56px 38px minmax(56px, 104px) minmax(0, 1fr);
+    gap: 8px;
+    padding: 0 4px;
     align-items: start;
 }
 .terminal-line:hover {
@@ -575,7 +575,7 @@ button.metric:focus-visible {
     inset-inline-end: 12px;
     min-block-size: 30px;
     padding: 0 10px;
-    border-radius: var(--radius);
+    border-radius: 0;
     font-family: var(--mono);
     font-size: 11.5px;
 }
@@ -635,11 +635,12 @@ button.metric:focus-visible {
     white-space: nowrap;
 }
 .terminal-tail {
+    /* Text on the status line, not a pill: a rounded chip in a terminal's own bar was
+       the last piece of card furniture left in the pane. */
     margin-left: auto;
-    padding: 1px 8px;
-    border-radius: var(--radius-pill);
-    background: var(--raised);
-    color: var(--text);
+    padding: 0;
+    background: none;
+    color: var(--term-fg);
     white-space: nowrap;
 }
 .terminal-tail[data-state='paused'] {
@@ -715,7 +716,7 @@ button.metric:focus-visible {
     border-color: var(--cyan);
     outline: none;
 }
-+/* The chip row this described was replaced by Tab-in-a-transcript and never built, so
+/* The chip row this described was replaced by Tab-in-a-transcript and never built, so
    the rules for it were dead CSS. */
 .console-connection {
     color: var(--good);
@@ -770,7 +771,7 @@ button.metric:focus-visible {
     .terminal-line {
         /* Wide enough for h:mm:ss at 10.5px, plus its own scroll clip: a timestamp
            that overprints the level is worse than a missing thread column. */
-        grid-template-columns: 58px 34px minmax(0, 1fr);
+        grid-template-columns: 58px 48px minmax(0, 1fr);
         gap: 5px;
     }
     .log-time {

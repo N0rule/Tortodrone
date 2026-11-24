@@ -1,3 +1,4 @@
+/** `#dashboard` is the old spelling of Overview; the shell rewrites it to `#overview`. */
 export function route() {
     const [name, query = ''] = location.hash.slice(1).split('?');
     return {

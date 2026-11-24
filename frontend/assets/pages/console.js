@@ -81,7 +81,9 @@ export async function mount(ctx) {
             countAnswers: true,
             sourceLabel: () =>
                 droppedAnswers
-                    ? `server log · ${droppedAnswers} older answers dropped`
+                    ? `server log · ${droppedAnswers} older ${
+                          droppedAnswers === 1 ? 'answer' : 'answers'
+                      } dropped`
                     : 'server log',
             countNoun: ['answer', 'answers'],
             severity: ctx.params.get('severity') || 'All',

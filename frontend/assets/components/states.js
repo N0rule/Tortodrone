@@ -45,15 +45,23 @@ export function waiting(label = 'Loading…') {
  * carry an action, so the operator is never left with a dead end.
  * @param {{title: string, message?: string, action?: {label: string, run: () => void}, icon?: string, compact?: boolean}} options
  */
-export function emptyState({ title, message = '', action, icon = 'details', compact = false }) {
+export function emptyState({
+    title,
+    message = '',
+    action,
+    icon = 'details',
+    compact = false,
+    primary = false
+}) {
     const node = el('div', null, 'empty-state' + (compact ? ' compact' : ''));
     const art = symbol(icon);
     if (art) node.append(art);
     node.append(el('p', title, 'empty-title'));
     if (message) node.append(el('p', message, 'empty-message'));
-    // The action here is usually the only thing a page offers, so it leads: a
-    // secondary under "No knights exist yet" is a suggestion, not the way out.
-    if (action) node.append(button(action.label, action.run, 'primary'));
+    // A page whose only action sits here leads with it; an empty list inside a page
+    // that already has its own gold keeps the quiet variant, so one page never shows
+    // two filled controls.
+    if (action) node.append(button(action.label, action.run, primary ? 'primary' : 'secondary'));
     return node;
 }
 

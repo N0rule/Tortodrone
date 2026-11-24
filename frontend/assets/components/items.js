@@ -52,9 +52,9 @@ export function icon(config, rarity = 0) {
         };
         root.append(image);
     }
-    // Rarity is a number the game shows as stars; a glyph is not client art, so it
-    // is written out for the reader instead.
-    if (rarity > 0) root.append(el('span', `${rarity}★`, 'stars'));
+    // Rarity is a number the game shows as stars; a glyph is not client art, and the
+    // word is what a screen reader can say, so it is written out.
+    if (rarity > 0) root.append(el('span', `Rarity ${rarity}`, 'stars'));
     return root;
 }
 /**

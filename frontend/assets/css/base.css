@@ -5,6 +5,8 @@
     display: none !important;
 }
 html {
+    /* A deep link lands on its target, not under the sticky top bar. */
+    scroll-padding-top: 64px;
     background: var(--canvas);
     scroll-behavior: smooth;
 }

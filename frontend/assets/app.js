@@ -1,6 +1,6 @@
 import { symbol as uiSymbol } from './components/symbols.js';
 import { api } from './api.js';
-import { $, el, button, text, notify, report, calendarDate } from './ui.js';
+import { $, el, button, text, notify, report, calendarDate, toolbar } from './ui.js';
 import { route, go } from './router.js';
 import { loadAssets } from './components/items.js';
 import { dialogDirty, closeDialog } from './components/dialog.js';
@@ -324,8 +324,9 @@ async function navigate() {
         current = null;
         return navigate();
     }
-    // `#dashboard` is an alias of Overview; the address says what is on screen.
-    if (next.name !== spec.name) {
+    // `#dashboard` is an alias of Overview, and the router has already resolved it: the
+    // address has to be rewritten from the raw hash, or it keeps saying dashboard.
+    if (!['#' + spec.name, '#' + (spec.alias?.[0] ?? spec.name)].includes(location.hash.split('?')[0])) {
         const query = next.params.toString();
         const hash = '#' + spec.name + (query ? '?' + query : '');
         if (location.hash !== hash) window.history.replaceState(null, '', hash);

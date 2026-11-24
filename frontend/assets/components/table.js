@@ -158,6 +158,7 @@ export class DataTable {
         if (search) this.controls.append(this.query);
         this.filtersByName = {};
         this.filtersInitial = {};
+        this.filterDefaults = {};
         this.address = address;
         this.choices = filters.map(([name, values, match, initial]) => {
             const savedValue = saved?.filters?.[name];
@@ -186,6 +187,10 @@ export class DataTable {
             this.controls.append(wrap);
             this.filtersByName[name] = control;
             this.filtersInitial[name] = start;
+            // What the filter reads before anybody chose anything: the baseline a
+            // "Clear filters" press returns to, and the one the address is compared
+            // with so a remembered filter is written into it instead of vanishing.
+            this.filterDefaults[name] = initial ?? values[0];
             return [control, name, match];
         });
         this.controls.append(el('span', null, 'spacer'));
@@ -377,7 +382,9 @@ export class DataTable {
         else params.delete(own);
         for (const [control, name] of this.choices) {
             const chosen = control.value;
-            const first = this.filtersInitial[name];
+            // Compare with the factory value: comparing with what the table arrived
+            // with deleted the very filter the operator could see applied.
+            const first = this.filterDefaults[name] ?? this.filtersInitial[name];
             if (chosen && chosen !== first) params.set(name.toLowerCase(), chosen);
             else params.delete(name.toLowerCase());
         }
@@ -447,7 +454,10 @@ export class DataTable {
     setFilter(name, value) {
         const control = this.filtersByName?.[name];
         if (!control) return;
-        const next = value == null || value === '' ? (this.filtersInitial[name] ?? 'All') : String(value);
+        const next =
+            value == null || value === ''
+                ? (this.filterDefaults[name] ?? this.filtersInitial[name] ?? 'All')
+                : String(value);
         if (![...control.options].some((option) => option.value === next)) return;
         if (control.value === next) return;
         control.value = next;
@@ -460,10 +470,14 @@ export class DataTable {
     clearFilters() {
         if (this.query) this.query.value = '';
         for (const [control, name] of this.choices) {
-            control.value = this.filtersInitial[name] ?? control.options[0].value;
+            // The factory value, not `filtersInitial`: a filter this table remembered
+            // from the last visit made "Clear filters" a button that changed nothing.
+            control.value = this.filterDefaults[name] ?? control.options[0].value;
         }
         this.page = 1;
+        this.remember();
         this.render();
+        this.syncAddress();
     }
 
     /** Rows after search, filters and sorting, across every page. */
