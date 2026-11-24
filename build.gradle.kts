@@ -169,7 +169,14 @@ fun preparation(name: String, command: String) = tasks.register<JavaExec>(name) 
     else providers.gradleProperty("contentOutput").orElse(
         providers.gradleProperty("defaultsOutput")).getOrElse(publicOutput.dir("content").asFile.absolutePath)
     args(command, output)
-    // Always recheck source integrity and fill missing files; never claim ownership of defaults.
+    // Never claim ownership of the defaults it fills, but do declare what it reads and
+    // writes: without inputs/outputs this ran on every Java task (20s each) even when
+    // no content byte had changed. Gradle's output snapshot still notices a hand-edited
+    // or missing deployment file, so the "fill missing files" contract holds.
+    inputs.dir("content")
+    inputs.property("command", command)
+    outputs.dir(output)
+    outputs.cacheIf { false }
 }
 val validateContent = tasks.register<JavaExec>("validateContent") {
     group = "verification"
@@ -179,6 +186,18 @@ val validateContent = tasks.register<JavaExec>("validateContent") {
     mainClass.set("org.tortodrone.resources.ContentManager")
     workingDir = projectDir
     args(projectDir.absolutePath)
+    // Content validation reads the source tree and writes nothing, so its result is a
+    // stamp: 17s on every Java task was the single largest cost in the gate.
+    val stamp = layout.buildDirectory.file("content-validation.stamp")
+    inputs.dir("content")
+    inputs.dir("config")
+    outputs.file(stamp)
+    outputs.cacheIf { false }
+    doLast {
+        val file = stamp.get().asFile
+        file.parentFile.mkdirs()
+        file.writeText("validated\n")
+    }
 }
 // Fast content guard: fail on exact-duplicate text files that are not accepted in the allowlist.
 val checkContentDuplication = tasks.register<JavaExec>("checkContentDuplication") {
@@ -340,9 +359,20 @@ val selectedUnitPrograms = requestedUnitTests?.split(',')?.map { requested ->
         throw GradleException("Unknown or ambiguous unit test '$name'; use a test class name, separated by commas")
     matches.single()
 }?.distinct() ?: unitProgramNames
+// 271 standalone programs in one JVM is the gate's wall time. `-PunitShard=1/4` takes
+// every fourth program, so CI can run the shards as separate runners instead of paying
+// the sum of all of them on one machine.
+val requestedShard = providers.gradleProperty("unitShard").orNull
+val shardSelection = requestedShard?.split('/')?.map { it.trim().toIntOrNull() }?.let { parts ->
+    val index = parts.getOrNull(0)
+    val count = parts.getOrNull(1)
+    if (index == null || count == null || count < 1 || index < 1 || index > count)
+        throw GradleException("Use -PunitShard=<1..count>/<count>, for example -PunitShard=2/4")
+    index - 1 to count
+} ?: (0 to 1)
 val testUnit = tasks.register<JavaExec>("testUnit") {
     group = "verification"
-    description = "Run standalone unit programs; select classes with -PunitTests=A,B."
+    description = "Run standalone unit programs; select classes with -PunitTests=A,B and slice with -PunitShard=i/n."
     usesService(regressionExecution)
     dependsOn(buildServer, tasks.testClasses)
     javaLauncher.set(launcher25)
@@ -351,7 +381,18 @@ val testUnit = tasks.register<JavaExec>("testUnit") {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     workingDir = projectDir
     useBuildTemp()
-    args(selectedUnitPrograms)
+    val (shardIndex, shardCount) = shardSelection
+    val programs =
+        if (shardCount == 1) selectedUnitPrograms
+        else selectedUnitPrograms.filterIndexed { position, _ -> position % shardCount == shardIndex }
+    if (programs.isEmpty())
+        throw GradleException("Shard ${shardIndex + 1}/$shardCount selects no unit program")
+    inputs.property("programs", programs)
+    // The shard is reported by the suite itself: a doFirst closure here captured script
+    // scope and invalidated the configuration cache.
+    systemProperty("unitShard", "${shardIndex + 1}/$shardCount")
+    systemProperty("unitPrograms", selectedUnitPrograms.size.toString())
+    args(programs)
 }
 val serverPath = publicOutput.file("tortodrone.jar").asFile.absolutePath
 val integrationPrograms = listOf(

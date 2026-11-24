@@ -1,4 +1,11 @@
-/** Verify a copied deployment, with no access to or dependency on an installed game. */
+/**
+ * Verify a copied deployment, with no access to or dependency on an installed game:
+ * `node src/test/webui/assets-check.mjs dist/webui`.
+ *
+ * Deliberately not named `*-test.mjs`. It scans 5,000+ files, so it is a deployment
+ * check that runs after `buildWebui`, not a unit test that rides along inside the
+ * suite's glob.
+ */
 import assert from 'node:assert/strict';
 import { readFile, realpath } from 'node:fs/promises';
 import { createHash } from 'node:crypto';

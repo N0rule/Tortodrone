@@ -391,7 +391,7 @@ node --test src/test/webui/news-test.mjs src/test/webui/chart-test.mjs \
   src/test/webui/table-filter-test.mjs src/test/webui/palette-test.mjs \
   src/test/webui/export-test.mjs src/test/webui/prefs-test.mjs \
   src/test/webui/routes-test.mjs src/test/webui/responsive-test.mjs
-node src/test/webui/assets-test.mjs dist/webui
+node src/test/webui/assets-check.mjs dist/webui
 node --check frontend/assets/app.js
 ./gradlew testUnit -PunitTests=WebUiTest,WebAdminServiceTest,WebIdentityStoreTest
 ./gradlew integrationWebUi integrationConsole

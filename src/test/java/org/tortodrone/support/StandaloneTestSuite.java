@@ -12,6 +12,12 @@ public final class StandaloneTestSuite {
 
     public static void main(String[] tests) {
         if (tests.length == 0) throw new IllegalArgumentException("Select at least one standalone test class");
+        System.out.printf(
+                Locale.ROOT,
+                "Run %s of %s programs (shard %s)%n",
+                tests.length,
+                System.getProperty("unitPrograms", String.valueOf(tests.length)),
+                System.getProperty("unitShard", "1/1"));
         var failures = new ArrayList<String>();
         var durations = new LinkedHashMap<String, Long>();
         long started = System.nanoTime();
@@ -32,9 +38,10 @@ public final class StandaloneTestSuite {
             }
         }
         System.out.printf(Locale.ROOT, "Unit time: %.2fs; slowest programs:%n", (System.nanoTime() - started) / 1e9);
+        // Every program, not the top five: a shard split or a prune needs the whole
+        // distribution, and the log is the only place it is visible.
         durations.entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .limit(5)
                 .forEach(entry ->
                         System.out.printf(Locale.ROOT, "  %.2fs %s%n", entry.getValue() / 1e9, entry.getKey()));
         if (!failures.isEmpty()) throw new AssertionError("Unit test failures: " + String.join("; ", failures));
