@@ -389,6 +389,19 @@ button.metric:focus-visible {
     flex: 1 1 180px;
     min-inline-size: 0;
 }
+/* The terminal's ground is darker than the page, so the page's recessed fill sank
+   into it: the search field measured 1.01:1 against the toolbar it sat in and the
+   placeholder floated over bare terminal material. A field in a terminal takes the
+   terminal's own step — 1.9:1 on the dark ground, 1.28:1 on the light one — and its
+   hover moves the same way it does everywhere else. */
+.terminal-tools input:not(:disabled),
+.terminal-tools select:not(:disabled) {
+    background: var(--field-on-term);
+}
+.terminal-tools input:hover:not(:disabled),
+.terminal-tools select:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--field-on-term) 84%, var(--line-bright));
+}
 .terminal-tools select {
     flex: 0 0 auto;
     inline-size: auto;

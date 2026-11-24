@@ -8,7 +8,10 @@
     --canvas: #142635;
     --surface: #1d3446;
     --raised: #29495e;
-    --inset: #102330;
+    /* Deeper than it was (#102330) for the same reason the light canvas moved: the
+       recessed fill has to be a step off the ground it lands on. 1.15:1 from the
+       canvas, 1.37:1 from a panel, which is what light measures too. */
+    --inset: #0b1a26;
     /* --line is a decorative rule; --line-bright is a component boundary and has
        to clear 3:1 against both surface (4.31) and raised (3.18). */
     --line: #3b586c;
@@ -74,6 +77,9 @@
     --effect-strong: #e1c792;
     /* Terminal surface: the log and console panes are their own material, so the
        palette is defined per theme instead of baked into the panes. */
+    /* A field on the terminal's toolbar needs its own step: the page recess was
+       1.01:1 from --term-bg-top, so the search box had no shape at all. */
+    --field-on-term: #2b4d63;
     --term-bg: #08131c;
     --term-bg-top: #0f2231;
     --term-fg: #d6e4ee;
@@ -112,7 +118,7 @@
        white panels left a fill-only control only 1.06:1 from the ground it sat on —
        visible inside a panel, a whisper on the page — because a fill between two grounds
        1.19:1 apart can be no more than 1.08:1 from either. Deepening the canvas is what
-       gives the fills room: raised 1.23:1, fields 1.21:1, panels 1.54:1. */
+       gives the fills room: raised 1.33:1, fields 1.14:1, panels 1.54:1. */
     --canvas: #c0d3e0;
     --surface: #ffffff;
     /* Lifted to the top of its band: the raised fill has to clear both grounds now, and
@@ -171,6 +177,7 @@
     --effect-line: #a97f27;
     --effect-strong: #755321;
     /* A paper-and-ink terminal keeps the same structure and severity semantics. */
+    --field-on-term: #c8dce9;
     /* The screen has to stay recessed against the panel it sits in: at #f8fafc it was
        1.12:1 from the canvas and identical to the panel fill, so the light theme's
        terminal read as an empty white card. */

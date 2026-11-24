@@ -127,9 +127,13 @@ button.primary:not(:disabled):not([aria-disabled='true']):active,
 .button.primary:not(:disabled):not([aria-disabled='true']):active {
     background: color-mix(in srgb, var(--action) 88%, var(--action-text));
 }
+ /* The press has to step past the hover, not back to the resting fill: mixed 12%
+   toward --inset it landed 2/255 from the rest fill, so press-and-hold and
+   press-then-drag-off looked the same and the button could not tell you it was
+   still held. It deepens toward the line colour, as the quiet press above does. */
 button.secondary:not(:disabled):not([aria-disabled='true']):active,
 .button.secondary:not(:disabled):not([aria-disabled='true']):active {
-    background: color-mix(in srgb, var(--raised) 88%, var(--inset));
+    background: color-mix(in srgb, var(--raised) 55%, var(--line-bright));
 }
 button.danger:not(:disabled):not([aria-disabled='true']):active,
 .button.danger:not(:disabled):not([aria-disabled='true']):active {
