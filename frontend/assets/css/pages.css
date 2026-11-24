@@ -419,6 +419,13 @@ button.metric:focus-visible {
 .terminal-tools .terminal-menu-toggle:active {
     background: color-mix(in srgb, var(--raised) 40%, var(--line-bright));
 }
+/* The one control that cannot act must not be the only filled thing in a text bar:
+   the global disabled rule paints a fill, so a paused or offline stream grew a lone
+   filled button beside the field. Muted ink says "cannot act" here. */
+.terminal-tools button:disabled,
+.terminal-tools button[aria-disabled='true'] {
+    background: transparent;
+}
 .terminal-tools select {
     flex: 0 0 auto;
     inline-size: auto;
@@ -445,6 +452,12 @@ button.metric:focus-visible {
     display: inline-flex;
     align-items: center;
     block-size: var(--control);
+    /* Not a disclosure row: the base rule draws a hairline above every <details>, which
+       on a control in a toolbar was a bright 1px line ruled over the bar (obvious in
+       light, faint in dark). The menu is a button that opens, so it takes no rule and
+       no stacked-row padding. */
+    border-top: 0;
+    padding: 0;
 }
 .terminal-menu-toggle {
     list-style: none;
@@ -1079,8 +1092,12 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     }
     /* No `font-size` here: it was re-declared at 12.5px a few lines below the 16px
        guard above and silently won, so every field on a phone still zoomed the page. */
+    /* 74px clipped the value the operator is reading: "All (12)" needs 77px for the
+       label alone at the 16px touch type, plus 8px of padding and the 18px caret,
+       and "All time" left one pixel of slack at 104. At 112 the caret has air around
+       it, and the bar still scrolls sideways if a third control wants the row. */
     .terminal-tools select {
-        inline-size: 74px;
+        inline-size: 112px;
         min-inline-size: 0;
         padding-inline: 4px;
     }
