@@ -416,9 +416,16 @@ function deliveredLabel(campaign) {
         // reach figure, so the other half of the answer is one comparison away.
         const knights = roster || (await rosterRows().catch(() => null));
         const total = population();
-        const delivered = new Set(recipients.map((row) => String(row.worldId)));
+        // Two different id spaces meet here: a delivery row's `worldId` is
+        // `world_characters.world_id`, a global sequence, while a roster row's `id` is
+        // `knights.id`, the roster number that restarts at 1 for every account
+        // (`SchemaMigrations.java:194`). Comparing them looked right on a one-account
+        // fixture and reported every second account's knight #1 as already delivered.
+        // The knight *name* is the join: `global_knight_names` makes it unique across
+        // accounts (`SchemaMigrations.java:203`), and the delivery row carries it.
+        const delivered = new Set(recipients.map((row) => String(row.knight).toLowerCase()));
         const missing = knights
-            ? knights.filter((knight) => !delivered.has(String(knight.id)))
+            ? knights.filter((knight) => !delivered.has(String(knight.name).toLowerCase()))
             : null;
         const missingTable = new DataTable(
             [
@@ -439,7 +446,10 @@ function deliveredLabel(campaign) {
                 ['Online', (row) => (row.online ? 'Yes' : 'No'), (row) => (row.online ? 1 : 0)]
             ],
             {
-                key: (row) => String(row.id),
+                // The roster id alone is not unique: it restarts per account, and the
+                // table caches a row node per key, so two knights #1 would have shared
+                // one node and one of them would silently vanish.
+                key: (row) => `${row.accountId}:${row.id}`,
                 caption: 'Knights that have not received this mailing',
                 exportName: `mail-pending-${campaign.id}`,
                 pageSize: 30,
