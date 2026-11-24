@@ -267,6 +267,19 @@ main {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space);
 }
+/* A list whose rows are separated by the stack rather than by each row's own margin.
+   Five callers asked for it by name before it had a rule, so each fell back to
+   whatever margins its children happened to carry and the last row sat flush against
+   the controls under it. */
+.stack-tight {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+}
+/* The controls under a stack act on it, so they take the gap the rows take. */
+.stack-tight + .toolbar {
+    margin-block-start: 14px;
+}
 .two-columns {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

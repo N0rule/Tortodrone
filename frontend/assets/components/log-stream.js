@@ -80,7 +80,7 @@ export function logStream({
     // not in a sentence the operator has to translate into a route.
     extras = []
 } = {}) {
-    const node = el('div', null, 'terminal-shell stack-tight'),
+    const node = el('div', null, 'terminal-shell'),
         // The first paint is measured a frame later, so the pane is kept invisible
         // until then: it used to appear at the CSS floor and grow 82px.
         unhide = () => {

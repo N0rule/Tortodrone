@@ -10,6 +10,7 @@ import {
     details,
     facts,
     date,
+    time,
     copy,
     download,
     number,
@@ -516,7 +517,13 @@ export async function mount(ctx) {
         text(counters[1][0], s.scenes.length);
         text(counters[1][1], `${s.scenes.reduce((a, v) => a + v.players, 0)} scene occupants`);
         text(counters[2][0], duration(s.uptimeSeconds));
-        text(counters[2][1], s.failure || '');
+        // A caption adds the one thing the figure cannot say. This tile had none, so it
+        // carried an empty 17px band under its number while the five beside it carried a
+        // line, and the strip stopped reading as six of the same thing.
+        text(
+            counters[2][1],
+            s.failure || `since ${time(Date.now() - s.uptimeSeconds * 1000)}`
+        );
         text(counters[3][0], s.database.failures ? 'Review' : 'Available');
         text(counters[3][1], `${s.accounts} accounts`);
         // Every caption under a tile is the same shape: a figure and the noun it counts.
@@ -529,7 +536,9 @@ export async function mount(ctx) {
             counters[5][0],
             s.scenes.reduce((a, v) => a + v.monsters.engaged, 0)
         );
-        text(counters[5][1], `${monsterTotal} monsters`);
+        // The figure above is the engaged count, so the caption cannot count them again:
+        // it names the population the figure is out of.
+        text(counters[5][1], `of ${number(monsterTotal)} live`);
         monsters.update(s.scenes);
         for (const c of [cpu, memory, population, activity]) c.update(history);
         warnings.update(
