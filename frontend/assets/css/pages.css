@@ -509,11 +509,12 @@ button.metric:focus-visible {
     border-bottom: 1px solid var(--line);
 }
 .terminal-menu-label {
+    /* The strip's label, word for word and style for style: "Related" at 12.5px, not a
+       tracked all-caps heading. Two drawings of one label is the kind of drift that
+       reads as two different things. */
     padding-inline: 6px 2px;
-    color: var(--muted);
-    font-size: 11.5px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    color: var(--term-time);
+    font-size: 12.5px;
 }
 /* Destinations, not prose: an underlined text link inside a filled menu reads as a
    stray sentence, and the phone block's 24px link height left these rows half the
@@ -837,16 +838,17 @@ html[data-motion='reduce'] .command-pending {
 /* The strip is 292px of links and only fits where the bar has that much to spare: it
    squeezed to 170px and stacked into three lines at 844px wide, four lines at 760, and
    held a 148px search field down to 88px of content box against a 94px placeholder,
-   which reads "Search ou". The breakpoint is where one line is actually possible, not
-   where the strip stops wrapping off the edge. Inside it the same three pages are two
+   which reads "Search ou". The breakpoint is where the strip holds one line and leaves
+   the field room, measured: 292px of strip with a 166px field at 1280, 252px at 1366;
+   at 1200 the field falls to 62px, which clips. Inside it the same three pages are two
    taps away in the More menu, which carries them at every size and draws them only
    where the strip is gone — so a window dragged across either edge keeps both. */
-@media (max-width: 1399px), (max-height: 520px) {
+@media (max-width: 1279px), (max-height: 520px) {
     .terminal-tools .toolbar-links {
         display: none;
     }
 }
-@media (min-width: 1400px) and (min-height: 521px) {
+@media (min-width: 1280px) and (min-height: 521px) {
     .terminal-menu-links {
         display: none;
     }
