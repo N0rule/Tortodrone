@@ -47,7 +47,9 @@ function fields(o) {
 }
 export async function mount(ctx) {
     const node = el('div', null, 'stack'),
-        revision = el('span', null, 'muted');
+        // A caption, pushed to the far end of the action row: at body size beside two
+        // buttons, "Content revision 2" read as a third control that did nothing.
+        revision = el('span', null, 'muted toolbar-note');
     let data,
         definitions = new Map(),
         tab = 'offers',

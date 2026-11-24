@@ -289,6 +289,12 @@ main {
 .toolbar .spacer {
     margin-left: auto;
 }
+/* A caption that shares a row with controls takes the far end and the caption size:
+   beside two buttons at body size, "Content revision 2" was read as a third control. */
+.toolbar-note {
+    margin-inline-start: auto;
+    font-size: 12.5px;
+}
 .split {
     display: grid;
     grid-template-columns: minmax(0, 1.25fr) minmax(300px, 1fr);

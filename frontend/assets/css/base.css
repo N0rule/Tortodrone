@@ -135,8 +135,12 @@ button.danger:not(:disabled):not([aria-disabled='true']):active,
 .button.danger:not(:disabled):not([aria-disabled='true']):active {
     background: color-mix(in srgb, var(--bad) 26%, var(--surface));
 }
+/* A quiet control has no fill to step, so its press deepens its own hover: the two
+   states measured identical, and a click on Copy link or Sign out landed with no
+   acknowledgement before the result appeared. */
 button.quiet:not(:disabled):not([aria-disabled='true']):active,
 .button.quiet:not(:disabled):not([aria-disabled='true']):active {
+    background: color-mix(in srgb, var(--raised) 42%, var(--line-bright));
     box-shadow: none;
 }
 button:focus-visible,

@@ -108,18 +108,32 @@
 }
 [data-theme='light'] {
     color-scheme: light;
-    --canvas: #e6eef3;
+    /* The workspace sits a step down from the panels it holds. A pale canvas next to
+       white panels left a fill-only control only 1.06:1 from the ground it sat on —
+       visible inside a panel, a whisper on the page — because a fill between two grounds
+       1.19:1 apart can be no more than 1.08:1 from either. Deepening the canvas is what
+       gives the fills room: raised 1.23:1, fields 1.21:1, panels 1.54:1. */
+    --canvas: #c0d3e0;
     --surface: #ffffff;
-    --raised: #dce8ef;
+    /* Lifted to the top of its band: the raised fill has to clear both grounds now, and
+       one fill between a canvas and a panel 1.54:1 apart can never be far from either.
+       1.33:1 from the canvas, 1.16:1 from a panel, is as even as the two allow. */
+    --raised: #e4f0f7;
     /* The recessed fill, deepened so a field or a frame reads against a white panel
        without a hairline: #f1f6f9 sat 1.09:1 from the panel and only its rim said
-       where it was. */
-    --inset: #dbe6ee;
-    --line: #bdcfdc;
+       where it was. Kept a step below the raised fill — at #dbe6ee the button and the
+       field beside it were 1.02:1 apart and shared one fill. Every fill boundary in
+       this theme now lands between 1.14:1 and 1.35:1: the button 1.16:1 from a panel
+       and 1.33:1 from the canvas, the field 1.35:1 and 1.14:1. */
+    --inset: #d0e0eb;
+    /* The decorative hairline, deepened with the canvas: at #bdcfdc it measured 1.04:1
+       against the workspace, which is not a rule, it is a rumour. */
+    --line: #a7bfd0;
     --line-bright: #678193;
     /* 1.18:1 was not a line: on white panels that lost their shadow, the container
-       edge has to be visible at 1x, and 2:1 on the canvas is the quietest that reads. */
-    --line-panel: #b4c9d6;
+       edge has to be visible at 1x. This clears 2.05:1 against a panel and 1.33:1
+       against the canvas, which is the quietest that reads on either. */
+    --line-panel: #9fb9ca;
     --line-data: #7f93a2;
     --text: #203a4d;
     --muted: #3f5c70;
