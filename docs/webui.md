@@ -529,14 +529,14 @@ the code it was supposed to describe.
 | Asset class | Raw | Gzip | Transport |
 | --- | --- | --- | --- |
 | `index.html` | 9 860 B | 2 234 B | Gzip when the browser offers it, `must-revalidate` |
-| JavaScript (33 files under `frontend/assets`) | 596 425 B | 151 010 B | Gzip, `must-revalidate`, ETag per encoding |
+| JavaScript (33 files under `frontend/assets`) | 597 698 B | 151 451 B | Gzip, `must-revalidate`, ETag per encoding |
 | CSS (5 sheets) | 113 738 B | 27 102 B | Gzip, `must-revalidate`, ETag per encoding |
 | Icons and artwork (5081 files, 87 MB on disk) | median icon 16 kB | n/a | `max-age=31536000, immutable` for the content-hashed `assets/game/icons/<hash>` paths |
 
 The JavaScript column is every module at once, which no single page loads: a
 VIEWER never fetches `mailing.js`, and there is no bundler, so the number grows
 with each page module. Gzip is applied to text assets over 1 kB: `app.js` alone
-goes from 31 858 to 9 221 bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
+goes from 33 131 to 9 655 bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
 cache never serves one representation for the other and revalidation still
 answers `304`. Every non-hashed asset revalidates, so an upgrade is visible on the
 next load without a hard refresh; hashed artwork is cached for a year. Only the
@@ -604,3 +604,14 @@ actions follow red in both themes. The small set of source-owned SVG outlines in
 that module is a fallback for symbols a prepared pack does not contain — for example
 the palette magnifier and the keyboard hint — and disappears as soon as the pack
 exports a matching name.
+
+A server started with `--skip-client-assets`, or one on a host with no game install,
+has an **empty** pack: `manifest.json` reports `"source": "No local client assets
+prepared"` and every `symbol()` call answers `null`. That is a supported state and it
+costs only the glyphs — every control keeps its word, and the sidebar keeps its
+section headings and page titles. It used to cost the whole navigation: the frame
+called `setAttribute` on that `null` inside `flatMap`, so `replaceChildren` never ran
+and the shell came up with an empty sidebar and no way between pages. The sidebar now
+builds its groups in `navigationGroups()`, survives a missing glyph, and falls back to
+word-only links plus a reported error if the build ever throws, because a navigation
+that throws takes the operator's only route out of the page with it.
