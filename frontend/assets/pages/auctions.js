@@ -153,6 +153,7 @@ export async function mount(ctx) {
                             description:
                                 'The auction service releases escrow and arranges any required refunds.',
                             label: 'Cancel listing',
+                            variant: 'danger',
                             onSubmit: async () => {
                                 await api.change('auction-cancel', { id: a.id });
                             }
@@ -238,6 +239,7 @@ export async function mount(ctx) {
                             description:
                                 'The auction service releases escrow and arranges any required refunds.',
                             label: 'Cancel listing',
+                            variant: 'danger',
                             onSubmit: async () => {
                                 await api.change('auction-cancel', { id: get().listing.id });
                             }

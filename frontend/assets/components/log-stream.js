@@ -833,12 +833,17 @@ export function logStream({
         if (!active || active === document.body) return true;
         return /^(H[1-6]|MAIN|SECTION|ARTICLE|P|DIV)$/.test(active.tagName);
     };
-    document.addEventListener('keydown', (event) => {
+    // Held by name: this listener lives on `document`, so a page that is left behind
+    // keeps answering Ctrl+L for a pane that no longer exists. Every visit to Logs or
+    // Console used to add one more copy, each of them running a tag-name test on every
+    // keystroke in the shell.
+    const onPageKeydown = (event) => {
         if (!node.isConnected || event.defaultPrevented) return;
         if (document.querySelector('dialog[open]')) return;
         if (!nothingFocused()) return;
         onKeydown(event);
-    });
+    };
+    document.addEventListener('keydown', onPageKeydown);
     jump.onclick = () => {
         setTail(true);
         output.scrollTop = output.scrollHeight;
@@ -1072,10 +1077,11 @@ export function logStream({
         // first measurement lands, so the pane only ever appears at its real size.
         if (node.style.visibility) node.style.visibility = '';
     }
+    let frame = 0;
     if (fill) {
         node.classList.add('terminal-fill');
         window.addEventListener('resize', fit);
-        requestAnimationFrame(fit);
+        frame = requestAnimationFrame(fit);
     }
 
     renderStatus();
@@ -1090,6 +1096,13 @@ export function logStream({
         output,
         footer,
         state,
+        /** Take the page-level listeners off with the page that owns them. */
+        dispose() {
+            document.removeEventListener('keydown', onPageKeydown);
+            window.removeEventListener('resize', fit);
+            if (frame) cancelAnimationFrame(frame);
+            frame = 0;
+        },
         redraw: () => display(),
         tools,
         clear,

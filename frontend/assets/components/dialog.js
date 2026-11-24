@@ -25,6 +25,7 @@ export function openDialog({
 }) {
     const dialog = $('#dialog'),
         form = $('#editor');
+    bindEditorKeys(form);
     if (dialog.open) {
         if (
             active?.pending ||
@@ -103,12 +104,7 @@ export function openDialog({
             if (active === state) $('#submit-dialog').disabled = state.conflicted;
         }
     };
-    form.addEventListener('keydown', (event) => {
-        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-            event.preventDefault();
-            form.requestSubmit();
-        }
-    });
+
     $('#close-dialog').onclick = $('#cancel-dialog').onclick = () => {
         if (
             !state.pending &&
@@ -144,6 +140,23 @@ export function openDialog({
     }
     return true;
 }
+/* The editor form is a singleton, so its short cuts are bound once rather than once
+   per `openDialog()`. Bound in every open they stacked: fifty edits in one session left
+   fifty identical listeners on the same node, which is the kind of cost that shows up
+   as "the editor feels slow" and never as a bug. The binding is lazy because this
+   module is imported by the Node test suite, where there is no document. */
+let editorKeysBound = false;
+function bindEditorKeys(form) {
+    if (editorKeysBound) return;
+    editorKeysBound = true;
+    form.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+            event.preventDefault();
+            form.requestSubmit();
+        }
+    });
+}
+
 export function dialogDirty() {
     return !!active?.isDirty?.();
 }
@@ -285,19 +298,25 @@ function isDestructive(fields) {
     );
 }
 /**
- * Confirm one server action. A gated action destroys something, so it submits as
- * a danger action; anything else stays a primary "Confirm" instead of pretending
- * to be a save.
+ * Confirm one server action.
+ *
+ * A retype gate is one way to know an action destroys something, but it is not the
+ * only one: dropping every live session is destructive whether or not it asks for a
+ * typed word. Inferring from the field alone left Stop, Restart, Kick, Disconnect and
+ * Cancel promoting a gold "Confirm" — the same weight as Save — so the caller can now
+ * say so outright with `{destructive, submit}`. `submit` names what the press does
+ * ("Stop the listener"), because "Confirm" makes the operator re-read the title to
+ * find out.
  */
-export function confirm(title, route, fixed = {}, extra = [], description = '') {
-    const destructive = isDestructive(extra);
+export function confirm(title, route, fixed = {}, extra = [], description = '', options = {}) {
+    const destructive = options.destructive ?? isDestructive(extra);
     edit(
         title,
         route,
         extra,
         fixed,
         description || 'Review the target before confirming this action.',
-        undefined,
-        { variant: destructive ? 'danger' : 'primary', submit: 'Confirm' }
+        options.after,
+        { variant: destructive ? 'danger' : 'primary', submit: options.submit || 'Confirm' }
     );
 }

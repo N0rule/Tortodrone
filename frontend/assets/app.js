@@ -276,18 +276,30 @@ function renderNavigation() {
 /**
  * A refused address is a page, not a notice: say which page was asked for, why it is
  * not here, and what the operator can do about it.
+ *
+ * The card is *state*, not a node written into `#page`. Written directly it lasted one
+ * task: the redirect below re-entered `navigate()`, which swaps a skeleton and then
+ * Overview into the same container before the browser paints, so the reason an
+ * operator's link failed never appeared at all. The paint helpers below prepend it,
+ * and any real navigation clears it.
  */
+let refusal = null;
 function showRefusal({ title, message }) {
-    const card = el('div', null, 'stack');
-    const head = el('h2', title);
-    const body = el('p', message, 'muted');
-    const actions = toolbar(
-        button('Open Overview', () => go('overview'), 'primary'),
-        button('Search pages', () => $('#search').click(), 'secondary')
+    const card = el('div', null, 'stack refusal');
+    card.append(
+        el('h2', title),
+        el('p', message, 'muted'),
+        toolbar(
+            button('Open Overview', () => go('overview'), 'primary'),
+            button('Search pages', () => $('#search').click(), 'secondary')
+        )
     );
-    card.append(head, body, actions);
-    $('#page').replaceChildren(card);
+    refusal = card;
     announce('Refused: ' + title);
+}
+/** Paint the page container, keeping a live refusal above whatever it holds. */
+function paintPage(...nodes) {
+    $('#page').replaceChildren(...(refusal ? [refusal, ...nodes] : nodes));
 }
 
 async function navigate() {
@@ -387,7 +399,7 @@ async function navigate() {
     // placeholder to disappear before it inspects a page.
     placeholder.classList.add('loading');
     $('#page').setAttribute('aria-busy', 'true');
-    $('#page').replaceChildren(placeholder);
+    paintPage(placeholder);
     $('#notice').hidden = true;
     const ctx = {
         params: next.params,
@@ -419,7 +431,7 @@ async function navigate() {
         }
         controller = mounted;
         $('#page').setAttribute('aria-busy', 'false');
-        $('#page').replaceChildren(mounted.node);
+        paintPage(mounted.node);
         $('#refresh').disabled = !mounted.refresh;
         connection('Connected');
         // Keyboard and screen-reader users land on the new page's heading, not
@@ -429,7 +441,7 @@ async function navigate() {
     } catch (error) {
         if (ctx.alive() && error.name !== 'AbortError') {
             $('#page').setAttribute('aria-busy', 'false');
-            $('#page').replaceChildren(
+            paintPage(
                 errorState({
                     error,
                     title: spec.title + ' could not be loaded',
@@ -447,6 +459,7 @@ async function navigate() {
 function signedIn() {
     generation++;
     current = null;
+    refusal = null;
     $('#login').hidden = true;
     $('#shell').hidden = false;
     text($('#identity'), api.session.username + ' · ' + api.session.role.toLowerCase());
@@ -756,7 +769,12 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-window.addEventListener('hashchange', navigate);
+window.addEventListener('hashchange', () => {
+    // A refusal explains the address that produced it. Any other address is a new
+    // question, so the answer goes with it.
+    refusal = null;
+    navigate();
+});
 window.addEventListener('beforeunload', (event) => {
     if (controller?.isDirty?.() || dialogDirty()) {
         event.preventDefault();

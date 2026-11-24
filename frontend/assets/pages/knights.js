@@ -15,6 +15,7 @@ import {
 } from '../components/items.js';
 import { inspectItem, grantItem } from '../components/gear-editor.js';
 import { spriteCard } from '../components/sprite-card.js';
+import { emptyState } from '../components/states.js';
 
 const slotNames = new Map([
     [0, 'Helmet'],
@@ -495,17 +496,16 @@ export async function mount(ctx) {
                 id: 'knight-inventory',
                 caption: 'Owned inventory',
                 exportName: 'knight-inventory',
-                actions: (get) => [
-                    routeLink(
-                        'Inspect',
-                        'knights',
-                        { username: get().username, knight: get().name },
-                        'button secondary'
-                    )
-                ]
+                // An inventory row is an item, not a knight: the link built its route
+                // from `username`/`name`, which an item record does not carry, so every
+                // row pointed at `#knights?username=undefined&knight=undefined` and
+                // landed on "No such knight". The inspector is the same one the
+                // equipment grid opens.
+                actions: (get) => [button('Inspect', () => inspect(get()), 'secondary')]
             }
         );
-        let page = 1;
+        let page = 1,
+            noItems = null;
         const previous = button('Previous', () => {
                 page--;
                 update();
@@ -579,7 +579,30 @@ export async function mount(ctx) {
                 }
                 return entry.tile;
             });
-            if (!desired.length) desired.push(el('p', 'No items match these filters.', 'empty'));
+            if (!desired.length) {
+                // One empty-state idiom for the whole application, and an action: the
+                // bare line used to tell an operator that nothing matched without
+                // offering the reset that would make something match.
+                noItems ??= emptyState({
+                    compact: true,
+                    icon: 'search',
+                    title: 'No items match these filters',
+                    message:
+                        "The whole catalogue is searched here, narrowed by a term and a category.",
+                    action: {
+                        label: 'Clear filters',
+                        run: () => {
+                            search.value = '';
+                            category.value = '';
+                            sort.value = 'name';
+                            mode.value = 'grid';
+                            page = 1;
+                            update();
+                        }
+                    }
+                });
+                desired.push(noItems);
+            }
             const wanted = new Set(desired);
             for (const child of [...grid.children]) if (!wanted.has(child)) child.remove();
             desired.forEach((child, i) => {
@@ -602,7 +625,13 @@ export async function mount(ctx) {
     function sprites() {
         const node = el('div', null, 'sprite-grid'),
             cards = new Map(),
-            empty = el('p', 'This Knight owns no Battle Sprites.', 'empty');
+            empty = emptyState({
+                compact: true,
+                icon: 'sprites',
+                title: 'This Knight owns no Battle Sprites',
+                message:
+                    'Sprites are earned in game, so there is nothing to grant from here. A Knight that has finished the Battle Sprite story shows its roster on this tab.'
+            });
         function update() {
             const desired = view.sprites.map((s) => {
                 let card = cards.get(s.state.id);
@@ -749,7 +778,7 @@ export async function mount(ctx) {
                               ],
                               ['Saved loadouts', p.town.loadouts.length],
                               ['Learned recipes', p.town.recipes.length],
-                              ['Inventory stacks', view.items.length],
+                              ['Inventory stacks', p.items.length],
                               ['Sprites', view.sprites.length]
                           ]),
                           toolbar(
@@ -879,6 +908,9 @@ export async function mount(ctx) {
             tabBar = tabs(sectionNames, activeTab, (tab) =>
                 ctx.go('knights', { username: view.username, knight: view.name, tab })
             );
+            // The strip has to name the region it switches, or a tab is a button
+            // wearing a role it does not complete.
+            tabBar.bindPanel(content);
             profileHost.replaceChildren(header, actions, tabBar, content);
             showTab();
         } else if (

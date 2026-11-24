@@ -501,7 +501,11 @@ export async function mount(ctx) {
         stream.fit();
     };
     measurePrompt();
-    if (typeof ResizeObserver === 'function') new ResizeObserver(measurePrompt).observe(prompt);
+    // Kept so the page can let go of it: a new observer per visit measured a prompt
+    // that had already been removed, and the old one was never disconnected.
+    const promptObserver =
+        typeof ResizeObserver === 'function' ? new ResizeObserver(measurePrompt) : null;
+    if (promptObserver) promptObserver.observe(prompt);
     else window.addEventListener('resize', measurePrompt);
     let failures = 0;
     async function refresh() {
@@ -557,6 +561,10 @@ export async function mount(ctx) {
         },
         dispose() {
             commandDraft = command.value;
+            promptObserver?.disconnect();
+            if (!promptObserver) window.removeEventListener('resize', measurePrompt);
+            // The terminal's own page-level keys go with the terminal.
+            stream.dispose?.();
         }
     };
 }

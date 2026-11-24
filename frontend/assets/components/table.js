@@ -5,7 +5,7 @@ import { route } from '../router.js';
 const stamp = (value) => date(value);
 import { emptyState } from './states.js';
 import { exportControls } from './export.js';
-import { read, write, schema } from '../prefs.js';
+import { read, schema } from '../prefs.js';
 
 const collator = new Intl.Collator(undefined, { numeric: true });
 /** Evaluate renderers once per row; sorting must not construct cells for every comparison. */
@@ -300,7 +300,11 @@ export class DataTable {
         this.size.onchange = () => {
             this.pageSize = Number(this.size.value);
             this.page = 1;
-            write('pageSize', this.pageSize);
+            // The size is this table's own, remembered beside its sort and filters.
+            // Writing the global preference here made one table's pager silently
+            // rewrite the default for every other table and for the Preferences page,
+            // which promised the opposite: "each table remembers its own".
+            this.remember();
             this.render();
         };
         this.previous = button('Previous', () => {

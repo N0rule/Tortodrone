@@ -403,14 +403,23 @@ main {
     font-size: 13px;
     max-width: 70ch;
 }
-/* Navigation moves focus here for keyboard users and announces the page in
-   #page-status; a visible ring around a heading would only add noise. */
+/* Two different jobs, two different answers.
+   `#title` is focused only to move the reading position of a screen reader; it is
+   not interactive, so it carries no ring, and the page name is announced through
+   #page-status instead.
+   `#main` is the skip link's destination (index.html:20). Focus really does move
+   there, and a low-vision operator who cannot see where it went has no way to tell
+   that the skip worked, so the ring is drawn inset: on the content region it reads
+   as "you are here" rather than as a focused button. */
 #title:focus,
 #title:focus-visible {
     outline: none;
 }
+#main:focus,
 #main:focus-visible {
-    outline: none;
+    outline: 2px solid var(--cyan);
+    outline-offset: -2px;
+    border-radius: var(--radius);
 }
 @media (max-width: 1000px) {
     .search-trigger span {

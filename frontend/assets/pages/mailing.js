@@ -608,7 +608,8 @@ function deliveredLabel(campaign) {
                             'mail-cancel',
                             { id: get().id, revision: get().updated },
                             [],
-                            'Knights who already received this mailing keep it. No further deliveries will be made.'
+                            'Knights who already received this mailing keep it. No further deliveries will be made.',
+                            { destructive: true, submit: 'Cancel mailing' }
                         ),
                     'secondary',
                     () => get().enabled,
@@ -768,11 +769,17 @@ function deliveredLabel(campaign) {
         ];
         if (!receipts.length)
             content.push(
-                el(
-                    'p',
-                    'Nothing sent from this browser yet. A direct letter, a batch send or a test copy adds a receipt here.',
-                    'empty'
-                )
+                emptyState({
+                    compact: true,
+                    icon: 'mail',
+                    title: 'Nothing sent from this browser yet',
+                    message:
+                        'A direct letter, a batch send or a test copy adds a receipt here. Receipts are this browser’s record of what it asked for; the server’s own delivery count lives under Recipients.',
+                    action: {
+                        label: 'Write a direct letter',
+                        run: () => here({ tab: 'direct' })
+                    }
+                })
             );
         else {
             const table = new DataTable(

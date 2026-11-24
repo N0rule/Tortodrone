@@ -73,7 +73,8 @@ export async function mount(ctx) {
                                             'kick',
                                             { session: get().id },
                                             [],
-                                            `Disconnect ${get().knight || get().username || 'this connection'}.`
+                                            `Drop ${get().knight || get().username || 'this connection'} now. The player can reconnect immediately; nothing they own is changed.`,
+                                            { destructive: true, submit: 'Disconnect' }
                                         ),
                                     'danger'
                                 )
@@ -93,6 +94,7 @@ export async function mount(ctx) {
                                   description:
                                       'Each selected connection is dropped immediately. Authenticated players can reconnect at once.',
                                   label: 'Disconnect',
+                                  variant: 'danger',
                                   onSubmit: async (form, progress) => {
                                       let done = 0;
                                       const failed = [];

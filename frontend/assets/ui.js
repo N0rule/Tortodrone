@@ -278,13 +278,21 @@ const preferredLocale = (() => {
     // Americas, prefer the day-first/24-hour form the user asked for.
     return /^en[-_]US$/i.test(language) && !zone.startsWith('America/') ? 'en-GB' : language;
 })();
+/**
+ * Every date the WebUI prints is a local date, and the server stores its windows as
+ * Unix milliseconds UTC (`DepotStore`, `AuctionState`). Without a zone the same instant
+ * read "04/12 09:00" to the operator who scheduled it and to the colleague they sent
+ * the link to, in two different zones. The zone is part of the value, so it is part of
+ * the string — compactly, as `GMT+3` rather than a spelled-out region name.
+ */
 const dateFormat = new Intl.DateTimeFormat(preferredLocale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    hourCycle: 'h23'
+    hourCycle: 'h23',
+    timeZoneName: 'short'
 });
 const calendarFormat = new Intl.DateTimeFormat(preferredLocale, {
     day: '2-digit',
@@ -415,9 +423,18 @@ export function download(name, content, type = 'text/plain') {
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+let tabSeq = 0;
 export function tabs(options, value, onChange) {
     const root = el('div', null, 'tabs');
     root.setAttribute('role', 'tablist');
+    // A tab that does not say which region it controls is a button wearing a tab's
+    // role: a screen reader announces "tab, 1 of 3" and then has nowhere to send the
+    // operator. Each strip owns one region — both callers swap that region's children
+    // rather than stacking hidden panels — so the panel id is minted once per strip
+    // and its label follows the selected tab.
+    const group = 'tabs-' + ++tabSeq;
+    const panelId = group + '-panel';
+    let panel = null;
     function choose(id, focus = false) {
         for (const b of root.children) {
             const selected = b.dataset.tab === id;
@@ -425,6 +442,7 @@ export function tabs(options, value, onChange) {
             b.tabIndex = selected ? 0 : -1;
             if (selected && focus) b.focus();
         }
+        if (panel) panel.setAttribute('aria-labelledby', group + '-' + id);
         onChange(id);
     }
     for (const [id, title] of options) {
@@ -432,7 +450,9 @@ export function tabs(options, value, onChange) {
         const art = symbol(id);
         if (art) b.prepend(art);
         b.dataset.tab = id;
+        b.id = group + '-' + id;
         b.setAttribute('role', 'tab');
+        b.setAttribute('aria-controls', panelId);
         b.setAttribute('aria-selected', id === value);
         b.tabIndex = id === value ? 0 : -1;
         root.append(b);
@@ -450,6 +470,22 @@ export function tabs(options, value, onChange) {
             choose(options[next][0], true);
         };
     }
+    /**
+     * Name the region the strip switches, once per caller. `tabindex="0"` is what the
+     * tab pattern asks for: a panel whose content is all read-only text would
+     * otherwise be unreachable from the keyboard, and a tab stop on a region is
+     * cheaper than a dead end. Returns the node so callers can keep using
+     * `replaceChildren` on it.
+     */
+    root.bindPanel = (node) => {
+        if (!node) return panel;
+        node.id = panelId;
+        node.setAttribute('role', 'tabpanel');
+        node.setAttribute('aria-labelledby', group + '-' + (value ?? options[0][0]));
+        node.tabIndex = 0;
+        panel = node;
+        return node;
+    };
     return root;
 }
 

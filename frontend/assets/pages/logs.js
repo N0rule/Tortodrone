@@ -84,6 +84,8 @@ export async function mount(ctx) {
     return {
         node: stream.node,
         refresh,
+        /** The stream listens on `document` and `window`; leaving the page detaches it. */
+        dispose: () => stream.dispose?.(),
         // Back off while the server is unreachable, then come straight back.
         get interval() {
             return failures ? Math.min(4000 * 2 ** failures, 60000) : 4000;

@@ -283,10 +283,14 @@ export async function mount(ctx) {
                 button(
                     'Cancel',
                     () =>
-                        confirm('Cancel promotion #' + get().id, 'promotion-cancel', {
-                            ...fixed(),
-                            id: get().id
-                        }),
+                        confirm(
+                            'Cancel promotion #' + get().id,
+                            'promotion-cancel',
+                            { ...fixed(), id: get().id },
+                            [],
+                            'The discount comes off offer #' + get().offerId + ' for the rest of its window, and a cancelled promotion cannot be reinstated — a new one has to be scheduled.',
+                            { destructive: true, submit: 'Cancel promotion' }
+                        ),
                     'secondary',
                     () => !get().cancelled
                 )
@@ -395,6 +399,7 @@ export async function mount(ctx) {
     // not still be the offer editor.
     const createOfferButton = button('Create offer', () => createOffer()),
         createPromotionButton = button('Schedule promotion', () => schedulePromotion(null));
+    tabBar.bindPanel(content);
     node.append(toolbar(createOfferButton, createPromotionButton, revision), tabBar, content);
     paintTabs();
     show();

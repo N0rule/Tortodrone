@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { el, input, select, toolbar, button, text, report } from '../ui.js';
 import { itemTile } from './items.js';
+import { emptyState } from './states.js';
 
 /** Bounded server pages; obsolete search results never replace the latest results. */
 export function itemPicker(
@@ -76,7 +77,31 @@ export function itemPicker(
             return tile;
         });
         grid.replaceChildren(
-            ...(tiles.length ? tiles : [el('p', 'No items match these filters.', 'empty')])
+            ...(tiles.length
+                ? tiles
+                : [
+                      emptyState({
+                          compact: true,
+                          icon: 'search',
+                          title: 'No items match these filters',
+                          message:
+                              search.value || categories.value
+                                  ? 'The catalogue had a category and a search term to go on. Clearing one of them is the next step.'
+                                  : 'The server returned no items for this slot at all.',
+                          action:
+                              search.value || categories.value
+                                  ? {
+                                        label: 'Clear filters',
+                                        run: () => {
+                                            search.value = '';
+                                            categories.value = '';
+                                            page = 1;
+                                            load().catch(report);
+                                        }
+                                    }
+                                  : null
+                      })
+                  ])
         );
         text(count, `${result.total.toLocaleString()} items · Page ${page}`);
         previous.disabled = page <= 1;

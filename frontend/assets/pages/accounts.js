@@ -1,19 +1,5 @@
 import { api } from '../api.js';
-import {
-    el,
-    toolbar,
-    button,
-    routeLink,
-    panel,
-    facts,
-    badge,
-    date,
-    text,
-    input,
-    label,
-    copy,
-    changed
-} from '../ui.js';
+import { el, toolbar, button, routeLink, panel, facts, badge, date, copy } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { edit, confirm, confirmAction, field } from '../components/dialog.js';
 
@@ -101,6 +87,9 @@ export async function mount(ctx) {
                 ? 'Game Master rights allow in-game administration. Each account is updated individually and the result is reported per account.'
                 : 'Game Master rights are removed from each selected account. WebUI roles are not affected.',
             label: gameMaster ? 'Grant' : 'Remove',
+            // Escalation, not a tidy-up: the same gold Confirm as every other write
+            // made a grant of in-game admin rights look like saving a field.
+            variant: gameMaster ? 'danger' : 'primary',
             onSubmit: async (form, progress) => {
                 let done = 0;
                 const failed = [];
@@ -207,27 +196,27 @@ export async function mount(ctx) {
                     'danger'
                 )
             );
-        const gm = input('Game Master permission', account.gameMaster, 'checkbox');
-        gm.setAttribute('role', 'switch');
-        gm.disabled = !ctx.admin;
+        // A switch that posts on change asks for no confirmation and cannot be
+        // undone, which contradicts the rule the rest of the application keeps; and
+        // natively disabling it for a moderator removed the control *and* the reason
+        // from the tab order. One button, through the same confirmation the bulk path
+        // uses for the same route.
         const feedback = el(
             'small',
             'Game account permission; WebUI roles are managed separately.'
         );
-        gm.onchange = async () => {
-            gm.disabled = true;
-            try {
-                await api.change('account-gm', { ...fixed, gm: gm.checked });
-                text(feedback, 'Game Master permission saved.');
-                changed();
-            } catch (error) {
-                gm.checked = account.gameMaster;
-                text(feedback, error.message);
-            } finally {
-                gm.disabled = false;
-            }
-        };
-        actions.prepend(label('Game Master', gm), feedback);
+        actions.prepend(
+            button(
+                account.gameMaster ? 'Remove Game Master' : 'Grant Game Master',
+                () => bulkPermission([account], !account.gameMaster),
+                'secondary',
+                () =>
+                    ctx.admin ||
+                    'Granting and removing Game Master rights needs an administrator role.',
+                { showReason: true }
+            ),
+            feedback
+        );
         // One person can be a game account, an audit actor and a WebUI identity,
         // so the detail links all three views of them.
         const links = toolbar(routeLink('Back to accounts', 'accounts', {}, 'button secondary'));

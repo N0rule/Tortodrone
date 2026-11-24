@@ -300,6 +300,12 @@ td .toolbar .button .ui-icon,
     grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
     gap: 10px;
 }
+/* The empty state is a message about the grid, not a tile in it: it takes the whole
+   row instead of one 155px cell. */
+.item-grid > .empty-state,
+.sprite-grid > .empty-state {
+    grid-column: 1 / -1;
+}
 .item-tile {
     display: flex;
     flex-direction: column;
@@ -542,6 +548,20 @@ a:focus-visible {
     background: var(--raised);
     border-left: 3px solid var(--gold);
     border-radius: var(--radius);
+}
+/* A refused address keeps Overview beneath it, so the card has to read as a banner
+   above content rather than as the page: the same left edge as #notice, in the
+   colour that means "this did not happen". */
+.refusal {
+    padding: 14px 16px;
+    background: var(--raised);
+    border: 1px solid var(--line-bright);
+    border-left: 3px solid var(--warn);
+    border-radius: var(--radius);
+}
+.refusal h2 {
+    margin: 0;
+    font-size: 15px;
 }
 .data-table {
     display: grid;
