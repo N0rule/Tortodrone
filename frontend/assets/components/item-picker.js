@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { el, input, select, toolbar, button, text, report } from '../ui.js';
-import { itemTile } from './items.js';
+import { itemLine, itemTile } from './items.js';
 import { emptyState } from './states.js';
 import { exportRows } from './export.js';
 import { DataTable } from './table.js';
@@ -44,7 +44,10 @@ export function itemPicker(
      */
     const EXPORT_CAP = 1000;
     const COLUMNS = [
-        ['Name', (row) => row.name, (row) => row.name],
+        // The catalogue's own table is the last place an item was a bare string: the
+        // name cell is the same line the depot and the auctions use, art first, and
+        // `note` is empty because the Category column beside it already says it.
+        ['Name', (row) => itemLine(row, null, { compact: true, note: '' }), (row) => row.name],
         ['Config', (row) => row.config],
         [
             'Category',

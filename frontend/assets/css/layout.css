@@ -102,34 +102,46 @@
     text-align: center;
     font-size: 16px;
 }
+/* The foot of the rail: who is signed in, two things that change how the console
+   looks, and the way out. They are three groups, not five boxes — the space between
+   them is the only thing drawing the boundary here. */
 #sidebar footer {
     display: grid;
-    gap: 7px;
+    gap: 14px;
     margin-top: auto;
-    padding: 20px 8px 0;
+    padding: 18px 4px 2px;
     color: var(--muted);
     font-size: 12.5px;
-    border-top: 1px solid var(--line-panel);
     flex-shrink: 0;
     overflow-wrap: anywhere;
 }
-.preference-controls {
-    display: flex;
-    flex-wrap: wrap;
-}
-/* Who is signed in: the name, then the role as the one chip the sidebar wears. */
+/* Who is signed in. The name is the only bold thing in the foot and the role sits
+   beside it as a word in purple, not as a filled chip: a 30px tinted lozenge over a
+   12px label was the loudest object on a rail of quiet ones. */
 #identity {
     display: flex;
-    flex-wrap: wrap;
     align-items: baseline;
+    flex-wrap: wrap;
     gap: 2px 8px;
+    padding: 0 8px;
     color: var(--text);
 }
 #identity-name {
     font-weight: 600;
+    font-size: 13px;
+}
+#identity-role {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 11.5px;
+}
+.preference-controls {
+    display: grid;
+    gap: 1px;
 }
 #sidebar footer button {
-    min-block-size: var(--control-sm);
+    min-block-size: 34px;
     padding: 0 8px;
     border-radius: var(--radius-control);
     font-size: 12.5px;
@@ -138,6 +150,24 @@
        the two switches above it started at the margin. */
     text-align: left;
     justify-content: flex-start;
+}
+#sidebar footer .preference-controls button {
+    inline-size: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    background: transparent;
+    font-weight: 400;
+}
+#sidebar footer .preference-controls button:not(:disabled):hover {
+    background: var(--raised);
+}
+#sidebar footer > button#logout {
+    color: var(--muted);
+    font-weight: 400;
+}
+#sidebar footer > button#logout:not(:disabled):hover {
+    background: var(--raised);
+    color: var(--text);
 }
 .workspace {
     min-width: 0;

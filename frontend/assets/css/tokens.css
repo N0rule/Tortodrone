@@ -49,14 +49,14 @@
        The surface step is the large one: a 12px corner on a 1,200px panel reads as a
        soft edge, while an 8px one a few pixels off the controls beside it read as a
        mistake. */
-    --radius: 12px;
-    --radius-control: 8px;
+    --radius: 14px;
+    --radius-control: 10px;
     --radius-pill: 999px;
-    --control: 36px;
+    --control: 40px;
     /* The sizes client art is drawn at, one per job: a row thumbnail, a tile, an
        equipped slot. Two lists picking their own 30px and 34px was drift, not design. */
-    --icon-row: 36px;
-    --icon-tile: 56px;
+    --icon-row: 38px;
+    --icon-tile: 60px;
     --icon-slot: 64px;
     /* A ramp of three real steps: 32 / 36 / 44. 34 against 36 was a 2px difference
        that read as misalignment rather than as a smaller control. */
@@ -93,7 +93,7 @@
     /* The page's breathing room, in one number: block gaps and the padding inside a
        panel are the same value, so a panel's edge never sits closer to its content than
        two panels sit to each other. */
-    --space: 24px;
+    --space: 26px;
     /* Table cell padding above and below its content. A row is as tall as the tallest
        thing in it — usually the 36px row action — so 12px here measured 60px rows for
        one line of text: twelve visible rows per screen, and a 30-row list that scrolled

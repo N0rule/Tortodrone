@@ -7,6 +7,7 @@ import { edit, confirm, field, conflict, openDialog } from '../components/dialog
 import {
     itemLine,
     currency,
+    definitionsFor,
     itemTile,
     icon,
     variantEffects,
@@ -753,14 +754,17 @@ export async function mount(ctx) {
             );
             return node;
         }
-        const list = el('ul', null, 'recipe-list');
+        const list = el('ul', null, 'recipe-list'),
+            rows = new Map();
         for (const recipe of recipes) {
             const row = el('li', null, 'recipe-row');
-            const open = el('button', recipe.config, 'link');
-            open.type = 'button';
-            open.onclick = () => inspectItemName(recipe.config);
+            // A recipe is an item, so it wears that item's client art: the row used to
+            // be the raw config path, the one thing on the page that was neither art
+            // nor a name an operator could read.
+            const line = itemLine(undefined, { config: recipe.config });
+            rows.set(recipe.config, { row, line });
             row.append(
-                open,
+                line,
                 el(
                     'small',
                     `${recipe.crafted ? 'crafted' : 'not crafted'} · expires ${recipe.expires ? date(recipe.expires) : 'never'}`,
@@ -769,6 +773,18 @@ export async function mount(ctx) {
             );
             list.append(row);
         }
+        // The view's definitions cover the gear a knight wears, not what they have
+        // learned to craft, so the names for these rows are read once and swapped in;
+        // the config path stands in until then rather than a blank frame.
+        definitionsFor([...rows.keys()])
+            .then((definitions) => {
+                for (const [config, { row, line }] of rows) {
+                    const definition = definitions.get(config);
+                    if (!definition || !row.isConnected) continue;
+                    line.replaceWith(itemLine(definition, { config }));
+                }
+            })
+            .catch(() => {});
         node.append(list);
         return node;
     }

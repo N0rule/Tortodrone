@@ -84,9 +84,11 @@ function rarityLine(rarity) {
  * @param {any} [definition] the catalogue definition, when the caller already has it
  * @param {any} [item] a knight's item instance, when the caller has one
  * @param {{actions?: Node[], label?: string, note?: string, compact?: boolean}} [options]
- *   `note` replaces the category line with the caller's own detail, and `compact`
- *   is the table-cell size: the art stays, at a third of the height, because a
- *   56px thumbnail per row turns a 328-offer list into a 22-page one.
+ *   `note` replaces the category line with the caller's own detail, and an empty
+ *   one drops that line entirely for a caller whose table already has the category
+ *   in a column of its own. `compact` is the table-cell size: the art stays, at a
+ *   third of the height, because a 56px thumbnail per row turns a 328-offer list
+ *   into a 22-page one.
  */
 export function itemLine(definition, item, { actions, label, note, compact } = {}) {
     const root = el('div', null, compact ? 'item-line compact' : 'item-line'),
@@ -105,7 +107,9 @@ export function itemLine(definition, item, { actions, label, note, compact } = {
             inspectItemName(config, { definition, item, actions }).catch(report);
         names.append(control);
     } else names.append(el('strong', label || name));
-    const detail = note || definition?.category;
+    // `??`, not `||`: a caller whose neighbouring column already carries the
+    // category passes '' to say so, and a fallback would have printed it twice.
+    const detail = note ?? definition?.category;
     if (detail) names.append(el('small', detail));
     // A gear card has the room for the rarity the game prints as stars; a compact
     // table row does not, and the row's own detail line carries the level instead.
