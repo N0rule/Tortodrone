@@ -403,6 +403,31 @@ export function logStream({
                     : 'idle'
                 : 'back';
         statusRight.title = file?.path ? 'The complete log lives in ' + file.path : '';
+        // The severity filter is also the only place per-level counts can be read, so
+        // it carries them: "3 ERROR among 1000" was invisible until you chose ERROR and
+        // counted what was left. Counted over the search-filtered rows, never the
+        // severity filter itself, or every option would read 0 except the chosen one.
+        const needle = search.value.trim().toLowerCase(),
+            counts = new Map();
+        for (const row of allRows()) {
+            if (cleared(row)) continue;
+            if (
+                needle &&
+                !`${row.level ?? ''} ${row.thread ?? ''} ${
+                    row.entry ? `${row.entry.command} ${row.entry.output}` : (row.message ?? row.line)
+                }`
+                    .toLowerCase()
+                    .includes(needle)
+            )
+                continue;
+            counts.set(row.level, (counts.get(row.level) || 0) + 1);
+        }
+        for (const option of severity.options) {
+            const label = option.value === 'All' ? 'All' : option.value;
+            const count = option.value === 'All' ? [...counts.values()].reduce((a, b) => a + b, 0) : (counts.get(option.value) || 0);
+            const next = count ? `${label} (${count})` : label;
+            if (option.textContent !== next) option.textContent = next;
+        }
         // A notice appearing above the pane (or a second status row) moves its top
         // edge, and that is the only reason to resize: refitting on every status
         // repaint grew the pane under the operator's eyes on arrival (305px → 490px).

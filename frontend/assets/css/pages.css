@@ -329,7 +329,9 @@ button.metric:focus-visible {
 .terminal-tools select {
     flex: 0 0 auto;
     inline-size: auto;
-    min-inline-size: 84px;
+    /* The options carry per-level counts ("ERROR (123)"), so the field has to be able
+       to show one: 84px clipped them to "ERROR (…". */
+    min-inline-size: 118px;
 }
 .terminal-count {
     margin-left: auto;
@@ -810,7 +812,7 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
         order: -1;
     }
     .terminal-tools select {
-        inline-size: 76px;
+        inline-size: 104px;
         min-inline-size: 0;
     }
     .terminal-count {

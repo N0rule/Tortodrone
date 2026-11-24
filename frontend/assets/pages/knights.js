@@ -627,6 +627,55 @@ export async function mount(ctx) {
     }
 
     /** Learned recipes as named rows, each one a route into the item it makes. */
+    /**
+     * Saved equipment snapshots, one row each. The old panel printed
+     * `details('Saved loadouts (read only)', …)` — a JSON.stringify of the raw records,
+     * so an operator with ten loadouts had to read braces to find a name.
+     */
+    function loadoutList(loadouts) {
+        const node = el('div', null, 'stack-tight');
+        node.append(el('h3', `Saved loadouts (${loadouts.length})`));
+        if (!loadouts.length) {
+            node.append(
+                el(
+                    'p',
+                    'This knight has no saved loadout. Loadouts are saved in the game client, one snapshot of the equipped gear at a time.',
+                    'muted'
+                )
+            );
+            return node;
+        }
+        const list = el('ul', null, 'recipe-list');
+        for (const loadout of loadouts) {
+            const row = el('li', null, 'recipe-row');
+            const equipment = loadout.equipment || [];
+            row.append(
+                el('strong', loadout.name || 'Untitled loadout'),
+                el(
+                    'small',
+                    [
+                        `${equipment.length} ${equipment.length === 1 ? 'piece' : 'pieces'}`,
+                        loadout.pvp ? 'PvP set' : null,
+                        loadout.sprite ? `battle sprite ${loadout.sprite}` : null,
+                        loadout.harness ? `harness ${loadout.harness}` : null,
+                        loadout.perk == null ? null : `perk ${loadout.perk}`
+                    ]
+                        .filter(Boolean)
+                        .join(' · '),
+                    'muted'
+                )
+            );
+            if (equipment.length) {
+                const gear = el('span', null, 'muted');
+                gear.textContent = equipment.join(', ');
+                row.append(gear);
+            }
+            list.append(row);
+        }
+        node.append(list);
+        return node;
+    }
+
     function recipeList(recipes) {
         const node = el('div', null, 'stack-tight');
         node.append(el('h3', `Learned recipes (${recipes.length})`));
@@ -677,7 +726,7 @@ export async function mount(ctx) {
                           // A count nobody can open is trivia: each learned recipe
                           // names an item, so each one leads to that item.
                           recipeList(p.town.recipes),
-                          details('Saved loadouts (read only)', p.town.loadouts)
+                          loadoutList(p.town.loadouts)
                       )
                     : panel(
                           'Knight details',

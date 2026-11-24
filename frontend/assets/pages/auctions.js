@@ -48,7 +48,13 @@ export async function mount(ctx) {
                 : ' Settlement is not offered for one listing, so other expired ' +
                   'listings settle at the same time.');
         return confirmAction({
-            title: id == null ? 'Settle expired auctions' : 'Settle auction #' + id,
+            // The label said "Settle" and the row said "#12345", but the service settles
+            // every expired listing at once: name what the press does, not which row it
+            // was pressed on.
+            title:
+                id == null
+                    ? 'Settle every expired auction'
+                    : `Settle every expired auction (including #${id})`,
             description,
             label: id == null ? 'Settle expired' : 'Settle expired listings',
             onSubmit: async () => {
@@ -219,7 +225,7 @@ export async function mount(ctx) {
             actions: (get) => [
                 routeLink('Inspect', 'auctions', { listing: get().listing.id }, 'button secondary'),
                 button(
-                    'Settle',
+                    'Settle expired',
                     () => settle(get().listing.id),
                     'secondary',
                     () => state(get().listing) === 'Awaiting settlement'
