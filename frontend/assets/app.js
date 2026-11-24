@@ -219,7 +219,8 @@ async function refresh() {
         } catch (error) {
             if (id === generation && error.name !== 'AbortError') {
                 connection('Reconnecting', false);
-                report(error);
+                // A failed poll read nothing and wrote nothing.
+                report(error, { read: true });
             }
         } finally {
             if (id === generation) $('#refresh').disabled = false;
@@ -272,6 +273,23 @@ function renderNavigation() {
     );
 }
 
+/**
+ * A refused address is a page, not a notice: say which page was asked for, why it is
+ * not here, and what the operator can do about it.
+ */
+function showRefusal({ title, message }) {
+    const card = el('div', null, 'stack');
+    const head = el('h2', title);
+    const body = el('p', message, 'muted');
+    const actions = toolbar(
+        button('Open Overview', () => go('overview'), 'primary'),
+        button('Search pages', () => $('#search').click(), 'secondary')
+    );
+    card.append(head, body, actions);
+    $('#page').replaceChildren(card);
+    announce('Refused: ' + title);
+}
+
 async function navigate() {
     if (!api.session) return;
     const next = route(),
@@ -286,14 +304,20 @@ async function navigate() {
             pages.find((page) => page.name === next.name || page.alias?.includes(next.name)) ||
             null;
         const needs = ['a viewer', 'a moderator', 'an administrator'][denied?.rank ?? 2];
-        // A refusal is not a moment; it stays on the page as a notice, and the address
-        // is rewritten to the page actually shown so the bar never names a page the
-        // operator cannot see.
-        notify(
+        // A refusal is not a moment: it is a page. The notice was hidden again by the
+        // redirect it caused, so an operator who mistyped a link saw Overview and no
+        // reason for it. The card stays until they ask for something else.
+        showRefusal(
             denied
-                ? `You do not have access to ${denied.title}. It needs ${needs} role, and Overview is shown instead.`
-                : `There is no page called “${next.name}”. Overview is shown instead.`,
-            true
+                ? {
+                      title: denied.title,
+                      message: `That page needs ${needs} role, which this session does not hold. Overview is shown below instead.`
+                  }
+                : {
+                      title: `There is no page called “${next.name}”`,
+                      message:
+                          'Nothing is stored under that link. The pages are listed in the sidebar, and Ctrl K searches them.'
+                  }
         );
         if (location.hash !== '#overview') window.history.replaceState(null, '', '#overview');
         acceptedHash = '#overview';
@@ -342,7 +366,7 @@ async function navigate() {
             try {
                 await controller.navigate(next.params);
             } catch (error) {
-                if (error.name !== 'AbortError') report(error);
+                if (error.name !== 'AbortError') report(error, { read: true });
             }
         }
         return;
@@ -414,7 +438,7 @@ async function navigate() {
                     }
                 })
             );
-            report(error);
+            report(error, { read: true });
         }
     }
 }

@@ -14,6 +14,8 @@ let commandDraft = '';
  * sessionStorage, marked with the time each command went out.
  */
 const TRANSCRIPT_KEY = 'tortodrone-console-transcript';
+/** Answers the fifty-row transcript has had to drop since this page was opened. */
+let droppedAnswers = 0;
 function persist() {
     try {
         sessionStorage.setItem(
@@ -74,6 +76,13 @@ export async function mount(ctx) {
             // opens at the prompt: the newest line and the banner belong on screen.
             tail: false,
             autoScroll: true,
+            // The rows this page owns are answers; the log lines behind them are the
+            // server's words. Counting both said "13 answers" with none issued.
+            countAnswers: true,
+            sourceLabel: () =>
+                droppedAnswers
+                    ? `server log · ${droppedAnswers} older answers dropped`
+                    : 'server log',
             countNoun: ['answer', 'answers'],
             severity: ctx.params.get('severity') || 'All',
             search: ctx.params.get('search') || '',
@@ -223,7 +232,10 @@ export async function mount(ctx) {
     /** Echo the prompt line before the server answers, the way a shell does. */
     function echo(value) {
         outputHistory.push({ time: Date.now(), command: value, output: '', error: false, pending: true });
-        if (outputHistory.length > 50) outputHistory.shift();
+        if (outputHistory.length > 50) {
+            outputHistory.shift();
+            droppedAnswers++;
+        }
         stream.redraw();
     }
     let completion = { list: [], at: -1 };
@@ -405,8 +417,11 @@ export async function mount(ctx) {
             }
         } catch (error) {
             failures++;
-            text(feedback, 'Disconnected · ' + error.message);
+            // One word for one state, and no raw TypeError text: the LED reads the
+            // error class, so it has to be repainted to stop showing green.
+            text(feedback, 'Offline · reconnecting');
             feedback.classList.add('error');
+            stream.redraw();
             // A 401 is not a flaky server: every command from here prints "Sign in
             // required" into the transcript, so the pane offers the way back.
             if (error.status === 401 && ctx.reauth && !feedback.parentElement.querySelector('.console-reauth')) {

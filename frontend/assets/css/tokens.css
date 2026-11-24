@@ -35,7 +35,9 @@
     --radius-control: 8px;
     --radius-pill: 999px;
     --control: 36px;
-    --control-sm: 34px;
+    /* A ramp of three real steps: 32 / 36 / 44. 34 against 36 was a 2px difference
+       that read as misalignment rather than as a smaller control. */
+    --control-sm: 32px;
     --control-lg: 44px;
     --elev-1: 0 1px 2px #030d1640;
     --elev-2: 0 6px 18px #030d1640;

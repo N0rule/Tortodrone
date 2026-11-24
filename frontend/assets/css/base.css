@@ -60,10 +60,10 @@ button,
 .button {
     --control-bg: var(--raised);
     --control-fg: var(--text);
-    /* A control is defined by its own fill and its own depth, not by the brightest
-       boundary on the page: a 1px --line-bright outline on all 330 of them made the
-       whole product a field of identical bright rectangles. */
-    --control-border: var(--line);
+    /* A control is defined by its own fill and its own depth, but its boundary still
+       has to clear 3:1 against the panel it sits on: --line is 1.71:1 and left
+       secondary buttons located by their label alone. --line-bright is 4.31:1. */
+    --control-border: var(--line-bright);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -95,7 +95,15 @@ button:not(:disabled):not([aria-disabled='true']):hover,
     background: color-mix(in srgb, var(--raised) 82%, var(--line-bright));
 }
 button:not(:disabled):not([aria-disabled='true']):active,
-.button:not(:disabled):not([aria-disabled='true']):active {
+.button:not(:disabled):not([aria-disabled='true']):active,
+button.primary:not(:disabled):not([aria-disabled='true']):active,
+button.secondary:not(:disabled):not([aria-disabled='true']):active,
+button.quiet:not(:disabled):not([aria-disabled='true']):active,
+button.danger:not(:disabled):not([aria-disabled='true']):active,
+.button.primary:not(:disabled):not([aria-disabled='true']):active,
+.button.secondary:not(:disabled):not([aria-disabled='true']):active,
+.button.quiet:not(:disabled):not([aria-disabled='true']):active,
+.button.danger:not(:disabled):not([aria-disabled='true']):active {
     background: color-mix(in srgb, var(--raised) 88%, var(--inset));
     border-color: var(--cyan);
     box-shadow: none;
@@ -307,7 +315,8 @@ a.link:hover {
 }
 /* A link-styled control keeps every state the bordered variants have. */
 button.link,
-.button.link {
+.button.link,
+a.link {
     --control-bg: transparent;
     --control-border: transparent;
     color: var(--cyan);
@@ -322,7 +331,8 @@ button.link,
     text-decoration: underline;
 }
 button.link:not(:disabled):hover,
-.button.link:not(:disabled):hover {
+.button.link:not(:disabled):hover,
+a.link:hover {
     background: transparent;
     border-color: transparent;
     text-decoration: underline;

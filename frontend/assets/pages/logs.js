@@ -28,11 +28,15 @@ export async function mount(ctx) {
         raw: ctx.params.get('raw') === '1',
         fill: true,
         onLoadFile: (limit) => ctx.request('logs-file', { limit: String(limit) }),
-        extras: RELATED.map(([page, label]) => {
-            const go = button(label, () => ctx.go(page), 'link');
-            go.title = `Open ${label} — the page that explains what this line is about`;
-            return go;
-        }),
+        // Below 601px these three cost a whole row of chrome the pane cannot spare,
+        // and the drawer already lists all three pages.
+        extras: window.matchMedia('(min-width: 601px)').matches
+            ? RELATED.map(([page, label]) => {
+                  const go = button(label, () => ctx.go(page), 'link');
+                  go.title = `Open ${label} — the page that explains what this line is about`;
+                  return go;
+              })
+            : [],
         // The filter is the view, so it belongs in the address: the operator can copy
         // what they are looking at instead of describing it to a colleague. Replace
         // rather than push, so a typed search does not stack history entries.

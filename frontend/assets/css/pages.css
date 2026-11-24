@@ -208,20 +208,24 @@ button.metric:focus-visible {
     flex-direction: column;
     /* Fill the reading area on both Logs and Console so the surface reads as a
        terminal window instead of a strip of rows above empty canvas. */
-    min-height: min(480px, 62dvh);
-    border: 1px solid var(--line-bright);
-    border-radius: var(--radius-control);
-    background: var(--inset);
-    box-shadow: var(--elev-2);
+    /* A terminal window is a rectangle of one material: an 8px radius, a drop shadow
+       and a floating pill made the pane read as a card dressed as a terminal. */
+    min-height: min(380px, 54dvh);
+    border: 1px solid var(--term-line);
+    border-radius: 2px;
+    background: var(--term-bg);
     overflow: hidden;
 }
 .terminal-bar {
     display: flex;
     align-items: center;
     gap: 9px;
-    padding: 7px 12px;
-    background: color-mix(in srgb, var(--surface) 80%, var(--inset));
-    border-bottom: 1px solid var(--line);
+    padding: 6px 12px;
+    background: var(--term-bg-top);
+    border-bottom: 1px solid var(--term-line);
+    color: var(--term-fg);
+    font-family: var(--mono);
+    font-size: 12px;
 }
 /* The stream's real state, not a drawing of window buttons that do nothing. */
 .terminal-led {
@@ -287,11 +291,32 @@ button.metric:focus-visible {
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
+/* One row of 36px controls: the `More` disclosure measured 59px for a 34px summary,
+   which spent 74px of a 578px pane on chrome. */
 .terminal-tools {
-    padding: 7px 12px;
+    padding: 5px 12px;
     gap: 8px;
-    border-bottom: 1px solid var(--line);
-    background: color-mix(in srgb, var(--surface) 55%, var(--inset));
+    flex-wrap: nowrap;
+    border-bottom: 1px solid var(--term-line);
+    background: var(--term-bg-top);
+    font-family: var(--mono);
+}
+.terminal-tools input,
+.terminal-tools select,
+.terminal-tools button,
+.terminal-menu-toggle {
+    font-family: var(--mono);
+    font-size: 12px;
+}
+/* The counter for the field beside it, not a badge: "1 of 20". */
+.terminal-match-count {
+    color: var(--term-time);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.terminal-match-count:empty {
+    display: none;
 }
 .terminal-tools input[type='search'] {
     flex: 1 1 180px;
@@ -315,9 +340,19 @@ button.metric:focus-visible {
 .terminal-menu {
     position: relative;
 }
-/* The menu toggle is a `.button`; this only drops the native disclosure marker. */
+/* The menu toggle is a `.button`; this only drops the native disclosure marker and
+   pins the disclosure's own box to the control height it is drawn at. */
+.terminal-menu {
+    display: inline-flex;
+    align-items: center;
+    block-size: var(--control);
+}
 .terminal-menu-toggle {
     list-style: none;
+    align-items: center;
+    display: inline-flex;
+    block-size: var(--control);
+    min-block-size: var(--control);
 }
 .terminal-menu-toggle::-webkit-details-marker {
     display: none;
@@ -382,19 +417,20 @@ button.metric:focus-visible {
 .terminal-line:hover {
     background: var(--term-hover);
 }
+/* One size and one baseline across the gutter: 13 / 11.5 / 10.5 with a 2px padding
+   staircase put three type sizes on three baselines in a single row. */
 .log-time {
     color: var(--term-time);
-    font-size: 11.5px;
+    font-size: 12px;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 .log-level {
     color: var(--term-level);
-    font-size: 10.5px;
+    font-size: 11.5px;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    padding-top: 2px;
     /* A fixed track must never be widened by a long level name. */
     overflow: hidden;
     text-overflow: ellipsis;
@@ -461,6 +497,11 @@ button.metric:focus-visible {
     overflow-x: auto;
 }
 /* A search hit shows itself: a filtered line explains why it matched. */
+.terminal-body mark.mark-current {
+    background: var(--gold);
+    color: var(--term-bg);
+    outline: 1px solid var(--gold);
+}
 .terminal-body mark {
     padding: 0 1px;
     border-radius: 2px;
@@ -530,13 +571,13 @@ button.metric:focus-visible {
 .terminal-jump {
     position: absolute;
     /* Clears the console prompt when one is present, and the status bar always. */
-    inset-block-end: calc(var(--prompt-height, 0px) + 42px);
-    inset-inline-end: 18px;
-    min-block-size: 36px;
-    padding: 0 14px;
-    border-radius: var(--radius-pill);
-    font-size: 12.5px;
-    box-shadow: var(--elev-2);
+    inset-block-end: calc(var(--prompt-height, 0px) + 34px);
+    inset-inline-end: 12px;
+    min-block-size: 30px;
+    padding: 0 10px;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 11.5px;
 }
 .terminal-jump[hidden] {
     display: none;
@@ -544,11 +585,12 @@ button.metric:focus-visible {
 .terminal-status {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 12px;
+    gap: 2px 12px;
     align-items: center;
-    padding: 4px 12px;
-    border-top: 1px solid var(--line);
-    background: color-mix(in srgb, var(--surface) 80%, var(--inset));
+    padding: 3px 12px;
+    border-top: 1px solid var(--term-line);
+    background: var(--term-bg-top);
+    color: var(--term-fg);
     font-family: var(--mono);
     font-size: 11.5px;
     color: var(--muted);
@@ -673,41 +715,8 @@ button.metric:focus-visible {
     border-color: var(--cyan);
     outline: none;
 }
-/* Discoverable commands beat a native autocomplete popup that fights Tab. */
-/* The command list is the console's documentation, so it wraps instead of
-   truncating, and each name is a control that fills the prompt. */
-.console-hint {
-    /* It is a <p>, so the global 78ch measure would cut the command list in half. */
-    max-width: none;
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 10px;
-    margin: 0;
-    padding: 3px 12px 6px;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    color: var(--term-time);
-    font-family: var(--mono);
-    font-size: 10.5px;
-    line-height: 1.5;
-}
-.console-hint > * {
-    flex: 0 0 auto;
-}
-.console-hint .link {
-    color: var(--cyan);
-    font-family: var(--mono);
-    font-size: 10.5px;
-    min-block-size: 0;
-}
-.console-hint .link:hover {
-    color: var(--text);
-}
-.console-hint .link:focus-visible {
-    outline: 1px solid var(--cyan);
-    outline-offset: 2px;
-}
++/* The chip row this described was replaced by Tab-in-a-transcript and never built, so
+   the rules for it were dead CSS. */
 .console-connection {
     color: var(--good);
     margin-left: auto;
@@ -728,9 +737,15 @@ button.metric:focus-visible {
         inline-size: 76px;
         min-inline-size: 0;
     }
-    .terminal-count,
-    .terminal-hint {
+    .terminal-count {
         display: none;
+    }
+    /* The key help stays on a phone: hiding it left a touch operator with no way to
+       learn that Tab completes and `help` lists the commands. It wraps to two lines
+       instead of vanishing. */
+    .terminal-hint {
+        white-space: normal;
+        line-height: 1.35;
     }
 }
 @media (max-width: 600px) {
@@ -747,8 +762,10 @@ button.metric:focus-visible {
     }
     .terminal-body {
         padding: 8px;
+        /* 1.2 is a terminal's leading at every width: 1.45 on the tightest screen gave
+           18.1px rows where the desktop shows 15.6px. */
         font-size: 12.5px;
-        line-height: 1.45;
+        line-height: 1.2;
     }
     .terminal-line {
         /* Wide enough for h:mm:ss at 10.5px, plus its own scroll clip: a timestamp
@@ -785,9 +802,17 @@ button.metric:focus-visible {
     /* One row of controls: a phone cannot afford four wrapped rows of chrome
        above the output it came to read. */
     .terminal-tools {
-        padding: 6px 8px;
+        padding: 5px 8px;
         gap: 4px;
+        row-gap: 2px;
         flex-wrap: nowrap;
+    }
+    /* The cross-links sit in the pane's own bar on a phone, at the height of a link
+       rather than of a control, so they cost one short row and not a 44px one. */
+    .terminal-tools .link {
+        min-block-size: 24px;
+        padding-inline: 0;
+        font-size: 11.5px;
     }
     .terminal-tools input[type='search'] {
         flex: 1 1 auto;
@@ -1242,8 +1267,9 @@ button.metric:focus-visible {
 .variant-option[aria-pressed='true'] {
     border-color: var(--gold);
 }
-.variant-option[aria-pressed='true'] .effect-name::after {
-    content: ' ✓';
+/* Selection is a border and an ink, not a tick drawn from a character. */
+.variant-option[aria-pressed='true'] .effect-name {
+    color: var(--gold);
 }
 .variant-option:disabled {
     opacity: 0.42;
@@ -1780,6 +1806,21 @@ dd .bad {
 }
 
 /* The delivery explanation is an aside, not a paragraph above every list. */
+/* The delivery counts are one line above the list they describe. As a panel they cost
+   262px and pushed the first campaign row past the fold. */
+.mail-status-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.mail-status-strip > * {
+    flex: 0 0 auto;
+}
+.mail-status-strip .mail-guidance {
+    margin: 0;
+}
 .mail-guidance {
     font-size: 12.5px;
 }

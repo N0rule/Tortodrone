@@ -67,7 +67,11 @@ const RECEIPTS_KEY = 'tortodrone-mail-receipts',
 const ROSTER_ROWS = 200;
 
 const strip = (value) => String(value ?? '').trim();
-const senderName = (sender) => SENDER_NAMES[Number(sender)] || `Sender ${sender}`;
+/**
+ * `System sender 4` is what the client ships; the ordinal is the game's own sender
+ * id, and printing it as a bare "Sender 4" read like leaked internals in a letter.
+ */
+const senderName = (sender) => SENDER_NAMES[Number(sender)] || `System sender ${sender}`;
 const displaySender = (value) =>
     strip(value.senderLabel) ? strip(value.senderLabel) : senderName(value.sender);
 const units = (gifts) => gifts.reduce((total, gift) => total + Number(gift.count || 0), 0);
@@ -313,7 +317,14 @@ export async function mount(ctx) {
         saveReceipts(receipts);
     }
 
-    function deliveredLabel(campaign) {
+    /**
+ * A check this page ran itself. It never reached the server, so its own sentence is
+ * the whole answer: the dialog used to replace "Subject is required" with a
+ * lost-write warning about a request that was never sent.
+ */
+const invalid = (message) => Object.assign(new Error(message), { local: true });
+
+function deliveredLabel(campaign) {
         const total = population();
         // A server with no knights delivered "0 of 0", which reads as a failure
         // rather than as "there is nobody to deliver to".
@@ -412,12 +423,9 @@ export async function mount(ctx) {
         const total = population();
         const content = panel(
             '',
-            preview(campaign, definitions, [
-                total === null || total === 0
-                    ? `${campaign.delivered.toLocaleString()} delivered so far`
-                    : `${campaign.delivered.toLocaleString()} of ${total.toLocaleString()} knights on this server received it`,
-                `Window · ${zone}`
-            ]),
+            // The facts table below carries Delivered; repeating it in the preview
+            // footer printed the same zero three times in one dialog.
+            preview(campaign, definitions, [`Window · ${zone}`]),
             facts([
                 ['Status', mailingStatus(campaign, data.now)],
                 ['Sender', displaySender(campaign)],
@@ -694,8 +702,11 @@ export async function mount(ctx) {
                     'muted'
                 )
             );
-        const summaryPanel = panel('Delivery status', ...content);
-        summaryPanel.classList.add('stack');
+        const summaryPanel = el('div', null, 'mail-status-strip');
+        // A strip, not a panel: 262px of "Delivery status" above the list put the first
+        // campaign row at y=730 of an 800px page, so the operator opened Player Mail on
+        // the one thing it was not about.
+        summaryPanel.append(...content);
         summary.replaceChildren(summaryPanel);
     }
 
@@ -1016,7 +1027,7 @@ export async function mount(ctx) {
             if (!found) return;
             control.value = raw.replace(CONTROL, '');
             refreshPreview();
-            throw new Error(
+            throw invalid(
                 `${fieldName} contained ${found.length === 1 ? 'a character' : `${found.length} characters`} the game cannot display. ${found.length === 1 ? 'It has' : 'They have'} been removed; check the text and save again.`
             );
         }
@@ -1031,32 +1042,32 @@ export async function mount(ctx) {
                 [customSender, 'Sender name']
             ])
                 if (control.value.startsWith(' '))
-                    throw new Error(`${name} must not start with a space`);
+                    throw invalid(`${name} must not start with a space`);
             if (mode === 'campaign') {
                 const start = new Date(starts.value).getTime(),
                     end = new Date(ends.value).getTime();
                 // The server caps a window at ten years; the pickers do not.
                 if (Number.isFinite(start) && Number.isFinite(end) && end - start > 3652 * 86_400_000)
-                    throw new Error('The delivery window is too long');
+                    throw invalid('The delivery window is too long');
             }
-            if (requiresText && !strip(subject.value)) throw new Error('Subject is required');
-            if (requiresText && !strip(body.value)) throw new Error('Body is required');
+            if (requiresText && !strip(subject.value)) throw invalid('Subject is required');
+            if (requiresText && !strip(body.value)) throw invalid('Body is required');
             if (strip(subject.value).length > limits.subject)
-                throw new Error(`Subject must be at most ${limits.subject} characters`);
+                throw invalid(`Subject must be at most ${limits.subject} characters`);
             if (strip(body.value).length > limits.body)
-                throw new Error(
+                throw invalid(
                     mode === 'welcome'
                         ? 'Welcome mail is too long'
                         : `Body must be at most ${limits.body} characters`
                 );
             if (strip(customSender.value).length > limits.senderLabel)
-                throw new Error(`Sender name must be at most ${limits.senderLabel} characters`);
+                throw invalid(`Sender name must be at most ${limits.senderLabel} characters`);
             if (Number(crowns.value) < 0 || Number(energy.value) < 0)
-                throw new Error('Crowns and energy cannot be negative');
+                throw invalid('Crowns and energy cannot be negative');
             if (draft.gifts.length > limits.units)
-                throw new Error(`Add at most ${limits.units} gift stacks`);
+                throw invalid(`Add at most ${limits.units} gift stacks`);
             if (units(draft.gifts) > limits.units)
-                throw new Error(`A mailing can carry at most ${limits.units} item units`);
+                throw invalid(`A mailing can carry at most ${limits.units} item units`);
         }
 
         /** Delivers to `keys`, never rewriting a knight that already succeeded here. */
@@ -1680,7 +1691,7 @@ export async function mount(ctx) {
                 // a second time is the confirmation, so nothing is lost to a native
                 // dialog and nothing is written on the first press.
                 const confirmAgain = (message) => {
-                    throw new Error(message + ' Press the same button again to confirm.');
+                    throw invalid(message + ' Press the same button again to confirm.');
                 };
                 if (mode === 'direct') {
                     const recipients = [...chosen].filter(
@@ -1688,7 +1699,7 @@ export async function mount(ctx) {
                     );
                     attemptedSend = true;
                     if (!recipients.length)
-                        throw new Error(
+                        throw invalid(
                             batch.size
                                 ? 'Every selected knight already received this letter in this batch.'
                                 : 'Choose at least one knight.'
@@ -1708,7 +1719,7 @@ export async function mount(ctx) {
                     if (outcome.refused.length) {
                         const pending =
                             recipients.length - outcome.sent - outcome.refused.length;
-                        throw new Error(
+                        throw invalid(
                             `${outcome.sent} of ${recipients.length} delivered; ${
                                 outcome.refused.length
                             } refused${pending ? `, ${pending} not sent` : ''}. ${
@@ -1734,10 +1745,10 @@ export async function mount(ctx) {
                     const start = new Date(starts.value).getTime(),
                         end = new Date(ends.value).getTime();
                     if (!Number.isFinite(start) || !Number.isFinite(end))
-                        throw new Error('Choose a valid start and end time.');
-                    if (end <= start) throw new Error('The mailing must end after it starts');
+                        throw invalid('Choose a valid start and end time.');
+                    if (end <= start) throw invalid('The mailing must end after it starts');
                     if (end <= Date.now())
-                        throw new Error('The window has already ended; choose a later end.');
+                        throw invalid('The window has already ended; choose a later end.');
                     if (start <= Date.now() && before !== 'past') {
                         before = 'past';
                         confirmAgain(

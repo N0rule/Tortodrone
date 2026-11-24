@@ -51,7 +51,9 @@ export function emptyState({ title, message = '', action, icon = 'details', comp
     if (art) node.append(art);
     node.append(el('p', title, 'empty-title'));
     if (message) node.append(el('p', message, 'empty-message'));
-    if (action) node.append(button(action.label, action.run));
+    // The action here is usually the only thing a page offers, so it leads: a
+    // secondary under "No knights exist yet" is a suggestion, not the way out.
+    if (action) node.append(button(action.label, action.run, 'primary'));
     return node;
 }
 

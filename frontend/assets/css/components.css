@@ -107,16 +107,17 @@ th button {
     color: inherit;
     background: transparent;
     box-shadow: none;
-    font-weight: 400;
+    /* A sortable header is a control: 400 weight made it the one control on the page
+       that did not look like one. */
+    font-weight: 600;
 }
+/* The sorted column is named by `aria-sort` and marked by its ink; the ↑/↓ carets
+   were invented glyphs, and the art rule here is that a mark is client art or a
+   word. */
 th[aria-sort] button {
     color: var(--cyan);
-}
-th[aria-sort='ascending'] button::after {
-    content: ' ↑';
-}
-th[aria-sort='descending'] button::after {
-    content: ' ↓';
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 td {
     padding: var(--row) 12px;
@@ -165,7 +166,9 @@ td.row-actions .toolbar {
 td button,
 td .button {
     padding: 0 10px;
-    min-block-size: var(--control-sm);
+    /* Row actions sit on the default step: 34px beside a 36px sibling read as a
+       misalignment, not as a hierarchy. */
+    min-block-size: var(--control);
     font-size: 12.5px;
     border-radius: var(--radius-control);
 }

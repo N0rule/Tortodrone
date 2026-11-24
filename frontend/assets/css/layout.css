@@ -124,6 +124,11 @@
     align-items: center;
     justify-content: space-between;
     height: 54px;
+    /* The page switcher stays on screen: on a 2,300px catalogue page the Menu button
+       used to be 561px above the viewport, so changing page meant scrolling home. */
+    position: sticky;
+    top: 0;
+    z-index: 20;
     padding: 0 30px;
     border-bottom: 1px solid var(--line);
     color: var(--muted);

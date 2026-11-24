@@ -33,6 +33,10 @@ export function logStream({
     // What the bar is counting. A console holds answers, which may each print many
     // lines, so calling them "lines" was a number that never matched the pane.
     countNoun = ['line', 'lines'],
+    // A page whose rows are its own answers, not the server's lines.
+    countAnswers = false,
+    // What the source strip is describing, when the pane is not the log itself.
+    sourceLabel = null,
     // A console has no Tail control but still opens at its prompt, the way a
     // terminal does: without this it opened on the oldest server line in the buffer
     // and the prompt, the banner and the last answer were all below the fold.
@@ -43,10 +47,17 @@ export function logStream({
     extras = []
 } = {}) {
     const node = el('div', null, 'terminal-shell stack-tight'),
+        // The first paint is measured a frame later, so the pane is kept invisible
+        // until then: it used to appear at the CSS floor and grow 82px.
+        unhide = () => {
+            node.style.visibility = '';
+        },
         bar = el('div', null, 'terminal-bar'),
         led = el('span', null, 'terminal-led'),
         titleNode = el('h2', title, 'terminal-title'),
         barMeta = el('span', null, 'terminal-bar-meta'),
+        // "1 of 20", beside the field that made the marks: Enter steps through them.
+        matchCount = el('span', null, 'terminal-match-count'),
         tools = toolbar(),
         output = el('div', null, 'terminal-body'),
         footer = el('div', null, 'terminal-status'),
@@ -57,6 +68,9 @@ export function logStream({
         announce = el('span', null, 'visually-hidden'),
         jump = el('button', 'Jump to latest', 'terminal-jump');
     tools.classList.add('terminal-tools');
+    node.style.visibility = 'hidden';
+    // A missing frame loop must not leave a blank pane behind.
+    setTimeout(unhide, 700);
     // One indicator that means something: it reflects the real stream state instead
     // of three decorative window dots an operator will try to click.
     led.setAttribute('aria-hidden', 'true');
@@ -268,9 +282,15 @@ export function logStream({
         // One count, derived from what is painted: the bar, the empty note and the
         // Restore pill all read the same set, so Ctrl+L can no longer report 0, 12
         // and 14 lines for one screen.
-        const visible = [...rows, ...commandRows()].filter((row) => matches(row) && !cleared(row))
-            .length,
-            total = retainedCount || visible,
+        // A console's own rows are answers; the log lines it streams are the server's
+        // words behind them. Counting both gave "13 answers" on a console with none.
+        const counted = countAnswers
+                ? [...rows, ...commandRows()].filter((row) => row.entry)
+                : [...rows, ...commandRows()],
+            visible = counted.filter((row) => matches(row) && !cleared(row)).length,
+            total = countAnswers
+                ? [...rows, ...commandRows()].filter((row) => row.entry).length
+                : retainedCount || visible,
             away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
         // A cleared screen says nothing about counts: the pill is the whole story.
         text(
@@ -312,7 +332,15 @@ export function logStream({
                     (file.exists === false ? ' (not written yet)' : '')
             );
         }
-        text(source, bounds.join(' · '));
+        text(
+            source,
+            [
+                typeof sourceLabel === 'function' ? sourceLabel() : sourceLabel,
+                ...bounds
+            ]
+                .filter(Boolean)
+                .join(' · ')
+        );
         // The console puts its connection text inside the state line, so the LED
         // has to look for the error class on either of them.
         const offline = state.classList.contains('error') || !!state.querySelector('.error');
@@ -594,17 +622,46 @@ export function logStream({
     }
 
     /** Filtering must not yank a reader who scrolled back up to the bottom. */
+    /**
+     * Enter steps the search matches, and the field names which one is in view: a
+     * terminal's own search walks its hits, and "20 marks painted somewhere in the
+     * buffer" is not an answer to "where is the next one".
+     */
+    let matchIndex = -1;
+    function stepMatch(step) {
+        const marks = [...output.querySelectorAll('mark')];
+        if (!marks.length) return;
+        matchIndex = (matchIndex + step + marks.length) % marks.length;
+        for (const mark of marks) mark.classList.toggle('mark-current', false);
+        const current = marks[matchIndex];
+        current.classList.add('mark-current');
+        current.scrollIntoView({ block: 'center' });
+        text(
+            matchCount,
+            `${matchIndex + 1} of ${marks.length}`
+        );
+    }
+    search.onkeydown = (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            // A new term starts at its first hit, the way a search box does.
+            if (!output.querySelector('mark.mark-current')) matchIndex = -1;
+            stepMatch(1);
+            return;
+        }
+        // The hint says Esc leaves; from the search field that means back to the pane.
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            output.focus({ preventScroll: true });
+        }
+    };
     search.oninput = severity.onchange = () => {
+        matchIndex = -1;
+        text(matchCount, '');
         display();
         // The view in front of the operator is what they copy or bookmark, so the
         // address follows the filters instead of only being read from.
         if (onFilter) onFilter({ severity: severity.value, search: search.value });
-    };
-    // The hint says Esc leaves; from the search field that means back to the pane.
-    search.onkeydown = (event) => {
-        if (event.key !== 'Escape') return;
-        event.preventDefault();
-        output.focus({ preventScroll: true });
     };
     output.addEventListener('scroll', () => {
         const away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
@@ -641,7 +698,10 @@ export function logStream({
                 search.select();
                 return;
             }
-            if (shortcut === 'l' && event.target !== search) {
+            if (shortcut === 'l') {
+                // Ctrl+F lands in the search field, so Ctrl+L has to work there too:
+                // skipping it there made the key dead exactly where the previous
+                // keystroke put the operator.
                 event.preventDefault();
                 clear();
                 return;
@@ -657,11 +717,17 @@ export function logStream({
                 event.preventDefault();
                 setTail(false);
                 output.scrollTop = 0;
-            } else if (event.key === 'p' || event.key === 'P') {
+            } else if ((event.key === 'p' || event.key === 'P') && tail) {
+                // Only a pane with a Pause control binds `p`: the Console has neither
+                // the control nor the hint, and it was pausing itself with no way back.
                 event.preventDefault();
                 pause.click();
             } else if (event.key === 'Escape') {
+                // "Esc leave" moved focus nowhere: leaving a pane means the page
+                // heading, not a blur that leaves the caret nowhere.
                 output.blur();
+                const heading = document.querySelector('#title');
+                if (heading) heading.focus({ preventScroll: true });
             }
             return;
         }
@@ -789,7 +855,7 @@ export function logStream({
         menuBody.append(load);
     }
     menu.append(menuToggle, menuBody);
-    tools.append(search, severity, ...(tail ? [pause, follow] : []), menu, undoClear, ...extras);
+    tools.append(search, matchCount, severity, ...(tail ? [pause, follow] : []), menu, undoClear, ...extras);
 
     /** Parse the file's own `[24-11-2026 04:53:11]` prefix into an instant. */
     function fileStamp(value) {
@@ -845,6 +911,10 @@ export function logStream({
         const floor = Math.max(window.innerHeight < 520 ? 180 : 240, fixed + 56);
         node.style.blockSize = Math.max(floor, window.innerHeight - top - 18) + 'px';
         node.style.minHeight = '0';
+        // Measured on the frame it mounts, the shell grew 82px under the operator's
+        // eyes (the CSS floor first, this height second). Nothing is painted until the
+        // first measurement lands, so the pane only ever appears at its real size.
+        if (node.style.visibility) node.style.visibility = '';
     }
     if (fill) {
         node.classList.add('terminal-fill');

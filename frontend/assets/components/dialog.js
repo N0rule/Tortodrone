@@ -87,7 +87,10 @@ export function openDialog({
                 error.status === 409
                     ? error.message +
                       ' Your draft is preserved. Close and reopen this record to use its latest revision.'
-                    : error.status
+                    : // A check this page ran itself never reached the server, so its own
+                      // sentence is the whole answer: "the window has already ended" was
+                      // being replaced by a lost-write warning about a request never sent.
+                      error.local || error.status
                       ? error.message
                       : // No status means no answer, not no effect: say what is true of a
                         // write whose reply was lost.

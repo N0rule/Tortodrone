@@ -131,8 +131,20 @@ export function button(label, action, className = 'secondary', available, option
     node.addEventListener('click', async () => {
         if (node.getAttribute('aria-busy') === 'true') return;
         // A control that cannot act keeps its reason on screen and stays focusable;
-        // the click is refused here instead of by the attribute.
-        if (node.dataset.usable === 'false') return;
+        // the click is refused here instead of by the attribute. A press says the
+        // reason out loud too: a title is hover-only, and a phone never hovers.
+        if (node.dataset.usable === 'false') {
+            const reason =
+                node.dataset.reason ||
+                node.title ||
+                'That action is not available on this server yet.';
+            toast(reason, { type: 'error' });
+            (node.getAttribute('aria-describedby') || '')
+                .split(/\s+/)
+                .filter(Boolean)
+                .forEach((id) => document.getElementById(id)?.setAttribute('data-said', 'true'));
+            return;
+        }
         try {
             await action();
         } catch (error) {
@@ -318,7 +330,7 @@ export function notify(message, error = false) {
     node.hidden = false;
     node.classList.toggle('error', error);
 }
-export function report(error) {
+export function report(error, { read = false } = {}) {
     if (error?.status === 401) {
         document.dispatchEvent(new Event('session-expired'));
         return;
@@ -335,10 +347,18 @@ export function report(error) {
     // A request that never got an answer is not a request that did nothing: a write
     // can have committed and lost its reply, so the sentence must not invite a
     // re-submit into a possible double write.
+    const lost =
+        error?.name === 'TypeError' || /fetch|network/i.test(String(error?.message || ''));
+    // A poll that failed wrote nothing, so promising a possible write is a lie the
+    // operator would act on. Reads get a sentence true of reads.
     notify(
-        error?.name === 'TypeError' || /fetch|network/i.test(String(error?.message || ''))
-            ? 'The server did not answer. The change may or may not have been stored: reopen the record and read its state before saving again.'
-            : 'The WebUI could not finish that action; reload the page and try again.',
+        read
+            ? lost
+                ? 'The server did not answer, so this view may be out of date. Nothing was changed; the next refresh retries on its own.'
+                : 'The WebUI could not read that view; reload the page and try again.'
+            : lost
+              ? 'The server did not answer. The change may or may not have been stored: reopen the record and read its state before saving again.'
+              : 'The WebUI could not finish that action; reload the page and try again.',
         true
     );
 }
