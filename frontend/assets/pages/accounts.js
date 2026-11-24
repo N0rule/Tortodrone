@@ -148,15 +148,7 @@ export async function mount(ctx) {
                               'muted'
                           ),
                           toolbar(
-                              button(
-                                  'Back to accounts',
-                                  () => {
-                                      selected = null;
-                                      table.markInspected?.(null);
-                                      show();
-                                  },
-                                  'secondary'
-                              )
+                              routeLink('Back to accounts', 'accounts', {}, 'button secondary')
                           )
                       )
                     : el('p', 'Select an account to see its knights and actions.', 'muted')

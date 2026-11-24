@@ -66,7 +66,7 @@ const RECEIPTS_KEY = 'tortodrone-mail-receipts',
 const ROSTER_ROWS = 200;
 
 const strip = (value) => String(value ?? '').trim();
-const senderName = (sender) => SENDER_NAMES[Number(sender)] || `System ${sender}`;
+const senderName = (sender) => SENDER_NAMES[Number(sender)] || `Sender ${sender}`;
 const displaySender = (value) =>
     strip(value.senderLabel) ? strip(value.senderLabel) : senderName(value.sender);
 const units = (gifts) => gifts.reduce((total, gift) => total + Number(gift.count || 0), 0);
@@ -342,9 +342,11 @@ export async function mount(ctx) {
                 emptyState({
                     title: 'No delivery yet',
                     message:
-                        mailingStatus(campaign, data.now) === 'Scheduled'
-                            ? `Nothing is delivered before ${moment(campaign.starts)}; after that each knight receives it once, on their next login.`
-                            : 'Knights receive a mailing on their next login while its window is open. Check the window and status above.',
+                        mailingStatus(campaign, data.now) === 'Cancelled'
+                            ? 'This mailing was cancelled before anyone received it, and a cancelled mailing never delivers again. Duplicate it to send the same letter.'
+                            : mailingStatus(campaign, data.now) === 'Scheduled'
+                              ? `Nothing is delivered before ${moment(campaign.starts)}; after that each knight receives it once, on their next login.`
+                              : 'Knights receive a mailing on their next login while its window is open. Check the window and status above.',
                     icon: 'mailing'
                 })
             );
@@ -439,6 +441,12 @@ export async function mount(ctx) {
                     }
                 ),
                 button('Recipients', () => openDeliveries(campaign), 'secondary'),
+                routeLink(
+                    'Link to this mailing',
+                    'mailing',
+                    { campaign: campaign.id },
+                    'button quiet'
+                ),
                 // A cancelled mailing is only useful as a copy, and that was the one
                 // action the dialog did not offer.
                 button(
@@ -525,13 +533,11 @@ export async function mount(ctx) {
                 (campaign) => campaign.delivered
             ],
             [
-                'Crowns / energy',
-                (campaign) =>
-                    toolbar(
-                        currency('crowns', campaign.crowns),
-                        currency('energy', campaign.energy)
-                    ),
-                (campaign) => campaign.crowns + campaign.energy
+                'Crowns',
+                // One column, one number: energy is beside it in the letter dialog, and
+                // two stacked currencies made every row taller than the rest of it.
+                (campaign) => currency('crowns', campaign.crowns),
+                (campaign) => campaign.crowns
             ]
         ],
         {
@@ -555,8 +561,9 @@ export async function mount(ctx) {
                     'secondary',
                     () => get().enabled,
                     {
-                        // A dead grey button explains itself on screen, not only to a
-                        // screen reader: a disabled control cannot even be hovered.
+                        // The note appears when the row is hovered or focused: a
+                        // permanent caption turns one empty row 305px tall and clips
+                        // the buttons beside it.
                         showReason: true,
                         unavailable:
                             'Cancelled mailings cannot be edited. Duplicate it to send it again.'
@@ -566,14 +573,19 @@ export async function mount(ctx) {
                 button('Duplicate', () => duplicate(get()), 'secondary'),
                 button(
                     'Cancel',
-                    () =>
-                        confirmAction(
-                            'Cancel mailing · ' + get().subject,
-                            'mail-cancel',
-                            { id: get().id, revision: get().updated },
-                            [],
-                            'Knights who already received this mailing keep it. No further deliveries will be made.'
-                        ),
+                    async () => {
+                        try {
+                            await confirmAction(
+                                'Cancel mailing · ' + get().subject,
+                                'mail-cancel',
+                                { id: get().id, revision: get().updated },
+                                [],
+                                'Knights who already received this mailing keep it. No further deliveries will be made.'
+                            );
+                        } catch (error) {
+                            throw normalized(error);
+                        }
+                    },
                     'secondary',
                     () => get().enabled,
                     { showReason: true, unavailable: 'This mailing is already cancelled.' }
@@ -608,7 +620,11 @@ export async function mount(ctx) {
                 ends: soon + 7 * 86_400_000
             },
             {
-                banner: `This is a new mailing, not a resumption. Saving it delivers again, including to the ${source.delivered.toLocaleString()} knight(s) that already received the original. The window below starts in the future, so nothing is delivered until it opens.`
+                banner: `This is a new mailing, not a resumption. ${
+                    source.delivered
+                        ? `Saving it delivers again, including to the ${countOf(source.delivered, 'knight')} that already received the original. `
+                        : ''
+                }The window below starts in the future, so nothing is delivered until it opens.`
             }
         );
     }
@@ -690,7 +706,12 @@ export async function mount(ctx) {
                         renderReceipts();
                     },
                     'secondary'
-                )
+                ),
+                routeLink('Link to this section', 'mailing', { tab: 'receipts' }, 'link')
+            );
+        else
+            header.append(
+                routeLink('Link to this section', 'mailing', { tab: 'receipts' }, 'link')
             );
         const content = [
             el(
@@ -824,6 +845,7 @@ export async function mount(ctx) {
 
     const welcomeDetails = el('details');
     const welcomeSummary = el('summary');
+    welcomeSummary.append(routeLink('Link to this section', 'mailing', { tab: 'welcome' }, 'link'));
     function renderWelcome() {
         const welcome = data.welcome;
         text(
@@ -910,6 +932,9 @@ export async function mount(ctx) {
         const bodyCount = el('small', '', 'muted');
         bodyCount.id = 'mail-body-count';
         body.setAttribute('aria-describedby', bodyCount.id);
+        // A counter is a description, not part of the field's name, so it sits beside
+        // the label instead of inside it (inside, it joined the accessible name).
+        const bodyField = el('div', null, 'mail-field');
         const sender = select(
             'Sender',
             senders.map((id) => [String(id), senderName(id)]),
@@ -917,6 +942,9 @@ export async function mount(ctx) {
         );
         const customSender = input('Custom sender (optional)', draft.senderLabel);
         customSender.placeholder = 'Overrides the stock sender name';
+        const senderCount = el('small', '', 'muted');
+        senderCount.id = 'mail-sender-count';
+        customSender.setAttribute('aria-describedby', senderCount.id);
         const starts =
             mode === 'campaign' ? input('Starts', localDate(draft.starts), 'datetime-local') : null;
         const ends =
@@ -934,9 +962,10 @@ export async function mount(ctx) {
         const counters = () => {
             syncCounter(subject, subjectCount, limits.subject);
             syncCounter(body, bodyCount, limits.body);
+            syncCounter(customSender, senderCount, limits.senderLabel);
         };
-        subject.addEventListener('input', counters);
-        body.addEventListener('input', counters);
+        for (const control of [subject, body, customSender])
+            control.addEventListener('input', counters);
         counters();
 
         const keyOf = (row) => `${row.username}|${row.name}`;
@@ -983,6 +1012,20 @@ export async function mount(ctx) {
             cleanField(subject, 'Subject');
             cleanField(body, 'Body');
             cleanField(customSender, 'Sender name');
+            for (const [control, name] of [
+                [subject, 'Subject'],
+                [body, 'Body'],
+                [customSender, 'Sender name']
+            ])
+                if (control.value.startsWith(' '))
+                    throw new Error(`${name} must not start with a space`);
+            if (mode === 'campaign') {
+                const start = new Date(starts.value).getTime(),
+                    end = new Date(ends.value).getTime();
+                // The server caps a window at ten years; the pickers do not.
+                if (Number.isFinite(start) && Number.isFinite(end) && end - start > 3652 * 86_400_000)
+                    throw new Error('The delivery window is too long');
+            }
             if (requiresText && !strip(subject.value)) throw new Error('Subject is required');
             if (requiresText && !strip(body.value)) throw new Error('Body is required');
             if (strip(subject.value).length > limits.subject)
@@ -1345,8 +1388,7 @@ export async function mount(ctx) {
                           : `Reaches every knight on this server once, including knights created later (${countOf(
                                 knights,
                                 'knight'
-                            )} exist right now).`) +
-                        ` Window ${sentTime(start)} → ${sentTime(end)} (${zone}).`
+                            )} exist right now).`)
                 );
             } else if (mode === 'welcome')
                 notes.push('Sent once, on the first visit of a knight created while it is enabled.');
@@ -1378,8 +1420,7 @@ export async function mount(ctx) {
         plain.hidden = true;
         previewPanel.querySelectorAll('button').forEach((tab) => tab.classList.add('sm'));
         showPreview('game');
-        const bodyField = label('Body', body);
-        bodyField.append(bodyCount);
+        bodyField.append(label('Body', body), bodyCount);
         split.append(bodyField, label('Preview', previewPanel));
 
         const pickerDetails = el('details');
@@ -1490,11 +1531,18 @@ export async function mount(ctx) {
         attachments.classList.add('stack');
 
         const enabledRow = mode === 'welcome' ? toolbar(label('Enabled', enabled)) : null;
-        const subjectField = label('Subject', subject);
-        subjectField.classList.add('wide');
-        subjectField.append(subjectCount);
+        const subjectField = el('div', null, 'wide mail-field');
+        subjectField.append(label('Subject', subject), subjectCount);
         if (mode === 'campaign') header.append(label('Starts', starts), label('Ends', ends));
-        header.append(label('From', sender), label('Custom sender', customSender), subjectField);
+        header.append(
+            label('From', sender),
+            (() => {
+                const wrap = el('div', null, 'mail-field');
+                wrap.append(label('Custom sender', customSender), senderCount);
+                return wrap;
+            })(),
+            subjectField
+        );
         if (mode === 'campaign') {
             // The store has no draft flag: a saved mailing is live for its window, so
             // a window that contains now delivers on save and needs saying out loud.
@@ -1516,7 +1564,7 @@ export async function mount(ctx) {
             starts.addEventListener('input', syncArm);
             syncArm();
             const draftButton = button(
-                'Save as draft',
+                'Schedule for later (+1 hour)',
                 () => {
                     // A draft is a window that opens later, so saving cannot deliver.
                     const soon = Math.ceil((Date.now() + 3_600_000) / 900_000) * 900_000;
@@ -1530,7 +1578,7 @@ export async function mount(ctx) {
                 'secondary'
             );
             draftButton.title =
-                'Moves the window one hour ahead and thirty days long, then saves; nothing is delivered before it opens.';
+                'Moves the window one hour ahead and thirty days long, then saves; nothing is delivered before it opens, but from then on every knight receives it.';
             header.append(
                 armNote,
                 toolbar(
@@ -1719,22 +1767,24 @@ export async function mount(ctx) {
                 directMail.setBusy(false);
             }
         },
-        'secondary'
+        'secondary',
+        // A server with no knights cannot be sent to, and a modal that only says so
+        // wastes the read the page already had: the control says it instead.
+        () => roster === null || roster.length > 0,
+        {
+            showReason: true,
+            unavailable: 'No knight exists on this server yet; knights are created in the game client.'
+        }
     );
     directMail.title =
         'Write a one-off letter to one knight; it waits in the inbox while they are offline.';
-    // A director with no knights cannot send anything, and a modal that only says
-    // "no knights" wastes the read that the page already had.
-    directMail.refreshAvailability = () => {
-        const empty = roster !== null && roster.length === 0;
-        directMail.disabled = empty;
-        directMail.title = empty
-            ? 'No knight exists on this server yet; knights are created in the game client.'
-            : 'Write a one-off letter to one knight; it waits in the inbox while they are offline.';
-    };
     const mailings = panel(
         'Mailings',
-        toolbar(newMailing, directMail),
+        toolbar(
+            newMailing,
+            directMail,
+            routeLink('Link to this section', 'mailing', { tab: 'mailings' }, 'link')
+        ),
         table.node,
         welcomeDetails
     );
@@ -1756,11 +1806,30 @@ export async function mount(ctx) {
             if (ctx.alive()) renderSummary();
         });
     const tab = ctx.params.get('tab');
-    if (tab === 'welcome') {
-        welcomeDetails.open = true;
-        welcomeDetails.scrollIntoView({ block: 'start' });
-    } else if (tab === 'receipts') receiptsHost.scrollIntoView({ block: 'start' });
-    else if (tab === 'mailings') mailings.scrollIntoView({ block: 'start' });
+    // The node is not in the document yet, so scrolling now does nothing: the
+    // arrival is scheduled for the frame after insertion.
+    const arrive = () => {
+        if (tab === 'welcome') {
+            welcomeDetails.open = true;
+            welcomeDetails.scrollIntoView({ block: 'start' });
+        } else if (tab === 'receipts') receiptsHost.scrollIntoView({ block: 'start' });
+        else if (tab === 'mailings') mailings.scrollIntoView({ block: 'start' });
+    };
+    if (tab) {
+        if (typeof requestAnimationFrame === 'function')
+            requestAnimationFrame(() => requestAnimationFrame(arrive));
+        else queueMicrotask(arrive);
+    }
+    // A letter is addressable too, so "this is the one I mean" can be a link.
+    const campaign = Number(ctx.params.get('campaign'));
+    if (Number.isInteger(campaign) && campaign > 0) {
+        const match = data.campaigns.find((row) => row.id === campaign);
+        if (match) queueMicrotask(() => openLetter(match));
+        else
+            ctx.notify(
+                `There is no mailing #${campaign} on this server; the list below is the whole set.`
+            );
+    }
     return {
         node,
         interval: 30000,

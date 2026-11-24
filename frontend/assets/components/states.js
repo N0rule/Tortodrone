@@ -60,12 +60,18 @@ export function emptyState({ title, message = '', action, icon = 'details', comp
  * @param {{error: Error, retry?: () => void, title?: string}} options
  */
 export function errorState({ error, retry, title = 'That view could not be loaded' }) {
+    // A fetch that never reached the server throws a TypeError whose message is the
+    // browser's own words. Say what the operator can do instead.
+    const message =
+        error instanceof TypeError
+            ? 'The server is not answering. Check that the process is running, then try again.'
+            : error?.message || '';
     const node = el('div', null, 'empty-state error-state');
     node.setAttribute('role', 'alert');
     const art = symbol('warning');
     if (art) node.append(art);
     node.append(el('p', title, 'empty-title'));
-    node.append(el('p', error?.message || 'The server did not answer.', 'empty-message'));
+    node.append(el('p', message || 'The server did not answer.', 'empty-message'));
     if (retry) node.append(button('Try again', retry));
     return node;
 }

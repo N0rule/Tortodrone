@@ -23,6 +23,7 @@ export function logStream({
     search: initialSearch = '',
     raw = false,
     fill = false,
+    hint = 'Ctrl+F search · Ctrl+L clear · End tail · Home top · p pause · Esc leave',
     onLoadFile = null,
     onLink = null
 } = {}) {
@@ -58,20 +59,24 @@ export function logStream({
     jump.hidden = true;
     jump.setAttribute('aria-label', 'Jump to latest');
     footer.setAttribute('role', 'status');
-    statusLeft.textContent = 'Ctrl+F search · Ctrl+L clear · End tail · Home top · p pause · Esc leave';
+    // The keys differ per page, so the caller owns the sentence: the Console has no
+    // tail or pause, and advertising them there is a promise nothing keeps.
+    statusLeft.textContent = hint;
     footer.append(state, statusLeft, statusRight, source);
     node.append(bar, tools, output, announce, jump, footer);
 
     const search = input('Search output', '', 'search'),
         // COMMAND rows only exist on the Console, so Logs does not offer a filter
         // that can never match.
-        severity = select('Severity', commands ? LEVELS : LEVELS.filter((l) => l !== 'COMMAND'), 'All'),
-        count = el('small', null, 'terminal-count');
+        severity = select('Severity', commands ? LEVELS : LEVELS.filter((l) => l !== 'COMMAND'), 'All');
     search.placeholder = 'Search output';
     search.classList.add('terminal-search');
     search.title = 'Search the output (Ctrl+F)';
     if (initialSearch) search.value = initialSearch;
-    if (LEVELS.includes(initialSeverity)) severity.value = initialSeverity;
+    // A deep link may name a level this page does not offer (COMMAND on Logs): the
+    // select would then sit on "All" while the URL claimed a filter.
+    if ([...severity.options].some((option) => option.value === initialSeverity))
+        severity.value = initialSeverity;
 
     let paused = false,
         auto = true,
@@ -167,8 +172,13 @@ export function logStream({
     const rawLine = (row) =>
         row.entry ? row.entry.command + '\n' + (row.entry.output ?? '') : row.line ?? row.message ?? '';
 
+    /** A cleared row is still in the buffer; it is just not on screen any more. */
+    const cleared = (row) => clearing.has(key(row));
+
     function renderStatus() {
-        const visible = [...rows, ...commandRows()].filter(matches).length,
+        // A cleared line is not in the pane, so it is not in the count either.
+        const visible = [...rows, ...commandRows()].filter((row) => matches(row) && !cleared(row))
+            .length,
             total = retainedCount || visible,
             away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
         // One place counts lines, and it says how many the filter hid rather than
@@ -178,12 +188,6 @@ export function logStream({
             `${visible} ${visible === 1 ? 'line' : 'lines'}${
                 visible !== total ? ` of ${total}` : ''
             }${paused ? ' · paused' : ''}${paused && fresh ? ` · ${fresh} new` : ''}`
-        );
-        text(
-            count,
-            `${visible} of ${total}${
-                visible !== total ? ' shown' : ''
-            }${dropped ? ` · ${dropped} older dropped` : ''}`
         );
         // The pill names what the pane is doing, not what the tail wants to do.
         text(
@@ -205,6 +209,9 @@ export function logStream({
         const bounds = [];
         if (dropped) bounds.push(`${retained} of ${capacity}, ${dropped} older dropped`);
         else if (retained) bounds.push(`${retained} buffered`);
+        // A file load is drawn from its own rows, so the live buffer's count alone
+        // described a pane that was showing five hundred lines.
+        if (fileRows.length) bounds.push(`${fileRows.length} loaded from the file`);
         if (file?.path) {
             const size = file.bytes ? `${Math.round(file.bytes / 1024)} KB` : null;
             const stamp = file.modified ? clockTime(new Date(file.modified).toISOString()) : null;
@@ -468,9 +475,23 @@ export function logStream({
         const away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
         jump.hidden = !away;
         if (auto && away) setTail(false);
+        // Home leaves the pane at the top with the tail still on, so the pill lies
+        // until the next poll repaints it. It repaints now.
+        else renderStatus();
     });
+    // The terminal keys only work on a focused pane, and a page that opens with a
+    // live stream in front of you should answer Ctrl+L without a click first.
+    // The page hands the node to the document after mount, so the first frame may
+    // still be detached: try again on the next one before giving up.
+    const grabFocus = (attempt = 0) => {
+        if (!node.isConnected || document.activeElement !== document.body) return;
+        output.focus({ preventScroll: true });
+        if (document.activeElement !== output && attempt < 3) grabFocus(attempt + 1);
+    };
+    if (typeof requestAnimationFrame === 'function')
+        requestAnimationFrame(() => requestAnimationFrame(() => grabFocus()));
     // Terminal keys: search, clear, tail, home, leave. Fields keep their own keys.
-    node.addEventListener('keydown', (event) => {
+    const onKeydown = (event) => {
         const typing =
             event.target instanceof HTMLInputElement ||
             event.target instanceof HTMLTextAreaElement ||
@@ -509,6 +530,24 @@ export function logStream({
             }
             return;
         }
+    };
+    node.addEventListener('keydown', onKeydown);
+    // A page that opens with a live stream should answer Ctrl+L without a click first.
+    // When nothing else holds focus the keys are the page's, so they are handled here
+    // too, with the same typing guard as inside the pane.
+    // A page that opens with a live stream should answer Ctrl+L without a click first.
+    // The shell focuses its heading on arrival, so "nothing interactive is focused" is
+    // the condition, not "the body is focused"; a field or an open dialog keeps its keys.
+    const nothingFocused = () => {
+        const active = document.activeElement;
+        if (!active || active === document.body) return true;
+        return /^(H[1-6]|MAIN|SECTION|ARTICLE|P|DIV)$/.test(active.tagName);
+    };
+    document.addEventListener('keydown', (event) => {
+        if (!node.isConnected || event.defaultPrevented) return;
+        if (document.querySelector('dialog[open]')) return;
+        if (!nothingFocused()) return;
+        onKeydown(event);
     });
     jump.onclick = () => {
         setTail(true);
@@ -609,7 +648,7 @@ export function logStream({
         menuBody.append(load);
     }
     menu.append(menuToggle, menuBody);
-    tools.append(search, severity, pause, follow, menu, undoClear, count);
+    tools.append(search, severity, pause, follow, menu, undoClear);
 
     /** Parse the file's own `[24-11-2026 04:53:11]` prefix into an instant. */
     function fileStamp(value) {

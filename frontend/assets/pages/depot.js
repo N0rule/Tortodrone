@@ -140,10 +140,7 @@ export async function mount(ctx) {
                 action: { label: 'Create offer', run: () => createOffer() },
                 icon: 'depot'
             },
-            actions: (get) => [
-                button('Edit', () => editOffer(get())),
-                button('Schedule promotion', () => schedulePromotion(get()))
-            ],
+            actions: (get) => [button('Edit', () => editOffer(get()))],
             filters: [
                 [
                     'Availability',
@@ -375,7 +372,11 @@ export async function mount(ctx) {
         conflict('depot-save', data.snapshot.revision);
         conflict('promotion-create', data.snapshot.revision);
         conflict('promotion-cancel', data.snapshot.revision);
-        offers.update(data.snapshot.offers);
+        // The name is rendered from the item config, so a search for the item the
+        // operator can see must find it: the row carries its own name.
+        offers.update(
+            data.snapshot.offers.map((o) => ({ ...o, name: offerName(o) }))
+        );
         promotions.update(data.promotions);
         effective.update(data.effective.offers.filter((o) => o.enabled));
         text(revision, `Revision ${data.snapshot.revision}`);
@@ -391,7 +392,8 @@ export async function mount(ctx) {
         }
         applySearch(params);
         const offer = Number(params.get('offer'));
-        focusOffer(Number.isInteger(offer) && offer > 0 ? offer : null);
+        // Offer ids start at 0, so > 0 made the first offer unreachable by link.
+        focusOffer(Number.isInteger(offer) && offer >= 0 ? offer : null);
     }
     applyParams(ctx.params);
     return { node, refresh, interval: 10000, navigate: applyParams };

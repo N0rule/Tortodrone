@@ -422,8 +422,14 @@ export class DataTable {
         return this.columns.map(([name, render, sortValue]) => [
             name,
             (row) => {
+                // The export must be the table the operator is looking at: render the
+                // cell and prefer its text, because the sort key is often a raw
+                // epoch or a count that no column ever shows.
+                const rendered = render(row);
+                if (rendered instanceof Node) return rendered.textContent ?? '';
+                if (rendered !== undefined && rendered !== null) return rendered;
                 const value = (sortValue || render)(row);
-                return value?.textContent ?? (value instanceof Node ? '' : value);
+                return value?.textContent ?? (value instanceof Node ? '' : value) ?? '';
             }
         ]);
     }
@@ -493,7 +499,7 @@ export class DataTable {
                     entry.cells.push(td);
                 }
                 if (this.actions) {
-                    const td = el('td');
+                    const td = el('td', null, 'row-actions');
                     const controls = this.actions(() => entry.record);
                     entry.actions = controls;
                     for (const control of controls) {
@@ -541,6 +547,8 @@ export class DataTable {
                 this.emptyCell = cell;
             }
             const searching = !!this.query?.value;
+            // `this.rows` is the whole set the last update() handed over, so a filter
+            // that empties the view still reads as a miss, not as an empty table.
             this.emptyCell.replaceChildren(
                 this.rows.length
                     ? emptyState({

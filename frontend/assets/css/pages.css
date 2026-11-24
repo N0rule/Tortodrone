@@ -672,15 +672,20 @@ button.metric:focus-visible {
    truncating, and each name is a control that fills the prompt. */
 .console-hint {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 4px 10px;
+    gap: 10px;
     margin: 0;
-    padding: 5px 12px 9px;
+    padding: 3px 12px 6px;
+    overflow-x: auto;
+    scrollbar-width: thin;
     color: var(--term-time);
     font-family: var(--mono);
     font-size: 10.5px;
-    line-height: 1.6;
+    line-height: 1.5;
+}
+.console-hint > * {
+    flex: 0 0 auto;
 }
 .console-hint .link {
     color: var(--cyan);
@@ -702,7 +707,36 @@ button.metric:focus-visible {
 .console-connection.error {
     color: var(--bad);
 }
+@media (max-width: 700px) {
+    /* Smallest terminal chrome: the search keeps a row, the rest folds away. */
+    .terminal-tools {
+        flex-wrap: wrap;
+    }
+    .terminal-tools input[type='search'] {
+        flex: 1 1 100%;
+        order: -1;
+    }
+    .terminal-tools select {
+        inline-size: 76px;
+        min-inline-size: 0;
+    }
+    .terminal-count,
+    .terminal-hint {
+        display: none;
+    }
+}
 @media (max-width: 600px) {
+    /* A command chip is a real tap target, not a 14px word. */
+    .console-hint {
+        gap: 14px;
+        padding: 4px 10px 6px;
+    }
+    .console-hint .link {
+        min-block-size: 32px;
+        display: inline-flex;
+        align-items: center;
+        font-size: 12px;
+    }
     .terminal-body {
         padding: 8px;
         font-size: 12.5px;
@@ -1360,6 +1394,12 @@ button.metric:focus-visible {
 /* The cap belongs to the letter itself, not to one of the three places that show
    it: a maximum-length body added 2,400px inside the read dialog and pushed the
    facts the operator opened it for off the screen. */
+/* A field plus its counter: the counter is a description, not part of the name. */
+.mail-field {
+    display: grid;
+    gap: 4px;
+    min-inline-size: 0;
+}
 .mail-preview {
     display: grid;
     gap: 10px;

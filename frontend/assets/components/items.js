@@ -200,8 +200,10 @@ export function currency(kind, value) {
         };
         root.append(image);
     }
-    // The amount carries the unit, so a missing coin icon still reads "1,200 crowns".
-    root.append(el('span', number(value)), el('span', ' ' + kind, 'muted'));
+    root.append(el('span', number(value)));
+    // The unit word is the fallback for a missing icon, not a second label on every
+    // cell: "1,200" with the client's coin beside it needs no word.
+    if (!source) root.append(el('span', ' ' + kind, 'muted'));
     return root;
 }
 export function spriteIcon(config, iconTier) {

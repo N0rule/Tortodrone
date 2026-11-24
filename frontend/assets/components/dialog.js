@@ -180,7 +180,7 @@ export const field = (key, title, value = '', type = 'text', options, constraint
  * longer argument list.
  */
 export function edit(title, route, fields = [], fixed = {}, description = '', after, options = {}) {
-    const { variant, submit } =
+    const { variant, submit, guardDirty = true } =
         typeof options === 'string' ? { variant: options } : { variant: 'primary', ...options };
     const content = el('div', null, 'form-grid'),
         controls = new Map();
@@ -212,14 +212,19 @@ export function edit(title, route, fields = [], fixed = {}, description = '', af
         variant,
         revision: fixed.revision,
         target: fixed.worldId ?? route,
-        isDirty: () =>
-            fields.some(
-                (f) =>
-                    initial.get(f.key) !==
-                    (f.type === 'checkbox'
-                        ? controls.get(f.key).checked
-                        : controls.get(f.key).value)
-            ),
+        // A confirmation gate is not an editor: nothing typed in it survives the
+        // dialog, so asking "discard the unsaved changes?" on the way out is a second
+        // question with no answer worth having.
+        isDirty: guardDirty
+            ? () =>
+                  fields.some(
+                      (f) =>
+                          initial.get(f.key) !==
+                          (f.type === 'checkbox'
+                              ? controls.get(f.key).checked
+                              : controls.get(f.key).value)
+                  )
+            : undefined,
         onSubmit: async () => {
             const values = { ...fixed };
             for (const f of fields) {

@@ -131,7 +131,7 @@ const pages = [
         module: access,
         // `#access` is the name links and the docs use; keep both spellings working.
         alias: ['access'],
-        description: 'Identities, roles and sessions.'
+        description: 'Identities and roles.'
     },
     {
         name: 'settings',

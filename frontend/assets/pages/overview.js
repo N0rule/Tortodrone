@@ -87,7 +87,7 @@ export async function mount(ctx) {
     for (const [title, destination, hint] of [
         ['Online players', 'players', 'Open live sessions'],
         ['Active scenes', 'players', 'Open scene population'],
-        ['Listener uptime', 'settings', 'Open the WebUI session details'],
+        ['Listener uptime', 'uptime', 'Open the process runtime details'],
         ['Database health', 'diagnostics', 'Open database operations and runtime details'],
         ['Live monsters', 'overview', 'Open scene monster runtime'],
         ['Engaged monsters', 'overview', 'Open scene monster runtime']
@@ -99,6 +99,11 @@ export async function mount(ctx) {
         n.title = hint;
         n.append(el('span', title, 'muted'), value, sub);
         n.onclick = () => {
+            if (destination === 'uptime') {
+                diagnostics.open = true;
+                diagnostics.scrollIntoView({ block: 'center' });
+                return;
+            }
             if (destination === 'diagnostics') {
                 diagnostics.open = true;
                 diagnostics.scrollIntoView({ block: 'center' });
@@ -147,7 +152,9 @@ export async function mount(ctx) {
     // ledger of named figures, with the raw payload kept one disclosure deeper.
     const diagnosticsBody = el('div', null, 'stack'),
         diagnosticsFacts = facts([]);
-    let diagnosticsSignature = '';
+    let diagnosticsSignature = '',
+        uptimeSeconds = 0,
+        listenerPort = '';
     const diagnosticsRaw = el('div');
     const diagnostics = el('details', null, 'stack-tight');
     diagnostics.append(
@@ -155,8 +162,9 @@ export async function mount(ctx) {
         diagnosticsBody
     );
     diagnosticsBody.append(diagnosticsFacts);
-    function renderDiagnostics(database) {
-        const signature = JSON.stringify(database);
+    function renderDiagnostics(database, status) {
+        if (status) uptimeSeconds = Number(status.uptimeSeconds) || 0;
+        const signature = JSON.stringify([database, uptimeSeconds]);
         if (signature === diagnosticsSignature) return;
         diagnosticsSignature = signature;
         const operations = database?.operations ?? 0,
@@ -165,6 +173,7 @@ export async function mount(ctx) {
             rollbacks = database?.rollbacks ?? 0,
             failures = database?.failures ?? 0;
         const cells = [
+            ['Process uptime', duration(uptimeSeconds)],
             ['Operations recorded', number(operations)],
             ['Slowest statement', worst ? `${number(Math.round(worst))} ms` : '—'],
             ['Slow statements', number(slow)],
@@ -232,7 +241,9 @@ export async function mount(ctx) {
     ]);
     // The field's label names the key it holds, so the mismatch state cannot hand
     // out one key under the name of another.
-    const identityFieldLabel = el('p', null, 'muted identity-field-label');
+    const identityFieldLabel = el('p', null, 'muted identity-field-label'),
+        identityCaption = el('p', null, 'muted identity-caption'),
+        identityReach = el('p', null, 'muted identity-caption');
     const IDENTITY_NOTE =
         "The public half only. Paste it into the client's Add Server dialog, in the Public key field (game.publicKey), on every machine that plays here. The private key never leaves the server.";
     text(identityNote, IDENTITY_NOTE);
@@ -243,7 +254,9 @@ export async function mount(ctx) {
         identityKey,
         identityActions,
         identityWarning,
-        identityFacts
+        identityCaption,
+        identityFacts,
+        identityReach
     );
     // Handlers read the current key at click time, so a rotated key is the one an
     // operator copies; the panels are built once and never hold stale values.
@@ -326,6 +339,12 @@ export async function mount(ctx) {
             id: 'overview-warnings',
             caption: 'Recent warnings and errors',
             exportName: 'recent-warnings',
+            empty: {
+                title: 'No warnings or errors since the server started',
+                hint: 'Every line the process writes is in Logs, including the ones below a warning.',
+                action: { label: 'Open Logs', run: () => ctx.go('logs') },
+                icon: 'logs'
+            },
             actions: (get) => [
                 routeLink(
                     'Open in Logs',
@@ -396,6 +415,19 @@ export async function mount(ctx) {
             ? `Verify on the host with: ${identity.fileSha256Command}`
             : '';
         text(identityModified, date(identity.publicModified || identity.modified));
+        // An explanation that only exists in a title is invisible on a touch screen,
+        // to keyboard focus and in print.
+        text(
+            identityCaption,
+            [
+                identity.fingerprintNote || '',
+                identity.fileSha256Command
+                    ? `Reproduce the file hash on the host with: ${identity.fileSha256Command}`
+                    : ''
+            ]
+                .filter(Boolean)
+                .join(' ')
+        );
         text(
             identityPair,
             identity.pairMatches === false
@@ -411,7 +443,7 @@ export async function mount(ctx) {
         if (mismatch) identityWarning.setAttribute('role', 'alert');
         else identityWarning.removeAttribute('role');
         identityWarning.textContent = mismatch
-            ? `The stored public half does not match the private key that signs handshakes, so the server refuses to start.${
+            ? `The stored public half does not match the private key that signs handshakes, so the server will refuse to start until the pair matches again.${
                   identity.expectedPublicKey
                       ? ' The field below, Copy and Download all use the key the private half implies — the one clients must trust.'
                       : ''
@@ -427,6 +459,12 @@ export async function mount(ctx) {
         );
         // A five-second poll must not eat a selection the operator is copying:
         // only rewrite the field when it is not focused and the value changed.
+        text(
+            identityReach,
+            `Clients reach this server at this machine's own address with port ${
+                listenerPort || 'the game port'
+            }; a bind address of 0.0.0.0 above means "every interface", not a destination.`
+        );
         const shown = trustedKey();
         if (document.activeElement !== identityKey && identityKey.value !== shown)
             identityKey.value = shown;
@@ -440,9 +478,17 @@ export async function mount(ctx) {
                 ),
                 button(
                     'Download public.txt',
-                    // The server sends the file's own bytes, so `sha256sum` on the
-                    // download matches the SHA-256 printed above it.
-                    () => download('public.txt', identityCurrent?.fileText ?? trustedKey()),
+                    // Normally the server sends the file's own bytes, so `sha256sum`
+                    // on the download matches the printed hash. In the mismatch state
+                    // the file is the stale half, and the button hands out the key the
+                    // warning above promises.
+                    () =>
+                        download(
+                            'public.txt',
+                            identityCurrent?.pairMatches === false
+                                ? trustedKey()
+                                : (identityCurrent?.fileText ?? trustedKey())
+                        ),
                     'secondary'
                 )
             );
@@ -458,6 +504,11 @@ export async function mount(ctx) {
         renderIdentity(identity);
         text(state, s.state);
         text(endpoint, s.endpoint || 'Listener stopped');
+        // The port a client dials is the listener's own; the host in that string is
+        // the bind address, which is why the identity panel says so out loud.
+        listenerPort = String(s.endpoint || '').includes(':')
+            ? String(s.endpoint).split(':').pop()
+            : '';
         const running = s.state === 'RUNNING';
         if (running !== listenerRunning) {
             listenerRunning = running;
@@ -497,7 +548,7 @@ export async function mount(ctx) {
         );
         // Named figures first, the JSON payload one disclosure deeper, and no
         // rewrite of the DOM when nothing changed.
-        renderDiagnostics(s.database);
+        renderDiagnostics(s.database, s);
         if (diagnosticsRaw.childElementCount === 0) {
             diagnosticsBody.append(diagnosticsRaw);
         }

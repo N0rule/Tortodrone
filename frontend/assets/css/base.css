@@ -124,20 +124,33 @@ th .unavailable-reason {
     clip-path: inset(50%);
     white-space: nowrap;
 }
-/* A disabled button cannot be hovered, so a caller with no other channel shows the
-   reason under the control instead of only in its title. */
+/* A row action's reason appears when the operator reaches for the row: a permanent
+   caption made one empty row 305px tall and clipped the buttons beside it. */
 td .unavailable-reason.shown,
 th .unavailable-reason.shown {
+    display: none;
     position: static;
     inline-size: auto;
     block-size: auto;
     overflow: visible;
     clip-path: none;
     white-space: normal;
-    display: block;
     margin-block-start: 3px;
-    max-inline-size: 24ch;
+    max-inline-size: 26ch;
     font-size: 11px;
+}
+tr:hover td .unavailable-reason.shown,
+tr:focus-within td .unavailable-reason.shown,
+tr:hover th .unavailable-reason.shown,
+tr:focus-within th .unavailable-reason.shown {
+    display: block;
+}
+/* A disabled note in a toolbar takes its own line, so the controls it sits between
+   still read as one group. */
+.server-strip .toolbar .unavailable-reason {
+    order: 99;
+    flex-basis: 100%;
+    max-inline-size: none;
 }
 /* A pending control keeps its label and grows a spinner instead of going blank. */
 button[aria-busy='true'],

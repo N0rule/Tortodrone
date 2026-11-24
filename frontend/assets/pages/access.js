@@ -158,9 +158,11 @@ export async function mount(ctx) {
                 // The server refuses to remove the last administrator, so the
                 // control says so instead of spending a round trip on a 409.
                 button('Change role', () => changeRole(get()), 'secondary', () => !lastAdmin(get()), {
+                    showReason: true,
                     unavailable: LAST_ADMIN
                 }),
                 button('Revoke', () => revoke(get()), 'danger', () => !lastAdmin(get()), {
+                    showReason: true,
                     unavailable: LAST_ADMIN
                 })
             ]

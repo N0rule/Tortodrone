@@ -34,6 +34,9 @@ export async function mount(ctx) {
             commands: outputHistory,
             title: 'tortodrone — console',
             fill: true,
+            // The Console has no tail to follow and nothing to pause: advertising
+            // those keys here promised behaviour this page does not have.
+            hint: 'Ctrl+F search · Ctrl+L clear · Tab completes · ↑ ↓ history',
             onLink: (link) => ctx.go(link.page, link.params || {})
         }),
         feedback = el('small', listError ? 'Command list unavailable' : 'Connected');
@@ -151,13 +154,22 @@ export async function mount(ctx) {
         if (outputHistory.length > 50) outputHistory.shift();
         stream.redraw();
     }
+    let completion = { list: [], at: -1 };
     command.oninput = () => {
         commandDraft = command.value;
+        completion = { list: [], at: -1 };
     };
     command.onkeydown = (event) => {
         if (event.ctrlKey && event.key.toLowerCase() === 'l') {
             event.preventDefault();
             stream.clear();
+            return;
+        }
+        if (event.key === 'Escape') {
+            // A terminal's Esc clears the prompt it is standing on.
+            event.preventDefault();
+            command.value = commandDraft = '';
+            completion = { list: [], at: -1 };
             return;
         }
         if (event.ctrlKey && event.key.toLowerCase() === 'c') {
@@ -173,19 +185,20 @@ export async function mount(ctx) {
             text(feedback, 'Connected');
             return;
         }
-        if (event.key === 'Tab' && command.value.trim() && !command.value.includes(' ')) {
-            // Complete a command name in place; repeated Tab cycles matches.
-            const prefix = command.value.trim();
-            const matches = words.filter((name) => name.startsWith(prefix));
-            if (matches.length) {
-                event.preventDefault();
-                const next =
-                    matches.indexOf(command.value) === matches.length - 1
-                        ? matches[0]
-                        : (matches.find((name) => name > command.value) ?? matches[0]);
-                command.value = commandDraft = next;
-                command.setSelectionRange(next.length, next.length);
-            }
+        if (event.key === 'Tab') {
+            // Complete a command name in place and keep cycling the same match set:
+            // recomputing the prefix from the completed word left one candidate, so
+            // Tab could never reach the second match.
+            const typed = command.value.trim();
+            if (!typed || typed.includes(' ')) return;
+            if (!completion.list.includes(typed))
+                completion = { list: words.filter((name) => name.startsWith(typed)), at: -1 };
+            if (!completion.list.length) return;
+            event.preventDefault();
+            completion.at = (completion.at + 1) % completion.list.length;
+            const next = completion.list[completion.at];
+            command.value = commandDraft = next;
+            command.setSelectionRange(next.length, next.length);
             return;
         }
         if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
@@ -223,7 +236,11 @@ export async function mount(ctx) {
                     record(value, result);
                     if (command.value.trim() === value) command.value = commandDraft = '';
                 },
-                { submit: 'Run ' + value.split(/\s+/)[0], variant: 'danger' }
+                {
+                    submit: 'Run ' + value.split(/\s+/)[0],
+                    variant: 'danger',
+                    guardDirty: false
+                }
             );
             return;
         }
@@ -294,7 +311,12 @@ export async function mount(ctx) {
             failures = 0;
             if (!pending)
                 text(feedback, stream.paused ? 'Display paused · still reading' : 'Connected');
-            feedback.classList.remove('error');
+            // The LED reads this class, so the pane has to repaint when it is lifted:
+            // otherwise the light stayed red under the word "Connected".
+            if (feedback.classList.contains('error')) {
+                feedback.classList.remove('error');
+                stream.redraw();
+            }
         } catch (error) {
             failures++;
             text(feedback, 'Disconnected · ' + error.message);

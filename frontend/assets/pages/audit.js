@@ -27,7 +27,10 @@ export async function mount(ctx) {
             [/^auction/, ['auctions', 'Open auctions']],
             [/^(news|welcome)/, ['news', 'Open News']],
             [/^content/, ['content', 'Open Content']],
-            [/^(webui-user|login|logout)/, ['webui-users', 'Open WebUI identities']]
+            [/^(webui-user|login|logout)/, ['webui-users', 'Open WebUI identities']],
+            [/^console/, ['console', 'Open the Console']],
+            [/^kick/, ['players', 'Open live sessions']],
+            [/^(status|logs|metrics)$/, ['logs', 'Open Logs']]
         ];
         const match = table.find(([pattern]) => pattern.test(action));
         return match ? { page: match[1][0], label: match[1][1] } : null;
@@ -166,7 +169,8 @@ export async function mount(ctx) {
                 icon: 'audit'
             },
             actions: (get) => [
-                button('Inspect', () => showDetail(get()), 'secondary')
+                // The inspector has an address of its own, so an event can be cited.
+                routeLink('Inspect', 'audit', { event: get().id }, 'button secondary')
             ],
             filters: [
                 [
@@ -190,10 +194,22 @@ export async function mount(ctx) {
     function applyParams(params) {
         // Navigating back to a bare #audit clears the filter instead of leaving the
         // previous actor's rows on screen. `target` names a record (a game account
-        // or knight); `actor` names the WebUI identity that acted.
+        // or knight); `actor` names the WebUI identity that acted; `event` picks one
+        // recorded event and opens its inspector.
         table.query.value = params.get('actor') || params.get('target') || '';
         table.query.dispatchEvent(new Event('input'));
         showDetail(null);
+        const wanted = Number(params.get('event'));
+        if (Number.isInteger(wanted) && wanted > 0) {
+            const row = table.rows.find((r) => r.id === wanted);
+            if (row) {
+                showDetail(row);
+                table.markInspected?.(row);
+            } else
+                ctx.notify(
+                    `There is no audit event #${wanted} in the trail on this server; the list below is the whole set.`
+                );
+        }
     }
     return { node, refresh, interval: 10000, navigate: applyParams };
 }
