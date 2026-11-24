@@ -171,7 +171,11 @@ export class DataTable {
             this.all.type = 'checkbox';
             this.all.setAttribute('aria-label', 'Select every record on this page');
             this.all.onchange = () => this.selectPage(this.all.checked);
-            cell.append(this.all);
+            // The label is the hit area, so the control keeps a 24px target
+            // without drawing a heavy checkbox.
+            const allLabel = el('label', null, 'select-target');
+            allLabel.append(this.all);
+            cell.append(allLabel);
             row.append(cell);
         }
         columns.forEach(([name], index) => {
@@ -409,7 +413,9 @@ export class DataTable {
                         else this.selected.delete(key);
                         this.syncSelection();
                     };
-                    cell.append(box);
+                    const boxLabel = el('label', null, 'select-target');
+                    boxLabel.append(box);
+                    cell.append(boxLabel);
                     row.append(cell);
                     entry.box = box;
                 }

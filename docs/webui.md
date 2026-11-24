@@ -113,6 +113,15 @@ Every record list shares one table component and therefore one behaviour set:
   warns once and a refresh extends it. Expiry returns to the sign-in screen and
   announces the reason.
 
+## Session and transport
+
+`WebUI Access` (Operations) opens with a read-only facts panel for the signed-in
+session: identity, role, session expiry with the time left, cookie protection for
+the current scheme, and the checks the server applies to every request (Host,
+Origin, CSRF token, role) plus the login rate limit and the audit guarantee. An
+administrator can therefore confirm the transport in use without reading
+`config/server.yml` or the proxy configuration.
+
 ## Accessibility
 
 - Landmarks: banner, navigation, main, and one `h1` per page; the page's live
@@ -126,6 +135,12 @@ Every record list shares one table component and therefore one behaviour set:
   trapped by dialogs; the mobile drawer closes with Escape and restores focus.
 - Status text does not rely on colour alone, both themes meet AA contrast, and
   `prefers-reduced-motion` plus the preference switch disable animation.
+- Row-selection checkboxes draw at 18px inside a 24px label, and table rows are
+  spaced further apart than the 24px target circle, so WCAG 2.2 target size is
+  met by the spacing exception while dense tables stay readable.
+- Charts are focusable images with a description: arrow keys, Home and End move
+  through samples and the readout becomes a polite live region only while the
+  keyboard is inspecting, so pointer movement never floods a screen reader.
 
 ## Frontend structure
 

@@ -366,13 +366,15 @@ public final class AdminHandler implements HttpHandler {
         }
         if (b.length > limit) throw new IOException("Asset too large");
         e.getResponseHeaders().set("Content-Type", type);
-        if (!name.equals("index.html"))
-            e.getResponseHeaders()
-                    .set(
-                            "Cache-Control",
-                            name.matches("assets/game/icons/[a-f0-9]{64}\\.(?:png|webp)")
-                                    ? "private, max-age=31536000, immutable"
-                                    : "private, max-age=0, must-revalidate");
+        // The ETag below covers index.html too, so every document is revalidated
+        // instead of guessed at by the browser, while hashed artwork stays
+        // immutable for a year.
+        e.getResponseHeaders()
+                .set(
+                        "Cache-Control",
+                        name.matches("assets/game/icons/[a-f0-9]{64}\\.(?:png|webp)")
+                                ? "private, max-age=31536000, immutable"
+                                : "private, max-age=0, must-revalidate");
         // Hash the response snapshot: a second file read can race an atomic asset replacement.
         try {
             e.getResponseHeaders()

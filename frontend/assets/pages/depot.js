@@ -134,6 +134,9 @@ export async function mount(ctx) {
         ],
         {
             presentationKey: promotionState,
+            id: 'promotions',
+            caption: 'Scheduled promotions',
+            exportName: 'promotions',
             actions: (get) => [
                 button(
                     'Cancel',

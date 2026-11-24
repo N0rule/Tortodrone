@@ -1,4 +1,5 @@
-import { el, toolbar, button } from '../ui.js';
+import { api } from '../api.js';
+import { el, text, toolbar, button, panel, facts, date } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { edit, confirm, field } from '../components/dialog.js';
 export async function mount(ctx) {
@@ -50,7 +51,43 @@ export async function mount(ctx) {
             ]
         }
     );
+    // What the server enforces for this browser session, so an administrator can
+    // confirm the transport and cookie protections without reading the config.
+    const expiry = el('dd'),
+        sessionFacts = facts([
+            ['Signed in as', api.session?.username || 'Unavailable'],
+            ['Role', api.session?.role || 'Unavailable'],
+            ['Session expiry', ''],
+            [
+                'Cookie',
+                location.protocol === 'https:'
+                    ? 'HttpOnly, SameSite, Secure over HTTPS'
+                    : 'HttpOnly, SameSite over plain HTTP'
+            ],
+            ['Request checks', 'Host, Origin, CSRF token and role on every request'],
+            ['Login limit', 'Ten attempts per minute per remote address'],
+            ['Audit', 'Every privileged action is recorded with its outcome']
+        ]);
+    // Replace the placeholder description value with a live element.
+    const expirySlot = [...sessionFacts.querySelectorAll('dt')].find(
+        (term) => term.textContent === 'Session expiry'
+    )?.nextElementSibling;
+    if (expirySlot) {
+        expirySlot.replaceWith(expiry);
+        expiry.id = 'session-expiry';
+    }
+    const sessionPanel = panel('Your session and transport', sessionFacts);
+    const describeExpiry = () => {
+        const expires = api.session?.expires;
+        if (!expires) return 'Unavailable';
+        const minutes = Math.max(0, Math.round((expires - Date.now()) / 60000));
+        return (
+            date(expires) +
+            (minutes > 1 ? ` (${minutes} minutes left)` : ' (renewing on the next request)')
+        );
+    };
     node.append(
+        sessionPanel,
         toolbar(
             button('Create WebUI identity', () =>
                 edit('Create WebUI identity', 'webui-user-create', [
@@ -71,6 +108,7 @@ export async function mount(ctx) {
         table.node
     );
     async function refresh() {
+        text(expiry, describeExpiry());
         table.update(await ctx.request('webui-users'));
     }
     await refresh();

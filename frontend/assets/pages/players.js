@@ -15,6 +15,9 @@ export async function mount(ctx) {
             ['State', (r) => status(r.state, true)]
         ],
         {
+            id: 'sessions',
+            caption: 'Live sessions',
+            exportName: 'sessions',
             actions: ctx.moderator
                 ? (get) => [
                       button(

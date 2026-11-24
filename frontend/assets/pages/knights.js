@@ -487,7 +487,13 @@ export async function mount(ctx) {
                 ],
                 ['Binding', (i) => (i.bound ? 'Bound' : 'Unbound')]
             ],
-            { search: false, actions: (get) => [button('Inspect', () => inspect(get()))] }
+            {
+                search: false,
+                id: 'knight-inventory',
+                caption: 'Owned inventory',
+                exportName: 'knight-inventory',
+                actions: (get) => [button('Inspect', () => inspect(get()))]
+            }
         );
         let page = 1;
         const previous = button('Previous', () => {

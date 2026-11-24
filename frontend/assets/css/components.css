@@ -906,3 +906,18 @@ caption {
         margin-left: 0;
     }
 }
+
+/* Selection checkboxes keep a 24px hit area inside dense rows. */
+.select-target {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 24px;
+    block-size: 24px;
+}
+.select-target > input {
+    margin: 0;
+    inline-size: 18px;
+    block-size: 18px;
+    accent-color: var(--accent);
+}
