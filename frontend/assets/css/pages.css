@@ -2085,9 +2085,22 @@ dd .bad {
     .terminal-tools::-webkit-scrollbar {
         display: none;
     }
+    /* The field is the only shrinkable item in a nowrap bar, so it used to absorb the
+       whole deficit: at 844x390 it drew 99px wide, 75px of content box against a 94px
+       placeholder, and read "Search ou" while the sideways scroll the rule above
+       intends never engaged. A fixed width makes the bar overflow and scroll, which
+       is the point of nowrap here. */
     .terminal-tools input[type='search'] {
-        flex: 1 1 120px;
+        flex: 0 0 auto;
+        inline-size: 148px;
         order: 0;
+    }
+    /* The cross-links wrap too, and a wrapped link made the single flex line 92px tall
+       for 44px controls: the bar measured 97px and every control floated mid-height on
+       a 390px-tall screen. One row here, like the rest of the bar. */
+    .terminal-tools .toolbar-links {
+        flex-wrap: nowrap;
+        align-items: center;
     }
     /* No select floor here: with `flex: 0 0 auto` and `inline-size: auto` a select is
        as wide as its widest option ("All (12)" 110px, "All time" 146px at 16px type),
