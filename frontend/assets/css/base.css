@@ -290,20 +290,14 @@ button.secondary,
     --control-fg: var(--text);
     /* This is the default control in the whole UI, so its boundary is what decides
        whether the product reads as flat: --line is 1.71:1 against a panel and turned
-       every toolbar into labels with a smudge around them. 62% measured 2.86:1 dark and
-       2.47:1 light against --surface; 80% measures 3.50:1 and 3.09:1, which is the
-       panel it actually sits on rather than the canvas. */
-    --control-border: color-mix(in srgb, var(--line-bright) 80%, var(--raised));
-}
-/* That mix is measured against --surface, where it reaches 3.50:1 (dark) and 3.09:1
-   (light). On a host that *is* --raised it lands at 2.59:1 and 2.48:1 — under the 3:1
-   a control boundary needs (WCAG 1.4.11) — because the mix moves the boundary toward
-   the very colour it has to stand out from. The hosts that paint --raised name
-   themselves here and take the flat token: 3.18:1 and 3.28:1. */
-.bulk-bar button.secondary,
-.bulk-bar .button.secondary,
-#notice button.secondary,
-.refusal button.secondary {
+       every toolbar into labels with a smudge around them. The boundary is the flat
+       token, measured on the worst surface a control actually sits on — 4.31:1 on
+       --surface and 3.18:1 on --raised (dark), 4.09:1 and 3.28:1 (light). It used to
+       be mixed 80% toward --raised, which reached 3.50:1 on a panel but only 2.59:1
+       and 2.48:1 on a raised host — under the 3:1 a control boundary needs. Naming the
+       raised hosts one by one was the first attempt and it missed the table's hover
+       row and the Overview server strip; a boundary that only clears AA on some of the
+       surfaces it is painted on is not a boundary. */
     --control-border: var(--line-bright);
 }
 button:where(.secondary):not(:disabled):not([aria-disabled='true']):hover,
@@ -454,6 +448,20 @@ textarea {
     background: var(--inset);
     border: 1px solid var(--line-bright);
     border-radius: var(--radius-control);
+}
+/* `showReason` chooses to show a reason instead of hiding it, and outside a table cell
+   there was no rule that honoured it: `.shown` was only ever un-clipped inside `td`/`th`,
+   so a toolbar control's explanation stayed invisible until the pointer or the focus
+   landed on it. A moderator's "this needs an administrator role" is exactly the case
+   that has to be readable without hovering. */
+.toolbar > .unavailable-reason.shown {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    clip-path: none;
+    overflow: visible;
+    white-space: normal;
+    margin-inline-start: 4px;
 }
 input[type='checkbox'] {
     /* One size, one accent colour, wherever a checkbox appears. */

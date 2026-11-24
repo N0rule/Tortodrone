@@ -74,7 +74,24 @@ export async function mount(ctx) {
                                             { session: get().id },
                                             [],
                                             `Drop ${get().knight || get().username || 'this connection'} now. The player can reconnect immediately; nothing they own is changed.`,
-                                            { destructive: true, submit: 'Disconnect' }
+                                            {
+                                                destructive: true,
+                                                submit: 'Disconnect',
+                                                // A kick is not a save. `changed()` toasted
+                                                // "Changes saved." at a session it never
+                                                // named; the bulk path already said
+                                                // "Disconnected N sessions".
+                                                notifySaved: false,
+                                                after: () =>
+                                                    ctx.toast(
+                                                        `Disconnected session ${get().id} (${
+                                                            get().knight ||
+                                                            get().username ||
+                                                            'unknown'
+                                                        }).`,
+                                                        { type: 'success' }
+                                                    )
+                                            }
                                         ),
                                     'danger'
                                 )

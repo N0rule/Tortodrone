@@ -121,7 +121,7 @@ const pages = [
         section: 'Operations',
         rank: 2,
         module: audit,
-        description: 'Every privileged request with its recorded outcome.'
+        description: 'The newest 500 privileged requests, with their recorded outcomes.'
     },
     {
         name: 'webui-users',
@@ -284,14 +284,42 @@ function renderNavigation() {
  * and any real navigation clears it.
  */
 let refusal = null;
+/**
+ * Drop the card and repaint what is underneath it.
+ *
+ * A refusal always ends by rewriting the address to `#overview`, so the card's own
+ * "Open Overview" navigates to the address it is already on: no `hashchange` fires, and
+ * the banner stayed over the page it offered to take you to. Clearing it here is what
+ * makes that button do what it says.
+ */
+function clearRefusal() {
+    if (!refusal) return false;
+    refusal = null;
+    if (controller?.node) paintPage(controller.node);
+    return true;
+}
 function showRefusal({ title, message }) {
     const card = el('div', null, 'stack refusal');
     card.append(
         el('h2', title),
         el('p', message, 'muted'),
         toolbar(
-            button('Open Overview', () => go('overview'), 'primary'),
-            button('Search pages', () => $('#search').click(), 'secondary')
+            button(
+                'Open Overview',
+                () => {
+                    clearRefusal();
+                    go('overview');
+                },
+                'primary'
+            ),
+            button(
+                'Search pages',
+                () => {
+                    clearRefusal();
+                    $('#search').click();
+                },
+                'secondary'
+            )
         )
     );
     refusal = card;
@@ -559,6 +587,7 @@ $('#logout').onclick = async () => {
 };
 
 $('#refresh').onclick = refresh;
+$('#navigation').addEventListener('click', () => clearRefusal());
 $('#menu').onclick = () => {
     menu(!$('#shell').classList.contains('menu-open'));
 };

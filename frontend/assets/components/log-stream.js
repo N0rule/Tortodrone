@@ -427,12 +427,22 @@ export function logStream({
         statusRight.title = file?.path ? 'The complete log lives in ' + file.path : '';
         // The severity filter is also the only place per-level counts can be read, so
         // it carries them: "3 ERROR among 1000" was invisible until you chose ERROR and
-        // counted what was left. Counted over the search-filtered rows, never the
-        // severity filter itself, or every option would read 0 except the chosen one.
+        // counted what was left. Counted over the rows the search and the period leave,
+        // never over the severity filter itself, or every option would read 0 except the
+        // chosen one. The period belongs in the count: without it the select offered
+        // "ERROR (300)" over a pane holding the last five minutes and nothing else.
         const needle = search.value.trim().toLowerCase(),
+            span = PERIODS[period.value],
             counts = new Map();
         for (const row of allRows()) {
             if (cleared(row)) continue;
+            if (span) {
+                const at =
+                    typeof row.timestamp === 'number'
+                        ? row.timestamp
+                        : Date.parse(row.timestamp);
+                if (Number.isFinite(at) && Date.now() - at > span) continue;
+            }
             if (
                 needle &&
                 !`${row.level ?? ''} ${row.thread ?? ''} ${

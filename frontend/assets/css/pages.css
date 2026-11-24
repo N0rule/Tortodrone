@@ -1966,6 +1966,13 @@ dd .bad {
     .terminal-tools button,
     .terminal-tools select,
     .terminal-menu-toggle,
+    /* A link-styled control is a control: `button.link` sets its own 24px floor at
+       (0,1,1), which outranks the bare `button` selector above, so the audit
+       drill-downs and the Logs related-page buttons stayed at 24px on a phone. Prose
+       links (`a.link` inside a sentence) keep the inline exception and are not sized
+       here — a 44px tall link in a paragraph breaks the paragraph. */
+    button.link,
+    .button.link,
     /* The drawer's page switcher is the most-tapped control on a phone, and it was
        the one target the list above left out: `#navigation a` is padding-only, so it
        stood at ~35px, and the short-viewport compaction in layout.css cut it to ~27px

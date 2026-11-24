@@ -40,13 +40,23 @@ function restore() {
     }
 }
 
-/** Where each read command's answer lives as a page, so output is not a dead end. */
+/**
+ * Where an answer lives as a page, so output is not a dead end. The state-changing
+ * verbs matter most here and used to have nothing: the answer to `restart` is a line of
+ * text, and the record of it is an audit row, so the one command whose outcome an
+ * operator needs to prove now links to the trail filtered to that action.
+ */
 const RELATED = {
     status: [{ label: 'Open overview', page: 'overview' }],
     players: [{ label: 'Open live sessions', page: 'players' }],
     scenes: [{ label: 'Open scenes', page: 'overview' }],
     accounts: [{ label: 'Open accounts', page: 'accounts' }],
-    help: [{ label: 'Open settings', page: 'settings' }]
+    help: [{ label: 'Open settings', page: 'settings' }],
+    start: [{ label: 'Audit trail for start', page: 'audit', params: { target: 'start' } }],
+    stop: [{ label: 'Audit trail for stop', page: 'audit', params: { target: 'stop' } }],
+    restart: [{ label: 'Audit trail for restart', page: 'audit', params: { target: 'restart' } }],
+    shutdown: [{ label: 'Audit trail for shutdown', page: 'audit', params: { target: 'shutdown' } }],
+    kick: [{ label: 'Open live sessions', page: 'players' }]
 };
 
 export function reset() {
@@ -401,7 +411,17 @@ export async function mount(ctx) {
                     at: -1
                 };
             }
-            if (!completion.list.length) return;
+            if (!completion.list.length) {
+                // With the command list unreadable there is nothing to complete, and a
+                // bare Tab would move focus out of the prompt. Say why instead.
+                if (!words.length) {
+                    event.preventDefault();
+                    notice(
+                        'The command list could not be read, so there is nothing to complete. The audit trail records every command that ran.'
+                    );
+                }
+                return;
+            }
             event.preventDefault();
             // A second Tab on a sole candidate prints the ambiguous set, the way a
             // shell lists them, instead of cycling invisibly.
@@ -439,6 +459,9 @@ export async function mount(ctx) {
             return;
         }
         if (!value) return;
+        // The static set is the guarantee; the server's own list is joined in so a verb
+        // this page has not learned yet still gets its confirmation. The server refuses
+        // a write without it, so being generous here costs nothing.
         if (STATEFUL.has(value.split(/\s+/)[0]) || metadata.actions.includes(value.split(/\s+/)[0])) {
             // A cancelled confirmation never enters ↑ history: nothing ran.
             edit(

@@ -238,15 +238,22 @@ export async function mount(ctx) {
         reading = false;
     const pause = button('Pause', () => {
         paused = !paused;
+        // The accessible name is the label, not a fixed string: it said "Pause the
+        // audit trail" forever while the visible word flipped to Resume, so a screen
+        // reader was told the opposite action. `aria-pressed` carries the state.
         text(pause, paused ? 'Resume' : 'Pause');
+        pause.setAttribute('aria-pressed', String(paused));
+        pause.title = paused
+            ? 'Start reading the trail again'
+            : 'Stop reading the trail; the rows on screen stay put';
         describeScope();
         if (!paused) refresh().catch(() => {});
     });
-    pause.setAttribute('aria-label', 'Pause the audit trail');
+    pause.setAttribute('aria-pressed', 'false');
     function describeScope() {
         const count = table.rows.length;
         scope.textContent = paused
-            ? `Paused: the trail shown here is the ${count} row${count === 1 ? '' : 's'} that were on screen when you paused. Nothing is being read.`
+            ? `Paused: the trail shown here is the ${count} row${count === 1 ? '' : 's'} that were on screen when you paused. The ten-second poll and the header's Refresh are paused with it — press Resume to read again.`
             : count >= CAP
               ? `Showing the newest ${CAP} events only — older rows are still in data/webui.sqlite, but this page cannot page back to them yet.`
               : `Every recorded event (${count}) is on this page: the server keeps the newest ${CAP}.`;
@@ -255,10 +262,17 @@ export async function mount(ctx) {
     // below the fold, so the citation link a row emits looked like a dead click.
     node.append(detail, toolbar(scope, pause), table.node);
     let pendingEvent = null;
-    async function refresh() {
-        // A pause is a real pause: the ten-second poll used to re-insert rows at the
-        // top under whoever was reading them.
-        if (paused || reading) return;
+    /**
+     * `force` is the operator asking: the header's Refresh button, a `data-changed`
+     * event from a write, or Resume. A pause stops the *poll*, not a deliberate read —
+     * silently ignoring the header's Refresh while the button still greyed itself was
+     * the same lie as the sticky notice it replaced. `reading` alone is what a second
+     * concurrent read respects.
+     */
+    async function refresh(force = false) {
+        // The ten-second poll used to re-insert rows at the top under whoever was
+        // reading them; a pause stops that, not the operator's own refresh.
+        if (reading || (paused && !force)) return;
         reading = true;
         try {
             table.update(await ctx.request('audit'));
@@ -282,6 +296,7 @@ export async function mount(ctx) {
     // A cold load carries the address too. Without this the inspector a row's own
     // href names stayed empty until the operator clicked it again.
     if (ctx.params.size) applyParams(ctx.params);
+    document.addEventListener('data-changed', forced);
     /** Deep links (#audit?actor=…) re-filter the trail in place. */
     function applyParams(params) {
         // Navigating back to a bare #audit clears the filter instead of leaving the
@@ -306,5 +321,16 @@ export async function mount(ctx) {
             } else pendingEvent = wanted;
         }
     }
-    return { node, refresh, interval: 10000, navigate: applyParams };
+    function forced() {
+        return refresh(true).catch(() => {});
+    }
+    return {
+        node: node,
+        // The shell's Refresh button is a deliberate read, so a pause does not swallow
+        // it; the poll goes through `interval` and is skipped while paused.
+        refresh: () => refresh(true),
+        dispose: () => document.removeEventListener('data-changed', forced),
+        interval: 10000,
+        navigate: applyParams
+    };
 }

@@ -117,11 +117,13 @@ hours`): a thousand retained lines span days on a quiet server, and severity plu
 text could not narrow that at all. A line whose timestamp cannot be parsed is never
 hidden by a window.
 
-Every control that shapes the pane is in the address, not just the two the filters
-own: `#logs?severity=WARN&search=timeout&period=Last+hour&raw=1&wrap=0` is the view
-an operator is looking at, so a copied link arrives at it. `raw` and `wrap` used to be
-read from the URL and never written back, which meant a pane could show parsed,
-wrapped lines under an address that said otherwise.
+On Logs, every control that shapes the pane is in the address, not just the two the
+filters own: `#logs?severity=WARN&search=timeout&period=Last+hour&raw=1&wrap=0` is the
+view an operator is looking at, so a copied link arrives at it. `raw` and `wrap` used to
+be read from the URL and never written back, which meant a pane could show parsed,
+wrapped lines under an address that said otherwise. The Console shares the component but
+not this contract: its transcript is browser-local state keyed by no address, so its
+raw and wrap toggles are not round-tripped.
 
 Severity is carried by the level column, not by the message: a long warning stays
 readable text instead of turning into a gold paragraph. A buffer that crosses
@@ -242,11 +244,12 @@ whose timestamp cannot be parsed is never folded into "recent", it stays visible
 every window.
 
 The read is capped at the newest 500 rows (`WebIdentityStore` orders by id and limits),
-and the page says so above the table instead of claiming to hold every privileged
-request: below the cap it reports how many events exist, at the cap it says that older
-rows stay in `data/webui.sqlite` and that the page cannot page back to them yet.
-**Pause** stops the ten-second poll, because it used to re-insert rows at the top under
-whoever was reading them.
+and both the page description and the line above the table say so instead of claiming to
+hold every privileged request: below the cap it reports how many events exist, at the cap
+it says that older rows stay in `data/webui.sqlite` and that the page cannot page back to
+them yet. **Pause** stops the ten-second poll and the automatic refresh a write triggers,
+because those re-inserted rows at the top under whoever was reading them; the header's
+own Refresh still works, because a button that says Refresh has to refresh.
 
 ## Player Mail
 
@@ -361,6 +364,12 @@ Every record list shares one table component and therefore one behaviour set:
 - Unsaved editors, navigation away with pending edits and sign-out all confirm
   before discarding a draft. Revision conflicts keep the draft and explain how to
   reload the record.
+- **Red means "this destroys something you cannot get back"**, not "this concerns money".
+  Stopping the listener, kicking a session, cancelling a promotion, cancelling an
+  auction listing and deleting a record are `danger`. Settling every expired auction is
+  not: settlement is the exchange working as designed, and a control that is red every
+  day is a control operators stop reading. What a `danger` submit must carry is a label
+  that names the deed.
 - A confirmation says what it destroys, and carries the weight of it: the submit is
   a `danger` control, its label names the deed (`Stop the listener`, `Disconnect`,
   `Cancel promotion`) instead of a generic "Confirm", and a destructive dialog parks
@@ -377,14 +386,19 @@ Every record list shares one table component and therefore one behaviour set:
 - A disabled control stays focusable and explains itself: `aria-disabled` plus a
   visible note and `aria-describedby`, instead of a native `disabled` that removes the
   control and its reason from the tab order together.
-- One empty-state idiom for the whole application — icon, title, message, and the
-  action that would fill the region. A bare "No items match these filters." line is a
-  dead end; the catalogue, the gear grid and the receipt list now offer the reset that
-  makes something match, or say honestly that nothing can be granted from here.
-- Every timestamp carries its zone (`03/12/2026, 14:00 GMT+3`). The server stores
-  promotion and auction windows as Unix milliseconds UTC, so a bare `14:00` meant two
-  different instants to the operator who scheduled it and the colleague they sent the
-  link to.
+- One empty-state component for the whole application: icon, title, message, and — when
+  there is something the operator can do from there — the action that fills the region.
+  A bare "No items match these filters." line is a dead end; the catalogue, the gear grid
+  and the receipt list offer the reset that makes something match. Where the honest
+  answer is "nothing can be done here" (Battle Sprites are earned in game), the message
+  says exactly that instead of inventing a button.
+- Every date in a table, a fact list or a dialog carries its zone
+  (`03/12/2026, 14:00 GMT+3`). The server stores promotion and auction windows as Unix
+  milliseconds UTC, so a bare `14:00` meant two different instants to the operator who
+  scheduled it and the colleague they sent the link to. The terminal gutter prints
+  `HH:MM:SS` by design — a zone on every one of a thousand log lines is noise, and the
+  log's own status row names the file it came from — and the header clock follows the
+  browser's short locale form.
 - Sessions expire after 30 idle minutes; at five minutes remaining the interface
   warns once and a refresh extends it. Expiry returns to the sign-in screen and
   announces the reason.
@@ -418,12 +432,16 @@ administrator can therefore confirm the transport in use without reading
 - Every control has a programmatic name, including icon-only buttons (menu,
   shortcuts, dismiss).
 - Focus is visible on every interactive control, in both themes, at every
-  specificity: a page that needs to suppress a ring has to say why. The one place
-  it is suppressed is the page heading, which is focused only so a screen reader
-  starts reading at the top — it is not a control, and the page name is announced
-  through `#page-status` instead. The skip link lands on `#main` with an inset ring,
-  so a keyboard user can see that the jump happened. Dialogs trap focus; the mobile
-  drawer closes with Escape and restores focus to the button that opened it.
+  specificity. Exactly three rules set `outline: none`, each with something standing in
+  its place: the page heading, which is focused only so a screen reader starts reading
+  from the top and whose name is announced through `#page-status`; the palette's field,
+  where the ring moves to the field's frame; and the console's prompt, where the ring is
+  the border colour. The skip link lands on `#main` with an inset ring on
+  `:focus-visible` — never bare `:focus`, which is what a click into the page also
+  triggers. In card mode a table's header row is clipped to keep the layout tight, so
+  the whole row reappears through `:focus-within` when a sort button takes focus: a
+  keyboard user never stops in a 1x1 box. Dialogs trap focus; the mobile drawer closes
+  with Escape and restores focus to the button that opened it.
 - A control that cannot act stays focusable and says why (`aria-disabled` plus a
   description) rather than disappearing from the tab order as `disabled` would.
 - A tab strip names the region it switches: `aria-controls` on each tab, and
@@ -432,8 +450,12 @@ administrator can therefore confirm the transport in use without reading
   `prefers-reduced-motion` plus the preference switch disable animation.
 - Row-selection checkboxes draw at 16px inside a 24px label, and table rows are
   spaced further apart than the 24px target circle, so WCAG 2.2 target size is
-  met by the spacing exception while dense tables stay readable. On a coarse
-  pointer every control, including the drawer's page links, reaches 44px.
+  met by the spacing exception while dense tables stay readable. On a coarse pointer
+  every button, select and link-styled control reaches 44px, named explicitly in the
+  last sheet: `button.link` sets its own 24px floor at a higher specificity, and the
+  drawer's page links are padding-only, so both had to be listed or the touch step
+  silently skipped them. A link inside a sentence keeps the inline-text exception,
+  because a 44px-tall inline link breaks the paragraph it sits in.
 - Charts are focusable images with a description: arrow keys, Home and End move
   through samples and the readout becomes a polite live region only while the
   keyboard is inspecting, so pointer movement never floods a screen reader.
@@ -477,14 +499,14 @@ size and `gzip -9 | wc -c` for the compressed one.
 | Asset class | Raw | Gzip | Transport |
 | --- | --- | --- | --- |
 | `index.html` | 9 860 B | 2 234 B | Gzip when the browser offers it, `must-revalidate` |
-| JavaScript (33 files under `frontend/assets`) | 566 261 B | 142 532 B | Gzip, `must-revalidate`, ETag per encoding |
-| CSS (5 sheets) | 111 441 B | 26 265 B | Gzip, `must-revalidate`, ETag per encoding |
+| JavaScript (33 files under `frontend/assets`) | 572 754 B | 144 528 B | Gzip, `must-revalidate`, ETag per encoding |
+| CSS (5 sheets) | 112 545 B | 26 702 B | Gzip, `must-revalidate`, ETag per encoding |
 | Icons and artwork (5081 files, 87 MB on disk) | median icon 16 kB | n/a | `max-age=31536000, immutable` for the content-hashed `assets/game/icons/<hash>` paths |
 
 The JavaScript column is every module at once, which no single page loads: a
 VIEWER never fetches `mailing.js`, and there is no bundler, so the number grows
 with each page module. Gzip is applied to text assets over 1 kB: `app.js` alone
-goes from 30 306 to 8 688 bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
+goes from 31 176 to 8 921 bytes. The ETag carries the encoding (`…-gzip`) and `Vary: Accept-Encoding`, so a
 cache never serves one representation for the other and revalidation still
 answers `304`. Every non-hashed asset revalidates, so an upgrade is visible on the
 next load without a hard refresh; hashed artwork is cached for a year. Only the

@@ -299,10 +299,14 @@ const calendarFormat = new Intl.DateTimeFormat(preferredLocale, {
     month: '2-digit',
     year: 'numeric'
 });
+// Used where a *sample* time is read out loud (the chart's inspection readout and its
+// axis), so it carries the zone like every other date. The terminal gutter is the one
+// clock without a zone: see `clockFormat` below.
 const timeFormat = new Intl.DateTimeFormat(preferredLocale, {
     hour: '2-digit',
     minute: '2-digit',
-    hourCycle: 'h23'
+    hourCycle: 'h23',
+    timeZoneName: 'short'
 });
 // Log lines carry their own HH:MM:SS, so the terminal clock keeps seconds and
 // can order rows inside one minute.
@@ -435,16 +439,30 @@ export function tabs(options, value, onChange) {
     const group = 'tabs-' + ++tabSeq;
     const panelId = group + '-panel';
     let panel = null;
-    function choose(id, focus = false) {
+    /**
+     * Paint a selection without telling the page about it.
+     *
+     * The panel's `aria-labelledby` is minted once, so a page that wrote `aria-selected`
+     * itself (Depot's `paintTabs`, Knights' deep-link switch) left the region labelled by
+     * the tab selected at construction: `#depot?tab=promotions` announced a *Offers* panel
+     * over Promotions. Selection is one operation, and this is it.
+     */
+    function setSelected(id) {
         for (const b of root.children) {
             const selected = b.dataset.tab === id;
-            b.setAttribute('aria-selected', selected);
+            b.setAttribute('aria-selected', String(selected));
             b.tabIndex = selected ? 0 : -1;
-            if (selected && focus) b.focus();
         }
         if (panel) panel.setAttribute('aria-labelledby', group + '-' + id);
+    }
+    function choose(id, focus = false) {
+        setSelected(id);
+        if (focus) {
+            for (const b of root.children) if (b.dataset.tab === id) b.focus();
+        }
         onChange(id);
     }
+    root.setSelected = setSelected;
     for (const [id, title] of options) {
         const b = button(title, () => choose(id));
         const art = symbol(id);

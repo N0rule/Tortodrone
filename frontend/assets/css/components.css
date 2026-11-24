@@ -63,11 +63,6 @@
 .uv {
     color: var(--gold);
 }
-.empty {
-    padding: 35px 15px;
-    text-align: center;
-    color: var(--muted);
-}
 .loading {
     padding: 40px;
     color: var(--muted);
@@ -972,6 +967,19 @@ caption {
         height: 1px;
         overflow: hidden;
         clip-path: inset(50%);
+    }
+    /* A clipped header still holds focusable sort buttons, so the tab order walked into
+       a 1x1 box: eight invisible stops per table on a phone. Hiding the buttons would
+       also drop the column names a screen reader needs, so the header comes back when
+       focus is inside it — the operator sees the row they are on, and a pointer user
+       never sees it at all. The paging bar's sort select remains the everyday control. */
+    .data-table thead:focus-within {
+        position: static;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip-path: none;
+        display: table-header-group;
     }
     .data-table tbody {
         display: grid;

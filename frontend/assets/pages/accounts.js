@@ -89,7 +89,9 @@ export async function mount(ctx) {
             label: gameMaster ? 'Grant' : 'Remove',
             // Escalation, not a tidy-up: the same gold Confirm as every other write
             // made a grant of in-game admin rights look like saving a field.
-            variant: gameMaster ? 'danger' : 'primary',
+            // Escalation and de-escalation are both privilege changes; the grant used to
+            // be the only one that looked like a decision.
+            variant: 'danger',
             onSubmit: async (form, progress) => {
                 let done = 0;
                 const failed = [];

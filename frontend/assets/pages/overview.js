@@ -44,7 +44,7 @@ export async function mount(ctx) {
                     {},
                     [],
                     route === 'start'
-                        ? 'Start the game listener. Nothing is dropped: a listener that is already running refuses the command.'
+                        ? 'Start the game listener. Starting one that is already running does nothing at all — nobody is dropped, and nothing changes.'
                         : 'Every connected player is dropped with this press. HTTP administration stays available, and players can sign in again once the listener is back.',
                     // Starting is a plain action; stopping and restarting are not. The
                     // three used to look identical in the dialog.

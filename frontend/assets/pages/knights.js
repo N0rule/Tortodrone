@@ -147,10 +147,19 @@ export async function mount(ctx) {
     account.append(el('span', 'Account'), accountLink);
     left.append(name, badges, account);
     header.append(left, wallet);
-    const crowns = button('', () => editCurrency('CROWNS')),
-        energy = button('', () => editCurrency('ENERGY')),
-        prestige = button('', editProgress);
-    crowns.disabled = energy.disabled = prestige.disabled = !ctx.admin;
+    // `aria-disabled` plus a reason, not native `disabled`: a natively disabled button
+    // cannot take focus, so a moderator's Crowns and Energy were three dead controls with
+    // the explanation unreachable by keyboard — against the rule the rest of the
+    // application keeps.
+    const moneyReason = () =>
+        ctx.admin || 'Changing a Knight’s currency or progression needs an administrator role.';
+    const crowns = button('', () => editCurrency('CROWNS'), 'secondary', moneyReason, {
+            showReason: true
+        }),
+        energy = button('', () => editCurrency('ENERGY'), 'secondary', moneyReason, {
+            showReason: true
+        }),
+        prestige = button('', editProgress, 'secondary', moneyReason, { showReason: true });
     wallet.append(crowns, energy, prestige);
     const actions = toolbar(button('All Knights', () => ctx.go('knights')));
     if (ctx.admin)
@@ -315,7 +324,16 @@ export async function mount(ctx) {
         };
         search.oninput = filter.onchange = applyFilter;
         root.append(toolbar(search, filter), grid, selection);
-        if (!candidates.length) grid.append(el('p', 'No compatible owned items.'));
+        if (!candidates.length)
+            grid.append(
+                emptyState({
+                    compact: true,
+                    icon: 'search',
+                    title: 'No owned item fits this slot',
+                    message:
+                        'Compatible gear is either equipped already or not owned yet. The grant picker below adds any item this slot accepts.'
+                })
+            );
         if (canEdit) {
             const grantSection = el('details');
             grantSection.append(el('summary', 'Grant and equip'));
@@ -328,7 +346,7 @@ export async function mount(ctx) {
                     root.dataset.unequip = 'false';
                     selection.textContent = 'Grant and equip ' + def.name;
                 },
-                { grantable: true, compatibleSlot: index }
+                { grantable: true, compatibleSlot: index, exportable: false }
             );
             grantSection.append(picker.node);
             root.append(grantSection);
@@ -433,7 +451,17 @@ export async function mount(ctx) {
                     info
                 );
                 slot.dataset.slot = index;
-                slot.disabled = !item && !view.unlockedSlots.includes(index);
+                // A locked slot stays reachable so it can say why it is locked; a native
+                // `disabled` removed both the control and the sentence.
+                if (!item && !view.unlockedSlots.includes(index)) {
+                    slot.setAttribute('aria-disabled', 'true');
+                    slot.dataset.usable = 'false';
+                    slot.title = `Slot ${index} is not unlocked for this Knight.`;
+                    slot.dataset.reason = slot.title;
+                } else {
+                    slot.removeAttribute('aria-disabled');
+                    delete slot.dataset.usable;
+                }
                 return slot;
             });
             const wanted = new Set(desired);
@@ -942,10 +970,7 @@ export async function mount(ctx) {
                 if (activeTab !== nextTab) {
                     activeTab = nextTab;
                     showTab();
-                    for (const b of tabBar.children) {
-                        b.setAttribute('aria-selected', b.dataset.tab === activeTab);
-                        b.tabIndex = b.dataset.tab === activeTab ? 0 : -1;
-                    }
+                    tabBar.setSelected(activeTab);
                 }
                 if (returning) await refresh();
             } else {

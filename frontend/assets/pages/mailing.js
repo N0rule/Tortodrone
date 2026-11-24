@@ -777,7 +777,10 @@ function deliveredLabel(campaign) {
                         'A direct letter, a batch send or a test copy adds a receipt here. Receipts are this browser’s record of what it asked for; the server’s own delivery count lives under Recipients.',
                     action: {
                         label: 'Write a direct letter',
-                        run: () => here({ tab: 'direct' })
+                        // `compose` is the composer this page actually opens; `here` was
+                        // copied from another page and does not exist in this file, so
+                        // the button threw before it reached the server.
+                        run: () => compose('direct')
                     }
                 })
             );
@@ -1628,7 +1631,7 @@ function deliveredLabel(campaign) {
                 renderGifts();
                 refreshPreview();
             },
-            { grantable: true }
+            { grantable: true, exportable: false }
         );
         renderGifts();
         pickerDetails.append(el('summary', 'Add a gift item'), picker.node);
@@ -1827,14 +1830,17 @@ function deliveredLabel(campaign) {
                         );
                     }
                     if (outcome.cancelled) {
-                        // A stop is not a failure: name what landed and leave the rest
-                        // listed, so Resume picks up exactly where it stopped.
-                        changed(
+                        // A stop has to leave the dialog open: the batch list lives in
+                        // it, and closing it destroyed the outcomes the operator was
+                        // told to resume from. Throwing keeps the editor, the list and
+                        // its Resume control on screen with the reason in the error line.
+                        throw invalid(
                             `Stopped after ${outcome.sent} of ${recipients.length}. ${
                                 outcome.cancelled
-                            } knight${outcome.cancelled === 1 ? '' : 's'} did not receive it, and the batch list keeps every outcome — Resume sends the rest.`
+                            } knight${
+                                outcome.cancelled === 1 ? '' : 's'
+                            } did not receive it — press Resume remaining below to send the rest.`
                         );
-                        return;
                     }
                     changed(
                         recipients.length === 1

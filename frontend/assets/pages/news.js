@@ -89,7 +89,10 @@ export async function mount(ctx) {
     const libraryFilter = input('Filter the image library', '');
     libraryFilter.type = 'search';
     libraryFilter.placeholder = 'Filter by name';
-    libraryFilter.oninput = () => renderLibrary();
+    libraryFilter.oninput = () => {
+        renderLibrary();
+        renderImages();
+    };
     const libraryCount = el('span', null, 'muted');
     const fields = panel(
         '',
@@ -349,11 +352,18 @@ export async function mount(ctx) {
     }
     function renderImages() {
         const value = banner(),
-            max = slot === 'featured' ? [570, 300] : [280, 190];
+            max = slot === 'featured' ? [570, 300] : [280, 190],
+            // The filter above the picture grid is the filter for the field too: it was
+            // the one control still listing all 128 images, so the fix reached the tiles
+            // and not the thing the operator has to use.
+            needle = libraryFilter.value.trim().toLowerCase(),
+            offered = needle
+                ? data.images.filter((i) => i.image.toLowerCase().includes(needle))
+                : data.images;
         image.replaceChildren(
             ...[
                 ['', 'No image selected'],
-                ...data.images.map((i) => [i.image, `${i.image} · ${i.width} × ${i.height}`])
+                ...offered.map((i) => [i.image, `${i.image} · ${i.width} × ${i.height}`])
             ].map(([name, text]) => {
                 const option = el('option', text);
                 option.value = name;
@@ -362,6 +372,14 @@ export async function mount(ctx) {
                 return option;
             })
         );
+        // The banner's own image stays in the list even when the filter excludes it: a
+        // select whose value is not among its options resets to the first one, which
+        // would quietly unset a banner the operator did not touch.
+        if (value?.image && !offered.some((i) => i.image === value.image)) {
+            const option = el('option', `${value.image} · not matching the filter`);
+            option.value = value.image;
+            image.prepend(option);
+        }
         image.value = value?.image || '';
     }
     function showSlot() {

@@ -389,11 +389,7 @@ export async function mount(ctx) {
     );
     /** Sync the strip in place: rebuilding it would drop keyboard focus. */
     function paintTabs() {
-        for (const control of tabBar.children) {
-            const selected = control.dataset.tab === tab;
-            control.setAttribute('aria-selected', selected);
-            control.tabIndex = selected ? 0 : -1;
-        }
+        tabBar.setSelected(tab);
     }
     // The filled action follows the tab: on Promotions, the page's one primary must
     // not still be the offer editor.

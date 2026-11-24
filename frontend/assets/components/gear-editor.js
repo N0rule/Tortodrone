@@ -574,7 +574,7 @@ export function grantItem(fixed) {
             text(catalogue.firstChild, 'Change selected item');
             preview.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         },
-        { grantable: true }
+        { grantable: true, exportable: false }
     );
     catalogue.append(picker.node);
     node.append(
@@ -628,7 +628,7 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
             selected = def;
             selection.replaceChildren(itemLine(def));
         },
-        { grantable: true }
+        { grantable: true, exportable: false }
     );
     if (selectedConfig)
         api.request('item', { config: selectedConfig })

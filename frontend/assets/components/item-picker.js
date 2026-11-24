@@ -8,7 +8,11 @@ import { toast } from './toast.js';
 /** Bounded server pages; obsolete search results never replace the latest results. */
 export function itemPicker(
     onChoose,
-    { grantable = false, compatibleSlot = null, query = '' } = {}
+    // `exportable` is for the page that shows the catalogue. Inside a `showModal()` dialog
+    // the picker's toast lands under the backdrop — the top layer paints above every
+    // body-level layer — so an export offered there would fetch ten pages and then
+    // confirm it somewhere nobody can see.
+    { grantable = false, compatibleSlot = null, query = '', exportable = true } = {}
 ) {
     const node = el('div', null, 'stack'),
         search = input('Search items'),
@@ -38,21 +42,31 @@ export function itemPicker(
      * a partial file that claims to be whole is worse than no file.
      */
     const EXPORT_CAP = 1000;
+    // The walk can be ten requests in a row, so it carries its own signal: leaving the
+    // page must stop it, not download a file and toast for a page that is gone.
+    let exportRequest = null;
     const exportButton = button(
         'Export',
         async () => {
             exportButton.setBusy?.(true);
+            exportRequest?.abort();
+            const walk = (exportRequest = new AbortController());
             try {
                 const rows = [];
                 let total = null;
                 for (let at = 1; rows.length < EXPORT_CAP; at++) {
-                    const chunk = await api.request('catalogue', {
-                        search: search.value,
-                        category: categories.value,
-                        page: at,
-                        size: 100,
-                        slot: compatibleSlot ?? ''
-                    });
+                    const chunk = await api.request(
+                        'catalogue',
+                        {
+                            search: search.value,
+                            category: categories.value,
+                            page: at,
+                            size: 100,
+                            slot: compatibleSlot ?? ''
+                        },
+                        false,
+                        walk.signal
+                    );
                     total = chunk.total;
                     if (!chunk.entries.length) break;
                     rows.push(...chunk.entries);
@@ -82,8 +96,10 @@ export function itemPicker(
                         : { type: 'success' }
                 );
             } catch (error) {
-                report(error);
+                // A walk this page cancelled is not a failure to report.
+                if (error.name !== 'AbortError') report(error);
             } finally {
+                if (exportRequest === walk) exportRequest = null;
                 exportButton.setBusy?.(false);
             }
         },
@@ -91,7 +107,7 @@ export function itemPicker(
     );
     exportButton.title =
         'Download every item matching the search and category, up to 1,000 rows as CSV';
-    const paging = toolbar(count, exportButton, previous, next);
+    const paging = toolbar(count, ...(exportable ? [exportButton] : []), previous, next);
     node.append(toolbar(search, categories), grid, paging);
     async function load() {
         clearTimeout(timer);
@@ -204,6 +220,7 @@ export function itemPicker(
         dispose() {
             generation++;
             request?.abort();
+            exportRequest?.abort();
             clearTimeout(timer);
         }
     };

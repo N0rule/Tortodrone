@@ -172,13 +172,15 @@ export function openDialog({
 let editorKeysBound = false;
 function bindEditorKeys(form) {
     if (editorKeysBound) return;
-    editorKeysBound = true;
     form.addEventListener('keydown', (event) => {
         if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
             event.preventDefault();
             form.requestSubmit();
         }
     });
+    // Set after the binding, not before: a throw between the two would leave the flag
+    // set with no listener and no retry path, which is Ctrl+Enter dead for the session.
+    editorKeysBound = true;
 }
 
 export function dialogDirty() {
@@ -224,7 +226,7 @@ export const field = (key, title, value = '', type = 'text', options, constraint
  * longer argument list.
  */
 export function edit(title, route, fields = [], fixed = {}, description = '', after, options = {}) {
-    const { variant, submit, guardDirty = true } =
+    const { variant, submit, guardDirty = true, notifySaved = true } =
         typeof options === 'string' ? { variant: options } : { variant: 'primary', ...options };
     const content = el('div', null, 'form-grid'),
         controls = new Map();
@@ -284,6 +286,9 @@ export function edit(title, route, fields = [], fixed = {}, description = '', af
                 throw new Error('Passwords do not match.');
             return api.change(route, values);
         },
+        // Forwarded, not swallowed: an action that is not a save (a kick, a
+        // settlement) says its own sentence instead of "Changes saved.".
+        notifySaved,
         after
     });
 }
@@ -341,6 +346,9 @@ export function confirm(title, route, fixed = {}, extra = [], description = '', 
         fixed,
         description || 'Review the target before confirming this action.',
         options.after,
-        { variant: destructive ? 'danger' : 'primary', submit: options.submit || 'Confirm' }
+        // `notifySaved` and the rest travel through the options object `edit` hands to
+        // `openDialog`: a kick that ends in "Changes saved." is the same recycled
+        // sentence as a save, and only this pass-through lets a caller say otherwise.
+        { ...options, variant: destructive ? 'danger' : 'primary', submit: options.submit || 'Confirm' }
     );
 }

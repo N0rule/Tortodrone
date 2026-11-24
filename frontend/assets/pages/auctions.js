@@ -1,10 +1,19 @@
 import { el, toolbar, button, badge, facts, details, date, localDate, routeLink } from '../ui.js';
 import { api } from '../api.js';
 import { DataTable } from '../components/table.js';
-import { openDialog, confirmAction, field } from '../components/dialog.js';
+import { openDialog, confirmAction, closeDialog, field } from '../components/dialog.js';
 import { itemForm } from '../components/gear-editor.js';
 import { itemLine, currency, definitionsFor } from '../components/items.js';
 import { route, go } from '../router.js';
+/**
+ * The listing's state as this browser sees it. The window is the server's (it stores
+ * absolute instants), but the comparison happens against the workstation clock, so a
+ * machine that has drifted shows a listing as scheduled or awaiting settlement a little
+ * early or late. Both badges carry that in a tooltip rather than presenting a guess as
+ * server truth.
+ */
+const CLOCK_NOTE =
+    'Worked out by comparing the listing’s window with this browser’s clock; the server keeps the authoritative times.';
 const state = (a) =>
     a.cancelled
         ? 'Cancelled'
@@ -15,6 +24,9 @@ const state = (a) =>
             : a.availableAt > Date.now()
               ? 'Scheduled'
               : 'Active';
+/** A state badge that says where the judgement came from. */
+const stateBadge = (listing) =>
+    Object.assign(badge(state(listing), stateTone(state(listing))), { title: CLOCK_NOTE });
 /** The states the listing-state filter offers; `?status=` matches them by name. */
 const listingStates = ['Active', 'Scheduled', 'Awaiting settlement', 'Settled', 'Cancelled'];
 const stateTone = (value) =>
@@ -102,7 +114,7 @@ export async function mount(ctx) {
             facts([
                 ['Seller', party(row.seller)],
                 ['Bidder', party(row.bidder)],
-                ['State', badge(state(a), stateTone(state(a)))],
+                ['State', stateBadge(a)],
                 [
                     'Stock',
                     a.featuredTotal > 0
@@ -138,7 +150,16 @@ export async function mount(ctx) {
             el('h3', 'Deliveries'),
             deliveryTable.node,
             toolbar(
-                button('Back to listings', () => here({}, ['listing']), 'secondary'),
+                // Close first, then drop the param. `navigate()` only closes a dialog when
+                // the *page* changes, so dropping `?listing=` on the same page left the
+                // inspector open on a listing the address no longer named.
+                button(
+                    'Back to listings',
+                    () => {
+                        if (closeDialog()) here({}, ['listing']);
+                    },
+                    'secondary'
+                ),
                 button(
                     'Settle this listing',
                     () => settle(a.id),
@@ -204,7 +225,7 @@ export async function mount(ctx) {
                 (r) => toolbar(currency('crowns', r.listing.bid), currency('crowns', r.listing.buy)),
                 (r) => r.listing.bid
             ],
-            ['Status', (r) => badge(state(r.listing), stateTone(state(r.listing)))],
+            ['Status', (r) => stateBadge(r.listing)],
             ['Expires', (r) => date(r.listing.expires), (r) => r.listing.expires]
         ],
         {

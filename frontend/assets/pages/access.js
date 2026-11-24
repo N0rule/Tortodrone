@@ -240,5 +240,13 @@ export async function mount(ctx) {
         inspect(row);
     }
     applyParams(ctx.params);
-    return { node, refresh, navigate: applyParams };
+    return {
+        node,
+        refresh,
+        navigate: applyParams,
+        // The session panel prints "N minutes left" from `api.session.expires`. Without an
+        // interval the page computed it once at mount and froze, and `app.js` merges a
+        // fresh session without repainting, so an operator watched an hour-old number.
+        interval: 60_000
+    };
 }

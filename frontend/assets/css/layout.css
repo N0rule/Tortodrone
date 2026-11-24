@@ -410,12 +410,15 @@ main {
    `#main` is the skip link's destination (index.html:20). Focus really does move
    there, and a low-vision operator who cannot see where it went has no way to tell
    that the skip worked, so the ring is drawn inset: on the content region it reads
-   as "you are here" rather than as a focused button. */
+   as "you are here" rather than as a focused button.
+   `:focus-visible` only, never bare `:focus`: `<main tabindex="-1">` is the browser's
+   focus fallback for a click on any non-focusable descendant, so `#main:focus` drew a
+   full-width cyan outline around the whole page every time an operator clicked a
+   paragraph or a panel background. */
 #title:focus,
 #title:focus-visible {
     outline: none;
 }
-#main:focus,
 #main:focus-visible {
     outline: 2px solid var(--cyan);
     outline-offset: -2px;
