@@ -224,11 +224,27 @@ export async function mount(ctx) {
             }, 0);
         };
     }
+    /**
+     * Rarity travels on the category line here, because the row draws the row thumbnail
+     * rather than the tile: three stacked lines need the tile's 60px, and a tile in a
+     * table cell is what made one auction row read as a card beside the depot's rows.
+     */
+    const listingNote = (r) => {
+        const def = definitions.get(r.listing.item.config);
+        if (!def) return undefined;
+        return [def.category, def.rarity > 0 ? `Rarity ${def.rarity}` : '']
+            .filter(Boolean)
+            .join(' · ');
+    };
     const table = new DataTable(
         [
             [
                 'Item',
-                (r) => itemLine(definitions.get(r.listing.item.config), r.listing.item),
+                (r) =>
+                    itemLine(definitions.get(r.listing.item.config), r.listing.item, {
+                        compact: true,
+                        note: listingNote(r)
+                    }),
                 (r) => definitions.get(r.listing.item.config)?.name || r.listing.item.config
             ],
             ['Listing', (r) => r.listing.id],

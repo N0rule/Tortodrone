@@ -428,7 +428,11 @@ td .toolbar .button .ui-icon,
     /* The frame is a container for art, so its edge stays quiet: six thumbnails a row
        with --line-bright edges read as six boxes, and the picture inside is the point. */
     border: 1px solid var(--line);
-    border-radius: var(--radius-control);
+    /* A share of the box, not a length: the same frame is drawn at 44, 60, 64 and 112px,
+       and a fixed 10px corner is a fifth of the art at 44 and a twelfth at 112, so the
+       four sizes read as four different shapes. 22% is the 10px of the 44px row written
+       as the ratio it always was. */
+    border-radius: 22%;
     /* Client icons are square, opaque, 96px canvases with a bevelled rim baked into
        the picture: the art runs to its own edges. A rounded frame around a square
        picture shows that mismatch as four corners of art cut across the frame's
@@ -436,15 +440,15 @@ td .toolbar .button .ui-icon,
        frame clips instead, so the picture takes the frame's shape at every size. */
     overflow: hidden;
 }
-/* The art keeps 2px of air inside its frame at every size, so a 40px row thumbnail and
-   a 112px sprite portrait are the same picture at two scales instead of two crops.
+/* The art keeps 2px of air inside its frame at every size, so the 38px row thumbnail
+   and the 110px sprite portrait are the same picture at two scales, not two crops.
    Its own corners follow the frame's curve minus that air, so the ring drawn around
    the picture is even instead of pinched at the corners. */
 .item-icon img {
     width: calc(100% - 4px);
     height: calc(100% - 4px);
     object-fit: contain;
-    border-radius: calc(var(--radius-control) - 2px);
+    border-radius: 21%;
 }
 /* A config the pack has no picture of: the frame stays so the column keeps its
    rhythm, dashed so it says "not the ordinary case", and the picture becomes the
