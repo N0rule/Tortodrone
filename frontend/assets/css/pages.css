@@ -1208,6 +1208,19 @@ td:has(> .time-stamp) {
     flex: 0 0 32px;
     color: var(--accent);
 }
+/* The kind sits beside the station's name at caption size, in the muted ink the row
+   gives its own kind column. */
+.offer-reference .station-kind {
+    margin-inline-start: 8px;
+    font-size: 12.5px;
+    color: var(--muted);
+}
+/* The head of a record dialog is the row that opened it. In a table the cell's own
+   padding is the space under it; in a dialog nothing is, and the facts started flush
+   against the breadcrumb. */
+.record-head {
+    margin-block-end: 14px;
+}
 /* A timestamp that spans a trail: the day is printed where it changes, so the times
    below it line up in one narrow column instead of repeating one date fifty times. */
 /* The three figures at the top of the Catalogue are read, not pressed. A bordered pill

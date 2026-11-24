@@ -60,6 +60,23 @@ export async function mount(ctx) {
        which is the one spelling an operator cannot read as a word. The label is the
        class name with its `Open` verb dropped and the camel humps split, and the
        engine's own spelling stays on the cell as its tooltip and in the dialog. */
+    /* The engine spells its enums in capitals. A caption in this console is sentence
+       case, so a token that arrives entirely upper case is lowered and given one
+       capital; anything already carrying a lower-case letter is a name and is left
+       alone. */
+    const engineWord = (value) => {
+        const word = String(value ?? '').trim();
+        if (!word) return '—';
+        return /[A-Z]/.test(word) && !/[a-z]/.test(word)
+            ? word.charAt(0) + word.slice(1).toLowerCase()
+            : word;
+    };
+    /* A group is a scene path; the reader gets its leaf. */
+    const groupLeaf = (station) =>
+        String(station.group || '')
+            .split('/')
+            .filter(Boolean)
+            .pop() || '—';
     const kindLabel = (kind) => {
         const bare = String(kind || '').replace(/^Open/, '');
         const words = bare
@@ -148,7 +165,7 @@ export async function mount(ctx) {
                 (station) => {
                     const path = station.group || '';
                     const leaf = path.split('/').filter(Boolean).pop() || '—';
-                    const node = el('span', leaf);
+                    const node = el('span', engineWord(leaf));
                     node.title = path;
                     return node;
                 },
@@ -273,8 +290,10 @@ export async function mount(ctx) {
         };
     }
     function openStation(station) {
-        const recipeList = el('div', null, 'station-recipes');
         const recipes = station.recipes || [];
+        // A list with nothing in it is a sentence, not a frame: the bordered scroll box
+        // around the word "no recipes" was a third border inside two.
+        const recipeList = recipes.length ? el('div', null, 'station-recipes') : el('div');
         if (!recipes.length) recipeList.append(el('p', 'No recipes on this station.', 'muted'));
         else
             for (const config of recipes) {
@@ -286,25 +305,52 @@ export async function mount(ctx) {
                 );
                 recipeList.append(row);
             }
+        // The head is the row that opened it: the same client glyph, the name the link
+        // carried and the same breadcrumb underneath. The title used to be the actor
+        // path, which then appeared again as the body lead and again as a fact.
+        const segments = String(station.actor || '')
+                .split('/')
+                .filter(Boolean),
+            named = Boolean(station.name) && station.name !== '~',
+            label = named ? station.name : segments.at(-1) || '—',
+            head = el('div', null, 'offer-reference with-art record-head'),
+            names = el('span');
+        const mark = symbol(kindArt(station.kind));
+        if (mark) {
+            mark.classList.add('station-mark');
+            head.append(mark);
+        }
+        names.append(el('strong', label), el('span', kindLabel(station.kind), 'station-kind'));
+        const breadcrumb = el('small', station.actor, 'muted');
+        breadcrumb.title = station.actor;
+        head.append(names, breadcrumb);
         openDialog({
-            title: station.name && station.name !== '~' ? station.name : station.actor,
+            title: label,
             content: panel(
                 '',
-                el('p', station.description || station.actor, 'muted'),
+                head,
+                ...(station.description ? [el('p', station.description, 'muted record-state')] : []),
                 facts([
-                    ['Actor', station.actor],
-                    ['Kind', kindLabel(station.kind)],
-                    ['Group', station.group || '—'],
-                    ['Catalogue', station.shop?.catalog || 'none'],
+                    ['Group', engineWord(groupLeaf(station))],
+                    [
+                        'Catalogue',
+                        engineWord(
+                            String(station.shop?.catalog || '')
+                                .split('/')
+                                .filter(Boolean)
+                                .pop()
+                        )
+                    ],
                     [
                         'Shop level / cycle',
-                        `${station.shop?.level ?? '—'} · ${station.shop?.cycle || '—'}`
+                        `${station.shop?.level ?? '—'} · ${engineWord(station.shop?.cycle)}`
                     ],
-                    ['Preparer', station.shop?.preparer || '—'],
-                    ['Per knight', station.shop?.perKnight ? 'yes' : 'no'],
-                    ['Recipes', String(recipes.length)]
+                    ['Preparer', engineWord(station.shop?.preparer)],
+                    ['Per knight', station.shop?.perKnight ? 'yes' : 'no']
                 ]),
-                el('h3', 'Recipes'),
+                // The count belongs to the heading, the way the offer dialog counts its
+                // promotions, and not to a fact row that repeats the list under it.
+                el('h3', recipes.length ? `Recipes (${recipes.length})` : 'Recipes'),
                 recipeList,
                 toolbar(
                     button('Back to catalogue', () => here({}, ['station']), 'secondary'),

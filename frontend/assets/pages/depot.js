@@ -1,4 +1,4 @@
-import { el, button, toolbar, badge, date, localDate, text, tabs, facts, panel, routeLink, copy, $ } from '../ui.js';
+import { el, button, toolbar, badge, date, localDate, number, text, tabs, facts, panel, routeLink, copy, $ } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { field, edit, confirm, conflict, closeDialog, openDialog } from '../components/dialog.js';
 import { itemForm } from '../components/gear-editor.js';
@@ -99,7 +99,8 @@ export async function mount(ctx) {
         return detail || config;
     };
     const offerDetail = (o) => `${configNote(o)} · offer #${o.id}`;
-    const offerLabel = (o) => `${offerName(o)} · offer #${o.id} · ${o.good.price} Crowns`;
+    /** A `<select>` option is a string, so the price it names is spelled out and grouped. */
+    const offerLabel = (o) => `${offerName(o)} · offer #${o.id} · ${number(o.good.price)} Crowns`;
     /** One editor for the row action and for a deep link into a single offer. */
     function editOffer(o) {
         itemForm('Edit offer #' + o.id, 'depot-save', fields(o), { ...fixed(), id: o.id }, o.good.item);
@@ -133,8 +134,11 @@ export async function mount(ctx) {
         else
             for (const p of promotionsFor) {
                 const row = el('div', null, 'offer-reference');
-                const summary = el('strong', `${promotionState(p)} · ${p.crowns} Crowns`);
+                // The discount is money, so it wears the same coin and the same grouped
+                // digits as the price it comes off.
+                const summary = el('strong', `${promotionState(p)} · `);
                 summary.title = CLOCK_NOTE;
+                summary.append(currency('crowns', p.crowns));
                 row.append(
                     summary,
                     el(
@@ -152,9 +156,11 @@ export async function mount(ctx) {
                 // The title is the record's id, not its item: the item arrives as art and
                 // a name, the way every other surface names an item. Before this, the
                 // one dialog about an item showed no picture of it.
+                // The record head already prints the item's name, so it takes no note: the
+                // line under it is the category alone. The table row keeps the last two
+                // path segments, where two offers of the same item have to differ.
                 itemLine(definitions.get(offer.good.item), { config: offer.good.item }, {
-                    label: offerName(offer),
-                    note: configNote(offer)
+                    label: offerName(offer)
                 }),
                 el('p', offer.enabled ? 'Enabled in the Depot.' : 'Disabled.', 'muted record-state'),
                 // The title already names the item and offers the id, and the list under
@@ -162,7 +168,9 @@ export async function mount(ctx) {
                 // in one dialog, once as a heading and once as a row of its own.
                 facts([
                     ['Quantity', String(offer.good.count)],
-                    ['Price', `${offer.good.price} Crowns${offer.good.energy ? ` + ${offer.good.energy} Energy` : ''}`],
+                    // The same renderer the row uses, so money looks the same in the
+                    // record as in the list that opened it.
+                    ['Price', price(offer)],
                     ['Lifetime limit', offer.good.limit ? String(offer.good.limit) : 'Unlimited'],
                     ['Featured', offer.featured ? 'yes' : 'no'],
                     ['Promotion only', offer.promotionOnly ? 'yes' : 'no']
