@@ -495,6 +495,37 @@ button.metric:focus-visible {
     inline-size: 100%;
     text-align: start;
 }
+/* The cross-links, when the bar is too shallow to hold them beside the pane: a label
+   over three destinations, set apart from the menu's actions by the same soft edge
+   the menu uses between groups. */
+.terminal-menu-links {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    margin-top: 2px;
+    padding-top: 6px;
+    border-top: 1px solid var(--line);
+}
+.terminal-menu-label {
+    padding: 0 10px 2px;
+    color: var(--muted);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+/* Destinations, not prose: inside a filled menu an underlined text link reads as a
+   stray sentence, so these take the row shape of the actions above them. */
+.terminal-menu-links button {
+    padding-inline: 10px;
+    border-radius: 10px;
+    color: var(--text);
+    text-decoration: none;
+}
+.terminal-menu-links button:not(:disabled):hover {
+    background: color-mix(in srgb, var(--cyan) 14%, var(--raised));
+    text-decoration: none;
+}
 .terminal-body {
     flex: 1 1 auto;
     min-height: 160px;
@@ -777,6 +808,23 @@ html[data-motion='reduce'] .command-pending {
     padding: 0;
     font-family: var(--mono);
     font-size: 11.5px;
+}
+/* The strip needs a row that fits it, and it has two shapes that do not: under 601px
+   the bar stacks and a row of links costs chrome the pane cannot spare, and a bar only
+   470px tall is one nowrap row where 292px of strip sat past the edge behind a
+   scrollbar nobody can see. Both shapes read the same three pages out of the More
+   menu instead, which is one tap rather than a swipe that is never announced. The
+   menu carries them at every size and only draws them where the strip is gone, so a
+   window dragged across either breakpoint keeps both. */
+@media (max-width: 600px), (max-height: 470px) {
+    .terminal-tools .toolbar-links {
+        display: none;
+    }
+}
+@media (min-width: 601px) and (min-height: 471px) {
+    .terminal-menu-links {
+        display: none;
+    }
 }
 .command-links .link {
     padding: 0;
@@ -2095,12 +2143,20 @@ dd .bad {
         inline-size: 148px;
         order: 0;
     }
-    /* The cross-links wrap too, and a wrapped link made the single flex line 92px tall
-       for 44px controls: the bar measured 97px and every control floated mid-height on
-       a 390px-tall screen. One row here, like the rest of the bar. */
-    .terminal-tools .toolbar-links {
-        flex-wrap: nowrap;
-        align-items: center;
+    /* A scroll container clips what it contains, and the bar is one here: the More
+       menu's popover painted into the clip and disappeared, which would have hidden
+       the very links this size moves into it. While the menu is open the bar stops
+       scrolling — there is nothing left to scroll for, since the strip above is what
+       made it overflow. */
+    .terminal-tools:has(.terminal-menu[open]) {
+        overflow: visible;
+    }
+    /* The menu holds more rows than a 390px-tall screen has below the bar, so it takes
+       the height that is there and scrolls inside itself instead of running off the
+       bottom edge — the same reason it opens flush under the toggle. */
+    .terminal-menu-body {
+        max-block-size: calc(100dvh - 190px);
+        overflow-y: auto;
     }
     /* No select floor here: with `flex: 0 0 auto` and `inline-size: auto` a select is
        as wide as its widest option ("All (12)" 110px, "All time" 146px at 16px type),

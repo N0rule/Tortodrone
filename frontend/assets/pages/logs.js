@@ -30,6 +30,19 @@ function relatedStrip(ctx) {
 }
 
 /**
+ * The same three destinations as menu entries, for a bar that cannot hold the strip:
+ * a short viewport is one row of controls, and a strip beside it pushed two of the
+ * three links past the bar's edge behind a scroll nobody can see.
+ */
+function relatedMenu(ctx) {
+    return RELATED.map(([page, label]) => [
+        label,
+        () => ctx.go(page),
+        `Open ${label} — the page that explains what this line is about`
+    ]);
+}
+
+/**
  * The log page is a tail, not a table: it fills the reading area, keeps the last
  * rows visible through a failed read, and says where the complete file lives.
  *
@@ -47,8 +60,12 @@ export async function mount(ctx) {
         fill: true,
         onLoadFile: (limit) => ctx.request('logs-file', { limit: String(limit) }),
         // Below 601px these three cost a whole row of chrome the pane cannot spare,
-        // and the drawer already lists all three pages.
-        extras: window.matchMedia('(min-width: 601px)').matches ? [relatedStrip(ctx)] : [],
+        // and the drawer already lists all three pages. A short viewport is the other
+        // shape that cannot hold them: the bar is one nowrap row there, so the strip
+        // ran past its edge. Both destinations are built here and the stylesheet shows
+        // the one that fits, so a window dragged across either breakpoint stays right.
+        extras: [relatedStrip(ctx)],
+        menuLinks: relatedMenu(ctx),
         // The filter is the view, so it belongs in the address: the operator can copy
         // what they are looking at instead of describing it to a colleague. Replace
         // rather than push, so a typed search does not stack history entries.

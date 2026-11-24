@@ -78,7 +78,12 @@ export function logStream({
     // Where to go next from what the pane shows. A warning in the log names a
     // subsystem and stops there; the pages that explain it belong beside the pane,
     // not in a sentence the operator has to translate into a route.
-    extras = []
+    extras = [],
+    // The same destinations for a bar with no room for them: a phone in landscape has
+    // a single row of controls 44px tall and a strip of three links beside it would
+    // have to scroll sideways out of sight to be reached. They go in the menu that is
+    // already there instead — one tap, nothing hidden.
+    menuLinks = []
 } = {}) {
     const node = el('div', null, 'terminal-shell'),
         // The first paint is measured a frame later, so the pane is kept invisible
@@ -1123,6 +1128,19 @@ export function logStream({
             }
         });
         menuBody.append(load);
+    }
+    if (menuLinks.length) {
+        // First in the menu, not last: this group exists because a short viewport has
+        // no room for it beside the pane, and the menu is taller than such a screen —
+        // a destination at the bottom of it is a destination nobody reaches.
+        const group = el('div', null, 'terminal-menu-links');
+        group.append(el('span', 'Related', 'terminal-menu-label'));
+        for (const [label, onSelect, title] of menuLinks) {
+            const go = button(label, onSelect, 'link');
+            if (title) go.title = title;
+            group.append(go);
+        }
+        menuBody.prepend(group);
     }
     menu.append(menuToggle, menuBody);
     tools.append(
