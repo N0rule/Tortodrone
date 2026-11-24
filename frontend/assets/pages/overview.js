@@ -13,7 +13,8 @@ import {
     copy,
     download,
     number,
-    sceneLabel
+    sceneLabel,
+    landOn
 } from '../ui.js';
 import { chart } from '../components/chart.js';
 import { confirm, field, openDialog } from '../components/dialog.js';
@@ -269,8 +270,10 @@ export async function mount(ctx) {
         identityRotation
     );
     // One panel, one address: `#overview?panel=identity` is the link to hand a
-    // colleague who only needs the key.
-    identityPanel.id = 'identity';
+    // colleague who only needs the key. Not `identity` — the footer's session line
+    // already owns that id, and two elements answering to one name resolved to the
+    // wrong node for anything that looked it up.
+    identityPanel.id = 'identity-panel';
     // Handlers read the current key at click time, so a rotated key is the one an
     // operator copies; the panels are built once and never hold stale values.
     let identityLoaded = false,
@@ -429,11 +432,10 @@ export async function mount(ctx) {
         text(
             identityCaption,
             [
-                // The file holds a hex modulus and exponent, not a DER blob: the old
-                // wording claimed the fingerprint was computed from data that the file
-                // does not contain.
-                'The fingerprint is the SHA-256 of the DER SubjectPublicKeyInfo this server builds from the modulus and exponent below.',
-                identity.fingerprintNote || '',
+                // The file holds a hex modulus and exponent, not a DER blob: the server's
+                // own note still claimed the fingerprint was computed from data the file
+                // does not contain, and concatenating it contradicted this sentence.
+                'The file holds the modulus and exponent in hex, not a DER blob. The fingerprint is the SHA-256 of the DER SubjectPublicKeyInfo the server builds from them.',
                 identity.fileSha256Command
                     ? `Type ${identity.fileSha256Command} on the host to reproduce the file hash beside it.`
                     : ''
@@ -484,10 +486,21 @@ export async function mount(ctx) {
         if (!identityLoaded) {
             identityLoaded = true;
             identityActions.append(
+                // One gold control per page: the server strip owns the primary, and a
+                // copy is not the page's next action.
                 button(
                     'Copy public key',
                     () => copy(trustedKey(), 'Server public key copied.'),
-                    'primary'
+                    'secondary'
+                ),
+                button(
+                    'Copy link to this card',
+                    () =>
+                        copy(
+                            `${location.origin}${location.pathname}#overview?panel=identity`,
+                            'Link copied.'
+                        ),
+                    'quiet'
                 ),
                 button(
                     'Download public.txt',
@@ -581,13 +594,12 @@ export async function mount(ctx) {
     function applyParams(params) {
         // The key card has an address, so "send me the key" is a link rather than a
         // scroll position someone has to describe.
-        if (params.get('panel') === 'identity')
-            requestAnimationFrame(() => identityPanel.scrollIntoView({ block: 'start' }));
+        if (params.get('panel') === 'identity') landOn(identityPanel);
         const value = params.get('scene');
         if (value == null) return;
         monsters.query.value = value;
         monsters.query.dispatchEvent(new Event('input'));
-        monsters.node.scrollIntoView({ block: 'center' });
+        landOn(monsters.node, 'center');
     }
     return { node, refresh, interval: 5000, navigate: applyParams };
 }

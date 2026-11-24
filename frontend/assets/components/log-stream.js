@@ -26,7 +26,10 @@ export function logStream({
     hint = 'Ctrl+F search · Ctrl+L clear · End tail · Home top · p pause · Esc leave',
     onLoadFile = null,
     onLink = null,
-    onFilter = null
+    onFilter = null,
+    // The Console answers commands; it has no tail to follow and nothing to pause, so
+    // those two controls are not built there at all (the page's own hint said so).
+    tail = true
 } = {}) {
     const node = el('div', null, 'terminal-shell stack-tight'),
         bar = el('div', null, 'terminal-bar'),
@@ -304,6 +307,16 @@ export function logStream({
         thread.append(painted(row.thread || ''));
         thread.title = row.thread || '';
         const message = el('span', null, 'log-message');
+        if (row.entry?.notice) {
+            // A shell prints its candidate list under the prompt without repeating the
+            // prompt line; the transcript is the record of what was issued.
+            line.classList.add('notice');
+            message.replaceChildren(el('pre', formatOutput(row.entry.output), 'command-response'));
+            line.append(message);
+            line.title = new Date(row.timestamp).toLocaleString();
+            line.dataset.sig = signature(row);
+            return line;
+        }
         if (row.entry) {
             message.replaceChildren(el('span', `${prompt}$ ${row.entry.command}`, 'command'));
             // A command that has not answered yet shows a running marker instead of
@@ -341,6 +354,7 @@ export function logStream({
     const signature = (row) =>
         [
             rawMode ? 'r' : 'p',
+            row.entry?.notice ? 'n' : '',
             row.level,
             row.entry?.pending ? 'pending' : 'settled',
             row.entry?.error ? 'error' : '',
@@ -689,7 +703,7 @@ export function logStream({
         menuBody.append(load);
     }
     menu.append(menuToggle, menuBody);
-    tools.append(search, severity, pause, follow, menu, undoClear);
+    tools.append(search, severity, ...(tail ? [pause, follow] : []), menu, undoClear);
 
     /** Parse the file's own `[24-11-2026 04:53:11]` prefix into an instant. */
     function fileStamp(value) {

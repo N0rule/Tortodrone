@@ -1768,3 +1768,13 @@ dd .bad {
         padding-top: 12px;
     }
 }
+
+/* Every control the pane offers is a tap target, not only the prompt: Tail measured
+   39x36 in landscape, on the exact control you reach for when the tail runs away. */
+@media (max-width: 900px) {
+    .terminal-tools button,
+    .terminal-tools select,
+    .terminal-menu-toggle {
+        min-block-size: 44px;
+    }
+}

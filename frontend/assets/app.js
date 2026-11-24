@@ -97,7 +97,7 @@ const pages = [
         section: 'Content',
         rank: 2,
         module: news,
-        description: 'Banners, articles and the welcome chat message.'
+        description: 'Banners and the welcome chat message.'
     },
     {
         name: 'content',
@@ -275,9 +275,8 @@ async function navigate() {
     const next = route(),
         spec = pageFor(next.name);
     if (!spec) {
-        // A denied link is not an empty click: say which role the page needs. The
-        // redirect to Overview hides the page notice, so the sentence travels as a
-        // toast, which navigation does not clear.
+        // A denied link is not an empty click: say which role the page needs, in a
+        // notice the redirect cannot clear.
         // `#access` and `#mail` are aliases: matching the raw name told a moderator
         // that a page they were looking at does not exist. Resolve the alias first,
         // and only call it unknown when no page owns that spelling.
@@ -285,14 +284,26 @@ async function navigate() {
             pages.find((page) => page.name === next.name || page.alias?.includes(next.name)) ||
             null;
         const needs = ['a viewer', 'a moderator', 'an administrator'][denied?.rank ?? 2];
-        toast(
+        // A refusal is not a moment; it stays on the page as a notice, and the address
+        // is rewritten to the page actually shown so the bar never names a page the
+        // operator cannot see.
+        notify(
             denied
-                ? `You do not have access to ${denied.title}. It needs ${needs} role.`
-                : `There is no page called “${next.name}”.`,
-            { type: 'error', detail: denied ? '' : 'Overview is shown instead.' }
+                ? `You do not have access to ${denied.title}. It needs ${needs} role, and Overview is shown instead.`
+                : `There is no page called “${next.name}”. Overview is shown instead.`,
+            true
         );
-        go('overview');
-        return;
+        if (location.hash !== '#overview') history.replaceState(null, '', '#overview');
+        acceptedHash = '#overview';
+        current = null;
+        return navigate();
+    }
+    // `#dashboard` is an alias of Overview; the address says what is on screen.
+    if (next.name !== spec.name) {
+        const query = next.params.toString();
+        const hash = '#' + spec.name + (query ? '?' + query : '');
+        if (location.hash !== hash) history.replaceState(null, '', hash);
+        acceptedHash = hash;
     }
     if (
         current &&

@@ -102,7 +102,17 @@ export function button(label, action, className = 'secondary', available, option
         node.refreshAvailability = (reason) => {
             const answer = available();
             const usable = typeof answer === 'string' ? false : Boolean(answer);
-            node.disabled = !usable;
+            // `aria-disabled` rather than `disabled`: a natively disabled button
+            // cannot take focus, so the reason below it was readable with a mouse and
+            // invisible to a keyboard. The click handler refuses when the flag is set.
+            if (usable) {
+                node.removeAttribute('aria-disabled');
+                node.disabled = false;
+            } else {
+                node.setAttribute('aria-disabled', 'true');
+                node.disabled = false;
+            }
+            node.dataset.usable = usable ? 'true' : 'false';
             explain(
                 node,
                 usable ? '' : reason || (typeof answer === 'string' ? answer : settings.unavailable)
@@ -115,10 +125,14 @@ export function button(label, action, className = 'secondary', available, option
     node.setBusy = (busy) => {
         if (busy) node.setAttribute('aria-busy', 'true');
         else node.removeAttribute('aria-busy');
-        node.disabled = !!busy;
+        if (busy) node.setAttribute('aria-disabled', 'true');
+        else if (node.dataset.usable !== 'false') node.removeAttribute('aria-disabled');
     };
     node.addEventListener('click', async () => {
         if (node.getAttribute('aria-busy') === 'true') return;
+        // A control that cannot act keeps its reason on screen and stays focusable;
+        // the click is refused here instead of by the attribute.
+        if (node.dataset.usable === 'false') return;
         try {
             await action();
         } catch (error) {
@@ -149,6 +163,33 @@ export function routeLink(label, name, values = {}, className = 'link') {
     const node = el('a', label, className);
     node.href = href(name, values);
     return node;
+}
+/**
+ * Bring a block into view once it is actually in the document.
+ *
+ * A page is built as a detached fragment and attached after `mount()` returns, so a
+ * deep link that scrolls in the same tick moves nothing at all — the one thing a
+ * shared link has to do.
+ */
+export function landOn(node, block = 'start', frames = 30) {
+    const attempt = (left) => {
+        if (!node) return;
+        if (node.isConnected) {
+            node.scrollIntoView({ block });
+            // The shell swaps the page's children in after `mount()` returns, and that
+            // replacement resets the scroll position: the landing is asserted again on
+            // the next frame, which is the one the operator actually sees.
+            if (typeof requestAnimationFrame === 'function')
+                requestAnimationFrame(() => {
+                    if (node.isConnected) node.scrollIntoView({ block });
+                });
+            return;
+        }
+        if (left > 0 && typeof requestAnimationFrame === 'function')
+            requestAnimationFrame(() => attempt(left - 1));
+    };
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => attempt(frames));
+    else attempt(0);
 }
 export function toolbar(...nodes) {
     const node = el('div', null, 'toolbar');

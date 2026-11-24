@@ -14,7 +14,8 @@ import {
     date,
     localDate,
     text,
-    changed
+    changed,
+    landOn
 } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { toast } from '../components/toast.js';
@@ -407,7 +408,7 @@ export async function mount(ctx) {
         const content = panel(
             '',
             preview(campaign, definitions, [
-                total === null
+                total === null || total === 0
                     ? `${campaign.delivered.toLocaleString()} delivered so far`
                     : `${campaign.delivered.toLocaleString()} of ${total.toLocaleString()} knights on this server received it`,
                 `Window · ${zone}`
@@ -698,17 +699,19 @@ export async function mount(ctx) {
             header.append(
                 button(
                     'Clear',
-                    () => {
-                        if (
-                            !window.confirm(
-                                `Clear ${countOf(receipts.length, 'local receipt')}? The delivery counts on this page come from the server and are not affected.`
-                            )
-                        )
-                            return;
-                        receipts = [];
-                        saveReceipts(receipts);
-                        renderReceipts();
-                    },
+                    () =>
+                        confirmAction({
+                            title: `Clear ${countOf(receipts.length, 'local receipt')}?`,
+                            description:
+                                'These receipts are stored in this browser. The delivery counts on this page come from the server and are not affected.',
+                            label: 'Clear receipts',
+                            variant: 'danger',
+                            onSubmit: async () => {
+                                receipts = [];
+                                saveReceipts(receipts);
+                                renderReceipts();
+                            }
+                        }),
                     'secondary'
                 ),
                 routeLink('Link to this section', 'mailing', { tab: 'receipts' }, 'link')
@@ -720,7 +723,7 @@ export async function mount(ctx) {
         const content = [
             el(
                 'small',
-                'Letters sent directly from this browser, newest first, kept in this browser only. A mailing’s own deliveries are counted from the server and listed under Inspect recipients.',
+                'Letters sent directly from this browser, newest first, kept in this browser only. A mailing’s own deliveries are counted from the server and listed under Recipients.',
                 'muted'
             )
         ];
@@ -1177,7 +1180,9 @@ export async function mount(ctx) {
                         ? `${chosen.size.toLocaleString()} of ${countOf(rows.length, 'knight')} selected`
                         : `Choose at least one knight · ${countOf(rows.length, 'knight')} on this server`
                 );
-                countLabel.classList.toggle('error', chosen.size === 0);
+                // Red before the first click taught people to ignore red: the count
+                // is neutral until a send actually needs a recipient and has none.
+                countLabel.classList.toggle('error', chosen.size === 0 && attemptedSend);
             };
             const fill = () => {
                 const matches = visibleRows();
@@ -1358,7 +1363,16 @@ export async function mount(ctx) {
             node.append(recipientPanel);
         }
 
-        const messagePanel = panel(
+        // Set when a dangerous submit asked for a second press, cleared by any edit.
+    let before = '';
+    const armReset = () => {
+        if (before) before = '';
+    };
+    // Any edit withdraws an armed confirmation, so the second press sends what the
+    // operator is looking at rather than what they confirmed. `attemptedSend` keeps the
+    // recipient count neutral until a send has actually been tried.
+    let attemptedSend = false;
+    const messagePanel = panel(
             'Message',
             el('div', null, 'mail-compose-split'),
             el(
@@ -1600,6 +1614,10 @@ export async function mount(ctx) {
         if (options.banner) node.append(el('p', options.banner, 'warning'));
         if (enabledRow) node.append(enabledRow);
         node.append(header, messagePanel, attachments, results);
+        // Any edit withdraws an armed confirmation and lets the recipient count be
+        // judged again from a clean state.
+        node.addEventListener('input', armReset);
+        node.addEventListener('change', armReset);
 
         function snapshot() {
             return [
@@ -1652,10 +1670,17 @@ export async function mount(ctx) {
             onSubmit: async () => {
                 checkLetter();
                 const values = letterValues();
+                // A confirmation the operator can read, inside the editor: pressing Save
+                // a second time is the confirmation, so nothing is lost to a native
+                // dialog and nothing is written on the first press.
+                const confirmAgain = (message) => {
+                    throw new Error(message + ' Press the same button again to confirm.');
+                };
                 if (mode === 'direct') {
                     const recipients = [...chosen].filter(
                         (key) => batch.get(key)?.ok !== true
                     );
+                    attemptedSend = true;
                     if (!recipients.length)
                         throw new Error(
                             batch.size
@@ -1663,12 +1688,12 @@ export async function mount(ctx) {
                                 : 'Choose at least one knight.'
                         );
                     // A mass send is never one click: name the count before writing.
-                    if (
-                        recipients.length > 1 &&
-                        !window.confirm(`Send this letter to ${recipients.length} knights?`)
-                    )
-                        // An empty message keeps the editor open without a red line.
-                        throw new Error('');
+                    if (recipients.length > 1 && before !== `${recipients.length}`) {
+                        before = `${recipients.length}`;
+                        confirmAgain(
+                            `This sends the letter to ${recipients.length} knights.`
+                        );
+                    }
                     attempted = [...new Set([...attempted, ...recipients])];
                     const outcome = await send(recipients, values, 'Sending');
                     renderResults();
@@ -1707,13 +1732,12 @@ export async function mount(ctx) {
                     if (end <= start) throw new Error('The mailing must end after it starts');
                     if (end <= Date.now())
                         throw new Error('The window has already ended; choose a later end.');
-                    if (
-                        start <= Date.now() &&
-                        !window.confirm(
-                            'This window starts in the past, so saving delivers to every knight with mail open now. Save anyway?'
-                        )
-                    )
-                        throw new Error('');
+                    if (start <= Date.now() && before !== 'past') {
+                        before = 'past';
+                        confirmAgain(
+                            'This window starts in the past, so saving delivers to every knight with mail open now.'
+                        );
+                    }
                     await write('mail-save', {
                         ...values,
                         id: draft.id,
@@ -1823,15 +1847,11 @@ export async function mount(ctx) {
         const arrive = () => {
             if (tab === 'welcome') {
                 welcomeDetails.open = true;
-                welcomeDetails.scrollIntoView({ block: 'start' });
-            } else if (tab === 'receipts') receiptsHost.scrollIntoView({ block: 'start' });
-            else if (tab === 'mailings') mailings.scrollIntoView({ block: 'start' });
+                landOn(welcomeDetails);
+            } else if (tab === 'receipts') landOn(receiptsHost);
+            else if (tab === 'mailings') landOn(mailings);
         };
-        if (tab) {
-            if (typeof requestAnimationFrame === 'function')
-                requestAnimationFrame(() => requestAnimationFrame(arrive));
-            else queueMicrotask(arrive);
-        }
+        if (tab) arrive();
         const campaign = Number(params.get('campaign'));
         if (!Number.isInteger(campaign) || campaign <= 0) return;
         const match = data.campaigns.find((row) => row.id === campaign);

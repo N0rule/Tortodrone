@@ -38,6 +38,11 @@ a {
     color: var(--cyan);
     text-decoration: none;
 }
+/* The UA's `smaller` put 9.58px, 10.83px and 11.67px on the page beside a ramp that
+   documents one caption size. */
+small {
+    font-size: 11.5px;
+}
 a:hover {
     text-decoration: underline;
 }
@@ -84,13 +89,13 @@ button,
 }
 /* Hover is a fill step, not a second accent: cyan stays the colour of focus and of
    the pressed state, so "hovered", "focused" and "on" stop looking the same. */
-button:not(:disabled):hover,
-.button:not(:disabled):hover {
+button:not(:disabled):not([aria-disabled='true']):hover,
+.button:not(:disabled):not([aria-disabled='true']):hover {
     border-color: var(--line-bright);
     background: color-mix(in srgb, var(--raised) 82%, var(--line-bright));
 }
-button:not(:disabled):active,
-.button:not(:disabled):active {
+button:not(:disabled):not([aria-disabled='true']):active,
+.button:not(:disabled):not([aria-disabled='true']):active {
     background: color-mix(in srgb, var(--raised) 88%, var(--inset));
     border-color: var(--cyan);
     box-shadow: none;
@@ -105,6 +110,7 @@ button:focus-visible,
    control's own fill stays readable. A pending one keeps its colour and grows a
    spinner (below), because a greyed-out button reads as "broken", not "busy". */
 button:disabled,
+button[aria-disabled='true'],
 .button[aria-disabled='true'] {
     cursor: not-allowed;
     box-shadow: none;
@@ -234,11 +240,12 @@ html[data-motion='reduce'] .button[aria-busy='true']::before {
 }
 button.primary,
 .button.primary {
+    /* One lift, declared once: a second box-shadow here silently replaced this one
+       and every primary sat at a secondary's depth. */
     box-shadow: var(--elev-2);
     --control-bg: var(--action);
     --control-fg: var(--action-text);
     --control-border: var(--action);
-    box-shadow: var(--elev-1);
     font-weight: 700;
 }
 button.primary:not(:disabled):hover,
@@ -252,11 +259,12 @@ button.secondary,
 .button.secondary {
     --control-bg: var(--raised);
     --control-fg: var(--text);
-    --control-border: var(--line-bright);
+    /* The panel keeps the bright boundary; the control inside it is a fill. */
+    --control-border: var(--line);
 }
 button.secondary:not(:disabled):hover,
-.button.secondary:not(:disabled):hover {
-    border-color: var(--cyan);
+.button.secondary:not([aria-disabled='true']):hover {
+    border-color: var(--line-bright);
     background: color-mix(in srgb, var(--raised) 76%, var(--line-bright));
 }
 button.quiet,

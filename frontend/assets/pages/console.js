@@ -7,6 +7,37 @@ const history = [],
     outputHistory = [];
 let commandDraft = '';
 
+/**
+ * A reload in the middle of a state-changing command used to erase the echo, the
+ * answer and the whole ↑ history. The transcript is the operator's only on-screen
+ * evidence that the command was issued, so it survives the document in
+ * sessionStorage, marked with the time each command went out.
+ */
+const TRANSCRIPT_KEY = 'tortodrone-console-transcript';
+function persist() {
+    try {
+        sessionStorage.setItem(
+            TRANSCRIPT_KEY,
+            JSON.stringify({ history: history.slice(-50), rows: outputHistory.slice(-50) })
+        );
+    } catch {
+        /* private browsing keeps the session copy only */
+    }
+}
+function restore() {
+    try {
+        const saved = JSON.parse(sessionStorage.getItem(TRANSCRIPT_KEY) || 'null');
+        if (!saved) return false;
+        for (const row of saved.rows || [])
+            if (row && typeof row.command === 'string') outputHistory.push(row);
+        for (const value of saved.history || [])
+            if (typeof value === 'string') history.push(value);
+        return outputHistory.length > 0;
+    } catch {
+        return false;
+    }
+}
+
 /** Where each read command's answer lives as a page, so output is not a dead end. */
 const RELATED = {
     status: [{ label: 'Open overview', page: 'overview' }],
@@ -19,6 +50,11 @@ const RELATED = {
 export function reset() {
     history.length = outputHistory.length = 0;
     commandDraft = '';
+    try {
+        sessionStorage.removeItem(TRANSCRIPT_KEY);
+    } catch {
+        /* nothing to clear */
+    }
 }
 export async function mount(ctx) {
     // The prompt is the console: a failed command list must not replace the page an
@@ -34,9 +70,11 @@ export async function mount(ctx) {
             commands: outputHistory,
             title: 'tortodrone — console',
             fill: true,
+            // A console has no tail to follow and nothing to freeze.
+            tail: false,
             // The Console has no tail to follow and nothing to pause: advertising
             // those keys here promised behaviour this page does not have.
-            hint: 'Ctrl+F search · Ctrl+L clear · Tab completes · ↑ ↓ history · help lists the commands',
+            hint: 'Enter runs · Tab completes · ↑ ↓ history · Ctrl+F search · Ctrl+L clear · help lists the commands',
             onLink: (link) => ctx.go(link.page, link.params || {})
         }),
         feedback = el('small', listError ? 'Command list unavailable' : 'Connected');
@@ -79,6 +117,20 @@ export async function mount(ctx) {
                 '. A command still runs once the server answers.',
             error: true
         });
+    /** Write a line into the transcript that is not an answer to a command. */
+    const notice = (message) => {
+        outputHistory.push({ time: Date.now(), command: '', output: message, notice: true });
+        if (outputHistory.length > 50) outputHistory.shift();
+        stream.redraw();
+    };
+    // The transcript outlives the document: a reload mid-command keeps the echo and
+    // the answers, and says so, instead of dropping the only evidence it happened.
+    if (restore()) {
+        notice(
+            'Answers issued before this page was reloaded are kept below. A command whose answer arrived while the page was gone shows only its echo — the audit trail has the outcome.'
+        );
+        persist();
+    }
     let index = history.length,
         draft = '',
         pending = false;
@@ -113,6 +165,7 @@ export async function mount(ctx) {
         if (history.length > 100) history.shift();
         index = history.length;
         if (outputHistory.length > 50) outputHistory.shift();
+        persist();
         if (!paint) return;
         stream.redraw();
         // Announced once, briefly: the stream itself is not a live region, so a
@@ -165,12 +218,18 @@ export async function mount(ctx) {
             // recomputing the prefix from the completed word left one candidate, so
             // Tab could never reach the second match.
             const typed = command.value.trim();
-            if (!typed) return;
+            if (!typed) {
+                // A shell lists its commands on an empty prompt; this page has ten and
+                // used to answer the keystroke with nothing at all.
+                event.preventDefault();
+                notice(words.join('  '));
+                return;
+            }
             if (typed.includes(' ')) {
                 // `kick 42` is a command plus an argument this page cannot guess, so
-                // Tab says so instead of silently doing nothing.
+                // Tab says so in the pane, not only to a screen reader.
                 event.preventDefault();
-                stream.announce(
+                notice(
                     'Tab completes command names. ' +
                         typed.split(/\s+/)[0] +
                         ' takes an argument the page cannot guess; help lists the syntax.'
@@ -189,13 +248,7 @@ export async function mount(ctx) {
             // A second Tab on a sole candidate prints the ambiguous set, the way a
             // shell lists them, instead of cycling invisibly.
             if (completion.list.length > 1 && completion.at === completion.list.length - 1) {
-                outputHistory.push({
-                    time: Date.now(),
-                    command: typed,
-                    output: completion.list.join('  '),
-                    error: false
-                });
-                stream.redraw();
+                notice(completion.list.join('  '));
                 return;
             }
             completion.at = (completion.at + 1) % completion.list.length;

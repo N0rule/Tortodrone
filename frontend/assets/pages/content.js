@@ -1,4 +1,4 @@
-import { el, toolbar, badge, details, facts, panel, button, copy, report } from '../ui.js';
+import { el, toolbar, badge, details, facts, panel, button, copy, report, routeLink } from '../ui.js';
 import { itemPicker } from '../components/item-picker.js';
 import { definitionsFor, itemLine, itemLinks, inspectItemName } from '../components/items.js';
 import { openDialog } from '../components/dialog.js';
@@ -60,17 +60,34 @@ export async function mount(ctx) {
             [
                 'Station',
                 (station) => {
+                    // One string per station, and the link is on the value the reader
+                    // sees: a button and a hidden actor path meant no station address
+                    // could be copied or middle-clicked.
                     const cell = el('div', null, 'offer-reference');
                     const label = station.name && station.name !== '~' ? station.name : station.actor;
-                    cell.append(el('strong', label));
+                    const link = routeLink(label, 'content', { station: keyOf(station) });
+                    link.title = station.actor;
+                    cell.append(link);
                     if (station.name && station.name !== '~')
                         cell.append(el('small', station.actor, 'muted'));
                     return cell;
                 },
-                (station) => station.actor
+                (station) => station.name && station.name !== '~' ? station.name : station.actor
             ],
             ['Kind', (station) => station.kind || '—'],
-            ['Group', (station) => station.group || '—'],
+            [
+                'Group',
+                // A group is an internal scene path; the leaf name is the label and the
+                // path stays available as its tooltip.
+                (station) => {
+                    const path = station.group || '';
+                    const leaf = path.split('/').filter(Boolean).pop() || '—';
+                    const node = el('span', leaf);
+                    node.title = path;
+                    return node;
+                },
+                (station) => station.group || ''
+            ],
             [
                 'Catalogue',
                 (station) => {
@@ -91,7 +108,16 @@ export async function mount(ctx) {
                 (station) => station.recipes?.length ?? 0,
                 (station) => station.recipes?.length ?? 0
             ],
-            ['Model', (station) => station.model?.split('/').slice(-1)[0] || '—']
+            [
+                'Model',
+                (station) => {
+                    const path = station.model || '';
+                    const node = el('span', path.split('/').filter(Boolean).pop() || '—');
+                    node.title = path;
+                    return node;
+                },
+                (station) => station.model || ''
+            ]
         ],
         {
             key: keyOf,
@@ -229,9 +255,10 @@ export async function mount(ctx) {
             else ctx.notify(`Station ${station} is not in the exported catalogue.`, true);
         } else if (item) showItem(item);
     }
-    // The catalogue is not here yet: merchants() is empty until the first poll, so a
-    // cold-linked station was reported as "not in the exported catalogue" for a
-    // station the page was about to draw. The address is applied once there is data.
+    // The catalogue is not here until the first read, so the address is applied after
+    // it: a cold-linked station used to wait for the next poll (~15 s) or be reported
+    // as "not in the exported catalogue" for a station the page was about to draw.
     let coldApplied = false;
+    await refresh();
     return { node, dispose: () => picker.dispose(), refresh, navigate: applyParams };
 }

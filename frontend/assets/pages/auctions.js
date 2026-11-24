@@ -211,7 +211,9 @@ export async function mount(ctx) {
                 hint:
                     'Listings are created in the auction house in game; featured ' +
                     'auctions scheduled here appear too.',
-                action: { label: 'Schedule featured auction', run: () => scheduleFeatured() },
+                // The toolbar above already owns this action, and it is the page's one
+                // primary: a second copy at a different weight named the same job twice.
+                action: null,
                 icon: 'auctions'
             },
             actions: (get) => [

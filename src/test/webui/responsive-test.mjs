@@ -14,10 +14,15 @@ const table = readFileSync(`${root}frontend/assets/components/table.js`, 'utf8')
 const pages = readFileSync(`${root}frontend/assets/css/pages.css`, 'utf8');
 const html = readFileSync(`${root}frontend/index.html`, 'utf8');
 
-/** The declarations inside the first `@media (max-width: 760px)` block. */
+/**
+ * The declarations inside the card-mode breakpoint. It is 900px, not 760px: at 844x390
+ * (a landscape phone) the mail table was still a 1,051px table in a 522px pane, so the
+ * actions column sat off-screen at rest and a row could not be acted on without
+ * scrolling sideways.
+ */
 function mobileBlock(css) {
-    const start = css.indexOf('@media (max-width: 760px)');
-    assert.ok(start >= 0, 'components.css must keep a 760px breakpoint');
+    const start = css.indexOf('@media (max-width: 900px)');
+    assert.ok(start >= 0, 'components.css must keep a 900px card-mode breakpoint');
     let depth = 0;
     for (let index = css.indexOf('{', start); index < css.length; index++) {
         if (css[index] === '{') depth++;
@@ -30,7 +35,7 @@ test('the document declares a responsive viewport', () => {
     assert.match(html, /name="viewport"[^>]*width=device-width/);
 });
 
-test('tables become labelled cards below 760px', () => {
+test('tables become labelled cards below 900px', () => {
     const mobile = mobileBlock(components);
     assert.match(mobile, /\.data-table table\s*\{[^}]*display:\s*block/, 'table must leave grid layout');
     assert.match(mobile, /\.data-table thead\s*\{[^}]*clip-path/, 'the header row must be visually hidden');

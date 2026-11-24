@@ -1,4 +1,5 @@
-import { el, date, badge, panel, facts, toolbar, button, routeLink, copy } from '../ui.js';
+import { el, date, badge, panel, facts, toolbar, button, routeLink, copy, landOn } from '../ui.js';
+import { route } from '../router.js';
 import { DataTable } from '../components/table.js';
 export async function mount(ctx) {
     const node = el('div', null, 'stack'),
@@ -51,11 +52,22 @@ export async function mount(ctx) {
             return;
         }
         // The pane sits above a long table, so it says which row it describes and
-        // takes the reader to itself instead of painting off-screen.
-        detail.scrollIntoView({ block: 'nearest' });
+        // takes the reader to itself instead of painting off-screen — after the page
+        // is attached, which for a cold load is a frame or two later.
+        landOn(detail, 'start');
         table.markInspected?.(row);
         const target = parseTarget(row.target);
-        const links = toolbar();
+        const links = toolbar(
+            button(
+                'Clear selection',
+                () => {
+                    showDetail(null);
+                    detail.hidden = true;
+                    if (route().params.has('event')) ctx.go('audit', {});
+                },
+                'secondary'
+            )
+        );
         const owner = ownerOf(row.action);
         // Every route out of the inspector is a real link, so the operator can
         // middle-click it into a second tab while he keeps reading.
@@ -185,7 +197,9 @@ export async function mount(ctx) {
     // The trail is the page; the inspector appears above it once a row is chosen, so
     // the first thing an operator reads is the events, not an empty pane.
     detail.hidden = true;
-    node.append(table.node, detail);
+    // The inspector sits above the trail: appended after sixty rows it was 2,200px
+    // below the fold, so the citation link a row emits looked like a dead click.
+    node.append(detail, table.node);
     let pendingEvent = null;
     async function refresh() {
         table.update(await ctx.request('audit'));

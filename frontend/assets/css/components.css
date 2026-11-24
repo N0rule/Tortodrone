@@ -884,7 +884,10 @@ caption {
     font-weight: 400;
 }
 
-@media (max-width: 760px) {
+/* 900px, not 760: at 844x390 the mail table was still a 1,051px table inside a 522px
+   pane, so the actions column sat off-screen at rest and nothing on a row could be
+   clicked without scrolling sideways. The composer splits at the same width. */
+@media (max-width: 900px) {
     /* Card rows can afford the full touch target. */
     td button,
     .pagination button,

@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, panel, button, routeLink, copy, duration, status, facts, date, sceneLabel } from '../ui.js';
+import { el, panel, button, routeLink, copy, duration, status, facts, date, sceneLabel, landOn } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { go } from '../router.js';
 import { confirm, confirmAction, openDialog } from '../components/dialog.js';
@@ -287,7 +287,7 @@ export async function mount(ctx) {
     function applyParams(params) {
         const value = params.get('scene');
         players.setQuery(value ?? '');
-        if (value) players.node.scrollIntoView({ block: 'start' });
+        if (value) landOn(players.node);
     }
     return { node, refresh, interval: 4000, navigate: applyParams };
 }

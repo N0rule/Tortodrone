@@ -15,7 +15,17 @@ export async function mount(ctx) {
         search: ctx.params.get('search') || '',
         raw: ctx.params.get('raw') === '1',
         fill: true,
-        onLoadFile: (limit) => ctx.request('logs-file', { limit: String(limit) })
+        onLoadFile: (limit) => ctx.request('logs-file', { limit: String(limit) }),
+        // The filter is the view, so it belongs in the address: the operator can copy
+        // what they are looking at instead of describing it to a colleague. Replace
+        // rather than push, so a typed search does not stack history entries.
+        onFilter: ({ severity, search }) => {
+            const params = new URLSearchParams();
+            if (severity && severity !== 'All') params.set('severity', severity);
+            if (search) params.set('search', search);
+            const hash = '#logs' + (params.size ? '?' + params : '');
+            if (location.hash !== hash) history.replaceState(null, '', hash);
+        }
     });
     let failures = 0;
     // A failing read is a terminal state, not a page-level crash: the last rows
