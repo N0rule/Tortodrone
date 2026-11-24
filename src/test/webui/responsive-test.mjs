@@ -11,6 +11,7 @@ const root = new URL('../../../', import.meta.url).pathname;
 const components = readFileSync(`${root}frontend/assets/css/components.css`, 'utf8');
 const base = readFileSync(`${root}frontend/assets/css/base.css`, 'utf8');
 const table = readFileSync(`${root}frontend/assets/components/table.js`, 'utf8');
+const pages = readFileSync(`${root}frontend/assets/css/pages.css`, 'utf8');
 const html = readFileSync(`${root}frontend/index.html`, 'utf8');
 
 /** The declarations inside the first `@media (max-width: 760px)` block. */
@@ -44,6 +45,36 @@ test('touch targets stay large enough on a phone', () => {
     assert.match(mobile, /min-block-size:\s*36px/, 'card actions need a 36px touch target');
     assert.match(base, /min-block-size:\s*32px/, 'buttons never render shorter than 32px');
     assert.match(components, /\.select-target\s*\{[^}]*24px/, 'selection needs a 24px hit area');
+});
+
+/** Every `@media (max-width: …)` block in a stylesheet, as text. */
+function narrowBlocks(css) {
+    const blocks = [];
+    for (const match of css.matchAll(/@media[^{]*max-width:[^{]*\{/g)) {
+        let depth = 1;
+        for (let index = match.index + match[0].length; index < css.length; index++) {
+            if (css[index] === '{') depth++;
+            else if (css[index] === '}' && --depth === 0) {
+                blocks.push(css.slice(match.index, index));
+                break;
+            }
+        }
+    }
+    return blocks;
+}
+
+test('page grids collapse before they can overflow', () => {
+    // Wide deliverables inside a grid track are what push a page sideways, so
+    // every multi-column page section needs a narrow-screen override.
+    const narrow = narrowBlocks(pages);
+    for (const selector of ['.news-workspace', '.equipment-grid', '.metric-strip'])
+        assert.ok(
+            narrow.some(
+                (block) =>
+                    block.includes(selector) && /grid-template-columns/.test(block)
+            ),
+            `${selector} needs a narrow-screen override in pages.css`
+        );
 });
 
 test('the shell fits a 360px viewport', () => {

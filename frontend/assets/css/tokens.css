@@ -14,8 +14,8 @@
     --action-text: #152c3b;
     --scrim: #07151fc9;
     --good: #8fd9ae;
-    --bad: #ff9c99;
-    --purple: #d8a9ef;
+    --bad: #ffb0ad;
+    --purple: #e2bcf5;
     --shadow: 0 12px 32px #030d1680;
     --radius: 5px;
     --space: 20px;
@@ -32,14 +32,14 @@
     --line: #bdcfdc;
     --line-bright: #6f8b9e;
     --text: #203a4d;
-    --muted: #4b687c;
+    --muted: #3f5c70;
     --cyan: #00677b;
     --gold: #795411;
     --action: #805a16;
     --action-text: #ffffff;
-    --good: #237445;
-    --bad: #b13a38;
-    --purple: #79549b;
+    --good: #1d6539;
+    --bad: #a52f2d;
+    --purple: #6b3f8f;
     --shadow: 0 12px 32px #24465d1a;
 }
 [data-density='compact'] {
