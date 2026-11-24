@@ -249,35 +249,67 @@ function poll() {
     }, (controller?.interval || 15000) * prefs.read('pollScale'));
 }
 
+/**
+ * The sidebar: grouped by section, each group labelled, each link named.
+ *
+ * Painting and building are separate so one failing link cannot leave the column blank —
+ * a navigation that throws is a shell with no way out of it. That is exactly what an
+ * empty art pack produced: `symbol()` answers null for every job when the pack is empty
+ * (the normal state of a server started with `--skip-client-assets`), and the unguarded
+ * `setAttribute` on that null threw inside `flatMap`, before `replaceChildren` was ever
+ * called. The links fall back to words, the way `ui.js` already treats a missing glyph:
+ * an invented icon is worse than a label.
+ */
 function renderNavigation() {
     const nav = $('#navigation');
-    nav.replaceChildren(
-        ...sections.flatMap((section) => {
-            const visible = pages.filter((page) => page.section === section && page.rank <= rank());
-            if (!visible.length) return [];
-            const group = el('div', null, 'nav-section');
-            // A labelled group keeps the page heading as the only heading in the
-            // shell, so the outline starts at h1 and screen readers still hear the
-            // section name for each run of links.
-            const heading = el('p', section, 'nav-heading');
-            heading.id = 'nav-' + section.toLowerCase().replace(/\s+/g, '-');
-            group.append(heading);
-            const list = el('div', null, 'nav-list');
-            list.setAttribute('role', 'group');
-            list.setAttribute('aria-labelledby', heading.id);
-            for (const page of visible) {
-                const link = el('a');
-                const icon = uiSymbol(page.name);
+    try {
+        nav.replaceChildren(...navigationGroups());
+    } catch (error) {
+        // Words beat a blank column: the operator can still reach every page, and the
+        // failure is reported instead of hidden in a console nobody has open.
+        nav.replaceChildren(
+            ...pages
+                .filter((page) => page.rank <= rank())
+                .map((page) => {
+                    const link = el('a', page.title);
+                    link.href = '#' + page.name;
+                    link.dataset.page = page.name;
+                    return link;
+                })
+        );
+        report(error);
+    }
+}
+
+function navigationGroups() {
+    return sections.flatMap((section) => {
+        const visible = pages.filter((page) => page.section === section && page.rank <= rank());
+        if (!visible.length) return [];
+        const group = el('div', null, 'nav-section');
+        // A labelled group keeps the page heading as the only heading in the shell, so
+        // the outline starts at h1 and screen readers still hear the section name for
+        // each run of links.
+        const heading = el('p', section, 'nav-heading');
+        heading.id = 'nav-' + section.toLowerCase().replace(/\s+/g, '-');
+        group.append(heading);
+        const list = el('div', null, 'nav-list');
+        list.setAttribute('role', 'group');
+        list.setAttribute('aria-labelledby', heading.id);
+        for (const page of visible) {
+            const link = el('a');
+            const icon = uiSymbol(page.name);
+            if (icon) {
                 icon.setAttribute('aria-hidden', 'true');
-                link.append(icon, el('span', page.title));
-                link.href = '#' + page.name;
-                link.dataset.page = page.name;
-                list.append(link);
+                link.append(icon);
             }
-            group.append(list);
-            return [group];
-        })
-    );
+            link.append(el('span', page.title));
+            link.href = '#' + page.name;
+            link.dataset.page = page.name;
+            list.append(link);
+        }
+        group.append(list);
+        return [group];
+    });
 }
 
 /**
