@@ -477,6 +477,12 @@ td .toolbar .button .ui-icon,
 .item-line.compact .item-rarity {
     display: none;
 }
+/* The line under a record header that says whether the record is live. It belongs to the
+   header above it, so it takes a little air from the art and less from the facts below;
+   flush against the header it read as a third line of the item's own description. */
+.record-state {
+    margin-block: 14px 4px;
+}
 .item-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));

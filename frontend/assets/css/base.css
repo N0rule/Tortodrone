@@ -35,8 +35,13 @@ h2 {
     font-size: 20px;
     line-height: 1.3;
 }
+/* A subheading opens a section, so it owns the space above it: flush against the row
+   it followed, "Promotions" read as one more fact in the list that just ended. The
+   space below stays smaller than the space above, which is what makes the two read as
+   one block. */
 h3 {
     font-size: 16px;
+    margin-block: 20px 10px;
 }
 p {
     max-width: 78ch;

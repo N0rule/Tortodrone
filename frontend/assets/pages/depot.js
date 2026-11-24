@@ -93,11 +93,12 @@ export async function mount(ctx) {
      * visually identical. The last two path segments carry the difference, and the
      * whole path stays on the line's title for a copy.
      */
-    const offerDetail = (o) => {
+    const configNote = (o) => {
         const config = String(o.good.item || '');
         const detail = config.split('/').filter(Boolean).slice(-2).join(' / ');
-        return `${detail || config} · offer #${o.id}`;
+        return detail || config;
     };
+    const offerDetail = (o) => `${configNote(o)} · offer #${o.id}`;
     const offerLabel = (o) => `${offerName(o)} · offer #${o.id} · ${o.good.price} Crowns`;
     /** One editor for the row action and for a deep link into a single offer. */
     function editOffer(o) {
@@ -145,10 +146,17 @@ export async function mount(ctx) {
                 list.append(row);
             }
         openDialog({
-            title: `${offerName(offer)} · offer #${offer.id}`,
+            title: `Offer #${offer.id}`,
             content: panel(
                 '',
-                el('p', offer.enabled ? 'Enabled in the Depot.' : 'Disabled.', 'muted'),
+                // The title is the record's id, not its item: the item arrives as art and
+                // a name, the way every other surface names an item. Before this, the
+                // one dialog about an item showed no picture of it.
+                itemLine(definitions.get(offer.good.item), { config: offer.good.item }, {
+                    label: offerName(offer),
+                    note: configNote(offer)
+                }),
+                el('p', offer.enabled ? 'Enabled in the Depot.' : 'Disabled.', 'muted record-state'),
                 // The title already names the item and offers the id, and the list under
                 // Promotions already says how many there are: both were printed twice
                 // in one dialog, once as a heading and once as a row of its own.

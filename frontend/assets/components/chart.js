@@ -37,6 +37,21 @@ export function roundTick(value) {
     return value >= 100 ? Math.round(value) : Math.round(value * 10) / 10;
 }
 
+/**
+ * The word beside a reading, inflected for the number it sits next to. A legend that
+ * prints "1 Scenes" is the one place the app stops agreeing with itself about how it
+ * counts things, and the value arrives after the label is built, so the label has to be
+ * rewritten rather than written once.
+ * @param {{ name: string, one?: string }} s
+ * @param {string} unit
+ * @param {number} n
+ * @returns {string}
+ */
+function legendWord(s, unit, n) {
+    const word = s.one && Math.round(n) === 1 ? s.one : s.name;
+    return word + (unit.startsWith('events') ? ' / sample' : '');
+}
+
 export function chart(title, unit, series) {
     const slug = 'chart-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         node = el('section', null, 'panel'),
@@ -49,11 +64,12 @@ export function chart(title, unit, series) {
                 // A key: the number, the series' own colour and the word for it. Two
                 // lines of muted text over two lines of graph named neither, so a
                 // reader could see there were two series and not which was which.
-                swatch = el('span', null, i ? 'chart-swatch secondary-swatch' : 'chart-swatch');
+                swatch = el('span', null, i ? 'chart-swatch secondary-swatch' : 'chart-swatch'),
+                word = el('small', legendWord(s, unit, NaN));
             swatch.setAttribute('aria-hidden', 'true');
-            row.append(swatch, value, el('small', s.name + (unit.startsWith('events') ? ' / sample' : '')));
+            row.append(swatch, value, word);
             current.append(row);
-            return value;
+            return { value, word };
         });
     heading.id = slug + '-heading';
     readout.id = slug + '-readout';
@@ -153,7 +169,7 @@ export function chart(title, unit, series) {
             series.forEach((s, i) => {
                 const n = values.length ? s.value(values.at(-1), values.length - 1, values) : NaN;
                 text(
-                    currentValues[i],
+                    currentValues[i].value,
                     Number.isFinite(n) && n >= 0
                         ? n.toLocaleString(undefined, {
                               maximumFractionDigits:
@@ -161,6 +177,7 @@ export function chart(title, unit, series) {
                           }) + (unit && !unit.startsWith('events') ? ' ' + unit : '')
                         : 'Unavailable'
                 );
+                text(currentValues[i].word, legendWord(s, unit, n));
             });
             const all = series
                 .flatMap((s) => values.map((v, i) => s.value(v, i, values)))

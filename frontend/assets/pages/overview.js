@@ -175,8 +175,8 @@ export async function mount(ctx) {
         { name: 'Committed', value: (s) => s.runtime.heapCommitted / 1048576 }
     ]);
     const population = chart('Players and scenes', '', [
-        { name: 'Players', value: (s) => s.players },
-        { name: 'Scenes', value: (s) => s.scenes }
+        { name: 'Players', one: 'Player', value: (s) => s.players },
+        { name: 'Scenes', one: 'Scene', value: (s) => s.scenes }
     ]);
     const activity = chart('Connection activity', 'events / sample', [
         { name: 'Connected', value: (s, i, a) => (i ? s.connected - a[i - 1].connected : -1) },
