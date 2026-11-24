@@ -89,16 +89,19 @@ export async function mount(ctx) {
     node.append(
         sessionPanel,
         toolbar(
-            button('Create WebUI identity', () =>
-                edit('Create WebUI identity', 'webui-user-create', [
-                    field('username', 'Username', '', 'text', null, {
-                        minLength: 3,
-                        maxLength: 64,
-                        pattern: '(?:[a-zA-Z0-9_]|-){3,64}'
-                    }),
-                    ...passwords(),
-                    role('VIEWER')
-                ])
+            button(
+                'Create WebUI identity',
+                () =>
+                    edit('Create WebUI identity', 'webui-user-create', [
+                        field('username', 'Username', '', 'text', null, {
+                            minLength: 3,
+                            maxLength: 64,
+                            pattern: '(?:[a-zA-Z0-9_]|-){3,64}'
+                        }),
+                        ...passwords(),
+                        role('VIEWER')
+                    ]),
+                'primary'
             )
         ),
         el(

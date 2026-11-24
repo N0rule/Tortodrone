@@ -18,6 +18,7 @@ export async function mount(ctx) {
             id: 'sessions',
             caption: 'Live sessions',
             exportName: 'sessions',
+            initialQuery: ctx.params.get('scene') || '',
             actions: ctx.moderator
                 ? (get) => [
                       button(

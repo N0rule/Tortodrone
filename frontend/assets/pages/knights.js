@@ -634,11 +634,40 @@ export async function mount(ctx) {
                     : panel(
                           'Knight details',
                           facts([
-                              ['Account', view.username],
-                              ['Guild', view.guild],
+                              [
+                                  'Account',
+                                  button(
+                                      view.username,
+                                      () => ctx.go('accounts', { username: view.username }),
+                                      'quiet'
+                                  )
+                              ],
+                              ['Guild', view.guild || 'No guild'],
                               ['Status', view.online ? 'Online' : 'Offline'],
-                              ['Permission', view.gameMaster ? 'Game Master' : 'Player']
+                              ['Permission', view.gameMaster ? 'Game Master' : 'Player'],
+                              [
+                                  'Rank',
+                                  `${p.progress.rank}-${p.progress.subrank} · prestige ${number(p.progress.prestige)}`
+                              ],
+                              ['Saved loadouts', p.town.loadouts.length],
+                              ['Learned recipes', p.town.recipes.length],
+                              ['Inventory stacks', view.items.length],
+                              ['Sprites', view.sprites.length]
                           ]),
+                          toolbar(
+                              button(
+                                  'Audit for this knight',
+                                  () => ctx.go('audit', { actor: view.username }),
+                                  'secondary'
+                              ),
+                              button(
+                                  'Edit progression',
+                                  editProgress,
+                                  'secondary',
+                                  () => !!ctx.admin
+                              ),
+                              button('Grant item', () => grantItem(fixed()), 'secondary', () => !!ctx.admin)
+                          ),
                           details('Identifiers and revision', {
                               worldId: p.worldId,
                               accountId: p.accountId,

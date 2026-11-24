@@ -95,7 +95,15 @@ export async function mount(ctx) {
         const a = row.listing;
         const deliveryTable = new DataTable(
             [
-                ['Recipient', (d) => d.recipient],
+                [
+                    'Recipient',
+                    (d) =>
+                        button(
+                            d.recipient,
+                            () => ctx.go('accounts', { username: d.recipient }),
+                            'quiet'
+                        )
+                ],
                 ['Kind', (d) => (d.item ? 'Item delivery' : 'Crowns')],
                 ['Crowns', (d) => currency('crowns', d.crowns)],
                 ['State', (d) => (d.claimed ? 'Claimed' : 'Pending')],

@@ -26,12 +26,15 @@ export async function mount(ctx) {
         detailSignature;
     if (ctx.admin)
         controls.append(
-            button('Create account', () =>
-                edit('Create game account', 'account-create', [
-                    field('username', 'Username'),
-                    field('password', 'Password', '', 'password'),
-                    field('gm', 'Game Master', false, 'checkbox')
-                ])
+            button(
+                'Create account',
+                () =>
+                    edit('Create game account', 'account-create', [
+                        field('username', 'Username'),
+                        field('password', 'Password', '', 'password'),
+                        field('gm', 'Game Master', false, 'checkbox')
+                    ]),
+                'primary'
             )
         );
     const table = new DataTable(

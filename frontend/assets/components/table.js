@@ -79,7 +79,8 @@ export class DataTable {
             selectable = false,
             bulkActions,
             exportName = id,
-            persist = true
+            persist = true,
+            initialQuery = ''
         } = {}
     ) {
         Object.assign(this, {
@@ -117,6 +118,7 @@ export class DataTable {
         this.query = input('Search records');
         this.query.type = 'search';
         this.query.placeholder = 'Search records';
+        if (initialQuery) this.query.value = initialQuery;
         this.controls = toolbar();
         this.controls.classList.add('table-tools');
         if (search) this.controls.append(this.query);

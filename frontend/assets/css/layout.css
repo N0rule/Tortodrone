@@ -56,6 +56,25 @@
     border: 1px solid transparent;
     border-radius: 4px;
 }
+/* Short viewports: tighten the list so every destination stays above the footer
+   instead of the last items hiding behind a scrollbar. */
+@media (max-height: 1000px) {
+    #navigation a {
+        padding: 5px 12px;
+    }
+}
+@media (max-height: 840px) {
+    #navigation a {
+        padding: 3px 12px;
+        gap: 9px;
+    }
+    #sidebar .brand {
+        padding-bottom: 14px;
+    }
+    #sidebar footer {
+        padding-top: 12px;
+    }
+}
 #navigation a:hover {
     background: var(--surface);
     color: var(--text);

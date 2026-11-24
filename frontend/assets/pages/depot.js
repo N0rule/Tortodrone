@@ -166,14 +166,32 @@ export async function mount(ctx) {
             [
                 'Availability',
                 (o) => (o.sale ? 'Promotion sale' : o.featured ? 'Featured' : 'Regular')
+            ],
+            [
+                'Promotion',
+                (o) => (o.promoHeader ? el('span', o.promoHeader, 'muted') : '—')
             ]
         ],
         {
             key: (o) => o.id,
             id: 'depot-effective',
-            caption: 'Effective catalogue',
+            caption: 'Effective catalogue: what a player sees today',
             exportName: 'depot-catalogue',
-            search: false
+            actions: (get) => [
+                button(
+                    'Open offer',
+                    () => {
+                        const offer = data.snapshot.offers.find(
+                            (candidate) => candidate.good.item === get().good.item
+                        );
+                        if (!offer) return;
+                        tab = 'offers';
+                        show();
+                        offers.node.scrollIntoView({ block: 'center' });
+                    },
+                    'secondary'
+                )
+            ]
         }
     );
     const content = el('div');

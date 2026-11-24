@@ -47,6 +47,7 @@ export function openDialog({
         if (state.pending || state.conflicted) return;
         state.pending = true;
         $('#submit-dialog').disabled = true;
+        $('#submit-dialog').setAttribute('aria-busy', 'true');
         $('#dialog-error').textContent = '';
         // Sequential bulk work reports its own progress through this callback,
         // so a long run never looks frozen.
@@ -71,6 +72,7 @@ export function openDialog({
                     : error.message;
         } finally {
             state.pending = false;
+            $('#submit-dialog').removeAttribute('aria-busy');
             const progressNode = $('#dialog-progress');
             if (progressNode) progressNode.hidden = true;
             if (active === state) $('#submit-dialog').disabled = state.conflicted;

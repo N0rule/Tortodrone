@@ -46,6 +46,7 @@ const shapes = {
     close: 'M5 5l14 14M19 5 5 19',
     edit: 'm16 3 5 5-12 12-6 1 1-6L16 3Zm-2 2 5 5',
     add: 'M12 4v16M4 12h16',
+    refresh: 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5',
     save: 'm4 12 5 5L20 6',
     remove: 'M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7'
 };

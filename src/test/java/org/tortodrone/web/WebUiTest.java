@@ -52,6 +52,21 @@ public final class WebUiTest {
                     secret.equals(
                             Files.readString(data.resolve("webui-proxy.key")).strip()),
                     "existing secret preserved");
+            // A real keypair so the identity route is exercised end to end: the
+            // public file is what the client reads, and the fingerprint must be the
+            // SHA-256 of the same SubjectPublicKeyInfo bytes openssl would print.
+            Path settingsPath = org.tortodrone.core.config.ServerSettings.defaultPath(root);
+            var generator = java.security.KeyPairGenerator.getInstance("RSA");
+            generator.initialize(2048);
+            var pair = generator.generateKeyPair();
+            var publicKey = (java.security.interfaces.RSAPublicKey) pair.getPublic();
+            Files.createDirectories(data.resolve("keys"));
+            Files.writeString(
+                    data.resolve("keys/public.txt"),
+                    publicKey.getModulus().toString(16) + "#"
+                            + publicKey.getPublicExponent().toString(16));
+            String expectedFingerprint = fingerprint(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(pair.getPublic().getEncoded()));
             firstRunSetup(root, news, frontend);
             var identities = new WebIdentityStore(data);
             identities.put("administrator", PASSWORD.toCharArray(), WebIdentityStore.Role.ADMINISTRATOR);
@@ -66,7 +81,7 @@ public final class WebUiTest {
             var control = new ServerControl("test", data);
             try (var accounts = new AccountStore(data, false, ItemCatalog.starter());
                     var log = new ServerLog(data.resolve("logs"));
-                    var service = new AdminService(accounts, control, log, root)) {
+                    var service = new AdminService(accounts, control, log, root, null, settingsPath, data)) {
                 var handler = new AdminHandler(security, identities, service, frontend);
                 try (var http = NewsServer.start(InetAddress.getLoopbackAddress(), 0, news, x -> {}, handler)) {
                     port = http.port();
@@ -283,10 +298,24 @@ public final class WebUiTest {
                     check(
                             post("account-create", Map.of("padding", "x".repeat(66000))).status == 400,
                             "request size bounded");
+                    // Read while the administrator session is still live; the signed-out
+                    // case is covered by the logout check below.
+                    var identity = get("identity");
                     check(
-                            post("logout", Map.of()).status == 200 && get("status").status == 401,
+                            identity.status == 200
+                                    && identity.body.contains("\"fingerprint\":\"" + expectedFingerprint + "\"")
+                                    && identity.body.contains("\"publicKey\":\"")
+                                    && identity.body.contains("\"bits\":2048")
+                                    && !identity.body.contains("private")
+                                    && !identity.body.contains("PRIVATE"),
+                            "administrator reads the public server identity without private material");
+                    check(
+                            post("logout", Map.of()).status == 200
+                                    && get("status").status == 401
+                                    && get("identity").status == 401,
                             "logout revokes session");
                     login("viewer");
+                    check(get("identity").status == 200, "a viewer can read the public server identity");
                     check(
                             get("console").status == 403
                                     && post("console", Map.of("command", "status", "confirmation", "console")).status
@@ -390,6 +419,17 @@ public final class WebUiTest {
                 for (var p : walk.sorted(Comparator.reverseOrder()).toList()) Files.delete(p);
             }
         }
+    }
+
+    /** Byte-pair, colon-separated SHA-256 digest, the form every tool prints. */
+    private static String fingerprint(byte[] digest) {
+        var text = new StringBuilder();
+        for (byte value : digest) {
+            if (!text.isEmpty()) text.append(':');
+            text.append(Character.toUpperCase(Character.forDigit((value >> 4) & 0xf, 16)));
+            text.append(Character.toUpperCase(Character.forDigit(value & 0xf, 16)));
+        }
+        return text.toString();
     }
 
     private static void firstRunSetup(Path root, Path news, Path frontend) throws Exception {

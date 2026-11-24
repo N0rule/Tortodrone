@@ -465,6 +465,7 @@ $('#logout').onclick = async () => {
     }
 };
 
+$('#refresh').prepend(uiSymbol('refresh'));
 $('#refresh').onclick = refresh;
 $('#menu').onclick = () => {
     menu(!$('#shell').classList.contains('menu-open'));

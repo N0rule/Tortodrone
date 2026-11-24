@@ -92,7 +92,10 @@ public final class AdminHandler implements HttpHandler {
             return;
         }
         boolean post = e.getRequestMethod().equals("POST");
-        if (!post && !e.getRequestMethod().equals("GET")) {
+        // HEAD answers like GET so probes and link checkers see the real headers.
+        if (!post
+                && !e.getRequestMethod().equals("GET")
+                && !e.getRequestMethod().equals("HEAD")) {
             send(e, 405, Map.of("error", "Method not allowed"));
             return;
         }
@@ -424,6 +427,11 @@ public final class AdminHandler implements HttpHandler {
         }
         byte[] payload = compressible ? gzip(b) : b;
         if (compressible) e.getResponseHeaders().set("Content-Encoding", "gzip");
+        if (e.getRequestMethod().equals("HEAD")) {
+            e.getResponseHeaders().set("Content-Length", Integer.toString(payload.length));
+            e.sendResponseHeaders(200, -1);
+            return;
+        }
         e.sendResponseHeaders(200, payload.length == 0 ? -1 : payload.length);
         if (payload.length > 0) e.getResponseBody().write(payload);
     }
@@ -431,6 +439,11 @@ public final class AdminHandler implements HttpHandler {
     private static void send(HttpExchange e, int status, Object result) throws IOException {
         byte[] b = WebJson.encode(result).getBytes(StandardCharsets.UTF_8);
         e.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+        if (e.getRequestMethod().equals("HEAD")) {
+            e.getResponseHeaders().set("Content-Length", Integer.toString(b.length));
+            e.sendResponseHeaders(status, -1);
+            return;
+        }
         e.sendResponseHeaders(status, b.length);
         e.getResponseBody().write(b);
     }

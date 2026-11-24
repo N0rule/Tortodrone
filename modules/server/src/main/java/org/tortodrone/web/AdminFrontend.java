@@ -39,7 +39,7 @@ public final class AdminFrontend implements WebFrontend, WebFrontend.Factory {
             ContentRegistry content,
             ServerSettings settings)
             throws IOException {
-        var service = new AdminService(accounts, control, log, deployment, content, config);
+        var service = new AdminService(accounts, control, log, deployment, content, config, data);
         var identities = new WebIdentityStore(data);
         var security = new WebSecurity(settings.webui(), identities, data);
         var handler = new AdminHandler(security, identities, service, deployment.resolve("webui"));

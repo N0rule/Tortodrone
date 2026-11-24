@@ -43,7 +43,11 @@ test('tables become labelled cards below 760px', () => {
 test('touch targets stay large enough on a phone', () => {
     const mobile = mobileBlock(components);
     assert.match(mobile, /min-block-size:\s*36px/, 'card actions need a 36px touch target');
-    assert.match(base, /min-block-size:\s*32px/, 'buttons never render shorter than 32px');
+    // Control heights come from tokens; the small step is the floor.
+    const tokens = readFileSync(`${root}frontend/assets/css/tokens.css`, 'utf8');
+    assert.match(tokens, /--control:\s*(?:36|4[0-9])px/, 'the default control height is at least 36px');
+    assert.match(tokens, /--control-sm:\s*3[2-9]px/, 'the small control step stays above 32px');
+    assert.match(base, /min-block-size:\s*var\(--control\)/, 'buttons take their height from the control token');
     assert.match(components, /\.select-target\s*\{[^}]*24px/, 'selection needs a 24px hit area');
 });
 

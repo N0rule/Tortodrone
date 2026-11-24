@@ -1,4 +1,17 @@
-import { el, panel, toolbar, button, select, text, duration, details, facts, date } from '../ui.js';
+import {
+    el,
+    panel,
+    toolbar,
+    button,
+    select,
+    text,
+    duration,
+    details,
+    facts,
+    date,
+    copy,
+    download
+} from '../ui.js';
 import { chart } from '../components/chart.js';
 import { confirm, field } from '../components/dialog.js';
 import { DataTable } from '../components/table.js';
@@ -93,6 +106,40 @@ export async function mount(ctx) {
     const charts = el('div', null, 'two-columns');
     charts.append(cpu.node, memory.node, population.node, activity.node);
     const diagnostics = details('Database operations and runtime details', {});
+    // The handshake identity is the one thing an operator otherwise has to SSH in
+    // for; it sits on the page they land on.
+    const identityFingerprint = el('code', null, 'identity-fingerprint'),
+        identityNote = el('p', null, 'muted identity-note'),
+        identityKey = el('textarea', null, 'identity-key'),
+        identityActions = toolbar();
+    identityKey.readOnly = true;
+    identityKey.spellcheck = false;
+    identityKey.rows = 3;
+    identityKey.hidden = true;
+    identityKey.setAttribute('aria-label', 'Server public key, modulus and exponent');
+    const identityFacts = facts([
+        ['Fingerprint (SHA-256)', identityFingerprint],
+        ['Key', ''],
+        ['Created', ''],
+        ['Recorded in', 'data/keys/public.txt']
+    ]);
+    const identityPanel = panel('Server identity', identityNote, identityFacts, identityActions, identityKey);
+    let identityLoaded = false;
+    const toggleKey = button(
+        'Show full key',
+        () => {
+            identityKey.hidden = !identityKey.hidden;
+            toggleKey.textContent = identityKey.hidden ? 'Show full key' : 'Hide full key';
+            toggleKey.setAttribute('aria-expanded', String(!identityKey.hidden));
+            if (!identityKey.hidden) {
+                // Revealed on demand, so select it in one gesture to copy by hand.
+                identityKey.focus();
+                identityKey.select();
+            }
+        },
+        'secondary'
+    );
+    toggleKey.setAttribute('aria-expanded', 'false');
     const monsters = new DataTable(
         [
             ['Scene', (r) => r.name],
@@ -118,7 +165,14 @@ export async function mount(ctx) {
             pageSize: 8,
             id: 'overview-monsters',
             caption: 'Scene monster runtime',
-            exportName: 'scene-monsters'
+            exportName: 'scene-monsters',
+            actions: (get) => [
+                button(
+                    'Players here',
+                    () => ctx.go('players', { scene: get().name }),
+                    'secondary'
+                )
+            ]
         }
     );
     const warnings = new DataTable(
@@ -132,11 +186,19 @@ export async function mount(ctx) {
             pageSize: 8,
             id: 'overview-warnings',
             caption: 'Recent warnings and errors',
-            exportName: 'recent-warnings'
+            exportName: 'recent-warnings',
+            actions: (get) => [
+                button(
+                    'Open in Logs',
+                    () => ctx.go('logs', { severity: get().level }),
+                    'secondary'
+                )
+            ]
         }
     );
     node.append(
         strip,
+        identityPanel,
         metrics,
         toolbar(range, el('small', 'Measured every 5 seconds · retained in memory for 1 hour')),
         charts,
@@ -145,12 +207,54 @@ export async function mount(ctx) {
         diagnostics
     );
     let diagnosticSignature;
+    async function renderIdentity(identity) {
+        if (!identity.available) {
+            text(identityFingerprint, 'Unavailable');
+            text(
+                identityNote,
+                identity.reason ||
+                    'The server has not created its keypair yet; it is created on the next start.'
+            );
+            identityActions.replaceChildren();
+            return;
+        }
+        text(identityFingerprint, identity.fingerprint);
+        identityFingerprint.title = identity.fingerprintBase64;
+        text(
+            identityNote,
+            `RSA ${identity.bits}-bit · the public half only. Clients use this to trust the server; the private key never leaves the server.`
+        );
+        const cells = identityFacts.querySelectorAll('dd');
+        cells[1].textContent = `RSA ${identity.bits}-bit, exponent 0x${identity.exponent}`;
+        cells[2].textContent = date(identity.modified);
+        const key = `${identity.modulus}#${identity.exponent}`;
+        identityKey.value = key;
+        if (!identityLoaded) {
+            identityLoaded = true;
+            identityActions.append(
+                button('Copy public key', () => copy(key, 'Server public key copied.'), 'primary'),
+                button(
+                    'Download public.txt',
+                    () => download('public.txt', key + '\n'),
+                    'secondary'
+                ),
+                toggleKey,
+                button(
+                    'Copy fingerprint',
+                    () => copy(identity.fingerprint, 'Fingerprint copied.'),
+                    'secondary'
+                )
+            );
+        }
+    }
     async function refresh() {
-        const [s, history, logs] = await Promise.all([
+        const [s, history, logs, identity] = await Promise.all([
             ctx.request('status'),
             ctx.request('metrics', { minutes: range.value }),
-            ctx.request('logs')
+            ctx.request('logs'),
+            ctx.request('identity')
         ]);
+        renderIdentity(identity);
         text(state, s.state);
         text(endpoint, s.endpoint || 'Listener stopped');
         text(version, `Tortodrone ${s.version}`);

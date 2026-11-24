@@ -47,41 +47,112 @@ select,
 textarea {
     font: inherit;
 }
+/* One control language: a neutral surface button by default, a filled primary
+   accent, a quiet text button, and an outlined destructive action. Sizes come
+   from the control tokens so toolbars and dialog footers share a height. */
 button,
 .button {
+    --control-bg: var(--raised);
+    --control-fg: var(--text);
+    --control-border: var(--line-bright);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-block-size: var(--control);
+    padding: 0 14px;
     cursor: pointer;
-    /* WCAG 2.2 target size: no interactive control renders shorter than 32px. */
-    min-block-size: 32px;
-    padding: 8px 14px;
-    color: var(--action-text);
-    background: var(--action);
-    border: 1px solid var(--action);
-    border-radius: var(--radius);
-    font-weight: 700;
-    box-shadow: inset 0 1px #ffffff40;
+    color: var(--control-fg);
+    background: var(--control-bg);
+    border: 1px solid var(--control-border);
+    border-radius: var(--radius-control);
+    box-shadow: var(--elev-1);
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
     white-space: nowrap;
+    transition:
+        background-color 120ms ease,
+        border-color 120ms ease,
+        color 120ms ease,
+        box-shadow 120ms ease,
+        transform 60ms ease;
 }
-button:not(:disabled):hover {
-    filter: brightness(1.1);
+button:not(:disabled):hover,
+.button:not(:disabled):hover {
+    border-color: var(--cyan);
+    background: color-mix(in srgb, var(--raised) 72%, var(--line-bright));
 }
-button:disabled {
-    cursor: default;
-    opacity: 0.5;
-}
-button.secondary,
-button.quiet {
-    background: var(--raised);
-    border-color: var(--line-bright);
-    color: var(--text);
-}
-button.quiet {
-    background: transparent;
-    border-color: transparent;
+button:not(:disabled):active,
+.button:not(:disabled):active {
+    transform: translateY(1px);
     box-shadow: none;
 }
-button.danger {
-    background: transparent;
-    color: var(--bad);
+button:focus-visible,
+.button:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+button:disabled,
+.button[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.5;
+    box-shadow: none;
+}
+/* A pending control keeps its label and grows a spinner instead of going blank. */
+button[aria-busy='true'] {
+    pointer-events: none;
+}
+button[aria-busy='true']::before {
+    content: '';
+    inline-size: 12px;
+    block-size: 12px;
+    border: 2px solid currentColor;
+    border-block-start-color: transparent;
+    border-radius: 50%;
+    animation: control-spin 700ms linear infinite;
+}
+@keyframes control-spin {
+    to {
+        transform: rotate(1turn);
+    }
+}
+html[data-motion='reduce'] button[aria-busy='true']::before {
+    animation-duration: 2s;
+}
+button.primary,
+.button.primary {
+    --control-bg: var(--action);
+    --control-fg: var(--action-text);
+    --control-border: var(--action);
+    font-weight: 700;
+}
+button.primary:not(:disabled):hover,
+.button.primary:not(:disabled):hover {
+    background: color-mix(in srgb, var(--action) 84%, #ffffff);
+    border-color: color-mix(in srgb, var(--action) 84%, #ffffff);
+}
+button.quiet,
+.button.quiet {
+    --control-bg: transparent;
+    --control-border: transparent;
+    box-shadow: none;
+}
+button.quiet:not(:disabled):hover,
+.button.quiet:not(:disabled):hover {
+    background: var(--raised);
+    border-color: transparent;
+}
+button.danger,
+.button.danger {
+    --control-bg: transparent;
+    --control-fg: var(--bad);
+    --control-border: color-mix(in srgb, var(--bad) 70%, transparent);
+}
+button.danger:not(:disabled):hover,
+.button.danger:not(:disabled):hover {
+    background: color-mix(in srgb, var(--bad) 16%, transparent);
     border-color: var(--bad);
 }
 button.link {
@@ -90,7 +161,56 @@ button.link {
     box-shadow: none;
     color: var(--cyan);
     padding: 0;
+    min-block-size: 0;
     text-align: left;
+    text-decoration: underline;
+}
+/* A toggled control (Tail, Pause, density) reads as pressed, not hovered. */
+button[aria-pressed='true'],
+.button[aria-pressed='true'] {
+    background: color-mix(in srgb, var(--cyan) 18%, var(--raised));
+    border-color: var(--cyan);
+    color: var(--text);
+}
+button.sm,
+.button.sm {
+    min-block-size: var(--control-sm);
+    padding: 0 10px;
+    font-size: 12px;
+    border-radius: 7px;
+}
+button.lg,
+.button.lg {
+    min-block-size: var(--control-lg);
+    padding: 0 20px;
+    font-size: 14px;
+}
+button.icon,
+.button.icon {
+    inline-size: var(--control);
+    padding: 0;
+}
+button.icon.sm {
+    inline-size: var(--control-sm);
+}
+button.icon svg {
+    inline-size: 16px;
+    block-size: 16px;
+}
+input,
+select,
+textarea {
+    font: inherit;
+}
+button.link {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    color: var(--cyan);
+    padding: 0;
+    min-block-size: 0;
+    text-align: left;
+    text-decoration: underline;
 }
 input,
 select,

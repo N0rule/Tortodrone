@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, button, input, label, text } from '../ui.js';
+import { el, button, input, text } from '../ui.js';
 import { edit, field } from '../components/dialog.js';
 import { logStream } from '../components/log-stream.js';
 const history = [],
@@ -11,22 +11,22 @@ export function reset() {
 }
 export async function mount(ctx) {
     const metadata = await ctx.request('console'),
-        node = el('div', null, 'console-workspace'),
-        stream = logStream({ commands: outputHistory }),
+        stream = logStream({ commands: outputHistory, title: 'tortodrone — console' }),
         feedback = el('small', 'Connected');
     const output = stream.output;
     output.setAttribute('aria-label', 'Console output');
     feedback.className = 'console-connection';
-    const form = el('form', null, 'command-form'),
+    const form = el('form', null, 'console-prompt'),
         command = input('Command', commandDraft, 'text', {
             maxLength: 128,
             required: true,
             autocomplete: 'off',
             spellcheck: false
         }),
-        run = el('button', 'Run command');
+        run = el('button', 'Run', 'primary');
     run.type = 'submit';
     command.placeholder = 'help';
+    command.classList.add('console-input');
     const completions = el('datalist');
     completions.id = 'console-commands';
     for (const name of [...metadata.read, ...metadata.actions]) {
@@ -35,7 +35,10 @@ export async function mount(ctx) {
         completions.append(option);
     }
     command.setAttribute('list', completions.id);
-    form.append(label('Command', command), run, completions);
+    // The visible prompt is decorative; the accessible name stays on the field.
+    const promptLabel = el('span', 'tortodrone$', 'console-prompt-label');
+    promptLabel.setAttribute('aria-hidden', 'true');
+    form.append(promptLabel, command, run, completions);
     let index = history.length,
         draft = '',
         pending = false;
@@ -49,6 +52,34 @@ export async function mount(ctx) {
         commandDraft = command.value;
     };
     command.onkeydown = (event) => {
+        if (event.ctrlKey && event.key.toLowerCase() === 'l') {
+            event.preventDefault();
+            stream.clear();
+            return;
+        }
+        if (event.ctrlKey && event.key.toLowerCase() === 'c') {
+            event.preventDefault();
+            command.value = commandDraft = '';
+            text(feedback, 'Connected');
+            return;
+        }
+        if (event.key === 'Tab' && command.value.trim() && !command.value.includes(' ')) {
+            // Complete a command name in place; repeated Tab cycles matches.
+            const prefix = command.value.trim();
+            const matches = [...metadata.read, ...metadata.actions].filter((name) =>
+                name.startsWith(prefix)
+            );
+            if (matches.length) {
+                event.preventDefault();
+                const next =
+                    matches.indexOf(command.value) === matches.length - 1
+                        ? matches[0]
+                        : (matches.find((name) => name > command.value) ?? matches[0]);
+                command.value = commandDraft = next;
+                command.setSelectionRange(next.length, next.length);
+            }
+            return;
+        }
         if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
             event.preventDefault();
             if (index === history.length) draft = command.value;
@@ -121,8 +152,10 @@ export async function mount(ctx) {
         }
     });
     stream.tools.prepend(help);
-    stream.tools.append(feedback);
-    node.append(stream.tools, output, form);
+    stream.state.append(feedback);
+    stream.node.insertBefore(form, stream.footer);
+    const node = stream.node;
+    node.classList.add('console-workspace');
     async function refresh() {
         try {
             if (!stream.paused) stream.update(await ctx.request('logs'));

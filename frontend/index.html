@@ -122,7 +122,9 @@
                             <h1 id="title" tabindex="-1">Overview</h1>
                             <p id="page-description" class="page-description"></p>
                         </div>
-                        <button id="refresh" class="quiet">Refresh</button>
+                        <button id="refresh" class="secondary sm" title="Reload this page (R)">
+                            <span>Refresh</span>
+                        </button>
                     </div>
                     <div id="notice" role="status" aria-live="polite" hidden></div>
                     <div id="page-status" class="visually-hidden" role="status" aria-live="polite"></div>
@@ -145,7 +147,7 @@
                 <p id="dialog-error" role="alert" class="error"></p>
                 <div class="dialog-actions">
                     <button type="button" id="cancel-dialog" class="secondary">Cancel</button
-                    ><button type="submit" id="submit-dialog">Save changes</button>
+                    ><button type="submit" id="submit-dialog" class="primary">Save changes</button>
                 </div>
             </form>
         </dialog>

@@ -60,6 +60,68 @@ Shortcuts are ignored while a text field, select or content-editable element has
 focus, so typing a knight name never fires them. `?` also appears in the top bar
 for pointer users.
 
+## Server identity
+
+Operators used to SSH into the host to read `data/keys/public.txt`; the Overview
+page now shows it. The panel reports the algorithm and size, the creation time,
+the file that holds it, the `modulus#exponent` pair the client trusts, and the
+**SHA-256 fingerprint over the DER SubjectPublicKeyInfo** — the same value
+`openssl rsa -pubin -inform DER -in key.der -noout -text` prints as it does for
+TLS certificates, written as upper-case colon-separated byte pairs.
+
+- **Never exposed:** the private key, its path and the reverse-proxy secret. The
+  panel only reports whether a signing key is stored (`keyStored`).
+- **Permission:** `VIEWER`. A signed-out request gets `401`, so the fingerprint is
+  never public.
+- **Actions:** copy the public key, download `public.txt`, reveal the full key in a
+  read-only field, copy the fingerprint. Each confirms with a toast.
+
+## Terminal surface
+
+Logs and Console share one component, `assets/components/log-stream.js`, and read
+as a terminal window rather than a table: window dots and a title bar with the
+live line count, a monospaced grid (`time · level · message`), severity colouring,
+and a status line with the key hints and the tail state. Both pages fill the
+reading area (`calc(100dvh - 210px)`, at least 480 px) so the surface has the same
+weight on either page.
+
+| Keys | Action |
+| --- | --- |
+| `Ctrl`/`⌘` + `F` | Focus the output search |
+| `Ctrl`/`⌘` + `L` | Clear the visible output |
+| `End` | Resume tailing the newest line |
+| `p` | Pause or resume the stream |
+
+Filtering never moves the viewport: the stream stays anchored while rows are
+hidden, and a **Jump to latest** pill appears when new rows arrive off-screen.
+Console keeps its prompt inside the shell — `tortodrone$` label, a borderless
+monospace field and a primary **Run** button — with `Tab` completion from the
+server's route list, `↑`/`↓` history, and `Ctrl`/`⌘` + `L`/`C` for clear and
+cancel. The connection state lives in the status line (`● Connected`,
+`Executing…`, `Disconnected · reason`).
+
+Deep links land on a filtered view: `#logs?severity=WARN` and
+`#logs?search=timeout` are used by the Overview warnings table, and
+`#players?scene=<name>` by the monster table.
+
+## Player Mail
+
+Compose is a three-mode editor: windowed **Campaign**, **Direct** mail to one
+knight, and the **Welcome** letter. Each mode shares the same layout — a template
+row (Maintenance, Compensation, Event, Season start), sender and subject, the body
+beside a preview, and attachments.
+
+- **Preview:** an **In-game** view (what the client renders) and a **Plain text**
+  view (the exact characters that reach the mailbox), toggled with pressed-state
+  buttons and kept current while typing.
+- **Recipients:** direct mail offers a filterable knight list with per-knight
+  checkboxes, *Select all* and *Clear*, and sends sequentially with progress in
+  the dialog (`#dialog-progress`, `aria-busy` on the submit button).
+- **Time:** campaign windows are read in the browser's timezone, named in the
+  form, and the list shows each mailing's window in local time.
+- **Revisions:** an in-flight mailing can be duplicated, and editing an active one
+  only affects knights who have not received it yet — the panel says so.
+
 ## Preferences
 
 `Preferences` (Operations) stores browser-local settings; they are never sent to
@@ -206,6 +268,7 @@ operation cannot ship without a control. The mapping in brief:
 | Route group | Where the WebUI uses it |
 | --- | --- |
 | `status`, `logs`, `metrics` | Overview, Logs, Players, the connection strip |
+| `identity` | Server identity panel on Overview |
 | `accounts`, `account-*`, `knights`, `knights-all` | Accounts, Knights |
 | `knight`, `knight-state`, `knight-view`, `knight-delete`, `knight-progress`, `knight-currency` | Knight profile, progression and currency editors |
 | `items`, `item`, `item-definitions`, `accessories`, `item-preview` | Item picker, catalogue, gear editor |
@@ -234,7 +297,8 @@ node --check frontend/assets/app.js
 ```
 
 `responsive-test.mjs` pins the mobile contract (card rows with `data-label`,
-hidden header row, 36 px touch targets, no `min-width` wider than 360 px) and
+hidden header row, 36 px touch targets taken from the `--control*` tokens, no
+`min-width` wider than 360 px) and
 `routes-test.mjs` pins endpoint coverage; both fail loudly if a refactor drops
 either. The browser `shell.js` group ends with a sweep over every navigable page,
 checking one visible `h1`, a caption and scoped headers on each table, unique ids,

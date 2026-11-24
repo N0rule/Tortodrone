@@ -1,6 +1,7 @@
 package org.tortodrone.web;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.account.AccountStore;
@@ -21,10 +22,18 @@ public final class AdminService implements AutoCloseable {
     private final AdminViews views;
     private final MetricHistory history;
     private final org.tortodrone.resources.ContentRegistry validatedContent;
+    private final Path data;
 
     public AdminService(AccountStore accounts, ServerControl control, ServerLog log, Path deployment)
             throws IOException {
-        this(accounts, control, log, deployment, null);
+        this(
+                accounts,
+                control,
+                log,
+                deployment,
+                null,
+                org.tortodrone.core.config.ServerSettings.defaultPath(deployment),
+                deployment.resolveSibling("data"));
     }
 
     public AdminService(
@@ -40,7 +49,8 @@ public final class AdminService implements AutoCloseable {
                 log,
                 deployment,
                 validatedContent,
-                org.tortodrone.core.config.ServerSettings.defaultPath(deployment));
+                org.tortodrone.core.config.ServerSettings.defaultPath(deployment),
+                deployment.resolveSibling("data"));
     }
 
     public AdminService(
@@ -49,9 +59,11 @@ public final class AdminService implements AutoCloseable {
             ServerLog log,
             Path deployment,
             org.tortodrone.resources.ContentRegistry validatedContent,
-            Path config)
+            Path config,
+            Path data)
             throws IOException {
         this.validatedContent = validatedContent;
+        this.data = data;
         this.accounts = accounts;
         this.control = control;
         this.deployment = deployment;
@@ -127,6 +139,7 @@ public final class AdminService implements AutoCloseable {
             case "auctions" -> accounts.auctions().overview();
             case "deliveries" -> accounts.auctions().deliveries(p.number("id"));
             case "console" -> AdminConsole.commands();
+            case "identity" -> identity();
             case "logs" -> {
                 synchronized (logs) {
                     yield List.copyOf(logs);
@@ -164,10 +177,103 @@ public final class AdminService implements AutoCloseable {
         };
     }
 
+    /**
+     * The handshake identity is public material: a remote operator needs the modulus and exponent to
+     * point a client at this server without shell access. Only the public half is ever reported, and
+     * the file is read defensively so a missing or huge file cannot fail the page.
+     */
+    private Object identity() throws IOException {
+        Path directory = data == null ? null : data.resolve("keys");
+        Path publicFile = directory == null ? null : directory.resolve("public.txt");
+        var result = new LinkedHashMap<String, Object>();
+        result.put("algorithm", "RSA");
+        result.put("bits", 2048);
+        result.put("fingerprintAlgorithm", "SHA-256");
+        if (publicFile == null
+                || !Files.isRegularFile(publicFile, LinkOption.NOFOLLOW_LINKS)
+                || Files.size(publicFile) > 4096) {
+            result.put("available", false);
+            result.put("reason", "No server keypair is stored yet; it is created on the next start.");
+            result.put("keyStored", false);
+            return result;
+        }
+        String value = Files.readString(publicFile, java.nio.charset.StandardCharsets.US_ASCII)
+                .trim();
+        int separator = value.indexOf('#');
+        if (separator < 2 || separator == value.length() - 1) {
+            result.put("available", false);
+            result.put("reason", "keys/public.txt is not in modulus#exponent form.");
+            result.put("keyStored", false);
+            return result;
+        }
+        String modulusHex = value.substring(0, separator).toLowerCase(Locale.ROOT);
+        String exponentHex = value.substring(separator + 1).toLowerCase(Locale.ROOT);
+        BigInteger modulus;
+        BigInteger exponent;
+        try {
+            modulus = new BigInteger(modulusHex, 16);
+            exponent = new BigInteger(exponentHex, 16);
+        } catch (NumberFormatException invalid) {
+            result.put("available", false);
+            result.put("reason", "keys/public.txt does not parse as hexadecimal numbers.");
+            result.put("keyStored", false);
+            return result;
+        }
+        result.put("available", true);
+        result.put("publicKey", modulusHex + "#" + exponentHex);
+        result.put("modulus", modulusHex);
+        result.put("exponent", exponentHex);
+        result.put("bits", modulus.bitLength());
+        byte[] der = der(modulus, exponent);
+        result.put("fingerprint", fingerprint(der));
+        result.put("fingerprintBase64", Base64.getEncoder().encodeToString(digest(der)));
+        result.put("derBase64", Base64.getEncoder().encodeToString(der));
+        // Only whether a signing key exists is published; no private material
+        // and no path to it ever crosses the HTTP boundary.
+        result.put("keyStored", Files.isRegularFile(directory.resolve("private.pk8"), LinkOption.NOFOLLOW_LINKS));
+        result.put("file", "data/keys/public.txt");
+        result.put("modified", Files.getLastModifiedTime(publicFile).toMillis());
+        result.put("bytes", value.length());
+        return result;
+    }
+
+    /** X.509 SubjectPublicKeyInfo bytes, the form openssl prints a fingerprint of. */
+    private static byte[] der(BigInteger modulus, BigInteger exponent) throws IOException {
+        try {
+            return java.security.KeyFactory.getInstance("RSA")
+                    .generatePublic(new java.security.spec.RSAPublicKeySpec(modulus, exponent))
+                    .getEncoded();
+        } catch (java.security.GeneralSecurityException invalid) {
+            throw new IOException("Server public key cannot be encoded", invalid);
+        }
+    }
+
+    private static byte[] digest(byte[] value) {
+        try {
+            return java.security.MessageDigest.getInstance("SHA-256").digest(value);
+        } catch (java.security.NoSuchAlgorithmException impossible) {
+            throw new AssertionError(impossible);
+        }
+    }
+
+    /**
+     * Upper-case hex in byte pairs, the form anyone can compare against openssl or a
+     * <code>sha256sum</code> of the modulus, and read aloud over a phone.
+     */
+    private static String fingerprint(byte[] der) {
+        String hex = HexFormat.of().withUpperCase().formatHex(digest(der));
+        var grouped = new StringBuilder(hex.length() + hex.length() / 2);
+        for (int index = 0; index < hex.length(); index += 2) {
+            if (index > 0) grouped.append(':');
+            grouped.append(hex, index, Math.min(hex.length(), index + 2));
+        }
+        return grouped.toString();
+    }
+
     public static WebIdentityStore.Role permission(String route, boolean write) {
         if (!write)
             return switch (route) {
-                case "status", "logs", "metrics" -> WebIdentityStore.Role.VIEWER;
+                case "status", "logs", "metrics", "identity" -> WebIdentityStore.Role.VIEWER;
                 case "accounts",
                         "knights",
                         "knight",

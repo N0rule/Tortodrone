@@ -18,6 +18,34 @@ import { openDialog, confirm as confirmAction } from '../components/dialog.js';
 import { itemPicker } from '../components/item-picker.js';
 import { currency, itemLine } from '../components/items.js';
 
+const TEMPLATES = [
+    {
+        id: 'maintenance',
+        label: 'Maintenance',
+        subject: 'Scheduled maintenance',
+        body: 'Haven goes offline for maintenance in one hour.\n\nExpected downtime is 30 minutes. Please finish your runs before then.'
+    },
+    {
+        id: 'compensation',
+        label: 'Compensation',
+        subject: 'Sorry for the interruption',
+        body: 'Haven dropped a few of you mid-run earlier today.\n\nTake this as an apology, and thank you for the reports.'
+    },
+    {
+        id: 'event',
+        label: 'Event',
+        subject: 'Weekend event is live',
+        body: 'From now until Sunday, bonus rewards are active in the Clockworks.\n\nGroup up, go deep, and tell us how it goes.'
+    },
+    {
+        id: 'season',
+        label: 'Season start',
+        subject: 'New season begins',
+        body: 'A new season opens today.\n\nPrestige, gear and rewards reset as usual; your account and inventory stay exactly as they are.'
+    }
+];
+/** Direct sends from this browser session, newest first; not persisted server-side. */
+const recentSends = [];
 const SENDERS = [
     ['6', 'Spiral HQ'],
     ['5', 'Haven Treasury'],
@@ -136,6 +164,7 @@ export async function mount(ctx) {
         node = el('div', null, 'stack mail-page'),
         summary = el('div', null, 'stack'),
         welcomeHost = el('div'),
+        recentSendsHost = el('div'),
         guidance = el(
             'p',
             'A mailing reaches every knight once while the window is open, including knights created later. Delivery happens on their next visit; delivered letters are never duplicated.'
@@ -238,6 +267,24 @@ export async function mount(ctx) {
                     () => get().enabled
                 ),
                 button(
+                    'Duplicate',
+                    () => {
+                        const source = get();
+                        const now = Date.now();
+                        compose('campaign', {
+                            ...source,
+                            id: 0,
+                            updated: 0,
+                            delivered: 0,
+                            enabled: false,
+                            subject: `${source.subject} (copy)`.slice(0, 50),
+                            starts: now + 3600_000,
+                            ends: now + 7 * 86400_000
+                        });
+                    },
+                    'secondary'
+                ),
+                button(
                     'Cancel',
                     () =>
                         confirmAction(
@@ -299,6 +346,38 @@ export async function mount(ctx) {
         );
         summaryPanel.classList.add('stack');
         summary.replaceChildren(summaryPanel);
+    }
+
+    /** Direct sends made in this session, so a multi-knight batch has a receipt. */
+    function renderRecentSends() {
+        if (!recentSends.length) {
+            recentSendsHost.replaceChildren();
+            return;
+        }
+        const table = new DataTable(
+            [
+                ['Knight', (row) => row.knight],
+                ['Account', (row) => row.username],
+                ['Subject', (row) => row.subject],
+                ['Sent', (row) => date(row.at), (row) => row.at],
+                [
+                    'Result',
+                    (row) => badge(row.ok ? 'Queued' : 'Refused', row.ok ? 'good' : 'bad')
+                ]
+            ],
+            {
+                key: (row) => String(row.at) + row.knight,
+                id: 'mail-recent-sends',
+                caption: 'Direct mail sent from this session',
+                search: false,
+                persist: false,
+                pageSize: 5
+            }
+        );
+        table.update([...recentSends].slice(0, 25));
+        recentSendsHost.replaceChildren(
+            panel('Recent direct mail', el('small', 'Session only, newest first. Refusals keep the reason in the toast.', 'muted'), table.node)
+        );
     }
 
     function renderWelcome() {
@@ -372,53 +451,99 @@ export async function mount(ctx) {
             max: 2147483647,
             step: 1
         });
-        let filter, target;
+        let filter, target, chosen;
         if (mode === 'direct') {
+            // Direct mail can go to one knight or a checked subset; the list keeps
+            // the account and online state next to the name.
             filter = input('Filter knights');
-            target = select('Knight', [], '');
+            target = el('div', null, 'mail-recipients');
+            target.setAttribute('role', 'group');
+            target.setAttribute('aria-label', 'Recipients');
+            chosen = new Set(draft.recipient ? [draft.recipient] : []);
             const countLabel = el('small', '', 'muted');
             const recipientPanel = panel(
                 'To',
                 el(
                     'small',
-                    'Written straight to this knight’s inbox; offline knights read it when they return.',
+                    'Written straight to each knight’s inbox; offline knights read it when they return.',
                     'muted'
                 ),
                 el('div', null, 'form-grid'),
+                toolbar(
+                    button(
+                        'Select all shown',
+                        () => {
+                            for (const row of visibleRows()) chosen.add(`${row.username}|${row.name}`);
+                            fill();
+                        },
+                        'quiet',
+                        () => rows.length > 0
+                    ),
+                    button(
+                        'Clear',
+                        () => {
+                            chosen.clear();
+                            fill();
+                        },
+                        'quiet',
+                        () => chosen.size > 0
+                    )
+                ),
                 countLabel
             );
             recipientPanel.classList.add('stack');
             const recipientForm = recipientPanel.querySelector('.form-grid');
-            recipientForm.append(label('Filter', filter), label('Knight', target));
-            const fill = () => {
+            recipientForm.append(label('Filter', filter));
+            const visibleRows = () => {
                 const query = filter.value.trim().toLowerCase();
-                const matches = rows.filter((row) =>
+                return rows.filter((row) =>
                     `${row.name} ${row.username}`.toLowerCase().includes(query)
                 );
+            };
+            const syncCount = () => {
+                text(
+                    countLabel,
+                    chosen.size
+                        ? `${chosen.size} knight${chosen.size === 1 ? '' : 's'} selected`
+                        : 'Choose at least one knight'
+                );
+                countLabel.classList.toggle('error', chosen.size === 0);
+            };
+            const fill = () => {
+                const matches = visibleRows();
                 target.replaceChildren(
                     ...matches.map((row) => {
-                        const option = el(
-                            'option',
-                            `${row.name} · ${row.username} · ${row.online ? 'online' : 'offline'}`
+                        const key = `${row.username}|${row.name}`;
+                        const box = input(`Send to ${row.name}`, chosen.has(key), 'checkbox');
+                        const name = el('span', null, 'mail-recipient-name');
+                        name.append(
+                            el('strong', row.name),
+                            el('small', `${row.username} · ${row.online ? 'online' : 'offline'}`, 'muted')
                         );
-                        option.value = `${row.username}|${row.name}`;
-                        return option;
+                        const rowLabel = el('label', null, 'mail-recipient');
+                        box.onchange = () => {
+                            if (box.checked) chosen.add(key);
+                            else chosen.delete(key);
+                            syncCount();
+                        };
+                        rowLabel.append(box, name);
+                        return rowLabel;
                     })
                 );
-                if (!matches.length) {
-                    const option = el('option', 'No matching knights');
-                    option.value = '';
-                    target.append(option);
-                }
-                if (!target.value && target.options.length) target.value = target.options[0].value;
-                if (!draft.recipient) draft.recipient = target.value;
-                text(countLabel, `${matches.length} knight${matches.length === 1 ? '' : 's'}`);
+                if (!matches.length) target.append(el('p', 'No knight matches this filter.', 'muted'));
+                draft.recipient = [...chosen][0] || '';
+                syncCount();
             };
             filter.oninput = fill;
             fill();
             node.append(recipientPanel);
         }
+        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time';
         const enabledRow = mode === 'welcome' ? toolbar(label('Enabled', enabled)) : null;
+        const zoneNote =
+            mode === 'campaign'
+                ? el('small', `Start and end are read in this browser's timezone (${zone}).`, 'muted')
+                : null;
         if (mode === 'campaign') header.append(label('Starts', starts), label('Ends', ends));
         header.append(
             label('From', sender),
@@ -443,6 +568,7 @@ export async function mount(ctx) {
             );
             previewHost.replaceWith(next);
             previewHost = next;
+            if (previewMode === 'plain') showPreview('plain');
         };
         for (const control of [subject, body, sender, customSender, crowns, energy])
             control.addEventListener('input', refreshPreview);
@@ -523,7 +649,34 @@ export async function mount(ctx) {
             )
         );
         const split = messagePanel.querySelector('.mail-compose-split');
-        split.append(label('Body', body), label('Preview', previewHost));
+        // The same letter as the client renders it and as plain text, because the
+        // in-game view normalises whitespace and strips markup-ish characters.
+        const plain = el('pre', null, 'mail-plain');
+        const viewTabs = toolbar(
+            button('In-game', () => showPreview('game'), 'quiet'),
+            button('Plain text', () => showPreview('plain'), 'quiet')
+        );
+        let previewMode = 'game';
+        function showPreview(mode) {
+            previewMode = mode;
+            for (const [index, node] of [...viewTabs.querySelectorAll('button')].entries())
+                node.setAttribute('aria-pressed', String(index === (mode === 'game' ? 0 : 1)));
+            gameHost.hidden = mode !== 'game';
+            plain.hidden = mode !== 'plain';
+            if (mode === 'plain')
+                plain.textContent =
+                    `${customSender.value.trim() || senderName(Number(sender.value))}\n` +
+                    `${subject.value.trim() || '(no subject)'}\n\n` +
+                    `${body.value.trim() || '(no body)'}`;
+        }
+        const gameHost = el('div', null, 'mail-preview-host');
+        gameHost.append(previewHost);
+        const previewPanel = el('div', null, 'stack-tight');
+        previewPanel.append(viewTabs, gameHost, plain);
+        plain.hidden = true;
+        previewPanel.querySelectorAll('button').forEach((node) => node.classList.add('sm'));
+        showPreview('game');
+        split.append(label('Body', body), label('Preview', previewPanel));
         const attachments = panel(
             'Attachments',
             el('div', null, 'form-grid'),
@@ -538,9 +691,38 @@ export async function mount(ctx) {
         );
         const extras = attachments.querySelector('.form-grid');
         extras.append(label('Crowns', crowns), label('Energy', energy));
+        // Templates fill the subject and body in one click; the preview updates
+        // with them, so nothing is sent blind.
+        const templateRow = toolbar(
+            el('small', 'Start from', 'muted'),
+            ...TEMPLATES.map((template) =>
+                button(
+                    template.label,
+                    () => {
+                        if (
+                            body.value.trim() &&
+                            body.value.trim() !== template.body.trim() &&
+                            !window.confirm('Replace the current subject and body with this template?')
+                        )
+                            return;
+                        subject.value = template.subject;
+                        body.value = template.body;
+                        refreshPreview();
+                    },
+                    'secondary'
+                )
+            )
+        );
+        templateRow.classList.add('mail-templates');
+        templateRow.querySelectorAll('button').forEach((node) => node.classList.add('sm'));
+        messagePanel.prepend(templateRow);
         messagePanel.classList.add('stack');
         attachments.classList.add('stack');
         if (enabledRow) node.append(enabledRow);
+        if (zoneNote) {
+            zoneNote.classList.add('wide');
+            header.append(zoneNote);
+        }
         node.append(header, messagePanel, attachments);
 
         const initial = JSON.stringify(snapshot());
@@ -589,7 +771,7 @@ export async function mount(ctx) {
             isDirty: () => JSON.stringify(snapshot()) !== initial,
             dispose: () => picker.dispose(),
             after: () => refresh(),
-            onSubmit: async () => {
+            onSubmit: async (form, progress) => {
                 const requiresText = mode !== 'welcome' || enabled.checked || draft.enabledAt;
                 if (requiresText && !subject.value.trim()) throw new Error('Subject is required.');
                 if (requiresText && !body.value.trim()) throw new Error('Body is required.');
@@ -605,12 +787,43 @@ export async function mount(ctx) {
                     items: mailingItems(draft.gifts)
                 };
                 if (mode === 'direct') {
-                    if (!target.value) throw new Error('Choose a knight.');
-                    const [username, knight] = target.value.split('|');
-                    await api.change('mail-send', { ...values, username, knight });
+                    const recipients = [...chosen];
+                    if (!recipients.length) throw new Error('Choose at least one knight.');
+                    let sent = 0;
+                    const failed = [];
+                    for (const [index, key] of recipients.entries()) {
+                        progress(index + 1, recipients.length, 'Sending');
+                        const [username, knight] = key.split('|');
+                        try {
+                            await api.change('mail-send', { ...values, username, knight });
+                            sent++;
+                            recentSends.unshift({
+                                knight,
+                                username,
+                                subject: values.subject,
+                                at: Date.now(),
+                                ok: true
+                            });
+                        } catch (error) {
+                            failed.push(`${knight}: ${error.message || 'refused'}`);
+                            recentSends.unshift({
+                                knight,
+                                username,
+                                subject: values.subject,
+                                at: Date.now(),
+                                ok: false,
+                                reason: error.message || 'refused'
+                            });
+                        }
+                    }
                     changed(
-                        `Mail queued for ${knight}. It is waiting even while they are offline.`
+                        failed.length
+                            ? `${sent} of ${recipients.length} sent; ${failed.slice(0, 2).join(' · ')}`
+                            : sent === 1
+                              ? `Mail queued for ${recipients[0].split('|')[1]}. It waits while they are offline.`
+                              : `${sent} knights will receive this mail.`
                     );
+                    renderRecentSends();
                 } else if (mode === 'welcome') {
                     await api.change('mail-welcome-save', { ...values, enabled: enabled.checked });
                     changed(enabled.checked ? 'Welcome mail saved.' : 'Welcome mail disabled.');
@@ -649,13 +862,14 @@ export async function mount(ctx) {
     const mailings = panel(
         'Mailings',
         toolbar(
-            button('New mailing', () => compose('campaign')),
+            button('New mailing', () => compose('campaign'), 'primary'),
             button('Send to knight', () => compose('direct'), 'secondary')
         ),
         table.node
     );
     mailings.classList.add('stack');
-    node.append(summary, welcomeHost, mailings);
+    renderRecentSends();
+    node.append(summary, welcomeHost, mailings, recentSendsHost);
     return {
         node,
         interval: 30000,

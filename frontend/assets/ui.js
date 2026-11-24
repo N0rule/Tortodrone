@@ -30,7 +30,15 @@ export function button(label, action, className = 'secondary', available) {
         };
         node.refreshAvailability();
     }
+    // A pending control shows a spinner and refuses further clicks, so a slow
+    // write cannot be submitted twice.
+    node.setBusy = (busy) => {
+        if (busy) node.setAttribute('aria-busy', 'true');
+        else node.removeAttribute('aria-busy');
+        node.disabled = !!busy;
+    };
     node.addEventListener('click', async () => {
+        if (node.getAttribute('aria-busy') === 'true') return;
         try {
             await action();
         } catch (error) {
@@ -90,8 +98,14 @@ export function label(title, control) {
 }
 export function facts(entries) {
     const node = el('dl');
-    for (const [key, value] of entries)
-        node.append(el('dt', key), el('dd', value ?? 'Unavailable'));
+    for (const [key, value] of entries) {
+        const description = el('dd');
+        // A Node value lets a caller keep a live element (fingerprint, expiry)
+        // inside the description list instead of a stringified copy.
+        if (value instanceof Node) description.append(value);
+        else description.textContent = String(value ?? 'Unavailable');
+        node.append(el('dt', key), description);
+    }
     return node;
 }
 export const number = (value) => Number(value ?? 0).toLocaleString();
