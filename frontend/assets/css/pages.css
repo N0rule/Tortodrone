@@ -274,11 +274,12 @@ button.metric:focus-visible {
     flex-direction: column;
     /* Fill the reading area on both Logs and Console so the surface reads as a
        terminal window instead of a strip of rows above empty canvas. */
-    /* A terminal window is a rectangle of one material: a 2px radius, no drop shadow
-       and no floating pill, because anything rounder read as a card dressed as one. */
+    /* A terminal window is a rectangle of one material: one surface radius and no drop
+       shadow. The corner is the product's own surface step, not a sharper one - a 2px
+       corner beside 18px panels read as a box somebody forgot to finish. */
     min-height: min(380px, 54dvh);
     border: 1px solid var(--term-line);
-    border-radius: 2px;
+    border-radius: var(--radius);
     background: var(--term-bg);
     overflow: hidden;
 }
@@ -534,7 +535,7 @@ button.metric:focus-visible {
     /* 7px a side, not 8: the row came to 326.9px in a 326px line and wrapped its last
        word onto a second line at exactly the width the row was sized for. */
     padding-inline: 7px;
-    border-radius: 10px;
+    border-radius: var(--radius-control);
     color: var(--text);
     font-size: 12.5px;
     white-space: nowrap;
@@ -942,8 +943,8 @@ html[data-motion='reduce'] .command-pending {
     inset-block-end: 34px;
     inset-inline-end: 12px;
     min-block-size: 30px;
-    padding: 0 10px;
-    border-radius: 0;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
     font-family: var(--mono);
     font-size: 11.5px;
 }
@@ -1141,7 +1142,7 @@ html[data-motion='reduce'] .command-pending {
     color: var(--term-fg);
     background: transparent;
     border: 1px solid var(--term-line);
-    border-radius: 2px;
+    border-radius: var(--radius-control);
     cursor: pointer;
     white-space: nowrap;
 }
@@ -1849,7 +1850,7 @@ td:has(> .time-stamp) {
     background: var(--effect-bg);
     border: 1px solid var(--effect-line);
     border-left: 3px solid var(--effect-line);
-    border-radius: 3px;
+    border-radius: var(--radius-control);
     font-size: 12.5px;
     font-weight: 400;
     line-height: 1.4;

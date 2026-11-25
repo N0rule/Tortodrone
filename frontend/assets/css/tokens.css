@@ -49,11 +49,12 @@
     --purple: #e2bcf5;
     --shadow: 0 12px 32px #030d1680;
     /* Three radii, three jobs: surfaces, controls, pills. Anything else is drift.
-       The surface step is the large one: a 12px corner on a 1,200px panel reads as a
-       soft edge, while an 8px one a few pixels off the controls beside it read as a
-       mistake. */
-    --radius: 14px;
-    --radius-control: 10px;
+       The steps are generous on purpose: this is a dense panel product, and the soft
+       corner is what keeps twelve surfaces of numbers from reading as a spreadsheet.
+       The surface step stays well clear of the control step, so a control inside a
+       panel never looks like the panel's own edge. */
+    --radius: 20px;
+    --radius-control: 14px;
     --radius-pill: 999px;
     --control: 40px;
     /* The sizes client art is drawn at, one per job: a row thumbnail, a tile, an
