@@ -64,10 +64,13 @@
     --control: 40px;
     /* The sizes client art is drawn at, one per job: a row thumbnail, a tile, an
        equipped slot. Two lists picking their own 30px and 34px was drift, not design.
-       The row is 44, not 38: it is the same picture the 60px tile shows, and at 38 the
-       ring around it read as a border on a box rather than a frame around art. */
-    --icon-row: 44px;
-    --icon-tile: 60px;
+       Every size is a step on the pack's own canvas — all of it is 96px square — so a
+       44px row was 96 ÷ 2.18: a resample with no whole pixels in it, which is why the
+       art at that size looked softer than the same icon in the game. 48 / 64 are 96 ÷ 2
+       and 96 ÷ 1.5, and nothing is drawn above 96, because above native the browser can
+       only invent the extra pixels. */
+    --icon-row: 48px;
+    --icon-tile: 64px;
     --icon-slot: 64px;
     /* A ramp of three real steps: 32 / 36 / 44. 34 against 36 was a 2px difference
        that read as misalignment rather than as a smaller control. */

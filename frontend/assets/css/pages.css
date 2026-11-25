@@ -204,8 +204,10 @@ button.metric:focus-visible {
     border-style: dashed;
     align-items: center;
 }
+/* The frame draws no edge of its own now, so an empty slot has to draw the whole
+   outline it turns on, not just recolour one. */
 .equipment-slot.empty-slot .item-icon {
-    border-style: dashed;
+    border: 1px dashed var(--line);
     opacity: 0.5;
 }
 .sprite-grid {
@@ -1039,7 +1041,7 @@ html[data-motion='reduce'] .command-pending {
 }
 .terminal-key .kbd {
     font-size: 10px;
-    padding: 1px 4px;
+    padding: 0 4px;
 }
 .terminal-key-verb,
 .terminal-key-note {
@@ -1676,12 +1678,14 @@ td:has(> .time-stamp) {
 }
 .sprite-overview {
     display: grid;
-    grid-template-columns: 112px minmax(0, 1fr);
+    /* The portrait is the one place a client icon is shown at its own size: 96px is the
+       canvas, so this is the picture the game draws, not an enlargement of it. */
+    grid-template-columns: 96px minmax(0, 1fr);
     gap: 22px;
 }
 .sprite-overview .item-icon {
-    width: 112px;
-    height: 112px;
+    width: 96px;
+    height: 96px;
 }
 .sprite-overview dl {
     display: grid;

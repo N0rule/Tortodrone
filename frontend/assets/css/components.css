@@ -446,37 +446,34 @@ td .toolbar .button .ui-icon,
     width: var(--icon-tile);
     height: var(--icon-tile);
     flex-shrink: 0;
-    background: var(--inset);
-    /* The frame is a container for art, so its edge stays quiet: six thumbnails a row
-       with --line-bright edges read as six boxes, and the picture inside is the point. */
-    border: 1px solid var(--line);
-    /* A share of the box, not a length: the same frame is drawn at 44, 60, 64 and 112px,
-       and a fixed 10px corner is a fifth of the art at 44 and a twelfth at 112, so the
-       four sizes read as four different shapes. 22% is the 10px of the 44px row written
-       as the ratio it always was. */
-    border-radius: 22%;
-    /* Client icons are square, opaque, 96px canvases with a bevelled rim baked into
-       the picture: the art runs to its own edges. A rounded frame around a square
-       picture shows that mismatch as four corners of art cut across the frame's
-       curve, which at a 38px row thumbnail read as a square sitting in a halo. The
-       frame clips instead, so the picture takes the frame's shape at every size. */
+    /* The frame is the asset's own shape and nothing else. Every client icon is a 96px
+       square canvas, already rounded — a ten-pixel corner on 96, so 10% — and
+       transparent outside that curve. The box copies the curve instead of drawing a
+       rounder one over it: at 22% the frame cut inside the art's own corner, and the
+       four slivers between the two curves showed the page through them, which read as
+       black gaps in every thumbnail. No fill and no ring either: the art is opaque to
+       its edges, so a fill behind it was never visible and the 1px border drew a second
+       rim over the bevelled one the picture brings. */
+    border-radius: 10%;
+    /* Square art in a square box, so the clip costs nothing and no air is left over. */
     overflow: hidden;
 }
-/* The art keeps 2px of air inside its frame at every size, so the 38px row thumbnail
-   and the 110px sprite portrait are the same picture at two scales, not two crops.
-   Its own corners follow the frame's curve minus that air, so the ring drawn around
-   the picture is even instead of pinched at the corners. */
+/* 1:1 with the canvas: the art fills the box it is given at whatever size that box is,
+   with no inset and no letterbox. `contain` rather than `cover`, so a canvas that
+   arrives a different shape is shown whole instead of cropped. */
 .item-icon img {
-    width: calc(100% - 4px);
-    height: calc(100% - 4px);
+    display: block;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
-    border-radius: 21%;
 }
-/* A config the pack has no picture of: the frame stays so the column keeps its
-   rhythm, dashed so it says "not the ordinary case", and the picture becomes the
-   item's initial — typography over the name, not art invented for it. */
+/* A config the pack has no picture of: the edge the ordinary state does not draw comes
+   back so the column keeps its rhythm, dashed so it says "not the ordinary case", and
+   the picture becomes the item's initial — typography over the name, not art invented
+   for it. */
 .item-icon[data-missing] {
-    border-style: dashed;
+    background: var(--inset);
+    border: 1px dashed var(--line);
     color: var(--muted);
 }
 .item-icon-letter {
