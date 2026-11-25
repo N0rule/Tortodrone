@@ -394,14 +394,14 @@ td .toolbar .button.danger:not(:disabled):not([aria-disabled='true']):focus-visi
     color: var(--bad);
     background: color-mix(in srgb, var(--bad) 16%, var(--raised));
 }
-/* A row action that cannot run recedes instead of standing out. The disabled rule paints a
-   filled control in a mixed grey precisely so it stays readable, which on a column of
-   ghosts made the three that were unavailable the loudest thing in the table. */
+/* A row action that cannot run recedes instead of standing out: the base disabled rule
+   drops the fill and the ink, and on a column of ghosts that is the whole difference —
+   it used to keep the muted ink of its enabled neighbours and only lose a fill none of
+   them had. */
 td .toolbar button:disabled,
 td .toolbar button[aria-disabled='true'],
 .data-table tr .toolbar button[aria-disabled='true'] {
     background: transparent;
-    color: var(--muted);
 }
 /* Three small buttons in a row read as broken when only two carry art, so dense
    cell toolbars stay text-only; page-level toolbars keep their icons. */
@@ -420,11 +420,11 @@ td .toolbar .button .ui-icon,
     block-size: 16px;
 }
 /* The paging bar is the compact end of the control scale. */
-/* A page button that cannot act loses its fill. On a single-page table it kept the
-   filled pill of the live control beside it, so the two read as a pair of choices. */
+/* A page button that cannot act loses its fill and its ink with every other disabled
+   control: it used to keep the muted ink of the live page button beside it, so a pager
+   with nowhere to go read as a pair of choices. */
 .pagination button:disabled {
     background: transparent;
-    color: var(--muted);
 }
 .pagination button,
 .pagination select {

@@ -28,7 +28,7 @@ import { toast } from '../components/toast.js';
 import { openDialog, closeDialog, confirm, confirmAction } from '../components/dialog.js';
 import { emptyState, errorState, waiting } from '../components/states.js';
 import { itemPicker } from '../components/item-picker.js';
-import { currency, itemLine } from '../components/items.js';
+import { currency, icon, itemLine } from '../components/items.js';
 
 const TEMPLATES = [
     {
@@ -616,9 +616,10 @@ function deliveredLabel(campaign) {
             ],
             ['Sender', displaySender, displaySender],
             [
-                // One zone for the whole column, instead of a suffix per cell that
-                // the letter dialog repeats differently.
-                `Delivery window · ${zone}`,
+                // The zone lives in the cells, where `date()` prints "07:17 EET" beside
+                // every stamp: repeating it in the header made the label two lines wide,
+                // so the whole header row stood 72px against 42px on every other table.
+                'Delivery window',
                 (campaign) => {
                     const cell = el('div', null, 'mail-window'),
                         end = el('span', null, 'mail-window-end');
@@ -640,10 +641,31 @@ function deliveredLabel(campaign) {
                 'Gifts',
                 (campaign) => {
                     if (!campaign.gifts.length) return el('span', 'Text only', 'muted');
-                    const cell = el('div', null, 'mail-gifts-cell');
+                    // Art, not names. A gift written as a full item line put a 48px tile
+                    // and a two-line name in a 132px column, so a mailing with gifts
+                    // stood 156px in a table of 82px rows: the art is what makes the
+                    // column scannable, and the name is one hover or one letter away.
+                    const cell = el('div', null, 'mail-gifts-cell'),
+                        shown = campaign.gifts.slice(0, 1);
+                    for (const gift of shown) {
+                        const art = icon(gift.config),
+                            name =
+                                definitions.get(gift.config)?.name ||
+                                gift.config.split('/').at(-1);
+                        art.setAttribute('role', 'img');
+                        art.setAttribute('aria-label', name);
+                        art.title = name;
+                        cell.append(art);
+                    }
+                    if (campaign.gifts.length > shown.length)
+                        cell.append(
+                            el(
+                                'span',
+                                `+${campaign.gifts.length - shown.length}`,
+                                'mail-gift-more'
+                            )
+                        );
                     cell.append(el('span', unitCount(units(campaign.gifts)), 'muted'));
-                    for (const gift of campaign.gifts)
-                        cell.append(itemLine(definitions.get(gift.config), { config: gift.config }));
                     return cell;
                 },
                 (campaign) => units(campaign.gifts)

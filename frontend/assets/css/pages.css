@@ -256,11 +256,12 @@ button.metric:focus-visible {
     border-radius: var(--radius);
     color: var(--muted);
 }
-/* A 2px border on select re-flowed the image inside by a pixel; the ring draws the
-   same emphasis on the same geometry. */
+/* The chosen slot is marked by its edge and by nothing else: a gold border *and* a gold
+   inset ring drew two lines 1px apart, 1.8px of gold on a 0.8px border, so the featured
+   slot read as a double frame beside its 0.8px neighbours. Selection is one line, in the
+   colour this console already uses for "this one". */
 .news-preview .news-slot[aria-pressed='true'] {
-    border-color: var(--gold-rule);
-    box-shadow: inset 0 0 0 1px var(--gold);
+    border-color: var(--gold);
 }
 .news-preview .featured {
     aspect-ratio: 570/300;
@@ -844,6 +845,14 @@ button.metric:focus-visible {
 .terminal-line.notice,
 .terminal-line.printed {
     grid-template-columns: minmax(min-content, 1fr);
+}
+/* A notice is the console speaking in its own voice — the banner, the restore notice, a
+   hint about what to type next — so it keeps a measure: across a 1,100px pane it ran to
+   about 190 characters, and a sentence that long is read twice before it lands. A
+   command's output is left alone: a `pre` of aligned columns is what a terminal prints,
+   and capping it would break the columns instead of the line. */
+.terminal-line.notice .log-message {
+    max-inline-size: 96ch;
 }
 /* The message of a printed row holds the echoed command and a `pre` of its output: an
    inline box with a block inside it splits, which put the answer's first line beside
@@ -1605,6 +1614,18 @@ td:has(> .time-stamp) {
 .content-summary .badge.good {
     color: var(--good);
 }
+/* Three figures, three facts, and one separator between each pair: at a 10px gap three
+   muted phrases ran together as "17 compiled scenes 9,355 items Content validated", which
+   reads as a sentence about 9,355 items rather than three answers. A middot says where
+   one fact ends, and it is punctuation rather than a pill, so nothing here looks pressable. */
+.content-summary .toolbar {
+    gap: 0;
+}
+.content-summary .badge + .badge::before {
+    content: '·';
+    margin-inline: 9px;
+    color: var(--line-bright);
+}
 /* One stamp per row: "24/11/2026, 16:19:07 EET" reads the same on the first row as on
    the last, so the column never depends on a row above it and the line never wraps. */
 .time-stamp {
@@ -2263,8 +2284,11 @@ td:has(> .time-stamp) {
 }
 .mail-gifts-cell {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px 12px;
+    /* One row of art, never a column of it: with the items written as full lines the
+       cell stacked a 48px tile and a two-line name per gift, and one mailing stood 156px
+       in a table of 82px rows. */
+    flex-wrap: nowrap;
+    gap: 6px;
     align-items: center;
 }
 .mail-gifts-cell .item-line {
@@ -2292,12 +2316,15 @@ td:has(> .time-stamp) {
     margin-top: 2px;
     margin-bottom: 12px;
 }
-/* Eight columns plus a sticky action column did not fit a 1091px table: the header
-   labels were each held to one unbreakable line, so the table's own minimum width came
-   out wider than the panel. A header label may share a second line instead. */
-.mail-table th,
-.mail-table th button {
-    white-space: normal;
+/* Eight columns plus a sticky action column did not fit a 1091px table, so the labels
+   here were once allowed to wrap. One two-line label ("Delivery window · Europe/Kiev")
+   made this header 72px where every other table's is 42px, and the zone it carried is
+   already printed beside every date below it: the label is one line now, and the window
+   column takes its width from those dates. */
+.mail-gifts-cell .mail-gift-more {
+    color: var(--muted);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
 }
 /* The row carries two controls, not four: "Recipients" and "Duplicate" live in the
    letter the subject opens. Four of them in this cell either wrapped into a 2x2 block,
@@ -2315,8 +2342,11 @@ td:has(> .time-stamp) {
     padding-bottom: max(var(--row), 10px);
 }
 .mail-table th {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    /* No vertical padding here: the sortable header's own button carries 10px top and
+       bottom on every table, and adding a second 10px above and below made this header
+       row 60px where the rest of the console's are 42px. */
+    padding-top: 0;
+    padding-bottom: 0;
 }
 .mail-compose-split {
     display: grid;

@@ -18,7 +18,11 @@ export function text(node, value) {
    and the paint promised nothing. A word is always enough for a control that can be
    taken back. */
 function guessIcon(label) {
-    if (/^(Remove|Unequip|Delete|Revoke|Settle)\b/.test(label)) return 'remove';
+    // Settle is not a removal. It borrowed the ✕ because the word begins with an S, and
+    // on the auctions page "✕ Settle expired" sat beside "✕ Remove pack" doing the
+    // opposite kind of job. The pack has no art for paying a listing out, so the control
+    // carries its label and no icon — the rule this file already follows.
+    if (/^(Remove|Unequip|Delete|Revoke)\b/.test(label)) return 'remove';
     return null;
 }
 /* A disabled control explains itself, out loud and on screen. The reason rides on

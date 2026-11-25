@@ -186,8 +186,13 @@ button[aria-disabled='true'],
 .button[aria-disabled='true'] {
     cursor: not-allowed;
     box-shadow: none;
-    color: var(--muted);
-    background: color-mix(in srgb, var(--raised) 46%, var(--surface));
+    /* Off is a state, and it has to be visible from a metre away: muted ink on a mixed
+       fill measured six RGB steps from the enabled surface beside it, so a control that
+       could not run looked exactly like one that could. The fill goes, the ink drops
+       under the muted step, and the label stays above 4:1 on the panel — dim enough to
+       read as "not now", legible enough to read at all. */
+    color: color-mix(in srgb, var(--muted) 62%, var(--surface));
+    background: transparent;
 }
 /* The reason a control is off, written beside it. Row actions keep it to the
    title and the description: a caption in every cell would wreck the columns. */

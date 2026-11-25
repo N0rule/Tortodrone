@@ -279,21 +279,11 @@ export async function mount(ctx) {
             },
             actions: (get) => [
                 routeLink('Inspect', 'auctions', { listing: get().listing.id }, 'button secondary'),
-                button(
-                    // The row said "Settle all expired (including #1)" — accurate, and 34
-                    // characters wide in a table cell, which cost the item column its
-                    // width and wrapped every listing's subtitle. The toolbar presses the
-                    // same operation under "Settle expired", so the row says what the
-                    // toolbar says; the long form stays in the inspector, where it fits.
-                    'Settle expired',
-                    () => settle(get().listing.id),
-                    'secondary',
-                    () => state(get().listing) === 'Awaiting settlement',
-                    {
-                        unavailable:
-                            'This listing is not awaiting settlement, so there is nothing of its own to settle here; the toolbar settles whatever has expired.'
-                    }
-                ),
+                // Settling is a page-level operation, and it used to appear twice: once
+                // in the toolbar and once in every row, where it was off on almost every
+                // listing and carried its own explanation in a note nobody could see. The
+                // row keeps the two things it can decide alone — read it, cancel it — and
+                // the settle stays where it acts on the whole list.
                 button(
                     'Cancel',
                     () =>

@@ -472,6 +472,10 @@ export async function mount(ctx) {
                 : slot[0].toUpperCase() + slot.slice(1) + ' spotlight'
         );
         renderImages();
+        // The action speaks for the slot the panel is showing. Headed "Featured banner"
+        // over a button that said "Remove spotlight", the panel named two different
+        // things: the featured slot is not a spotlight.
+        text(removeSpotlight, slot === 'featured' ? 'Remove featured banner' : 'Remove spotlight');
         removeSpotlight.disabled = slot === 'featured' || !value;
         tooltip.value = value?.tooltip || '';
         url.value = value?.url || '';
