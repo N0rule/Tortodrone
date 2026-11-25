@@ -1833,6 +1833,11 @@ td:has(> .time-stamp) {
     background: var(--inset);
     border: 1px solid var(--line);
     border-top: 2px solid var(--gold);
+    /* The one bordered block in the console with square corners: every panel around it,
+       and the Level and Heat controls inside it, are rounded, so a card holding rounded
+       children read as a cut-out of the surface. The gold edge is the card's own accent
+       and stays; only its corners join the shape the rest of the console draws. */
+    border-radius: var(--radius);
     padding: 18px;
     gap: 16px;
 }
@@ -2065,12 +2070,26 @@ td:has(> .time-stamp) {
 }
 .grant-options {
     display: grid;
-    grid-template-columns: 100px minmax(180px, 1fr) auto;
+    /* Three fields of two and four digits, and no reason for any of them to be wide: the
+       middle column took the whole 1fr of an 860px dialog, so "Expiration days" was a
+       576px box holding "0" and Quantity beside it was 100. The slack goes to the end
+       instead, where Bind keeps the row's outer edge. */
+    grid-template-columns: 100px 210px minmax(0, 1fr);
     gap: 14px;
-    align-items: center;
+    /* Bottom-aligned, so the three controls share an edge and not a centre: "Expiration
+       days (0 permanent)" wrapped to two lines, and centring each cell dropped that
+       input 16px below the one beside it. */
+    align-items: end;
+}
+.grant-options label {
+    /* One line or the row breaks: the field is told what it is in its own label. */
+    white-space: nowrap;
 }
 .grant-options .check {
     white-space: nowrap;
+    /* Beside the two fields, not at the far edge of the dialog: pushed right, "Bind item"
+       floated 470px from the field it belongs to and read as a separate decision. */
+    justify-self: start;
 }
 .log-time {
     white-space: nowrap;

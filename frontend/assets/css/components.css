@@ -788,6 +788,20 @@ dialog[open]::backdrop {
 .dialog-heading h2 {
     margin: 0;
 }
+/* What the dialog is about to do, said under its title. It had no rule at all, so it
+   inherited body ink at 14px and sat 3px under a 20px title: brighter and larger than
+   every field label below it, which read as a second crammed heading. Small and muted,
+   with the tight seam to the title and the loose one to the fields. */
+#dialog-description {
+    margin-block: 2px 14px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+    max-inline-size: 78ch;
+}
+#dialog-description:empty {
+    display: none;
+}
 /* The footer of a tall editor stays in reach: a long letter, a big gift list or a
    roster of two hundred knights must not hide the button that saves them. */
 .dialog-actions {

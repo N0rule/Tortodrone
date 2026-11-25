@@ -577,19 +577,24 @@ export function grantItem(fixed) {
         { grantable: true, exportable: false }
     );
     catalogue.append(picker.node);
-    // The three answers the grant needs come first, the chosen item below them: they sat
-    // last, behind a 1,222px picker and then behind the 606px instance editor a pick
-    // opens, so Quantity, Expiration and Bind were 656px below a 618px pane — the item
-    // could be chosen without them ever being on screen, and the grant would go out with
-    // quantity 1 and permanent expiry because that is what a hidden default does.
+    // The three answers the grant needs come first: they sat last, behind a 1,222px
+    // picker and then behind the 606px instance editor a pick opens, so Quantity,
+    // Expiration and Bind were 656px below a 618px pane — a grant could go out with
+    // quantity 1 and permanent expiry because the controls that say otherwise were never
+    // on screen.
+    //
+    // The picker sits between them and the instance editor. Chosen-last, its collapsed
+    // "Change selected item" summary was pushed 606px down the moment an item was picked,
+    // so correcting a wrong pick meant scrolling past the editor to find the control just
+    // used. Here the summary stays under the answers, where the pick was made.
     node.append(
         grantOptions(
             label('Quantity', quantity),
             label('Expiration days (0 permanent)', expiry),
             label('Bind item', bound)
         ),
-        preview,
-        catalogue
+        catalogue,
+        preview
     );
     openDialog({
         // Named recipient: this dialog adds items to one knight's inventory for good, and
