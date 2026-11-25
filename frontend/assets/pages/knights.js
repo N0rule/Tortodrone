@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import { itemPicker } from '../components/item-picker.js';
 import { el, button, routeLink, toolbar, panel, badge, status, facts, details, input, select, tabs, text, number, copy, date } from '../ui.js';
 import { DataTable } from '../components/table.js';
-import { edit, confirm, field, conflict, openDialog } from '../components/dialog.js';
+import { edit, confirm, field, conflict, openDialog, localError } from '../components/dialog.js';
 import {
     itemLine,
     currency,
@@ -343,7 +343,7 @@ export async function mount(ctx) {
             picker = itemPicker(
                 (def) => {
                     if (!def.compatibleSlots.includes(index))
-                        throw new Error('This item is not compatible with this slot.');
+                        throw localError('This item is not compatible with this slot.');
                     selected = 0;
                     grant = def.config;
                     root.dataset.unequip = 'false';
@@ -365,7 +365,7 @@ export async function mount(ctx) {
             isDirty: () => canEdit && selected !== null,
             onSubmit: async () => {
                 if (!canEdit) return;
-                if (selected === null) throw new Error('Choose an item or Unequip.');
+                if (selected === null) throw localError('Choose an item or Unequip.');
                 await api.change('equipment', {
                     ...snapshot,
                     itemId: selected,

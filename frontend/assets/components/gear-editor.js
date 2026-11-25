@@ -14,7 +14,7 @@ import {
     badge,
     report
 } from '../ui.js';
-import { openDialog, edit, field } from './dialog.js';
+import { openDialog, edit, field, localError } from './dialog.js';
 import { itemLine, icon, variantName, variantEffect, gearProgress } from './items.js';
 import { itemPicker } from './item-picker.js';
 
@@ -284,7 +284,7 @@ export function modifierControls(def, item) {
         isDirty: () => initial !== JSON.stringify(values()),
         validate: () => {
             if (def.progression && (!level.checkValidity() || !heatInput.checkValidity()))
-                throw new Error('Enter a valid Level and Heat percentage.');
+                throw localError('Enter a valid Level and Heat percentage.');
             return api.request('item-preview', { config: def.config, ...values() });
         },
         dispose() {
@@ -481,7 +481,7 @@ export async function inspectItem(def, item, fixed, writable = false) {
                 isDirty: () => selected !== null,
                 onSubmit: async () => {
                     if (selected === null)
-                        throw new Error('Select an accessory or choose removal.');
+                        throw localError('Select an accessory or choose removal.');
                     await api.change('item-accessory', {
                         ...fixed,
                         itemId: item.id,
@@ -577,17 +577,27 @@ export function grantItem(fixed) {
         { grantable: true, exportable: false }
     );
     catalogue.append(picker.node);
+    // The three answers the grant needs come first, the chosen item below them: they sat
+    // last, behind a 1,222px picker and then behind the 606px instance editor a pick
+    // opens, so Quantity, Expiration and Bind were 656px below a 618px pane — the item
+    // could be chosen without them ever being on screen, and the grant would go out with
+    // quantity 1 and permanent expiry because that is what a hidden default does.
     node.append(
-        preview,
-        catalogue,
         grantOptions(
             label('Quantity', quantity),
             label('Expiration days (0 permanent)', expiry),
             label('Bind item', bound)
-        )
+        ),
+        preview,
+        catalogue
     );
     openDialog({
-        title: 'Grant item',
+        // Named recipient: this dialog adds items to one knight's inventory for good, and
+        // three entry points open it from a page that lists every knight on the server.
+        title: fixed.knight ? `Grant item to ${fixed.knight}` : 'Grant item',
+        description: fixed.knight
+            ? `Goes straight into ${fixed.knight}'s inventory — no trade, no letter, no cost.`
+            : '',
         content: node,
         submit: 'Confirm grant',
         target: fixed.worldId,
@@ -599,7 +609,7 @@ export function grantItem(fixed) {
             modifiers?.dispose();
         },
         onSubmit: async () => {
-            if (!selected) throw new Error('Select an item first.');
+            if (!selected) throw localError('Select an item first.');
             await modifiers.validate();
             await api.change('item-grant', {
                 ...fixed,
@@ -684,7 +694,7 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
             picker.dispose();
         },
         onSubmit: async () => {
-            if (!selected) throw new Error('Select an item first.');
+            if (!selected) throw localError('Select an item first.');
             const values = { ...fixed, config: selected.config };
             for (const f of fields) {
                 const c = controls.get(f.key);

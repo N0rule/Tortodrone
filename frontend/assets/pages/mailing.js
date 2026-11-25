@@ -25,7 +25,13 @@ import { toast } from '../components/toast.js';
 // server action), `confirmAction` takes an options object (a local, irreversible edit).
 // They were imported under one name, so the receipts Clear handed an options object to
 // the positional form: `api.change(undefined, {})` and nothing was ever cleared.
-import { openDialog, closeDialog, confirm, confirmAction } from '../components/dialog.js';
+import {
+    openDialog,
+    closeDialog,
+    confirm,
+    confirmAction,
+    localError
+} from '../components/dialog.js';
 import { emptyState, errorState, waiting } from '../components/states.js';
 import { itemPicker } from '../components/item-picker.js';
 import { currency, icon, itemLine } from '../components/items.js';
@@ -345,9 +351,10 @@ export async function mount(ctx) {
     /**
  * A check this page ran itself. It never reached the server, so its own sentence is
  * the whole answer: the dialog used to replace "Subject is required" with a
- * lost-write warning about a request that was never sent.
+ * lost-write warning about a request that was never sent. The rule lives in dialog.js
+ * now, because eight other checks outside this page needed it too.
  */
-const invalid = (message) => Object.assign(new Error(message), { local: true });
+const invalid = localError;
 
 function deliveredLabel(campaign) {
         const total = population();

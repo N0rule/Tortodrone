@@ -21,6 +21,17 @@ function lockPageScroll(locked) {
     document.documentElement.classList.toggle('dialog-open', locked);
 }
 /**
+ * A refusal this page decided on, before any request was sent.
+ *
+ * The dialog's error line tells the truth about a write whose reply was lost ("the change
+ * may or may not have been stored"), so it can only print a message that reached the
+ * server — or one that says outright it never left. Without the mark, pressing Confirm on
+ * an empty form answered "The server did not answer…" about a request that was never
+ * made, and every local check in the console said so: no item selected, no item
+ * compatible with a slot, passwords that do not match, a file over the limit.
+ */
+export const localError = (message) => Object.assign(new Error(message), { local: true });
+/**
  * Open the shared editor dialog. `variant` picks the submit button's weight:
  * 'primary' for an ordinary save, 'danger' for a decision that destroys
  * something. A destructive dialog also parks focus on Cancel, so Enter on an
@@ -382,7 +393,7 @@ export function edit(title, route, fields = [], fixed = {}, description = '', af
                           : c.value;
             }
             if ('passwordConfirmation' in values && values.password !== values.passwordConfirmation)
-                throw new Error('Passwords do not match.');
+                throw localError('Passwords do not match.');
             return api.change(route, values);
         },
         // Forwarded, not swallowed: an action that is not a save (a kick, a

@@ -257,7 +257,7 @@ export function spriteIcon(config, iconTier) {
     }
     return root;
 }
-export function itemTile(def, item, onClick) {
+export function itemTile(def, item, onClick, { availability = true } = {}) {
     const root = el('button', null, 'item-tile');
     root.type = 'button';
     root.onclick = onClick;
@@ -290,7 +290,11 @@ export function itemTile(def, item, onClick) {
         if (def.category) meta.append(el('span', def.category));
         if (rarity) meta.append(...(meta.childNodes.length ? [el('span', ' · ')] : []), rarity);
         if (meta.childNodes.length) root.append(meta);
-        root.append(el('small', def.grantable ? 'Available to grant' : def.reason));
+        // A picker that already asks the server for grantable items only would print
+        // "Available to grant" under all twenty-four of them; the line answers a question
+        // that picker never asks, and costs every tile a row of height.
+        if (availability)
+            root.append(el('small', def.grantable ? 'Available to grant' : def.reason));
     }
     return root;
 }

@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { el, input, select, label, toolbar, button, panel, text, notify, report } from '../ui.js';
-import { openDialog, conflict as dialogConflict } from '../components/dialog.js';
+import { openDialog, conflict as dialogConflict, localError } from '../components/dialog.js';
 
 function schema(catalog) {
     return {
@@ -559,7 +559,7 @@ export async function mount(ctx) {
         fileBusy(true);
         try {
             if (upload.size > 1024 * 1024 || !['image/png', 'image/jpeg'].includes(upload.type))
-                throw new Error('Choose a PNG or JPEG no larger than 1 MiB.');
+                throw localError('Choose a PNG or JPEG no larger than 1 MiB.');
             const bytes = new Uint8Array(await upload.arrayBuffer());
             let binary = '';
             for (let i = 0; i < bytes.length; i += 8192)

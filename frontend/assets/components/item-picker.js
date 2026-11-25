@@ -231,11 +231,19 @@ export function itemPicker(
                 categories.append(o);
             }
         const tiles = result.entries.map((def) => {
-            const tile = itemTile(def, null, () => {
-                selected = def;
-                for (const n of grid.children) n.setAttribute('aria-pressed', n === tile);
-                onChoose(def);
-            });
+            const tile = itemTile(
+                def,
+                null,
+                () => {
+                    selected = def;
+                    for (const n of grid.children) n.setAttribute('aria-pressed', n === tile);
+                    onChoose(def);
+                },
+                // Watch the argument order: the click handler is the third, so the flags
+                // ride fourth. A picker filtered to grantable items says so in its own
+                // heading; printing it under each tile is twenty-four copies of one fact.
+                { availability: !grantable }
+            );
             tile.disabled = grantable && !def.grantable;
             tile.setAttribute('aria-pressed', selected?.config === def.config);
             return tile;
