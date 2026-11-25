@@ -1,10 +1,9 @@
 * {
     box-sizing: border-box;
 }
-/* One scrollbar for the whole product, drawn by the app. Chromium ignores these
-   pseudo-elements wherever `scrollbar-width` is set, so they are the fallback for the
-   surfaces that render the platform bar with its stepper arrows — and the arrows are
-   exactly what made a themed panel look like an application window. */
+/* One scrollbar for the whole product, drawn by the app: a 10px track, a pill thumb, and
+   no stepper arrows — the arrows are exactly what made a themed panel look like an
+   application window. */
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -25,6 +24,23 @@
 }
 ::-webkit-scrollbar-button {
     display: none;
+}
+/* The engines without the pseudo-element — Firefox — get the same bar through the
+   standard properties. They go behind the guard because they are not harmless where the
+   pseudo-element does exist: Chromium ignores `::-webkit-scrollbar` on any element whose
+   `scrollbar-color` is not `auto`, and `scrollbar-color` inherits. Declared on `:root`
+   unguarded, it reached every scroller in the product and put the platform bar, stepper
+   arrows and all, back onto the console, every dialog body and the page itself — with
+   the rules above still in the file, matching nothing. */
+@supports not selector(::-webkit-scrollbar) {
+    :root {
+        scrollbar-width: thin;
+        scrollbar-color: var(--line-bright) transparent;
+    }
+    /* The console's bar is its own two tokens: green-black, not navy. */
+    .terminal-body {
+        scrollbar-color: var(--term-scroll) var(--term-scroll-bg);
+    }
 }
 [hidden] {
     display: none !important;
@@ -597,6 +613,18 @@ input[type='checkbox'] {
 input[type='range'] {
     padding: 0;
     accent-color: var(--gold);
+}
+/* A number field is typed into or nudged with the arrow keys; the platform's spinner
+   draws a grey stepper inside the navy recess the moment the field takes focus, which was
+   the last native control left in an otherwise themed field set. */
+input[type='number'] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
 }
 input::placeholder,
 textarea::placeholder {

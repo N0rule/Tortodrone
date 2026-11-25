@@ -45,8 +45,6 @@
     flex: 1 1 auto;
     overflow: auto;
     min-height: 0;
-    scrollbar-width: thin;
-    scrollbar-color: var(--line-bright) transparent;
 }
 /* Only when the list is longer than its column: the last item fades into the footer
    instead of ending in a hard cut with nothing to say there is more. */

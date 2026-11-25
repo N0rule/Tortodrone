@@ -814,6 +814,15 @@ dialog[open]::backdrop {
     border-top: 1px solid var(--line);
     background: var(--surface);
 }
+/* An editor holding a draft says so while it is open. The verdict is the discard prompt
+   on close, which is a browser alert: it should not be the first word about unsaved
+   work. It sits at the far end of the footer the buttons are pushed to, opposite the
+   two controls it is talking about, in the gold that means "not written yet" here. */
+#dialog-dirty {
+    margin: 0 auto 0 0;
+    color: var(--gold);
+    font-size: 12.5px;
+}
 #dialog {
     max-block-size: 90dvh;
     /* The form is the column: the heading and the actions keep their place and the
@@ -875,11 +884,6 @@ html.dialog-open {
     /* Room for a focus ring inside the scroll box, without a visible gutter shift. */
     padding-inline: 2px;
     margin-inline: -2px;
-    /* Every other scroll region in the app asks for the thin themed track; the dialog
-       body was the one that did not, so it drew the platform's default bar — a light
-       tan strip down the middle of a navy panel. */
-    scrollbar-width: thin;
-    scrollbar-color: var(--line-bright) transparent;
     /* A form paged with Home/End or a wheel stops on a row that sits under the pinned
        footer; this keeps the last row clear of it. */
     scroll-padding-block-end: 64px;
@@ -919,7 +923,12 @@ html.dialog-open {
     background: linear-gradient(to top, var(--surface), transparent);
     pointer-events: none;
 }
-#fields:has(.item-paging).is-scrollable {
+/* The fade goes only while the pager is actually on screen, so the guard asks for the
+   picker to be open. Every item picker sits inside a `<details>` in a dialog, and a
+   closed one still holds its pager in the DOM: matched on the bare `.item-paging`, this
+   rule kept the fade off after a pick — 763px of content scrolling in a 583px body,
+   ending flat against the footer with nothing to say it continued. */
+#fields:has(details[open] .item-paging).is-scrollable {
     padding-block-end: 0;
     mask-image: none;
     scroll-padding-block-end: 76px;
@@ -1425,8 +1434,6 @@ caption {
     list-style: none;
     /* Twenty destinations in a 470px list: the track was invisible and the last row
        was cut in half, so the list looked like it had ended. */
-    scrollbar-width: thin;
-    scrollbar-color: var(--line-bright) transparent;
     scrollbar-gutter: stable;
     mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
     -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
@@ -1801,8 +1808,6 @@ caption {
     white-space: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: var(--line-bright) transparent;
     user-select: all;
 }
 .identity-key:focus-visible {

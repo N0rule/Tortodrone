@@ -689,8 +689,6 @@ button.metric:focus-visible {
     font-variant-ligatures: none;
     font-variant-numeric: tabular-nums;
     tab-size: 4;
-    scrollbar-width: thin;
-    scrollbar-color: var(--term-scroll) var(--term-scroll-bg);
     scrollbar-gutter: stable;
     overflow-anchor: none;
 }

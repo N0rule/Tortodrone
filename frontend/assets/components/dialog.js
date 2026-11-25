@@ -123,6 +123,7 @@ export function openDialog({
         };
     }
     active = state;
+    syncDirty();
     cleanup = dispose;
     form.onsubmit = async (event) => {
         event.preventDefault();
@@ -193,6 +194,7 @@ export function openDialog({
         if (!dialog.open) {
             lockPageScroll(false);
             active = null;
+            syncDirty();
             cleanup?.();
             cleanup = null;
             $('#fields').replaceChildren();
@@ -293,6 +295,28 @@ function bindEditorKeys(form) {
     editorKeysBound = true;
 }
 
+/**
+ * Says, while the dialog is open, that it holds a draft. The discard prompt on close is
+ * the backstop; it used to be the only sign, so the first word about unsaved work was a
+ * browser alert asking whether to throw it away.
+ *
+ * Bound once for the session: `#editor` outlives every dialog that fills it, so a
+ * listener per open would leave one closure per edit behind.
+ */
+let dirtyBound = false;
+export function syncDirty() {
+    const mark = $('#dialog-dirty');
+    if (!mark) return;
+    if (!dirtyBound) {
+        dirtyBound = true;
+        // A draft changes through a click as often as through typing — a picker tile, a
+        // tab, a toggle — and those paths raise neither `input` nor `change`, so the
+        // mark would have stayed hidden in exactly the dialog it was added for.
+        for (const type of ['input', 'change', 'click', 'focusout'])
+            $('#editor').addEventListener(type, syncDirty);
+    }
+    mark.hidden = !active?.isDirty?.();
+}
 export function dialogDirty() {
     return !!active?.isDirty?.();
 }
