@@ -930,15 +930,20 @@ a:focus-visible {
     white-space: nowrap;
     border: 0;
 }
+/* A key is a hint about a control, not a control: no rim, no keycap lip under it, no
+   fill of its own — one faint lift over whatever it sits on, which is what lets the
+   same chip read on the inset search trigger and inside the shortcuts panel. The
+   colour is mixed from the theme's own ink, so the light theme gets the same 8% of
+   its darker text instead of a dark theme's box on a white page. */
 .kbd {
     display: inline-block;
-    padding: 1px 6px;
+    padding: 0 6px;
     color: var(--muted);
-    background: var(--inset);
-    border: 1px solid var(--line-bright);
-    border-bottom-width: 2px;
-    border-radius: var(--radius);
-    font: 600 11px/1.6 var(--mono);
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+    border: 0;
+    border-radius: 7px;
+    font: 500 11px/1.85 var(--mono);
+    letter-spacing: 0.02em;
     white-space: nowrap;
 }
 .notice-inline {
