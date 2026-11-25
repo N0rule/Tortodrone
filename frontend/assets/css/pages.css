@@ -2187,6 +2187,46 @@ td:has(> .time-stamp) {
 .mail-subject-cell strong {
     display: block;
 }
+/* The letter is the row's subject, so it takes the width the auto layout was handing to
+   the two numeric columns: at 113px the subject of every mailing wrapped to three lines
+   while "Delivered" and "Crowns" — which hold one digit each — were given 125px apiece. */
+/* Eight columns in a 1096px table: an auto layout gave the letter 113px and the two
+   one-digit figure columns 125px each, then wrapped the actions cell. Percentages alone
+   are a hint to an auto layout, and a minimum width on the subject pushed the whole
+   table 117px past its panel. Fixed layout is the honest shape for eight known columns:
+   one budget, spent per column, and the table cannot grow past the panel it sits in. */
+.mail-table table {
+    table-layout: fixed;
+}
+.mail-table th:nth-child(1) {
+    inline-size: 25%;
+}
+.mail-table th:nth-child(2) {
+    inline-size: 10%;
+}
+.mail-table th:nth-child(3) {
+    inline-size: 16%;
+}
+.mail-table th:nth-child(4) {
+    inline-size: 8%;
+}
+.mail-table th:nth-child(5) {
+    inline-size: 12%;
+}
+.mail-table th:nth-child(6) {
+    inline-size: 8%;
+}
+.mail-table th:nth-child(7) {
+    inline-size: 8%;
+}
+.mail-table th:nth-child(8) {
+    inline-size: 13%;
+}
+/* A fixed column cannot grow to fit a long word, so a name or a subject breaks
+   instead of spilling over the column beside it. */
+.mail-table td {
+    overflow-wrap: anywhere;
+}
 /* The body preview is a reminder of which letter this is, not the letter: unclamped it
    wrapped to five lines in the table's narrow first column and made one row 153px tall
    beside a 40px action column. Two lines name it. */
@@ -2217,6 +2257,13 @@ td:has(> .time-stamp) {
     min-width: 0;
     flex: 0 1 auto;
 }
+/* A gift in a table cell is a row thumbnail, not a tile: the tile size is the one
+   artwork is presented at, and at 64px one gift made its row 180px tall — three times
+   the row beside it. 48 is the row step every other table draws its art at. */
+.mail-gifts-cell .item-icon {
+    inline-size: var(--icon-row);
+    block-size: var(--icon-row);
+}
 
 .mail-page {
     gap: 22px;
@@ -2226,24 +2273,16 @@ td:has(> .time-stamp) {
     margin-bottom: 12px;
 }
 /* Eight columns plus a sticky action column did not fit a 1091px table: the header
-   labels and the four row controls were each held to one unbreakable line, so the
-   table's own minimum width came to 1380px and the action column sat off the right
-   edge behind a scrollbar. A label and a control may share a second line instead. */
+   labels were each held to one unbreakable line, so the table's own minimum width came
+   out wider than the panel. A header label may share a second line instead. */
 .mail-table th,
 .mail-table th button {
     white-space: normal;
 }
-.mail-table td.row-actions .toolbar {
-    flex-wrap: wrap;
-    row-gap: 4px;
-}
-/* Four controls in a column that now shrinks to its content stacked one per line and
-   made a mailing row 193px tall. This table asks for the room to pair them — the widest
-   pair is "Duplicate" beside "Cancel". */
-.mail-table td.row-actions,
-.mail-table th.row-actions {
-    min-inline-size: 186px;
-}
+/* The row carries two controls, not four: "Recipients" and "Duplicate" live in the
+   letter the subject opens. Four of them in this cell either wrapped into a 2x2 block,
+   which made a mailing row 105px tall and 180px on the row with a gift, or held the
+   table wider than its panel. The generic row-action rules size this column now. */
 .mail-table td,
 .mail-table th {
     /* 16px of side padding in eight columns was 256px of air, and the table needed

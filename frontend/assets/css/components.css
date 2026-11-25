@@ -355,6 +355,45 @@ td .button {
     font-size: 12.5px;
     border-radius: var(--radius-control);
 }
+/* The quiet variant, scoped to a row: a table of thirty rows had thirty filled pills
+   down one column, each repeating the underlined name beside it, so the loudest thing
+   on the page was a control that starts every row over again. A row action is a press
+   on the row it sits in; the fill and the edge arrive with the pointer, which is also
+   what tells an operator that the name and the pill do the same thing. */
+td button.secondary,
+td .button.secondary,
+.data-table tr button.secondary,
+.data-table tr .button.secondary {
+    --control-bg: transparent;
+    --control-border: transparent;
+    box-shadow: none;
+    color: var(--muted);
+    min-block-size: var(--control-sm);
+    border-radius: var(--radius-control-sm);
+}
+td button.secondary:not(:disabled):not([aria-disabled='true']):hover,
+td button.secondary:not(:disabled):not([aria-disabled='true']):focus-visible,
+td .button.secondary:not(:disabled):not([aria-disabled='true']):hover,
+td .button.secondary:not(:disabled):not([aria-disabled='true']):focus-visible,
+.data-table tr button.secondary:not(:disabled):not([aria-disabled='true']):hover,
+.data-table tr button.secondary:not(:disabled):not([aria-disabled='true']):focus-visible,
+.data-table tr .button.secondary:not(:disabled):not([aria-disabled='true']):hover,
+.data-table tr .button.secondary:not(:disabled):not([aria-disabled='true']):focus-visible {
+    --control-border: var(--line-bright);
+    color: var(--text);
+    background: color-mix(in srgb, var(--raised) 55%, var(--line-bright));
+}
+/* A row action that cannot run recedes instead of standing out. The disabled rule paints
+   a filled control in a mixed grey precisely so it stays readable, which on a column of
+   quiet row actions made the three that were unavailable the loudest thing in the table. */
+td button.secondary:disabled,
+td button.secondary[aria-disabled='true'],
+td .button.secondary[aria-disabled='true'],
+.data-table tr button.secondary:disabled,
+.data-table tr button.secondary[aria-disabled='true'] {
+    background: transparent;
+    color: var(--muted);
+}
 /* Three small buttons in a row read as broken when only two carry art, so dense
    cell toolbars stay text-only; page-level toolbars keep their icons. */
 /* A row action keeps its label, so its glyph may stay: hiding the art in tables and
@@ -368,8 +407,8 @@ td .toolbar button .ui-icon,
 td .toolbar .button .ui-icon,
 .data-table tr .toolbar .button .ui-icon {
     display: inline-block;
-    inline-size: 14px;
-    block-size: 14px;
+    inline-size: 16px;
+    block-size: 16px;
 }
 /* The paging bar is the compact end of the control scale. */
 .pagination button,
@@ -395,6 +434,13 @@ td .toolbar .button .ui-icon,
 .pagination .table-count {
     margin-right: auto;
     white-space: nowrap;
+}
+/* A bare word beside its own select, on the pager's muted ink: the select is 190px of
+   names and nothing said what choosing one would do. */
+.pagination .paging-label {
+    margin-inline-end: -4px;
+    white-space: nowrap;
+    color: var(--muted);
 }
 .pagination select {
     flex: 0 1 190px;
@@ -961,11 +1007,14 @@ html.dialog-open {
     vertical-align: middle;
 }
 /* The button's own gap spaces the icon; an extra margin would double it. The
-   basis follows the size, so flexbox cannot stretch the art past 17px. */
+   basis follows the size, so flexbox cannot stretch the art past 16px. One size for
+   every control glyph: 17 in a button and 14 in a table row were the same job at two
+   sizes, and at 14px the client art — which is drawn 24px square in the pack — lost the
+   detail that is supposed to say which action it belongs to. */
 button > .ui-icon,
 .tabs .ui-icon {
-    inline-size: 17px;
-    block-size: 17px;
+    inline-size: 16px;
+    block-size: 16px;
     flex: 0 0 auto;
 }
 img.ui-icon {
@@ -975,6 +1024,21 @@ img.ui-icon {
 #navigation .ui-icon {
     /* Neutral ink: a column of cyan silhouettes makes "current" invisible. */
     color: var(--muted);
+    /* The rail is the one place a destination is identified by its art alone, so it
+       gets the largest step the column can hold. */
+    inline-size: 22px;
+    block-size: 22px;
+    flex: 0 0 22px;
+}
+/* A destination whose art the pack exports for another destination as well wears this
+   instead: the row keeps the icon column's width and draws nothing, which is the same
+   rule `symbols.js` states for a job the pack has no art for — an image that labels two
+   rows labels neither. */
+#navigation .nav-icon-void {
+    display: inline-block;
+    inline-size: 22px;
+    block-size: 22px;
+    flex: 0 0 22px;
 }
 #navigation [aria-current='page'] .ui-icon {
     color: var(--gold);

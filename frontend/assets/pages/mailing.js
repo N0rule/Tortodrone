@@ -705,8 +705,11 @@ function deliveredLabel(campaign) {
                             'Cancelled mailings cannot be edited. Duplicate it to send it again.'
                     }
                 ),
-                button('Recipients', () => openDeliveries(get()), 'secondary'),
-                button('Duplicate', () => duplicate(get()), 'secondary'),
+                // "Recipients" and "Duplicate" are not here, and not lost: both are in
+                // the letter the row's subject opens, which is where an operator reads a
+                // mailing before copying it. Four controls in one cell is what made a
+                // mailing row 105px tall — and 180 on the row with a gift — in a table
+                // where the subject itself was the narrowest column on the screen.
                 button(
                     'Cancel',
                     // `confirm` only opens the dialog: the request runs inside it and
@@ -720,7 +723,7 @@ function deliveredLabel(campaign) {
                             'Knights who already received this mailing keep it. No further deliveries will be made.',
                             { destructive: true, submit: 'Cancel mailing' }
                         ),
-                    'secondary',
+                    'danger',
                     () => get().enabled,
                     { showReason: true, unavailable: 'This mailing is already cancelled.' }
                 )

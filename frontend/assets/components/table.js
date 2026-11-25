@@ -380,7 +380,17 @@ export class DataTable {
         };
         this.sortSelect.setAttribute('aria-label', 'Sort by column');
         const paging = el('div', null, 'pagination');
-        paging.append(this.count, this.previous, this.next, this.size, this.sortSelect);
+        // Two selects at the end of the pager, one saying "30 per page" and one saying
+        // "Item": the second had no word of its own anywhere a sighted operator could
+        // read, so it named a column and looked like a filter for one.
+        paging.append(
+            this.count,
+            this.previous,
+            this.next,
+            this.size,
+            el('span', 'Sort', 'paging-label'),
+            this.sortSelect
+        );
         this.node.append(this.controls, this.bulk, this.wrap, paging);
 
         if (search) {
