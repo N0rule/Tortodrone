@@ -203,8 +203,26 @@ th.numeric button {
     flex-direction: row-reverse;
     justify-content: flex-start;
 }
-td.numeric {
+td.numeric,
+th.numeric {
     text-align: end;
+}
+/* A figure hugs its column. Auto layout handed the depot's free space to its Quantity
+   column, which then stood 775px wide to hold a single digit while the item name it
+   belonged to had 200. `1%` is the shrink-to-fit request: the slack goes to the columns
+   that carry text. Phones turn a row into a card, where a cell is the whole line. */
+@media (min-width: 901px) {
+    td.numeric,
+    th.numeric {
+        inline-size: 1%;
+        white-space: nowrap;
+    }
+    /* A price is two figures, and the wider of them sets the column: wrapped, the
+       crowns chip dropped under the energy one and the column grew a line. */
+    .data-table td.numeric .price-cell {
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+    }
 }
 /* Nothing to label: the empty state speaks for the table, and the headers stay in the
    accessibility tree as the table's own structure. */
@@ -483,8 +501,19 @@ td .toolbar .button .ui-icon,
 .item-line strong {
     font-weight: 600;
 }
+/* The names column may shrink; the art does not. Without this the flex line refused to
+   go narrower than its text and pushed the thumbnail's row past its cell. */
+.item-line > div {
+    min-inline-size: 0;
+}
+/* A detail line is one phrase, not two: in a narrow cell "Sword · Rarity 5" split after
+   its first word and the row read as a two-row card in the middle of a table. It
+   ellipsises instead, and the inspector still carries the whole note. */
 .item-line small {
     display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 /* The table-cell size of the same line. A list of offers is scanned by eye, and the
    art is what makes one row findable in a hundred, so the thumbnail stays and only
@@ -700,6 +729,14 @@ dialog[open]::backdrop {
        error line off screen on a long offer, so the operator had to scroll to the end
        of a form to learn it had refused the save. */
     overflow: hidden;
+}
+/* A read-only dialog opens on its own heading, so the title takes focus with
+   `tabindex="-1"` and the browser drew the focus ring around three words of it — a box
+   that read as a text field on the title of every record view. Focus still lands there
+   for a screen reader; nothing is being typed into it. Same rule as `#title`. */
+#dialog-title:focus,
+#dialog-title:focus-visible {
+    outline: none;
 }
 #editor {
     display: flex;
@@ -927,6 +964,10 @@ a:focus-visible {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     min-width: 0;
+    /* One figure per column, and the same figures under each other: with proportional
+       digits a column of "3,500 / 250 / 35,000" never lined up, so two prices one above
+       the other were read digit by digit instead of by their thousands. */
+    font-variant-numeric: tabular-nums;
 }
 .table-tools .spacer {
     margin-left: auto;

@@ -2183,8 +2183,14 @@ td:has(> .time-stamp) {
 .mail-subject-cell strong {
     display: block;
 }
+/* The body preview is a reminder of which letter this is, not the letter: unclamped it
+   wrapped to five lines in the table's narrow first column and made one row 153px tall
+   beside a 40px action column. Two lines name it. */
 .mail-subject-cell small {
-    display: block;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
     margin-top: 3px;
 }
 .mail-window {
@@ -2210,10 +2216,24 @@ td:has(> .time-stamp) {
     margin-top: 2px;
     margin-bottom: 12px;
 }
+/* Eight columns plus a sticky action column did not fit a 1091px table: the header
+   labels and the four row controls were each held to one unbreakable line, so the
+   table's own minimum width came to 1380px and the action column sat off the right
+   edge behind a scrollbar. A label and a control may share a second line instead. */
+.mail-table th,
+.mail-table th button {
+    white-space: normal;
+}
+.mail-table td.row-actions .toolbar {
+    flex-wrap: wrap;
+    row-gap: 4px;
+}
 .mail-table td,
 .mail-table th {
-    padding-right: 16px;
-    padding-left: 16px;
+    /* 16px of side padding in eight columns was 256px of air, and the table needed
+       every one of them to fit the panel. */
+    padding-right: 10px;
+    padding-left: 10px;
 }
 .mail-table td {
     padding-top: max(var(--row), 10px);

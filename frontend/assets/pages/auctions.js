@@ -91,7 +91,7 @@ export async function mount(ctx) {
                                 : '—'
                     ],
                     ['Kind', (d) => (d.item ? 'Item delivery' : 'Crowns')],
-                    ['Crowns', (d) => currency('crowns', d.crowns)],
+                    ['Crowns', (d) => currency('crowns', d.crowns), (d) => d.crowns, 'end'],
                     ['State', (d) => (d.claimed ? 'Claimed' : 'Pending')],
                     ['Details', (d) => details('Delivery record', d)]
                 ],
@@ -280,7 +280,12 @@ export async function mount(ctx) {
             actions: (get) => [
                 routeLink('Inspect', 'auctions', { listing: get().listing.id }, 'button secondary'),
                 button(
-                    `Settle all expired (including #${get().listing.id})`,
+                    // The row said "Settle all expired (including #1)" — accurate, and 34
+                    // characters wide in a table cell, which cost the item column its
+                    // width and wrapped every listing's subtitle. The toolbar presses the
+                    // same operation under "Settle expired", so the row says what the
+                    // toolbar says; the long form stays in the inspector, where it fits.
+                    'Settle expired',
                     () => settle(get().listing.id),
                     'secondary',
                     () => state(get().listing) === 'Awaiting settlement',

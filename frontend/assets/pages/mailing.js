@@ -656,14 +656,19 @@ function deliveredLabel(campaign) {
                     if (!campaign.delivered) return el('span', label, 'muted');
                     return button(label, () => openDeliveries(campaign), 'link');
                 },
-                (campaign) => campaign.delivered
+                (campaign) => campaign.delivered,
+                // A count ends on the same edge as the header, like every other figure
+                // on this console: left-aligned, it drifted under a column twice its
+                // width.
+                'end'
             ],
             [
                 'Crowns',
                 // One column, one number: energy is beside it in the letter dialog, and
                 // two stacked currencies made every row taller than the rest of it.
                 (campaign) => currency('crowns', campaign.crowns),
-                (campaign) => campaign.crowns
+                (campaign) => campaign.crowns,
+                'end'
             ]
         ],
         {
