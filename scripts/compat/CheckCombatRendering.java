@@ -57,6 +57,8 @@ public final class CheckCombatRendering {
         boolean exploreOnly = Arrays.asList(args).contains("--explore-only");
         boolean missionOnly = Arrays.asList(args).contains("--mission-only");
         boolean manual = Arrays.asList(args).contains("--manual");
+        boolean partyHudOnly = Arrays.asList(args).contains("--party-hud-only");
+        int partyBots = 5;
         int exploreScene = 0;
         for (String arg : args)
             if (arg.startsWith("--scene="))
@@ -71,6 +73,7 @@ public final class CheckCombatRendering {
                 || exploreOnly
                 || missionOnly
                 || manual
+                || partyHudOnly
                 || tutorialEntryOnly
                 || readyRoomOnly
                 || equipmentGroups
@@ -124,6 +127,13 @@ public final class CheckCombatRendering {
             ClientCheckHarness.copyTree(defaults, scratch.resolve("content"), "defaults");
             ClientCheckHarness.copyTree(deployment.resolve("config"), scratch.resolve("config"), "config");
             Files.deleteIfExists(scratch.resolve("config/server.yml"));
+            // A big party is exactly what this run measures: advertise the stock slot count
+            // and let the headless players fill it in front of the real client.
+            if (partyHudOnly)
+                Files.writeString(
+                        scratch.resolve("config/server.yml"),
+                        "server-ip: 127.0.0.1\nserver-port: 0\nnews-port: 0\n"
+                                + "max-clients: 16\nparty-max-players: 6\nlog-mode: debug\nwebui-enabled: false\n");
             Path maps = scratch.resolve("content");
             if (dialogueOnly) {
                 Path npc = maps.resolve("maps/training/advanced_training/npcs/konway.yml");
@@ -191,47 +201,74 @@ public final class CheckCombatRendering {
             var seed = new ArrayList<>(base);
             seed.addAll(List.of(
                     "CombatRenderingCheck",
-                    mailCampaignOnly
-                            ? "--seed-mail"
-                            : campStory
-                                    ? "--seed-camp"
-                                    : freshOpening
-                                            ? "--seed-opening"
-                                            : equipmentGroups
-                                                    ? "--seed-equipment"
-                                                    : itemsOnly
-                                                            ? "--seed-items"
-                                                            : multiplayerOnly
-                                                                    ? "--seed-multiplayer"
-                                                                    : boxesOnly
-                                                                            ? "--seed-boxes"
-                                                                            : depotOnly
-                                                                                    ? "--seed-depot"
-                                                                                    : readyRoomForgeOnly
-                                                                                            ? "--seed-forge"
-                                                                                            : missionOnly
-                                                                                                    ? "--seed-mission"
-                                                                                                    : rapidOnly
-                                                                                                            ? "--seed-rapid"
-                                                                                                            : "--seed",
+                    partyHudOnly
+                            ? "--seed-party-hud"
+                            : mailCampaignOnly
+                                    ? "--seed-mail"
+                                    : campStory
+                                            ? "--seed-camp"
+                                            : freshOpening
+                                                    ? "--seed-opening"
+                                                    : equipmentGroups
+                                                            ? "--seed-equipment"
+                                                            : itemsOnly
+                                                                    ? "--seed-items"
+                                                                    : multiplayerOnly
+                                                                            ? "--seed-multiplayer"
+                                                                            : boxesOnly
+                                                                                    ? "--seed-boxes"
+                                                                                    : depotOnly
+                                                                                            ? "--seed-depot"
+                                                                                            : readyRoomForgeOnly
+                                                                                                    ? "--seed-forge"
+                                                                                                    : missionOnly
+                                                                                                            ? "--seed-mission"
+                                                                                                            : rapidOnly
+                                                                                                                    ? "--seed-rapid"
+                                                                                                                    : "--seed",
                     scratch.resolve("data").toString()));
             if (manual) seed.set(seed.size() - 2, "--seed-manual");
-            ClientCheckHarness.runQuiet(scratch, seed, "seed", manual ? 120 : 45, scratch);
+            ClientCheckHarness.runQuiet(scratch, seed, "seed", manual ? 120 : partyHudOnly ? 240 : 45, scratch);
             if (manual) writeManualPrefs(scratch);
 
             // Log GC stops beside the session: a multi-hundred-millisecond pause shows up as a
             // scene tick tail and would otherwise be mistaken for simulation work.
-            Process server = ClientCheckHarness.start(
-                    scratch,
-                    List.of(
-                            ClientCheckHarness.executable("java"),
-                            "-Xlog:gc*:file=" + output.resolve("gc.log") + ":time,uptime,level,tags",
-                            "-jar",
-                            scratch.resolve("tortodrone.jar").toString(),
-                            "--nogui",
-                            "--skip-client-assets"),
-                    serverLog,
-                    scratch);
+            // The party players are in-process WorldSessions, like the socket tests: the server
+            // process itself owns them, so no extra client windows or display are needed.
+            Path partyFixture = scratch.resolve("party-players");
+            if (partyHudOnly) {
+                Files.createDirectories(partyFixture);
+                ClientCheckHarness.runQuiet(
+                        scratch,
+                        List.of(
+                                ClientCheckHarness.executable("javac"),
+                                "-d",
+                                partyFixture.toString(),
+                                "-cp",
+                                scratch.resolve("tortodrone.jar").toString(),
+                                project.resolve("scripts/compat/PartyPlayers.java")
+                                        .toString()),
+                        "party-players-compile",
+                        120,
+                        scratch);
+            }
+            var serverCommand = new ArrayList<String>();
+            serverCommand.add(ClientCheckHarness.executable("java"));
+            serverCommand.add("-Xlog:gc*:file=" + output.resolve("gc.log") + ":time,uptime,level,tags");
+            if (partyHudOnly) {
+                serverCommand.add("-cp");
+                serverCommand.add(scratch.resolve("tortodrone.jar") + File.pathSeparator + partyFixture);
+                serverCommand.add("org.tortodrone.server.network.PartyPlayers");
+                serverCommand.add(Integer.toString(partyBots));
+                serverCommand.add(outputDir.toString());
+                serverCommand.add(scratch.resolve("data").toString());
+            } else {
+                serverCommand.add("-jar");
+                serverCommand.add(scratch.resolve("tortodrone.jar").toString());
+                serverCommand.add("--nogui");
+                serverCommand.add("--skip-client-assets");
+            }
+            Process server = ClientCheckHarness.start(scratch, serverCommand, serverLog, scratch);
             server.getOutputStream().close();
             String port = ClientCheckHarness.ready(server, serverLog, Duration.ofSeconds(120));
             Path publicKey = scratch.resolve("data/keys/public.txt");
@@ -282,6 +319,7 @@ public final class CheckCombatRendering {
                             || rapidOnly
                             || exploreOnly
                             || missionOnly
+                            || partyHudOnly
                             || manual
                     ? null
                     : ClientCheckHarness.start(scratch, peerCommand, peerLog, scratch);
@@ -307,7 +345,8 @@ public final class CheckCombatRendering {
                     System.out.println(
                             "MANUAL: launcher wrapper not found at " + wrapper + "; starting the client directly");
             }
-            if (exploreOnly) graphical.addAll(List.of("--explore-only", "--scene=" + exploreScene));
+            if (partyHudOnly) graphical.addAll(List.of("--party-hud-only", "--party-bots=" + partyBots));
+            else if (exploreOnly) graphical.addAll(List.of("--explore-only", "--scene=" + exploreScene));
             else if (manual) graphical.add("--manual");
             else if (rapidOnly) graphical.add("--rapid-only");
             else if (trainingOnly)
@@ -365,6 +404,24 @@ public final class CheckCombatRendering {
                                                                                                                                                                                                                         : "--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = ClientCheckHarness.start(scratch, graphical, clientLog, scratch);
+            if (partyHudOnly) {
+                // The headless players started with the server. Wait for every one to reach
+                // Haven before the leader starts inviting.
+                long guestDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(300);
+                for (int i = 1; i <= partyBots; i++) {
+                    Path ready = outputDir.resolve("guest-" + i + "/guest-ready");
+                    while (!Files.isRegularFile(ready) && System.nanoTime() < guestDeadline) {
+                        if (!server.isAlive())
+                            throw new IOException("Disposable server exited before all players were in town:\n"
+                                    + ClientCheckHarness.tail(serverLog));
+                        Thread.sleep(100);
+                    }
+                    if (!Files.isRegularFile(ready))
+                        throw new IOException("Headless party player " + i + " never reached town:\n"
+                                + ClientCheckHarness.tail(serverLog));
+                }
+                System.out.println("Headless party players in town: " + partyBots);
+            }
             if (multiplayerOnly && !sharedWorldOnly) {
                 long mpDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(180);
                 while (peer.isAlive() && client.isAlive() && System.nanoTime() < mpDeadline) Thread.sleep(50);
@@ -385,17 +442,19 @@ public final class CheckCombatRendering {
                 return;
             }
             if (!client.waitFor(
-                    exploreOnly
-                            ? 120
-                            : playabilityOnly
-                                    ? 240
-                                    : rapidOnly
-                                            ? 180
-                                            : tutorialOnly
-                                                    ? 1500
-                                                    : tutorialEntryOnly || readyRoomOnly
-                                                            ? 100
-                                                            : trainingOnly ? 440 : 400,
+                    partyHudOnly
+                            ? 1500
+                            : exploreOnly
+                                    ? 120
+                                    : playabilityOnly
+                                            ? 240
+                                            : rapidOnly
+                                                    ? 180
+                                                    : tutorialOnly
+                                                            ? 1500
+                                                            : tutorialEntryOnly || readyRoomOnly
+                                                                    ? 100
+                                                                    : trainingOnly ? 440 : 400,
                     TimeUnit.SECONDS)) {
                 throw new IOException("Graphical combat probe timed out:\n" + ClientCheckHarness.tail(clientLog)
                         + "\nServer:\n" + ClientCheckHarness.tail(serverLog));
