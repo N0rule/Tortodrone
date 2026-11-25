@@ -277,9 +277,11 @@ final class PartyHandler {
         var args = request.arguments();
         boolean response = request.oid() == SessionCodec.INVOCATION_OID
                 && request.service() == SessionCodec.SOCIAL_SERVICE
-                // The installed client's SocialMarshaller.a(String, int, ...) encodes invocation
-                // code 7; older captures and the in-process fixtures use 5.
-                && (request.method() == 5 || request.method() == 7)
+                // The client answers a party invitation through SocialMarshaller.a(String, int,
+                // ...), which compiles to invocation code 7. Code 5 is c(PartyKey, listener) and
+                // never carries a String key, so this ordering also keeps party-suggestion joins
+                // away from the trade dispatcher.
+                && request.method() == 7
                 && !args.isEmpty()
                 && args.getFirst() instanceof String key
                 && key.startsWith("PARTY_INV:");

@@ -64,7 +64,7 @@ public final class PlayerTradeSessionTest {
                 sb.await("Notification$TradeRequest");
                 a.tradeInvocation(rpc(10, 6, 4, "Bob-Knight", confirm()));
                 sa.await("already open");
-                b.tradeInvocation(rpc(3, 12, 5, "TRADE_REQ:Alice-Knight", 1, confirm()));
+                b.tradeInvocation(rpc(3, 12, 7, "TRADE_REQ:Alice-Knight", 1, confirm()));
                 check(a.ownsTrade(1001) && b.ownsTrade(1001), "only the two participants own the opened trade");
                 a.subscribeTrade(1001, (short) 8);
                 b.subscribeTrade(1001, (short) 9);
@@ -104,7 +104,7 @@ public final class PlayerTradeSessionTest {
                 a.unsubscribeTrade(1001);
                 check(!a.ownsTrade(1001) && !b.ownsTrade(1001), "closing one view releases both participants");
                 a.tradeInvocation(rpc(10, 6, 4, "Bob-Knight", confirm()));
-                b.tradeInvocation(rpc(3, 12, 5, "TRADE_REQ:Alice-Knight", 1, confirm()));
+                b.tradeInvocation(rpc(3, 12, 7, "TRADE_REQ:Alice-Knight", 1, confirm()));
                 check(a.ownsTrade(1003), "new trade gets a fresh object identity");
                 a.unsubscribe();
                 check(!a.ownsTrade(1003) && !b.ownsTrade(1003), "scene departure cancels both sides");
@@ -113,7 +113,7 @@ public final class PlayerTradeSessionTest {
                 a.subscribe((short) 10);
                 a.entered();
                 a.tradeInvocation(rpc(10, 6, 4, "Bob-Knight", confirm()));
-                b.tradeInvocation(rpc(3, 12, 5, "TRADE_REQ:Alice-Knight", 1, confirm()));
+                b.tradeInvocation(rpc(3, 12, 7, "TRADE_REQ:Alice-Knight", 1, confirm()));
                 db.currency("Bob", "Bob-Knight", bob, -1, Currency.ENERGY, 1);
                 a.tradeInvocation(rpc(1005, 1, 1, 1, confirm()));
                 sa.await("Inventory changed");

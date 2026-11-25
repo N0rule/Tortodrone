@@ -197,7 +197,7 @@ public final class FriendSessionTest {
                 int leadParty = scenes.parties().view(partyMember(lead.world)).oid();
                 lead.world.partyInvocation(new SessionDecoder.Invocation(leadParty, 20, 2, List.of("Mate", confirm())));
                 mate.world.partyInvocation(new SessionDecoder.Invocation(
-                        SessionCodec.INVOCATION_OID, 12, 5, List.of("PARTY_INV:" + leadParty, 1, confirm())));
+                        SessionCodec.INVOCATION_OID, 12, 7, List.of("PARTY_INV:" + leadParty, 1, confirm())));
                 check(
                         scenes.parties().view(partyMember(mate.world)).oid() == leadParty,
                         "explicit party formation shares the native party identity");

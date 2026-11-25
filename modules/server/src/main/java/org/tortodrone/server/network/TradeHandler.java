@@ -86,9 +86,11 @@ final class TradeHandler {
         boolean close = request.service() == 6 && request.method() == 1 && session.ownsScene(request.oid());
         boolean response = request.oid() == SessionCodec.INVOCATION_OID
                 && request.service() == SessionCodec.SOCIAL_SERVICE
-                // The installed client's SocialMarshaller.a(String, int, ...) encodes invocation
-                // code 7; older captures and the in-process fixtures use 5.
-                && (request.method() == 5 || request.method() == 7);
+                // The installed client answers an invitation through SocialMarshaller.a(String,
+                // int, ...), which compiles to invocation code 7. Code 5 is c(PartyKey,
+                // listener), a party-suggestion join, so claiming it here only rejected and
+                // disconnected a real client call.
+                && request.method() == 7;
         boolean operation = request.service() == 1 && request.oid() >= 1001 && (request.oid() & 1) == 1;
         if (!invite && !close && !response && !operation) return false;
         var args = request.arguments();

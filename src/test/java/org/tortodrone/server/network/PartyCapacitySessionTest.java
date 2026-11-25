@@ -187,7 +187,7 @@ public final class PartyCapacitySessionTest {
 
         void accept(int party) throws Exception {
             world.partyInvocation(
-                    new SessionDecoder.Invocation(3, 12, 5, List.of("PARTY_INV:" + party, 1, listener())));
+                    new SessionDecoder.Invocation(3, 12, 7, List.of("PARTY_INV:" + party, 1, listener())));
         }
 
         void travel(int template) throws Exception {

@@ -48,7 +48,7 @@ public class CooperativeTrainingTest {
                 a.operation(2, b.name);
                 b.socket.await("Notification$PartyInvite");
                 b.world.partyInvocation(
-                        new SessionDecoder.Invocation(3, 12, 5, List.of("PARTY_INV:" + party, 1, listener())));
+                        new SessionDecoder.Invocation(3, 12, 7, List.of("PARTY_INV:" + party, 1, listener())));
                 // Native clients subscribe when the newly visible partyOid is announced.
                 await(() -> a.world.announcedPartyOid() == party && b.world.announcedPartyOid() == party);
                 a.world.subscribeInteriorParty((short) 5);
@@ -212,7 +212,7 @@ public class CooperativeTrainingTest {
                 a.travel(1);
                 a.operation(2, b.name);
                 b.world.partyInvocation(
-                        new SessionDecoder.Invocation(3, 12, 5, List.of("PARTY_INV:" + party, 1, listener())));
+                        new SessionDecoder.Invocation(3, 12, 7, List.of("PARTY_INV:" + party, 1, listener())));
                 b.world.subscribeInteriorParty((short) 7);
                 a.travel(294);
                 b.travel(294);
@@ -231,7 +231,7 @@ public class CooperativeTrainingTest {
                 a.travel(1);
                 a.operation(2, b.name);
                 b.world.partyInvocation(
-                        new SessionDecoder.Invocation(3, 12, 5, List.of("PARTY_INV:" + party, 1, listener())));
+                        new SessionDecoder.Invocation(3, 12, 7, List.of("PARTY_INV:" + party, 1, listener())));
                 b.world.subscribeInteriorParty((short) 9);
                 a.travel(294);
                 b.travel(294);

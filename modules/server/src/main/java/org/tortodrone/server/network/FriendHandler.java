@@ -91,8 +91,8 @@ final class FriendHandler {
         // friend request and must fall through to the chat dispatcher instead of being rejected.
         // Current SocialMarshaller: 1 request, 2 party suggestions, 3 join friend, 4 join secret,
         // 6 looking-for-group, 8 unfriend. The two this handler does not serve belong to the party
-        // and trade dispatchers: 5 is c(PartyKey, listener), and 7 is a(String, int, listener),
-        // the invitation response those handlers accept under both codes.
+        // and trade dispatchers: 5 is c(PartyKey, listener), a party-suggestion join, and 7 is
+        // a(String, int, listener), the invitation response.
         if (request.oid() != SessionCodec.INVOCATION_OID
                 || request.service() != SessionCodec.SOCIAL_SERVICE
                 || !Set.of(1, 2, 3, 4, 6, 8).contains(method)) return false;
