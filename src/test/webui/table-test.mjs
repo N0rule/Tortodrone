@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sortRows, filterRows } from '../../webui/assets/components/table.js';
+import { sortRows, filterRows } from '../../../frontend/assets/components/table.js';
 
 test('sorting evaluates cell content once per row and retains numeric text order', () => {
     const rows = ['Knight 10', 'Knight 2', 'Knight 1', 'Knight 2'].map((name, id) => ({

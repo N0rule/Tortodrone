@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { nearestSample } from '../../webui/assets/components/chart.js';
+import { nearestSample } from '../../../frontend/assets/components/chart.js';
 
 test('chart inspection uses elapsed time across uneven sampling and gaps', () => {
     const samples = [0, 5, 10, 90, 100].map((time) => ({ time }));

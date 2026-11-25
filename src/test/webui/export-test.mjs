@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { toCsv, toJson } from '../../webui/assets/components/export.js';
+import { toCsv, toJson } from '../../../frontend/assets/components/export.js';
 
 const columns = [
     ['Name', (row) => row.name],

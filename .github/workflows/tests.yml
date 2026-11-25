@@ -57,7 +57,7 @@ jobs:
       - name: Run WebUI contract tests
         shell: bash
         run: |
-          # The suite reads src/webui (a tracked symlink to frontend/), so it needs no
+          # The suite reads frontend/ by relative path, so it needs no
           # build step and no game installation.
           node --test src/test/webui/*-test.mjs
 

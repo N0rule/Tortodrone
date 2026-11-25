@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { newsDocument } from '../../webui/assets/pages/news.js';
+import { newsDocument } from '../../../frontend/assets/pages/news.js';
 
 test('visual News saves omit the empty action key rejected by the native schema', () => {
     const banner = { image: 'featured.png', tooltip: '', url: '', action: '', argument: '' };

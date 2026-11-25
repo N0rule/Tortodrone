@@ -597,10 +597,11 @@ verified less than it claimed. The browser `shell.js` group ends with a sweep ov
 checking one visible `h1`, a caption and scoped headers on each table, unique ids,
 no horizontal overflow, and the session facts on WebUI Access.
 
-`src/webui` is a symlink to `frontend/` so those test imports resolve from the
-repository root. Browser regression groups (`acceptance.js`, `refinements.js`,
-`shell.js`, `icons.js`) run inside a disposable fixture; copy them beside the
-fixture's `assets/` directory and never against live player data.
+The test modules import the shipped `frontend/assets/` files by relative path, so
+they resolve from the repository root without a build step. Browser regression
+groups (`acceptance.js`, `refinements.js`, `shell.js`, `icons.js`) run inside a
+disposable fixture; copy them beside the fixture's `assets/` directory and never
+against live player data.
 
 ## Icons and artwork
 

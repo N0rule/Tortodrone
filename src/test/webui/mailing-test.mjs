@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mailingStatus, mailingItems } from '../../webui/assets/pages/mailing.js';
+import { mailingStatus, mailingItems } from '../../../frontend/assets/pages/mailing.js';
 
 test('mailing status follows the delivery window and cancellation', () => {
     const now = 1_000_000;

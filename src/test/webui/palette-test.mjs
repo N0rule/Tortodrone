@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rank, score } from '../../webui/assets/components/palette.js';
+import { rank, score } from '../../../frontend/assets/components/palette.js';
 
 test('an empty query keeps every command available', () => {
     assert.equal(score('Knights', ''), 1);

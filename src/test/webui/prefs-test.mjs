@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { read, schema, write } from '../../webui/assets/prefs.js';
+import { read, schema, write } from '../../../frontend/assets/prefs.js';
 
 test('unknown stored values fall back to the documented default', () => {
     for (const [key, values] of Object.entries(schema)) {
