@@ -757,6 +757,15 @@ dialog[open]::backdrop {
     display: flex;
     flex-direction: column;
 }
+/* Set while a modal is open. `showModal()` stops the pointer reaching the page but not
+   the wheel over the scrim, so the page behind a dialog scrolled and the row the
+   operator had just opened slid out from under it. The gutter is held open for the
+   duration, or taking the scrollbar away would shift the page sideways under the scrim
+   and put it back when the dialog closed. */
+html.dialog-open {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+}
 /* A read-only dialog opens on its own heading, so the title takes focus with
    `tabindex="-1"` and the browser drew the focus ring around three words of it — a box
    that read as a text field on the title of every record view. Focus still lands there
@@ -782,24 +791,36 @@ dialog[open]::backdrop {
     /* Room for a focus ring inside the scroll box, without a visible gutter shift. */
     padding-inline: 2px;
     margin-inline: -2px;
+    /* Every other scroll region in the app asks for the thin themed track; the dialog
+       body was the one that did not, so it drew the platform's default bar — a light
+       tan strip down the middle of a navy panel. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-bright) transparent;
+    /* A form paged with Home/End or a wheel stops on a row that sits under the pinned
+       footer; this keeps the last row clear of it. */
+    scroll-padding-block-end: 64px;
 }
 /* A record taller than the dialog scrolls, and without a cue the last rows were sliced
-   flat against the footer with nothing to say more existed below. */
+   flat against the footer with nothing to say more existed below. The fade is as tall as
+   the footer's shadow so the two read as one edge rather than as a cut and a smudge. */
 #fields.is-scrollable {
     padding-block-end: 12px;
-    mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent);
 }
 /* The item picker's pager sits in the dialog's body, which is the scroll region, and it
    used to sit at the end of it: the next 24 items were only reachable by scrolling past
    the 24 already passed on. Pinned to the bottom of the body it never leaves the view.
    The body's fade-out cue is turned off in this dialog, because the cue and the pager
    want the same 20px at the bottom and the fade would paint the buttons out. The pager
-   is itself the cue that more is below. */
+   is itself the cue that more is below, and it draws the rule that says where it starts:
+   without one the third row of tiles was sliced through the middle of its artwork and
+   the bar it was cut against was the same colour as the ground. */
 #fields .item-paging {
     position: sticky;
     inset-block-end: 0;
     z-index: 1;
-    padding-block: 8px;
+    padding-block: 10px 4px;
+    border-block-start: 1px solid var(--line);
     background: var(--surface);
 }
 /* The body's fade used to live on the scroll box, where it and the pager want the same
@@ -810,13 +831,14 @@ dialog[open]::backdrop {
     position: absolute;
     inset-inline: 0;
     inset-block-end: 100%;
-    block-size: 20px;
+    block-size: 22px;
     background: linear-gradient(to top, var(--surface), transparent);
     pointer-events: none;
 }
 #fields:has(.item-paging).is-scrollable {
     padding-block-end: 0;
     mask-image: none;
+    scroll-padding-block-end: 76px;
 }
 .form-grid {
     display: grid;
