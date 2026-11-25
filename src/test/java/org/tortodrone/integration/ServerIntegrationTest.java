@@ -359,11 +359,14 @@ public final class ServerIntegrationTest {
         check(
                 log.contains("Loading server keypair") && log.contains("Generating server keypair"),
                 "accurate key creation/reuse messages");
+        // A properties-only deployment keeps using data/server.properties. Startup must not
+        // materialize config/server.yml beside it, because the unified file would silently win
+        // over the override on the next restart.
         check(
-                Files.isRegularFile(deployment.resolve("config/server.yml"))
-                        && !Files.exists(deployment.resolve("cache"))
-                        && Files.isRegularFile(data.resolve("server.properties")),
-                "legacy settings overrides remain usable beside unified config/content");
+                Files.isRegularFile(data.resolve("server.properties"))
+                        && !Files.exists(deployment.resolve("config/server.yml"))
+                        && !Files.exists(deployment.resolve("cache")),
+                "a properties-only deployment keeps its override and gains no shadowing config");
     }
 
     private static void managementWorkflow(Path jar, Path directory) throws Exception {

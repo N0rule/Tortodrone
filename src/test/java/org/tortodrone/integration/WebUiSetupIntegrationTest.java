@@ -32,7 +32,9 @@ public final class WebUiSetupIntegrationTest {
                         "obsolete admin application is absent from server JAR");
             }
             TestDeployment.copyServer(source, root.resolve("tortodrone.jar"));
-            Files.writeString(root.resolve("config/server.yml"), "server-port: 0\nwebui/content_url-port: 0\n");
+            Path config = root.resolve("config");
+            Files.createDirectories(config);
+            Files.writeString(config.resolve("server.yml"), "server-port: 0\nwebui/content_url-port: 0\n");
             try (var server = new Running(root)) {
                 server.ready();
                 server.await("WebUI first-run setup code: ");
@@ -91,14 +93,16 @@ public final class WebUiSetupIntegrationTest {
                 admin.post("setup", setup, 403);
                 check(Boolean.FALSE.equals(admin.get("setup").get("required")), "setup closes after commit");
                 var first = admin.user(FIRST);
+                // The identity store's own rule comes back with the rule's sentence (422),
+                // not the generic revision-race conflict (409).
                 admin.post(
                         "webui-user-delete",
                         Map.of("username", FIRST, "revision", first.get("revision"), "nameConfirmation", FIRST),
-                        409);
+                        422);
                 admin.post(
                         "webui-user-role",
                         Map.of("username", FIRST, "revision", first.get("revision"), "role", "VIEWER"),
-                        409);
+                        422);
                 admin.post(
                         "webui-user-create",
                         Map.of(
@@ -248,7 +252,10 @@ public final class WebUiSetupIntegrationTest {
                             "--enable-native-access=ALL-UNNAMED",
                             "-jar",
                             root.resolve("tortodrone.jar").toString(),
-                            "--nogui")
+                            "--nogui",
+                            // Setup and account management do not need extracted artwork; this also
+                            // keeps the run identical on hosts that do and do not have the client.
+                            "--skip-client-assets")
                     .directory(root.toFile())
                     .redirectErrorStream(true)
                     .redirectOutput(output.toFile())
@@ -264,9 +271,14 @@ public final class WebUiSetupIntegrationTest {
         }
 
         void ready() throws Exception {
-            WebUiSetupIntegrationTest.await(
-                    () -> output().contains("Type help for server commands.") && output().contains("WebUI Ready "),
-                    "packaged server ready");
+            try {
+                WebUiSetupIntegrationTest.await(
+                        () -> output().contains("Type help for server commands.") && output().contains("WebUI Ready "),
+                        "packaged server ready");
+            } catch (AssertionError timeout) {
+                // Keep the packaged server's own words in the failure instead of only "timed out".
+                throw new AssertionError(timeout.getMessage() + "\n" + output(), timeout);
+            }
             check(process.isAlive(), "server remains running");
         }
 
