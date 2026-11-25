@@ -55,15 +55,13 @@ export function logStream({
     // The sentence that follows the chords, when a pane has one.
     note = null,
     onLoadFile = null,
-    onLink = null,
     onFilter = null,
     // The Console answers commands; it has no tail to follow and nothing to pause, so
     // those two controls are not built there at all (the page's own hint said so).
     tail = true,
-    // What the bar is counting. A console holds answers, which may each print many
-    // lines, so calling them "lines" was a number that never matched the pane.
-    countNoun = ['line', 'lines'],
-    // A page whose rows are its own answers, not the server's lines.
+    // A page whose rows are its own answers, not the server's lines. Such a pane is a
+    // terminal: it prints its rows as text instead of tabulating them, it carries no
+    // counter in the bar and no source strip, because neither is a thing a terminal has.
     countAnswers = false,
     // What an empty pane is called. A tail says lines arrive as the server writes
     // them; a console holds answers to commands, and it printed the log's sentence
@@ -170,6 +168,9 @@ export function logStream({
         period.value = initialPeriod;
 
     let paused = false,
+        // A page that reports its connection somewhere else than the status strip - the
+        // console says it in the bar, which is always on screen - lifts the LED itself.
+        offlineState = false,
         auto = true,
         rows = [],
         pending = [],
@@ -281,7 +282,7 @@ export function logStream({
 
     // A shell prints `key: value` in aligned columns, not fifty lines of braces: the
     // pretty-printed dump made one `status` answer taller than the pane.
-    function formatOutput(value) {
+    function formatOutput(value, command = '') {
         const textValue = typeof value === 'string' ? value : String(value ?? '');
         const trimmed = textValue.trim();
         const structured =
@@ -289,39 +290,62 @@ export function logStream({
             (trimmed.startsWith('[') && trimmed.endsWith(']'));
         if (!structured) return textValue;
         try {
-            return align(JSON.parse(trimmed));
+            const parsed = JSON.parse(trimmed);
+            // An empty answer used to print a lone dash under the prompt, which is a
+            // punctuation mark where an answer should be: `players` with nobody on
+            // said nothing an operator could read. It names the absence instead.
+            if (Array.isArray(parsed) && !parsed.length)
+                return command ? `(no ${command})` : '—';
+            return align(parsed);
         } catch {
             /* keep the raw text when it is not valid JSON */
         }
         return textValue;
     }
 
-    /** How many lines of one answer are shown before it folds. */
-    const ANSWER_LINES_SHOWN = 24;
-
     /**
-     * One answer, folded. A `help` or `players` answer can print sixty thousand
-     * characters, and a single `pre` that tall pushed the prompt's context off screen.
-     * The fold keeps the first lines and names the rest; Export still carries all of it.
+     * One answer, printed whole. It used to fold after 24 lines behind a "show all"
+     * link, which is a widget standing in the middle of a terminal: the output is the
+     * answer, and a terminal does not ask whether to print the rest of it. The pane
+     * scrolls and Ctrl+L clears, which is how the transcript above the prompt is
+     * already handled.
      */
     function answerBody(entry) {
-        const formatted = formatOutput(entry.output);
-        const lines = formatted.split('\n');
-        if (lines.length <= ANSWER_LINES_SHOWN) return el('pre', formatted, 'command-response');
-        const fold = el('div', null, 'command-fold'),
-            head = el('pre', lines.slice(0, ANSWER_LINES_SHOWN).join('\n'), 'command-response');
-        const rest = lines.length - ANSWER_LINES_SHOWN,
-            more = el('button', `${rest} more ${rest === 1 ? 'line' : 'lines'} — show all`, 'link');
-        more.type = 'button';
-        more.onclick = () => fold.replaceChildren(el('pre', formatted, 'command-response'));
-        fold.append(head, more);
-        return fold;
+        const formatted = formatOutput(entry.output, entry.command),
+            response = el('pre', null, 'command-response');
+        // A find that filters the transcript but never marks the hit is half a find. The
+        // answer is painted the same way a server line is, so `Ctrl+F player` shows the
+        // word in the answer it matched instead of only hiding the rows around it.
+        if (!search.value.trim()) {
+            response.textContent = formatted;
+            return response;
+        }
+        formatted.split('\n').forEach((line, at) => {
+            if (at) response.append('\n');
+            response.append(painted(line));
+        });
+        return response;
     }
+
+    /**
+     * A value that has to fit in one column. A nested object in a table cell used to
+     * print `[object Object]`, which is the machine's word for the data, not the data:
+     * `monsters` is a table of counts and reads as `awake 0, despawned 0, …`.
+     */
+    const inline = (value) => {
+        if (value === null || value === undefined) return '—';
+        if (typeof value !== 'object') return String(value);
+        if (Array.isArray(value)) return value.length ? value.map(inline).join(', ') : '—';
+        const entries = Object.entries(value);
+        return entries.length
+            ? entries.map(([key, item]) => `${key} ${inline(item)}`).join(', ')
+            : '—';
+    };
 
     /** The scalar as a terminal prints it: booleans bare, nothing a JSON parser needs. */
     const cell = (value) => {
         if (value === null || value === undefined) return '—';
-        if (typeof value === 'string') return value;
+        if (typeof value === 'object') return inline(value);
         return String(value);
     };
 
@@ -333,6 +357,12 @@ export function logStream({
     const human = (key, value) => {
         if (typeof value !== 'number' || !Number.isFinite(value)) return cell(value);
         const name = String(key).toLowerCase();
+        // An instant is not a number anyone can read: `createdAt : 1,795,519,994,109` in
+        // an answer column answered nothing about when the account was made. The suffix
+        // test is on the name and the size test on the value, so a duration or a
+        // `uptime` in seconds is never mistaken for one.
+        if (/(at|time|date)$/.test(name) && value >= 1e11)
+            return new Date(value).toISOString().slice(0, 16).replace('T', ' ');
         // `heapCommitted` and `physicalTotal` are byte counts whose names do not end in
         // `Bytes`: one `status` answer printed five nine-digit integers.
         if (/bytes?$|size$|heap|physical|memory/.test(name) && Math.abs(value) >= 1024) {
@@ -366,6 +396,33 @@ export function logStream({
         return Number.isInteger(value) ? value.toLocaleString('en-US') : String(value);
     };
 
+    /**
+     * A list of records as a table with one header row, which is how a terminal prints
+     * them: `ps`, a SQL client, anything that has more than one row to show. Nested
+     * plain, four accounts printed `username: alice` five times over and the four rows
+     * of data read as one wall of repeated keys with no seam between them.
+     */
+    function table(records, indent) {
+        const columns = [...new Set(records.flatMap((record) => Object.keys(record)))],
+            widths = columns.map((column) =>
+                Math.max(
+                    column.length,
+                    ...records.map((record) => String(human(column, record[column])).length)
+                )
+            ),
+            row = (cells) =>
+                indent +
+                cells
+                    .map((value, at) => String(value).padEnd(widths[at]))
+                    .join('  ')
+                    .trimEnd();
+        return [
+            row(columns),
+            row(widths.map((width) => '-'.repeat(width))),
+            ...records.map((record) => row(columns.map((column) => human(column, record[column]))))
+        ].join('\n');
+    }
+
     /** Key/value pairs in two aligned columns, nesting by indentation. */
     function align(value, indent = '') {
         if (value === null || typeof value !== 'object') return indent + cell(value);
@@ -373,7 +430,20 @@ export function logStream({
             if (!value.length) return indent + '—';
             if (value.every((item) => item === null || typeof item !== 'object'))
                 return indent + value.map(cell).join(', ');
-            return value.map((item) => align(item, indent)).join('\n');
+            const records = value.every(
+                (item) => item && typeof item === 'object' && !Array.isArray(item)
+            );
+            if (!records) return value.map((item) => align(item, indent)).join('\n');
+            // A record with a nested object cannot be a row: the cell would be a
+            // paragraph, and one long cell pushes every column after it off the line
+            // (`scenes` carries a `monsters` bag of twelve counters). Those records
+            // print as their own block, which is what `align` already knows how to do.
+            const flat = value.every((record) =>
+                Object.values(record).every((item) => item === null || typeof item !== 'object')
+            );
+            return flat
+                ? table(value, indent)
+                : value.map((record) => align(record, indent + '  ')).join('\n\n');
         }
         const entries = Object.entries(value);
         if (!entries.length) return indent + '—';
@@ -382,9 +452,13 @@ export function logStream({
             .map(([key, item]) => {
                 const label = indent + key.padEnd(width);
                 const nested = item !== null && typeof item === 'object';
-                return nested
-                    ? `${label}:\n${align(item, indent + '  ')}`
-                    : `${label}: ${human(key, item)}`;
+                // An empty bag has nothing to indent: `byType` printed as a dangling
+                // colon with a lone dash under it, in a block where every other key was
+                // `key : value` on one line, and the dash landed in a column of its own.
+                const empty =
+                    nested && (Array.isArray(item) ? !item.length : !Object.keys(item).length);
+                if (nested && !empty) return `${label}:\n${align(item, indent + '  ')}`;
+                return `${label}: ${empty ? '—' : human(key, item)}`;
             })
             .join('\n');
     }
@@ -409,20 +483,24 @@ export function logStream({
         // rows have no entry, so the bar read "0 answers" over a full pane.
         const countingAnswers = countAnswers && sourceMode !== 'log',
             counted = countingAnswers ? allRows().filter(answered) : allRows(),
-            noun = countingAnswers ? countNoun : ['line', 'lines'],
             visible = counted.filter((row) => matches(row) && !cleared(row)).length,
             total = countingAnswers ? counted.length
                 : retainedCount || visible,
             away = output.scrollHeight - output.scrollTop - output.clientHeight > 50;
+        // A console is not counted at: "3 answers" is a dashboard figure, and a terminal
+        // has no dashboard. The page writes its own state ("Executing…", "Offline") into
+        // this slot, so the console branch must also leave it alone rather than blanking
+        // it on every paint.
         // A cleared screen says nothing about counts: the pill is the whole story.
-        text(
-            barMeta,
-            clearing.size
-                ? ''
-                : `${visible} ${visible === 1 ? noun[0] : noun[1]}${
-                      visible !== total ? ` of ${total}` : ''
-                  }${paused ? ', paused' : ''}${paused && fresh ? `, ${fresh} new` : ''}`
-        );
+        if (!countAnswers)
+            text(
+                barMeta,
+                clearing.size
+                    ? ''
+                    : `${visible} ${visible === 1 ? 'line' : 'lines'}${
+                          visible !== total ? ` of ${total}` : ''
+                      }${paused ? ', paused' : ''}${paused && fresh ? `, ${fresh} new` : ''}`
+            );
         // The pill names what the pane is doing, not what the tail wants to do — and a
         // pane with no tail (the Console) has no pill to fill: it printed the word
         // "tail" on a page whose own footer says there is nothing to follow.
@@ -444,33 +522,39 @@ export function logStream({
             undoClear,
             clearing.size === 1 ? 'Restore 1 cleared line' : `Restore ${clearing.size} cleared lines`
         );
+        // Where the rest of the log lives is a fact about a log file, and a console is
+        // not reading one: the buffer line described a screen the operator is not
+        // looking at, so a console's source strip is empty and collapses with the rest.
         const bounds = [];
-        if (dropped) bounds.push(`${retained} of ${capacity}, ${dropped} older dropped`);
-        else if (retained) bounds.push(`${retained} buffered`);
-        // A file load is drawn from its own rows, so the live buffer's count alone
-        // described a pane that was showing five hundred lines.
-        if (fileRows.length) bounds.push(`${fileRows.length} loaded from the file`);
-        if (file?.path) {
-            const size = file.bytes ? `${Math.round(file.bytes / 1024)} KB` : null;
-            const name = file.path.split(/[\\/]/).pop();
-            bounds.push(
-                name + (size ? ` (${size})` : '') + (file.exists === false ? ', not written yet' : '')
+        if (!countAnswers) {
+            if (dropped) bounds.push(`${retained} of ${capacity}, ${dropped} older dropped`);
+            else if (retained) bounds.push(`${retained} buffered`);
+            // A file load is drawn from its own rows, so the live buffer's count alone
+            // described a pane that was showing five hundred lines.
+            if (fileRows.length) bounds.push(`${fileRows.length} loaded from the file`);
+            if (file?.path) {
+                const size = file.bytes ? `${Math.round(file.bytes / 1024)} KB` : null;
+                const name = file.path.split(/[\\/]/).pop();
+                bounds.push(
+                    name +
+                        (size ? ` (${size})` : '') +
+                        (file.exists === false ? ', not written yet' : '')
+                );
+            }
+            // One phrase, not six clauses on middots: the source line said what the pane
+            // is, how full its buffer is and where the file lives in a single run.
+            text(
+                source,
+                [typeof sourceLabel === 'function' ? sourceLabel() : sourceLabel, ...bounds]
+                    .filter(Boolean)
+                    .join(', ')
             );
-        }
-        // One phrase, not six clauses on middots: the source line said what the pane is,
-        // how full its buffer is and where the file lives in a single dot-separated run.
-        text(
-            source,
-            [
-                typeof sourceLabel === 'function' ? sourceLabel() : sourceLabel,
-                ...bounds
-            ]
-                .filter(Boolean)
-                .join(', ')
-        );
-        // The console puts its connection text inside the state line, so the LED
-        // has to look for the error class on either of them.
-        const offline = state.classList.contains('error') || !!state.querySelector('.error');
+        } else text(source, '');
+        // The console reports its connection in the bar, which is always on screen, so it
+        // lifts the LED through `setOffline`; the strip's own error class stays readable
+        // here for the pages that still say it there.
+        const offline =
+            offlineState || state.classList.contains('error') || !!state.querySelector('.error');
         const recent = Date.now() - lastRowAt < 2500;
         led.dataset.state = offline
             ? 'offline'
@@ -525,6 +609,15 @@ export function logStream({
         // A notice appearing above the pane (or a second status row) moves its top
         // edge, and that is the only reason to resize: refitting on every status
         // repaint grew the pane under the operator's eyes on arrival (305px → 490px).
+        // A terminal has no second status bar: a console's keys are in its banner and
+        // its connection state in the bar above, so its strip is only there when
+        // something is written into it. An empty one was a rule and 22px of padding
+        // under the prompt, saying nothing.
+        footer.hidden =
+            !statusLeft.textContent.trim() &&
+            !statusRight.textContent.trim() &&
+            !source.textContent.trim() &&
+            !state.textContent.trim();
         const chrome = [...node.children]
             .filter((child) => !child.classList.contains('terminal-body'))
             .reduce((total, child) => total + child.offsetHeight, 0);
@@ -555,22 +648,12 @@ export function logStream({
     }
 
     /**
-     * The pages that explain an answer, as a strip under it. Both the banner and an
-     * answered command carry these, so the markup lives in one place instead of two
-     * copies that can drift apart.
+     * One row of the pane. A server line is tabulated, because a log is a table of
+     * time, level, thread and message and the columns are how you read it. An answer is
+     * not: a terminal prints `tortodrone$ accounts` and its output under it, and the
+     * gutter this pane used to put in front of every command - `22:17:53  CMD` - was
+     * the last piece of log viewer left in the console.
      */
-    function linkStrip(links) {
-        const strip = el('span', null, 'command-links');
-        strip.append(el('span', 'Related', 'command-links-label'));
-        for (const link of links) {
-            const go = el('button', link.label, 'link');
-            go.type = 'button';
-            go.onclick = () => onLink(link);
-            strip.append(go);
-        }
-        return strip;
-    }
-
     function lineFor(row, id) {
         const line = el('div', null, 'terminal-line level-' + row.level);
         const time = el('time', clockTime(row.timestamp), 'log-time');
@@ -587,10 +670,8 @@ export function logStream({
             // prompt line; the transcript is the record of what was issued.
             line.classList.add('notice');
             message.replaceChildren(answerBody(row.entry));
-            // A notice may name the page that explains it; without its links the
-            // console's first line was the one place links were silently dropped.
-            if (row.entry.links?.length && onLink) message.append(linkStrip(row.entry.links));
             line.append(message);
+            line.classList.add('printed');
             line.title = new Date(row.timestamp).toLocaleString();
             line.dataset.sig = signature(row);
             return line;
@@ -603,13 +684,15 @@ export function logStream({
             else message.append(answerBody(row.entry));
         } else if (rawMode) message.textContent = row.line ?? row.message ?? '';
         else message.append(painted(row.message ?? row.line));
-        if (!row.entry && rawMode) {
+        if (row.entry) {
+            line.classList.add('printed');
+            line.append(message);
+        } else if (rawMode) {
             // The file's own line already says `[time] [thread/LEVEL]:`, so the
             // gutter would print all three twice.
             line.classList.add('raw');
             line.append(message);
         } else line.append(time, level, thread, message);
-        if (row.entry?.links?.length && onLink) message.append(linkStrip(row.entry.links));
         line.title = new Date(row.timestamp).toLocaleString();
         line.dataset.sig = signature(row);
         return line;
@@ -628,7 +711,6 @@ export function logStream({
             row.entry?.pending ? 'pending' : 'settled',
             row.entry?.error ? 'error' : '',
             row.entry ? String(row.entry.output).length : '',
-            row.entry?.links?.length || 0,
             row.entry ? '' : (row.line ?? '') + '|' + (row.message ?? ''),
             row.thread ?? '',
             search.value.trim().toLowerCase()
@@ -706,8 +788,13 @@ export function logStream({
         if (!desired.length) {
             const note = el('p', null, 'log-empty');
             if (retained_rows.length)
-                note.textContent =
-                    'No line matches this filter. Clear the search or choose another severity.';
+                note.textContent = findBar
+                    ? // The console keeps its search field behind Ctrl+F, so a sentence
+                      // naming a search box points at nothing on this screen; the bar's
+                      // filter chip is what is there to clear. It stays inside one line of
+                      // the 78ch reading measure that every paragraph carries.
+                      'No line matches this filter. Clear it in the bar, or press Ctrl F.'
+                    : 'No line matches this filter. Clear the search or choose another severity.';
             else if (clearing.size) {
                 // Clearing hid the lines; saying "nothing has been logged" would be
                 // a lie about a buffer that is still there.
@@ -743,6 +830,10 @@ export function logStream({
                 });
         }
         jump.hidden = auto || atBottom;
+        // A terminal does not wrap a table, it scrolls sideways; a pane that has more
+        // line to the right than it can show has to say so, or a cell cut at the edge
+        // reads as a table that broke.
+        node.classList.toggle('is-wide', output.scrollWidth - output.clientWidth > 4);
         // The live pulse follows traffic, not a timer: settle it back once the
         // last line is a few seconds old.
         clearTimeout(settle);
@@ -1299,6 +1390,17 @@ export function logStream({
         },
         redraw: () => display(),
         tools,
+        /** The bar's own slot, where a page that reports state in the bar writes it. */
+        barMeta,
+        /**
+         * Say the pane is offline without giving it a status strip to say it in: the
+         * console's connection state lives in the bar, and the LED has to follow it.
+         */
+        setOffline(value) {
+            if (offlineState === !!value) return;
+            offlineState = !!value;
+            renderStatus();
+        },
         clear,
         announce: (message) => {
             announce.textContent = message;

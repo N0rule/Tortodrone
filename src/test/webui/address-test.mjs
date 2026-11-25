@@ -121,10 +121,68 @@ test('the log pane names where to go next', () => {
     assert.match(stream, /extras = \[\]/, 'the stream accepts extra bar controls');
 });
 
-test('an empty console is not a dead end', () => {
+test('an empty console prints a banner, and the banner names the keys', () => {
     assert.match(consolePage, /commands\\n/, 'the banner counts the commands');
     assert.match(consolePage, /notice: true/, 'the banner is a line in the transcript');
-    assert.match(stream, /row\.entry\.links\?\.length && onLink/, 'a notice keeps its links');
+    assert.match(consolePage, /Tab completes · ↑↓ history/, 'the banner writes the chords down');
+    assert.match(
+        consolePage,
+        /matchMedia\('\(pointer: fine\)'\)/,
+        'a touch screen is not told to press Tab and Ctrl'
+    );
+});
+
+/**
+ * A terminal prints; it does not tabulate. The log viewer's gutter - time, level and
+ * thread in three columns - was the last piece of it left in the console: every command
+ * went out under `22:17:53 CMD`, and the answers under it were laid out as rows of a
+ * log. A shell prints the prompt and the output, and nothing beside it.
+ */
+test('a console row is printed, not tabulated', () => {
+    const pages = read('frontend/assets/css/pages.css');
+    assert.match(stream, /line\.classList\.add\('printed'\)/, 'an answer is a printed row');
+    assert.match(
+        pages,
+        /\.terminal-line\.notice,\s*\.terminal-line\.printed \{\s*grid-template-columns: minmax\(min-content, 1fr\);/,
+        'a printed row takes the whole width and may widen for an unwrapped table'
+    );
+    // The output is the answer: folding it behind a "show all" control put a widget in
+    // the middle of a terminal, and the pane already scrolls.
+    assert.doesNotMatch(stream, /ANSWER_LINES_SHOWN|more \$\{rest\}/, 'an answer is not folded');
+    // Those destinations are in the sidebar. Printing them again under every answer is
+    // the one thing a Minecraft panel's console never does.
+    assert.doesNotMatch(stream, /linkStrip|command-links/, 'the transcript links nowhere');
+});
+
+/**
+ * A list of records is a table with one header row, which is how a terminal prints one:
+ * `ps`, a SQL client, anything with more than one row to show. Nested plain, four
+ * accounts printed `username: alice` five times over and the seam between the four rows
+ * of data disappeared.
+ */
+test('records print as a table, one header row', () => {
+    assert.match(stream, /function table\(records, indent\)/, 'records are tabulated');
+    assert.match(stream, /row\(widths\.map\(\(width\) => '-'.repeat\(width\)\)\)/, 'the header is ruled off');
+    assert.match(stream, /value\.map\(\(record\) => align\(record, indent \+ '  '\)\)/, 'a record with a nested object keeps its block');
+});
+
+/** The prompt is the terminal, so the caret goes where the operator clicks. */
+test('clicking the screen puts the caret on the prompt', () => {
+    assert.match(consolePage, /output\.addEventListener\('click'/, 'the screen is a way into the prompt');
+    assert.match(consolePage, /isCollapsed/, 'dragging a selection is not a click on the screen');
+    assert.match(consolePage, /closest\('a, button/, 'a control in the transcript keeps its own click');
+});
+
+/**
+ * A console has no second status bar: its chords are in the banner and its state is in
+ * the bar above the screen, so the strip under the last line is only drawn when a page
+ * writes something into it.
+ */
+test('the console keeps its state in the bar, not in a strip', () => {
+    assert.match(consolePage, /stream\.barMeta\.append\(feedback/, 'the state is in the bar');
+    assert.match(consolePage, /keys: \[\]/, 'the console binds no permanent key legend');
+    assert.match(stream, /footer\.hidden =/, 'an empty strip is not drawn');
+    assert.match(read('frontend/assets/css/pages.css'), /\.terminal-status\[hidden\] \{\s*display: none;/, 'a hidden strip is hidden');
 });
 
 /**
@@ -171,4 +229,76 @@ test('an in-app link moves the box, not only a reloaded document', () => {
     ]) {
         assert.ok(read(file).includes(call), `${file} drives its own address parameter`);
     }
+});
+/**
+ * A filter that outlives its own bar is a screen that lies about what it holds: Escape
+ * closes the find bar and keeps the term, so the view stayed filtered with nothing on it
+ * saying why, and the next answer arrived filtered out while the prompt looked like it
+ * had eaten the command. The bar names the filter now, one click drops it, and a command
+ * always lands on a whole screen.
+ */
+test('a closed find bar still says what it is filtering', () => {
+    assert.match(consolePage, /filterChip\.hidden = !term;/, 'the bar carries the filter');
+    assert.match(consolePage, /'\\u201c' \+ search \+ '\\u201d'/, 'and names the term');
+    assert.match(consolePage, /severity !== 'All' \? severity : ''/, 'and the level as the select spells it');
+    assert.match(consolePage, /stream\.barMeta\.append\(feedback, filterChip\)/, 'in the bar, not a strip');
+    assert.match(
+        consolePage,
+        /showFilter\(view\.severity, view\.search\)/,
+        'a deep-linked filter says so on arrival'
+    );
+    assert.match(
+        stream,
+        /findBar\s*\?\s*\/\/[^]*?Clear it in the bar, or press Ctrl F\./,
+        'the empty screen points at the control that is on screen'
+    );
+});
+test('a command is never born behind a filter', () => {
+    // The filter is dropped before the echo goes out, so its answer cannot arrive into a
+    // hidden row; the chip and the address follow in clearFind.
+    assert.match(
+        consolePage,
+        /if \(!value\) return;\n[^]*?clearFind\(\);/,
+        'submitting clears the find'
+    );
+    assert.match(
+        consolePage,
+        /view = \{ severity: 'All', search: '' \};\s*stream\.filter\(view\);/,
+        'and repaints the whole screen, both axes dropped'
+    );
+    assert.match(consolePage, /writeAddress\(view\)/, 'the address stops claiming the filter');
+});
+test('the prompt lets go of the keyboard', () => {
+    // Tab completes and lists, which kept it from ever being an exit: Shift+Tab returns
+    // focus to the bar, where the menu and the filter chip live.
+    assert.match(
+        consolePage,
+        /if \(event\.key === 'Tab'\) \{\n\s*\/\/[^]*?\n\s*if \(event\.shiftKey\) return;/,
+        'Shift+Tab leaves the prompt'
+    );
+});
+test('an empty value prints on the line that names it', () => {
+    // `byType` printed as a dangling colon with a lone dash under it, in a block where
+    // every other key was `key : value`, and the dash landed in a column of its own.
+    assert.match(stream, /const empty =\s*\n?\s*nested && \(Array\.isArray\(item\)/, 'emptiness is tested first');
+    assert.match(stream, /if \(nested && !empty\) return `\$\{label\}:\\n\$\{align/, 'only a bag with rows nests');
+    assert.match(stream, /\$\{empty \? '—' : human\(key, item\)\}/, 'an empty bag stays on its key line');
+    // A top-level empty answer was a lone dash under the prompt, which is punctuation
+    // where an answer should be: it names the absence instead.
+    assert.match(stream, /return command \? `\(no \$\{command\}\)` : '—';/, 'an empty answer names itself');
+    assert.match(stream, /formatOutput\(entry\.output, entry\.command\)/, 'the answer knows its command');
+});
+/**
+ * The address is the view. The sidebar's Console entry points at `#console` while the
+ * screen it is already on may be filtered, and that visit changes only the parameters -
+ * so the pane has to be told, or it keeps a filter the address no longer claims.
+ */
+test('a visit that changes only the parameters reaches the pane', () => {
+    assert.match(consolePage, /navigate\(params\) \{/, 'the console answers a parameter-only visit');
+    assert.match(
+        consolePage,
+        /if \(next\.severity === view\.severity && next\.search === view\.search\) return;/,
+        'and does nothing when the parameters say what the pane already shows'
+    );
+    assert.match(consolePage, /showFilter\(view\.severity, view\.search\)/, 'the chip follows the address');
 });

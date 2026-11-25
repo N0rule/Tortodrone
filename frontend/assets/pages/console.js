@@ -14,8 +14,6 @@ let commandDraft = '';
  * sessionStorage, marked with the time each command went out.
  */
 const TRANSCRIPT_KEY = 'tortodrone-console-transcript';
-/** Answers the fifty-row transcript has had to drop since this page was opened. */
-let droppedAnswers = 0;
 function persist() {
     try {
         sessionStorage.setItem(
@@ -39,25 +37,6 @@ function restore() {
         return false;
     }
 }
-
-/**
- * Where an answer lives as a page, so output is not a dead end. The state-changing
- * verbs matter most here and used to have nothing: the answer to `restart` is a line of
- * text, and the record of it is an audit row, so the one command whose outcome an
- * operator needs to prove now links to the trail filtered to that action.
- */
-const RELATED = {
-    status: [{ label: 'Open overview', page: 'overview' }],
-    players: [{ label: 'Open live sessions', page: 'players' }],
-    scenes: [{ label: 'Open scenes', page: 'overview' }],
-    accounts: [{ label: 'Open accounts', page: 'accounts' }],
-    help: [{ label: 'Open settings', page: 'settings' }],
-    start: [{ label: 'Audit trail for start', page: 'audit', params: { target: 'start' } }],
-    stop: [{ label: 'Audit trail for stop', page: 'audit', params: { target: 'stop' } }],
-    restart: [{ label: 'Audit trail for restart', page: 'audit', params: { target: 'restart' } }],
-    shutdown: [{ label: 'Audit trail for shutdown', page: 'audit', params: { target: 'shutdown' } }],
-    kick: [{ label: 'Open live sessions', page: 'players' }]
-};
 
 export function reset() {
     history.length = outputHistory.length = 0;
@@ -87,6 +66,45 @@ export async function mount(ctx) {
     } catch (error) {
         listError = error;
     }
+    // A find that outlives its own bar: Escape closes the bar and keeps the term, so the
+    // screen stayed filtered with nothing on it saying why - and the next answer landed
+    // behind the filter that was hiding it. The bar names what is being hidden, and one
+    // click drops it.
+    const filterChip = el('button', null, 'console-filter'),
+        filterName = el('span', null, 'console-filter-term');
+    filterChip.type = 'button';
+    filterChip.append(filterName, el('span', '\u00d7', 'console-filter-drop'));
+    filterChip.hidden = true;
+    filterChip.title = 'The find bar is closed and still filtering the screen. Clear it.';
+    // The view in front of the operator is what they copy or bookmark, so the address
+    // follows the filters instead of only being read from.
+    const writeAddress = ({ severity, search }) => {
+            const params = new URLSearchParams();
+            if (severity && severity !== 'All') params.set('severity', severity);
+            if (search) params.set('search', search);
+            const hash = '#console' + (params.size ? '?' + params : '');
+            // `history` in this module is the prompt's ↑ list, so the browser's history
+            // is named in full.
+            if (location.hash !== hash) window.history.replaceState(null, '', hash);
+        },
+        showFilter = (severity, search) => {
+            // Both axes, because a view is filtered by both: the chip said "filter zzz"
+            // while a level was also hiding every answer, and pointed at half the cause.
+            const term = [
+                // The level as the find bar's own select spells it: one value, one
+                // spelling, whether it is read in the chip or in the control.
+                severity && severity !== 'All' ? severity : '',
+                search ? '\u201c' + search + '\u201d' : ''
+            ]
+                .filter(Boolean)
+                .join(' ');
+            filterChip.hidden = !term;
+            filterName.textContent = term ? 'filter ' + term : '';
+        };
+    let view = {
+        severity: ctx.params.get('severity') || 'All',
+        search: ctx.params.get('search') || ''
+    };
     const stream = logStream({
             commands: outputHistory,
             // The same separator the banner below prints: one pane, one voice.
@@ -99,44 +117,23 @@ export async function mount(ctx) {
             // The rows this page owns are answers; the log lines behind them are the
             // server's words. Counting both said "13 answers" with none issued.
             countAnswers: true,
-            sourceLabel: () =>
-                droppedAnswers
-                    ? `server log · ${droppedAnswers} older ${
-                          droppedAnswers === 1 ? 'answer' : 'answers'
-                      } dropped`
-                    : 'server log',
-            countNoun: ['answer', 'answers'],
             // A console holds answers, so its blank pane is a prompt nobody has
             // used yet — the log's own sentence described the wrong thing entirely.
             emptyNote:
                 'No answer has been printed yet. Type a command below, or type help for the list.',
+            // A terminal has no key legend under its cursor: the banner above names the
+            // chords once, and they scroll away with the banner, the way a shell's own
+            // help does. A permanent row of chords is chrome, and this page is not.
+            keys: [],
             severity: ctx.params.get('severity') || 'All',
             search: ctx.params.get('search') || '',
             // The filter is part of the view: writing it into the address is what lets
             // an operator hand a colleague the exact console they are reading.
             onFilter: ({ severity, search }) => {
-                const params = new URLSearchParams();
-                if (severity && severity !== 'All') params.set('severity', severity);
-                if (search) params.set('search', search);
-                const hash = '#console' + (params.size ? '?' + params : '');
-                // `history` in this module is the prompt's ↑ list, so the browser's
-                // history is named in full.
-                if (location.hash !== hash) window.history.replaceState(null, '', hash);
+                view = { severity, search };
+                writeAddress({ severity, search });
+                showFilter(severity, search);
             },
-            // The Console has no tail to follow and nothing to pause: advertising
-            // those keys here promised behaviour this page does not have.
-            // The list fits the footer it is written into. It used to be 132 characters
-            // in a 518px box, so the pane cut it mid-word at "Ctrl+F…" and the two keys
-            // an operator needs most — clear, and how to list the commands — were the
-            // ones that never appeared. `help` is the command that spells the rest out.
-            keys: [
-                ['Enter', 'runs'],
-                ['Tab', 'completes'],
-                ['↑ ↓', 'history'],
-                ['Ctrl R', 'recall'],
-                ['Ctrl F', 'find']
-            ],
-            note: 'Type help for the commands.',
             // The pane is the terminal, so its filters are not a toolbar parked above
             // the screen: Ctrl+F opens a find bar over the output, the way a terminal
             // emulator searches its own scrollback.
@@ -145,16 +142,15 @@ export async function mount(ctx) {
                 // Closing the find bar puts the caret back on the prompt; it had been
                 // left on a field that is no longer on screen.
                 if (!open) command.focus();
-            },
-            onLink: (link) => ctx.go(link.page, link.params || {})
+            }
         }),
-        // The pane's own status line, and only while something is happening in it.
-        // It used to say "Connected" beside a prompt under a top bar that already
-        // said "Connected" — and that one ages, this one never did.
+        // What the pane is doing, and only while it is doing it. It sat in a status
+        // strip under the prompt, which a terminal does not have; the bar above the
+        // screen says it instead, beside the light that means the same thing.
         feedback = el('small', listError ? 'Command list unavailable' : '');
     const output = stream.output;
     output.setAttribute('aria-label', 'Console output');
-    feedback.className = 'console-connection';
+    feedback.className = 'console-state';
     const form = el('form', null, 'console-prompt'),
         // Not `required`: the browser painted the empty prompt with the invalid-field
         // ring (a red box around a cursor), and an empty prompt is not a mistake - Enter
@@ -198,10 +194,7 @@ export async function mount(ctx) {
     /** Write a line into the transcript that is not an answer to a command. */
     const notice = (message, kind = true) => {
         outputHistory.push({ time: Date.now(), command: '', output: message, notice: kind });
-        if (outputHistory.length > 50) {
-            outputHistory.shift();
-            droppedAnswers++;
-        }
+        if (outputHistory.length > 50) outputHistory.shift();
         stream.redraw();
     };
     // The transcript outlives the document: a reload mid-command keeps the echo and
@@ -218,10 +211,17 @@ export async function mount(ctx) {
         );
         persist();
     }
-    // A fresh console opened on a blank pane, with the ten commands, the Tab hint and
-    // the three pages that explain an answer all somewhere else. A shell prints a
-    // banner; this one prints one too, and its links are the answer to "now what".
+    // A fresh console opened on a blank pane, with the ten commands and the keys all
+    // somewhere else. A shell prints a banner; this one prints one too, and a real
+    // terminal's banner is the only place its chords are written down - they scroll
+    // away with the transcript instead of being a legend nailed under the screen.
     if (!outputHistory.length) {
+        // A touch screen has no Tab, no arrows and no Ctrl, so those chords are not
+        // named on one: `help` is how the commands are found there.
+        const chords =
+            typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches
+                ? '\nTab completes · ↑↓ history · Ctrl R recall · Ctrl F find · Ctrl L clear'
+                : '';
         outputHistory.push({
             time: Date.now(),
             command: '',
@@ -230,14 +230,8 @@ export async function mount(ctx) {
                 'tortodrone console · ' +
                 words.length +
                 ' commands\n' +
-                // The footer already binds Tab and names `help`: this banner said both
-                // again 40px below itself.
-                'Reads print an answer; writes ask for their argument first.',
-            links: [
-                { label: 'Accounts', page: 'accounts' },
-                { label: 'Audit trail', page: 'audit' },
-                { label: 'Server log', page: 'logs' }
-            ]
+                'Reads print an answer; writes ask you to repeat them first.' +
+                chords
         });
         stream.redraw();
     }
@@ -259,28 +253,22 @@ export async function mount(ctx) {
                 break;
             }
         }
-        const links = RELATED[value.split(/\s+/)[0]] || [];
         if (pendingEcho) {
             pendingEcho.output = result.output;
             pendingEcho.error = error;
             pendingEcho.pending = false;
-            pendingEcho.links = links;
         } else {
             outputHistory.push({
                 time: Date.now(),
                 command: value,
                 output: result.output,
-                error,
-                links
+                error
             });
         }
         if (!pendingEcho && history.at(-1) !== value) history.push(value);
         if (history.length > 100) history.shift();
         index = history.length;
-        if (outputHistory.length > 50) {
-            outputHistory.shift();
-            droppedAnswers++;
-        }
+        if (outputHistory.length > 50) outputHistory.shift();
         persist();
         if (!paint) return;
         stream.redraw();
@@ -295,10 +283,7 @@ export async function mount(ctx) {
     /** Echo the prompt line before the server answers, the way a shell does. */
     function echo(value) {
         outputHistory.push({ time: Date.now(), command: value, output: '', error: false, pending: true });
-        if (outputHistory.length > 50) {
-            outputHistory.shift();
-            droppedAnswers++;
-        }
+        if (outputHistory.length > 50) outputHistory.shift();
         stream.redraw();
     }
     let completion = { list: [], at: -1 };
@@ -409,6 +394,10 @@ export async function mount(ctx) {
             return;
         }
         if (event.key === 'Tab') {
+            // Shift+Tab is the way out: the prompt kept the keystroke to list or complete
+            // commands and never let it go, so the bar's menu and the sidebar were
+            // unreachable without a mouse.
+            if (event.shiftKey) return;
             // Complete a command name in place and keep cycling the same match set:
             // recomputing the prefix from the completed word left one candidate, so
             // Tab could never reach the second match.
@@ -492,6 +481,10 @@ export async function mount(ctx) {
             return;
         }
         if (!value) return;
+        // A filter left over from a closed find bar would hide the answer to the command
+        // about to run - the row arrives filtered out and the prompt looks like it ate
+        // it. Issuing a command restores the whole screen first.
+        clearFind();
         // The static set is the guarantee; the server's own list is joined in so a verb
         // this page has not learned yet still gets its confirmation. The server refuses
         // a write without it, so being generous here costs nothing.
@@ -553,7 +546,25 @@ export async function mount(ctx) {
             busy(false);
         }
     };
-    stream.state.append(feedback);
+    // The pane's state is said in the bar, beside the light that means the same thing:
+    // a terminal has no status strip under its last line, and the strip this page used
+    // to carry was 26px of rule saying nothing until a command went out.
+    stream.barMeta.append(feedback, filterChip);
+    // Dropping the filter from the bar keeps the caret on the prompt: the chip is the
+    // only thing a closed find bar leaves on screen, and using it must not strand focus
+    // on a control that has just been hidden. Both axes go, because the bar's chip names
+    // both: a level left behind would keep eating answers it does not name.
+    const clearFind = () => {
+        view = { severity: 'All', search: '' };
+        stream.filter(view);
+        writeAddress(view);
+        showFilter(view.severity, view.search);
+        command.focus();
+    };
+    filterChip.onclick = clearFind;
+    // A console opened filtered - `#console?search=zzz` handed over by a colleague, or an
+    // Escape that closed the bar but kept the term - says so before anything is typed.
+    showFilter(view.severity, view.search);
     const prompt = el('div', null, 'console-prompt-block');
     prompt.append(form);
     // The cursor stands on the line after the last one, inside the scrollback: a shell
@@ -563,6 +574,15 @@ export async function mount(ctx) {
     stream.bodyTail.append(prompt);
     const node = stream.node;
     node.classList.add('console-workspace');
+    // A terminal puts the caret where you click it. Clicking the screen used to focus
+    // the read-only body, so the next keystroke went nowhere and the operator had to
+    // aim at a prompt that is a single line at the bottom of a 600px pane.
+    output.addEventListener('click', (event) => {
+        // A control in the transcript, or a selection being dragged, keeps its click.
+        if (event.target.closest('a, button, input, select, textarea, summary, details')) return;
+        if (!window.getSelection()?.isCollapsed) return;
+        command.focus();
+    });
     // No prompt height to measure any more: the prompt is a line in the body, so it is
     // part of the pane's own scroll height instead of chrome the jump pill has to clear.
     let failures = 0;
@@ -574,19 +594,18 @@ export async function mount(ctx) {
             // A healthy read says nothing here: the top bar's pill is the connection
             // claim, it ages, and a second one beside the prompt could contradict it.
             if (!pending) text(feedback, stream.paused ? 'Display paused · still reading' : '');
-            // The LED reads this class, so the pane has to repaint when it is lifted:
-            // otherwise the light stayed red under the word "Connected".
+            // The light follows the state, and the state is no longer in the strip the
+            // LED used to read, so it is told.
             if (feedback.classList.contains('error')) {
                 feedback.classList.remove('error');
-                stream.redraw();
+                stream.setOffline(false);
             }
         } catch (error) {
             failures++;
-            // One word for one state, and no raw TypeError text: the LED reads the
-            // error class, so it has to be repainted to stop showing green.
+            // One word for one state, and no raw TypeError text.
             text(feedback, 'Offline · reconnecting');
             feedback.classList.add('error');
-            stream.redraw();
+            stream.setOffline(true);
             // A 401 is not a flaky server: every command from here prints "Sign in
             // required" into the transcript, so the pane offers the way back.
             if (error.status === 401 && ctx.reauth && !feedback.parentElement.querySelector('.console-reauth')) {
@@ -614,6 +633,24 @@ export async function mount(ctx) {
     return {
         node,
         refresh,
+        /**
+         * The sidebar's own Console entry points at `#console`, and a link to
+         * `#console?search=…` points at a filtered one: the address is the view, so a
+         * visit that changes only the parameters has to reach the pane. Without this the
+         * screen kept a filter the address no longer claimed, and a colleague handed that
+         * address got a different screen than the one it was copied from.
+         */
+        navigate(params) {
+            const next = {
+                severity: params.get('severity') || 'All',
+                search: params.get('search') || ''
+            };
+            if (next.severity === view.severity && next.search === view.search) return;
+            view = next;
+            stream.filter(next);
+            showFilter(view.severity, view.search);
+            command.focus();
+        },
         // A dead server is not polled every three seconds forever.
         get interval() {
             return failures ? Math.min(3000 * 2 ** failures, 60000) : 3000;

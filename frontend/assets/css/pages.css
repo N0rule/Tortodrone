@@ -349,6 +349,11 @@ button.metric:focus-visible {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    /* A narrow bar has one thing to give, and it is the pane's own name: the page
+       heading already says Console, while the readout on the right is a control with a
+       hit target. Left to an even share, the shrinking squeezed that control's own label
+       against its cross. */
+    flex-shrink: 8;
 }
 .terminal-bar-meta {
     margin-left: auto;
@@ -710,6 +715,19 @@ button.metric:focus-visible {
     color: var(--term-fg);
     font-weight: 600;
 }
+/* A printed row is not a log line: the echoed prompt keeps the prompt's own ink, and
+   the refusal under it is the line that goes red. The rule above is the log viewer's -
+   a whole ERROR row read aloud in white bold - and applied to a command an operator
+   just typed it painted the prompt white and the answer the colour of ordinary output,
+   which is the opposite of what a terminal does with an error. */
+.terminal-line.printed.level-ERROR .log-message {
+    color: inherit;
+    font-weight: 400;
+}
+.terminal-line.printed.level-ERROR .command-response {
+    color: var(--term-error);
+    font-weight: 600;
+}
 .terminal-line.level-DEBUG .log-level {
     color: var(--term-debug);
 }
@@ -763,9 +781,27 @@ button.metric:focus-visible {
 /* A notice is the shell talking under a prompt the previous line already stamped, so
    it carries no time, level or thread of its own. It was still laid out on the four
    gutter columns, which left a whole sentence in the 56px time column: every word on
-   its own line, and the pane's width doing nothing. */
-.terminal-line.notice {
-    grid-template-columns: minmax(0, 1fr);
+   its own line, and the pane's width doing nothing.
+
+   A printed row is the same shape for the same reason: the console prints
+   `tortodrone$ accounts` and its output under it, the way a terminal does, and a
+   gutter in front of the command would make the answers a log the operator did not
+   ask for.
+
+   `min-content` is the floor of that column, not zero: an answer that is one
+   unwrappable line - a table of columns, or any line in the no-wrap mode the menu
+   offers - widens its own row and scrolls the pane sideways instead of being clipped
+   by a track that cannot grow. Wrapped text has the width of its longest word there,
+   so nothing moves for it. */
+.terminal-line.notice,
+.terminal-line.printed {
+    grid-template-columns: minmax(min-content, 1fr);
+}
+/* The message of a printed row holds the echoed command and a `pre` of its output: an
+   inline box with a block inside it splits, which put the answer's first line beside
+   the prompt instead of under it. */
+.terminal-line.printed .log-message {
+    display: block;
 }
 .terminal-line.raw .log-message {
     white-space: pre;
@@ -842,16 +878,6 @@ button.metric:focus-visible {
 html[data-motion='reduce'] .command-pending {
     animation: none;
 }
-/* A folded answer: the first lines, then a control that names the rest. Export still
-   carries all of it, which is what the footer says. */
-.command-fold {
-    display: block;
-}
-.command-fold .link {
-    margin-block-end: 6px;
-    padding: 0;
-    font-size: 12px;
-}
 /* An answer is the shell's own text, not a block in a frame: no rule down its side and
    no indent of its own. A terminal prints the output under the command it belongs to and
    stops there; the rule and the 10px of hanging indent made every answer look like a
@@ -864,28 +890,6 @@ html[data-motion='reduce'] .command-pending {
     white-space: pre-wrap;
     overflow: visible;
     background: transparent;
-}
-/* A command's output names pages, so it is not a dead end. It is a strip under the
-   answer, ruled off from it: three bare words on the line after the text read as a
-   stray sentence, not as the places that explain what just happened. */
-/* The pages that explain an answer are a line of the transcript too, so they keep no
-   rule above them: a hairline was the one thing in the pane that said "panel". The dim
-   label keeps them from reading as output the server printed. */
-.command-links {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 4px 12px;
-    margin-top: 2px;
-}
-.command-links-label {
-    color: var(--term-time);
-    font-size: 12px;
-    text-transform: lowercase;
-}
-.command-links .link {
-    font-family: var(--mono);
-    font-size: 12px;
 }
 /* The same word above the same three links in the log pane's toolbar, where a ruled
    strip would break the bar: a rule on the leading edge is what separates them from
@@ -931,21 +935,20 @@ html[data-motion='reduce'] .command-pending {
         display: none;
     }
 }
-.command-links .link {
-    padding: 0;
-    font-family: var(--mono);
-    font-size: 11.5px;
-}
 .terminal-jump {
     position: absolute;
-    /* Clears the console prompt when one is present, and the status bar always. */
-    inset-block-end: calc(var(--prompt-height, 0px) + 34px);
+    /* Clears the status strip the log panes keep at the bottom. The console has no
+       strip - it is a terminal - so it hangs the pill closer to the edge below. */
+    inset-block-end: 34px;
     inset-inline-end: 12px;
     min-block-size: 30px;
     padding: 0 10px;
     border-radius: 0;
     font-family: var(--mono);
     font-size: 11.5px;
+}
+.console-workspace .terminal-jump {
+    inset-block-end: 12px;
 }
 .terminal-jump[hidden] {
     display: none;
@@ -963,6 +966,13 @@ html[data-motion='reduce'] .command-pending {
     font-size: 11.5px;
     color: var(--muted);
 }
+/* A console has no strip of its own - its keys are in the banner and its state in the
+   bar - so the strip is only drawn when a page writes something into it. `hidden` is
+   set on the element rather than left to `:empty`, because the strip is a flex row of
+   spans that are never literally empty. */
+.terminal-status[hidden] {
+    display: none;
+}
 .terminal-state {
     display: inline-flex;
     align-items: center;
@@ -975,31 +985,6 @@ html[data-motion='reduce'] .command-pending {
 }
 .terminal-state.error {
     color: var(--bad);
-}
-/* A state dot with no word beside it is a mark that means nothing: the connection
-   element is emptied on the tick a command succeeds, and the dot stayed behind. */
-.terminal-state .console-connection:empty,
-.console-connection:empty {
-    display: none;
-}
-.terminal-state .console-connection {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text);
-}
-.terminal-state .console-connection::before {
-    content: '';
-    inline-size: 6px;
-    block-size: 6px;
-    border-radius: 50%;
-    background: var(--good);
-}
-.terminal-state .console-connection.error {
-    color: var(--bad);
-}
-.terminal-state .console-connection.error::before {
-    background: var(--bad);
 }
 .terminal-hint {
     flex: 1 1 120px;
@@ -1091,6 +1076,15 @@ html[data-motion='reduce'] .command-pending {
 .terminal-tail-slot {
     display: contents;
 }
+/* A line too long for the window scrolls sideways here, and a cell cut off at the
+   trailing edge reads as a table that broke rather than a line that continues. A mask,
+   not a background: the glyphs are painted by the rows, so a gradient behind them is
+   invisible, while a mask fades whatever the pane actually painted at its edge. It is
+   only there while there is something to scroll to. */
+.console-workspace.is-wide .terminal-body {
+    -webkit-mask-image: linear-gradient(to left, transparent 0, #000 26px);
+    mask-image: linear-gradient(to left, transparent 0, #000 26px);
+}
 /* The prompt is a line in the buffer - the terminal's own cursor row - not a strip
    under the screen: no rule above it, no second fill, and the body's padding already
    indents it to the column every answer is printed in. */
@@ -1104,6 +1098,83 @@ html[data-motion='reduce'] .command-pending {
     align-items: baseline;
     gap: 8px;
     padding: 8px 12px 4px;
+}
+/* What the pane is doing, said in the bar: a terminal keeps that in its title, not in a
+   status strip under the cursor. It is the same ink as the command it is running. */
+.console-workspace .terminal-bar-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-inline-size: 0;
+}
+.console-state {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--term-time);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.console-state:empty {
+    display: none;
+}
+.console-state.error {
+    color: var(--bad);
+}
+/* The find bar closes on Escape and keeps its term, so the filter it leaves behind has
+   to stay on screen: a hidden filter is a screen that lies about what it holds. Chip,
+   not toolbar - one word, one cross, the bar's own mono ink. */
+.console-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    /* The bar is a row of flex boxes on a 390px phone, and a long term made this one
+       wider than the space it was given: it ran under the More pill, so the cross the
+       chip exists for was the one thing you could not hit. It never shrinks for its own
+       size - the pane's own title gives up that space instead, and the term inside it
+       ellipsises at its own cap - so the cross is never the thing that goes. */
+    flex: none;
+    min-inline-size: 0;
+    padding: 1px 7px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--term-fg);
+    background: transparent;
+    border: 1px solid var(--term-line);
+    border-radius: 2px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.console-filter[hidden] {
+    display: none;
+}
+.console-filter:hover,
+.console-filter:focus-visible {
+    border-color: var(--term-command);
+    color: var(--term-command);
+}
+.console-filter-term {
+    min-inline-size: 0;
+    /* A cap that is a reading width on a desktop and a phone's share of the bar on a
+       phone: 22ch of mono is 152px, which is most of a 390px bar, and the chip has the
+       More pill to stay clear of. */
+    max-inline-size: min(22ch, 27vw);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.console-filter-drop {
+    flex: none;
+    color: var(--term-time);
+}
+/* Below 360px the bar is too narrow for a chip sized by its own label and a 44px More
+   pill side by side: the chip took the space the gap needed and landed flush on the
+   menu, which read as one welded control. It takes the box's width there instead and
+   ellipsises; at 360 and up the label keeps its own size, which is what a real phone
+   shows and where a clipped "filter ERROR" would be the worse trade. */
+@media (max-width: 360px) {
+    .console-filter {
+        max-inline-size: 100%;
+    }
 }
 .console-workspace .console-prompt {
     padding: 0;
@@ -1175,15 +1246,6 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     /* While a command is out the prompt is not the operator's: say so by fading it. */
     color: var(--term-time);
 }
-/* The chip row this described was replaced by Tab-in-a-transcript and never built, so
-   the rules for it were dead CSS. */
-.console-connection {
-    color: var(--good);
-    margin-left: auto;
-}
-.console-connection.error {
-    color: var(--bad);
-}
 @media (max-width: 700px) {
     /* Smallest terminal chrome: the search keeps a row, the rest folds away. */
     .terminal-tools {
@@ -1209,17 +1271,6 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     }
 }
 @media (max-width: 600px) {
-    /* A command chip is a real tap target, not a 14px word. */
-    .console-hint {
-        gap: 14px;
-        padding: 4px 10px 6px;
-    }
-    .console-hint .link {
-        min-block-size: 32px;
-        display: inline-flex;
-        align-items: center;
-        font-size: 12px;
-    }
     .terminal-body {
         padding: 8px;
         /* 1.2 is a terminal's leading at every width: 1.45 on the tightest screen gave
@@ -1333,8 +1384,13 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     .console-prompt {
         padding: 7px 9px 3px;
     }
-    .console-hint {
-        padding: 0 9px 7px;
+    /* A phone is a narrow terminal, and a table of five columns reflowed into a column
+       of fragments: `createdAt            gameMaster  id  knights` and `username` on the
+       line under it, with each record's values scattered below its keys. An answer keeps
+       its own line here and the pane scrolls sideways for the few characters that do not
+       fit, which is what a terminal does with a line too long for the window. */
+    .console-workspace .command-response {
+        white-space: pre;
     }
     .terminal-fill,
     .console-workspace {
@@ -1394,7 +1450,6 @@ html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-lab
     .console-prompt {
         padding: 4px 9px 2px;
     }
-    .console-hint,
     /* A touch screen has no Ctrl, no Tab and no arrows, so the key legend is a list of
        keys this device cannot press. `help` is how the commands are found here, and the
        banner says so. */
@@ -2277,7 +2332,6 @@ dd .bad {
    the width-based heights above, so the shell takes what is left of the viewport and
    the prompt stays on screen. */
 @media (max-height: 470px) {
-    .console-hint,
     /* A touch screen has no Ctrl, no Tab and no arrows, so the key legend is a list of
        keys this device cannot press. `help` is how the commands are found here, and the
        banner says so. */
@@ -2373,8 +2427,7 @@ dd .bad {
            body scrolls; the bar keeps the height of its tallest control. */
         flex: none;
     }
-    .console-workspace .terminal-bar .terminal-led,
-    .console-workspace .terminal-bar .terminal-bar-meta {
+    .console-workspace .terminal-bar .terminal-led {
         display: none;
     }
     /* The "More" summary sat 23px taller than the buttons beside it and pushed the
