@@ -5,6 +5,13 @@
    28 headline number / 32 page hero. */
 :root {
     color-scheme: dark;
+    /* The document itself scrolls, and it was the one scroll region no component rule
+       reached: the page kept the platform's default bar — a light grey strip down the
+       edge of a navy page — while every panel inside drew a thin themed one. Both
+       properties inherit, so naming them here sets the default for every scroller that
+       does not ask for something else, and follows the theme because the token does. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-bright) transparent;
     --canvas: #142635;
     --surface: #1d3446;
     --raised: #29495e;

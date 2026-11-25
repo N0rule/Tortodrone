@@ -11,6 +11,16 @@ let active = null,
  */
 let opener = null;
 /**
+ * A modal `<dialog>` keeps the pointer off the page but not the wheel over the scrim:
+ * the page behind went on scrolling, so the row an operator had just opened slid out
+ * from under the record and came back somewhere else when it closed. The gutter is held
+ * open while the lock is on, or removing the scrollbar would shift the whole page right
+ * by its width under the scrim.
+ */
+function lockPageScroll(locked) {
+    document.documentElement.classList.toggle('dialog-open', locked);
+}
+/**
  * Open the shared editor dialog. `variant` picks the submit button's weight:
  * 'primary' for an ordinary save, 'danger' for a decision that destroys
  * something. A destructive dialog also parks focus on Cancel, so Enter on an
@@ -170,6 +180,7 @@ export function openDialog({
     };
     dialog.onclose = () => {
         if (!dialog.open) {
+            lockPageScroll(false);
             active = null;
             cleanup?.();
             cleanup = null;
@@ -228,6 +239,7 @@ export function openDialog({
             settle();
         }
     };
+    lockPageScroll(true);
     dialog.showModal();
     if (variant === 'danger') $('#cancel-dialog').focus();
     else if (readOnly) {

@@ -1,6 +1,31 @@
 * {
     box-sizing: border-box;
 }
+/* One scrollbar for the whole product, drawn by the app. Chromium ignores these
+   pseudo-elements wherever `scrollbar-width` is set, so they are the fallback for the
+   surfaces that render the platform bar with its stepper arrows — and the arrows are
+   exactly what made a themed panel look like an application window. */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--line-bright);
+    background-clip: content-box;
+    border: 3px solid transparent;
+    border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text);
+    background-clip: content-box;
+}
+::-webkit-scrollbar-button {
+    display: none;
+}
 [hidden] {
     display: none !important;
 }
@@ -370,12 +395,18 @@ a.button:hover {
     color: var(--control-fg);
 }
 a.link {
-    text-decoration: underline;
+    text-decoration: none;
 }
 a.link:hover {
     color: var(--cyan);
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
-/* A link-styled control keeps every state the bordered variants have. */
+/* A link-styled control keeps every state the bordered variants have. The underline
+   belongs to hover and keyboard focus only: a table has ten of these in one column and
+   twenty underlines in a grid of data is the loudest "unstyled admin panel" signal on
+   the page, which is what a name that opens a record was reading as. The 24px hit area
+   stays, and the cyan ink still marks it as the way in. */
 button.link,
 .button.link,
 a.link {
@@ -390,14 +421,18 @@ a.link {
     padding: 2px 0;
     box-shadow: none;
     text-align: left;
-    text-decoration: underline;
+    text-decoration: none;
 }
 button.link:not(:disabled):hover,
 .button.link:not(:disabled):hover,
-a.link:hover {
+button.link:focus-visible,
+.button.link:focus-visible,
+a.link:hover,
+a.link:focus-visible {
     background: transparent;
     border-color: transparent;
     text-decoration: underline;
+    text-underline-offset: 2px;
 }
 button.link:disabled,
 .button.link[aria-disabled='true'] {
