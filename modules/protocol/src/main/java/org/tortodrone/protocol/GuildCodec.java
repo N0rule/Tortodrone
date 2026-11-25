@@ -90,7 +90,8 @@ public final class GuildCodec extends WireWriter {
             var previous = old.get(member.name());
             if (previous == null
                     || previous.rank() != member.rank()
-                    || previous.commandOrder() != member.commandOrder())
+                    || previous.commandOrder() != member.commandOrder()
+                    || previous.lastSession() != member.lastSession())
                 events.add(o -> {
                     partyEntry(o, oid, "members", previous == null ? "EntryAddedEvent" : "EntryUpdatedEvent");
                     guildMember(o, member);

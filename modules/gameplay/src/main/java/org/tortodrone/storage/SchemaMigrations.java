@@ -16,7 +16,7 @@ final class SchemaMigrations {
     static final int APPLICATION_ID = 0x5444524E; // TDRN
 
     static final int BASELINE = 1;
-    static final int LATEST = 4;
+    static final int LATEST = 5;
 
     @FunctionalInterface
     interface Step {
@@ -29,7 +29,30 @@ final class SchemaMigrations {
     static final java.util.List<Migration> ALL = java.util.List.of(
             new Migration(2, "lookup indexes", SchemaMigrations::lookupIndexes),
             new Migration(3, "strict tables", SchemaMigrations::strictTables),
-            new Migration(4, "foreign-key indexes", SchemaMigrations::foreignKeyIndexes));
+            new Migration(4, "foreign-key indexes", SchemaMigrations::foreignKeyIndexes),
+            new Migration(5, "roster session stamp and one master per guild", SchemaMigrations::guildRoster));
+
+    /**
+     * The guild roster publishes when each member was last online, and a guild has exactly one
+     * master. A guild formed before this step could hold two rank-0 rows, so the senior master is
+     * kept and the rest are demoted to officer before the unique index is created.
+     */
+    private static void guildRoster(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            // A file whose version was rolled back for a fixture may already carry the column, so
+            // the add is guarded instead of assumed.
+            if (!column(connection, "world_characters", "last_session"))
+                statement.execute("ALTER TABLE world_characters ADD COLUMN last_session INTEGER NOT NULL DEFAULT 0");
+            statement.execute("UPDATE guild_members SET rank=1 WHERE rank=0 AND EXISTS ("
+                    + "SELECT 1 FROM guild_members other WHERE other.guild_id=guild_members.guild_id"
+                    + " AND other.rank=0 AND other.world_id<>guild_members.world_id"
+                    + " AND (other.command_order<guild_members.command_order"
+                    + " OR other.command_order=guild_members.command_order"
+                    + " AND other.world_id<guild_members.world_id))");
+            statement.execute(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS guild_single_master ON guild_members(guild_id) WHERE rank=0");
+        }
+    }
 
     /** Every foreign-key column and hot lookup that previously scanned its table. */
     private static void lookupIndexes(Connection connection) throws SQLException {
@@ -126,6 +149,17 @@ final class SchemaMigrations {
                 for (var trigger : triggers.get(name)) statement.execute(trigger);
             }
             restoreSequence(connection, name, sequences.get(name));
+        }
+    }
+
+    /** Whether a table already declares a column, for steps that may run on a rolled-back file. */
+    private static boolean column(Connection connection, String table, String name) throws SQLException {
+        try (var query = connection.prepareStatement("SELECT 1 FROM pragma_table_info(?) WHERE name=?")) {
+            query.setString(1, table);
+            query.setString(2, name);
+            try (var rows = query.executeQuery()) {
+                return rows.next();
+            }
         }
     }
 

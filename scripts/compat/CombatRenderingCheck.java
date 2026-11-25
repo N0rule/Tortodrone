@@ -113,6 +113,11 @@ public final class CombatRenderingCheck {
     private int rapidBumpFrames;
     private boolean vortexShieldOnly;
     private boolean equipmentGroups;
+    private boolean partyHudOnly;
+    private int partyBots;
+    private long partyNextInviteAt;
+    private final Map<String, Long> partyInvites = new HashMap<>();
+    private boolean partyHudPassed;
     private List<Action> actions = ACTIONS;
     private int healthMaximum;
     private float hazardX, hazardY;
@@ -271,6 +276,35 @@ public final class CombatRenderingCheck {
             }
             return;
         }
+        if (args.length == 2 && args[0].equals("--seed-party-hud")) {
+            seed(Path.of(args[1]));
+            try (var store = new AccountStore(Path.of(args[1]))) {
+                for (int i = 1; i <= 8; i++) {
+                    String user = "HudPlayer" + i;
+                    store.create(user, "lan-test-password".toCharArray());
+                    char[] password = AccountStore.transform("lan-test-password".toCharArray());
+                    try {
+                        store.authenticate(user, password)
+                                .characters()
+                                .create(new Knight(
+                                        0,
+                                        partyKnight(i),
+                                        "Gear/Helm/Spiral Sallet (Blue)",
+                                        "Gear/Armor/Spiral Culet (Blue)",
+                                        null,
+                                        null,
+                                        "Blue",
+                                        1,
+                                        2,
+                                        0,
+                                        0));
+                    } finally {
+                        Arrays.fill(password, '\0');
+                    }
+                }
+            }
+            return;
+        }
         if (args.length == 2 && args[0].equals("--seed-manual")) {
             seed(Path.of(args[1]));
             System.exit(0);
@@ -324,6 +358,7 @@ public final class CombatRenderingCheck {
         boolean missionOnly = Arrays.asList(args).contains("--mission-only");
         boolean manual = Arrays.asList(args).contains("--manual");
         boolean mailCampaign = Arrays.asList(args).contains("--mail-campaign-only");
+        boolean partyHudLeader = Arrays.asList(args).contains("--party-hud-only");
         int exploreScene = 0;
         for (String arg : args)
             if (arg.startsWith("--scene="))
@@ -348,6 +383,7 @@ public final class CombatRenderingCheck {
                 || Arrays.asList(args).contains("--ready-room-mail-only")
                 || Arrays.asList(args).contains("--ready-room-forge-only")
                 || Arrays.asList(args).contains("--equipment-groups")
+                || partyHudLeader
                 || multiplayerOnly
                 || !peer
                         && args.length == 4
@@ -366,6 +402,9 @@ public final class CombatRenderingCheck {
                                 || args[3].equals("--vortex-shield-only")
                                 || args[3].equals("--mission-only"));
         if (exploreOnly || manual || missionOnly) {
+            if (args.length < 4)
+                throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
+        } else if (partyHudLeader) {
             if (args.length < 4)
                 throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         } else if (args.length != ((trainingOnly || missionOnly) ? 4 : 3))
@@ -443,6 +482,15 @@ public final class CombatRenderingCheck {
         probe.movementOnly = Arrays.asList(args).contains("--movement-only");
         probe.playabilityOnly = Arrays.asList(args).contains("--playability-only");
         probe.rapidOnly = Arrays.asList(args).contains("--rapid-only");
+        probe.partyHudOnly = Arrays.asList(args).contains("--party-hud-only");
+        for (String arg : args)
+            if (arg.startsWith("--party-bots="))
+                try {
+                    probe.partyBots = Integer.parseInt(arg.substring("--party-bots=".length()));
+                } catch (NumberFormatException invalid) {
+                    throw new IllegalArgumentException("Invalid --party-bots value: " + arg);
+                }
+        if (probe.partyHudOnly) probe.deadline = System.nanoTime() + 1_500_000_000_000L;
         if (probe.rapidOnly) {
             probe.deadline = System.nanoTime() + 180_000_000_000L;
             probe.actions = RAPID_ACTIONS;
@@ -515,6 +563,22 @@ public final class CombatRenderingCheck {
         }
         if (probe.failure != null) throw new AssertionError("Graphical combat acceptance failed", probe.failure);
         if (!probe.passed) throw new AssertionError("Graphical client exited before acceptance completed");
+    }
+
+    /** Stock character names reject single-letter parts, so party knights use number words. */
+    private static String partyKnight(int index) {
+        String part = switch (index) {
+            case 1 -> "One";
+            case 2 -> "Two";
+            case 3 -> "Three";
+            case 4 -> "Four";
+            case 5 -> "Five";
+            case 6 -> "Six";
+            case 7 -> "Seven";
+            case 8 -> "Eight";
+            default -> throw new IllegalArgumentException("No party knight name for " + index);
+        };
+        return "Hud-Knight-" + part;
     }
 
     private static void seed(Path data) throws Exception {
@@ -2472,6 +2536,10 @@ public final class CombatRenderingCheck {
                     || (app.GK().mN() || app.GB())) return;
             var view = new View(app.Gx());
             if (view.PO() == null) return;
+            if (partyHudOnly) {
+                partyHudTick(view, now);
+                return;
+            }
             if (rapidOnly && rapidTick(view, now)) return;
             if (equipmentGroups) {
                 equipmentGroupsTick(view, now);
@@ -4073,6 +4141,77 @@ public final class CombatRenderingCheck {
     private int mpTour;
     private Result mpBox;
     private Confirm mpUse;
+
+    /** One real client forms a party in Haven, then enters Training with the party HUD populated. */
+    private void partyHudTick(View view, long now) throws Exception {
+        if (stage == 0) {
+            if (started == 0) started = now;
+            var raw = app.GV().Dc();
+            if (!(raw instanceof com.threerings.projectx.dungeon.data.PartyObject party) || party.partyService == null)
+                return;
+            for (int i = 1; i <= partyBots; i++)
+                if (!Files.isRegularFile(output.resolve("guest-" + i + "/guest-ready"))) {
+                    if (now - started > 240_000_000_000L)
+                        throw new AssertionError("Headless party players never reached town");
+                    return;
+                }
+            int expected = partyBots + 1;
+            if (party.members.size() >= expected) {
+                System.out.println(
+                        "CHECK: " + party.members.size() + "-knight party formed in Haven; entering Training");
+                started = now;
+                stage = 1;
+                app.GK().bn(294);
+                return;
+            }
+            if (now < partyNextInviteAt) return;
+            for (int i = 1; i <= partyBots; i++) {
+                String name = partyKnight(i);
+                if (party.C(new com.threerings.util.Name(name)) != null) continue;
+                long last = partyInvites.getOrDefault(name, 0L);
+                if (now - last < 8_000_000_000L) continue;
+                partyInvites.put(name, now);
+                var confirm = new Confirm();
+                party.partyService.l(new com.threerings.util.Name(name), confirm);
+                System.out.println("CHECK: party HUD invites " + name + " (" + party.members.size() + " in party)");
+                partyNextInviteAt = now + 1_200_000_000L;
+                return;
+            }
+            return;
+        }
+        if (stage == 1) {
+            if (view.sceneId() != 294 || !(view.PO().acU() instanceof Dungeoneer)) {
+                if (now - started > 120_000_000_000L)
+                    throw new AssertionError("Party HUD run did not reach the Training Hall; scene=" + view.sceneId());
+                return;
+            }
+            var raw = app.GV().Dc();
+            if (!(raw instanceof com.threerings.projectx.dungeon.data.PartyObject party) || party.partyService == null)
+                return;
+            int expected = partyBots + 1;
+            if (party.members.size() < expected) {
+                if (now - started > 60_000_000_000L)
+                    throw new AssertionError(
+                            "Training party HUD lost members: " + party.members.size() + "/" + expected);
+                return;
+            }
+            if (!partyHudPassed) {
+                partyHudPassed = true;
+                capture("party-hud");
+                System.out.println("CHECK: real client party HUD in Training has " + party.members.size()
+                        + " members (expected " + expected + ")");
+                started = now;
+            }
+            // Keep the window up so the owner can watch the populated HUD.
+            if (now - started > 600_000_000_000L) {
+                finishImages();
+                passed = done = true;
+                System.out.println(
+                        "PASS: the real client draws a " + expected + "-knight party in the Training Hall HUD");
+                app.shutdown();
+            }
+        }
+    }
 
     private void multiplayerTick(View view, long now) throws Exception {
         // PO is the stock camera target sprite. It must remain the authenticated pawn.

@@ -8,7 +8,6 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.core.ContentFiles;
 import org.tortodrone.core.Json;
-import org.tortodrone.core.Yaml;
 
 /** Offline, candidate-only conversion of effective customized unified item content. Never opens SQLite. */
 public final class ItemMigration {
@@ -36,13 +35,7 @@ public final class ItemMigration {
             var before = ContentManager.inputs(root);
             Path content = root.resolve("content");
             boolean readable = Files.exists(content.resolve("_internal/item-bindings.json"));
-            int dodge = 0;
-            Path combat = root.resolve("config/combat.yml");
-            if (Files.exists(combat)) {
-                var c = Yaml.read(combat);
-                fields(c, combat.toString(), "dodgeCooldownMs");
-                dodge = integer(c.get("dodgeCooldownMs"), combat + " → dodgeCooldownMs");
-            }
+            int dodge = org.tortodrone.core.world.WeaponCatalog.STOCK_DODGE_COOLDOWN_MS;
             var old = readable
                     ? ItemYaml.read(content.resolve("items"), dodge)
                     : LegacyItemYaml.read(content.resolve("items"), dodge);

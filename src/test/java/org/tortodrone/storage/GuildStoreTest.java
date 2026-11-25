@@ -35,9 +35,11 @@ public final class GuildStoreTest {
 
             guilds.checkName("Knights of the Spiral");
             check(guilds.guildOf(aliceWorld) == null, "a new knight belongs to no guild");
-            var formed = guilds.form(alice, 1, 1, "Knights of the Spiral");
+            var formed = guilds.form(alice, 1, 1, "  Knights of the Spiral  ");
             var guild = guilds.guildOf(aliceWorld);
-            check(guild != null && guild.name().equals("Knights of the Spiral"), "the founder's guild is stored");
+            check(
+                    guild != null && guild.name().equals("Knights of the Spiral"),
+                    "the founder's guild is stored with the name trimmed");
             check(guild.memberLimit() == GuildStore.MAX_MEMBERS, "the stock member limit is published");
             check(
                     formed.profile().crowns() == 8000 && formed.profile().energy() == 400,
@@ -55,6 +57,46 @@ public final class GuildStoreTest {
             }
             check(duplicate, "guild names are unique case-insensitively");
 
+            boolean paddedDuplicate = false;
+            try {
+                guilds.form(bob, 1, 1, "  Knights of the Spiral  ");
+            } catch (java.io.IOException expected) {
+                paddedDuplicate = true;
+            }
+            check(paddedDuplicate, "padding cannot claim a name the trimmed probe already holds");
+
+            boolean twoGuilds = false;
+            try {
+                guilds.form(alice, 1, 1, "Second Guild");
+            } catch (java.io.IOException refused) {
+                twoGuilds = refused.getMessage().equals("m.already_in_guild");
+            }
+            check(twoGuilds, "a knight who already belongs to a guild is refused as already in one");
+
+            boolean unknownRankTarget = false;
+            try {
+                guilds.changeRank(alice, 1, 1, "Nobody-Knight", (byte) 2);
+            } catch (java.io.IOException refused) {
+                unknownRankTarget = refused.getMessage().equals("m.unknown_knight");
+            }
+            check(unknownRankTarget, "an unknown roster target is reported as an unknown knight");
+
+            boolean unknownExpelTarget = false;
+            try {
+                guilds.expel(alice, 1, 1, "Nobody-Knight");
+            } catch (java.io.IOException refused) {
+                unknownExpelTarget = refused.getMessage().equals("m.unknown_knight");
+            }
+            check(unknownExpelTarget, "expelling an unknown knight is reported the same way");
+
+            boolean badCategory = false;
+            try {
+                guilds.log(alice, 1, 1, guild.id(), Long.MAX_VALUE, 0, 100, 9, null);
+            } catch (java.io.IOException refused) {
+                badCategory = true;
+            }
+            check(badCategory, "a log category outside the stock enum is refused, not answered empty");
+
             guilds.invite(alice, 1, 1, "Bob-Knight", "Join us", "Bring a sword");
             var letter = db.worldProfile(bob, 1, 1).town().mail().stream()
                     .filter(m -> m.guildInvite())
@@ -68,6 +110,16 @@ public final class GuildStoreTest {
                     guilds.guildOf(bobWorld) != null
                             && guilds.view(guild.id()).members().size() == 2,
                     "accepting the letter adds the knight");
+
+            db.lastSession(bobWorld, 1_700_000_000_000L);
+            check(
+                    guilds.view(guild.id()).members().stream()
+                                    .filter(m -> m.name().equals("Bob-Knight"))
+                                    .findFirst()
+                                    .orElseThrow()
+                                    .lastSession()
+                            == 1_700_000_000_000L,
+                    "the roster publishes when the member was last online");
             check(
                     guilds.view(guild.id()).members().stream()
                                     .filter(m -> m.worldId() == bobWorld)
@@ -120,6 +172,27 @@ public final class GuildStoreTest {
                     "the guild record answers a page and its total");
             check(page.entries().stream().anyMatch(e -> e.type() == 0), "the roster additions are recorded");
             check(page.entries().stream().anyMatch(e -> e.type() == 9), "the well deposit is recorded");
+
+            // A guild has one master: promoting a member to master hands the guild over and demotes
+            // the promoter to senior officer.
+            guilds.changeRank(alice, 1, 1, "Bob-Knight", (byte) 0);
+            var handedOver = guilds.view(guild.id());
+            check(
+                    handedOver.members().stream().filter(m -> m.rank() == 0).count() == 1
+                            && handedOver.members().stream()
+                                    .anyMatch(m -> m.name().equals("Bob-Knight") && m.rank() == 0)
+                            && handedOver.members().stream()
+                                    .anyMatch(m -> m.name().equals("Alice-Knight") && m.rank() == 1),
+                    "promoting a member to master hands the guild over and keeps exactly one master");
+            guilds.changeRank(bob, 1, 1, "Alice-Knight", (byte) 0);
+            check(
+                    guilds.view(guild.id()).members().stream()
+                            .filter(m -> m.rank() == 0)
+                            .findFirst()
+                            .orElseThrow()
+                            .name()
+                            .equals("Alice-Knight"),
+                    "mastership hands back the same way");
 
             guilds.expel(alice, 1, 1, "Bob-Knight");
             check(

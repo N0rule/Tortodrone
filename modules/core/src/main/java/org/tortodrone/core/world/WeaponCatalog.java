@@ -99,6 +99,9 @@ public final class WeaponCatalog {
         }
     }
 
+    /** Verified stock knight dodge cooldown; deployments no longer carry a combat override file. */
+    public static final int STOCK_DODGE_COOLDOWN_MS = 8000;
+
     private final Map<String, Weapon> weapons;
     private final Map<String, Shield> shields;
     private final int dodgeCooldown;

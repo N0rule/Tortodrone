@@ -11,6 +11,7 @@ public record ServerSettings(
         int newsPort,
         LogMode logMode,
         int maxClients,
+        int partyMaxPlayers,
         int logMaxMiB,
         int logRetention,
         String contentPacks,
@@ -20,6 +21,8 @@ public record ServerSettings(
         org.tortodrone.core.config.WebSettings webui) {
     /** Printed once in the chat log when a knight first enters the world after login; empty disables it. */
     public static final String DEFAULT_WELCOME_MESSAGE = "Welcome to Tortodrone!";
+    /** Stock client slot count; a smaller value only narrows admission. */
+    public static final int DEFAULT_PARTY_MAX_PLAYERS = org.tortodrone.core.party.PartyView.CAPACITY;
 
     public ServerSettings(
             String bind,
@@ -38,6 +41,7 @@ public record ServerSettings(
                 newsPort,
                 mode,
                 clients,
+                DEFAULT_PARTY_MAX_PLAYERS,
                 maxMiB,
                 retention,
                 packs,

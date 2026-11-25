@@ -409,7 +409,9 @@ final class TownHandler {
                             (Long) a.get(offset + 1),
                             (Integer) a.get(offset + 2),
                             custom);
-                } else if (dialog.kind().equals("OpenCrafter") || dialog.kind().equals("OpenCatalogCrafter")) {
+                } else if (dialog.kind().equals("OpenCrafter")
+                        || dialog.kind().equals("OpenCatalogCrafter")
+                        || dialog.kind().equals("OpenGuildCatalogCrafter")) {
                     if (a.size() != 4 || !(a.get(1) instanceof long[] ids) || !(a.get(2) instanceof Boolean upgrade))
                         throw new SessionDecoder.Rejected("Invalid craft request");
                     String recipe;

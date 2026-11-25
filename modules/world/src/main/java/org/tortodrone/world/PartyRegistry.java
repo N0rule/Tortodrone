@@ -18,6 +18,16 @@ import org.tortodrone.core.world.SceneStatus;
 
 /** Transient, session-bound parties. Endpoints only enqueue work; they never perform network I/O. */
 public final class PartyRegistry {
+    /** Admission cap from config/server.yml; the encoder still advertises {@link PartyView#CAPACITY}. */
+    private int capacity = org.tortodrone.core.config.ServerSettings.DEFAULT_PARTY_MAX_PLAYERS;
+
+    /** Bound one player party to the configured maximum; the client renders whoever joins. */
+    public synchronized void capacity(int value) {
+        if (value < 1 || value > PartyView.MAX_CAPACITY)
+            throw new IllegalArgumentException("Party capacity must be from 1 to " + PartyView.MAX_CAPACITY);
+        capacity = value;
+    }
+
     public final class Member implements AutoCloseable {
         public final int playerOid, worldId;
         private Knight knight;
@@ -98,7 +108,7 @@ public final class PartyRegistry {
         var member = new Member(oid, knight, profile, Objects.requireNonNull(endpoint));
         online.put(member.worldId, member);
         var prior = detached.remove(member.worldId);
-        if (prior != null && prior.party().members.size() < PartyView.CAPACITY) {
+        if (prior != null && prior.party().members.size() < capacity) {
             var party = prior.party();
             member.party = party;
             member.order = party.nextOrder++;
@@ -278,7 +288,7 @@ public final class PartyRegistry {
         var party = sender.party;
         if (party.automatic) throw new IOException("Training groups do not allow invitations");
         if (party.members.iterator().next() != sender) throw new IOException("Only the party leader can invite");
-        if (party.members.size() >= PartyView.CAPACITY) throw new IOException("The party is full");
+        if (party.members.size() >= capacity) throw new IOException("The party is full");
         var target = online.values().stream()
                 .filter(m -> m.knight.name().equalsIgnoreCase(name))
                 .findFirst()
@@ -319,7 +329,7 @@ public final class PartyRegistry {
                 || target.party.members.size() != 1
                 || !target.town
                 || !invite.sender.town
-                || invite.party.members.size() >= PartyView.CAPACITY)
+                || invite.party.members.size() >= capacity)
             throw new IOException("This party invitation has expired or is no longer valid");
         invalidate(target);
         remove(target, false);
@@ -356,7 +366,7 @@ public final class PartyRegistry {
         var party = target.party;
         if (party == joiner.party) return false;
         if (!party.shared) throw new IOException("That knight is not in a joinable party");
-        if (party.members.size() >= PartyView.CAPACITY) throw new IOException("The party is full");
+        if (party.members.size() >= capacity) throw new IOException("The party is full");
         if (party.inviteOnly && (!party.allowFriends || !friend)) throw new IOException("That party is invite only");
         var current = joiner.party;
         if (current.members.size() > 1 && !current.automatic) throw new IOException("Leave your current party first");

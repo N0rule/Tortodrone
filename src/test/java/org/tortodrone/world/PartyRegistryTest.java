@@ -250,8 +250,27 @@ public class PartyRegistryTest {
             check(publicGroups.view(b).oid() == publicGroups.view(a).oid(), "a friend follows a public Training group");
             refused(() -> publicGroups.setInviteOnly(a, true));
         }
+        var capped = new PartyRegistry();
+        capped.capacity(2);
+        try (var a = member(capped, 1);
+                var b = member(capped, 2);
+                var c = member(capped, 3)) {
+            capped.invite(a, "Knight-B");
+            capped.respond(b, "PARTY_INV:" + capped.view(a).oid(), 1);
+            check(capped.view(b).oid() == capped.view(a).oid(), "a smaller party cap still admits a second knight");
+            refused(() -> capped.invite(a, "Knight-C"));
+            check(
+                    capped.view(c).oid() != capped.view(a).oid(),
+                    "the configured party cap refuses the next knight in the same party");
+        }
+        var outOfRange = new PartyRegistry();
+        try {
+            outOfRange.capacity(org.tortodrone.core.party.PartyView.MAX_CAPACITY + 1);
+            throw new AssertionError("Party capacity above the server ceiling accepted");
+        } catch (IllegalArgumentException expected) {
+        }
         System.out.println(
-                "PASS: invite authorization/decline/expiry, reconnect invalidation, disconnected-party grace/expiry, Training seat release, leader succession, shared/private ownership, open/private controls, direct friend follows and lease cleanup");
+                "PASS: invite authorization/decline/expiry, reconnect invalidation, disconnected-party grace/expiry, Training seat release, leader succession, shared/private ownership, open/private controls, direct friend follows, configured party cap and lease cleanup");
     }
 
     private static PartyRegistry.Member member(PartyRegistry p, int id) throws IOException {

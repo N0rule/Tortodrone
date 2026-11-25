@@ -78,6 +78,21 @@ public final class GuildStore {
         });
     }
 
+    /**
+     * One page of a guild's record for a local operator.
+     *
+     * <p>{@link #log} refuses a caller who is not a member of the guild because it answers a knight
+     * inside the town service. The WebUI and console are local trusted surfaces with no knight to
+     * authenticate as, so they read the same ordered pages without that gate. Nothing here mints a
+     * record entry: the guild log is still written only by the game paths.
+     */
+    public Page operatorLog(long guildId, long cursor, int offset, int count, Integer category, String knightName)
+            throws IOException {
+        if (guildId <= 0) throw new IOException("Invalid guild id");
+        if (count < 1 || count > 100 || offset < 0) throw new IOException("Invalid log page");
+        return database.read(c -> GuildLogStore.page(c, guildId, cursor, offset, count, category, knightName));
+    }
+
     /** {@code GuildMarshaller} id 4, the same gates {@code formGuild} applies to a name. */
     public void checkName(String name) throws IOException {
         settings.checkName(name);
@@ -131,7 +146,8 @@ public final class GuildStore {
         return settings.setMotd(account, knight, auth, guildId, motd);
     }
 
-    /** {@code GuildMarshaller} id 17. Opening the hall is refused until hall scenes are authored. */
+    /** {@code GuildMarshaller} id 17. The flag persists, but entering the hall stays refused until a
+     *  hall map is authored. */
     public TownStore.Result setHallOpen(int account, int knight, long auth, long guildId, boolean open)
             throws IOException {
         return hall.setHallOpen(account, knight, auth, guildId, open);
@@ -190,24 +206,53 @@ public final class GuildStore {
         try (var s = c.prepareStatement("SELECT * FROM guilds WHERE id=?")) {
             s.setLong(1, guildId);
             try (var r = s.executeQuery()) {
-                if (!r.next()) return null;
-                return new Guild(
-                        r.getLong("id"),
-                        r.getString("name"),
-                        r.getLong("formed"),
-                        r.getString("motd"),
-                        r.getInt("hall_open") != 0,
-                        r.getInt("energy"),
-                        r.getInt("upkeep_cost"),
-                        r.getLong("upkeep_time"),
-                        r.getInt("in_default") != 0,
-                        r.getInt("member_limit"),
-                        r.getString("theme"),
-                        r.getString("environment"),
-                        r.getLong("hall_open_at"),
-                        r.getLong("renamed"));
+                return r.next() ? row(r) : null;
             }
         }
+    }
+
+    /** One {@code guilds} row. Column names are used so the shared column list stays valid. */
+    private static Guild row(ResultSet r) throws SQLException {
+        return new Guild(
+                r.getLong("id"),
+                r.getString("name"),
+                r.getLong("formed"),
+                r.getString("motd"),
+                r.getInt("hall_open") != 0,
+                r.getInt("energy"),
+                r.getInt("upkeep_cost"),
+                r.getLong("upkeep_time"),
+                r.getInt("in_default") != 0,
+                r.getInt("member_limit"),
+                r.getString("theme"),
+                r.getString("environment"),
+                r.getLong("hall_open_at"),
+                r.getLong("renamed"));
+    }
+
+    /** Guilds ordered by formation, for the local console. Read-only. */
+    public List<Guild> list() throws IOException {
+        return database.read(c -> {
+            var guilds = new ArrayList<Guild>();
+            try (var s = c.prepareStatement("SELECT * FROM guilds ORDER BY id");
+                    var r = s.executeQuery()) {
+                while (r.next()) guilds.add(row(r));
+            }
+            return guilds;
+        });
+    }
+
+    /** One guild by name, case-insensitively, or null. Read-only. */
+    public Guild named(String name) throws IOException {
+        if (name == null || name.isBlank()) return null;
+        return database.read(c -> {
+            try (var s = c.prepareStatement("SELECT * FROM guilds WHERE name_key=?")) {
+                s.setString(1, name.trim().toLowerCase(Locale.ROOT));
+                try (var r = s.executeQuery()) {
+                    return r.next() ? row(r) : null;
+                }
+            }
+        });
     }
 
     static View view(Connection c, long guildId) throws SQLException, IOException {
@@ -215,7 +260,7 @@ public final class GuildStore {
         if (guild == null) throw new IOException("m.internal_error");
         var members = new ArrayList<Member>();
         try (var s = c.prepareStatement("SELECT m.world_id,m.rank,m.command_order,m.joined,k.name,"
-                + "0 last_session,m.last_withdrawal FROM guild_members m "
+                + "w.last_session,m.last_withdrawal FROM guild_members m "
                 + "JOIN world_characters w ON w.world_id=m.world_id "
                 + "JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id "
                 + "WHERE m.guild_id=? "

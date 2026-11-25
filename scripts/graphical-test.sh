@@ -26,6 +26,9 @@
 #   rapid           fastest single-client combat burst: login-scene jump, seeded
 #                   GM knight, every weapon family, shield/bash/dodge, sprites,
 #                   armor/shield equips and a real shield bump
+#   party-hud       the owner's client forms a party with five headless
+#                   in-process players in Haven, follows them into Training and
+#                   keeps the populated party HUD on screen to watch
 #   explore <id>    load a scene by native scene id, drive free stock movement
 #   manual          disposable server + fullscreen interactive client, auto-logged
 #                   in with the owner's Steam launch wrapper (sk-nopad); only for
@@ -72,7 +75,7 @@ for arg in "$@"; do
             scenarios
             exit 0
             ;;
-        tutorial|crash|ready-room|mail-campaign|mail|forge|haven|training|camp|preview|mission|playability|rapid|explore|manual)
+        tutorial|crash|ready-room|mail-campaign|mail|forge|haven|training|camp|preview|mission|playability|rapid|party-hud|explore|manual)
             scenario=$arg
             ;;
         --*)
@@ -111,6 +114,7 @@ case $scenario in
     mission) scenario_flags=(--mission-only) ;;
     playability) scenario_flags=(--playability-only) ;;
     rapid) scenario_flags=(--rapid-only) ;;
+    party-hud) scenario_flags=(--party-hud-only) ;;
     explore)
         if [ -z "$scene" ]; then
             echo "graphical-test: explore needs a numeric scene id, e.g. scripts/graphical-test.sh explore 398" >&2

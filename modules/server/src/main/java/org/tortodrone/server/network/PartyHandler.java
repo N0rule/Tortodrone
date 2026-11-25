@@ -277,7 +277,9 @@ final class PartyHandler {
         var args = request.arguments();
         boolean response = request.oid() == SessionCodec.INVOCATION_OID
                 && request.service() == SessionCodec.SOCIAL_SERVICE
-                && request.method() == 5
+                // The installed client's SocialMarshaller.a(String, int, ...) encodes invocation
+                // code 7; older captures and the in-process fixtures use 5.
+                && (request.method() == 5 || request.method() == 7)
                 && !args.isEmpty()
                 && args.getFirst() instanceof String key
                 && key.startsWith("PARTY_INV:");

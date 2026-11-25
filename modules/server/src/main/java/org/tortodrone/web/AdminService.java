@@ -114,6 +114,12 @@ public final class AdminService implements AutoCloseable {
             case "knight-state" -> views.state(p.text("username"), p.text("knight"));
             case "knight-view" -> views.knight(p.text("username"), p.text("knight"));
             case "knights-all" -> views.knights();
+            case "guilds" -> views.guilds();
+            case "guild" ->
+                views.guild(
+                        p.text("name"),
+                        p.optional("knight"),
+                        p.optional("count").isEmpty() ? 25 : p.integer("count"));
             case "catalogue" -> views.items(p);
             case "item" -> views.item(p.text("config"));
             case "item-definitions" -> views.definitions(p.optional("configs"));
@@ -473,6 +479,8 @@ public final class AdminService implements AutoCloseable {
                         "knights",
                         "knight",
                         "items",
+                        "guilds",
+                        "guild",
                         "knight-state",
                         "knight-view",
                         "knights-all",

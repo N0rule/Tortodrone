@@ -151,7 +151,8 @@ val buildTools = sourceSets.create("buildTools") {
     java.include("build/BuildTools.java", "build/BuildToolsTest.java", "build/ContentAudit.java",
         "build/ContentManifest.java", "build/StockTools.java", "build/ProcessCleanupTest.java",
         "build/CollisionPackExport.java", "build/MapCompiler.java",
-        "compat/CheckClientWorld.java", "compat/CheckCombatRendering.java", "compat/ClientCheckHarness.java")
+        "compat/CheckClientWorld.java", "compat/CheckCombatRendering.java", "compat/ClientCheckHarness.java",
+        "compat/PartyPlayers.java")
     resources.setSrcDirs(emptyList<String>())
 }
 buildTools.compileClasspath += sourceSets.main.get().output + configurations.runtimeClasspath.get()

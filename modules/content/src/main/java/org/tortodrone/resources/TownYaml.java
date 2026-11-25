@@ -179,6 +179,10 @@ public final class TownYaml {
         if (section.equals("stations")) {
             int level = integer(row.getOrDefault("level", 10), where + " level");
             if (level < 0 || level > 100) throw new IOException(where + ": station level must be from 0 to 100");
+            Object kind = row.get("kind");
+            if (kind != null
+                    && !org.tortodrone.core.town.TownCatalog.STATION_KINDS.contains(text(kind, where + " kind")))
+                throw new IOException(where + ": unknown station kind " + kind);
         }
     }
 

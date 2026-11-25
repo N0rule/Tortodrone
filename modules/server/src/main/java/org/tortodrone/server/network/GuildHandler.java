@@ -294,7 +294,9 @@ final class GuildHandler {
                     }
                     case 19 -> {
                         requireArgs(a, 1, Integer.class);
-                        var current = view;
+                        // Reload instead of trusting this session's cached view: a peer may have
+                        // bought or removed an expansion since the last guild event.
+                        var current = load();
                         if (current == null || current.guild().id() != (Integer) a.get(0))
                             throw new IOException("m.access_denied");
                         long now = System.currentTimeMillis();
@@ -313,7 +315,7 @@ final class GuildHandler {
                     }
                     case 20 -> {
                         requireArgs(a, 2, Integer.class, org.tortodrone.core.wire.EnumValue.class);
-                        var current = view;
+                        var current = load();
                         if (current == null || current.guild().id() != (Integer) a.get(0))
                             throw new IOException("m.access_denied");
                         int type = ((org.tortodrone.core.wire.EnumValue) a.get(1)).ordinal();
@@ -350,7 +352,15 @@ final class GuildHandler {
                     } else guildChanged(before);
                 }
                 Object reply = response;
-                if (result)
+                // The record page travels as an InvocationResponseEvent whose argument is a
+                // GuildLogPage. The town result writer has no branch for that type, and an
+                // unencodable frame fails the downstream stream and closes the connection, so the
+                // page is written by the guild codec that was built for it.
+                if (method == 12) {
+                    if (!(reply instanceof org.tortodrone.core.guild.Page page))
+                        throw new IOException("m.internal_error");
+                    responder.send(() -> responder.codec().guildLog(listener.requestId(), responder.oid(), page));
+                } else if (result)
                     responder.send(() -> responder
                             .codec()
                             .townResult(responder.oid(), listener.requestId(), reply, session.currentProfile()));

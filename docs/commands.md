@@ -148,6 +148,17 @@ A knight name is optional for targetable emotes and must refer to someone in you
 | `/yawn` | `/yawn` | Emote or party signal. |
 | `/yes [player name] (/agree, /nod)` | `/yes Jane` | Targetable emote. |
 
+### Guild chat
+
+Guild chat is a served channel: the guild's own object carries its `SpeakMarshaller`, and a
+member's message reaches every online member of that guild, rate-limited like other chat.
+Guild menus (form, invite, ranks, record, well) are native client windows, not slash
+commands.
+
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/guild message (/g, /guildchat)` | `/guild Hello everyone` | Guild chat. The client refuses for a knight who is not in a guild yet. |
+
 ### Player features not available yet
 
 These depend on systems the server does not currently provide. They return an unavailable response where the client sends a request; they do not perform the described action.
@@ -157,9 +168,8 @@ These depend on systems the server does not currently provide. They return an un
 | `/bug description` | `/bug Stuck after entering a scene` | Bug-report delivery service. |
 | `/complain player name (/report)` | `/complain Jane` | Player-report submission service. |
 | `/game message` | `/game Ready to start` | PvP game chat. |
-| `/guild message (/g, /guildchat)` | `/guild Hello everyone` | Guild membership and guild chat. |
 | `/guildhall (/gh)` | `/guildhall` | Guild-owned halls. |
-| `/officer message (/o)` | `/officer Meeting in Haven` | Guild officer permissions and officer chat. |
+| `/officer message (/o)` | `/officer Meeting in Haven` | Officer chat channel. Officer ranks and permissions themselves are served in the guild menus. |
 | `/readyroom (/rr)` | `/readyroom` | Ready-room and dungeon matchmaking. |
 | `/recharge [player name]` | `/recharge Jane` | Legacy client command without a current server handler. |
 | `/set-ident` | `/set-ident` | Forum identity linking. |
@@ -274,11 +284,14 @@ The server terminal accepts these forms with an optional leading `/`. These are 
 | Syntax | Use | Example |
 |---|---|---|
 | `help [command] [action]` | Show all commands or help for one command. | `help account create` |
-| `status` | Show version, uptime, sessions, resources and memory. | `status` |
+| `status` | Show version, uptime, sessions, resources, memory, outbound counters and scene cadence (late ticks, overruns, lateness). | `status` |
 | `backup [directory \| file.db]` | Write a consistent SQLite snapshot while the server keeps running. | `backup` |
 | `players` | List current TCP sessions, verified identities and locations. | `players` |
 | `session <session-id>` | Inspect an active connection. | `session 1` |
 | `inspect <knight-name>` | Inspect persistent identity, balances and inventory count. | `inspect Jane` |
+| `guild list` | List every formed guild with member count and well balance. | `guild list` |
+| `guild info <guild-name>` | Show one guild's record and roster, including last session stamps. | `guild info Oracion` |
+| `guild log <guild-name>` | Show the newest twenty record entries with their stored type bytes and arguments. | `guild log Oracion` |
 | `account list` | List accounts and Game Master roles. | `ac list` |
 | `account create <username> [gm]` | Create an account; enter its password at the prompts. | `account create Alice` |
 | `account password <username>` | Change a password; existing sessions disconnect. | `ac password Alice` |

@@ -142,6 +142,7 @@ final class ServerConsole implements AutoCloseable {
         boolean group = command.equals("account")
                 || command.equals("knight")
                 || command.equals("currency")
+                || command.equals("guild")
                 || command.equals("webui");
         if (ConsoleHelp.known(command)
                 && words.length == 1
@@ -233,6 +234,12 @@ final class ServerConsole implements AutoCloseable {
                         + output.get("budgetDisconnects")
                         + " peakPendingFrames=" + output.get("peakPendingFrames") + " peakPendingBytes="
                         + output.get("peakPendingBytes"));
+                log.info("Scene cadence: active=" + output.get("sceneActive") + " lateTicks="
+                        + output.get("sceneLateTicks")
+                        + " overruns=" + output.get("sceneOverruns") + " latenessP50Us="
+                        + output.get("sceneLatenessP50Micros") + " latenessP99Us="
+                        + output.get("sceneLatenessP99Micros") + " latenessMaxUs="
+                        + output.get("sceneLatenessMaxMicros"));
             }
         } else if (command.equals("webui")) {
             webui(words);
@@ -295,6 +302,8 @@ final class ServerConsole implements AutoCloseable {
                                 + p.instanceId()));
         } else if (command.equals("currency")) {
             currency(words);
+        } else if (command.equals("guild")) {
+            guild(words);
         } else if (command.equals("knight")) {
             knight(words);
         } else if (command.equals("gm")) {
@@ -407,6 +416,13 @@ final class ServerConsole implements AutoCloseable {
         var result = accounts.currency(
                 words[2], words[3], Currency.parse(words[4]), words[1].equals("give") ? amount : -amount, -1, -1);
         log.info(words[3] + " | Crowns: " + result.crowns() + " | Energy: " + result.energy());
+    }
+
+    private void guild(String[] words) throws IOException {
+        // Guild writes stay with the game service, which authorises them against the caller's
+        // stored auth revision. The console reports only.
+        for (String line : GuildCommands.execute(String.join(" ", words), accounts.guilds())
+                .split("\n")) log.info(line);
     }
 
     private void account(String[] words) throws IOException {

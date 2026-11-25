@@ -243,8 +243,20 @@ public final class ServerSettingsTest {
                 throw new AssertionError("Wildcard proxy hostname accepted");
             } catch (IOException expected) {
             }
+            Path fresh = home.resolve("fresh-defaults.yml");
+            check(ServerSettings.read(fresh).partyMaxPlayers() == 4, "the shipped party cap is four knights");
+            Path policy = home.resolve("party.yml");
+            Files.writeString(policy, "party-max-players: 2\n");
+            check(ServerSettings.read(policy).partyMaxPlayers() == 2, "the party cap is configurable");
+            Files.writeString(policy, "party-max-players: 17\n");
+            try {
+                ServerSettings.read(policy);
+                throw new AssertionError("Party size above the server ceiling accepted");
+            } catch (IOException expected) {
+                check(expected.getMessage().startsWith("party-max-players"), "bounded party size");
+            }
             System.out.println(
-                    "PASS: bounded settings, one shared HTTP port, legacy compatibility, automatic host origins and proxy defaults");
+                    "PASS: bounded settings, one shared HTTP port, legacy compatibility, automatic host origins, proxy defaults and the party cap");
         } finally {
             try (var paths = Files.walk(home)) {
                 for (var path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);

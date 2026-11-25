@@ -17,7 +17,7 @@
 Tortodrone is an independent Java 25 server for **Spiral Knights**. It hosts a persistent world for the unmodified official client, with authoritative movement and combat plus both console and browser-based administration. Accounts use normal usernames and passwords, including when connecting from a Steam-installed client, which is reported under a steam alias so the stock client does not offer to convert the account. Steam account/ticket authentication and guest login are not supported. Tortodrone is not affiliated with or endorsed by the owners of Spiral Knights.
 
 > [!IMPORTANT]
-> **Development status:** this is an active development release, not a complete replacement for the official server. Login, the native Ready Room, Haven, supported interiors, many town and player systems, and one verified mission route work. New knights complete Crash Site and travel directly to Haven. The remaining stock mission routes, guilds, PvP, Arcade play, and some item effects are still unfinished. See [Supported scope](#supported-scope) before inviting players.
+> **Development status:** this is an active development release, not a complete replacement for the official server. Login, the native Ready Room, Haven, supported interiors, many town and player systems, guilds, and one verified mission route work. New knights complete Crash Site and travel directly to Haven. The remaining stock mission routes, guild halls, PvP, Arcade play, and some item effects are still unfinished. See [Supported scope](#supported-scope) before inviting players.
 
 **Start here:** [Quick start](#quick-start) · [Connect the client](#step-5-connect-the-game-client) · [Play with others](#playing-with-others) · [Configuration](#configuration) · [Troubleshooting](#troubleshooting)
 
@@ -25,7 +25,7 @@ Tortodrone is an independent Java 25 server for **Spiral Knights**. It hosts a p
 
 - **Unmodified client** — connect with your own official installation through [KnightLauncherCustom](https://github.com/N0rule/KnightLauncherCustom). No client patches are required.
 - **Portable server** — one JAR plus `config/`, `content/`, `webui/`, and `plugins/`; no external database or runtime services.
-- **Built-in administration** — manage accounts, knights, inventory, economy, and News from the terminal or the WebUI, with a searchable command palette, role-aware pages, stored browser preferences, bulk row actions, CSV/JSON export and a remote console ([WebUI guide](docs/webui.md)).
+- **Built-in administration** — manage accounts, knights, inventory, economy, and News from the terminal or the WebUI, with a searchable command palette, role-aware pages, stored browser preferences, bulk row actions, CSV/JSON export and a remote console, and inspect formed guilds, their wells and rosters ([WebUI guide](docs/webui.md)).
 - **Opening content included** — new knights start in Crash Site and travel directly to Haven after completion, without the legacy Rescue Camp missions. Seventeen maps are bundled; no separate import is needed.
 - **Source-available** — build, inspect, and modify the server under the project license.
 
@@ -208,6 +208,8 @@ A typical configuration:
 server-ip: 0.0.0.0
 server-port: 47624
 max-clients: 16
+
+party-max-players: 4
 startup-map: haven
 welcome-message: Welcome to Tortodrone!
 
@@ -226,6 +228,7 @@ log-retention: 5
 | `server-ip` | `0.0.0.0` | Bind address. `0.0.0.0` accepts local and LAN connections. |
 | `server-port` | `47624` | Game TCP port. |
 | `max-clients` | `16` | Maximum simultaneous game clients (1–1024). |
+| `party-max-players` | `4` | Maximum knights in one player party (1–16). Admission policy only: the client holds no size of its own. `PartyCapacitySessionTest` puts nine knights in one party and one Training simulation and refuses the tenth, and the same run reached sixteen. The client's dungeon HUD above four is unverified. |
 | `startup-map` | `haven` | Installed map folder used by the startup flow; it must be a town. |
 | `welcome-message` | `Welcome to Tortodrone!` | Shown once in chat after a knight enters the world. Set `""` to disable. |
 | `webui-enabled` | `true` | Enables administration and WebUI routes. |
@@ -326,9 +329,10 @@ This validates the pinned scenes, entrances, and route prerequisites. It does **
 | **Opening route** | Crash Site 398 → Haven directly after the original exit/floor report. Completion, collected heat and Haven return location commit together; no skipped-mission rewards are invented. Use the [manual playtest](docs/content.md#local-crash-site-playtest) for graphical acceptance. Existing legacy Camp checkpoints are preserved; that older mission chain remains incomplete. |
 | **Player systems** | Partial: persistent inventory and currencies, equipment and costumes, weapon combat, heat, and battle sprites. Individual item and action support varies. |
 | **Town and social** | Partial: supported shops and crafting, auctions, Energy Exchange, chat, friends, parties, and eligible friend travel. |
-| **Administration** | Supported: game account management, inventory and economy tools, News, monitoring, and lifecycle controls through the console and WebUI. |
-| **Missions** | Partial: the stock catalogue, native mission bar and gate map are served, and the Shadow Beast route runs floor-by-floor with room progress and one settlement. The other four bundled routes are blocked on missing authored lobbies or floors. |
-| **Guilds, PvP, Arcade** | Not implemented. |
+| **Administration** | Supported: game account management, inventory and economy tools, News, monitoring, lifecycle controls, and read-only guild inspection through the console and WebUI. |
+| **Missions** | Partial: the stock catalogue, native mission bar and gate map are served, and the Shadow Beast route runs floor-by-floor with room progress and one settlement. Every other imported route stays blocked on a missing authored lobby, an unbundled wedge scene or the pending gate-conversation semantics, and the gate map only offers a route the bundle can actually complete. |
+| **Guilds** | Partial: formation, invitations, roster and ranks, the record page, the energy well, expansion purchases and theme/environment settings. Guild hall scenes, the hall editor, guild storage and the guild shop are not served, so a purchased expansion or stored theme has no visible effect yet. |
+| **PvP, arcade play** | Not implemented: no arenas, teams, scoring or cabinet minigames. The bundled Arcade is an ordinary town scene. |
 
 Imported definitions and passing serialization tests do not establish full gameplay or visual parity. See [Content](docs/content.md), the [item support inventory](docs/data/item-support.csv), and the [box support inventory](docs/data/box-support.csv) for current limits.
 

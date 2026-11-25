@@ -26,7 +26,12 @@ final class ConsoleHelp {
                     "help [command] [action]",
                     "Show all commands or help for one command.",
                     "help account create"),
-            new Entry("status", "", "status", "Show version, uptime, sessions, resources and memory.", "status"),
+            new Entry(
+                    "status",
+                    "",
+                    "status",
+                    "Show version, uptime, sessions, resources, memory, outbound counters and scene cadence.",
+                    "status"),
             new Entry(
                     "backup",
                     "",
@@ -159,7 +164,31 @@ final class ConsoleHelp {
                     "",
                     "giveitem <knight-name> <1-20> <catalogue ID or exact item config>",
                     "Grant unequipped items by unique knight name. The account-qualified form also works.",
-                    "giveitem Jane 2 Weapon/Sword/Proto Sword"));
+                    "giveitem Jane 2 Weapon/Sword/Proto Sword"),
+            new Entry(
+                    "guild",
+                    "",
+                    "guild list | guild info <guild-name> | guild log <guild-name>",
+                    "Inspect formed guilds, their well, their roster and their record. Guild writes stay with the game client.",
+                    "guild list"),
+            new Entry(
+                    "guild",
+                    "list",
+                    "guild list",
+                    "List every formed guild with member count and well balance.",
+                    "guild list"),
+            new Entry(
+                    "guild",
+                    "info",
+                    "guild info <guild-name>",
+                    "Show one guild's record and roster, including last session stamps.",
+                    "guild info Oracion"),
+            new Entry(
+                    "guild",
+                    "log",
+                    "guild log <guild-name>",
+                    "Show the newest twenty record entries with their stored type bytes and arguments.",
+                    "guild log Oracion"));
 
     static String canonical(String command) {
         command = command.toLowerCase(Locale.ROOT);
@@ -169,6 +198,11 @@ final class ConsoleHelp {
     static boolean known(String command) {
         String name = canonical(command);
         return ENTRIES.stream().anyMatch(e -> e.command().equals(name));
+    }
+
+    /** Canonical command names in entry order, for the docs conformance check. */
+    static List<String> commands() {
+        return ENTRIES.stream().map(Entry::command).distinct().toList();
     }
 
     static List<String> overview() {

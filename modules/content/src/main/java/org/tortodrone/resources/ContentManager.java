@@ -69,13 +69,7 @@ public final class ContentManager {
         var before = inputs(root);
         var warnings = new ArrayList<String>();
         try {
-            int dodge = 0;
-            Path combat = root.resolve("config/combat.yml");
-            if (Files.exists(combat)) {
-                var c = Yaml.read(combat);
-                Yaml.fields(c, combat.toString(), "dodgeCooldownMs");
-                dodge = Yaml.integer(c.get("dodgeCooldownMs"), "dodgeCooldownMs");
-            }
+            int dodge = org.tortodrone.core.world.WeaponCatalog.STOCK_DODGE_COOLDOWN_MS;
             var definitions = ItemYaml.read(content.resolve("items"), dodge);
             var fires = FireCatalog.load(content.resolve("_internal/fires.json.gz"));
             var pet = FireCatalog.load(content.resolve("_internal/pet-fires.json.gz"));

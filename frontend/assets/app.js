@@ -12,6 +12,7 @@ import * as overview from './pages/overview.js';
 import * as players from './pages/players.js';
 import * as accounts from './pages/accounts.js';
 import * as knights from './pages/knights.js';
+import * as guilds from './pages/guilds.js';
 import * as depot from './pages/depot.js';
 import * as auctions from './pages/auctions.js';
 import * as news from './pages/news.js';
@@ -64,6 +65,14 @@ const pages = [
         rank: 1,
         module: knights,
         description: 'Progress, currency, gear, accessories and Battle Sprites.'
+    },
+    {
+        name: 'guilds',
+        title: 'Guilds',
+        section: 'People',
+        rank: 1,
+        module: guilds,
+        description: 'Formed guilds, their treasury well, hall state and rosters.'
     },
     {
         name: 'depot',

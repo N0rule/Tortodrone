@@ -7,8 +7,7 @@ progression remain in SQLite. Back up a stopped deployment before upgrading.
 
 ```text
 config/
-  server.yml                 listener, limits, logs, startup-map
-  combat.yml                 dodgeCooldownMs
+  server.yml                 listener, limits, party cap, logs, startup-map
 content/
   maps/<type>/<map>/         type is town, training or level and must match map.yml
     map.yml                  readable identity, default entrance, instance count
@@ -75,6 +74,7 @@ server-ip: 0.0.0.0
 server-port: 47624
 webui/content_url-port: 8080
 max-clients: 16
+party-max-players: 4
 log-mode: normal
 log-max-mib: 10
 log-retention: 5
@@ -86,7 +86,17 @@ begin in Crash Site; existing completed knights return to the native Ready Room,
 as described in the [README](../README.md#step-5-connect-the-game-client).
 `--config path.yml` changes the settings file without relocating `data/`. Existing explicitly chosen
 `.properties` settings remain readable, including their listener overrides.
-`config/combat.yml` holds the verified global dodge cooldown in milliseconds.
+`party-max-players` bounds party admission (1-8, shipped as 4). It is policy, not a
+client constant: `LevelPartyObject.memberLimit` is server-supplied, and the client both
+renders the members it receives and only compares the limit with 1 to decide whether
+party controls are offered. The cap is enforced in `PartyRegistry` and was measured:
+`PartyCapacitySessionTest` adds knights one at a time, fills nine, refuses the tenth
+with "The party is full", and puts all nine in one Training simulation; a separate run
+reached sixteen before the seventeenth was refused. Nothing in the server caps a party
+at four or eight. Whether the client's dungeon HUD draws more than four portraits has
+not been verified, so 4 stays the shipped value. Only the party cap is player-facing policy; chat and trade have no switch. The knight dodge cooldown is the verified
+stock value (`8000` ms in `WeaponCatalog`), not a deployment setting: `config/` holds
+server policy only.
 Static merchant rules belong to Town YAML. Depot offers/promotions and auctions
 belong exclusively to SQLite; no Depot YAML or empty economy file is shipped.
 
@@ -662,12 +672,18 @@ Existing sparse base values remain the fallback for deployments without a level
 table; omitted values default to zero.
 
 The sprite/harness tables and all 27 base/ultimate attacks (1,728 power/damage
-combinations) are retained from the native reader. A successful skill
+combinations) are retained from the native reader. `SpriteCoverageTest` pins the
+whole matrix: for each of the three sprite families it resolves every declared
+skill, base and ultimate attack, all sixteen power pairs and all four harness
+damage types against the captured catalogue, so a skill can no longer be
+silently inert because a row is missing. A successful skill
 uses native knight activity 288 for 750 ms and writes the **used skill's**
 harness-adjusted, minimum-clamped recharge to all three pet cooldown slots,
 matching observed live behavior. Selected sprite resistance
 and family-damage perks now contribute to combat, alongside existing health,
-charge and speed perks.
+charge and speed perks. Defense-type sprite perks are the exception: their
+presentation entry carries a category, rank and strength but no captured
+defense value, so they are retained as data and add no defense.
 
 Reproduce the native portion of the numeric table with a separate read-only
 stock installation:
@@ -720,6 +736,14 @@ and variants YAML no longer duplicate them. Advanced overrides merge by exact
 `config`, with duplicate IDs rejected. No entries, rare goods or probabilities were
 invented or removed. NPC filenames use verified native names where available;
 `id` and native dialogue bindings remain authoritative even after a file rename.
+
+A station's `kind` is a closed set: `OpenShop`, `OpenDepot`, `OpenAuction`,
+`OpenCrafter`, `OpenCatalogCrafter`, `OpenGuildCatalogCrafter`, `OpenUnbinder`,
+`OpenAccessorizer`, `OpenVariantMaker`, `OpenHarnessInstaller` and `OpenArsenal`.
+An unknown kind fails validation instead of loading an NPC whose dialog renders
+and whose operation is always refused. `OpenGuildCatalogCrafter` crafts its pinned
+recipes exactly like `OpenCatalogCrafter`; the Hunter's Lodge machine it describes
+belongs to a guild hall, which is not served, so that station stays latent.
 
 The 27 `Rule/Hall of Heroes/<Family> <2|3|4> Star` catalogues filter the existing
 nine captured 5-star families by original item rarity, retaining order, quantities
@@ -1076,9 +1100,10 @@ Hearts use their authored native `Heal current` values (40, 80, 120 and 10,000)
 on the activating knight. Using a heart at full health still starts the ordinary
 hand-raising activity, but the use is not consumed and no health changes. Lethal
 Damage applies the native 100,000 `DamageTarget` to the user. Its second native
-action, `UnlockAchievement CASINO_WHAMMIE`, remains unavailable because this
-server has no achievement persistence, so Lethal Damage is only partially
-supported.
+action, `UnlockAchievement CASINO_WHAMMIE`, is still not executed: achievement
+persistence exists (`AchievementState` receipts, the `PlayerObject.achievements`
+DSet and `CASINO_WHAMMIE`'s ordinal), but the item-use path runs no
+`UnlockAchievement` action, so Lethal Damage remains partially supported.
 
 Spawn-actor items place the item's configured actor as an inert static prop at
 the user's position. This covers the four prepared bucket/pillow/pie-pan items
@@ -1090,19 +1115,23 @@ Crowns, Arena Autotarget Off, the Lockdown shields and the Mystery Lockbox stay
 disabled. Their installed native definitions are a no-op `FireEffect`, an
 `ActionConfig.None`, arena-only gear and an empty reward graph respectively, so
 enabling them would either consume an item for nothing or invent behavior the
-client does not supply. Guild bonds, hall/theme/environment tickets, member and
-storage upgrades, and furniture items remain unusable: guild halls, guild
-storage and design rooms are not served, and the native upgrade tickets are
-guild-hall props. The [item support matrix](data/item-support.csv) records each
-remaining group and its evidence.
+client does not supply. Guild bonds, member and storage upgrades, and furniture
+items remain unusable: guild halls, guild storage and design rooms are not
+served, and the native upgrade tickets are guild-hall props. Hall theme and
+environment tickets are accepted by the guild service and stored as a bounded
+string, but no hall scene exists to apply them to. The
+[item support matrix](data/item-support.csv) records each remaining group and its
+evidence.
 
 ## Lockboxes and Prize Boxes
 
-The current content set enables **243 explicitly labeled approximation pools**,
-covering all indexed non-template stock boxes. The [support matrix](data/box-support.csv) audits
-all 250 native definitions. Six internal base/parameter templates and the empty
-Mystery placeholder remain disabled because they have no playable reward pool.
-Every edition has a separate definition, using existing readable item IDs.
+The current content set enables **247 definitions** — 230 with an estimated
+distribution and 17 that keep the native key config only — covering all indexed
+non-template stock boxes. The [support matrix](data/box-support.csv) audits all
+**254** native definitions. Six internal base/parameter templates and the empty
+Mystery placeholder remain disabled (seven rows) because they have no playable
+reward pool. Every edition has a separate definition, using existing readable
+item IDs.
 
 The original 12 wiki/announcement estimates remain documented below. Another
 223 definitions preserve archived resource graph weights, choices, independent

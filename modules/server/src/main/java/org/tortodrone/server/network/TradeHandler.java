@@ -86,7 +86,9 @@ final class TradeHandler {
         boolean close = request.service() == 6 && request.method() == 1 && session.ownsScene(request.oid());
         boolean response = request.oid() == SessionCodec.INVOCATION_OID
                 && request.service() == SessionCodec.SOCIAL_SERVICE
-                && request.method() == 5;
+                // The installed client's SocialMarshaller.a(String, int, ...) encodes invocation
+                // code 7; older captures and the in-process fixtures use 5.
+                && (request.method() == 5 || request.method() == 7);
         boolean operation = request.service() == 1 && request.oid() >= 1001 && (request.oid() & 1) == 1;
         if (!invite && !close && !response && !operation) return false;
         var args = request.arguments();
