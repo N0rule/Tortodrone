@@ -1,7 +1,7 @@
 import { el, toolbar, button, badge, facts, details, date, localDate, routeLink } from '../ui.js';
 import { api } from '../api.js';
 import { DataTable } from '../components/table.js';
-import { openDialog, confirmAction, closeDialog, field } from '../components/dialog.js';
+import { openDialog, confirmAction, field } from '../components/dialog.js';
 import { itemForm } from '../components/gear-editor.js';
 import { itemLine, currency, definitionsFor } from '../components/items.js';
 import { route, go } from '../router.js';
@@ -149,20 +149,12 @@ export async function mount(ctx) {
                         : 'Held by the auction service'
                 ]
             ]),
-            details('Listing and escrow state', row),
-            el('h3', 'Deliveries'),
-            deliveryTable.node,
+            // The actions belong above the deliveries, not under them. They sat at the end
+            // of a 927px body inside a 615px pane, so "Cancel listing" — the one control
+            // here that destroys something — was 219px below the fold while the footer
+            // offered a dismiss-only Close, and "Back to listings" said what Close already
+            // says. Nothing that ends or destroys this record is out of sight now.
             toolbar(
-                // Close first, then drop the param. `navigate()` only closes a dialog when
-                // the *page* changes, so dropping `?listing=` on the same page left the
-                // inspector open on a listing the address no longer named.
-                button(
-                    'Back to listings',
-                    () => {
-                        if (closeDialog()) here({}, ['listing']);
-                    },
-                    'secondary'
-                ),
                 button(
                     // The press settles every expired listing, not this one: the row
                     // it was pressed on cannot be the label's whole claim.
@@ -196,7 +188,10 @@ export async function mount(ctx) {
                             : 'This listing has already settled, so there is nothing to cancel.'
                     }
                 )
-            )
+            ),
+            el('h3', 'Deliveries'),
+            deliveryTable.node,
+            details('Listing and escrow state', row)
         );
         deliveryTable.update(deliveries);
         openDialog({

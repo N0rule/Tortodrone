@@ -2326,6 +2326,13 @@ td:has(> .time-stamp) {
     font-size: 11.5px;
     font-variant-numeric: tabular-nums;
 }
+/* "+1 6 units" read as one number until a middot stood between the count of gifts this
+   cell could not draw and the count of units the mailing sends. */
+.mail-gifts-cell .mail-gift-more + .muted::before {
+    content: '·';
+    margin-inline-end: 6px;
+    color: var(--line-bright);
+}
 /* The row carries two controls, not four: "Recipients" and "Duplicate" live in the
    letter the subject opens. Four of them in this cell either wrapped into a 2x2 block,
    which made a mailing row 105px tall and 180px on the row with a gift, or held the

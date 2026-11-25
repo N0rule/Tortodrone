@@ -657,14 +657,15 @@ function deliveredLabel(campaign) {
                         art.title = name;
                         cell.append(art);
                     }
-                    if (campaign.gifts.length > shown.length)
-                        cell.append(
-                            el(
-                                'span',
-                                `+${campaign.gifts.length - shown.length}`,
-                                'mail-gift-more'
-                            )
-                        );
+                    if (campaign.gifts.length > shown.length) {
+                        const more = campaign.gifts.length - shown.length,
+                            chip = el('span', `+${more}`, 'mail-gift-more');
+                        // A lone "+1" beside two figures is a number nobody can name, so it
+                        // says what it counts on hover and to a screen reader.
+                        chip.title = `${more} more gift${more === 1 ? '' : 's'}`;
+                        chip.setAttribute('aria-label', chip.title);
+                        cell.append(chip);
+                    }
                     cell.append(el('span', unitCount(units(campaign.gifts)), 'muted'));
                     return cell;
                 },
