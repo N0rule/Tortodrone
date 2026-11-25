@@ -926,9 +926,13 @@ html.dialog-open {
     height: 190px;
     display: block;
 }
+/* Axis labels are the smallest text in the product, and 10px was under the ramp's own
+   10.5px floor: a figure the operator has to read sat below the size the type scale
+   calls the smallest. Tabular digits, because three ticks down one axis are a column. */
 .chart text {
     fill: var(--muted);
-    font: 10px var(--font);
+    font: 10.5px var(--font);
+    font-variant-numeric: tabular-nums;
 }
 .chart .grid-line {
     stroke: var(--line);

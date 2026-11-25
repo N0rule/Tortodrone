@@ -361,10 +361,21 @@ function navigationGroups() {
         const list = el('div', null, 'nav-list');
         list.setAttribute('role', 'group');
         list.setAttribute('aria-labelledby', heading.id);
+        // The pack exports one image under three names — `nav-console`, `nav-settings`
+        // and `nav-webui-users` all resolve to the same file — so Console, WebUI Access
+        // and Preferences wore the same 24px blob and none of them was identifiable by
+        // it. A picture that labels two rows labels neither: the first destination to
+        // claim an image draws it, the rest hold the icon column open and draw nothing,
+        // which is the rule `symbols.js` already states for a job with no art of its own.
+        const drawn = new Set();
         for (const page of visible) {
             const link = el('a');
             const icon = uiSymbol(page.name);
-            if (icon) {
+            const art = icon?.querySelector('image')?.getAttribute('href');
+            if (icon && art && drawn.has(art)) {
+                link.append(el('span', null, 'nav-icon-void'));
+            } else if (icon) {
+                if (art) drawn.add(art);
                 icon.setAttribute('aria-hidden', 'true');
                 link.append(icon);
             }

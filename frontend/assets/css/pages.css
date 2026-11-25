@@ -10,8 +10,21 @@
        rule down the left is what marks this block, not a second surface step. */
     background: var(--surface);
     border: 1px solid transparent;
-    border-left: 3px solid var(--gold-rule);
     border-radius: var(--radius);
+    position: relative;
+}
+/* The gold rule is drawn, not a border: a 3px left border on a 20px rounded box bends
+   round the corner and stops in mid-air at both ends, so the mark of the one block that
+   reports the server read as a hook. Inset clear of both corners, with the same round
+   ends as every other bar in the console, it marks the block instead of cutting it. */
+.server-strip::before {
+    content: '';
+    position: absolute;
+    inset-block: 14px;
+    inset-inline-start: 0;
+    inline-size: 3px;
+    border-radius: var(--radius-pill);
+    background: var(--gold-rule);
 }
 /* On a phone the four listener controls become a two-by-two grid of equal width
    instead of a ragged wrap of 109/107/139/138px. */
