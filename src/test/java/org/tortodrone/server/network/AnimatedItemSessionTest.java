@@ -87,6 +87,8 @@ public final class AnimatedItemSessionTest {
                 return null;
             });
             var scenes = org.tortodrone.world.SceneRegistry.create(content);
+            // The selected-character reply reads the home town from the installed scene source.
+            org.tortodrone.world.SceneRegistry.install(scenes);
             var socket = new Socket() {
                 public OutputStream getOutputStream() {
                     return OutputStream.nullOutputStream();

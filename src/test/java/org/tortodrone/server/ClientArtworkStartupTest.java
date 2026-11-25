@@ -27,6 +27,7 @@ public final class ClientArtworkStartupTest {
             Path jar = root.resolve("tortodrone.jar");
             TestDeployment.copyServer(source, jar);
             Path config = root.resolve("config/server.yml");
+            Files.createDirectories(config.getParent());
             Files.writeString(
                     config,
                     "server-ip: 127.0.0.1\nserver-port: 0\nwebui/content_url-port: 0\nwebui-enabled: true\nwebui-public-url: 0.0.0.0\nwebui-tls-mode: http\n");
