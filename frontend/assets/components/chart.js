@@ -207,9 +207,13 @@ export function chart(title, unit, series) {
                 // The left label says when the window opens; where it ends is the
                 // readout under the graph's own subject, and printing that time at both
                 // ends of one axis was two answers to one question.
+                // Two ends, two ticks. One label at the leading edge read as a graph
+                // that started somewhere and finished nowhere.
                 const label = svg('text', { x: 45, y: 181, 'text-anchor': 'start' });
                 label.textContent = time(values[0].time);
-                grid.push(label);
+                const end = svg('text', { x: 580, y: 181, 'text-anchor': 'end' });
+                end.textContent = time(values[values.length - 1].time);
+                grid.push(label, end);
             }
             lines.replaceChildren(...grid);
             series.forEach((s, at) => {

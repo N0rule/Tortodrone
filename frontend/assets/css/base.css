@@ -485,6 +485,10 @@ button[role='switch'][aria-checked='true']::after {
        colour, and the lit track is a deeper teal than a bare cyan: a knob the colour of
        the ink needs a track it can be seen on. */
     background-color: color-mix(in srgb, var(--cyan) 55%, var(--inset));
+    /* The knob travels to the far end of the 32px track and stays 3px inside it. Only
+       the track was changing colour before, so "on" and "off" differed by a hue shift and
+       the knob sat at the left in both — a switch whose handle never moves is a lamp. */
+    background-image: radial-gradient(circle 7px at 22px 50%, var(--text) 99%, transparent 100%);
 }
 button[role='switch'][aria-checked='true']:not(:disabled):hover {
     background: color-mix(in srgb, var(--raised) 78%, var(--line-bright));

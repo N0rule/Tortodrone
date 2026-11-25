@@ -104,10 +104,11 @@ test('a link-styled control is still a target', () => {
 });
 
 test('row actions share one size', () => {
-    const start = components.indexOf('td button,');
+    const start = components.indexOf('td .toolbar button:not(.link),');
     assert.ok(start > 0, 'row actions are sized in one place');
     const block = components.slice(start, components.indexOf('}', start));
-    assert.match(block, /td \.button/, 'an anchor that routes is a row action too');
+    assert.match(block, /td \.toolbar \.button/, 'an anchor that routes is a row action too');
+    assert.match(block, /min-block-size: var\(--control-sm\)/, 'row actions sit on the small step');
 });
 
 test('a field the browser refused looks refused', () => {

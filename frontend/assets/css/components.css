@@ -343,54 +343,63 @@ td.row-actions .toolbar {
        ends there too, instead of starting at the left edge of a column 400px wide. */
     justify-content: flex-end;
 }
-/* Row actions use the small control size so dense tables stay scannable. Anchors
-   that route count as row actions too: a row that mixed a 36px/13px link with a
-   34px/12.5px button sat 1px off its own baseline. */
-td button,
-td .button {
-    padding: 0 10px;
-    /* Row actions sit on the default step: 34px beside a 36px sibling read as a
-       misalignment, not as a hierarchy. */
-    min-block-size: var(--control);
-    font-size: 12.5px;
-    border-radius: var(--radius-control);
-}
-/* The quiet variant, scoped to a row: a table of thirty rows had thirty filled pills
-   down one column, each repeating the underlined name beside it, so the loudest thing
-   on the page was a control that starts every row over again. A row action is a press
-   on the row it sits in; the fill and the edge arrive with the pointer, which is also
-   what tells an operator that the name and the pill do the same thing. */
-td button.secondary,
-td .button.secondary,
-.data-table tr button.secondary,
-.data-table tr .button.secondary {
+/* One row action, one shape. A cell held a 32px ghost beside a 40px filled destructive
+   button and, on one page, a 40px filled neutral one — three weights for three peers, so
+   the loudest pixel in every row was the control nobody presses without reading it first.
+   Every control in a table cell is a ghost at the 32px step now, on the small radius, and
+   takes its fill and its edge from the pointer. Anchors that route count as row actions
+   too, or a row mixing a 13px link with a 12.5px button sits a pixel off its own baseline,
+   so the opting out is a class and not an element name. */
+td .toolbar button:not(.link),
+td .toolbar .button:not(.link),
+.data-table tr .toolbar button:not(.link),
+.data-table tr .toolbar .button:not(.link) {
     --control-bg: transparent;
     --control-border: transparent;
     box-shadow: none;
     color: var(--muted);
+    padding: 0 10px;
     min-block-size: var(--control-sm);
+    font-size: 12.5px;
     border-radius: var(--radius-control-sm);
 }
-td button.secondary:not(:disabled):not([aria-disabled='true']):hover,
-td button.secondary:not(:disabled):not([aria-disabled='true']):focus-visible,
-td .button.secondary:not(:disabled):not([aria-disabled='true']):hover,
-td .button.secondary:not(:disabled):not([aria-disabled='true']):focus-visible,
-.data-table tr button.secondary:not(:disabled):not([aria-disabled='true']):hover,
-.data-table tr button.secondary:not(:disabled):not([aria-disabled='true']):focus-visible,
-.data-table tr .button.secondary:not(:disabled):not([aria-disabled='true']):hover,
-.data-table tr .button.secondary:not(:disabled):not([aria-disabled='true']):focus-visible {
+td .toolbar button:not(.link):not(:disabled):not([aria-disabled='true']):hover,
+td .toolbar button:not(.link):not(:disabled):not([aria-disabled='true']):focus-visible,
+td .toolbar .button:not(.link):not(:disabled):not([aria-disabled='true']):hover,
+td .toolbar .button:not(.link):not(:disabled):not([aria-disabled='true']):focus-visible,
+.data-table tr .toolbar button:not(.link):not(:disabled):not([aria-disabled='true']):hover,
+.data-table tr .toolbar button:not(.link):not(:disabled):not([aria-disabled='true']):focus-visible,
+.data-table tr .toolbar .button:not(.link):not(:disabled):not([aria-disabled='true']):hover,
+.data-table tr .toolbar .button:not(.link):not(:disabled):not([aria-disabled='true']):focus-visible {
     --control-border: var(--line-bright);
     color: var(--text);
     background: color-mix(in srgb, var(--raised) 55%, var(--line-bright));
 }
-/* A row action that cannot run recedes instead of standing out. The disabled rule paints
-   a filled control in a mixed grey precisely so it stays readable, which on a column of
-   quiet row actions made the three that were unavailable the loudest thing in the table. */
-td button.secondary:disabled,
-td button.secondary[aria-disabled='true'],
-td .button.secondary[aria-disabled='true'],
-.data-table tr button.secondary:disabled,
-.data-table tr button.secondary[aria-disabled='true'] {
+/* Destructive keeps the same geometry and changes ink: a filled red block in a column of
+   ghost buttons is a decision made louder than the decision to read the row. It reddens
+   its edge under the pointer, where the press is actually about to happen. */
+td .toolbar button.danger,
+td .toolbar .button.danger,
+.data-table tr .toolbar button.danger,
+.data-table tr .toolbar .button.danger {
+    color: var(--bad);
+}
+td .toolbar button.danger:not(:disabled):not([aria-disabled='true']):hover,
+td .toolbar button.danger:not(:disabled):not([aria-disabled='true']):focus-visible,
+td .toolbar .button.danger:not(:disabled):not([aria-disabled='true']):hover,
+td .toolbar .button.danger:not(:disabled):not([aria-disabled='true']):focus-visible,
+.data-table tr .toolbar button.danger:not(:disabled):not([aria-disabled='true']):hover,
+.data-table tr .toolbar .button.danger:not(:disabled):not([aria-disabled='true']):hover {
+    --control-border: color-mix(in srgb, var(--bad) 55%, transparent);
+    color: var(--bad);
+    background: color-mix(in srgb, var(--bad) 16%, var(--raised));
+}
+/* A row action that cannot run recedes instead of standing out. The disabled rule paints a
+   filled control in a mixed grey precisely so it stays readable, which on a column of
+   ghosts made the three that were unavailable the loudest thing in the table. */
+td .toolbar button:disabled,
+td .toolbar button[aria-disabled='true'],
+.data-table tr .toolbar button[aria-disabled='true'] {
     background: transparent;
     color: var(--muted);
 }
@@ -411,6 +420,12 @@ td .toolbar .button .ui-icon,
     block-size: 16px;
 }
 /* The paging bar is the compact end of the control scale. */
+/* A page button that cannot act loses its fill. On a single-page table it kept the
+   filled pill of the live control beside it, so the two read as a pair of choices. */
+.pagination button:disabled {
+    background: transparent;
+    color: var(--muted);
+}
 .pagination button,
 .pagination select {
     min-block-size: var(--control-sm);
@@ -628,11 +643,14 @@ td .toolbar .button .ui-icon,
 .item-tile {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    /* Centred, because a tile is a cell of a grid and not a line of text: left-aligned
+       under a 64px picture, every tile carried 60-90px of dead edge on its trailing side
+       and the grid read as four columns of labels that had given up. */
+    align-items: center;
     gap: 9px;
     min-width: 0;
     white-space: normal;
-    text-align: left;
+    text-align: center;
     /* The button base centres its content; a tile is a column of children and they
        drifted to the middle of every stretched grid row. */
     justify-content: flex-start;
@@ -802,6 +820,12 @@ dialog[open]::backdrop {
 #dialog[open] {
     display: flex;
     flex-direction: column;
+}
+/* A read-only record is as wide as its facts. At 860px the offer view held 430px of
+   label-and-value pairs and 430px of empty sheet, with the footer's rule running under
+   all of it, which reads as a form that lost its second column. */
+#dialog.is-narrow {
+    width: min(660px, calc(100vw - 30px));
 }
 /* Set while a modal is open. `showModal()` stops the pointer reaching the page but not
    the wheel over the scrim, so the page behind a dialog scrolled and the row the
@@ -1415,7 +1439,9 @@ caption {
 .palette-option.active,
 .palette-option[aria-selected='true'] {
     background: var(--raised);
-    box-shadow: inset 3px 0 var(--gold-rule);
+    /* The row's own edge, not an inset bar: a 3px inset gold rule on a 20px-radius row
+       curls round the corner and reads as a halo around the row's glyph. */
+    box-shadow: inset 0 0 0 1px var(--line-bright);
 }
 /* Every row reserves the glyph slot, so a row without client art still lines its
    title up with the pages above it. */
@@ -1432,13 +1458,25 @@ caption {
     inline-size: 16px;
     block-size: 16px;
 }
+/* An item hit wears its own 96px client art, like every other place an item appears: a
+   palette row without art was indistinguishable from a row of text, and the rule this
+   product runs on is that a picture of an item is the item's picture. */
+.palette-glyph .item-icon {
+    inline-size: 20px;
+    block-size: 20px;
+}
 .palette-option[aria-selected='true'] .palette-glyph {
     color: var(--gold);
 }
 .palette-kind {
-    min-width: 84px;
+    /* A fixed column, not a minimum: one long hint — "Identity · fingerprint · modulus ·
+       ssh" — grew its own row and shoved the title 134px past every title above it. */
+    flex: 0 0 84px;
+    overflow: hidden;
     color: var(--muted);
     font-size: 11.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .palette-title {
     font-weight: 600;
@@ -1501,24 +1539,35 @@ caption {
    selects above and below it occupy — and beside the same help line, so the two forms
    of a setting read as one row. A bare word stretched across the row was the only
    control on the page with no visible state. */
-.setting:has(> button[role='switch']) {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    column-gap: 16px;
-}
-.setting > button[role='switch'] {
-    grid-area: 1 / 2;
-    min-inline-size: 156px;
+.setting label > button[role='switch'] {
+    min-inline-size: 88px;
     block-size: 32px;
     padding: 0 10px;
-    justify-content: space-between;
+    justify-content: center;
     font-size: 13px;
-}
-.setting:has(> button[role='switch']) > .setting-help {
-    grid-area: 1 / 1;
 }
 .setting select {
     width: 100%;
+}
+/* A switch that belongs to a toolbar keeps its name on the same line, and the row keeps
+   one baseline: the word is the button's label, not a field heading, so it takes the
+   toolbar's own type and the switch takes the toolbar's own height. */
+.switch-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+.switch-label {
+    color: var(--muted);
+    font-size: 12.5px;
+}
+.switch-field button[role='switch'] {
+    padding: 0;
+    background: transparent;
+}
+.switch-field button[role='switch']:not(:disabled):hover {
+    background: transparent;
 }
 .setting-help {
     font-size: 12.5px;

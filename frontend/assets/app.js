@@ -361,21 +361,15 @@ function navigationGroups() {
         const list = el('div', null, 'nav-list');
         list.setAttribute('role', 'group');
         list.setAttribute('aria-labelledby', heading.id);
-        // The pack exports one image under three names — `nav-console`, `nav-settings`
-        // and `nav-webui-users` all resolve to the same file — so Console, WebUI Access
-        // and Preferences wore the same 24px blob and none of them was identifiable by
-        // it. A picture that labels two rows labels neither: the first destination to
-        // claim an image draws it, the rest hold the icon column open and draw nothing,
-        // which is the rule `symbols.js` already states for a job with no art of its own.
-        const drawn = new Set();
+        // The artwork pack exports one image under three names (nav-console,
+        // nav-settings, nav-webui-users), and the rail draws it on all three: they are
+        // the console's own three administration screens, so one mark for the three reads
+        // as a family. Hiding it on two of them left two empty slots in a column of
+        // thirteen glyphs, which reads as a failed image instead.
         for (const page of visible) {
             const link = el('a');
             const icon = uiSymbol(page.name);
-            const art = icon?.querySelector('image')?.getAttribute('href');
-            if (icon && art && drawn.has(art)) {
-                link.append(el('span', null, 'nav-icon-void'));
-            } else if (icon) {
-                if (art) drawn.add(art);
+            if (icon) {
                 icon.setAttribute('aria-hidden', 'true');
                 link.append(icon);
             }
@@ -801,7 +795,7 @@ const palette = createPalette({
             // (key, fingerprint, modulus, public) all land here.
             id: 'identity',
             title: 'Server public key',
-            hint: 'Identity · fingerprint · modulus · ssh',
+            hint: 'SSH key',
             icon: 'overview',
             group: 'Page',
             run: () => go('overview', { panel: 'identity' })
@@ -885,6 +879,7 @@ const palette = createPalette({
                     id: 'item-' + item.config,
                     title: item.name,
                     hint: item.category || 'Item',
+                    art: item.config,
                     run: () => go('content', { search: item.name })
                 }))
             });

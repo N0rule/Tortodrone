@@ -219,7 +219,9 @@ export function details(title, value) {
     return node;
 }
 export function badge(value, className = '') {
-    return el('span', value, 'badge ' + className);
+    // No trailing space and no empty modifier: a state with no tone is the plain form,
+    // and `class="badge "` made that look like a modifier that failed to arrive.
+    return el('span', value, ['badge', className].filter(Boolean).join(' '));
 }
 export function status(value, online = false) {
     return el('span', value, 'status' + (online ? ' online' : ''));

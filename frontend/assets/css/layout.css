@@ -577,6 +577,10 @@ main {
     color: var(--muted);
     font-size: 13px;
     max-width: 70ch;
+    /* Every page's head is the same height. A route with no subtitle (Console) drew a
+       134px band where Supply Depot drew 170, so the first row of content jumped when an
+       operator moved between them. The line is reserved whether or not it has words. */
+    min-block-size: 19.5px;
 }
 /* Two different jobs, two different answers.
    `#title` is focused only to move the reading position of a screen reader; it is

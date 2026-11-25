@@ -383,12 +383,16 @@ export class DataTable {
         // Two selects at the end of the pager, one saying "30 per page" and one saying
         // "Item": the second had no word of its own anywhere a sighted operator could
         // read, so it named a column and looked like a filter for one.
+        // The word travels with its own select: hidden on its own it left a lone
+        // "Sort" in a 31px row under an empty table, naming nothing.
+        this.sortLabel = el('span', 'Sort', 'paging-label');
+        this.paging = paging;
         paging.append(
             this.count,
             this.previous,
             this.next,
             this.size,
-            el('span', 'Sort', 'paging-label'),
+            this.sortLabel,
             this.sortSelect
         );
         this.node.append(this.controls, this.bulk, this.wrap, paging);
@@ -634,9 +638,13 @@ export class DataTable {
         // empty state they read as a broken footer. \"0 records\" under a sentence that
         // already says there is nothing was the fourth copy of the same fact.
         const paged = rows.length > 1;
-        for (const control of [this.previous, this.next, this.size, this.sortSelect])
+        for (const control of [this.previous, this.next, this.size, this.sortLabel, this.sortSelect])
             control.hidden = !paged;
         this.count.hidden = rows.length === 0;
+        // An empty list loses the whole bar, not just its controls: the empty state
+        // already says there is nothing here, and the bar's own padding left a strip of
+        // nothing under the card.
+        this.paging.hidden = rows.length === 0;
 
         const desired = [];
         for (const [rowIndex, record] of this.pageRows.entries()) {

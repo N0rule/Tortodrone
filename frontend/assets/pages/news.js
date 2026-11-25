@@ -44,12 +44,43 @@ export async function mount(ctx) {
         welcomeMessage = welcome.message,
         welcomeStale = false,
         stale = false;
+    /**
+     * One boolean, one control. Every live on/off in this console is a switch with a word
+     * for its state; this one was a native 13px checkbox, the only control on the page
+     * that did not belong to the control language around it.
+     */
+    function switchControl() {
+        const control = el('button', null, 'quiet');
+        control.type = 'button';
+        control.setAttribute('role', 'switch');
+        control.setAttribute('aria-checked', String(!!draft.enabled));
+        control.id = 'news-enabled';
+        text(control, draft.enabled ? 'On' : 'Off');
+        return control;
+    }
+    function paintEnabled() {
+        enabled.setAttribute('aria-checked', String(draft.enabled));
+        text(enabled, draft.enabled ? 'On' : 'Off');
+    }
+
     const node = el('div', null, 'stack'),
-        enabled = input('Enable News', draft.enabled, 'checkbox'),
+        // A switch, not a checkbox: this is the one control on the page that turns a
+        // feature on for the whole server, and it sat as a 13px native box in a row of
+        // 40px buttons beside the shell's 32px switches. Same control, same shape.
+        enabled = switchControl(),
         packs = select('News pack', [], ''),
         dirtyLabel = el('span', null, 'muted'),
         conflict = el('div', null, 'warning');
     conflict.hidden = true;
+    /* The label sits beside the switch, not above it. A stacked field put "Uplink News"
+       on one line and its switch on the next, which broke the toolbar into two rows and
+       left the switch floating under the word it belongs to. */
+    const enabledField = el('span', null, 'switch-field'),
+        enabledLabel = el('span', 'Uplink News', 'switch-label');
+    enabled.id = 'news-enabled';
+    enabledLabel.id = 'news-enabled-label';
+    enabled.setAttribute('aria-labelledby', 'news-enabled-label');
+    enabledField.append(enabledLabel, enabled);
     const preview = el('div', null, 'news-preview'),
         featured = button('', () => choose('featured'), 'news-slot featured'),
         spots = el('div', null, 'spotlights'),
@@ -172,41 +203,50 @@ export async function mount(ctx) {
         accept(latest);
         acceptWelcome(latestWelcome);
     });
-    const removePack = button('Remove pack', () => {
-        if (!draft.packs.length) return;
-        openDialog({
-            title: 'Remove pack ' + (pack + 1),
-            content: el(
-                'p',
-                'Removes this pack from your draft. Save News to publish this change.'
-            ),
-            submit: 'Remove from draft',
-            notifySaved: false,
-            onSubmit: async () => {
-                draft.packs.splice(pack, 1);
-                pack = Math.max(0, pack - 1);
-                mark();
-                updatePacks();
-                showSlot();
-            }
-        });
-    });
+    const removePack = button(
+        'Remove pack',
+        () => {
+            if (!draft.packs.length) return;
+            openDialog({
+                title: 'Remove pack ' + (pack + 1),
+                content: el(
+                    'p',
+                    'Removes this pack from your draft. Save News to publish this change.'
+                ),
+                submit: 'Remove from draft',
+                notifySaved: false,
+                onSubmit: async () => {
+                    draft.packs.splice(pack, 1);
+                    pack = Math.max(0, pack - 1);
+                    mark();
+                    updatePacks();
+                    showSlot();
+                }
+            });
+        },
+        'quiet'
+    );
     node.append(
         toolbar(
-            label('Enable News', enabled),
+            enabledField,
             packs,
-            button('Add pack', () => {
-                draft.packs.push({
-                    featured: emptyBanner(),
-                    spotlights: { left: null, right: null }
-                });
-                pack = draft.packs.length - 1;
-                slot = 'featured';
-                mark();
-                updatePacks();
-                showSlot();
-            }),
+            button(
+                'Add pack',
+                () => {
+                    draft.packs.push({
+                        featured: emptyBanner(),
+                        spotlights: { left: null, right: null }
+                    });
+                    pack = draft.packs.length - 1;
+                    slot = 'featured';
+                    mark();
+                    updatePacks();
+                    showSlot();
+                },
+                'quiet'
+            ),
             removePack,
+            el('span', null, 'spacer'),
             reload,
             save,
             dirtyLabel
@@ -499,8 +539,9 @@ export async function mount(ctx) {
                 }
             }
         );
-    enabled.onchange = () => {
-        draft.enabled = enabled.checked;
+    enabled.onclick = () => {
+        draft.enabled = !draft.enabled;
+        paintEnabled();
         mark();
     };
     packs.onchange = () => {
@@ -641,7 +682,7 @@ export async function mount(ctx) {
         draft = schema(latest.catalog);
         dirty = stale = false;
         raw.value = latest.yaml;
-        enabled.checked = draft.enabled;
+        paintEnabled();
         pack = Math.min(pack, Math.max(0, draft.packs.length - 1));
         text(dirtyLabel, 'Saved');
         conflict.hidden = true;

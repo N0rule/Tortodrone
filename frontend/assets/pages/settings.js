@@ -48,7 +48,7 @@ const SWITCHES = {
 };
 
 export async function mount(ctx) {
-    const node = el('div', null, 'stack');
+    const node = el('div', null, 'stack settings-page');
     const controls = new Map();
     const switches = new Map();
     const feedback = el('p', '', 'visually-hidden');
@@ -82,10 +82,18 @@ export async function mount(ctx) {
         return row;
     }
 
-    /** The switch form of a preference the shell also switches. */
+    /**
+     * The switch form of a preference the shell also switches.
+     *
+     * One row anatomy for every preference: the name and its help on the leading edge,
+     * the control on the trailing edge. The switch used to carry the setting's name
+     * itself and sit on the right, with only its help on the left, so the two switches
+     * named their row in the control column while the six selects beside them named
+     * theirs in the label column — two pages of one list, two layouts.
+     */
     function switchSetting(key) {
         const config = SWITCHES[key];
-        const control = el('button', config.label, 'quiet');
+        const control = el('button', null, 'quiet');
         control.id = 'pref-' + key;
         control.type = 'button';
         control.setAttribute('role', 'switch');
@@ -97,7 +105,7 @@ export async function mount(ctx) {
             paint();
         };
         const row = el('div', null, 'setting');
-        row.append(control, el('small', config.help, 'setting-help'));
+        row.append(label(config.label, control), el('small', config.help, 'setting-help'));
         return row;
     }
 
@@ -106,6 +114,9 @@ export async function mount(ctx) {
         for (const [key, control] of switches) {
             const on = prefs.read(key) === SWITCHES[key].on;
             control.setAttribute('aria-checked', String(on));
+            // The word is the state, next to the switch that is drawn as one: the row's
+            // label already carries the setting's name.
+            text(control, on ? 'On' : 'Off');
             control.title = on
                 ? key === 'theme'
                     ? 'Switch to the dark theme'

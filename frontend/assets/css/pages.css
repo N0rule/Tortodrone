@@ -688,6 +688,7 @@ button.metric:focus-visible {
     font-variant-ligatures: none;
     font-variant-numeric: tabular-nums;
     tab-size: 4;
+    scrollbar-width: thin;
     scrollbar-color: var(--term-scroll) var(--term-scroll-bg);
     scrollbar-gutter: stable;
     overflow-anchor: none;
@@ -2278,6 +2279,12 @@ td:has(> .time-stamp) {
     block-size: var(--icon-row);
 }
 
+/* A page of preferences is a column, not a page: eight rows of a label, a word and a
+   control do not need 1400px, and stretched to the page width the label sat 840px from
+   its own select with the help line running under the gap. */
+.settings-page {
+    max-inline-size: 760px;
+}
 .mail-page {
     gap: 22px;
 }

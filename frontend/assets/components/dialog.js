@@ -239,6 +239,11 @@ export function openDialog({
             settle();
         }
     };
+    // A record has facts, not fields: in a dialog sized for an eight-field form, a
+    // read-only view put its content in the left half and underlined 400px of nothing
+    // with its own footer rule. A view holding a table keeps the wide sheet, because a
+    // table is what the width is for.
+    dialog.classList.toggle('is-narrow', readOnly && !content.querySelector?.('table'));
     lockPageScroll(true);
     dialog.showModal();
     if (variant === 'danger') $('#cancel-dialog').focus();

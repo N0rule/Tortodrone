@@ -1,5 +1,6 @@
 import { el, text } from '../ui.js';
 import { symbol } from './symbols.js';
+import { icon } from './items.js';
 
 /**
  * Fuzzy subsequence score for the command palette. Returns a positive number
@@ -142,8 +143,13 @@ export function createPalette({ entries, lookup, label = 'Jump to a page or reco
                 // The nav's own artwork, at the row's size: twenty destinations that all
                 // have a client glyph rendered as a wall of text.
                 const glyph = el('span', null, 'palette-glyph');
-                const art = item.icon ? symbol(item.icon) : null;
-                if (art) glyph.append(art);
+                // An item carries its own config, so it wears its own art here as it
+                // does in every other list: a palette row without art was a row of text.
+                if (item.art) glyph.append(icon(item.art));
+                else {
+                    const art = item.icon ? symbol(item.icon) : null;
+                    if (art) glyph.append(art);
+                }
                 option.append(glyph);
                 if (item.hint) option.append(el('span', item.hint, 'palette-kind'));
                 option.append(el('span', item.title, 'palette-title'));
