@@ -1,4 +1,6 @@
 import { symbol } from './components/symbols.js';
+import { href } from './router.js';
+import { toast } from './components/toast.js';
 export const $ = (selector) => document.querySelector(selector);
 export function el(tag, text, className) {
     const node = document.createElement(tag);
@@ -10,26 +12,142 @@ export function text(node, value) {
     const next = String(value ?? '—');
     if (node.textContent !== next) node.textContent = next;
 }
-export function button(label, action, className = 'secondary', available) {
+/* One rule for art on a control: the picture marks the action that cannot be undone.
+   Matching a verb was a lottery — "Revoke" wore client art while "Create WebUI
+   identity" and "Export CSV" beside it wore none, so the column looked half painted
+   and the paint promised nothing. A word is always enough for a control that can be
+   taken back. */
+function guessIcon(label) {
+    // Settle is not a removal. It borrowed the ✕ because the word begins with an S, and
+    // on the auctions page "✕ Settle expired" sat beside "✕ Remove pack" doing the
+    // opposite kind of job. The pack has no art for paying a listing out, so the control
+    // carries its label and no icon — the rule this file already follows.
+    if (/^(Remove|Unequip|Delete|Revoke)\b/.test(label)) return 'remove';
+    return null;
+}
+/* A disabled control explains itself, out loud and on screen. The reason rides on
+   the button's title, on a note beside it, and on its aria-describedby, so a
+   hover, a glance and a screen reader all say what is missing. The note sits
+   outside the button so it cannot leak into the accessible name; base.css hides
+   it again inside table cells, where a caption per row would wreck the columns. */
+let reasonSeq = 0;
+/* One note per control, found by its own id rather than by module bookkeeping: a
+   note written by an earlier render of the same control is swept away instead of
+   piling up beside it, and a reason that no longer applies cannot outlive the
+   state change that lifted it. */
+function explain(node, why) {
+    if (!node.dataset.reasonId) node.dataset.reasonId = String(++reasonSeq);
+    const id = 'control-reason-' + node.dataset.reasonId;
+    if (!why) {
+        node.removeAttribute('title');
+        node.removeAttribute('aria-describedby');
+        node.__reasonNote?.remove();
+        node.__reasonNote = null;
+        node.ownerDocument?.getElementById(id)?.remove();
+        const stale = node.parentNode?.querySelector?.(`[id="${id}"]`);
+        stale?.remove();
+        return;
+    }
+    node.setAttribute('title', why);
+    // The note is a sibling of its control, so the node's own parent is the first
+    // place to look: a page built as a detached fragment is not reachable by id
+    // from the document, and a second lookup there minted a second copy of the same
+    // sentence until one row carried the reason twice.
+    let note =
+        node.__reasonNote ||
+        node.parentNode?.querySelector?.(`[id="${id}"]`) ||
+        node.ownerDocument?.getElementById(id) ||
+        null;
+    if (!note) {
+        note = el('span', why, 'unavailable-reason');
+        note.id = id;
+        // Held on the control itself: the note is written before the control is in
+        // the document, and a second lookup from the document then made a second
+        // copy of the same sentence.
+        node.__reasonNote = note;
+    } else if (note.textContent !== why) {
+        note.textContent = why;
+    }
+    // The note is described straight away, even while the page it belongs to is
+    // still a detached fragment: `isConnected` is false for a subtree that has not
+    // been inserted yet, and a page built in one task and mounted in the next would
+    // otherwise never announce its reason.
+    node.setAttribute('aria-describedby', note.id);
+    // Most callers keep the reason off screen (base.css clips it inside a table
+    // cell); a caller with no other channel asks for it shown.
+    note.classList.toggle('shown', node.dataset.reasonShown === 'true');
+    // It follows its own control, not the end of the row: an operator reading
+    // "The listener is already running." must not find it beside Shut down.
+    const place = () => {
+        if (node.getAttribute('title') !== why) return;
+        if (!note.isConnected && node.parentNode) node.parentNode.insertBefore(note, node.nextSibling);
+    };
+    place();
+    if (!note.isConnected) {
+        queueMicrotask(place);
+        if (!note.isConnected && typeof requestAnimationFrame === 'function')
+            requestAnimationFrame(place);
+    }
+}
+export function button(label, action, className = 'secondary', available, options = {}) {
+    const settings = typeof options === 'string' ? { icon: options } : options;
     const node = el('button', label, className);
     node.type = 'button';
-    const actionIcon = /^(Edit|Inspect)/.test(label)
-        ? 'edit'
-        : /^(Add|Grant)/.test(label)
-          ? 'add'
-          : /^(Save|Equip)\b/.test(label)
-            ? 'save'
-            : /^(Remove|Unequip|Delete)/.test(label)
-              ? 'remove'
-              : null;
-    if (actionIcon) node.prepend(symbol(actionIcon));
+    const icon = settings.icon === undefined ? guessIcon(label) : settings.icon;
+    // No client art for this job means no icon, never a drawn stand-in.
+    const art = icon ? symbol(icon) : null;
+    if (art) node.prepend(art);
+    if (settings.showReason) node.dataset.reasonShown = 'true';
     if (available) {
-        node.refreshAvailability = () => {
-            node.disabled = !available();
+        // `available` answers true when the action may run. A string answer means
+        // "no, because …", and an explicit reason overrides it. `unavailable`
+        // names the usual blocker for a control that is switched off by context.
+        node.refreshAvailability = (reason) => {
+            const answer = available();
+            const usable = typeof answer === 'string' ? false : Boolean(answer);
+            // `aria-disabled` rather than `disabled`: a natively disabled button
+            // cannot take focus, so the reason below it was readable with a mouse and
+            // invisible to a keyboard. The click handler refuses when the flag is set.
+            if (usable) {
+                node.removeAttribute('aria-disabled');
+                node.disabled = false;
+            } else {
+                node.setAttribute('aria-disabled', 'true');
+                node.disabled = false;
+            }
+            node.dataset.usable = usable ? 'true' : 'false';
+            explain(
+                node,
+                usable ? '' : reason || (typeof answer === 'string' ? answer : settings.unavailable)
+            );
         };
         node.refreshAvailability();
     }
+    // A pending control shows a spinner and refuses further clicks, so a slow
+    // write cannot be submitted twice. It keeps its colour: see base.css.
+    node.setBusy = (busy) => {
+        if (busy) node.setAttribute('aria-busy', 'true');
+        else node.removeAttribute('aria-busy');
+        if (busy) node.setAttribute('aria-disabled', 'true');
+        else if (node.dataset.usable !== 'false') node.removeAttribute('aria-disabled');
+    };
     node.addEventListener('click', async () => {
+        if (node.getAttribute('aria-busy') === 'true') return;
+        // A control that cannot act keeps its reason on screen and stays focusable;
+        // the click is refused here instead of by the attribute. A press says the
+        // reason out loud too: a title is hover-only, and a phone never hovers.
+        if (node.dataset.usable === 'false') {
+            const reason =
+                node.dataset.reason ||
+                node.title ||
+                'That action is not available on this server yet.';
+            toast(reason, { type: 'error' });
+            (node.getAttribute('aria-describedby') || '')
+                .split(/\s+/)
+                .filter(Boolean)
+                .forEach((id) => document.getElementById(id)?.setAttribute('data-said', 'true'));
+            return;
+        }
         try {
             await action();
         } catch (error) {
@@ -37,6 +155,56 @@ export function button(label, action, className = 'secondary', available) {
         }
     });
     return node;
+}
+/**
+ * A drill-down as a real link. Same look as the text link it replaces, but the
+ * href is a route, so the browser owns middle-click, new tabs and copying.
+ */
+/**
+ * A scene id names a place, not a label: "%town:m.haven_town_square" is the key the
+ * server uses, and an operator should read "Haven Town Square" here, on the overview
+ * and in a table cell alike.
+ */
+export function sceneLabel(name) {
+    const id = String(name || '')
+        .replace(/^%/, '')
+        .replace(/^[a-z]+:/, '')
+        .replace(/^[a-z]\./, '');
+    const words = id.split(/[_\s.]+/).filter(Boolean);
+    if (!words.length) return String(name || '');
+    return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+export function routeLink(label, name, values = {}, className = 'link') {
+    const node = el('a', label, className);
+    node.href = href(name, values);
+    return node;
+}
+/**
+ * Bring a block into view once it is actually in the document.
+ *
+ * A page is built as a detached fragment and attached after `mount()` returns, so a
+ * deep link that scrolls in the same tick moves nothing at all — the one thing a
+ * shared link has to do.
+ */
+export function landOn(node, block = 'start', frames = 30) {
+    const attempt = (left) => {
+        if (!node) return;
+        if (node.isConnected) {
+            node.scrollIntoView({ block });
+            // The shell swaps the page's children in after `mount()` returns, and that
+            // replacement resets the scroll position: the landing is asserted again on
+            // the next frame, which is the one the operator actually sees.
+            if (typeof requestAnimationFrame === 'function')
+                requestAnimationFrame(() => {
+                    if (node.isConnected) node.scrollIntoView({ block });
+                });
+            return;
+        }
+        if (left > 0 && typeof requestAnimationFrame === 'function')
+            requestAnimationFrame(() => attempt(left - 1));
+    };
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => attempt(frames));
+    else attempt(0);
 }
 export function toolbar(...nodes) {
     const node = el('div', null, 'toolbar');
@@ -55,7 +223,9 @@ export function details(title, value) {
     return node;
 }
 export function badge(value, className = '') {
-    return el('span', value, 'badge ' + className);
+    // No trailing space and no empty modifier: a state with no tone is the plain form,
+    // and `class="badge "` made that look like a modifier that failed to arrive.
+    return el('span', value, ['badge', className].filter(Boolean).join(' '));
 }
 export function status(value, online = false) {
     return el('span', value, 'status' + (online ? ' online' : ''));
@@ -89,8 +259,14 @@ export function label(title, control) {
 }
 export function facts(entries) {
     const node = el('dl');
-    for (const [key, value] of entries)
-        node.append(el('dt', key), el('dd', value ?? 'Unavailable'));
+    for (const [key, value] of entries) {
+        const description = el('dd');
+        // A Node value lets a caller keep a live element (fingerprint, expiry)
+        // inside the description list instead of a stringified copy.
+        if (value instanceof Node) description.append(value);
+        else description.textContent = String(value ?? 'Unavailable');
+        node.append(el('dt', key), description);
+    }
     return node;
 }
 export const number = (value) => Number(value ?? 0).toLocaleString();
@@ -107,27 +283,73 @@ const preferredLocale = (() => {
     // Americas, prefer the day-first/24-hour form the user asked for.
     return /^en[-_]US$/i.test(language) && !zone.startsWith('America/') ? 'en-GB' : language;
 })();
+/**
+ * Every date the WebUI prints is a local date, and the server stores its windows as
+ * Unix milliseconds UTC (`DepotStore`, `AuctionState`). Without a zone the same instant
+ * read "04/12 09:00" to the operator who scheduled it and to the colleague they sent
+ * the link to, in two different zones. The zone is part of the value, so it is part of
+ * the string — compactly, as `GMT+3` rather than a spelled-out region name.
+ */
 const dateFormat = new Intl.DateTimeFormat(preferredLocale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    hourCycle: 'h23'
+    hourCycle: 'h23',
+    timeZoneName: 'short'
 });
 const calendarFormat = new Intl.DateTimeFormat(preferredLocale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
 });
+// Used where a *sample* time is read out loud (the chart's inspection readout and its
+// axis), so it carries the zone like every other date. The terminal gutter is the one
+// clock without a zone: see `clockFormat` below.
 const timeFormat = new Intl.DateTimeFormat(preferredLocale, {
     hour: '2-digit',
     minute: '2-digit',
+    hourCycle: 'h23',
+    timeZoneName: 'short'
+});
+// Log lines carry their own HH:MM:SS, so the terminal clock keeps seconds and
+// can order rows inside one minute.
+const clockFormat = new Intl.DateTimeFormat(preferredLocale, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
     hourCycle: 'h23'
 });
+/**
+ * The zone a date prints, read from the formatter that prints dates.
+ *
+ * The header clock probed the zone with `Intl.DateTimeFormat(undefined, …)` — the raw
+ * browser locale — while every row used `preferredLocale`, which this bundle forces to
+ * `en-GB` outside the Americas. One viewport then read "GMT+2" in the header and "EET"
+ * four lines below it, and both were right.
+ */
+export const zoneName = (value = Date.now()) =>
+    dateFormat.formatToParts(new Date(value)).find((part) => part.type === 'timeZoneName')
+        ?.value || '';
 export const date = (value) => (value ? dateFormat.format(new Date(value)) : '—');
 export const time = (value) => (value ? timeFormat.format(new Date(value)) : '—');
+export const clock = (value) => (value ? clockFormat.format(new Date(value)) : '—');
 export const calendarDate = (value = Date.now()) => calendarFormat.format(new Date(value));
+// A trail can hold several events inside one minute, so its stamp carries seconds:
+// five rows reading "16:15 EET" left the operator unable to read the order the table
+// was already sorted by. Same locale, same zone, one more part.
+const stampFormat = new Intl.DateTimeFormat(preferredLocale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+    timeZoneName: 'short'
+});
+export const stamp = (value) => (value ? stampFormat.format(new Date(value)) : '—');
 export function duration(seconds) {
     seconds = Math.max(0, seconds);
     return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m ${Math.floor(seconds % 60)}s`;
@@ -150,13 +372,82 @@ export function notify(message, error = false) {
     node.hidden = false;
     node.classList.toggle('error', error);
 }
-export function report(error) {
-    if (error.status === 401) document.dispatchEvent(new Event('session-expired'));
-    else notify(error.message || 'Operation unavailable', true);
+export function report(error, { read = false } = {}) {
+    if (error?.status === 401) {
+        document.dispatchEvent(new Event('session-expired'));
+        return;
+    }
+    // An ApiError carries a sentence the server wrote for an operator. Anything
+    // else is a bug in this bundle: its message ("Cannot read properties of
+    // undefined…") tells the operator nothing he can act on, so say what happened
+    // in words and keep the stack for the console.
+    if (typeof error?.status === 'number') {
+        notify(error.message || 'Operation unavailable', true);
+        return;
+    }
+    if (error) console.error('Unexpected WebUI failure', error);
+    // A request that never got an answer is not a request that did nothing: a write
+    // can have committed and lost its reply, so the sentence must not invite a
+    // re-submit into a possible double write.
+    const lost =
+        error?.name === 'TypeError' || /fetch|network/i.test(String(error?.message || ''));
+    // A poll that failed wrote nothing, so promising a possible write is a lie the
+    // operator would act on. Reads get a sentence true of reads.
+    notify(
+        read
+            ? lost
+                ? 'The server did not answer, so this view may be out of date. Nothing was changed; the next refresh retries on its own.'
+                : 'The WebUI could not read that view; reload the page and try again.'
+            : lost
+              ? 'The server did not answer. The change may or may not have been stored: reopen the record and read its state before saving again.'
+              : 'The WebUI could not finish that action; reload the page and try again.',
+        true
+    );
 }
 export function changed(message = 'Changes saved.') {
-    notify(message);
+    // A transient confirmation, so the sticky page notice stays reserved for
+    // errors the operator must act on.
+    toast(message, { type: 'success' });
     document.dispatchEvent(new Event('data-changed'));
+}
+/** Copy text and confirm once, with a fallback for browsers without the async API. */
+export async function copy(value, message = 'Copied to the clipboard.') {
+    if (await writeClipboard(value)) {
+        toast(message, { type: 'success' });
+        return;
+    }
+    toast('This browser blocked clipboard access. Select the text and copy it manually.', {
+        type: 'error'
+    });
+}
+/**
+ * The async clipboard API only exists in a secure context, so a documented plain
+ * HTTP LAN setup would silently lose every copy button. Fall back to the legacy
+ * selection command, which still works there.
+ */
+async function writeClipboard(value) {
+    try {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(value);
+            return true;
+        }
+    } catch {
+        /* fall through to the legacy path */
+    }
+    try {
+        const field = el('textarea');
+        field.value = value;
+        field.setAttribute('readonly', '');
+        field.style.position = 'fixed';
+        field.style.insetBlockStart = '-1000px';
+        document.body.append(field);
+        field.select();
+        const copied = document.execCommand('copy');
+        field.remove();
+        return copied;
+    } catch {
+        return false;
+    }
 }
 export function download(name, content, type = 'text/plain') {
     const url = URL.createObjectURL(new Blob([content], { type }));
@@ -166,23 +457,50 @@ export function download(name, content, type = 'text/plain') {
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+let tabSeq = 0;
 export function tabs(options, value, onChange) {
     const root = el('div', null, 'tabs');
     root.setAttribute('role', 'tablist');
-    function choose(id, focus = false) {
+    // A tab that does not say which region it controls is a button wearing a tab's
+    // role: a screen reader announces "tab, 1 of 3" and then has nowhere to send the
+    // operator. Each strip owns one region — both callers swap that region's children
+    // rather than stacking hidden panels — so the panel id is minted once per strip
+    // and its label follows the selected tab.
+    const group = 'tabs-' + ++tabSeq;
+    const panelId = group + '-panel';
+    let panel = null;
+    /**
+     * Paint a selection without telling the page about it.
+     *
+     * The panel's `aria-labelledby` is minted once, so a page that wrote `aria-selected`
+     * itself (Depot's `paintTabs`, Knights' deep-link switch) left the region labelled by
+     * the tab selected at construction: `#depot?tab=promotions` announced a *Offers* panel
+     * over Promotions. Selection is one operation, and this is it.
+     */
+    function setSelected(id) {
         for (const b of root.children) {
             const selected = b.dataset.tab === id;
-            b.setAttribute('aria-selected', selected);
+            b.setAttribute('aria-selected', String(selected));
             b.tabIndex = selected ? 0 : -1;
-            if (selected && focus) b.focus();
+        }
+        if (panel) panel.setAttribute('aria-labelledby', group + '-' + id);
+    }
+    function choose(id, focus = false) {
+        setSelected(id);
+        if (focus) {
+            for (const b of root.children) if (b.dataset.tab === id) b.focus();
         }
         onChange(id);
     }
+    root.setSelected = setSelected;
     for (const [id, title] of options) {
         const b = button(title, () => choose(id));
-        b.prepend(symbol(id));
+        const art = symbol(id);
+        if (art) b.prepend(art);
         b.dataset.tab = id;
+        b.id = group + '-' + id;
         b.setAttribute('role', 'tab');
+        b.setAttribute('aria-controls', panelId);
         b.setAttribute('aria-selected', id === value);
         b.tabIndex = id === value ? 0 : -1;
         root.append(b);
@@ -200,5 +518,89 @@ export function tabs(options, value, onChange) {
             choose(options[next][0], true);
         };
     }
+    /**
+     * Name the region the strip switches, once per caller. `tabindex="0"` is what the
+     * tab pattern asks for: a panel whose content is all read-only text would
+     * otherwise be unreachable from the keyboard, and a tab stop on a region is
+     * cheaper than a dead end. Returns the node so callers can keep using
+     * `replaceChildren` on it.
+     */
+    root.bindPanel = (node) => {
+        if (!node) return panel;
+        node.id = panelId;
+        node.setAttribute('role', 'tabpanel');
+        node.setAttribute('aria-labelledby', group + '-' + (value ?? options[0][0]));
+        node.tabIndex = 0;
+        panel = node;
+        return node;
+    };
     return root;
+}
+
+/* ---------------------------------------------------------------------------
+   Shell chrome. The static markup carries labels only; the art comes from the
+   client symbol pack, so a shell control never falls back to a text glyph.
+   --------------------------------------------------------------------------- */
+export function paintShell() {
+    for (const [selector, name] of [
+        ['#close-dialog', 'close'],
+        ['#shortcuts-close', 'close'],
+        ['#shortcuts', 'keyboard'],
+        ['#close-navigation', 'close']
+    ]) {
+        const node = $(selector);
+        const art = node && !node.querySelector('.ui-icon') ? symbol(name) : null;
+        if (art) node.prepend(art);
+    }
+    paintBrand();
+    syncAppearances();
+}
+/**
+ * The brand is one piece of client art in three places: both wordmarks and the tab
+ * icon. A pack with no brand art leaves the words alone rather than standing a
+ * drawing in for them, so this runs again once the pack has loaded.
+ */
+export function paintBrand() {
+    const mark = symbol('brand');
+    if (!mark) return;
+    /* Each slot gets a symbol of its own. A clone carries the original's filter id, and
+       a duplicate id resolves to whichever copy the document reaches first: the login
+       card's, whose subtree is hidden once the operator signs in. A filter inside a
+       hidden subtree does not render, so the sidebar's mark fell back to the raw white
+       client art — invisible on the light theme's near-white sidebar. */
+    for (const slot of document.querySelectorAll('.brand-mark'))
+        if (!slot.querySelector('.ui-icon')) slot.append(symbol('brand'));
+    const image = mark.querySelector('image');
+    const favicon = $('#favicon');
+    if (favicon && image) favicon.href = image.getAttribute('href');
+}
+
+/* The appearance toggles name the action they perform, so the pressed state is
+   the only place the current setting is announced. preferences.js paints
+   data-theme/data-density before styles, so that is the source of truth. */
+const appearances = [
+    ['#theme', 'theme', 'light'],
+    ['#density', 'density', 'compact']
+];
+// These two are switches, not toggles: the label names the setting ("Light theme")
+// and `aria-checked` says whether it is on, so the button can never display the
+// opposite of its own state.
+function syncAppearances() {
+    for (const [selector, key, on] of appearances) {
+        const node = $(selector);
+        if (node) {
+            node.setAttribute('role', 'switch');
+            node.setAttribute('aria-checked', String(document.documentElement.dataset[key] === on));
+        }
+    }
+}
+// The regression programs import this module in Node for its pure helpers, so
+// nothing here may touch the DOM at import time outside a browser.
+if (typeof document !== 'undefined') {
+    paintShell();
+    new MutationObserver(syncAppearances).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme', 'data-density']
+    });
+    document.addEventListener('symbols-ready', paintBrand);
 }

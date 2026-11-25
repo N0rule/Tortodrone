@@ -1,10 +1,25 @@
 .panel {
     background: var(--surface);
-    border: 1px solid var(--line);
+    /* A panel is a region of the page, not a card on it: a quiet edge and the large
+       radius hold it together without drawing four lines around every block, and the
+       controls inside keep the bright boundary that locates them. */
+    border: 1px solid var(--line-panel);
     border-radius: var(--radius);
-    box-shadow: inset 0 1px #bce4ff0c;
     padding: var(--space);
     min-width: 0;
+}
+/* Panels nested in a panel are a region inside a region; the fill says so. */
+.panel .panel {
+    background: var(--inset);
+    border-color: transparent;
+}
+/* A record dialog is already a frame, so an untitled section inside one does not draw
+   a second: the station record and the gift card are `panel('')` in `#fields`, and two
+   rounded edges four pixels apart read as a mistake, not as a hierarchy. */
+#fields > .panel:not(:has(h2)) {
+    padding: 0;
+    background: none;
+    border: 0;
 }
 .panel-heading {
     display: flex;
@@ -22,12 +37,37 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 3px 8px;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    font-size: 11px;
+    border-radius: var(--radius);
+    font-size: 11.5px;
     color: var(--muted);
     white-space: nowrap;
+}
+.uv,
+/* A sentence of explanation is read, not glanced at: it takes the body size and a
+   measure. At the caption size, running the full width of a 900px dialog, a note
+   that says why the identity store has no timestamps was a line of small print
+   nobody finishes. */
+.prose-note {
+    max-width: 68ch;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+/* A chip is a container; a default value is a word. Three columns of identical
+   bordered chips (nine "Enabled", ten "authenticated") inked every row the same, so
+   a tone now costs the exception and the ordinary case is written plainly. */
+.badge.good,
+.badge.bad,
+.badge.gold,
+.badge.cyan,
+.badge.flag {
+    padding: 3px 8px;
+    /* A pill is a small component, so its edge is a component boundary. */
+    border: 1px solid var(--line-bright);
+}
+/* Neither good nor bad, but not the ordinary case either: disabled, promotion only. */
+.badge.flag {
+    border-style: dashed;
 }
 .status::before {
     content: '';
@@ -41,8 +81,21 @@
     color: var(--good);
 }
 .badge.gold {
-    color: var(--gold);
-    border-color: var(--gold);
+    color: var(--warn);
+    border-color: var(--warn);
+}
+/* Authority, not emphasis: gold is the primary action and the current page, so a role
+   chip in gold competed with both. Purple is the one hue in the palette that means
+   nothing else. */
+.badge.purple {
+    color: var(--purple);
+    border-color: color-mix(in srgb, var(--purple) 45%, transparent);
+    background: color-mix(in srgb, var(--purple) 12%, transparent);
+}
+.badge.cyan {
+    color: var(--cyan);
+    border-color: color-mix(in srgb, var(--cyan) 45%, transparent);
+    background: color-mix(in srgb, var(--cyan) 14%, transparent);
 }
 .badge.bad {
     color: var(--bad);
@@ -55,11 +108,6 @@
 .uv {
     color: var(--gold);
 }
-.empty {
-    padding: 35px 15px;
-    text-align: center;
-    color: var(--muted);
-}
 .loading {
     padding: 40px;
     color: var(--muted);
@@ -69,109 +117,441 @@
 }
 .table-wrap {
     overflow: auto;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border: 1px solid var(--line-panel);
+    border-radius: var(--radius-control);
+    /* The table is a panel, so a cell can be painted opaque and still match: without
+       a background here the sticky actions column had to guess what was behind its
+       row, and guessed a hard light stripe across every tinted row. */
+    background: var(--surface);
 }
 table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
 }
+/* One frame per surface: a table inside a panel leans on the panel's edge instead of
+   drawing a second box a few pixels inside the first. */
+.panel .table-wrap {
+    border: 0;
+    border-radius: 0;
+}
 th {
     position: sticky;
     top: 0;
     z-index: 1;
     text-align: left;
-    background: var(--raised);
+    /* A label row, not a band: on the panel's own fill, under one hairline, the header
+       names the columns and the data stays the loudest thing on the table. */
+    background: var(--surface);
     color: var(--muted);
+    border-block-end: 1px solid var(--line-bright);
     white-space: nowrap;
     font-weight: 400;
+}
+/* A sortable header lines up with the data under it and keeps the caret on the
+   far edge, where it reads as a column control rather than a stray glyph. */
+/* `th` is already --raised, so the generic `.quiet` hover painted the same colour and
+   a sortable header gave no feedback at all. `aria-sort` lives on the `th`, so the
+   guard is scoped there: hovering the *sorted* column used to repaint its cyan ink as
+   body text and lose the marker under the pointer. */
+th[aria-sort='none'] button:not(:disabled):not([aria-disabled='true']):hover {
+    background: var(--inset);
+    color: var(--text);
+}
+th[aria-sort='ascending'] button:not(:disabled):not([aria-disabled='true']):hover,
+th[aria-sort='descending'] button:not(:disabled):not([aria-disabled='true']):hover {
+    background: color-mix(in srgb, var(--raised) 80%, var(--line-bright));
 }
 th button {
     padding: 10px 12px;
     width: 100%;
+    justify-content: space-between;
+    gap: 8px;
     text-align: left;
     border: 0;
     color: inherit;
     background: transparent;
     box-shadow: none;
-    font-weight: 400;
+    /* The base control tracks 0.01em, which was there to open up tracked capitals.
+       Sentence-case headers kept the residue: 0.13px of air no one asked for. */
+    letter-spacing: 0;
+    /* A sortable header is a control: 400 weight made it the one control on the page
+       that did not look like one. */
+    font-weight: 600;
 }
-th[aria-sort] button {
+/* The sorted column is named by `aria-sort` and marked by its ink; the ↑/↓ carets
+   were invented glyphs, and the art rule here is that a mark is client art or a
+   word. */
+/* Every sortable header now carries `aria-sort`, `none` included, so the marker is
+   scoped to the two states that mean this column is the sort. */
+th[aria-sort='ascending'] button,
+th[aria-sort='descending'] button {
     color: var(--cyan);
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
-th[aria-sort='ascending'] button::after {
-    content: ' ↑';
+/* The caret is type, not art: it says which way a column sorts and that it sorts at
+   all — and it sits beside its own column name, because pushed to the far edge of a
+   wide column it read as a stray mark in the gap between two headers. */
+th button {
+    justify-content: flex-start;
 }
-th[aria-sort='descending'] button::after {
-    content: ' ↓';
+/* One numeric column language: the header's label ends on the same edge as every cell
+   and the digits line up under the word above them. The caret goes to the left of the
+   label — on the right it pushed the word 21px off the edge its numbers end on. */
+th.numeric button {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
+td.numeric,
+th.numeric {
+    text-align: end;
+}
+/* A figure hugs its column. Auto layout handed the depot's free space to its Quantity
+   column, which then stood 775px wide to hold a single digit while the item name it
+   belonged to had 200. `1%` is the shrink-to-fit request: the slack goes to the columns
+   that carry text. Phones turn a row into a card, where a cell is the whole line. */
+@media (min-width: 901px) {
+    td.numeric,
+    th.numeric {
+        inline-size: 1%;
+        white-space: nowrap;
+    }
+    /* A price is two figures, and the wider of them sets the column: wrapped, the
+       crowns chip dropped under the energy one and the column grew a line. */
+    .data-table td.numeric .price-cell {
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+    }
+}
+/* Nothing to label: the empty state speaks for the table, and the headers stay in the
+   accessibility tree as the table's own structure. */
+@media (min-width: 901px) {
+    .data-table table.is-empty thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+}
+/* A column this view has nothing in: the cells and the header leave together. */
+.column-dropped {
+    display: none;
+}
+td.numeric .currency {
+    justify-content: flex-end;
+}
+/* A price is a flex row, so `text-align: end` on the cell never reached it: the coin
+   and its figure sat against the left edge of a column whose header ended on the
+   right one. Every block inside a numeric cell has to end where the header ends. */
+td.numeric > div {
+    display: flex;
+    justify-content: flex-end;
+}
+/* The direction mark is drawn, not typed. At 12px a text arrowhead collapses to a
+   one-pixel wing, so the ascending and descending marks photographed as the same
+   vertical tick: the colour said which column and nothing said which way.
+   The slot is held on every header, so a label never moves when the sorted column
+   changes, and only the sorted column shows a mark. */
+.sort-mark {
+    display: inline-block;
+    flex: 0 0 auto;
+    align-self: center;
+    inline-size: 7px;
+    block-size: 5px;
+    margin-inline-start: 6px;
+    visibility: hidden;
+}
+.sort-mark.sorted {
+    visibility: visible;
+}
+.sort-mark::before {
+    content: '';
+    display: block;
+    inline-size: 0;
+    block-size: 0;
+    margin-inline: auto;
+    border-inline: 3.5px solid transparent;
+}
+.sort-mark.is-asc::before {
+    border-block-end: 5px solid var(--cyan);
+}
+.sort-mark.is-desc::before {
+    border-block-start: 5px solid var(--cyan);
 }
 td {
     padding: var(--row) 12px;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--line-data);
     vertical-align: middle;
 }
-tr:hover td {
-    background: color-mix(in srgb, var(--raised) 50%, transparent);
+/* One tint per row, declared on the row: the sticky actions cell has to paint the
+   same colour as its siblings while staying opaque over the cells scrolling under
+   it, and two independent declarations of "the zebra" drift apart. */
+tbody tr {
+    --row-tint: transparent;
 }
+tbody tr:hover {
+    --row-tint: color-mix(in srgb, var(--raised) 45%, transparent);
+}
+tbody td {
+    background: var(--row-tint);
+}
+td:first-of-type {
+    overflow-wrap: anywhere;
+}
+/* Row actions wrap instead of being clipped when a table is dense or narrow, and the
+   actions column is wide enough for two of them per line: one button per line made
+   every row as tall as its whole action set. */
 td .toolbar {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    row-gap: 4px;
 }
-td button {
-    padding: 5px 9px;
-    font-size: 12px;
+/* Two actions per line need room for the widest pair, and the cell stays visible when
+   a dense table scrolls sideways: the row's controls must never be the clipped part. */
+td.row-actions,
+th.row-actions {
+    /* As wide as the widest row's own controls and no wider. `inline-size: 1%` keeps a
+       wide table from handing 400px of slack to the last column, and the toolbar below
+       refuses to wrap, so a row's controls are always one line tall: two-to-a-line made
+       that table's rows 89px beside a 48px rhythm. The 224px floor that used to sit here
+       was there for the widest triple in the console ("Inspect", "Audit trail", "Revoke")
+       — that triple still sets the width where it exists, while the depot's single
+       "Open offer" stops reserving 124px of empty panel beside every row. */
+    inline-size: 1%;
+    min-inline-size: 0;
+    padding-inline: 10px;
+    position: sticky;
+    inset-inline-end: 0;
+    text-align: end;
+}
+th.row-actions {
+    z-index: 2;
+}
+/* The row's own tint over the panel, so the pinned column is opaque *and* the same
+   colour as the row it belongs to — the hover stripe runs straight through it. */
+td.row-actions {
+    background: linear-gradient(var(--row-tint), var(--row-tint)), var(--surface);
+    box-shadow: -10px 0 10px -10px color-mix(in srgb, var(--line-bright) 70%, transparent);
+}
+/* The two widest pairs must share a line; an 8px gutter pushed the fourth action onto
+   a third line and added 40px to the row. */
+td.row-actions .toolbar {
+    column-gap: 4px;
+    flex-wrap: nowrap;
+    /* The controls end on the table's right inset, under the "Actions" heading that
+       ends there too, instead of starting at the left edge of a column 400px wide. */
+    justify-content: flex-end;
+}
+/* One row action, one shape. A cell held a 32px ghost beside a 40px filled destructive
+   button and, on one page, a 40px filled neutral one — three weights for three peers, so
+   the loudest pixel in every row was the control nobody presses without reading it first.
+   Every control in a table cell is a ghost at the 32px step now, on the small radius, and
+   takes its fill and its edge from the pointer. Anchors that route count as row actions
+   too, or a row mixing a 13px link with a 12.5px button sits a pixel off its own baseline,
+   so the opting out is a class and not an element name. */
+td .toolbar button:not(.link),
+td .toolbar .button:not(.link),
+.data-table tr .toolbar button:not(.link),
+.data-table tr .toolbar .button:not(.link) {
+    --control-bg: transparent;
+    --control-border: transparent;
+    box-shadow: none;
+    color: var(--muted);
+    padding: 0 10px;
+    min-block-size: var(--control-sm);
+    font-size: 12.5px;
+    border-radius: var(--radius-control-sm);
+}
+td .toolbar button:not(.link):not(:disabled):not([aria-disabled='true']):hover,
+td .toolbar button:not(.link):not(:disabled):not([aria-disabled='true']):focus-visible,
+td .toolbar .button:not(.link):not(:disabled):not([aria-disabled='true']):hover,
+td .toolbar .button:not(.link):not(:disabled):not([aria-disabled='true']):focus-visible,
+.data-table tr .toolbar button:not(.link):not(:disabled):not([aria-disabled='true']):hover,
+.data-table tr .toolbar button:not(.link):not(:disabled):not([aria-disabled='true']):focus-visible,
+.data-table tr .toolbar .button:not(.link):not(:disabled):not([aria-disabled='true']):hover,
+.data-table tr .toolbar .button:not(.link):not(:disabled):not([aria-disabled='true']):focus-visible {
+    --control-border: var(--line-bright);
+    color: var(--text);
+    background: color-mix(in srgb, var(--raised) 55%, var(--line-bright));
+}
+/* Destructive keeps the same geometry and changes ink: a filled red block in a column of
+   ghost buttons is a decision made louder than the decision to read the row. It reddens
+   its edge under the pointer, where the press is actually about to happen. */
+td .toolbar button.danger,
+td .toolbar .button.danger,
+.data-table tr .toolbar button.danger,
+.data-table tr .toolbar .button.danger {
+    color: var(--bad);
+}
+td .toolbar button.danger:not(:disabled):not([aria-disabled='true']):hover,
+td .toolbar button.danger:not(:disabled):not([aria-disabled='true']):focus-visible,
+td .toolbar .button.danger:not(:disabled):not([aria-disabled='true']):hover,
+td .toolbar .button.danger:not(:disabled):not([aria-disabled='true']):focus-visible,
+.data-table tr .toolbar button.danger:not(:disabled):not([aria-disabled='true']):hover,
+.data-table tr .toolbar .button.danger:not(:disabled):not([aria-disabled='true']):hover {
+    --control-border: color-mix(in srgb, var(--bad) 55%, transparent);
+    color: var(--bad);
+    background: color-mix(in srgb, var(--bad) 16%, var(--raised));
+}
+/* A row action that cannot run recedes instead of standing out: the base disabled rule
+   drops the fill and the ink, and on a column of ghosts that is the whole difference —
+   it used to keep the muted ink of its enabled neighbours and only lose a fill none of
+   them had. */
+td .toolbar button:disabled,
+td .toolbar button[aria-disabled='true'],
+.data-table tr .toolbar button[aria-disabled='true'] {
+    background: transparent;
+}
+/* Three small buttons in a row read as broken when only two carry art, so dense
+   cell toolbars stay text-only; page-level toolbars keep their icons. */
+/* A row action keeps its label, so its glyph may stay: hiding the art in tables and
+   showing it in panel toolbars made one job look like two. */
+td .toolbar .ui-icon,
+.data-table tr .toolbar .ui-icon {
+    display: none;
+}
+td .toolbar button .ui-icon,
+.data-table tr .toolbar button .ui-icon,
+td .toolbar .button .ui-icon,
+.data-table tr .toolbar .button .ui-icon {
+    display: inline-block;
+    inline-size: 16px;
+    block-size: 16px;
+}
+/* The paging bar is the compact end of the control scale. */
+/* A page button that cannot act loses its fill and its ink with every other disabled
+   control: it used to keep the muted ink of the live page button beside it, so a pager
+   with nowhere to go read as a pair of choices. */
+.pagination button:disabled {
+    background: transparent;
+}
+.pagination button,
+.pagination select {
+    min-block-size: var(--control-sm);
+    /* The height token is a floor, and a select with 6px of block padding under a
+       12.5px line measured 33 — a third height nobody chose. The paging row is the
+       compact end of the scale, so it drops the padding and keeps the token. */
+    padding-block: 0;
+    font-size: 12.5px;
+    border-radius: var(--radius-control-sm);
 }
 .pagination {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     justify-content: flex-end;
     gap: 10px;
     padding-top: 12px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 12.5px;
+}
+.pagination .table-count {
+    margin-right: auto;
+    white-space: nowrap;
+}
+/* A bare word beside its own select, on the pager's muted ink: the select is 190px of
+   names and nothing said what choosing one would do. */
+.pagination .paging-label {
+    margin-inline-end: -4px;
+    white-space: nowrap;
+    color: var(--muted);
+}
+.pagination select {
+    flex: 0 1 190px;
+    width: auto;
+    min-width: 120px;
+}
+.pagination button {
+    flex: 0 0 auto;
 }
 .tabs {
     display: flex;
     gap: 4px;
     flex-wrap: wrap;
     border-bottom: 1px solid var(--line);
-    padding-bottom: 8px;
+    /* The selected tab's rule sits on the strip's own rule: a tab is a place in a
+       strip, not a raised button, and a filled tab with a control radius spoke a third
+       "selected" language on a screen that already used a gold bar in the nav. */
+    padding-bottom: 0;
 }
 .tabs button {
     background: transparent;
     color: var(--muted);
     border-color: transparent;
-    box-shadow: none;
+    border-radius: 0;
+    box-shadow: inset 0 -2px transparent;
+}
+/* Hovering must not outline an unselected tab: the shared button hover paints a
+   cyan edge, which reads as "selected" on a tab strip. */
+.tabs button:not(:disabled):not([aria-disabled='true']):not([aria-selected='true']):hover {
+    color: var(--text);
+    background: transparent;
+    border-color: transparent;
 }
 .tabs button[aria-selected='true'] {
-    color: var(--gold);
-    background: var(--raised);
-    border-color: var(--line);
-    box-shadow: inset 0 -2px var(--gold);
+    color: var(--text);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: inset 0 -2px var(--gold-rule);
+}
+.tabs button[aria-selected='true']:hover {
+    color: var(--text);
+    background: transparent;
+    border-color: transparent;
 }
 .item-icon {
     position: relative;
     display: inline-grid;
     place-items: center;
-    width: 56px;
-    height: 56px;
+    width: var(--icon-tile);
+    height: var(--icon-tile);
     flex-shrink: 0;
-    background: var(--inset);
-    border: 1px solid var(--line-bright);
-    border-radius: 5px;
+    /* The frame is the asset's own shape and nothing else. Every client icon is a 96px
+       square canvas, already rounded — a ten-pixel corner on 96, so 10% — and
+       transparent outside that curve. The box copies the curve instead of drawing a
+       rounder one over it: at 22% the frame cut inside the art's own corner, and the
+       four slivers between the two curves showed the page through them, which read as
+       black gaps in every thumbnail. No fill and no ring either: the art is opaque to
+       its edges, so a fill behind it was never visible and the 1px border drew a second
+       rim over the bevelled one the picture brings. */
+    border-radius: 10%;
+    /* Square art in a square box, so the clip costs nothing and no air is left over. */
+    overflow: hidden;
 }
+/* 1:1 with the canvas: the art fills the box it is given at whatever size that box is,
+   with no inset and no letterbox. `contain` rather than `cover`, so a canvas that
+   arrives a different shape is shown whole instead of cropped. */
 .item-icon img {
-    width: 48px;
-    height: 48px;
+    display: block;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
 }
-.item-icon .stars {
-    position: absolute;
-    bottom: -5px;
-    font-size: 9px;
-    letter-spacing: -1px;
+/* A config the pack has no picture of: the edge the ordinary state does not draw comes
+   back so the column keeps its rhythm, dashed so it says "not the ordinary case", and
+   the picture becomes the item's initial — typography over the name, not art invented
+   for it. */
+.item-icon[data-missing] {
+    background: var(--inset);
+    border: 1px dashed var(--line);
+    color: var(--muted);
+}
+.item-icon-letter {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    text-transform: uppercase;
+}
+/* Rarity is a line under the art, not a chip on it: at the 32px size tiles use the
+   overlay covered the picture, and at 56px it hung below the frame over the row rule. */
+.item-rarity {
     color: var(--gold);
-    text-shadow: 0 1px 2px #000;
+}
+.item-line .item-rarity {
+    font-size: 11.5px;
+    line-height: 1.3;
 }
 .item-line {
     display: flex;
@@ -182,46 +562,136 @@ td button {
 .item-line strong {
     font-weight: 600;
 }
+/* The names column may shrink; the art does not. Without this the flex line refused to
+   go narrower than its text and pushed the thumbnail's row past its cell. */
+.item-line > div {
+    min-inline-size: 0;
+}
+/* A detail line is one phrase, not two: in a narrow cell "Sword · Rarity 5" split after
+   its first word and the row read as a two-row card in the middle of a table. It
+   ellipsises instead, and the inspector still carries the whole note. */
 .item-line small {
     display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+/* The table-cell size of the same line. A list of offers is scanned by eye, and the
+   art is what makes one row findable in a hundred, so the thumbnail stays and only
+   its box shrinks: 32px of art fits inside the height these rows already had. Rarity
+   is the one thing that does not fit here; the inspector the name opens carries it. */
+.item-line.compact {
+    gap: 10px;
+    min-width: 0;
+}
+.item-line.compact .item-icon {
+    width: var(--icon-row);
+    height: var(--icon-row);
+}
+.item-line.compact .item-rarity {
+    display: none;
+}
+/* The line under a record header that says whether the record is live. It belongs to the
+   header above it, so it takes a little air from the art and less from the facts below;
+   flush against the header it read as a third line of the item's own description. */
+.record-state {
+    margin-block: 14px 4px;
 }
 .item-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
     gap: 10px;
 }
+/* The empty state is a message about the grid, not a tile in it: it takes the whole
+   row instead of one 155px cell. */
+.item-grid > .empty-state,
+.sprite-grid > .empty-state {
+    grid-column: 1 / -1;
+}
+/* The catalogue's "As a table" view switch is a control like the ones beside it: a
+   40px fill, the control radius and a caret drawn the way the sorted column's mark is
+   drawn. It was a 21px native disclosure — the last browser-default control on the
+   page — while the same job on the depot is a 40px tab. The item picker's step
+   ("Choose an item" in the grant and offer forms) is the same disclosure doing the same
+   job, so it wears the same control. */
+.catalogue-table,
+.grant-catalogue {
+    border-top: 0;
+    padding: 0;
+}
+.catalogue-table > summary,
+.grant-catalogue > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-block-size: var(--control);
+    padding: 0 16px;
+    color: var(--text);
+    background: var(--raised);
+    border-radius: var(--radius-control);
+    font-weight: 500;
+    list-style: none;
+}
+.catalogue-table > summary:hover,
+.grant-catalogue > summary:hover {
+    background: color-mix(in srgb, var(--raised) 78%, var(--line-bright));
+}
+.catalogue-table > div,
+.grant-catalogue > div {
+    padding-block-start: 14px;
+}
 .item-tile {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    /* Centred, because a tile is a cell of a grid and not a line of text: left-aligned
+       under a 64px picture, every tile carried 60-90px of dead edge on its trailing side
+       and the grid read as four columns of labels that had given up. */
+    align-items: center;
     gap: 9px;
     min-width: 0;
     white-space: normal;
-    text-align: left;
+    text-align: center;
+    /* The button base centres its content; a tile is a column of children and they
+       drifted to the middle of every stretched grid row. */
+    justify-content: flex-start;
     color: var(--text);
-    background: var(--surface);
-    border: 1px solid var(--line);
+    /* A tile is a control, so it obeys the one control language: a fill, and the step
+       between two fills when it is hovered or chosen. The fill is a lift over whatever
+       ground the grid lands on rather than a colour of its own — the catalogue shows
+       tiles on a panel and the picker shows them on a dialog, and `--surface` was
+       invisible against the second one, so 24 tiles read as 24 loose labels. Selection
+       is still a ring, because a ring is state. */
+    background: color-mix(in srgb, var(--text) 5%, transparent);
+    border: 1px solid transparent;
     padding: 13px;
     font-weight: 400;
     box-shadow: none;
 }
-.item-tile:hover,
+.item-tile:hover {
+    background: color-mix(in srgb, var(--text) 9%, transparent);
+}
 .item-tile[aria-pressed='true'] {
-    border-color: var(--cyan);
-    background: var(--raised);
+    background: color-mix(in srgb, var(--text) 9%, transparent);
+    box-shadow: inset 0 0 0 2px var(--cyan);
+}
+/* A tile that cannot be chosen is quieter than one that can, not louder: the shared
+   disabled rule mixes toward --raised, and on a dialog that filled exactly the tiles
+   with nothing to offer while the usable ones stayed flat. */
+.item-tile:disabled {
+    background: color-mix(in srgb, var(--text) 2%, transparent);
 }
 .item-tile .item-name {
     font-weight: 600;
     font-size: 13px;
 }
 .item-tile small {
-    font-size: 11px;
+    font-size: 11.5px;
 }
 .heat {
     width: 100%;
     height: 6px;
-    border: 1px solid var(--line);
-    border-radius: 3px;
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius);
     overflow: hidden;
     background: var(--inset);
 }
@@ -229,10 +699,10 @@ td button {
     background: var(--inset);
 }
 .heat::-webkit-progress-value {
-    background: #e6bc62;
+    background: var(--meter);
 }
 .heat::-moz-progress-bar {
-    background: #e6bc62;
+    background: var(--meter);
 }
 .currency {
     display: inline-flex;
@@ -252,14 +722,51 @@ dialog {
     color: var(--text);
     background: var(--surface);
     border: 1px solid var(--line-bright);
-    border-top: 3px solid var(--gold);
-    border-radius: 7px;
+    border-top: 3px solid var(--gold-rule);
+    border-radius: var(--radius);
     padding: 24px;
     box-shadow: var(--shadow);
 }
 dialog::backdrop {
-    background: #020c16bd;
+    background: var(--scrim);
     backdrop-filter: blur(3px);
+}
+/* The shell enters in 140ms; the largest surface on the page appeared with no motion
+   at all, as a hard cut over the page it interrupted. Both move by the same amount and
+   for the same reason, and the global reduced-motion rules cancel the pair. */
+dialog {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.985);
+    transition:
+        opacity 120ms ease-out,
+        transform 120ms ease-out,
+        overlay 120ms allow-discrete,
+        display 120ms allow-discrete;
+}
+dialog[open] {
+    opacity: 1;
+    transform: none;
+}
+@starting-style {
+    dialog[open] {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.985);
+    }
+}
+dialog::backdrop {
+    opacity: 0;
+    transition:
+        opacity 120ms ease-out,
+        overlay 120ms allow-discrete,
+        display 120ms allow-discrete;
+}
+dialog[open]::backdrop {
+    opacity: 1;
+}
+@starting-style {
+    dialog[open]::backdrop {
+        opacity: 0;
+    }
 }
 .dialog-heading,
 .dialog-actions {
@@ -268,19 +775,163 @@ dialog::backdrop {
     justify-content: space-between;
     gap: 12px;
 }
+/* A long batch reports its progress and offers the way out of it on the same line:
+   before this, a 200-knight send held the operator in a modal that refused Close,
+   Cancel and Escape while it worked, with no control that could stop it. */
+.dialog-progress-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
 .dialog-heading h2 {
     margin: 0;
 }
+/* What the dialog is about to do, said under its title. It had no rule at all, so it
+   inherited body ink at 14px and sat 3px under a 20px title: brighter and larger than
+   every field label below it, which read as a second crammed heading. Small and muted,
+   with the tight seam to the title and the loose one to the fields. */
+#dialog-description {
+    margin-block: 2px 14px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+    max-inline-size: 78ch;
+}
+#dialog-description:empty {
+    display: none;
+}
+/* The footer of a tall editor stays in reach: a long letter, a big gift list or a
+   roster of two hundred knights must not hide the button that saves them. */
 .dialog-actions {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 1;
     justify-content: flex-end;
-    border-top: 1px solid var(--line);
-    padding-top: 18px;
+    padding: 14px 0 4px;
     margin-top: 20px;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+}
+/* An editor holding a draft says so while it is open. The verdict is the discard prompt
+   on close, which is a browser alert: it should not be the first word about unsaved
+   work. It sits at the far end of the footer the buttons are pushed to, opposite the
+   two controls it is talking about, in the gold that means "not written yet" here. */
+#dialog-dirty {
+    margin: 0 auto 0 0;
+    color: var(--gold);
+    font-size: 12.5px;
+}
+#dialog {
+    max-block-size: 90dvh;
+    /* The form is the column: the heading and the actions keep their place and the
+       fields scroll between them. Scrolling the whole dialog took Save, Cancel and the
+       error line off screen on a long offer, so the operator had to scroll to the end
+       of a form to learn it had refused the save. */
+    overflow: hidden;
+}
+/* The dialog and the form inside it have to agree on one height. The form capped itself
+   at `100dvh - 88px` while the dialog capped itself at `90dvh`, so on a tall form the
+   form ran about 50px past the dialog's content box — clipped by `overflow: hidden`,
+   with the sticky footer floating up over the last 20px of the body. That is where a
+   cut-off button row and a half-hidden pager came from. As a flex column the dialog
+   gives the form exactly the room it has, the form gives the fields what the heading
+   and the actions leave, and nothing has to guess. `[open]`, because a bare `#dialog`
+   display rule would out-rank the user agent's `dialog:not([open]) { display: none }`
+   and paint every closed dialog on the page. */
+#dialog[open] {
+    display: flex;
+    flex-direction: column;
+}
+/* A read-only record is as wide as its facts. At 860px the offer view held 430px of
+   label-and-value pairs and 430px of empty sheet, with the footer's rule running under
+   all of it, which reads as a form that lost its second column. */
+#dialog.is-narrow {
+    width: min(660px, calc(100vw - 30px));
+}
+/* Set while a modal is open. `showModal()` stops the pointer reaching the page but not
+   the wheel over the scrim, so the page behind a dialog scrolled and the row the
+   operator had just opened slid out from under it. The gutter is held open for the
+   duration, or taking the scrollbar away would shift the page sideways under the scrim
+   and put it back when the dialog closed. */
+html.dialog-open {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+}
+/* A read-only dialog opens on its own heading, so the title takes focus with
+   `tabindex="-1"` and the browser drew the focus ring around three words of it — a box
+   that read as a text field on the title of every record view. Focus still lands there
+   for a screen reader; nothing is being typed into it. Same rule as `#title`. */
+#dialog-title:focus,
+#dialog-title:focus-visible {
+    outline: none;
+}
+#editor {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-block-size: 0;
+    max-block-size: none;
 }
 #fields {
     display: grid;
     gap: 18px;
     margin-top: 18px;
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow: auto;
+    /* Room for a focus ring inside the scroll box, without a visible gutter shift. */
+    padding-inline: 2px;
+    margin-inline: -2px;
+    /* A form paged with Home/End or a wheel stops on a row that sits under the pinned
+       footer; this keeps the last row clear of it. */
+    scroll-padding-block-end: 64px;
+}
+/* A record taller than the dialog scrolls, and without a cue the last rows were sliced
+   flat against the footer with nothing to say more existed below. The fade is as tall as
+   the footer's shadow so the two read as one edge rather than as a cut and a smudge. */
+#fields.is-scrollable {
+    padding-block-end: 12px;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent);
+}
+/* The item picker's pager sits in the dialog's body, which is the scroll region, and it
+   used to sit at the end of it: the next 24 items were only reachable by scrolling past
+   the 24 already passed on. Pinned to the bottom of the body it never leaves the view.
+   The body's fade-out cue is turned off in this dialog, because the cue and the pager
+   want the same 20px at the bottom and the fade would paint the buttons out. The pager
+   is itself the cue that more is below, and it draws the rule that says where it starts:
+   without one the third row of tiles was sliced through the middle of its artwork and
+   the bar it was cut against was the same colour as the ground. */
+#fields .item-paging {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 1;
+    padding-block: 10px 4px;
+    border-block-start: 1px solid var(--line);
+    background: var(--surface);
+}
+/* The body's fade used to live on the scroll box, where it and the pager want the same
+   20px. It moves here, above the pager, so the row the pager cuts through fades out
+   instead of ending on a hard edge. */
+#fields .item-paging::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 100%;
+    block-size: 22px;
+    background: linear-gradient(to top, var(--surface), transparent);
+    pointer-events: none;
+}
+/* The fade goes only while the pager is actually on screen, so the guard asks for the
+   picker to be open. Every item picker sits inside a `<details>` in a dialog, and a
+   closed one still holds its pager in the DOM: matched on the bare `.item-paging`, this
+   rule kept the fade off after a pick — 763px of content scrolling in a 583px body,
+   ending flat against the footer with nothing to say it continued. */
+#fields:has(details[open] .item-paging).is-scrollable {
+    padding-block-end: 0;
+    mask-image: none;
+    scroll-padding-block-end: 76px;
 }
 .form-grid {
     display: grid;
@@ -296,8 +947,12 @@ dialog::backdrop {
     max-height: 230px;
     overflow: auto;
     padding: 10px;
-    border: 1px solid var(--line);
-    border-radius: 4px;
+    /* The recessed fill the fields beside it wear, not a rim of its own: a list of
+       choices is the field form of a picker, and it was the last control in a dialog
+       still drawn as an outline. */
+    background: var(--inset);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
 }
 .choice-list label {
     display: flex;
@@ -310,7 +965,7 @@ dialog::backdrop {
 }
 .draft-preview {
     padding: 14px;
-    border-left: 3px solid var(--gold);
+    border-left: 3px solid var(--gold-rule);
     background: var(--inset);
 }
 .chart {
@@ -318,9 +973,13 @@ dialog::backdrop {
     height: 190px;
     display: block;
 }
+/* Axis labels are the smallest text in the product, and 10px was under the ramp's own
+   10.5px floor: a figure the operator has to read sat below the size the type scale
+   calls the smallest. Tabular digits, because three ticks down one axis are a column. */
 .chart text {
     fill: var(--muted);
-    font: 10px var(--font);
+    font: 10.5px var(--font);
+    font-variant-numeric: tabular-nums;
 }
 .chart .grid-line {
     stroke: var(--line);
@@ -338,7 +997,47 @@ dialog::backdrop {
     display: flex;
     justify-content: space-between;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 12.5px;
+}
+/* The measured value and the thing it measures are one reading: "0.3 % CPU", not
+   "0.3 %CPU". They were two inline nodes with no gap, and a second series stacked
+   under the first with nothing between them but its own line box. */
+.chart-current {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 20px;
+    margin-block: 2px 6px;
+    font-variant-numeric: tabular-nums;
+}
+.chart-current > div {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+.chart-current strong {
+    font-size: 15px;
+    font-weight: 600;
+}
+.chart-current small {
+    color: var(--muted);
+    font-size: 11.5px;
+}
+.chart-current .secondary-value strong {
+    color: var(--muted);
+}
+/* The colour a reading wears on the graph, beside the reading: one rule per series,
+   14x3px, in the same stroke the line is drawn in. */
+.chart-swatch {
+    align-self: center;
+    inline-size: 14px;
+    block-size: 3px;
+    flex: 0 0 14px;
+    border-radius: var(--radius-pill);
+    background: var(--cyan);
+}
+.chart-swatch.secondary-swatch {
+    background: var(--gold);
 }
 @media (max-width: 600px) {
     .form-grid {
@@ -358,23 +1057,39 @@ dialog::backdrop {
     flex: 0 0 20px;
     vertical-align: middle;
 }
+/* The button's own gap spaces the icon; an extra margin would double it. The
+   basis follows the size, so flexbox cannot stretch the art past 16px. One size for
+   every control glyph: 17 in a button and 14 in a table row were the same job at two
+   sizes, and at 14px the client art — which is drawn 24px square in the pack — lost the
+   detail that is supposed to say which action it belongs to. */
 button > .ui-icon,
 .tabs .ui-icon {
-    margin-right: 7px;
-    width: 17px;
-    height: 17px;
-}
-[role='switch'] {
-    accent-color: var(--cyan);
-    width: 20px;
-    height: 20px;
+    inline-size: 16px;
+    block-size: 16px;
+    flex: 0 0 auto;
 }
 img.ui-icon {
     object-fit: contain;
 }
 
 #navigation .ui-icon {
-    color: var(--cyan);
+    /* Neutral ink: a column of cyan silhouettes makes "current" invisible. */
+    color: var(--muted);
+    /* The rail is the one place a destination is identified by its art alone, so it
+       gets the largest step the column can hold. */
+    inline-size: 22px;
+    block-size: 22px;
+    flex: 0 0 22px;
+}
+/* A destination whose art the pack exports for another destination as well wears this
+   instead: the row keeps the icon column's width and draws nothing, which is the same
+   rule `symbols.js` states for a job the pack has no art for — an image that labels two
+   rows labels neither. */
+#navigation .nav-icon-void {
+    display: inline-block;
+    inline-size: 22px;
+    block-size: 22px;
+    flex: 0 0 22px;
 }
 #navigation [aria-current='page'] .ui-icon {
     color: var(--gold);
@@ -386,4 +1101,751 @@ button > svg.ui-icon {
 a:focus-visible {
     outline: 2px solid var(--cyan);
     outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Shared primitives added with the interaction polish: an unannounced
+   utility class, keyboard caps, pulse/skeleton placeholders, empty and error
+   states, transient toasts, the command palette and the bulk-selection bar.
+   --------------------------------------------------------------------------- */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+/* A key is a hint about a control, not a control: no rim, no keycap lip under it, no
+   fill of its own — one faint lift over whatever it sits on, which is what lets the
+   same chip read on the inset search trigger and inside the shortcuts panel. The
+   colour is mixed from the theme's own ink, so the light theme gets the same 8% of
+   its darker text instead of a dark theme's box on a white page. */
+.kbd {
+    display: inline-block;
+    padding: 0 6px;
+    color: var(--muted);
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+    border: 0;
+    border-radius: 7px;
+    font: 500 11px/1.85 var(--mono);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+.notice-inline {
+    padding: 12px 15px;
+    color: var(--muted);
+    background: var(--raised);
+    border-left: 3px solid var(--gold-rule);
+    border-radius: var(--radius);
+}
+/* A refused address keeps Overview beneath it, so the card has to read as a banner
+   above content rather than as the page: the same left edge as #notice, in the
+   colour that means "this did not happen". */
+.refusal {
+    padding: 14px 16px;
+    background: var(--raised);
+    border: 1px solid var(--line-bright);
+    border-left: 3px solid var(--warn);
+    border-radius: var(--radius);
+}
+.refusal h2 {
+    margin: 0;
+    font-size: 15px;
+}
+.data-table {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    min-width: 0;
+    /* One figure per column, and the same figures under each other: with proportional
+       digits a column of "3,500 / 250 / 35,000" never lined up, so two prices one above
+       the other were read digit by digit instead of by their thousands. */
+    font-variant-numeric: tabular-nums;
+}
+.table-tools .spacer {
+    margin-left: auto;
+}
+.table-count {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+.table-wrap:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+/* An empty table inside a panel drew three frames for one sentence: the panel, the
+   table's own border and the empty state. With nothing to scroll the inner frame has
+   no job, so it goes and the empty state sits on the panel it belongs to. */
+.panel .table-wrap:has(> table.is-empty) {
+    border-color: transparent;
+    background: transparent;
+}
+.select-column {
+    width: 1%;
+    padding-inline: 12px 4px;
+}
+.select-column input {
+    cursor: pointer;
+}
+th.select-column {
+    padding-top: 10px;
+}
+caption {
+    text-align: left;
+}
+
+/* Skeletons keep the final height so a first read does not shift the layout. */
+.skeleton {
+    display: grid;
+    gap: 8px;
+    padding: var(--space);
+    background: var(--surface);
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius);
+}
+.skeleton-row {
+    display: grid;
+    grid-auto-flow: column;
+    /* The first column carries the record's name and is the wide one, the way it is in
+       every table on this console. Equal columns drew a five-column list no page has,
+       and the placeholder jumped sideways the moment the real one arrived. */
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 14px;
+}
+.skeleton-row > :first-child {
+    grid-column: span 2;
+}
+.skeleton-bar {
+    height: 12px;
+    width: var(--skeleton-split, 88%);
+    border-radius: var(--radius);
+    background: linear-gradient(90deg, var(--raised), var(--inset), var(--raised));
+    background-size: 300% 100%;
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+.skeleton-head .skeleton-bar {
+    height: 10px;
+    opacity: 0.6;
+}
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: 0 0;
+    }
+}
+.waiting {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 40px;
+    color: var(--muted);
+}
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--line-bright);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: control-spin 700ms linear infinite;
+}
+
+/* Empty and error states always offer a next step instead of a dead end. */
+.empty-state {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+}
+.empty-state.compact {
+    padding: 26px 15px;
+}
+.empty-state .ui-icon {
+    width: 34px;
+    height: 34px;
+    color: var(--line-bright);
+}
+.empty-title {
+    margin: 0;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 600;
+}
+.empty-message {
+    margin: 0;
+    max-width: 52ch;
+    font-size: 13px;
+}
+.empty-state button {
+    margin-top: 6px;
+}
+.error-state .ui-icon {
+    color: var(--bad);
+}
+.empty-row td {
+    padding: 0;
+    border-top: 0;
+}
+.empty-row:hover td {
+    background: transparent;
+}
+
+/* Transient notifications. The region is created on demand. */
+.toasts {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 60;
+    display: grid;
+    gap: 10px;
+    width: min(390px, calc(100vw - 24px));
+    pointer-events: none;
+}
+.toast {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px;
+    padding: 12px 10px 12px 15px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line-bright);
+    border-left: 3px solid var(--cyan);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    pointer-events: auto;
+    animation: toast-in 140ms ease-out;
+}
+.toast.leaving {
+    animation: toast-out 120ms ease-in forwards;
+}
+.toast-success {
+    border-left-color: var(--good);
+}
+.toast-error {
+    border-left-color: var(--bad);
+}
+.toast-body {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+.toast-message {
+    margin: 0;
+    font-weight: 600;
+}
+.toast-detail {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12.5px;
+}
+/* A dismiss control says "Dismiss": the shell has no client close glyph. */
+.toast-dismiss {
+    align-self: start;
+    padding-inline: 8px;
+    border-radius: var(--radius-control);
+    color: var(--muted);
+}
+.toast-action {
+    justify-self: start;
+    margin-top: 4px;
+    padding: 5px 10px;
+    font-size: 12.5px;
+}
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+}
+@keyframes toast-out {
+    to {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}
+
+/* Bulk selection bar, shown only when at least one row is selected. */
+.bulk-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: var(--raised);
+    border: 1px solid var(--line-bright);
+    border-left: 3px solid var(--gold-rule);
+    border-radius: var(--radius);
+    font-size: 13px;
+}
+.bulk-bar .toolbar {
+    margin-left: auto;
+}
+
+/* Command palette: one combobox driving a grouped listbox. */
+.palette {
+    width: min(680px, calc(100vw - 24px));
+    max-height: min(70dvh, 640px);
+    padding: 0;
+    overflow: hidden;
+    border-top-width: 1px;
+    border-radius: var(--radius);
+}
+.palette::backdrop {
+    background: var(--scrim);
+}
+.palette-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+}
+.palette-field .ui-icon {
+    color: var(--muted);
+}
+.palette-field input {
+    flex: 1;
+    padding: 6px 0;
+    background: transparent;
+    border: 0;
+    font-size: 16px;
+}
+/* The palette field is the one control in that dialog, and `outline: none` left a
+   keyboard user with no visible focus at all: the ring moves to the field's frame. */
+.palette-field input:focus-visible {
+    outline: none;
+}
+.palette-field:focus-within {
+    box-shadow: inset 0 -2px var(--cyan);
+}
+#palette-list {
+    margin: 0;
+    padding: 6px;
+    max-height: min(52dvh, 470px);
+    overflow: auto;
+    list-style: none;
+    /* Twenty destinations in a 470px list: the track was invisible and the last row
+       was cut in half, so the list looked like it had ended. */
+    scrollbar-gutter: stable;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
+}
+#palette-list ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.palette-group {
+    padding: 10px 10px 6px;
+    color: var(--muted);
+    font-size: 11.5px;
+    font-weight: 600;
+}
+.palette-option {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+.palette-option.active,
+.palette-option[aria-selected='true'] {
+    background: var(--raised);
+    /* The row's own edge, not an inset bar: a 3px inset gold rule on a 20px-radius row
+       curls round the corner and reads as a halo around the row's glyph. */
+    box-shadow: inset 0 0 0 1px var(--line-bright);
+}
+/* Every row reserves the glyph slot, so a row without client art still lines its
+   title up with the pages above it. */
+.palette-glyph {
+    display: grid;
+    place-items: center;
+    inline-size: 18px;
+    block-size: 18px;
+    flex: 0 0 auto;
+    align-self: center;
+    color: var(--muted);
+}
+.palette-glyph .ui-icon {
+    inline-size: 16px;
+    block-size: 16px;
+}
+/* An item hit wears its own 96px client art, like every other place an item appears: a
+   palette row without art was indistinguishable from a row of text, and the rule this
+   product runs on is that a picture of an item is the item's picture. */
+.palette-glyph .item-icon {
+    inline-size: 20px;
+    block-size: 20px;
+}
+.palette-option[aria-selected='true'] .palette-glyph {
+    color: var(--gold);
+}
+.palette-kind {
+    /* A fixed column, not a minimum: one long hint — "Identity · fingerprint · modulus ·
+       ssh" — grew its own row and shoved the title 134px past every title above it. */
+    flex: 0 0 84px;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 11.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.palette-title {
+    font-weight: 600;
+}
+.palette-empty {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 30px 16px;
+}
+.palette-empty .ui-icon {
+    width: 30px;
+    height: 30px;
+    color: var(--line-bright);
+}
+.palette-status {
+    margin: 0;
+    padding: 0 16px 8px;
+    min-height: 20px;
+    color: var(--muted);
+    font-size: 12.5px;
+}
+.palette-hints {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12.5px;
+}
+.palette-hints .muted {
+    margin-left: auto;
+}
+.palette-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Preferences page rows. */
+.setting {
+    display: grid;
+    gap: 4px;
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+}
+.setting:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+}
+.setting label {
+    grid-template-columns: 1fr minmax(150px, 210px);
+    align-items: center;
+    gap: 16px;
+    color: var(--text);
+    font-size: 14px;
+}
+/* A preference the shell also switches draws the shell's switch, on the same edge the
+   selects above and below it occupy — and beside the same help line, so the two forms
+   of a setting read as one row. A bare word stretched across the row was the only
+   control on the page with no visible state. */
+.setting label > button[role='switch'] {
+    min-inline-size: 88px;
+    block-size: 32px;
+    padding: 0 10px;
+    justify-content: center;
+    font-size: 13px;
+}
+.setting select {
+    width: 100%;
+}
+/* A switch that belongs to a toolbar keeps its name on the same line, and the row keeps
+   one baseline: the word is the button's label, not a field heading, so it takes the
+   toolbar's own type and the switch takes the toolbar's own height. */
+.switch-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+.switch-label {
+    color: var(--muted);
+    font-size: 12.5px;
+}
+.switch-field button[role='switch'] {
+    padding: 0;
+    background: transparent;
+}
+.switch-field button[role='switch']:not(:disabled):hover {
+    background: transparent;
+}
+.setting-help {
+    font-size: 12.5px;
+}
+
+/* Shortcut reference dialog. */
+.shortcuts table {
+    margin-top: 12px;
+}
+.shortcuts td {
+    vertical-align: top;
+}
+.shortcuts th {
+    color: var(--muted);
+    font-weight: 400;
+}
+
+/* 900px, not 760: at 844x390 the mail table was still a 1,051px table inside a 522px
+   pane, so the actions column sat off-screen at rest and nothing on a row could be
+   clicked without scrolling sideways. The composer splits at the same width. */
+@media (max-width: 900px) {
+    /* Card rows can afford the full touch target. */
+    td button,
+    .pagination button,
+    .pagination select {
+        min-block-size: 36px;
+    }
+    .toasts {
+        right: 8px;
+        left: 8px;
+        bottom: 8px;
+        width: auto;
+    }
+    /* Rows become labelled cards; the paging bar keeps sorting available. */
+    .data-table .table-wrap {
+        overflow: visible;
+        border: 0;
+    }
+    .data-table table {
+        display: block;
+    }
+    .data-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+    /* A clipped header still holds focusable sort buttons, so the tab order walked into
+       a 1x1 box: eight invisible stops per table on a phone. Hiding the buttons would
+       also drop the column names a screen reader needs, so the header comes back when
+       focus is inside it — the operator sees the row they are on, and a pointer user
+       never sees it at all. The paging bar's sort select remains the everyday control. */
+    .data-table thead:focus-within {
+        position: static;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip-path: none;
+        display: table-header-group;
+    }
+    .data-table tbody {
+        display: grid;
+        gap: 10px;
+    }
+    .data-table tr {
+        display: grid;
+        gap: 5px;
+        padding: 12px 14px;
+        background: var(--surface);
+        border: 1px solid var(--line-bright);
+        border-radius: var(--radius);
+    }
+    .data-table tr:hover td {
+        background: transparent;
+    }
+    /* One line per field, label on the card's leading edge and value on its trailing
+       edge. A two-column grid aligned the values under each other only when they were
+       short, and a numeric cell pushed its value to the right of a column the text
+       cells started from — so a card ended with two ragged edges and no reason. */
+    .data-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 2px 12px;
+        padding: 2px 0;
+        border: 0;
+        overflow-wrap: anywhere;
+    }
+    .data-table td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 12.5px;
+    }
+    /* A card has no column to leave a gap for, so a dropped one goes entirely: the
+       flex rule above outranked the class that hides it on a wide table. */
+    .data-table td.column-dropped {
+        display: none;
+    }
+    .data-table td > * {
+        min-inline-size: 0;
+        margin-inline-start: auto;
+        text-align: end;
+    }
+    /* The item cell is a card of its own on a phone: a label gutter squeezed the 56px
+       thumbnail and a two-line item name into the value column beside it. */
+    .data-table td:has(.item-line) {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .data-table td:has(.item-line) > * {
+        margin-inline-start: 0;
+        text-align: start;
+    }
+    .data-table td:empty {
+        display: none;
+    }
+    .data-table td.select-column,
+    .data-table td:last-child:has(.toolbar) {
+        display: block;
+        padding-top: 6px;
+    }
+    /* A card is not a table column: the pinned actions cell keeps neither its width
+       floor, its 1% width nor its sticky edge once the row becomes a card. Without the
+       width reset the cell was four pixels wide and the row's own button hung off the
+       left edge of the card, half of it outside the panel. */
+    .data-table td.row-actions {
+        inline-size: auto;
+        min-inline-size: 0;
+        position: static;
+        box-shadow: none;
+        background: none;
+    }
+    /* Only the cell that holds the row's controls loses its label. Scoping this to
+       "any cell with a toolbar" dropped the Price and Status labels too, because both
+       are wrapped in a toolbar, and their values slid into the label column. */
+    .data-table td.select-column::before,
+    .data-table td:last-child:has(.toolbar)::before {
+        content: none;
+    }
+    .data-table td .toolbar {
+        flex-wrap: wrap;
+    }
+    .pagination {
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+    /* Search takes its own line; the remaining controls share the next one. */
+    .data-table .table-tools input[type='search'] {
+        flex: 1 1 100%;
+        width: 100%;
+        max-width: none;
+    }
+    .data-table .table-tools .spacer {
+        display: none;
+    }
+    /* Export buttons share a line as equals instead of the last one stretching alone
+       across the whole card: `flex: 1 1 auto` grew whichever button happened to wrap
+       onto a line of its own. */
+    .data-table .table-tools button {
+        flex: 1 1 calc(50% - 6px);
+    }
+    .pagination select {
+        flex: 1 1 140px;
+        width: auto;
+    }
+    .setting label {
+        grid-template-columns: 1fr;
+    }
+    .empty-state {
+        padding: 28px 12px;
+    }
+    .bulk-bar .toolbar {
+        margin-left: 0;
+    }
+}
+
+/* Selection checkboxes keep a 24px hit area inside dense rows; the box itself is
+   the one size and one accent colour base.css defines. */
+.select-target {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 24px;
+    block-size: 24px;
+}
+.select-target > input {
+    margin: 0;
+}
+
+/* The server key is a value, not a section: one selectable line with the copy on its
+   trailing edge. It scrolls sideways instead of wrapping into six lines, because the
+   landing page is a report on the process and the key is one fact in it. */
+.identity-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.identity-key {
+    flex: 1 1 260px;
+    min-inline-size: 0;
+    padding: 9px 12px;
+    background: var(--inset);
+    /* A value an operator clicks, focuses and copies: the boundary that locates a
+       control, not the quiet edge a container wears. */
+    border: 1px solid var(--line-bright);
+    /* The value is 518 characters in a 972px box and the scrollbar never renders, so
+       without this the key read as a string that had been cut in half. The fade says
+       the line continues; the mask moves with nothing, so the tail stays selectable. */
+    mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+    border-radius: var(--radius-control);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    user-select: all;
+}
+.identity-key:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 1px;
+}
+.identity-key[data-state='empty'] {
+    color: var(--muted);
+}
+.identity-hint {
+    margin: 9px 0 0;
+    color: var(--muted);
+    font-size: 12.5px;
+    max-inline-size: 72ch;
+}
+.identity-state {
+    margin: 0 0 10px;
+    color: var(--muted);
+    font-size: 13px;
+    max-inline-size: 72ch;
+}
+/* The signed-in name and its role, on the preferences page and in the sidebar. */
+.identity-session {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+}
+
+/* A filter says what it filters: the select's only visible text was its value. */
+.filter-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-inline-size: 0;
+}
+.filter-label-text {
+    font-size: 11.5px;
+    color: var(--muted);
+    white-space: nowrap;
 }

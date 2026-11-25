@@ -52,6 +52,23 @@ public final class WebUiTest {
                     secret.equals(
                             Files.readString(data.resolve("webui-proxy.key")).strip()),
                     "existing secret preserved");
+            // A real keypair so the identity route is exercised end to end: the
+            // public file is what the client reads, and the fingerprint must be the
+            // SHA-256 of the same SubjectPublicKeyInfo bytes openssl would print.
+            Path settingsPath = org.tortodrone.core.config.ServerSettings.defaultPath(root);
+            var generator = java.security.KeyPairGenerator.getInstance("RSA");
+            generator.initialize(2048);
+            var pair = generator.generateKeyPair();
+            var publicKey = (java.security.interfaces.RSAPublicKey) pair.getPublic();
+            Files.createDirectories(data.resolve("keys"));
+            Files.writeString(
+                    data.resolve("keys/public.txt"),
+                    publicKey.getModulus().toString(16) + "#"
+                            + publicKey.getPublicExponent().toString(16));
+            String expectedFingerprint = fingerprint(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(pair.getPublic().getEncoded()));
+            String goodPublicKey = publicKey.getModulus().toString(16) + "#"
+                    + publicKey.getPublicExponent().toString(16);
             firstRunSetup(root, news, frontend);
             var identities = new WebIdentityStore(data);
             identities.put("administrator", PASSWORD.toCharArray(), WebIdentityStore.Role.ADMINISTRATOR);
@@ -66,7 +83,7 @@ public final class WebUiTest {
             var control = new ServerControl("test", data);
             try (var accounts = new AccountStore(data, false, ItemCatalog.starter());
                     var log = new ServerLog(data.resolve("logs"));
-                    var service = new AdminService(accounts, control, log, root)) {
+                    var service = new AdminService(accounts, control, log, root, null, settingsPath, data)) {
                 var handler = new AdminHandler(security, identities, service, frontend);
                 try (var http = NewsServer.start(InetAddress.getLoopbackAddress(), 0, news, x -> {}, handler)) {
                     port = http.port();
@@ -179,20 +196,19 @@ public final class WebUiTest {
                                     == 400,
                             "console full shutdown requires its own phrase");
                     for (String command : List.of(
-                            "help; stop", "status\nstop", "account password operator secret", "../secret", "kick -1"))
+                            "help; stop", "status\nstop", "account password operator secret", "../secret", "kick -1")) {
+                        var refused = post(
+                                "console",
+                                Map.of("command", command, "commandConfirmation", command, "confirmation", "console"));
+                        check(refused.status == 400, "console refuses unsupported syntax and unsafe arguments");
+                        // A prompt must answer with the prompt's own words, not the
+                        // generic field-validation sentence.
                         check(
-                                post(
-                                                        "console",
-                                                        Map.of(
-                                                                "command",
-                                                                command,
-                                                                "commandConfirmation",
-                                                                command,
-                                                                "confirmation",
-                                                                "console"))
-                                                .status
-                                        == 400,
-                                "console refuses unsupported syntax and unsafe arguments");
+                                refused.body.contains("Unsupported command; use help")
+                                        || refused.body.contains("Invalid command")
+                                        || refused.body.contains("Invalid session"),
+                                "console refusals name the reason at the prompt");
+                    }
                     var create = Map.of(
                             "username",
                             "Alice",
@@ -283,10 +299,48 @@ public final class WebUiTest {
                     check(
                             post("account-create", Map.of("padding", "x".repeat(66000))).status == 400,
                             "request size bounded");
+                    // Read while the administrator session is still live; the signed-out
+                    // case is covered by the logout check below.
+                    var identity = get("identity");
                     check(
-                            post("logout", Map.of()).status == 200 && get("status").status == 401,
+                            identity.status == 200
+                                    && identity.body.contains("\"fingerprint\":\"" + expectedFingerprint + "\"")
+                                    && identity.body.contains("\"publicKey\":\"")
+                                    && identity.body.contains("\"bits\":2048")
+                                    && !identity.body.contains("private")
+                                    && !identity.body.contains("PRIVATE"),
+                            "administrator reads the public server identity without private material");
+                    // The identity route must stay truthful when the key file is
+                    // broken, missing, or replaced, and HEAD must match GET.
+                    var head = request("HEAD", "/admin/api/identity", null, authenticated());
+                    check(
+                            head.status == 200
+                                    && "no-store".equals(head.headers.get("cache-control"))
+                                    && !head.body.contains("fingerprint"),
+                            "HEAD answers like GET without a body and is never cached");
+                    Files.writeString(data.resolve("keys/public.txt"), "not-hex#zz");
+                    check(
+                            get("identity").body.contains("\"available\":false"),
+                            "a malformed key file is reported as unavailable, not as an error");
+                    Files.writeString(data.resolve("keys/public.txt"), "0f#03");
+                    check(
+                            get("identity").body.contains("\"available\":false"),
+                            "a modulus that cannot be a handshake key is reported as unavailable");
+                    Files.delete(data.resolve("keys/public.txt"));
+                    check(
+                            get("identity").body.contains("\"available\":false"),
+                            "a missing key file is reported as unavailable");
+                    Files.writeString(data.resolve("keys/public.txt"), goodPublicKey);
+                    check(
+                            get("identity").body.contains("\"available\":true"),
+                            "a restored key file makes the identity available again");
+                    check(
+                            post("logout", Map.of()).status == 200
+                                    && get("status").status == 401
+                                    && get("identity").status == 401,
                             "logout revokes session");
                     login("viewer");
+                    check(get("identity").status == 200, "a viewer can read the public server identity");
                     check(
                             get("console").status == 403
                                     && post("console", Map.of("command", "status", "confirmation", "console")).status
@@ -392,6 +446,17 @@ public final class WebUiTest {
         }
     }
 
+    /** Byte-pair, colon-separated SHA-256 digest, the form every tool prints. */
+    private static String fingerprint(byte[] digest) {
+        var text = new StringBuilder();
+        for (byte value : digest) {
+            if (!text.isEmpty()) text.append(':');
+            text.append(Character.toUpperCase(Character.forDigit((value >> 4) & 0xf, 16)));
+            text.append(Character.toUpperCase(Character.forDigit(value & 0xf, 16)));
+        }
+        return text.toString();
+    }
+
     private static void firstRunSetup(Path root, Path news, Path frontend) throws Exception {
         Path data = root.resolve("setup-data");
         var identities = new WebIdentityStore(data);
@@ -480,23 +545,25 @@ public final class WebUiTest {
             check(
                     request("POST", "/admin/api/webui-user-create", form(create), h).status == 200,
                     "administrator creates more WebUI accounts");
+            // A named refusal carries 422, so the operator reads the rule instead of
+            // the generic "refresh and verify the selection".
+            var lastAdminRefusal = request(
+                    "POST",
+                    "/admin/api/webui-user-delete",
+                    form(Map.of(
+                            "username",
+                            "FirstAdmin",
+                            "revision",
+                            row.get("revision"),
+                            "nameConfirmation",
+                            "FirstAdmin",
+                            "confirmation",
+                            "webui-user-delete")),
+                    h);
+            check(lastAdminRefusal.status == 422, "cannot revoke last administrator remotely");
             check(
-                    request(
-                                            "POST",
-                                            "/admin/api/webui-user-delete",
-                                            form(Map.of(
-                                                    "username",
-                                                    "FirstAdmin",
-                                                    "revision",
-                                                    row.get("revision"),
-                                                    "nameConfirmation",
-                                                    "FirstAdmin",
-                                                    "confirmation",
-                                                    "webui-user-delete")),
-                                            h)
-                                    .status
-                            == 409,
-                    "cannot revoke last administrator remotely");
+                    String.valueOf(lastAdminRefusal.body).contains("at least one WebUI administrator"),
+                    "the last-administrator refusal states the rule");
             var viewer = request(
                     "POST",
                     "/admin/api/login",

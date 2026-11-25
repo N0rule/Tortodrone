@@ -13,10 +13,30 @@ export class Api {
     /** @type {Session|null} */ session = null;
     /** @template T @param {string} route @param {Record<string,string|number|boolean>} [values] @param {boolean} [write] @returns {Promise<T>} */
     async request(route, values = {}, write = false, signal) {
+        const first = await this.send(route, values, write, signal);
+        const data = await first.json();
+        if (first.ok) return data;
+        // A rotated CSRF token would otherwise turn every write into a dead end:
+        // refresh the session once and replay the request that was refused.
+        if (first.status === 403 && write && this.session) {
+            try {
+                await this.restore();
+            } catch {
+                /* the replay reports the truth below either way */
+            }
+            const retry = await this.send(route, values, write, signal);
+            const retried = await retry.json();
+            if (retry.ok) return retried;
+            throw new ApiError(retried.error || 'Request failed', retry.status);
+        }
+        throw new ApiError(data.error || 'Request failed', first.status);
+    }
+    /** One fetch, so a refused write can be replayed with a fresh token. */
+    async send(route, values = {}, write = false, signal) {
         const parameters = new URLSearchParams(
             Object.entries(values).map(([k, v]) => [k, String(v)])
         );
-        const response = await fetch(
+        return fetch(
             '/admin/api/' + route + (write || !parameters.size ? '' : '?' + parameters),
             {
                 method: write ? 'POST' : 'GET',
@@ -34,11 +54,6 @@ export class Api {
                     : AbortSignal.timeout(15000)
             }
         );
-        const data = await response.json();
-        if (!response.ok) {
-            throw new ApiError(data.error || 'Request failed', response.status);
-        }
-        return data;
     }
     /** @returns {Promise<Session>} */ async restore() {
         return (this.session = await this.request('session'));

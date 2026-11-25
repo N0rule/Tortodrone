@@ -4,9 +4,14 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <meta name="color-scheme" content="dark light" />
+        <meta name="description" content="Tortodrone server administration" />
         <title>Tortodrone</title>
         <script src="/admin/assets/preferences.js"></script>
-        <link rel="icon" href="/admin/assets/icons/mark.svg" type="image/svg+xml" />
+        <!-- The tab icon is the pack's brand art, painted by `paintBrand()` once the
+             artwork is known. A placeholder here is a source the CSP forbids, and it
+             logged a violation on every page view. -->
+        <link id="favicon" rel="icon" />
+        <link rel="modulepreload" href="/admin/assets/app.js" />
         <link rel="stylesheet" href="/admin/assets/css/tokens.css" />
         <link rel="stylesheet" href="/admin/assets/css/base.css" />
         <link rel="stylesheet" href="/admin/assets/css/layout.css" />
@@ -16,9 +21,15 @@
     </head>
     <body>
         <a class="skip" href="#main">Skip to content</a>
+        <noscript>
+            <p class="notice-inline">
+                This administration interface needs JavaScript. Every operation is also available
+                from the server console.
+            </p>
+        </noscript>
         <div id="login" class="login">
             <form id="login-form" method="post" class="login-panel">
-                <div class="brand"><img src="/admin/assets/icons/mark.svg" alt="" />Tortodrone</div>
+                <div class="brand"><span class="brand-mark"></span>Tortodrone</div>
                 <h1 id="login-title">Sign in</h1>
                 <p id="login-description">WebUI access</p>
                 <label
@@ -58,7 +69,7 @@
                             disabled
                     /></label>
                 </div>
-                <button type="submit" disabled>Sign in</button>
+                <button type="submit" class="primary" disabled>Sign in</button>
                 <p id="login-error" class="error" role="alert"></p>
                 <small id="login-help"></small>
             </form>
@@ -67,17 +78,23 @@
             <button id="navigation-backdrop" tabindex="-1" aria-label="Close navigation"></button>
             <aside id="sidebar">
                 <button id="close-navigation" class="quiet" aria-label="Close navigation">
-                    Close ×
+                    Close
                 </button>
                 <a class="brand" href="#overview"
-                    ><img src="/admin/assets/icons/mark.svg" alt="" />Tortodrone</a
+                    ><span class="brand-mark"></span>Tortodrone</a
                 >
-                <nav id="navigation" aria-label="Administration"></nav>
+                <nav id="navigation" aria-label="Administration sections"></nav>
                 <footer>
-                    <span id="identity"></span>
+                    <span id="identity"
+                        ><span id="identity-name"></span
+                        ><span id="identity-role" class="badge purple"></span
+                    ></span>
                     <div class="preference-controls">
-                        <button id="theme" class="quiet">Light theme</button
-                        ><button id="density" class="quiet">Compact view</button>
+                        <button id="theme" class="quiet" role="switch" aria-checked="false">
+                            Light theme</button
+                        ><button id="density" class="quiet" role="switch" aria-checked="false">
+                            Compact view
+                        </button>
                     </div>
                     <button id="logout" class="quiet">Sign out</button>
                 </footer>
@@ -87,19 +104,45 @@
                     <button
                         id="menu"
                         class="quiet"
-                        aria-label="Toggle navigation"
                         aria-expanded="false"
                         aria-controls="sidebar"
                     >
-                        ☰</button
-                    ><span id="connection" class="status">Connecting</span><span id="clock"></span>
+                        Menu</button
+                    ><button
+                        id="search"
+                        class="search-trigger"
+                        aria-keyshortcuts="Control+K"
+                        aria-label="Search or jump to"
+                    >
+                        <span>Search or jump to…</span><kbd class="kbd">Ctrl K</kbd></button
+                    ><span class="topbar-meta"
+                        ><span id="connection" class="status" role="status" aria-live="polite"
+                            >Connecting</span
+                        ><button
+                            id="shortcuts"
+                            class="quiet sm"
+                            aria-label="Keyboard shortcuts"
+                            aria-keyshortcuts="?"
+                        >
+                            Shortcuts</button
+                        ><time id="clock"></time
+                    ></span>
                 </header>
                 <main id="main" tabindex="-1">
                     <div class="page-heading">
-                        <h1 id="title">Overview</h1>
-                        <button id="refresh" class="quiet">Refresh</button>
+                        <div class="page-titles">
+                            <h1 id="title" tabindex="-1">Overview</h1>
+                            <p id="page-description" class="page-description"></p>
+                        </div>
+                        <button
+                            id="refresh"
+                            class="quiet sm"
+                            title="Reload this page (R)"
+                        >
+                            Refresh</button>
                     </div>
                     <div id="notice" role="status" aria-live="polite" hidden></div>
+                    <div id="page-status" class="visually-hidden" role="status" aria-live="polite"></div>
                     <section id="page" aria-label="Administration"></section>
                 </main>
             </div>
@@ -108,19 +151,71 @@
             <form id="editor">
                 <div class="dialog-heading">
                     <h2 id="dialog-title"></h2>
-                    <button type="button" id="close-dialog" class="quiet" aria-label="Close dialog">
-                        ×
-                    </button>
+                    <button type="button" id="close-dialog" class="quiet sm">Close</button>
                 </div>
                 <div id="dialog-description"></div>
                 <div id="dialog-conflict" role="alert" class="warning" hidden></div>
                 <div id="fields"></div>
+                <div class="dialog-progress-row">
+                    <p id="dialog-progress" role="status" class="muted" hidden></p>
+                    <button type="button" id="dialog-stop" class="secondary sm" hidden>
+                        Stop
+                    </button>
+                </div>
                 <p id="dialog-error" role="alert" class="error"></p>
                 <div class="dialog-actions">
+                    <p id="dialog-dirty" class="muted" hidden>Unsaved changes</p>
                     <button type="button" id="cancel-dialog" class="secondary">Cancel</button
                     ><button type="submit" id="submit-dialog">Save changes</button>
                 </div>
             </form>
+        </dialog>
+        <dialog id="shortcut-dialog" class="shortcuts" aria-labelledby="shortcuts-title">
+            <div class="dialog-heading">
+                <h2 id="shortcuts-title">Keyboard shortcuts</h2>
+                <button type="button" id="shortcuts-close" class="quiet sm">
+                    Close</button
+                >
+            </div>
+            <p class="muted">
+                Shortcuts are ignored while you are typing in a field. Press
+                <kbd class="kbd">Esc</kbd> to close any dialog.
+            </p>
+            <table>
+                <caption class="visually-hidden">Keyboard shortcuts</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Keys</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">K</kbd></td>
+                        <td>Open the command palette (⌘ + K on macOS)</td>
+                    </tr>
+                    <tr>
+                        <td><kbd class="kbd">?</kbd></td>
+                        <td>Show this list</td>
+                    </tr>
+                    <tr>
+                        <td><kbd class="kbd">/</kbd></td>
+                        <td>Focus the search box on this page</td>
+                    </tr>
+                    <tr>
+                        <td><kbd class="kbd">r</kbd></td>
+                        <td>Refresh the page data</td>
+                    </tr>
+                    <tr>
+                        <td><kbd class="kbd">t</kbd></td>
+                        <td>Switch between the dark and light theme</td>
+                    </tr>
+                    <tr>
+                        <td><kbd class="kbd">↑</kbd> <kbd class="kbd">↓</kbd> <kbd class="kbd">↵</kbd></td>
+                        <td>Move through palette results and open one</td>
+                    </tr>
+                </tbody>
+            </table>
         </dialog>
     </body>
 </html>

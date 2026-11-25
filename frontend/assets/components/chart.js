@@ -18,24 +18,71 @@ function svg(tag, attrs = {}) {
     for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
     return node;
 }
+/**
+ * The next round number above `value`, at one of the steps a person counts in. An
+ * axis that ends at 1,888.8 is the raw sample plus 12%, printed.
+ * @param {number} value
+ * @returns {number}
+ */
+export function niceMaximum(value) {
+    if (!Number.isFinite(value) || value <= 0) return 1;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
+    const scaled = value / magnitude;
+    const step = scaled <= 1 ? 1 : scaled <= 2 ? 2 : scaled <= 2.5 ? 2.5 : scaled <= 5 ? 5 : 10;
+    return step * magnitude;
+}
+/** A tick is the maximum split in two, so it inherits at most one awkward digit. */
+export function roundTick(value) {
+    if (!Number.isFinite(value)) return 0;
+    return value >= 100 ? Math.round(value) : Math.round(value * 10) / 10;
+}
+
+/**
+ * The word beside a reading, inflected for the number it sits next to. A legend that
+ * prints "1 Scenes" is the one place the app stops agreeing with itself about how it
+ * counts things, and the value arrives after the label is built, so the label has to be
+ * rewritten rather than written once.
+ * @param {{ name: string, one?: string }} s
+ * @param {string} unit
+ * @param {number} n
+ * @returns {string}
+ */
+function legendWord(s, unit, n) {
+    const word = s.one && Math.round(n) === 1 ? s.one : s.name;
+    return word + (unit.startsWith('events') ? ' / sample' : '');
+}
+
 export function chart(title, unit, series) {
-    const node = el('section', null, 'panel'),
+    const slug = 'chart-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        node = el('section', null, 'panel'),
         heading = el('h2', title),
         readout = el('div', 'Waiting for samples', 'chart-legend'),
         current = el('div', null, 'chart-current'),
         currentValues = series.map((s, i) => {
             const row = el('div', null, i ? 'secondary-value' : ''),
-                value = el('strong', '—');
-            row.append(value, el('small', s.name + (unit.startsWith('events') ? ' / sample' : '')));
+                value = el('strong', '—'),
+                // A key: the number, the series' own colour and the word for it. Two
+                // lines of muted text over two lines of graph named neither, so a
+                // reader could see there were two series and not which was which.
+                swatch = el('span', null, i ? 'chart-swatch secondary-swatch' : 'chart-swatch'),
+                word = el('small', legendWord(s, unit, NaN));
+            swatch.setAttribute('aria-hidden', 'true');
+            row.append(swatch, value, word);
             current.append(row);
-            return value;
+            return { value, word };
         });
+    heading.id = slug + '-heading';
+    readout.id = slug + '-readout';
+    // Only keyboard inspection announces: pointer movement would flood a reader.
+    readout.setAttribute('aria-live', 'off');
     const graph = svg('svg', {
         viewBox: '0 0 600 190',
         class: 'chart',
         role: 'img',
         tabindex: 0,
-        'aria-label': title + ' history; use arrow keys to inspect samples'
+        'aria-label': title + ' history; use arrow keys to inspect samples',
+        'aria-describedby': readout.id,
+        'aria-labelledby': heading.id
     });
     const lines = svg('g'),
         paths = series.map((s, i) =>
@@ -58,15 +105,21 @@ export function chart(title, unit, series) {
         index = Math.max(0, Math.min(samples.length - 1, at));
         const s = samples[index];
         if (!s) return;
+        // At rest the values already stand in the header, so the line under the graph
+        // says only which sample it is. Under the pointer or the arrow keys it names
+        // the sample's own readings, which is the one thing the header cannot say.
+        const atLatest = index === samples.length - 1;
         text(
             readout,
-            `${time(s.time)} · ` +
-                series
-                    .map((v) => {
-                        const n = v.value(s, index, samples);
-                        return `${v.name}: ${Number.isFinite(n) && n >= 0 ? n.toLocaleString(undefined, { maximumFractionDigits: 1 }) + ' ' + unit : 'Unavailable'}`;
-                    })
-                    .join(' · ')
+            atLatest && !inspecting
+                ? `Latest sample at ${time(s.time)}`
+                : `${time(s.time)} · ` +
+                      series
+                          .map((v) => {
+                              const n = v.value(s, index, samples);
+                              return `${v.name}: ${Number.isFinite(n) && n >= 0 ? n.toLocaleString(undefined, { maximumFractionDigits: 1 }) + ' ' + unit : 'Unavailable'}`;
+                          })
+                          .join(' · ')
         );
         const x =
             45 +
@@ -81,6 +134,7 @@ export function chart(title, unit, series) {
     graph.onpointermove = (event) => {
         if (!samples.length) return;
         inspecting = true;
+        readout.setAttribute('aria-live', 'off');
         const x = new DOMPoint(event.clientX, event.clientY).matrixTransform(
             graph.getScreenCTM().inverse()
         ).x;
@@ -97,6 +151,7 @@ export function chart(title, unit, series) {
         if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
             event.preventDefault();
             inspecting = true;
+            readout.setAttribute('aria-live', 'polite');
             inspect(
                 event.key === 'Home'
                     ? 0
@@ -114,7 +169,7 @@ export function chart(title, unit, series) {
             series.forEach((s, i) => {
                 const n = values.length ? s.value(values.at(-1), values.length - 1, values) : NaN;
                 text(
-                    currentValues[i],
+                    currentValues[i].value,
                     Number.isFinite(n) && n >= 0
                         ? n.toLocaleString(undefined, {
                               maximumFractionDigits:
@@ -122,36 +177,44 @@ export function chart(title, unit, series) {
                           }) + (unit && !unit.startsWith('events') ? ' ' + unit : '')
                         : 'Unavailable'
                 );
+                text(currentValues[i].word, legendWord(s, unit, n));
             });
             const all = series
                 .flatMap((s) => values.map((v, i) => s.value(v, i, values)))
                 .filter((v) => Number.isFinite(v) && v >= 0);
             const rawMaximum = Math.max(unit === '%' ? 100 : 1, ...all) * (unit === '%' ? 1 : 1.12),
+                // A grid line is a reading aid, not the measurement: "1,888.8" over a
+                // flat line says the axis was never rounded to a number a human reads.
                 maximum =
-                    unit === '' || unit.startsWith('events')
-                        ? Math.max(2, Math.ceil(rawMaximum / 2) * 2)
-                        : rawMaximum,
+                    unit === '%'
+                        ? 100
+                        : unit === ''
+                          ? Math.max(2, Math.ceil(rawMaximum / 2) * 2)
+                          : niceMaximum(rawMaximum),
                 grid = [];
             for (let i = 0; i < 3; i++) {
                 const y = 15 + i * 70,
                     label = svg('text', { x: 0, y: y + 4 });
-                label.textContent = (maximum * (1 - i / 2)).toLocaleString(undefined, {
-                    maximumFractionDigits: 1
+                label.textContent = roundTick(maximum * (1 - i / 2)).toLocaleString(undefined, {
+                    maximumFractionDigits: maximum < 10 ? 1 : 0
                 });
                 grid.push(
                     svg('line', { class: 'grid-line', x1: 45, x2: 580, y1: y, y2: y }),
                     label
                 );
             }
-            if (values.length)
-                for (const [value, x, anchor] of [
-                    [values[0], 45, 'start'],
-                    [values.at(-1), 580, 'end']
-                ]) {
-                    const label = svg('text', { x, y: 181, 'text-anchor': anchor });
-                    label.textContent = time(value.time);
-                    grid.push(label);
-                }
+            if (values.length) {
+                // The left label says when the window opens; where it ends is the
+                // readout under the graph's own subject, and printing that time at both
+                // ends of one axis was two answers to one question.
+                // Two ends, two ticks. One label at the leading edge read as a graph
+                // that started somewhere and finished nowhere.
+                const label = svg('text', { x: 45, y: 181, 'text-anchor': 'start' });
+                label.textContent = time(values[0].time);
+                const end = svg('text', { x: 580, y: 181, 'text-anchor': 'end' });
+                end.textContent = time(values[values.length - 1].time);
+                grid.push(label, end);
+            }
             lines.replaceChildren(...grid);
             series.forEach((s, at) => {
                 let d = '',

@@ -39,7 +39,16 @@ public final class AdminHandler implements HttpHandler {
             try {
                 handleTrusted(e);
             } catch (IllegalArgumentException invalid) {
-                send(e, 400, Map.of("error", "Invalid request fields"));
+                // A refused field and an unknown route are different problems: a typo in a link
+                // must not read as "this form is wrong".
+                String known = safeValidation(invalid.getMessage());
+                if ("Unknown resource".equals(known)) {
+                    // A typo in a link is not a field problem: answer the route
+                    // question the client actually asked.
+                    send(e, 404, Map.of("error", known));
+                } else {
+                    send(e, 400, Map.of("error", known == null ? "Invalid request fields" : known));
+                }
             } catch (IOException invalid) {
                 String message = safeValidation(invalid.getMessage());
                 send(
@@ -75,13 +84,69 @@ public final class AdminHandler implements HttpHandler {
                     "Uploaded images must be at most 1 MiB",
                     "Image exceeds the 570 by 300 featured slot",
                     "News image library is full",
+                    // Mail refusals are user-facing: an operator must see why a letter
+                    // or a mailing was refused instead of a generic 409.
+                    "Choose a supported sender",
+                    "Crowns and energy cannot be negative",
+                    "This mailing changed; reopen it",
+                    "This mailing changed or was cancelled; reopen it",
+                    "This mailing changed or was already cancelled; reopen it",
+                    "Welcome mail is too long",
+                    "Unknown knight",
+                    "No such knight",
+                    "Unknown mailing",
+                    "Invalid gift list",
+                    "Choose a valid delivery window",
+                    "The mailing must end after it starts",
+                    "The delivery window is too long",
+                    "Sender name contains unsupported characters",
+                    "Sender name must be at most 40 characters",
+                    "Add at most 14 gift stacks",
+                    "Choose a gift item",
+                    "Gift quantities must be between 1 and 999",
+                    "A mailing can carry at most 14 item units",
+                    // Console refusals are read by an operator at a prompt, so the prompt's own
+                    // words come back instead of the generic field-validation sentence.
+                    "Unsupported command; use help",
+                    "Invalid command",
+                    "Repeat the exact command to confirm",
+                    // The confirmation refusal is the sentence an operator needs: it
+                    // names what was missing, not "invalid request fields".
+                    "Confirmation did not match the action",
+                    "Process shutdown confirmation required",
+                    "Session already disconnected",
+                    "Account name confirmation required",
+                    "Knight name confirmation required",
+                    "Username confirmation required",
+                    "Invalid session",
+                    "Unknown resource",
+                    "Unknown action",
+                    // A refused password is a field problem with its own sentence; the
+                    // generic conflict advice does not apply to a form with no revision.
+                    // The identity store's own rule, so the last administrator hears
+                    // the rule instead of "refresh and verify the selection".
+                    "Keep at least one WebUI administrator",
+                    "Passwords need 8-128 characters",
+                    "Passwords do not match",
+                    "Password contains control characters",
                     "welcome-message must be at most 256 characters",
                     "welcome-message must not contain control characters",
                     "welcome-message must not contain invalid text" -> message;
             case "e.existing_accessory" ->
                 "An accessory already occupies that location. Remove attached accessories before adding a replacement.";
             case "e.cant_use_accessory" -> "This accessory is not compatible with the selected equipment.";
-            default -> null;
+            default -> {
+                // Two mail refusals name the field or the item they are about, so
+                // they cannot be written as fixed cases. An operator who pasted an
+                // invisible character must be told which field holds it.
+                if (message.endsWith(" contains unsupported control characters"))
+                    yield message.replace(
+                            " contains unsupported control characters",
+                            " contains a character the game cannot display. Remove it and save again.");
+                if (message.startsWith("Gift is not grantable: "))
+                    yield "This gift cannot be granted. Choose an item the game can deliver.";
+                yield null;
+            }
         };
     }
 
@@ -92,7 +157,10 @@ public final class AdminHandler implements HttpHandler {
             return;
         }
         boolean post = e.getRequestMethod().equals("POST");
-        if (!post && !e.getRequestMethod().equals("GET")) {
+        // HEAD answers like GET so probes and link checkers see the real headers.
+        if (!post
+                && !e.getRequestMethod().equals("GET")
+                && !e.getRequestMethod().equals("HEAD")) {
             send(e, 405, Map.of("error", "Method not allowed"));
             return;
         }
@@ -214,7 +282,9 @@ public final class AdminHandler implements HttpHandler {
         }
         if (!post) {
             Object result = switch (route) {
-                case "audit" -> identities.audit();
+                // `before` is the oldest id already on screen; the WebUI pages back with
+                // it, because one 500-row page was the whole trail.
+                case "audit" -> identities.audit(p.optional("before").isEmpty() ? 0 : p.number("before"));
                 // Preserve all 64 revision bits across the JavaScript JSON boundary.
                 case "webui-users" ->
                     identities.list().stream()
@@ -231,9 +301,7 @@ public final class AdminHandler implements HttpHandler {
             send(e, 200, result);
             return;
         }
-        String target = route.equals("console")
-                ? AdminConsole.auditTarget(p.optional("command"))
-                : p.optional("username") + ":" + p.optional("knight") + ":" + p.optional("id");
+        String target = route.equals("console") ? AdminConsole.auditTarget(p.optional("command")) : auditTarget(p);
         identities.audit(s.identity().username(), route, target, "requested");
         Object result;
         try {
@@ -252,6 +320,23 @@ public final class AdminHandler implements HttpHandler {
             return;
         }
         send(e, 200, result);
+    }
+
+    /**
+     * Names what was acted on, and nothing else.
+     *
+     * <p>The previous form always joined username, knight and id, so every route that sends none of
+     * them recorded "::0" or "::999" and 54 of 71 real audit rows had an unreadable target. A target
+     * that carries no information is worse than an empty one: the page chained links to nothing.
+     */
+    private static String auditTarget(AdminService.Input p) {
+        String username = p.optional("username");
+        String knight = p.optional("knight");
+        if (!username.isEmpty()) return knight.isEmpty() ? username : username + ":" + knight;
+        String subject = p.optional("subject");
+        String id = p.optional("id");
+        if (!id.isEmpty()) return subject.isEmpty() ? "mailing " + id : subject;
+        return subject;
     }
 
     private Object identityChange(String route, AdminService.Input p, WebIdentityStore.Identity actor)
@@ -307,6 +392,28 @@ public final class AdminHandler implements HttpHandler {
         return address == null || address.getAddress() == null
                 ? "unknown"
                 : address.getAddress().getHostAddress();
+    }
+
+    private static boolean acceptsGzip(String header) {
+        if (header == null) return false;
+        for (String part : header.split(",")) {
+            String value = part.trim().toLowerCase(Locale.ROOT);
+            int semicolon = value.indexOf(';');
+            String coding = (semicolon < 0 ? value : value.substring(0, semicolon)).trim();
+            if (!coding.equals("gzip") && !coding.equals("*")) continue;
+            // q=0 explicitly refuses the coding.
+            return !(semicolon >= 0
+                    && value.substring(semicolon + 1).replace(" ", "").equals("q=0"));
+        }
+        return false;
+    }
+
+    private static byte[] gzip(byte[] source) throws IOException {
+        var buffer = new java.io.ByteArrayOutputStream(Math.max(64, source.length / 4));
+        try (var stream = new java.util.zip.GZIPOutputStream(buffer)) {
+            stream.write(source);
+        }
+        return buffer.toByteArray();
     }
 
     private static String body(HttpExchange e, int limit) throws IOException {
@@ -366,37 +473,61 @@ public final class AdminHandler implements HttpHandler {
         }
         if (b.length > limit) throw new IOException("Asset too large");
         e.getResponseHeaders().set("Content-Type", type);
-        if (!name.equals("index.html"))
-            e.getResponseHeaders()
-                    .set(
-                            "Cache-Control",
-                            name.matches("assets/game/icons/[a-f0-9]{64}\\.(?:png|webp)")
-                                    ? "private, max-age=31536000, immutable"
-                                    : "private, max-age=0, must-revalidate");
-        // Hash the response snapshot: a second file read can race an atomic asset replacement.
+        // The ETag below covers index.html too, so every document is revalidated
+        // instead of guessed at by the browser, while hashed artwork stays
+        // immutable for a year.
+        e.getResponseHeaders()
+                .set(
+                        "Cache-Control",
+                        name.matches("assets/game/icons/[a-f0-9]{64}\\.(?:png|webp)")
+                                ? "private, max-age=31536000, immutable"
+                                : "private, max-age=0, must-revalidate");
+        // Text assets compress well; the pack is a few hundred kilobytes of
+        // JavaScript and CSS that a browser reads on every cold start.
+        boolean compressible = b.length > 1024
+                && !type.startsWith("image/")
+                && !type.startsWith("font/")
+                && acceptsGzip(e.getRequestHeaders().getFirst("Accept-Encoding"));
+        // Hash the response snapshot: a second file read can race an atomic asset
+        // replacement. The encoding is part of the tag so a cache never mixes the
+        // two representations.
+        String etag;
         try {
-            e.getResponseHeaders()
-                    .set(
-                            "ETag",
-                            "\""
-                                    + HexFormat.of()
-                                            .formatHex(java.security.MessageDigest.getInstance("SHA-256")
-                                                    .digest(b))
-                                    + "\"");
+            etag = "\""
+                    + HexFormat.of()
+                            .formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                                    .digest(b))
+                    + (compressible ? "-gzip\"" : "\"");
         } catch (java.security.NoSuchAlgorithmException impossible) {
             throw new AssertionError(impossible);
         }
-        if (e.getResponseHeaders().getFirst("ETag").equals(e.getRequestHeaders().getFirst("If-None-Match"))) {
+        e.getResponseHeaders().set("ETag", etag);
+        if (compressible) e.getResponseHeaders().set("Vary", "Accept-Encoding");
+        if (etag.equals(e.getRequestHeaders().getFirst("If-None-Match"))) {
             e.sendResponseHeaders(304, -1);
             return;
         }
-        e.sendResponseHeaders(200, b.length == 0 ? -1 : b.length);
-        if (b.length > 0) e.getResponseBody().write(b);
+        byte[] payload = compressible ? gzip(b) : b;
+        if (compressible) e.getResponseHeaders().set("Content-Encoding", "gzip");
+        if (e.getRequestMethod().equals("HEAD")) {
+            e.getResponseHeaders().set("Content-Length", Integer.toString(payload.length));
+            e.sendResponseHeaders(200, -1);
+            return;
+        }
+        e.sendResponseHeaders(200, payload.length == 0 ? -1 : payload.length);
+        if (payload.length > 0) e.getResponseBody().write(payload);
     }
 
     private static void send(HttpExchange e, int status, Object result) throws IOException {
         byte[] b = WebJson.encode(result).getBytes(StandardCharsets.UTF_8);
         e.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+        // Session-scoped answers, including the server identity, are never cacheable.
+        e.getResponseHeaders().set("Cache-Control", "no-store");
+        if (e.getRequestMethod().equals("HEAD")) {
+            e.getResponseHeaders().set("Content-Length", Integer.toString(b.length));
+            e.sendResponseHeaders(status, -1);
+            return;
+        }
         e.sendResponseHeaders(status, b.length);
         e.getResponseBody().write(b);
     }

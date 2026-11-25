@@ -14,7 +14,7 @@ import {
     badge,
     report
 } from '../ui.js';
-import { openDialog, edit, field } from './dialog.js';
+import { openDialog, edit, field, localError } from './dialog.js';
 import { itemLine, icon, variantName, variantEffect, gearProgress } from './items.js';
 import { itemPicker } from './item-picker.js';
 
@@ -284,7 +284,7 @@ export function modifierControls(def, item) {
         isDirty: () => initial !== JSON.stringify(values()),
         validate: () => {
             if (def.progression && (!level.checkValidity() || !heatInput.checkValidity()))
-                throw new Error('Enter a valid Level and Heat percentage.');
+                throw localError('Enter a valid Level and Heat percentage.');
             return api.request('item-preview', { config: def.config, ...values() });
         },
         dispose() {
@@ -481,7 +481,7 @@ export async function inspectItem(def, item, fixed, writable = false) {
                 isDirty: () => selected !== null,
                 onSubmit: async () => {
                     if (selected === null)
-                        throw new Error('Select an accessory or choose removal.');
+                        throw localError('Select an accessory or choose removal.');
                     await api.change('item-accessory', {
                         ...fixed,
                         itemId: item.id,
@@ -574,20 +574,35 @@ export function grantItem(fixed) {
             text(catalogue.firstChild, 'Change selected item');
             preview.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         },
-        { grantable: true }
+        { grantable: true, exportable: false }
     );
     catalogue.append(picker.node);
+    // The three answers the grant needs come first: they sat last, behind a 1,222px
+    // picker and then behind the 606px instance editor a pick opens, so Quantity,
+    // Expiration and Bind were 656px below a 618px pane — a grant could go out with
+    // quantity 1 and permanent expiry because the controls that say otherwise were never
+    // on screen.
+    //
+    // The picker sits between them and the instance editor. Chosen-last, its collapsed
+    // "Change selected item" summary was pushed 606px down the moment an item was picked,
+    // so correcting a wrong pick meant scrolling past the editor to find the control just
+    // used. Here the summary stays under the answers, where the pick was made.
     node.append(
-        preview,
-        catalogue,
         grantOptions(
             label('Quantity', quantity),
             label('Expiration days (0 permanent)', expiry),
             label('Bind item', bound)
-        )
+        ),
+        catalogue,
+        preview
     );
     openDialog({
-        title: 'Grant item',
+        // Named recipient: this dialog adds items to one knight's inventory for good, and
+        // three entry points open it from a page that lists every knight on the server.
+        title: fixed.knight ? `Grant item to ${fixed.knight}` : 'Grant item',
+        description: fixed.knight
+            ? `Goes straight into ${fixed.knight}'s inventory — no trade, no letter, no cost.`
+            : '',
         content: node,
         submit: 'Confirm grant',
         target: fixed.worldId,
@@ -599,7 +614,7 @@ export function grantItem(fixed) {
             modifiers?.dispose();
         },
         onSubmit: async () => {
-            if (!selected) throw new Error('Select an item first.');
+            if (!selected) throw localError('Select an item first.');
             await modifiers.validate();
             await api.change('item-grant', {
                 ...fixed,
@@ -619,7 +634,16 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
     const node = el('div', null, 'stack'),
         selection = el('div'),
         form = el('div', null, 'form-grid'),
+        // The catalogue is a step in this form, not a wall in front of it: as a bare
+        // grid of 24 tiles it sat between the chosen item and the fields that describe
+        // it, so the price, the quantity and the expiry began below three rows of
+        // artwork. Folded into a disclosure the same picker opens when there is nothing
+        // chosen yet and collapses to one line the moment there is — the same shape the
+        // grant dialog already gives it.
+        catalogue = el('details', null, 'grant-catalogue'),
         controls = new Map();
+    catalogue.open = !selectedConfig;
+    catalogue.append(el('summary', selectedConfig ? 'Change selected item' : 'Choose an item'));
     let selected,
         disposed = false;
     const initial = new Map();
@@ -627,9 +651,12 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
         (def) => {
             selected = def;
             selection.replaceChildren(itemLine(def));
+            catalogue.open = false;
+            text(catalogue.firstChild, 'Change selected item');
         },
-        { grantable: true }
+        { grantable: true, exportable: false }
     );
+    catalogue.append(picker.node);
     if (selectedConfig)
         api.request('item', { config: selectedConfig })
             .then((def) => {
@@ -651,7 +678,7 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
         initial.set(f.key, f.type === 'checkbox' ? c.checked : c.value);
         form.append(label(f.title, c));
     }
-    node.append(selection, picker.node, form);
+    node.append(selection, catalogue, form);
     openDialog({
         title,
         content: node,
@@ -672,7 +699,7 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
             picker.dispose();
         },
         onSubmit: async () => {
-            if (!selected) throw new Error('Select an item first.');
+            if (!selected) throw localError('Select an item first.');
             const values = { ...fixed, config: selected.config };
             for (const f of fields) {
                 const c = controls.get(f.key);

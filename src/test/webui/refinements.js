@@ -250,12 +250,13 @@ export async function runTerminal({ disposable = false } = {}) {
         stream.update(rows);
         check(stream.output.children.length === 1001, 'Logs and command history are bounded');
         check(
-            host.querySelectorAll('.terminal').length === 1 &&
+            host.querySelectorAll('.terminal-shell').length === 1 &&
                 stream.output.textContent.includes('> help'),
             'One terminal contains commands and live output'
         );
         const line = stream.output.children[2];
-        click('Autoscroll on');
+        // Tailing is on by default; this toggle turns following off.
+        click('Tail');
         stream.output.scrollTop = 80;
         const anchor = [...stream.output.children].find(
             (n) => n.getBoundingClientRect().top >= stream.output.getBoundingClientRect().top + 2
@@ -289,7 +290,12 @@ export async function runTerminal({ disposable = false } = {}) {
             { ...next, message: 'Paused addition', line: 'Paused addition' }
         ]);
         check(!stream.output.textContent.includes('Paused addition'), 'Paused output stays frozen');
-        click('Resume');
+        check(
+            stream.node.textContent.includes('1 new'),
+            'A paused tail reports how far behind it is'
+        );
+        // The same control resumes, and the rows it withheld appear.
+        click('Pause');
         check(stream.output.textContent.includes('Paused addition'), 'Resume displays latest logs');
         const search = host.querySelector('[aria-label="Search output"]');
         change(search, 'help');
@@ -304,15 +310,34 @@ export async function runTerminal({ disposable = false } = {}) {
         );
         severity.value = 'All';
         severity.dispatchEvent(new Event('change'));
-        click('Clear display');
+        // Clearing is Ctrl+L, as in a shell: the pane has no Clear button, and a
+        // cleared screen keeps the buffer behind a Restore control.
+        stream.output.focus();
+        for (const target of [stream.output, document]) {
+            const event = new Event('keydown', { bubbles: true, cancelable: true });
+            event.key = 'l';
+            event.ctrlKey = true;
+            target.dispatchEvent(event);
+        }
+        check(
+            !stream.output.querySelector('.terminal-line') &&
+                !!stream.output.querySelector('.log-empty'),
+            'Ctrl+L clears the pane and says the lines are still held'
+        );
+        const restore = [...host.querySelectorAll('button')].find((n) =>
+            /^Restore/.test(n.textContent)
+        );
+        check(!!restore, 'A cleared pane can be restored');
+        restore.click();
         stream.update([
             ...rows,
             next,
             { ...next, message: 'Paused addition', line: 'Paused addition' }
         ]);
         check(
-            stream.output.children.length === 0 && commands.length === 0,
-            'Clear suppresses retained logs and commands'
+            stream.output.textContent.includes('Paused addition') &&
+                stream.output.textContent.includes('> help'),
+            'Restore brings the cleared log lines and the transcript back'
         );
         return [
             'single terminal',
@@ -321,7 +346,7 @@ export async function runTerminal({ disposable = false } = {}) {
             'manual scroll preservation',
             'pause and resume',
             'search and severity',
-            'clear display',
+            'clear display and restore',
             'plain-text log rendering'
         ];
     } finally {

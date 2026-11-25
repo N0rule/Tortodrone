@@ -4,40 +4,139 @@
     flex-wrap: wrap;
     gap: 20px;
     padding: 20px 24px;
-    background: var(--raised);
-    border: 1px solid var(--line-bright);
-    border-left: 4px solid var(--gold);
-    border-radius: 5px;
+    /* The panel fill, not the raised one: the four listener controls are raised
+       controls, and a raised strip painted them in their own colour — measured 1.00:1,
+       so Stop and Restart read as a run of text until the pointer arrived. The gold
+       rule down the left is what marks this block, not a second surface step. */
+    background: var(--surface);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    position: relative;
+}
+/* The gold rule is drawn, not a border: a 3px left border on a 20px rounded box bends
+   round the corner and stops in mid-air at both ends, so the mark of the one block that
+   reports the server read as a hook. Inset clear of both corners, with the same round
+   ends as every other bar in the console, it marks the block instead of cutting it. */
+.server-strip::before {
+    content: '';
+    position: absolute;
+    inset-block: 14px;
+    inset-inline-start: 0;
+    inline-size: 3px;
+    border-radius: var(--radius-pill);
+    background: var(--gold-rule);
+}
+/* On a phone the four listener controls become a two-by-two grid of equal width
+   instead of a ragged wrap of 109/107/139/138px. */
+@media (max-width: 520px) {
+    .server-strip .toolbar {
+        display: grid;
+        /* minmax(0, ...) because a bare `1fr` keeps a min-content floor: "Shut down
+           server" needs 144px, and two of those plus the 8px gap came to 298 in the
+           244px line a 320px phone leaves, so the last pair painted 5px past the
+           strip's own edge. */
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        inline-size: 100%;
+    }
+    .server-strip .toolbar > button {
+        inline-size: 100%;
+    }
+}
+/* Narrower than a pair of the widest label: one control per line, still full width,
+   rather than two that overflow the strip. */
+@media (max-width: 380px) {
+    .server-strip .toolbar {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+/* The client's own mark for the server, at the size the catalogue's row sprites use. */
+.server-mark {
+    display: inline-flex;
+    flex: 0 0 32px;
+    color: var(--cyan);
+}
+.server-mark-art {
+    inline-size: 32px;
+    block-size: 32px;
+    flex: 0 0 32px;
 }
 .server-strip strong {
-    font-size: 22px;
+    /* The one hero on the landing page. The page name is already in the nav, the tab
+       and the heading, so the largest type belongs to the state nothing else states. */
+    font-size: 28px;
+    line-height: 1.1;
 }
 .server-strip small {
     display: block;
 }
 .metric-strip {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    border: 1px solid var(--line);
-    border-radius: 5px;
-    background: var(--surface);
+    /* auto-fit so a strip of any length (4, 5 or 6 tiles) fills its row instead
+       of leaving a hole where the fourth column used to be. */
+    grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+    /* Six tiles with air between them, each one its own surface. A 1px gap painted
+       in the rule colour made one long band with five seams in it, which read as a
+       form row rather than as six figures an operator can compare. */
+    gap: 10px;
 }
 .metric {
-    padding: var(--space);
-    border-right: 1px solid var(--line);
+    /* A grid, not the inherited inline-flex: the label, the number and the caption
+       are three stacked lines, and a flex row overlapped them past four columns. */
+    display: grid;
+    /* The figure sizes itself against the tile rather than the viewport: the strip is
+       six across on a wide screen, one across on a phone, and the same 28px that is
+       right for a 185px tile set "Available" past the edge of a 156px one. Sizing the
+       container, not the screen, is what makes one font rule true in both. */
+    container-type: inline-size;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    justify-items: start;
+    /* The button base centres its content, and on a grid that centres the whole
+       column: every tile's label, number and caption sat 41px in from the padding
+       while the strip looked left-aligned. */
+    justify-content: start;
+    align-content: start;
+    padding: 18px 20px 20px;
+    background: var(--surface);
+    border: 1px solid var(--line-panel);
+    border-radius: var(--radius);
 }
-.metric:last-child {
-    border-right: 0;
+/* The tiles are buttons: the page's most inviting targets lead to their source. */
+button.metric {
+    text-align: start;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+button.metric:not(:disabled):not([aria-disabled='true']):hover {
+    background: var(--inset);
+    border-color: var(--line-bright);
+}
+button.metric:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: -2px;
 }
 .metric strong {
     display: block;
-    font-size: 29px;
-    font-weight: 400;
+    /* The number is the tile's hero, and 17cqw of the tile's own content box is 24.6px
+       at a 185px tile and 22px at a 156px one: the ramp follows the width the figure
+       actually has to fit in, so no value has to wrap and no row changes height as the
+       clock ticks over a digit. */
+    font-size: clamp(22px, 17cqw, 28px);
+    /* The same weight as every other headline number in the product. */
+    font-weight: 600;
     color: var(--text);
     font-variant-numeric: tabular-nums;
 }
 .metric small {
     display: block;
+}
+/* The label is the one line in a tile that can outrun the tile: "Engaged monsters" is
+   126px at 14px, and the strip's 158px floor leaves a 116px content box at 1280, where
+   it ended 9px inside the tile's own inset while its neighbours kept all 20. The
+   container that sizes the figure sizes the word above it. */
+.metric .muted {
+    font-size: clamp(12.5px, 11cqw, 14px);
 }
 .knight-header {
     display: flex;
@@ -45,14 +144,10 @@
     justify-content: space-between;
     gap: 22px;
     padding: 22px;
-    border: 1px solid var(--line-bright);
-    border-top: 3px solid var(--gold);
+    border: 1px solid var(--line-panel);
+    border-top: 3px solid var(--gold-rule);
     background: var(--surface);
-    border-radius: 5px;
-}
-.knight-name {
-    font-size: 28px;
-    margin-bottom: 8px;
+    border-radius: var(--radius);
 }
 .knight-wallet {
     display: flex;
@@ -60,18 +155,26 @@
     gap: 18px;
 }
 .knight-wallet button {
+    /* A deliberate shared variant: the same surface, radius and states as every
+       other control, sized for a reading-sized number instead of a label. */
     display: grid;
-    gap: 5px;
-    background: transparent;
-    border: 0;
+    gap: 2px;
+    justify-items: start;
+    min-block-size: var(--control-lg);
+    padding: 6px 12px;
     color: var(--text);
-    box-shadow: none;
-    padding: 5px;
-    font-size: 21px;
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
     text-align: left;
 }
+.knight-wallet button:hover:not(:disabled) {
+    border-color: var(--cyan);
+}
 .knight-wallet small {
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 400;
 }
 .equipment-grid {
@@ -86,15 +189,18 @@
     color: var(--text);
     background: var(--inset);
     border: 1px solid var(--line);
-    box-shadow: inset 0 1px #ffffff0a;
+    box-shadow: var(--elev-1);
     text-align: left;
     white-space: normal;
-    padding: 14px;
-    min-height: 110px;
+    /* One definition: the same rule used to be declared again ~1,000 lines below with
+       a different padding and min-height, so an edit to this block looked applied and
+       was not. */
+    padding: 16px;
+    min-height: 140px;
 }
 .equipment-slot .slot-label {
     color: var(--muted);
-    font-size: 11px;
+    font-size: 11.5px;
     display: block;
     margin-bottom: 6px;
 }
@@ -109,10 +215,12 @@
 }
 .equipment-slot.empty-slot {
     border-style: dashed;
-    opacity: 0.7;
+    align-items: center;
 }
+/* The frame draws no edge of its own now, so an empty slot has to draw the whole
+   outline it turns on, not just recolour one. */
 .equipment-slot.empty-slot .item-icon {
-    border-style: dashed;
+    border: 1px dashed var(--line);
     opacity: 0.5;
 }
 .sprite-grid {
@@ -131,9 +239,11 @@
 }
 .news-preview {
     padding: 10px;
-    border: 2px solid var(--line-bright);
+    /* A container beside two panels, so it wears the container's edge and the
+       surface radius: 2px of --line-bright made a peer block look like a control. */
+    border: 1px solid var(--line-panel);
     background: var(--inset);
-    border-radius: 8px;
+    border-radius: var(--radius);
 }
 .news-preview .news-slot {
     display: grid;
@@ -143,11 +253,15 @@
     overflow: hidden;
     background: var(--surface);
     border: 1px solid var(--line-bright);
-    border-radius: 4px;
+    border-radius: var(--radius);
     color: var(--muted);
 }
+/* The chosen slot is marked by its edge and by nothing else: a gold border *and* a gold
+   inset ring drew two lines 1px apart, 1.8px of gold on a 0.8px border, so the featured
+   slot read as a double frame beside its 0.8px neighbours. Selection is one line, in the
+   colour this console already uses for "this one". */
 .news-preview .news-slot[aria-pressed='true'] {
-    border: 2px solid var(--gold);
+    border-color: var(--gold);
 }
 .news-preview .featured {
     aspect-ratio: 570/300;
@@ -166,167 +280,1383 @@
     max-height: 100%;
     object-fit: none;
 }
-.terminal {
-    background: #0b1823;
-    color: #d5e2ec;
-    border: 1px solid #36566e;
-    border-radius: 5px;
-    font: 12px/1.55 var(--mono);
-    height: 520px;
-    overflow: auto;
-    padding: 12px 16px;
+/* What the picture in this slot has to be, at the size the slot draws it. Small, muted
+   and centred: the slot is a frame, and the frame should not shout. */
+.slot-empty {
+    padding: 0 12px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: center;
+}
+/* The uploader is one row: a real button, the file it holds, and the limit. A native
+   file input draws the browser's grey control inside a page of client art. */
+.upload-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-bottom: 4px;
+}
+.upload-row .file-name {
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
     overflow-wrap: anywhere;
-    scrollbar-color: #527992 #0b1823;
+}
+.upload-row .upload-limit {
+    color: var(--muted);
+    font-size: 11.5px;
+}
+/* Terminal surface: one real indicator, a monospaced grid with a fixed gutter, and
+   a status line that names the buffer's bounds, so Logs and Console read as one
+   console instead of two panels. */
+.terminal-shell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    /* Fill the reading area on both Logs and Console so the surface reads as a
+       terminal window instead of a strip of rows above empty canvas. */
+    /* A terminal window is a rectangle of one material: one surface radius and no drop
+       shadow. The corner is the product's own surface step, not a sharper one - a 2px
+       corner beside 18px panels read as a box somebody forgot to finish. */
+    min-height: min(380px, 54dvh);
+    border: 1px solid var(--term-line);
+    border-radius: var(--radius);
+    background: var(--term-bg);
+    overflow: hidden;
+}
+.terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 12px;
+    background: var(--term-bg-top);
+    border-bottom: 1px solid var(--term-line);
+    color: var(--term-fg);
+    font-family: var(--mono);
+    font-size: 12px;
+}
+/* The stream's real state, not a drawing of window buttons that do nothing. */
+.terminal-led {
+    inline-size: 8px;
+    block-size: 8px;
+    flex: 0 0 8px;
+    border-radius: 50%;
+    background: var(--term-time);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--term-time) 25%, transparent);
+}
+.terminal-led[data-state='live'] {
+    background: var(--good);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--good) 25%, transparent);
+    animation: terminal-pulse 2.4s ease-in-out infinite;
+}
+.terminal-led[data-state='idle'] {
+    background: var(--good);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--good) 18%, transparent);
+}
+.terminal-led[data-state='back'] {
+    background: var(--term-time);
+}
+.terminal-led[data-state='paused'] {
+    background: var(--term-warn);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--term-warn) 28%, transparent);
+}
+.terminal-led[data-state='offline'] {
+    background: var(--bad);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--bad) 28%, transparent);
+}
+@keyframes terminal-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.45;
+    }
+}
+[data-motion='reduce'] .terminal-led {
+    animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    .terminal-led {
+        animation: none;
+    }
+}
+.terminal-title {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    /* A narrow bar has one thing to give, and it is the pane's own name: the page
+       heading already says Console, while the readout on the right is a control with a
+       hit target. Left to an even share, the shrinking squeezed that control's own label
+       against its cross. */
+    flex-shrink: 8;
+}
+.terminal-bar-meta {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+/* One row of 36px controls: the `More` disclosure measured 59px for a 34px summary,
+   which spent 74px of a 578px pane on chrome. */
+.terminal-tools {
+    padding: 5px 12px;
+    gap: 8px;
+    flex-wrap: nowrap;
+    border-bottom: 1px solid var(--term-line);
+    background: var(--term-bg-top);
+    font-family: var(--mono);
+}
+.terminal-tools input,
+.terminal-tools select,
+.terminal-tools button,
+.terminal-menu-toggle {
+    font-family: var(--mono);
+    font-size: 12px;
+}
+/* The counter for the field beside it, not a badge: "1 of 20". */
+.terminal-match-count {
+    color: var(--term-time);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.terminal-match-count:empty {
+    display: none;
+}
+.terminal-tools input[type='search'] {
+    flex: 1 1 180px;
+    min-inline-size: 0;
+}
+/* The terminal's ground is darker than the page, so the page's recessed fill sank
+   into it: the search field measured 1.01:1 against the toolbar it sat in and the
+   placeholder floated over bare terminal material. A field in a terminal takes the
+   terminal's own step — 1.81:1 on the dark ground, 1.26:1 on the light one — and its
+   hover moves the same way it does everywhere else. */
+.terminal-tools input:not(:disabled),
+.terminal-tools select:not(:disabled) {
+    background: var(--field-on-term);
+}
+.terminal-tools input:hover:not(:disabled),
+.terminal-tools select:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--field-on-term) 84%, var(--line-bright));
+}
+/* The bar's buttons are text until they carry state. A filled secondary here competed
+   with the field for the same ground — 1.04:1 against the bar in light and 1.71:1 in
+   dark, one control trusting two grounds four times differently — and a prompt bar
+   does not need two filled things side by side. Hover and press still paint, and a
+   toggle that is on keeps the cyan fill that says it is on. */
+.terminal-tools button:not([aria-pressed='true']):not([aria-checked='true']),
+.terminal-tools .terminal-menu-toggle {
+    background: transparent;
+}
+.terminal-tools button:not([aria-pressed='true']):not([aria-checked='true']):not(:disabled):hover,
+.terminal-tools .terminal-menu-toggle:hover {
+    background: color-mix(in srgb, var(--raised) 62%, var(--line-bright));
+}
+.terminal-tools button:not([aria-pressed='true']):not([aria-checked='true']):not(:disabled):active,
+.terminal-tools .terminal-menu-toggle:active {
+    background: color-mix(in srgb, var(--raised) 40%, var(--line-bright));
+}
+/* The one control that cannot act must not be the only filled thing in a text bar:
+   the global disabled rule paints a fill, so a paused or offline stream grew a lone
+   filled button beside the field. Muted ink says "cannot act" here. */
+.terminal-tools button:disabled,
+.terminal-tools button[aria-disabled='true'] {
+    background: transparent;
+}
+.terminal-tools select {
+    flex: 0 0 auto;
+    inline-size: auto;
+    /* The options carry per-level counts ("ERROR (123)"), so the field has to be able
+       to show one: 84px clipped them to "ERROR (…". */
+    min-inline-size: 118px;
+}
+.terminal-count {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+/* Copy, export, raw lines and file history are secondary to reading the stream,
+   so they live behind one menu instead of in a row of equal buttons. */
+.terminal-menu {
+    position: relative;
+}
+/* The menu toggle is a `.button`; this only drops the native disclosure marker and
+   pins the disclosure's own box to the control height it is drawn at. */
+.terminal-menu {
+    display: inline-flex;
+    align-items: center;
+    block-size: var(--control);
+    /* Not a disclosure row: the base rule draws a hairline above every <details>, which
+       on a control in a toolbar was a bright 1px line ruled over the bar (obvious in
+       light, faint in dark). The menu is a button that opens, so it takes no rule and
+       no stacked-row padding. */
+    border-top: 0;
+    padding: 0;
+}
+.terminal-menu-toggle {
+    list-style: none;
+    align-items: center;
+    display: inline-flex;
+    block-size: var(--control);
+    min-block-size: var(--control);
+}
+.terminal-menu-toggle::-webkit-details-marker {
+    display: none;
+}
+/* No drawn caret: the client pack has no chevron, and <summary> already opens the
+   menu on click, Enter and Space. Hover paints it through the bar's own button rule;
+   an *open* menu takes the fill a pressed toggle takes, because a cyan hairline was
+   the only thing saying "open" and the bar's buttons have no rim to colour in. */
+.terminal-menu[open] .terminal-menu-toggle {
+    background: color-mix(in srgb, var(--cyan) 26%, var(--raised));
+}
+.terminal-menu-body {
+    position: absolute;
+    z-index: 6;
+    inset-inline-end: 0;
+    inset-block-start: calc(100% + 6px);
+    display: grid;
+    gap: 4px;
+    min-inline-size: 208px;
+    padding: 6px;
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+.terminal-menu-body button {
+    justify-content: flex-start;
+    inline-size: 100%;
+    text-align: start;
+}
+/* The cross-links, when the bar cannot hold them beside the pane. They keep the shape
+   they have in the bar — a label, then three destinations on one line — because that
+   is the row the desktop shows, and one line here costs the menu 44px instead of the
+   164px three stacked rows took: the menu's own actions are what an operator opens it
+   for, and a group that fills the popover hid every one of them. */
+.terminal-menu-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 2px;
+    padding: 0 2px 4px;
+    border-bottom: 1px solid var(--line);
+}
+.terminal-menu-label {
+    /* The strip's label, word for word and style for style: "Related" at 12.5px, not a
+       tracked all-caps heading. Two drawings of one label is the kind of drift that
+       reads as two different things. */
+    padding-inline: 6px 2px;
+    color: var(--term-time);
+    font-size: 12.5px;
+}
+/* Destinations, not prose: an underlined text link inside a filled menu reads as a
+   stray sentence, and the phone block's 24px link height left these rows half the
+   height of the actions beside them. */
+.terminal-tools .terminal-menu-links button {
+    /* The menu's actions are full-width rows; these are words in a line, and at 100%
+       each took a row of its own, which rebuilt the three stacked rows the row shape
+       was meant to replace. */
+    flex: 0 0 auto;
+    inline-size: auto;
+    min-block-size: 44px;
+    /* 7px a side, not 8: the row came to 326.9px in a 326px line and wrapped its last
+       word onto a second line at exactly the width the row was sized for. */
+    padding-inline: 7px;
+    border-radius: var(--radius-control);
+    color: var(--text);
+    font-size: 12.5px;
+    white-space: nowrap;
+    text-decoration: none;
+}
+.terminal-menu-links button:not(:disabled):hover {
+    background: color-mix(in srgb, var(--cyan) 14%, var(--raised));
+    text-decoration: none;
+}
+/* The row is 326px of label and three words, against the 208px the menu needs for its
+   own actions: at the default width it broke after "Audit trail" and finished on a
+   second line, so a menu that holds the row is as wide as the row — unless the screen
+   is narrower than that, in which case it is as wide as the screen allows. */
+.terminal-menu-body:has(.terminal-menu-links) {
+    min-inline-size: min(344px, calc(100dvw - 24px));
+}
+/* ---------------------------------------------------------------------------------
+   The find bar: a terminal emulator's only chrome. Closed on arrival, opened by Ctrl+F
+   and closed by Escape, one line of mono over the output it is searching.
+   ------------------------------------------------------------------------------ */
+.terminal-find {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 12px;
+    border-bottom: 1px solid var(--term-line);
+    background: var(--term-bg-top);
+    font-family: var(--mono);
+    font-size: 12px;
+}
+.terminal-find[hidden] {
+    display: none;
+}
+.terminal-find-label {
+    color: var(--term-time);
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+    user-select: none;
+}
+.terminal-find-label::after {
+    content: '>';
+    margin-inline-start: 1px;
+}
+/* The row is the control. A field in a find bar carries no rim, no fill, no corner and
+   no control height, and the bar says where the caret is by brightening `find>` - the
+   same device the prompt uses - instead of outlining a box inside a line of text. */
+.terminal-tools.terminal-find input:not(:disabled),
+.terminal-tools.terminal-find select:not(:disabled) {
+    background: transparent;
+    border-color: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    min-block-size: 22px;
+    font-size: 12px;
+}
+.terminal-tools.terminal-find input:not(:disabled):hover,
+.terminal-tools.terminal-find select:not(:disabled):hover {
+    background: color-mix(in srgb, var(--term-fg) 6%, transparent);
+    border-color: transparent;
+}
+.terminal-tools.terminal-find input:focus-visible,
+.terminal-tools.terminal-find select:focus-visible {
+    background: transparent;
+    border-color: transparent;
+    outline: none;
+    box-shadow: none;
+}
+.terminal-find:focus-within .terminal-find-label {
+    color: var(--term-fg);
+}
+/* The window's controls move into the bar on a find-bar pane, where they shrink to the
+   bar's own line: a 36px button in a 26px title bar draws a header over it. Only where
+   the pointer is precise, though — on a phone this menu is the console's only route to
+   Copy, Export and Clear, and 20px was both under the project's own 44px touch floor and
+   under WCAG's 24px minimum. */
+@media (pointer: fine) {
+    .terminal-bar > .terminal-menu,
+    .terminal-bar > .terminal-menu .terminal-menu-toggle,
+    .terminal-bar > button {
+        block-size: 20px;
+        min-block-size: 20px;
+        padding: 0 8px;
+        font-size: 11px;
+        /* The compact corner, not the 40px one: at 20px tall the control step clamps
+           to a stadium, which made the More pill a different shape from the filter
+           chip beside it in the same bar. */
+        border-radius: var(--radius-control-sm);
+    }
+}
+.terminal-body {
+    flex: 1 1 auto;
+    min-height: 160px;
+    /* A shell prints from the bottom: a four-line transcript sat at the top of a 620px
+       pane and the rest of the console was a black void. The leading spacer grows
+       while the transcript is short and shrinks to zero once it fills the pane — a
+       flex spacer, not `justify-content: flex-end`, because that clips the oldest
+       lines off the top and stops the pane from scrolling back to them. */
+    display: flex;
+    flex-direction: column;
+    overscroll-behavior: contain;
+    overflow: auto;
+    padding: 10px 12px 12px;
+    background: var(--term-bg);
+    color: var(--term-fg);
+    /* 1.2 is the leading a terminal uses: at 1.4 plus a per-row padding the pane
+       showed 16 lines where a 13px terminal shows 20. */
+    font: 13px/1.2 var(--mono);
+    font-variant-ligatures: none;
+    font-variant-numeric: tabular-nums;
+    tab-size: 4;
     scrollbar-gutter: stable;
     overflow-anchor: none;
 }
+.terminal-body::before {
+    content: '';
+    flex: 1 1 auto;
+}
+.terminal-body:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: -2px;
+}
 .terminal-line {
     display: grid;
-    grid-template-columns: 70px 64px minmax(0, 1fr);
+    grid-template-columns: 56px 38px minmax(56px, 104px) minmax(0, 1fr);
     gap: 8px;
-    padding: 2px 0;
-    align-items: baseline;
+    padding: 0 4px;
+    align-items: start;
 }
+.terminal-line:hover {
+    background: var(--term-hover);
+}
+/* A line that has just landed lifts in and fades up, so a tail answers the question
+   "is this live?" without a spinner. One 120ms beat, then the class is gone. */
+.terminal-line.is-new {
+    animation: line-arrive 120ms ease-out both;
+}
+@keyframes line-arrive {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+}
+/* One size and one baseline across the gutter: 13 / 11.5 / 10.5 with a 2px padding
+   staircase put three type sizes on three baselines in a single row. */
 .log-time {
-    color: #7792a6;
-    font-size: 11px;
+    color: var(--term-time);
+    font-size: 12px;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    /* The gutter is apparatus, not text: dragging a message out of a terminal used to
+       prepend the timestamp, the level and the thread to every copied line. */
+    user-select: none;
+}
+.log-level,
+.log-thread {
+    user-select: none;
 }
 .log-level {
-    color: #9fbdce;
-    font-size: 10px;
+    color: var(--term-level);
+    font-size: 11.5px;
     font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    /* A fixed track must never be widened by a long level name. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
-.terminal .WARN .log-level {
-    color: #e6bc62;
+/* Colour carries severity in the level column only: a long warning must not turn
+   into a gold paragraph, which is what made the column meaningless. */
+.terminal-line.level-INFO .log-level {
+    color: var(--term-info);
 }
-.terminal .ERROR .log-level {
-    color: #ff9c99;
+.terminal-line.level-WARN .log-level {
+    color: var(--term-warn);
 }
-.terminal .DEBUG {
-    color: #879cab;
+.terminal-line.level-ERROR .log-level {
+    color: var(--term-error);
 }
-.terminal .COMMAND .log-level,
-.terminal .command {
-    color: #62d5e5;
+.terminal-line.level-ERROR .log-message {
+    color: var(--term-fg);
+    font-weight: 600;
+}
+/* A printed row is not a log line: the echoed prompt keeps the prompt's own ink, and
+   the refusal under it is the line that goes red. The rule above is the log viewer's -
+   a whole ERROR row read aloud in white bold - and applied to a command an operator
+   just typed it painted the prompt white and the answer the colour of ordinary output,
+   which is the opposite of what a terminal does with an error. */
+.terminal-line.printed.level-ERROR .log-message {
+    color: inherit;
+    font-weight: 400;
+}
+.terminal-line.printed.level-ERROR .command-response {
+    color: var(--term-error);
+    font-weight: 600;
+}
+.terminal-line.level-DEBUG .log-level {
+    color: var(--term-debug);
+}
+.terminal-line.level-DEBUG .log-message {
+    color: var(--term-debug);
+}
+.terminal-line.level-COMMAND .log-level {
+    color: var(--term-command);
+}
+.terminal-line.level-COMMAND {
+    margin-top: 6px;
+}
+.log-thread {
+    min-inline-size: 0;
+    color: var(--term-level);
+    font-size: 11.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-top: 1px;
 }
 .log-message {
+    color: var(--term-fg);
+    /* Keep columns aligned: wrap at spaces, break a long token only if it cannot
+       fit, never mid-token when there is an alternative. */
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: normal;
+}
+/* "No wrapping" is what a terminal does with a stack trace: one row, one scrollbar,
+   the line's real shape. The pane already scrolls horizontally in raw mode, so the
+   toggle reuses that machinery instead of inventing a second layout. The answer and
+   the echoed command carry their own `white-space`, so they have to be named: without
+   them the toggle did nothing on the Console, the one page whose long lines it was
+   added for. */
+.terminal-body.no-wrap .log-message,
+.terminal-body.no-wrap .command-response,
+.terminal-body.no-wrap .command {
+    white-space: pre;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+/* Raw mode is the file's own text: a stack trace must keep its indentation. */
+/* Raw mode is one line of file text: no gutter (the line carries its own time,
+   level and thread) and one horizontal scroller for the whole pane, not one per
+   row. */
+.terminal-line.raw {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+}
+/* A notice is the shell talking under a prompt the previous line already stamped, so
+   it carries no time, level or thread of its own. It was still laid out on the four
+   gutter columns, which left a whole sentence in the 56px time column: every word on
+   its own line, and the pane's width doing nothing.
+
+   A printed row is the same shape for the same reason: the console prints
+   `tortodrone$ accounts` and its output under it, the way a terminal does, and a
+   gutter in front of the command would make the answers a log the operator did not
+   ask for.
+
+   `min-content` is the floor of that column, not zero: an answer that is one
+   unwrappable line - a table of columns, or any line in the no-wrap mode the menu
+   offers - widens its own row and scrolls the pane sideways instead of being clipped
+   by a track that cannot grow. Wrapped text has the width of its longest word there,
+   so nothing moves for it. */
+.terminal-line.notice,
+.terminal-line.printed {
+    grid-template-columns: minmax(min-content, 1fr);
+}
+/* A notice is the console speaking in its own voice — the banner, the restore notice, a
+   hint about what to type next — so it keeps a measure: across a 1,100px pane it ran to
+   about 190 characters, and a sentence that long is read twice before it lands. A
+   command's output is left alone: a `pre` of aligned columns is what a terminal prints,
+   and capping it would break the columns instead of the line. */
+.terminal-line.notice .log-message {
+    max-inline-size: 96ch;
+}
+/* The message of a printed row holds the echoed command and a `pre` of its output: an
+   inline box with a block inside it splits, which put the answer's first line beside
+   the prompt instead of under it. */
+.terminal-line.printed .log-message {
+    display: block;
+}
+.terminal-line.raw .log-message {
+    white-space: pre;
+    overflow-x: visible;
+    text-indent: 0;
+}
+.terminal-body {
+    overflow-x: auto;
+}
+/* A search hit shows itself: a filtered line explains why it matched. */
+.terminal-body mark.mark-current {
+    background: var(--gold);
+    color: var(--term-bg);
+    outline: 1px solid var(--gold);
+}
+.terminal-body mark {
+    padding: 0 1px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--gold) 42%, transparent);
+    color: var(--text);
+}
+/* A day change is a real boundary in a buffer that spans midnight. */
+.log-day {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0 4px;
+    padding: 0 6px;
+    color: var(--term-time);
+    /* A day header in the terminal's own quiet ink. Tracked capitals here were the last
+       label in the product wearing type the ramp does not have. */
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+.log-day::after {
+    content: '';
+    flex: 1;
+    block-size: 1px;
+    background: var(--term-line);
+}
+.log-empty {
+    margin: 18px 8px;
+    color: var(--term-time);
+    font-size: 12.5px;
+}
+.terminal .command,
+.command {
+    color: var(--term-input);
+    font-weight: 600;
     white-space: pre-wrap;
 }
+.command-pending {
+    display: block;
+    margin: 2px 0 6px;
+    padding-left: 10px;
+    color: var(--term-debug);
+    font-style: italic;
+    border-left: 2px solid var(--term-line);
+    /* Something is happening: a still line reads as a hang. */
+    animation: command-pending-pulse 1.1s ease-in-out infinite;
+}
+@keyframes command-pending-pulse {
+    50% {
+        opacity: 0.4;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .command-pending {
+        animation: none;
+    }
+}
+html[data-motion='reduce'] .command-pending {
+    animation: none;
+}
+/* An answer is the shell's own text, not a block in a frame: no rule down its side and
+   no indent of its own. A terminal prints the output under the command it belongs to and
+   stops there; the rule and the 10px of hanging indent made every answer look like a
+   card inside the transcript. */
 .command-response {
-    margin: 4px 0 8px;
-    color: #d5e2ec;
+    margin: 2px 0 6px;
+    padding: 4px 0 2px;
+    color: var(--term-response);
     font: inherit;
     white-space: pre-wrap;
     overflow: visible;
-    padding: 0;
     background: transparent;
-    border: 0;
 }
-.console-workspace {
-    display: flex;
-    flex-direction: column;
-    min-height: 480px;
-    height: max(480px, calc(100dvh - 210px));
-    border: 1px solid var(--line-bright);
-    border-radius: 5px;
-    overflow: hidden;
-    background: var(--surface);
-}
-.console-workspace > .toolbar {
-    padding: 10px 12px;
-    gap: 7px;
-    border-bottom: 1px solid var(--line);
-}
-.console-workspace .toolbar button,
-.console-workspace .toolbar input,
-.console-workspace .toolbar select {
-    font-size: 12px;
-    padding: 6px 8px;
-}
-.console-workspace .toolbar input {
-    flex: 1 1 150px;
-    width: auto;
-}
-.console-workspace > .terminal {
-    flex: 1;
-    min-height: 0;
-    height: auto;
-    border: 0;
-    border-radius: 0;
-}
-.console-connection {
-    color: var(--good);
-    margin-left: auto;
-}
-.console-connection.error {
-    color: var(--bad);
-}
-.command-form {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    border-top: 1px solid var(--line-bright);
-    padding: 12px;
-}
-.command-form label {
-    flex: 1;
-    display: block;
-    font-size: 0;
-}
-.command-form input {
-    font: 13px var(--mono);
-}
-.command-form input::placeholder {
-    color: var(--muted);
-}
-.chart-current {
+/* The same word above the same three links in the log pane's toolbar, where a ruled
+   strip would break the bar: a rule on the leading edge is what separates them from
+   the filters, since those shape the pane and these leave it. */
+.toolbar-links {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px 24px;
-    margin-bottom: 10px;
+    align-items: baseline;
+    gap: 4px 10px;
+    padding-inline-start: 12px;
+    border-inline-start: 1px solid var(--line-bright);
 }
-.chart-current > div {
+.toolbar-links {
+    /* Not the bar's ballast: as the only shrinkable item it drew 170px for 292px of
+       links, so three links stacked into three lines under a clipped search field.
+       Holding its width makes the bar wrap instead, which is visible and fixable. */
+    flex: 0 0 auto;
+}
+.toolbar-links-label {
+    color: var(--term-time);
+    font-size: 12.5px;
+}
+.toolbar-links .link {
+    padding: 0;
+    font-family: var(--mono);
+    font-size: 11.5px;
+}
+/* The strip is 292px of links and only fits where the bar has that much to spare: it
+   squeezed to 170px and stacked into three lines at 844px wide, four lines at 760, and
+   held a 148px search field down to 88px of content box against a 94px placeholder,
+   which reads "Search ou". The breakpoint is where the strip holds one line and leaves
+   the field room, measured: 292px of strip with a 166px field at 1280, 252px at 1366;
+   at 1200 the field falls to 62px, which clips. Inside it the same three pages are two
+   taps away in the More menu, which carries them at every size and draws them only
+   where the strip is gone — so a window dragged across either edge keeps both. */
+@media (max-width: 1279px), (max-height: 520px) {
+    .terminal-tools .toolbar-links {
+        display: none;
+    }
+}
+@media (min-width: 1280px) and (min-height: 521px) {
+    .terminal-menu-links {
+        display: none;
+    }
+}
+.terminal-jump {
+    position: absolute;
+    /* Clears the status strip the log panes keep at the bottom. The console has no
+       strip - it is a terminal - so it hangs the pill closer to the edge below. */
+    inset-block-end: 34px;
+    inset-inline-end: 12px;
+    min-block-size: 30px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    font-family: var(--mono);
+    font-size: 11.5px;
+}
+.console-workspace .terminal-jump {
+    inset-block-end: 12px;
+}
+.terminal-jump[hidden] {
+    display: none;
+}
+.terminal-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    align-items: center;
+    padding: 3px 12px;
+    border-top: 1px solid var(--term-line);
+    background: var(--term-bg-top);
+    color: var(--term-fg);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+}
+/* A console has no strip of its own - its keys are in the banner and its state in the
+   bar - so the strip is only drawn when a page writes something into it. `hidden` is
+   set on the element rather than left to `:empty`, because the strip is a flex row of
+   spans that are never literally empty. */
+.terminal-status[hidden] {
+    display: none;
+}
+.terminal-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text);
+    white-space: nowrap;
+}
+.terminal-state:empty {
+    display: none;
+}
+.terminal-state.error {
+    color: var(--bad);
+}
+.terminal-hint {
+    flex: 1 1 120px;
+    min-inline-size: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+/* The keys a pane answers to: a chord in the shell's key face, its verb after it at
+   the caption size, and enough gap that the six read as six bindings. */
+.terminal-keys {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 12px;
+}
+.terminal-key {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+}
+.terminal-key .kbd {
+    font-size: 10px;
+    padding: 0 4px;
+}
+.terminal-key-verb,
+.terminal-key-note {
+    color: var(--term-time);
+    font-size: 10.5px;
+}
+.terminal-tail {
+    /* Text on the status line, not a pill: a rounded chip in a terminal's own bar was
+       the last piece of card furniture left in the pane. */
+    margin-left: auto;
+    padding: 0;
+    background: none;
+    color: var(--term-fg);
+    white-space: nowrap;
+}
+.terminal-tail[data-state='paused'] {
+    /* A pill is text on its own fill, so the fill has to be dark enough for AA. */
+    background: color-mix(in srgb, var(--warn) 22%, var(--inset));
+    color: var(--warn);
+    font-weight: 600;
+}
+/* Where the rest of the log lives: the buffer is a window, not the whole file. */
+.terminal-source {
+    /* Shares the row when the pane is wide and wraps when it is not: as a
+       forced full-width line it alone made the status bar two rows tall and 52px
+       of every page that shows a stream. */
+    flex: 1 1 240px;
+    min-inline-size: 0;
+    color: var(--term-time);
+    font-size: 10.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.terminal-source:empty {
+    display: none;
+}
+/* A page whose only content is the stream fills the reading area, so Logs and
+   Console have the same weight in the layout. The height itself is measured by
+   the component (`fit()`), because only it knows how much chrome the page left
+   above the pane; this is the floor for the first paint. */
+.terminal-fill,
+.console-workspace {
+    height: min(62dvh, 720px);
+    min-height: 240px;
+}
+/* The console is the terminal: the prompt line belongs inside the shell, right
+   above the status bar, the way a shell keeps its cursor on the last line. */
+.console-workspace .terminal-body {
+    min-height: 0;
+    height: auto;
+}
+/* A terminal prints from the top: the banner on the first line, the prompt under the
+   last answer, the rest of the screen blank. The shared pane grows a leading spacer to
+   push a short transcript to the bottom, which is right for a log tail that fills up but
+   leaves a console looking at a black void with its prompt hanging beneath it. */
+.console-workspace .terminal-body::before {
+    /* `display: none`, not `content: none`: a pseudo-element with no content still took
+       a flex slot in Chrome, and the transcript hung 199px down the pane with the
+       prompt under it - the exact void this rule is meant to remove. */
+    display: none;
+}
+/* The line after the last one. It is a slot, not a box: it takes no room of its own and
+   draws nothing, so the prompt inside it sits exactly where the next answered line will
+   fall. */
+.terminal-tail-slot {
+    display: contents;
+}
+/* A line too long for the window scrolls sideways here, and a cell cut off at the
+   trailing edge reads as a table that broke rather than a line that continues. A mask,
+   not a background: the glyphs are painted by the rows, so a gradient behind them is
+   invisible, while a mask fades whatever the pane actually painted at its edge. It is
+   only there while there is something to scroll to. */
+.console-workspace.is-wide .terminal-body {
+    -webkit-mask-image: linear-gradient(to left, transparent 0, #000 26px);
+    mask-image: linear-gradient(to left, transparent 0, #000 26px);
+}
+/* The prompt is a line in the buffer - the terminal's own cursor row - not a strip
+   under the screen: no rule above it, no second fill, and the body's padding already
+   indents it to the column every answer is printed in. */
+.console-workspace .console-prompt-block {
+    border-top: 0;
+    background: transparent;
+    padding-block: 1px 0;
+}
+.console-prompt {
     display: flex;
     align-items: baseline;
     gap: 8px;
+    padding: 8px 12px 4px;
 }
-.chart-current strong {
-    font-size: clamp(22px, 2.3vw, 30px);
-    font-weight: 600;
+/* What the pane is doing, said in the bar: a terminal keeps that in its title, not in a
+   status strip under the cursor. It is the same ink as the command it is running. */
+.console-workspace .terminal-bar-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-inline-size: 0;
+}
+.console-state {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--term-time);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.console-state:empty {
+    display: none;
+}
+.console-state.error {
+    color: var(--bad);
+}
+/* The find bar closes on Escape and keeps its term, so the filter it leaves behind has
+   to stay on screen: a hidden filter is a screen that lies about what it holds. Chip,
+   not toolbar - one word, one cross, the bar's own mono ink. */
+.console-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    /* The bar is a row of flex boxes on a 390px phone, and a long term made this one
+       wider than the space it was given: it ran under the More pill, so the cross the
+       chip exists for was the one thing you could not hit. It never shrinks for its own
+       size - the pane's own title gives up that space instead, and the term inside it
+       ellipsises at its own cap - so the cross is never the thing that goes. */
+    flex: none;
+    min-inline-size: 0;
+    padding: 1px 7px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--term-fg);
+    background: transparent;
+    border: 1px solid var(--term-line);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    white-space: nowrap;
+}
+.console-filter[hidden] {
+    display: none;
+}
+.console-filter:hover,
+.console-filter:focus-visible {
+    border-color: var(--term-command);
+    color: var(--term-command);
+}
+.console-filter-term {
+    min-inline-size: 0;
+    /* A cap that is a reading width on a desktop and a phone's share of the bar on a
+       phone: 22ch of mono is 152px, which is most of a 390px bar, and the chip has the
+       More pill to stay clear of. */
+    max-inline-size: min(22ch, 27vw);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.console-filter-drop {
+    flex: none;
+    color: var(--term-time);
+}
+/* Below 360px the bar is too narrow for a chip sized by its own label and a 44px More
+   pill side by side: the chip took the space the gap needed and landed flush on the
+   menu, which read as one welded control. It takes the box's width there instead and
+   ellipsises; at 360 and up the label keeps its own size, which is what a real phone
+   shows and where a clipped "filter ERROR" would be the worse trade. */
+@media (max-width: 360px) {
+    .console-filter {
+        max-inline-size: 100%;
+    }
+}
+.console-workspace .console-prompt {
+    padding: 0;
+}
+/* Where the caret is, said by the row rather than by a rim: a terminal has no field to
+   outline, so the line that holds the cursor is the thing that lights up. */
+.console-prompt:focus-within .console-prompt-label {
+    color: var(--term-fg);
+}
+.console-prompt-label {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--term-command);
+    white-space: nowrap;
+    /* The label is apparatus too, and it must not end up in a copied command. */
+    user-select: none;
+}
+/* A command is out: the prompt blinks a block cursor, which is the only "still
+   working" signal a terminal has, and the answer row pulses above it. */
+.console-prompt[aria-busy='true'] .console-prompt-label::after {
+    content: '';
+    display: inline-block;
+    inline-size: 0.55em;
+    block-size: 1em;
+    margin-inline-start: 4px;
+    vertical-align: -0.15em;
+    background: var(--term-input);
+    animation: console-cursor 1s steps(2, start) infinite;
+}
+@keyframes console-cursor {
+    50% {
+        opacity: 0;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .console-prompt[aria-busy='true'] .console-prompt-label::after {
+        animation: none;
+    }
+}
+html[data-motion='reduce'] .console-prompt[aria-busy='true'] .console-prompt-label::after {
+    animation: none;
+}
+.console-input {
+    flex: 1;
+    min-inline-size: 0;
+    /* One line tall, on the buffer's own leading: a 36px control with a rim inside a
+       13px/1.2 transcript was a form field sitting in the middle of the terminal. */
+    min-block-size: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: var(--term-fg);
+    font-family: var(--mono);
+    font-size: 13px;
     line-height: 1.2;
-    color: var(--cyan);
-    font-variant-numeric: tabular-nums;
+    caret-color: var(--term-input);
+    padding: 1px 0;
 }
-.chart-current .secondary-value strong {
-    color: var(--gold);
+.console-input::placeholder {
+    color: var(--term-time);
 }
-.chart-current small {
-    color: var(--muted);
+/* No rim on either state: the cursor is the indicator, and the prompt line's own label
+   brightens while the caret is in it (`.console-prompt:focus-within`). */
+.console-input:focus-visible {
+    border-color: transparent;
+    outline: none;
+}
+.console-prompt[aria-busy='true'] .console-input {
+    /* While a command is out the prompt is not the operator's: say so by fading it. */
+    color: var(--term-time);
+}
+@media (max-width: 700px) {
+    /* Smallest terminal chrome: the search keeps a row, the rest folds away. */
+    .terminal-tools {
+        flex-wrap: wrap;
+    }
+    .terminal-tools input[type='search'] {
+        flex: 1 1 100%;
+        order: -1;
+    }
+    .terminal-tools select {
+        inline-size: 104px;
+        min-inline-size: 0;
+    }
+    .terminal-count {
+        display: none;
+    }
+    /* The key help stays on a phone: hiding it left a touch operator with no way to
+       learn that Tab completes and `help` lists the commands. It wraps to two lines
+       instead of vanishing. */
+    .terminal-hint {
+        white-space: normal;
+        line-height: 1.35;
+    }
 }
 @media (max-width: 600px) {
-    .terminal {
-        padding: 10px;
-        font-size: 11px;
+    .terminal-body {
+        padding: 8px;
+        /* 1.2 is a terminal's leading at every width: 1.45 on the tightest screen gave
+           18.1px rows where the desktop shows 15.6px. */
+        font-size: 12.5px;
+        line-height: 1.2;
     }
     .terminal-line {
+        /* Wide enough for h:mm:ss at 10.5px, plus its own scroll clip: a timestamp
+           that overprints the level is worse than a missing thread column. */
         grid-template-columns: 58px 48px minmax(0, 1fr);
         gap: 5px;
     }
     .log-time {
-        font-size: 10px;
+        overflow: hidden;
+    }
+    .log-thread {
+        display: none;
+    }
+    .log-time {
+        font-size: 10.5px;
     }
     .log-level {
-        font-size: 9px;
+        font-size: 10.5px;
+        letter-spacing: 0.02em;
     }
-    .command-form {
-        gap: 7px;
-        padding: 9px;
+    /* Below 16px a phone zooms the whole page when a field takes focus, which
+       throws a terminal's cursor off screen. */
+    .terminal-tools input,
+    .terminal-tools select,
+    .terminal-tools button,
+    .terminal-menu-toggle,
+    .console-input {
+        font-size: 16px;
     }
-    .command-form button {
-        padding: 8px;
-        font-size: 12px;
+    .console-input,
+    .console-prompt button {
+        min-block-size: var(--control-lg, 44px);
     }
+    /* One row of controls: a phone cannot afford four wrapped rows of chrome
+       above the output it came to read. */
+    .terminal-tools {
+        padding: 5px 8px;
+        gap: 4px;
+        row-gap: 2px;
+        flex-wrap: nowrap;
+    }
+    /* The More popover hung off its toggle, and on a 390px bar that toggle sits a third
+       of the way across: the menu drew at x -102, 257px wide, with every row clipped to
+       "…pane" and the three cross-links entirely off screen. It hangs off the bar here
+       and spans it, which is also where a phone expects a sheet from a toolbar. */
+    .terminal-tools,
+    /* The console's bar carries the menu, so it needs the same anchoring: with only the
+       tools bar made relative, the popover resolved against the page and opened 298px
+       below an 844px screen, with five of its six rows unreachable. */
+    .terminal-bar {
+        position: relative;
+    }
+    .terminal-menu {
+        position: static;
+    }
+    .terminal-menu-body {
+        inset-inline: 0;
+        max-inline-size: none;
+    }
+    /* The find bar's own fields and the bar's menu are the page's controls on a phone,
+       so they take the touch floor the rest of the product uses. */
+    .terminal-tools.terminal-find input:not(:disabled),
+    .terminal-tools.terminal-find select:not(:disabled),
+    .terminal-bar > .terminal-menu .terminal-menu-toggle,
+    .terminal-bar > button {
+        min-block-size: var(--control-lg);
+    }
+    /* The cross-links sit in the pane's own bar on a phone, at the height of a link
+       rather than of a control, so they cost one short row and not a 44px one. */
+    .terminal-tools .link {
+        min-block-size: 24px;
+        padding-inline: 0;
+        font-size: 11.5px;
+    }
+    .terminal-tools input[type='search'] {
+        flex: 1 1 auto;
+        min-inline-size: 0;
+        inline-size: auto;
+        width: auto;
+    }
+    /* No `font-size` here: it was re-declared at 12.5px a few lines below the 16px
+       guard above and silently won, so every field on a phone still zoomed the page. */
+    /* 74px clipped the value the operator is reading: "All (12)" needs 77px for the
+       label alone at the 16px touch type, plus 8px of padding and the 18px caret,
+       and "All time" left one pixel of slack at 104. At 112 the caret has air around
+       it, and the bar still scrolls sideways if a third control wants the row. */
+    .terminal-tools select {
+        inline-size: 112px;
+        min-inline-size: 0;
+        padding-inline: 4px;
+    }
+    .terminal-tools button,
+    .terminal-menu-toggle {
+        padding-inline: 8px;
+    }
+    .terminal-count {
+        display: none;
+    }
+    /* A touch screen has no Ctrl, no Tab and no arrows, so the key legend is a list of
+       keys this device cannot press. `help` is how the commands are found here, and the
+       banner says so. */
+    .terminal-hint {
+        display: none;
+    }
+    .console-prompt {
+        padding: 7px 9px 3px;
+    }
+    /* A phone is a narrow terminal, and a table of five columns reflowed into a column
+       of fragments: `createdAt            gameMaster  id  knights` and `username` on the
+       line under it, with each record's values scattered below its keys. An answer keeps
+       its own line here and the pane scrolls sideways for the few characters that do not
+       fit, which is what a terminal does with a line too long for the window. */
+    .console-workspace .command-response {
+        white-space: pre;
+    }
+    .terminal-fill,
+    .console-workspace {
+        height: min(58dvh, 620px);
+        min-height: 240px;
+    }
+}
+@media (max-width: 430px) {
+    /* A log without times is not a log: the thread column goes first, and the
+       timestamp keeps a column wide enough to print h:mm:ss without clipping. */
+    .terminal-line {
+        /* `ERROR` and `DEBUG` measure 32.6px: a 30px track ellipsised the severity
+           that made the line urgent. */
+        grid-template-columns: 52px 34px minmax(0, 1fr);
+        gap: 5px;
+    }
+    .log-time {
+        font-size: 10.5px;
+    }
+    .terminal-jump {
+        inset-inline-end: 10px;
+    }
+    /* Search takes a row of its own: squeezing it beside the controls left a
+       47px field that could not show a single word of the term it held. */
+    .terminal-tools {
+        flex-wrap: wrap;
+    }
+    .terminal-tools input[type='search'] {
+        flex: 1 1 100%;
+        order: -1;
+    }
+}
+/* A landscape phone (or a short desktop window) is wider than it is tall: the
+   chrome shrinks so the prompt keeps a row of output above it. */
+@media (max-height: 520px) {
+    .terminal-fill,
+    .console-workspace {
+        height: 200px;
+        min-height: 180px;
+    }
+    .terminal-shell {
+        min-height: 0;
+    }
+    .terminal-bar {
+        padding: 3px 10px;
+    }
+    .terminal-tools {
+        padding: 3px 8px;
+    }
+    .terminal-status {
+        padding: 2px 10px;
+    }
+    .terminal-body {
+        min-height: 56px;
+        padding: 6px 10px;
+    }
+    .console-prompt {
+        padding: 4px 9px 2px;
+    }
+    /* A touch screen has no Ctrl, no Tab and no arrows, so the key legend is a list of
+       keys this device cannot press. `help` is how the commands are found here, and the
+       banner says so. */
+    .terminal-hint {
+        display: none;
+    }
+    /* The source line names the buffer's bounds and the file; it is the one line
+       that must not be sacrificed to a short window. */
+    .terminal-source {
+        flex: 1 1 100%;
+        font-size: 10.5px;
+    }
+}
+/* A referenced record shows its name first and its identifier second, so a
+   promotion or a recipe row reads as data rather than a foreign key. */
+.offer-reference {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+}
+/* A record's own name is one line, like the actor under it: `overflow-wrap: anywhere`
+   in a table cell broke "m.haven_services" mid-word across three lines. */
+.offer-reference a {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+/* A path in a cell is one line with an ellipsis and the whole value on its title: a
+   model name that wrapped mid-token made one row two lines taller than its neighbours
+   and put a hyphenated fragment where a file name should be read. */
+.cell-clip {
+    display: block;
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.offer-reference small {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+/* A station's kind is one or two words and never a column's worth of text: wrapped,
+   "Catalog Crafter" made a two-line cell in a table whose other cells were one. */
+.station-kind {
+    white-space: nowrap;
+}
+/* Auto layout hands slack to whichever column asks for the most, and a timestamp
+   wrapped in a `time` element asked for 423px to print 175px of stamp: the widest
+   column in the audit trail carried its least interesting value. A cell whose only
+   content is a stamp now sizes to it. */
+td:has(> .time-stamp) {
+    inline-size: 1%;
+    white-space: nowrap;
+}
+/* The audit trail's scope line: a sentence about how much of the trail is on screen,
+   on its own line above the two controls that move through it. */
+.audit-scope {
+    display: block;
+    font-size: 12.5px;
+    line-height: 1.5;
+    max-inline-size: 78ch;
+}
+/* A station row opens with the client glyph for what the station does, and the name
+   keeps one text column beside it: the mark spans both lines so the actor stays under
+   the name it belongs to. */
+.offer-reference.with-art {
+    grid-template-columns: 32px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 8px;
+}
+.offer-reference .station-mark {
+    grid-row: span 2;
+    inline-size: 32px;
+    block-size: 32px;
+    flex: 0 0 32px;
+    color: var(--accent);
+}
+/* The kind sits beside the station's name at caption size, in the muted ink the row
+   gives its own kind column. */
+.offer-reference .station-kind {
+    margin-inline-start: 8px;
+    font-size: 12.5px;
+    color: var(--muted);
+}
+/* The head of a record dialog is the row that opened it. In a table the cell's own
+   padding is the space under it; in a dialog nothing is, and the facts started flush
+   against the breadcrumb. */
+.record-head {
+    margin-block-end: 14px;
+}
+/* A timestamp that spans a trail: the day is printed where it changes, so the times
+   below it line up in one narrow column instead of repeating one date fifty times. */
+/* The three figures at the top of the Catalogue are read, not pressed. A bordered pill
+   at 25px beside two borderless chips at 17px, in the same construction as the Export
+   button 100px below, made "Content validated" look like a control that does nothing. */
+.content-summary .badge {
+    border: 0;
+    padding: 0;
+}
+.content-summary .badge.good {
+    color: var(--good);
+}
+/* Three figures, three facts, and one separator between each pair: at a 10px gap three
+   muted phrases ran together as "17 compiled scenes 9,355 items Content validated", which
+   reads as a sentence about 9,355 items rather than three answers. A middot says where
+   one fact ends, and it is punctuation rather than a pill, so nothing here looks pressable. */
+.content-summary .toolbar {
+    gap: 0;
+}
+.content-summary .badge + .badge::before {
+    content: '·';
+    margin-inline: 9px;
+    color: var(--line-bright);
+}
+/* One stamp per row: "24/11/2026, 16:19:07 EET" reads the same on the first row as on
+   the last, so the column never depends on a row above it and the line never wraps. */
+.time-stamp {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+/* A price is one figure with its coin, and when both currencies are charged they sit
+   side by side rather than stacking into two lines. */
+.price-cell {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.station-recipes {
+    display: grid;
+    gap: 2px;
+    max-height: 260px;
+    overflow: auto;
+    padding: 6px;
+    border-radius: var(--radius-control);
+    background: var(--inset);
+}
+.station-recipe {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 4px 6px;
+    border-radius: var(--radius-control);
+}
+.station-recipe:hover {
+    background: var(--raised);
 }
 .inventory-tools {
     margin-bottom: 15px;
@@ -338,7 +1668,7 @@
     flex-wrap: wrap;
 }
 .account-detail {
-    border-left: 3px solid var(--gold);
+    border-left: 3px solid var(--gold-rule);
 }
 @media (max-width: 1200px) {
     .equipment-grid {
@@ -357,13 +1687,11 @@
         grid-template-columns: 1fr;
     }
     .metric-strip {
-        grid-template-columns: 1fr 1fr;
-    }
-    .metric:nth-child(2) {
-        border-right: 0;
-    }
-    .metric:nth-child(-n + 2) {
-        border-bottom: 1px solid var(--line);
+        /* Two tiles a row down to 158px each, and one below that. The old 130 let a
+           320px phone keep two columns at 141px, which is narrower than the widest
+           figure the strip holds: the number then ran under its neighbour instead of
+           dropping to a row of its own. */
+        grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
     }
     .knight-header {
         padding: 15px;
@@ -372,7 +1700,7 @@
         gap: 10px;
     }
     .knight-wallet button {
-        font-size: 17px;
+        font-size: 16px;
     }
 }
 .sprite-grid {
@@ -383,12 +1711,14 @@
 }
 .sprite-overview {
     display: grid;
-    grid-template-columns: 112px minmax(0, 1fr);
+    /* The portrait is the one place a client icon is shown at its own size: 96px is the
+       canvas, so this is the picture the game draws, not an enlargement of it. */
+    grid-template-columns: 96px minmax(0, 1fr);
     gap: 22px;
 }
 .sprite-overview .item-icon {
-    width: 112px;
-    height: 112px;
+    width: 96px;
+    height: 96px;
 }
 .sprite-overview dl {
     display: grid;
@@ -433,18 +1763,15 @@
         width: 72px;
         height: 72px;
     }
+    .sprite-overview .item-icon-letter {
+        font-size: 24px;
+    }
     .sprite-overview dl {
         display: block;
     }
     .sprite-overview dt {
         margin-top: 8px;
     }
-}
-.gear-card .item-icon img,
-.sprite-overview .item-icon img,
-.sprite-skills .item-icon img {
-    width: calc(100% - 10px);
-    height: calc(100% - 10px);
 }
 
 /* A compact identity ledger, with the existing wallet kept alongside it. */
@@ -453,7 +1780,7 @@
     flex: 1;
 }
 .knight-name {
-    font-size: 30px;
+    font-size: 32px;
     line-height: 1.15;
     margin: 0 0 12px;
     overflow-wrap: anywhere;
@@ -466,7 +1793,7 @@
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 12px;
-    font-size: 12px;
+    font-size: 12.5px;
 }
 .knight-account > span {
     color: var(--muted);
@@ -475,24 +1802,12 @@
     font-weight: 600;
 }
 .equipment-slot .slot-info > span:not(.slot-label) {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
 }
-.equipment-slot {
-    min-height: 140px;
-    padding: 16px;
-}
 .equipment-slot .item-icon {
-    width: 64px;
-    height: 64px;
-}
-.equipment-slot .item-icon img {
-    width: 56px;
-    height: 56px;
-}
-.equipment-slot.empty-slot {
-    opacity: 1;
-    align-items: center;
+    width: var(--icon-slot);
+    height: var(--icon-slot);
 }
 .equipment-slot.locked-slot {
     border-style: solid;
@@ -516,12 +1831,17 @@
     background: var(--inset);
     border: 1px solid var(--line);
     border-top: 2px solid var(--gold);
+    /* The one bordered block in the console with square corners: every panel around it,
+       and the Level and Heat controls inside it, are rounded, so a card holding rounded
+       children read as a cut-out of the surface. The gold edge is the card's own accent
+       and stays; only its corners join the shape the rest of the console draws. */
+    border-radius: var(--radius);
     padding: 18px;
     gap: 16px;
 }
 .gear-card .item-line .item-icon {
-    width: 64px;
-    height: 64px;
+    width: var(--icon-slot);
+    height: var(--icon-slot);
 }
 .gear-card .item-line strong {
     font-size: 20px;
@@ -571,7 +1891,7 @@
 }
 .gear-control output {
     color: var(--muted);
-    font-size: 12px;
+    font-size: 12.5px;
 }
 .gear-card .item-property {
     align-items: center;
@@ -584,7 +1904,7 @@
 }
 .gear-card .draft-status {
     margin: 0;
-    font-size: 12px;
+    font-size: 12.5px;
 }
 .gear-card[data-pending='true'] .draft-status {
     color: var(--gold);
@@ -603,12 +1923,12 @@
     align-items: center;
     gap: 8px;
     padding: 7px 9px;
-    color: #f1d48d;
-    background: #48391f;
-    border: 1px solid #8a6a32;
-    border-left: 3px solid #c69e50;
-    border-radius: 3px;
-    font-size: 12px;
+    color: var(--effect-fg);
+    background: var(--effect-bg);
+    border: 1px solid var(--effect-line);
+    border-left: 3px solid var(--effect-line);
+    border-radius: var(--radius-control);
+    font-size: 12.5px;
     font-weight: 400;
     line-height: 1.4;
 }
@@ -622,17 +1942,9 @@
     flex: 1;
 }
 .variant-effect .effect-strength {
-    font-size: 10px;
-    color: #e1c792;
+    font-size: 10.5px;
+    color: var(--effect-strong);
     margin: 0;
-}
-[data-theme='light'] .variant-effect {
-    color: #674614;
-    background: #f5e6b6;
-    border-color: #bc9851;
-}
-[data-theme='light'] .effect-strength {
-    color: #755321;
 }
 .variant-remove {
     padding: 0 5px;
@@ -662,10 +1974,11 @@
     height: 100%;
 }
 .variant-option[aria-pressed='true'] {
-    border-color: var(--gold);
+    border-color: var(--gold-rule);
 }
-.variant-option[aria-pressed='true'] .effect-name::after {
-    content: ' ✓';
+/* Selection is a border and an ink, not a tick drawn from a character. */
+.variant-option[aria-pressed='true'] .effect-name {
+    color: var(--gold);
 }
 .variant-option:disabled {
     opacity: 0.42;
@@ -710,7 +2023,7 @@
 .equipment-slot .variant-effect {
     padding: 4px 6px;
     gap: 5px;
-    font-size: 11px;
+    font-size: 11.5px;
 }
 .equipment-slot .variant-effect > img {
     width: 18px;
@@ -718,7 +2031,7 @@
     flex-basis: 18px;
 }
 .equipment-slot .effect-strength {
-    font-size: 10px;
+    font-size: 10.5px;
     flex-shrink: 0;
 }
 @media (max-width: 600px) {
@@ -755,15 +2068,26 @@
 }
 .grant-options {
     display: grid;
-    grid-template-columns: 100px minmax(180px, 1fr) auto;
+    /* Three fields of two and four digits, and no reason for any of them to be wide: the
+       middle column took the whole 1fr of an 860px dialog, so "Expiration days" was a
+       576px box holding "0" and Quantity beside it was 100. The slack goes to the end
+       instead, where Bind keeps the row's outer edge. */
+    grid-template-columns: 100px 210px minmax(0, 1fr);
     gap: 14px;
-    align-items: center;
+    /* Bottom-aligned, so the three controls share an edge and not a centre: "Expiration
+       days (0 permanent)" wrapped to two lines, and centring each cell dropped that
+       input 16px below the one beside it. */
+    align-items: end;
+}
+.grant-options label {
+    /* One line or the row breaks: the field is told what it is in its own label. */
+    white-space: nowrap;
 }
 .grant-options .check {
     white-space: nowrap;
-}
-.grant-options input[type='checkbox'] {
-    width: auto;
+    /* Beside the two fields, not at the far edge of the dialog: pushed right, "Bind item"
+       floated 470px from the field it belongs to and read as a separate decision. */
+    justify-self: start;
 }
 .log-time {
     white-space: nowrap;
@@ -775,35 +2099,39 @@
 }
 .gear-control input[type='range']::-webkit-slider-runnable-track {
     height: 10px;
-    background: linear-gradient(to right, #e6bc62 var(--fill, 0%), var(--inset) var(--fill, 0%));
+    background: linear-gradient(
+        to right,
+        var(--meter) var(--fill, 0%),
+        var(--inset) var(--fill, 0%)
+    );
     border: 1px solid var(--line-bright);
-    border-radius: 5px;
+    border-radius: var(--radius);
 }
 .gear-control input[type='range']::-webkit-slider-thumb {
     appearance: none;
     height: 18px;
     width: 18px;
     margin-top: -5px;
-    background: #e6bc62;
-    border: 2px solid #f5da98;
+    background: var(--meter);
+    border: 2px solid var(--meter-edge);
     border-radius: 50%;
 }
 .gear-control input[type='range']::-moz-range-track {
     height: 10px;
     background: var(--inset);
     border: 1px solid var(--line-bright);
-    border-radius: 5px;
+    border-radius: var(--radius);
 }
 .gear-control input[type='range']::-moz-range-progress {
     height: 10px;
-    background: #e6bc62;
-    border-radius: 5px;
+    background: var(--meter);
+    border-radius: var(--radius);
 }
 .gear-control input[type='range']::-moz-range-thumb {
     height: 16px;
     width: 16px;
-    background: #e6bc62;
-    border: 2px solid #f5da98;
+    background: var(--meter);
+    border: 2px solid var(--meter-edge);
     border-radius: 50%;
 }
 @media (max-width: 600px) {
@@ -822,16 +2150,27 @@
     background: color-mix(in srgb, var(--cyan) 7%, transparent);
 }
 
+/* The cap belongs to the letter itself, not to one of the three places that show
+   it: a maximum-length body added 2,400px inside the read dialog and pushed the
+   facts the operator opened it for off the screen. */
+/* A field plus its counter: the counter is a description, not part of the name. */
+.mail-field {
+    display: grid;
+    gap: 4px;
+    min-inline-size: 0;
+}
 .mail-preview {
     display: grid;
     gap: 10px;
     padding: 18px;
+    max-block-size: 20rem;
+    overflow: auto;
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: var(--radius);
     background: var(--inset);
 }
 .mail-preview .mail-subject {
-    font-size: 1.05rem;
+    font-size: 16px;
     line-height: 1.3;
     overflow-wrap: anywhere;
 }
@@ -842,6 +2181,37 @@
     overflow-wrap: anywhere;
     line-height: 1.55;
 }
+.mail-send-result {
+    display: grid;
+    gap: 2px;
+    justify-items: start;
+}
+/* A long letter must not push the dialog's own buttons seven screens away: the
+   preview scrolls inside a bounded box and the actions stay put. */
+.mail-preview-host {
+    display: block;
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+}
+/* Plain-text view: exactly the characters that reach the client mailbox, so
+   wrapping and blank lines can be checked before the letter is sent. */
+.mail-plain {
+    margin: 0;
+    padding: 14px 16px;
+    max-height: 320px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--inset);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    tab-size: 4;
+}
 .mail-gift {
     display: flex;
     flex-wrap: wrap;
@@ -851,8 +2221,6 @@
     border-bottom: 1px solid var(--line);
 }
 .mail-gift input[type='checkbox'] {
-    width: 18px;
-    height: 18px;
     margin: 0;
 }
 .mail-gift:last-child {
@@ -871,26 +2239,93 @@
 .mail-subject-cell strong {
     display: block;
 }
+/* The letter is the row's subject, so it takes the width the auto layout was handing to
+   the two numeric columns: at 113px the subject of every mailing wrapped to three lines
+   while "Delivered" and "Crowns" — which hold one digit each — were given 125px apiece. */
+/* Eight columns in a 1096px table: an auto layout gave the letter 113px and the two
+   one-digit figure columns 125px each, then wrapped the actions cell. Percentages alone
+   are a hint to an auto layout, and a minimum width on the subject pushed the whole
+   table 117px past its panel. Fixed layout is the honest shape for eight known columns:
+   one budget, spent per column, and the table cannot grow past the panel it sits in. */
+.mail-table table {
+    table-layout: fixed;
+}
+.mail-table th:nth-child(1) {
+    inline-size: 25%;
+}
+.mail-table th:nth-child(2) {
+    inline-size: 10%;
+}
+.mail-table th:nth-child(3) {
+    inline-size: 16%;
+}
+.mail-table th:nth-child(4) {
+    inline-size: 8%;
+}
+.mail-table th:nth-child(5) {
+    inline-size: 12%;
+}
+.mail-table th:nth-child(6) {
+    inline-size: 8%;
+}
+.mail-table th:nth-child(7) {
+    inline-size: 8%;
+}
+.mail-table th:nth-child(8) {
+    inline-size: 13%;
+}
+/* A fixed column cannot grow to fit a long word, so a name or a subject breaks
+   instead of spilling over the column beside it. */
+.mail-table td {
+    overflow-wrap: anywhere;
+}
+/* The body preview is a reminder of which letter this is, not the letter: unclamped it
+   wrapped to five lines in the table's narrow first column and made one row 153px tall
+   beside a 40px action column. Two lines name it. */
 .mail-subject-cell small {
-    display: block;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
     margin-top: 3px;
 }
 .mail-window {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px 8px;
+    flex-direction: column;
+    gap: 2px;
+}
+.mail-window-end {
+    /* A date range is two dates: the second one carries the arrow, so a wrap never
+       separates a mark from the thing it points at. */
+    white-space: nowrap;
 }
 .mail-gifts-cell {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px 12px;
+    /* One row of art, never a column of it: with the items written as full lines the
+       cell stacked a 48px tile and a two-line name per gift, and one mailing stood 156px
+       in a table of 82px rows. */
+    flex-wrap: nowrap;
+    gap: 6px;
     align-items: center;
 }
 .mail-gifts-cell .item-line {
     min-width: 0;
     flex: 0 1 auto;
 }
+/* A gift in a table cell is a row thumbnail, not a tile: the tile size is the one
+   artwork is presented at, and at 64px one gift made its row 180px tall — three times
+   the row beside it. 48 is the row step every other table draws its art at. */
+.mail-gifts-cell .item-icon {
+    inline-size: var(--icon-row);
+    block-size: var(--icon-row);
+}
 
+/* A page of preferences is a column, not a page: eight rows of a label, a word and a
+   control do not need 1400px, and stretched to the page width the label sat 840px from
+   its own select with the help line running under the gap. */
+.settings-page {
+    max-inline-size: 760px;
+}
 .mail-page {
     gap: 22px;
 }
@@ -898,18 +2333,44 @@
     margin-top: 2px;
     margin-bottom: 12px;
 }
+/* Eight columns plus a sticky action column did not fit a 1091px table, so the labels
+   here were once allowed to wrap. One two-line label ("Delivery window · Europe/Kiev")
+   made this header 72px where every other table's is 42px, and the zone it carried is
+   already printed beside every date below it: the label is one line now, and the window
+   column takes its width from those dates. */
+.mail-gifts-cell .mail-gift-more {
+    color: var(--muted);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+}
+/* "+1 6 units" read as one number until a middot stood between the count of gifts this
+   cell could not draw and the count of units the mailing sends. */
+.mail-gifts-cell .mail-gift-more + .muted::before {
+    content: '·';
+    margin-inline-end: 6px;
+    color: var(--line-bright);
+}
+/* The row carries two controls, not four: "Recipients" and "Duplicate" live in the
+   letter the subject opens. Four of them in this cell either wrapped into a 2x2 block,
+   which made a mailing row 105px tall and 180px on the row with a gift, or held the
+   table wider than its panel. The generic row-action rules size this column now. */
 .mail-table td,
 .mail-table th {
-    padding-right: 16px;
-    padding-left: 16px;
+    /* 16px of side padding in eight columns was 256px of air, and the table needed
+       every one of them to fit the panel. */
+    padding-right: 10px;
+    padding-left: 10px;
 }
 .mail-table td {
     padding-top: max(var(--row), 10px);
     padding-bottom: max(var(--row), 10px);
 }
 .mail-table th {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    /* No vertical padding here: the sortable header's own button carries 10px top and
+       bottom on every table, and adding a second 10px above and below made this header
+       row 60px where the rest of the console's are 42px. */
+    padding-top: 0;
+    padding-bottom: 0;
 }
 .mail-compose-split {
     display: grid;
@@ -936,8 +2397,433 @@
     margin-left: 4px;
     color: var(--muted);
 }
-@media (max-width: 760px) {
+/* The split is a desktop convenience: below 900px the form is one column, so the
+   letter and the fields you type it into are visible at the same time. 760px was
+   too late — 844x390 is the tightest supported size and it fell in the two-column
+   branch with a 351px-tall dialog. */
+@media (max-width: 900px) {
     .mail-compose-split {
         grid-template-columns: minmax(0, 1fr);
+    }
+    .mail-preview {
+        max-block-size: 12rem;
+    }
+    .mail-compose-split textarea {
+        min-height: 160px;
+    }
+}
+
+/* Direct-mail recipients: a checkbox list with the account and online state
+   beside the name, scrollable so a large roster stays usable. */
+.mail-recipients {
+    display: grid;
+    gap: 2px;
+    /* A roster box five rows tall cannot be searched through; give it the height
+       of the screen it is on and let it scroll. */
+    max-height: min(46dvh, 340px);
+    overflow: auto;
+    padding: 6px;
+    background: var(--inset);
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius-control);
+}
+.mail-recipient {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+.mail-recipient:hover {
+    background: var(--raised);
+}
+.mail-recipient input {
+    inline-size: 16px;
+    block-size: 16px;
+    accent-color: var(--cyan);
+}
+.mail-recipient-name {
+    display: grid;
+    line-height: 1.3;
+}
+.mail-recipient-name small {
+    font-size: 11.5px;
+}
+.mail-templates {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+}
+.mail-templates small {
+    align-self: center;
+    margin-right: 4px;
+}
+/* A broken keypair outranks every other fact on the page, so it opens the panel in
+   the danger ink; the ordinary case says nothing at all. */
+.identity-warning {
+    margin: 0 0 12px;
+    padding: 9px 12px;
+    border-left: 3px solid var(--bad);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--bad) 12%, transparent);
+    color: var(--text);
+    font-size: 12.5px;
+    line-height: 1.55;
+    max-inline-size: 88ch;
+}
+.identity-warning[hidden] {
+    display: none;
+}
+dd .bad {
+    color: var(--bad);
+    font-weight: 600;
+}
+/* Learned recipes: one row per recipe, the item art first and the name being the
+   route into it. The rule between rows went with the borders: two words on a
+   hairline is a table drawn by hand, and a hover fill says which row is which. */
+.recipe-list {
+    display: grid;
+    gap: 2px;
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.recipe-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 6px;
+    border-radius: var(--radius-control);
+}
+.recipe-row:hover {
+    background: var(--raised);
+}
+.recipe-row .link {
+    padding: 0;
+    text-align: start;
+}
+/* The row an inspector is describing says so, in both the table and the pane. */
+.data-table tr.inspected > td {
+    background: color-mix(in srgb, var(--cyan) 12%, transparent);
+}
+.data-table tr.inspected > td:first-child {
+    box-shadow: inset 3px 0 0 var(--cyan);
+}
+
+/* A landscape phone is the tightest case, and it comes last: these rules have to beat
+   the width-based heights above, so the shell takes what is left of the viewport and
+   the prompt stays on screen. */
+@media (max-height: 470px) {
+    /* A touch screen has no Ctrl, no Tab and no arrows, so the key legend is a list of
+       keys this device cannot press. `help` is how the commands are found here, and the
+       banner says so. */
+    .terminal-hint {
+        display: none;
+    }
+    /* 205px is what the app header and the page heading take above the shell on a
+       landscape phone; the remainder is the shell, so nothing scrolls and the prompt
+       sits on screen with about five lines of output above it. */
+    .terminal-fill,
+    .console-workspace {
+        height: calc(100dvh - 205px);
+        min-height: 150px;
+    }
+    .terminal-bar {
+        padding: 2px 10px;
+    }
+    /* One row of controls, scrolled sideways if it must: letting the search wrap
+       onto its own line cost 108px of a 390px-tall screen and left the pane with a
+       single line of output. */
+    .terminal-tools {
+        flex: 0 0 auto;
+        min-block-size: 40px;
+        flex-wrap: nowrap;
+        gap: 6px;
+        padding: 2px 8px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .terminal-tools::-webkit-scrollbar {
+        display: none;
+    }
+    /* The field is the only shrinkable item in a nowrap bar, so it used to absorb the
+       whole deficit: at 844x390 it drew 99px wide, 75px of content box against a 94px
+       placeholder, and read "Search ou" while the sideways scroll the rule above
+       intends never engaged. A fixed width makes the bar overflow and scroll, which
+       is the point of nowrap here. */
+    .terminal-tools input[type='search'] {
+        flex: 0 0 auto;
+        inline-size: 148px;
+        order: 0;
+    }
+    /* A scroll container clips what it contains, and the bar is one here: the More
+       menu's popover painted into the clip and disappeared, which would have hidden
+       the very links this size moves into it. While the menu is open the bar stops
+       scrolling — there is nothing left to scroll for, since the strip above is what
+       made it overflow. */
+    .terminal-tools:has(.terminal-menu[open]) {
+        overflow: visible;
+    }
+    /* The menu holds more rows than a 390px-tall screen has below the bar, so it takes
+       the height that is there and scrolls inside itself instead of running off the
+       bottom edge — the same reason it opens flush under the toggle. */
+    .terminal-menu-body {
+        max-block-size: calc(100dvh - 190px);
+        overflow-y: auto;
+        /* Four pixels a side buys the third action its whole row below the links in a
+           390px-tall window; six left it nine pixels short and half clipped. */
+        padding: 4px;
+    }
+    /* No select floor here: with `flex: 0 0 auto` and `inline-size: auto` a select is
+       as wide as its widest option ("All (12)" 110px, "All time" 146px at 16px type),
+       so a 72px floor never bound. The portrait clipping came from a fixed 74px
+       inline-size, not from this. */
+    .terminal-tools button {
+        padding-inline: 7px;
+    }
+    .terminal-body {
+        min-block-size: 60px;
+        padding: 4px 10px;
+    }
+    .terminal-status {
+        padding: 1px 10px;
+    }
+    /* The page heading above already names the page, so a bar that only carries a title
+       is the first thing to go on a 390px-tall screen. */
+    .terminal-bar {
+        display: none;
+    }
+    /* The console's bar is not a title: it holds the pane's own menu - Copy, Export,
+       Clear, the answers/server-log switch - so hiding it left the page with no
+       reachable action at all. It loses the pulse light and the counter instead, and
+       takes its height from its tallest child: `26px` plus the coarse pointer's 44px
+       floor drew the menu pill half outside the bar, over the first line of output. */
+    .console-workspace .terminal-bar {
+        display: flex;
+        block-size: auto;
+        min-block-size: 26px;
+        padding-block: 0;
+        /* `flex: none`, because a bar that may shrink is a bar whose 44px menu pill is
+           drawn 9px outside it once a full pane makes the shell's children overflow:
+           the pill then crosses the top rule and covers the first line of output. The
+           body scrolls; the bar keeps the height of its tallest control. */
+        flex: none;
+    }
+    .console-workspace .terminal-bar .terminal-led {
+        display: none;
+    }
+    /* The "More" summary sat 23px taller than the buttons beside it and pushed the
+       strip to 63px; it is a control like its neighbours, so it measures like one. */
+    .terminal-menu {
+        align-self: center;
+    }
+    .terminal-menu-toggle {
+        display: flex;
+        align-items: center;
+        min-block-size: 32px;
+        padding-block: 0;
+    }
+}
+
+/* The heading is paid for on every screen, and on a 390px-tall viewport it left the
+   first table row below the fold: below 900px wide the description joins the title
+   line instead of owning one, and on a landscape phone the heading keeps its name. */
+@media (max-width: 900px) {
+    .page-heading {
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+    }
+    /* The page keeps the sentence that says what it is for; a phone was shown a bare
+       name. Two lines is the whole of it at this width, and a short viewport drops it
+       in the rule below instead. */
+    .page-description {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+    }
+}
+@media (max-height: 470px) {
+    .page-heading {
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+    }
+    .page-description {
+        display: none;
+    }
+    main {
+        padding-top: 12px;
+    }
+}
+
+/* Every control the pane offers is a tap target, not only the prompt: Tail measured
+   39x36 in landscape, on the exact control you reach for when the tail runs away. */
+@media (max-width: 900px) {
+    .terminal-tools button,
+    .terminal-tools select,
+    .terminal-menu-toggle {
+        min-block-size: 44px;
+    }
+}
+
+/* The delivery explanation is an aside, not a paragraph above every list. */
+/* The delivery counts are one line above the list they describe. As a panel they cost
+   262px and pushed the first campaign row past the fold. */
+.mail-status-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.mail-status-strip > * {
+    flex: 0 0 auto;
+}
+/* The counts toolbar is the one wide item in the strip: without a shrink it kept its
+   max-content width and pushed the page 163px sideways on a phone. */
+.mail-status-strip > .toolbar {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+}
+.mail-status-strip .mail-guidance {
+    margin: 2px 0 0;
+    flex: 1 1 100%;
+}
+.mail-guidance {
+    font-size: 12.5px;
+}
+.mail-guidance summary {
+    color: var(--muted);
+    cursor: pointer;
+}
+.mail-guidance p {
+    margin: 6px 0 0;
+    max-width: 72ch;
+}
+/* The four delivery counts. As four badges they read as one sentence ("0 active 0
+   scheduled 0 ended 0 cancelled") with the figure and its label at the same weight;
+   as counters the numbers line up and can be compared at a glance. */
+.mail-counters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    margin: 0;
+}
+.mail-counter {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 0 14px;
+    border-left: 1px solid var(--line);
+}
+.mail-counter:first-child {
+    padding-inline-start: 0;
+    border-left: 0;
+}
+.mail-counter dt {
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+.mail-counter dt.is-live {
+    color: var(--good);
+}
+.mail-counter dd {
+    margin: 0;
+    color: var(--muted);
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+}
+/* The reach sentence sits under the counters, on its own line and on the strip's
+   leading edge: sharing the counters' row pushed it to the far end of the panel, where
+   it read as another control's label. */
+.mail-reach {
+    flex: 1 1 100%;
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+/* The image library is a grid of what is actually on the server: an upload field and a
+   sentence left the picker as the only inventory, so an operator could not see what a
+   name referred to without selecting it. */
+.news-library {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+.news-library-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 4px;
+    padding: 8px;
+    text-align: left;
+    white-space: normal;
+    background: var(--surface);
+    border: 1px solid var(--line-bright);
+}
+.news-library-tile img {
+    inline-size: 100%;
+    block-size: 72px;
+    object-fit: contain;
+    background: var(--inset);
+    border-radius: var(--radius);
+}
+.news-library-name {
+    font-size: 11.5px;
+    overflow-wrap: anywhere;
+}
+.news-library-tile small {
+    font-size: 11px;
+    line-height: 1.3;
+}
+
+/* A finger is not a mouse, and this is the last stylesheet, so the selector can name
+   every control the earlier files sized down: `td button` and `.pagination button`
+   used to beat a plain `button` rule declared in base.css, which meant the documented
+   44px target never reached the row actions a phone actually taps. */
+@media (pointer: coarse) {
+    button,
+    .button,
+    select,
+    input[type='search'],
+    td button,
+    th button,
+    .pagination button,
+    .pagination select,
+    td .button,
+    th .button,
+    button.sm,
+    .button.sm,
+    #sidebar footer button,
+    .tabs button,
+    .terminal-tools button,
+    .terminal-tools select,
+    .terminal-menu-toggle,
+    /* The box around the toggle, not only the toggle: it was fixed at 36px, so a 44px
+       menu button stood 4px proud of its own container and 2px outside the bar that
+       centred it. */
+    .terminal-menu,
+    /* A link-styled control is a control: `button.link` sets its own 24px floor at
+       (0,1,1), which outranks the bare `button` selector above, so the audit
+       drill-downs and the Logs related-page buttons stayed at 24px on a phone. Prose
+       links (`a.link` inside a sentence) keep the inline exception and are not sized
+       here — a 44px tall link in a paragraph breaks the paragraph. */
+    button.link,
+    .button.link,
+    /* The drawer's page switcher is the most-tapped control on a phone, and it was
+       the one target the list above left out: `#navigation a` is padding-only, so it
+       stood at ~35px, and the short-viewport compaction in layout.css cut it to ~27px
+       on every landscape phone. `min-block-size` outranks the padding either way. */
+    #navigation a {
+        min-block-size: var(--control-lg);
     }
 }

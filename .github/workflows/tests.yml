@@ -1,9 +1,20 @@
 name: Standalone tests
 
 # The Gradle build stays test-free by design; this workflow is the CI gate that
-# runs the standalone unit programs. Version tags are handled once by
-# release.yml, which runs the packaged integration gates while packaging the
-# release, so a tag does not start a second, duplicate suite here.
+# runs the standalone unit programs and the WebUI contract tests. Version tags are
+# handled once by release.yml, which runs the packaged integration gates while
+# packaging the release, so a tag does not start a second, duplicate suite here.
+#
+# Two jobs, because they answer different questions at very different costs:
+#
+#  - `webui` reads the frontend modules and stylesheets directly. 45 assertions over
+#    1,400 lines of CSS/JS contracts run in about one second, and until this job
+#    existed nothing in CI ever executed them.
+#  - `unit` runs 268 standalone Java programs. They share one JVM and one process at a
+#    time (several bind a fixed port), so the wall time is the sum of all of them:
+#    ~40 minutes on one runner. Four shards on four runners divide that by four
+#    without changing a single program; `-PunitShard=i/4` selects every fourth program
+#    from the same sorted list, so the shards are deterministic and disjoint.
 on:
   pull_request:
     paths-ignore:
@@ -30,10 +41,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  webui:
+    name: WebUI contract tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run WebUI contract tests
+        shell: bash
+        run: |
+          # The suite reads src/webui (a tracked symlink to frontend/), so it needs no
+          # build step and no game installation.
+          node --test src/test/webui/*-test.mjs
+
+      - name: Check the frontend modules parse
+        shell: bash
+        run: |
+          for module in frontend/assets/*.js frontend/assets/components/*.js \
+                        frontend/assets/pages/*.js; do
+            node --check "$module"
+          done
+
   unit:
-    name: Unit programs (Java 25)
+    name: Unit programs (${{ matrix.shard }}/4)
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -45,8 +88,8 @@ jobs:
           java-version: '25'
           cache: gradle
 
-      - name: Run standalone unit programs
+      - name: Run standalone unit programs (shard ${{ matrix.shard }})
         shell: bash
         run: |
           chmod +x ./gradlew
-          ./gradlew --no-daemon testUnit
+          ./gradlew --no-daemon testUnit -PunitShard=${{ matrix.shard }}/4

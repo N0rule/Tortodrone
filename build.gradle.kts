@@ -169,7 +169,14 @@ fun preparation(name: String, command: String) = tasks.register<JavaExec>(name) 
     else providers.gradleProperty("contentOutput").orElse(
         providers.gradleProperty("defaultsOutput")).getOrElse(publicOutput.dir("content").asFile.absolutePath)
     args(command, output)
-    // Always recheck source integrity and fill missing files; never claim ownership of defaults.
+    // Never claim ownership of the defaults it fills, but do declare what it reads and
+    // writes: without inputs/outputs this ran on every Java task (20s each) even when
+    // no content byte had changed. Gradle's output snapshot still notices a hand-edited
+    // or missing deployment file, so the "fill missing files" contract holds.
+    inputs.dir("content")
+    inputs.property("command", command)
+    outputs.dir(output)
+    outputs.cacheIf { false }
 }
 val validateContent = tasks.register<JavaExec>("validateContent") {
     group = "verification"
@@ -179,6 +186,18 @@ val validateContent = tasks.register<JavaExec>("validateContent") {
     mainClass.set("org.tortodrone.resources.ContentManager")
     workingDir = projectDir
     args(projectDir.absolutePath)
+    // Content validation reads the source tree and writes nothing, so its result is a
+    // stamp: 17s on every Java task was the single largest cost in the gate.
+    val stamp = layout.buildDirectory.file("content-validation.stamp")
+    inputs.dir("content")
+    inputs.dir("config")
+    outputs.file(stamp)
+    outputs.cacheIf { false }
+    doLast {
+        val file = stamp.get().asFile
+        file.parentFile.mkdirs()
+        file.writeText("validated\n")
+    }
 }
 // Fast content guard: fail on exact-duplicate text files that are not accepted in the allowlist.
 val checkContentDuplication = tasks.register<JavaExec>("checkContentDuplication") {
@@ -189,6 +208,18 @@ val checkContentDuplication = tasks.register<JavaExec>("checkContentDuplication"
     mainClass.set("ContentAudit")
     workingDir = projectDir
     args("check")
+    // Same treatment as validateContent: this reads the content tree and writes nothing,
+    // so an unchanged tree should not pay for it on every Java task.
+    val stamp = layout.buildDirectory.file("content-duplication.stamp")
+    inputs.dir("content")
+    inputs.file("scripts/content/duplicate-allowlist.txt")
+    outputs.file(stamp)
+    outputs.cacheIf { false }
+    doLast {
+        val file = stamp.get().asFile
+        file.parentFile.mkdirs()
+        file.writeText("checked\n")
+    }
 }
 val reportContentDuplication = tasks.register<JavaExec>("reportContentDuplication") {
     group = "verification"
@@ -340,9 +371,47 @@ val selectedUnitPrograms = requestedUnitTests?.split(',')?.map { requested ->
         throw GradleException("Unknown or ambiguous unit test '$name'; use a test class name, separated by commas")
     matches.single()
 }?.distinct() ?: unitProgramNames
+// 268 standalone programs in one JVM is the gate's wall time: a measured full run takes
+// 1883 s of program time (31m23s, wall 31m26s on an i5-8250U). `-PunitShard=i/n` slices
+// that into separate runners instead of paying the sum on one machine.
+// Shards are balanced by *time*, not by count, because the tail is a few simulations:
+// ContentMigrationTest (348 s) and SpatialIndexDifferentialTest (319 s) alone are 35% of
+// the gate, and the ten slowest programs are 53%. Assigning every fourth program by index
+// gives bins of 242/778/322/540 s; packing longest-first into the lightest bin gives four
+// bins of 471 s each, which is the floor set by "one program cannot be split".
+// Weights come from `scripts/tests/unit-timings.properties` (checked in, so CI and fresh
+// checkouts balance without a prior run), overridden by build/unit-timings.properties once
+// a local run has recorded fresher numbers. Refresh the checked-in file after re-running
+// `./gradlew testUnit`: it is written on every run.
+val unitTimings = layout.buildDirectory.file("unit-timings.properties")
+fun parseUnitTimings(file: File): Map<String, Long> =
+    if (!file.isFile) {
+        emptyMap()
+    } else {
+        file.readLines()
+            .mapNotNull { line ->
+                val parts = line.split('=')
+                if (parts.size == 2) parts[0].trim() to parts[1].trim().toLongOrNull() else null
+            }
+            .filter { (name, nanos) -> name.isNotEmpty() && nanos != null && nanos > 0 }
+            .associate { (name, nanos) -> name to nanos!! }
+    }
+// Fresh numbers win per program, missing names fall back to the checked-in baseline, so a
+// focused run (`-PunitTests=WebUiTest`) records one program without degrading the rest.
+val recordedUnitTimings: Map<String, Long> =
+    parseUnitTimings(layout.projectDirectory.file("scripts/tests/unit-timings.properties").asFile) +
+        parseUnitTimings(unitTimings.get().asFile)
+val requestedShard = providers.gradleProperty("unitShard").orNull
+val shardSelection = requestedShard?.split('/')?.map { it.trim().toIntOrNull() }?.let { parts ->
+    val index = parts.getOrNull(0)
+    val count = parts.getOrNull(1)
+    if (index == null || count == null || count < 1 || index < 1 || index > count)
+        throw GradleException("Use -PunitShard=<1..count>/<count>, for example -PunitShard=2/4")
+    index - 1 to count
+} ?: (0 to 1)
 val testUnit = tasks.register<JavaExec>("testUnit") {
     group = "verification"
-    description = "Run standalone unit programs; select classes with -PunitTests=A,B."
+    description = "Run standalone unit programs; select classes with -PunitTests=A,B and slice with -PunitShard=i/n."
     usesService(regressionExecution)
     dependsOn(buildServer, tasks.testClasses)
     javaLauncher.set(launcher25)
@@ -351,7 +420,49 @@ val testUnit = tasks.register<JavaExec>("testUnit") {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     workingDir = projectDir
     useBuildTemp()
-    args(selectedUnitPrograms)
+    val (shardIndex, shardCount) = shardSelection
+    val timings = recordedUnitTimings
+    val programs =
+        when {
+            shardCount == 1 -> selectedUnitPrograms
+            timings.isEmpty() ->
+                // No timing record yet: fall back to index modulo, which is at least
+                // deterministic and loses nothing.
+                selectedUnitPrograms.filterIndexed { position, _ -> position % shardCount == shardIndex }
+            else -> {
+                // Two passes, because a record is always incomplete: a program that has
+                // never been timed must not be treated as free, or one bin takes all of
+                // them. The untimed ones spread round-robin first; then the timed ones
+                // go longest-first into the lightest bin, so the shard walls land within
+                // one slow program of each other.
+                val bins = List(shardCount) { mutableListOf<String>() }
+                val loads = LongArray(shardCount)
+                val unknown = selectedUnitPrograms.filter { timings[it] == null }
+                val known = selectedUnitPrograms.filter { timings[it] != null }
+                unknown.forEachIndexed { position, name -> bins[position % shardCount].add(name) }
+                for (name in known.sortedByDescending { timings[it] ?: 0L }) {
+                    val lightest = loads.indices.minBy { loads[it] }
+                    bins[lightest].add(name)
+                    loads[lightest] += timings[name] ?: 0L
+                }
+                bins[shardIndex].sorted()
+            }
+        }
+    if (programs.isEmpty())
+        throw GradleException("Shard ${shardIndex + 1}/$shardCount selects no unit program")
+    inputs.property("programs", programs)
+    // The shard is reported by the suite itself: a doFirst closure here captured script
+    // scope and invalidated the configuration cache.
+    systemProperty("unitShard", "${shardIndex + 1}/$shardCount")
+    systemProperty("unitPrograms", selectedUnitPrograms.size.toString())
+    // Where the suite records durations: only a whole-suite run writes it, so a shard
+    // cannot change the selection of another shard.
+    systemProperty("unitTimings", unitTimings.get().asFile.absolutePath)
+    systemProperty(
+        "unitRecordTimings",
+        (shardCount == 1 && selectedUnitPrograms.size == unitProgramNames.size).toString()
+    )
+    args(programs)
 }
 val serverPath = publicOutput.file("tortodrone.jar").asFile.absolutePath
 val integrationPrograms = listOf(

@@ -1,10 +1,62 @@
 * {
     box-sizing: border-box;
 }
+/* One scrollbar for the whole product, drawn by the app: a 10px track, a pill thumb, and
+   no stepper arrows — the arrows are exactly what made a themed panel look like an
+   application window. */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--line-bright);
+    background-clip: content-box;
+    border: 3px solid transparent;
+    border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text);
+    background-clip: content-box;
+}
+::-webkit-scrollbar-button {
+    display: none;
+}
+/* The console keeps its own two tokens: green-black, not navy. `background-color`, not
+   the `background` shorthand, or the 3px transparent inset above goes with it and the
+   console's thumb draws 10px wide where every other one draws 4px. */
+.terminal-body::-webkit-scrollbar-thumb {
+    background-color: var(--term-scroll);
+}
+.terminal-body::-webkit-scrollbar-thumb:hover {
+    background-color: var(--term-fg);
+}
+/* The engines without the pseudo-element — Firefox — get the same bar through the
+   standard properties. They go behind the guard because they are not harmless where the
+   pseudo-element does exist: Chromium ignores `::-webkit-scrollbar` on any element whose
+   `scrollbar-color` is not `auto`, and `scrollbar-color` inherits. Declared on `:root`
+   unguarded, it reached every scroller in the product and put the platform bar, stepper
+   arrows and all, back onto the console, every dialog body and the page itself — with
+   the rules above still in the file, matching nothing. */
+@supports not selector(::-webkit-scrollbar) {
+    :root {
+        scrollbar-width: thin;
+        scrollbar-color: var(--line-bright) transparent;
+    }
+    /* The console's bar is its own two tokens: green-black, not navy. */
+    .terminal-body {
+        scrollbar-color: var(--term-scroll) var(--term-scroll-bg);
+    }
+}
 [hidden] {
     display: none !important;
 }
 html {
+    /* A deep link lands on its target, not under the sticky top bar. */
+    scroll-padding-top: 64px;
     background: var(--canvas);
     scroll-behavior: smooth;
 }
@@ -19,17 +71,27 @@ h3,
 p {
     margin: 0 0 12px;
 }
+/* The ramp's "23 page title" step, not the "32 page hero" one: the largest type in a
+   console belongs to the one thing the operator came to read, and a page name is
+   already in the nav and in the tab. 32 is spent only where a page has a hero — the
+   running state, a knight's name. */
 h1 {
-    font-size: 32px;
+    font-size: 23px;
+    font-weight: 700;
     line-height: 1.2;
-    letter-spacing: -0.6px;
+    letter-spacing: -0.4px;
 }
 h2 {
-    font-size: 19px;
+    font-size: 20px;
     line-height: 1.3;
 }
+/* A subheading opens a section, so it owns the space above it: flush against the row
+   it followed, "Promotions" read as one more fact in the list that just ended. The
+   space below stays smaller than the space above, which is what makes the two read as
+   one block. */
 h3 {
-    font-size: 15px;
+    font-size: 16px;
+    margin-block: 20px 10px;
 }
 p {
     max-width: 78ch;
@@ -37,6 +99,11 @@ p {
 a {
     color: var(--cyan);
     text-decoration: none;
+}
+/* The UA's `smaller` put 9.58px, 10.83px and 11.67px on the page beside a ramp that
+   documents one caption size. */
+small {
+    font-size: 11.5px;
 }
 a:hover {
     text-decoration: underline;
@@ -47,67 +114,526 @@ select,
 textarea {
     font: inherit;
 }
+/* One control language: a neutral surface button by default, one filled primary
+   accent per surface, a quiet text button, and a filled destructive action that
+   cannot be confused with either. Sizes come from the control tokens so toolbars
+   and dialog footers share a height. */
 button,
 .button {
+    --control-bg: var(--raised);
+    --control-fg: var(--text);
+    /* A control is a fill, not an outline. Its edge is the step between its own fill
+       and the surface under it, which is what makes a toolbar read as buttons instead
+       of as a form: four bordered boxes side by side draw four rectangles, and the eye
+       counts edges before it reads labels. */
+    --control-border: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-block-size: var(--control);
+    padding: 0 16px;
     cursor: pointer;
-    padding: 8px 14px;
-    color: var(--action-text);
-    background: var(--action);
-    border: 1px solid var(--action);
-    border-radius: var(--radius);
-    font-weight: 700;
-    box-shadow: inset 0 1px #ffffff40;
+    color: var(--control-fg);
+    background: var(--control-bg);
+    /* Transparent rather than absent: the border box is what gives every variant the
+       same height, and a control that drops it sits 2px shorter than its neighbour. */
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    /* 500, not 600: with system-ui at 13px, six buttons and four headings all at 600
+       made weight say nothing. Controls are 500, headings 600, the page title 700. */
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    box-shadow: none;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease,
+        box-shadow 120ms ease;
+}
+/* Hover is a fill step, not a second accent: cyan stays the colour of focus and of
+   the pressed state, so "hovered", "focused" and "on" stop looking the same. */
+button:not(:disabled):not([aria-disabled='true']):hover,
+.button:not(:disabled):not([aria-disabled='true']):hover {
+    background: color-mix(in srgb, var(--raised) 78%, var(--line-bright));
+}
+/* A press steps the control's own fill rather than painting every variant slate. One
+   shared rule did the latter, and a gold primary went grey under the same dark ink —
+   measured 1.41:1, so the only primary on the page vanished while it was being
+   pressed. Each variant mixes toward the surface it sits on, keeping its own colour
+   and its own ink. */
+button:not(:disabled):not([aria-disabled='true']):active,
+.button:not(:disabled):not([aria-disabled='true']):active {
+    background: color-mix(in srgb, var(--control-bg) 88%, var(--inset));
+    box-shadow: none;
+}
+/* The variant rules are spelled out because a hover rule for the same variant is
+   declared later at the same specificity: `:where()` keeps hover at (0,3,1), so a
+   bare `:active` rule lost to it and a press showed the hover fill. A class in the
+   selector is what puts the press back on top. */
+button.primary:not(:disabled):not([aria-disabled='true']):active,
+.button.primary:not(:disabled):not([aria-disabled='true']):active {
+    background: color-mix(in srgb, var(--action) 88%, var(--action-text));
+}
+ /* The press has to step past the hover, not back to the resting fill: mixed 12%
+   toward --inset it landed 2/255 from the rest fill, so press-and-hold and
+   press-then-drag-off looked the same and the button could not tell you it was
+   still held. It deepens toward the line colour, as the quiet press above does. */
+button.secondary:not(:disabled):not([aria-disabled='true']):active,
+.button.secondary:not(:disabled):not([aria-disabled='true']):active {
+    background: color-mix(in srgb, var(--raised) 55%, var(--line-bright));
+}
+button.danger:not(:disabled):not([aria-disabled='true']):active,
+.button.danger:not(:disabled):not([aria-disabled='true']):active {
+    background: color-mix(in srgb, var(--bad) 26%, var(--surface));
+}
+/* A quiet control has no fill to step, so its press deepens its own hover: the two
+   states measured identical, and a click on Copy link or Sign out landed with no
+   acknowledgement before the result appeared. */
+button.quiet:not(:disabled):not([aria-disabled='true']):active,
+.button.quiet:not(:disabled):not([aria-disabled='true']):active {
+    background: color-mix(in srgb, var(--raised) 42%, var(--line-bright));
+    box-shadow: none;
+}
+button:focus-visible,
+.button:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+/* Only a control that cannot act dims, and it dims by colour rather than by
+   opacity: a faded label fell under 2:1 on the dark theme, while muted ink on the
+   control's own fill stays readable. A pending one keeps its colour and grows a
+   spinner (below), because a greyed-out button reads as "broken", not "busy". */
+button:disabled,
+button[aria-disabled='true'],
+.button[aria-disabled='true'] {
+    cursor: not-allowed;
+    box-shadow: none;
+    /* Off is a state, and it has to be visible from a metre away: muted ink on a mixed
+       fill measured six RGB steps from the enabled surface beside it, so a control that
+       could not run looked exactly like one that could. The fill goes, the ink drops
+       under the muted step, and the label stays above 4:1 on the panel — dim enough to
+       read as "not now", legible enough to read at all. */
+    color: color-mix(in srgb, var(--muted) 62%, var(--surface));
+    background: transparent;
+}
+/* The reason a control is off, written beside it. Row actions keep it to the
+   title and the description: a caption in every cell would wreck the columns. */
+.unavailable-reason {
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--muted);
+    align-self: center;
+    max-inline-size: 44ch;
+}
+/* A reason that is always on costs a whole line of a phone screen to explain a
+   control nobody is reaching for, so outside a table it follows hover and focus. */
+.toolbar > .unavailable-reason {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
     white-space: nowrap;
 }
-button:not(:disabled):hover {
-    filter: brightness(1.1);
+.toolbar:hover > .unavailable-reason,
+.toolbar:focus-within > .unavailable-reason,
+.toolbar:has(button:focus-visible) > .unavailable-reason {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    clip-path: none;
+    white-space: normal;
 }
-button:disabled {
-    cursor: default;
-    opacity: 0.5;
+td .unavailable-reason,
+th .unavailable-reason {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
-button.secondary,
-button.quiet {
+/* A row action's reason appears when the operator reaches for the row: a permanent
+   caption made one empty row 305px tall and clipped the buttons beside it. */
+td .unavailable-reason.shown,
+th .unavailable-reason.shown {
+    display: none;
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    margin-block-start: 3px;
+    max-inline-size: 26ch;
+    font-size: 11px;
+}
+tr:hover td .unavailable-reason.shown,
+tr:focus-within td .unavailable-reason.shown,
+tr:hover th .unavailable-reason.shown,
+tr:focus-within th .unavailable-reason.shown {
+    display: block;
+}
+/* Shown as a floating note: revealing it inside the cell re-laid the whole table row
+   and moved the button the operator was reaching for. */
+td .unavailable-reason.shown {
+    position: absolute;
+    inset-block-start: calc(100% - 8px);
+    inset-inline-end: 6px;
+    z-index: 4;
+    padding: 4px 7px;
     background: var(--raised);
-    border-color: var(--line-bright);
-    color: var(--text);
+    border: 1px solid var(--line-bright);
+    border-radius: var(--radius);
+    /* A 38% black halo in the light theme was 2.7x heavier than the themed elevation
+       beside it: the shadow is a theme token, like every other one here. */
+    box-shadow: var(--elev-2);
 }
-button.quiet {
+/* A reason asked for on a page toolbar is permanent and takes its own line: the
+   operator needs it before they reach for the button, and hover is not a channel a
+   phone has. */
+.toolbar > .unavailable-reason.shown {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    clip-path: none;
+    white-space: normal;
+    order: 99;
+    flex-basis: 100%;
+    max-inline-size: none;
+}
+/* A disabled note in a toolbar takes its own line, so the controls it sits between
+   still read as one group. */
+.server-strip .toolbar .unavailable-reason {
+    order: 99;
+    flex-basis: 100%;
+    max-inline-size: none;
+}
+/* A pending control keeps its label and grows a spinner instead of going blank. */
+button[aria-busy='true'],
+.button[aria-busy='true'] {
+    /* The busy flag also sets aria-disabled, and that rule's grey repaint made every
+       spinner look broken rather than working. Declared later at equal specificity, so
+       the ink of the action survives while the spinner turns. */
+    cursor: progress;
+    opacity: 1;
+    color: var(--control-fg);
+    background: var(--control-bg);
+    border-color: var(--control-border);
+    /* No `pointer-events: none`: it made `cursor: progress` a lie, and ui.js already
+       refuses a second press while the control is busy. */
+}
+/* The disabled rule clears the shadow, so a busy primary lost its only lift while it
+   was the most important control on screen. */
+button[aria-busy='true']:where(.primary),
+.button[aria-busy='true']:where(.primary) {
+    box-shadow: var(--elev-2);
+}
+button[aria-busy='true']::before,
+.button[aria-busy='true']::before {
+    content: '';
+    inline-size: 12px;
+    block-size: 12px;
+    border: 2px solid currentColor;
+    border-block-start-color: transparent;
+    border-radius: 50%;
+    animation: control-spin 700ms linear infinite;
+}
+@keyframes control-spin {
+    to {
+        transform: rotate(1turn);
+    }
+}
+/* A frozen arc is worse than no spinner, so users who ask for no motion get a
+   text ellipsis that says "still working" without animating. */
+@media (prefers-reduced-motion: reduce) {
+    button[aria-busy='true']::before,
+    .button[aria-busy='true']::before {
+        content: '…';
+        inline-size: auto;
+        block-size: auto;
+        border: 0;
+        animation: none;
+    }
+}
+html[data-motion='reduce'] button[aria-busy='true']::before,
+html[data-motion='reduce'] .button[aria-busy='true']::before {
+    content: '…';
+    inline-size: auto;
+    block-size: auto;
+    border: 0;
+    animation: none;
+}
+button.primary,
+.button.primary {
+    --control-bg: var(--action);
+    --control-fg: var(--action-text);
+    font-weight: 600;
+}
+/* `:where()` keeps the variant class out of the specificity count, so a component
+   that knows its own host (a table header, a tab) can still paint its hover: at full
+   class weight these rules beat `th button:hover` and `.tabs button:hover` and made
+   both of those comments promises the cascade did not keep. */
+button:where(.primary):not(:disabled):not([aria-disabled='true']):hover,
+.button:where(.primary):not(:disabled):not([aria-disabled='true']):hover {
+    background: var(--action-hover);
+}
+/* The neutral variant every `button()` gets by default: the same surface as a
+   plain button with a boundary that is visible on the surface it sits on. */
+button.secondary,
+.button.secondary {
+    --control-bg: var(--raised);
+    --control-fg: var(--text);
+}
+button:where(.secondary):not(:disabled):not([aria-disabled='true']):hover,
+.button:where(.secondary):not(:disabled):not([aria-disabled='true']):hover {
+    background: color-mix(in srgb, var(--raised) 74%, var(--line-bright));
+}
+button.quiet,
+.button.quiet {
+    --control-bg: transparent;
+    --control-border: transparent;
+    box-shadow: none;
+}
+button:where(.quiet):not(:disabled):not([aria-disabled='true']):hover,
+.button:where(.quiet):not(:disabled):not([aria-disabled='true']):hover {
+    /* `--raised` is the colour of the host a quiet control usually sits on (a table
+       header, a hovered row), so the fill said nothing at all there. A tint that is
+       lighter than both the surface and the raised step reads as hover either way. */
+    background: color-mix(in srgb, var(--raised) 55%, var(--line-bright));
+}
+/* Destructive is a filled tint, not a quiet button in red ink: it has to look
+   like a decision. The fill is opaque so the ink stays at 5.54:1 (dark) and
+   5.50:1 (light) whatever sits behind the control. */
+button.danger,
+.button.danger {
+    --control-bg: color-mix(in srgb, var(--bad) 16%, var(--surface));
+    --control-fg: var(--bad);
+}
+button:where(.danger):not(:disabled):not([aria-disabled='true']):hover,
+.button:where(.danger):not(:disabled):not([aria-disabled='true']):hover {
+    background: color-mix(in srgb, var(--bad) 24%, var(--surface));
+}
+/* A drill-down is a real link wearing a control: the anchor must not underline
+   over the button it draws, and a link-styled one underlines as it always did. */
+a.button,
+a.button:hover {
+    text-decoration: none;
+    color: var(--control-fg);
+}
+a.link {
+    text-decoration: none;
+}
+a.link:hover {
+    color: var(--cyan);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+/* A link-styled control keeps every state the bordered variants have. The underline
+   belongs to hover and keyboard focus only: a table has ten of these in one column and
+   twenty underlines in a grid of data is the loudest "unstyled admin panel" signal on
+   the page, which is what a name that opens a record was reading as. The 24px hit area
+   stays, and the cyan ink still marks it as the way in. */
+button.link,
+.button.link,
+a.link {
+    --control-bg: transparent;
+    --control-border: transparent;
+    color: var(--cyan);
+    /* Link-styled, but still a control: the audit drill-downs are 17px tall with no
+       padding, under the 24x24 minimum, and they are the way into an event. */
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 24px;
+    padding: 2px 0;
+    box-shadow: none;
+    text-align: left;
+    text-decoration: none;
+}
+button.link:not(:disabled):hover,
+.button.link:not(:disabled):hover,
+button.link:focus-visible,
+.button.link:focus-visible,
+a.link:hover,
+a.link:focus-visible {
     background: transparent;
     border-color: transparent;
-    box-shadow: none;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
-button.danger {
-    background: transparent;
-    color: var(--bad);
-    border-color: var(--bad);
+button.link:disabled,
+.button.link[aria-disabled='true'] {
+    color: var(--muted);
+    text-decoration: none;
 }
-button.link {
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-    color: var(--cyan);
+/* A toggled control (Tail, Pause) and a switch (theme, density) read as pressed,
+   not hovered: both say "this is on", so both use the same fill. */
+button[aria-pressed='true'],
+.button[aria-pressed='true'],
+button[aria-checked='true'],
+.button[aria-checked='true'] {
+    background: color-mix(in srgb, var(--cyan) 26%, var(--raised));
+    color: var(--text);
+}
+/* Hover deepens the pressed fill instead of replacing it, so a pressed control
+   never flickers back to looking unpressed. */
+button[aria-pressed='true']:not(:disabled):hover,
+.button[aria-pressed='true']:not(:disabled):hover,
+button[aria-checked='true']:not(:disabled):hover,
+.button[aria-checked='true']:not(:disabled):hover {
+    background: color-mix(in srgb, var(--cyan) 34%, var(--raised));
+    color: var(--text);
+}
+/* A switch draws its state as a track with a knob, and draws it the same way
+   everywhere: the rail's two preferences and the ones on this page set the same
+   values, and a word on the end of a wide button reads as a label rather than as a
+   state. The knob is drawn, not added as an element, so the button's own text stays
+   its accessible name and `aria-checked` stays the state. */
+button[role='switch']::after {
+    content: '';
+    flex: 0 0 auto;
+    inline-size: 32px;
+    block-size: 18px;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--muted) 30%, transparent);
+    background-image: radial-gradient(circle 7px at 10px 50%, var(--text) 99%, transparent 100%);
+    transition: background-color 120ms ease;
+}
+/* The lit track is the whole state, so the button behind it stops filling: a tinted
+   pill AND a lit track said "on" twice, and made the quietest row on the page the
+   loudest thing on it. */
+button[role='switch'][aria-checked='true'] {
+    background: var(--control-bg);
+    color: var(--control-fg);
+}
+button[role='switch'][aria-checked='true']::after {
+    content: '';
+    /* The knob keeps --text in both positions, so a switch slides rather than flips
+       colour, and the lit track is a deeper teal than a bare cyan: a knob the colour of
+       the ink needs a track it can be seen on. */
+    background-color: color-mix(in srgb, var(--cyan) 55%, var(--inset));
+    /* The knob travels to the far end of the 32px track and stays 3px inside it. Only
+       the track was changing colour before, so "on" and "off" differed by a hue shift and
+       the knob sat at the left in both — a switch whose handle never moves is a lamp. */
+    background-image: radial-gradient(circle 7px at 22px 50%, var(--text) 99%, transparent 100%);
+}
+button[role='switch'][aria-checked='true']:not(:disabled):hover {
+    background: color-mix(in srgb, var(--raised) 78%, var(--line-bright));
+}
+button.sm,
+.button.sm {
+    min-block-size: var(--control-sm);
+    padding: 0 10px;
+    font-size: 12.5px;
+    border-radius: var(--radius-control-sm);
+}
+button.lg,
+.button.lg {
+    min-block-size: var(--control-lg);
+    padding: 0 20px;
+    font-size: 14px;
+}
+button.icon,
+.button.icon {
+    inline-size: var(--control);
     padding: 0;
-    text-align: left;
+}
+button.icon.sm {
+    inline-size: var(--control-sm);
+}
+button.icon svg {
+    inline-size: 16px;
+    block-size: 16px;
+    flex: 0 0 auto;
+}
+input,
+select,
+textarea {
+    font: inherit;
+}
+/* `:user-invalid` only matches after a submit or a blur on a field the operator
+   touched, so a dialog no longer looks submittable while three fields are invalid
+   and says nothing about which. */
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid {
+    border-color: var(--bad);
+    box-shadow: 0 0 0 1px var(--bad);
 }
 input,
 select,
 textarea {
     width: 100%;
     min-width: 0;
-    padding: 9px 11px;
+    /* A field and the button beside it share one height, so a toolbar reads as a
+       row instead of a staircase. */
+    min-block-size: var(--control);
+    padding: 6px 11px;
     color: var(--text);
     background: var(--inset);
-    border: 1px solid var(--line-bright);
-    border-radius: var(--radius);
+    /* One edge language: a control is a fill, and this is the recessed one. A field
+       used to keep a hairline the buttons had dropped, so a toolbar showed a rimmed
+       search box, a rimmed select, a rimmed trigger and two filled buttons — three
+       edges saying three different things about four things that are all controls.
+       The fill carries it in both themes now (--inset is deepened in the light one so
+       a recess on a white panel still reads at a glance). */
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    transition: background-color 120ms ease;
+}
+input:hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--inset) 84%, var(--line-bright));
+}
+/* `showReason` chooses to show a reason instead of hiding it, and outside a table cell
+   there was no rule that honoured it: `.shown` was only ever un-clipped inside `td`/`th`,
+   so a toolbar control's explanation stayed invisible until the pointer or the focus
+   landed on it. A moderator's "this needs an administrator role" is exactly the case
+   that has to be readable without hovering.
+   The exclusion is on the *cell*, not on a toolbar class: `.row-actions` sits on the
+   `td` (`components/table.js:587`) and never on the toolbar (`ui.js:206`), so a
+   `.toolbar:not(.row-actions)` guard matched every toolbar, row ones included, and its
+   (0,4,0) out-ranked the floating-note rule below (0,2,1) — which turned a row's reason
+   into an in-flow box that re-laid the row on hover, the exact defect that note exists
+   to stop. */
+:not(td):not(th) > .toolbar > .unavailable-reason.shown,
+td:not(.row-actions) > .toolbar > .unavailable-reason.shown,
+th:not(.row-actions) > .toolbar > .unavailable-reason.shown {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    clip-path: none;
+    overflow: visible;
+    white-space: normal;
+    margin-inline-start: 4px;
 }
 input[type='checkbox'] {
-    width: auto;
+    /* One size, one accent colour, wherever a checkbox appears. */
+    inline-size: 16px;
+    block-size: 16px;
+    min-block-size: 0;
+    padding: 0;
     accent-color: var(--cyan);
 }
 input[type='range'] {
     padding: 0;
     accent-color: var(--gold);
+}
+/* A number field is typed into or nudged with the arrow keys; the platform's spinner
+   draws a grey stepper inside the navy recess the moment the field takes focus, which was
+   the last native control left in an otherwise themed field set. */
+input[type='number'] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
 }
 input::placeholder,
 textarea::placeholder {
@@ -132,6 +658,9 @@ label.check {
     display: flex;
     align-items: center;
     gap: 9px;
+    /* A switch's own word is one line. "Enable News" broke between its two words in a
+       toolbar cell 107px wide, which read as a two-line label above a one-line box. */
+    white-space: nowrap;
 }
 :focus-visible {
     outline: 2px solid var(--cyan);
@@ -145,7 +674,7 @@ code,
 pre,
 .mono {
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 12.5px;
 }
 pre {
     white-space: pre-wrap;
@@ -155,9 +684,38 @@ details {
     border-top: 1px solid var(--line);
     padding: 12px 0;
 }
+/* A disclosure is a control, so it is drawn like one: a word, a row height, a radius
+   and a caret, instead of a 21px browser default with a native triangle. The caret is
+   the same mark the sorted column wears, for the same reason — a shape drawn in the
+   colours the theme already has, not an invented icon. */
 summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-block-size: var(--control-sm);
+    padding: 0 12px;
     color: var(--muted);
+    border-radius: var(--radius-control-sm);
     cursor: pointer;
+    list-style: none;
+}
+summary::-webkit-details-marker {
+    display: none;
+}
+summary::after {
+    content: '';
+    inline-size: 0;
+    block-size: 0;
+    border-inline: 5px solid transparent;
+    border-block-start: 5px solid currentColor;
+    transition: transform 120ms ease;
+}
+details[open] > summary::after {
+    transform: rotate(180deg);
+}
+summary:hover {
+    color: var(--text);
+    background: var(--raised);
 }
 details pre {
     max-height: 350px;
@@ -165,7 +723,10 @@ details pre {
 }
 dl {
     display: grid;
-    grid-template-columns: minmax(100px, 1fr) 2fr;
+    /* The label column is a label column, not a third of the panel: at
+       minmax(100px, 1fr) a two-word term sat 443px from its own value, and prose
+       parked itself in the gap. */
+    grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
     gap: 8px 16px;
     margin: 0;
 }
@@ -179,10 +740,12 @@ dd {
 .error {
     color: var(--bad);
 }
+/* Caution, not gold: this must never be mistaken for the primary action. */
 .warning {
-    color: var(--gold);
+    color: var(--warn);
+    background: color-mix(in srgb, var(--warn) 10%, transparent);
     padding: 12px;
-    border: 1px solid var(--gold);
+    border: 1px solid var(--warn);
     border-radius: var(--radius);
 }
 .skip {
@@ -205,3 +768,27 @@ dd {
         transition: none !important;
     }
 }
+
+/* Users may override the system motion preference; both routes disable motion. */
+html[data-motion='reduce'],
+html[data-motion='reduce'] * {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+}
+kbd {
+    font-family: var(--mono);
+}
+time {
+    font-variant-numeric: tabular-nums;
+}
+:target {
+    scroll-margin-top: 70px;
+}
+
+/* A finger is not a mouse: on a coarse pointer every control keeps the large step,
+   because a 32px target is a miss on the surface most likely to be driven from a
+   phone. The rule lives at the end of pages.css, the last stylesheet, because a
+   single-class selector here lost to `td button` and `.pagination button` and the
+   documented touch size never applied to the controls it named. */

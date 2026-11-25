@@ -1,48 +1,215 @@
+/* The type ramp, and the only sizes the product uses. Anything that wants a new
+   size argues with this list first: ten steps, no near-duplicates.
+   10.5 micro label / 11.5 caption / 12.5 dense body / 13 control and body /
+   14 lead-in / 16 subhead / 20 section title / 23 page title /
+   28 headline number / 32 page hero. */
 :root {
     color-scheme: dark;
     --canvas: #142635;
     --surface: #1d3446;
     --raised: #29495e;
-    --inset: #102330;
+    /* Deeper than it was (#102330) for the same reason the light canvas moved: the
+       recessed fill has to be a step off the ground it lands on. 1.15:1 from the
+       canvas, 1.37:1 from a panel, which is what light measures too. */
+    --inset: #0b1a26;
+    /* --line is a decorative rule; --line-bright is a component boundary and has
+       to clear 3:1 against both surface (4.31) and raised (3.18). */
     --line: #3b586c;
-    --line-bright: #6a8ba0;
+    --line-bright: #779aaf;
+    /* The edge of a container, as opposed to the edge of a control. Panels, tables and
+       strip frames use this; anything an operator clicks keeps --line-bright, because a
+       control's boundary is what locates it. */
+    --line-panel: #46647a;
+    /* A rule between two rows of data is a boundary the reader has to see, not a
+       decorative hairline: this one clears 3:1 against the surface and against the
+       zebra tint (3.44 and 3.21), where --line sat at 1.71. */
+    --line-data: #63899f;
     --text: #edf4f6;
     --muted: #b0c5d1;
     --cyan: #78dce8;
     --gold: #edc777;
     --action: #edc777;
     --action-text: #152c3b;
+    /* The primary's edge. On the dark canvas the fill is its own boundary; on white
+       it needs a darker gold around it or the button reads as a pale smear. */
+    --action-edge: #edc777;
+    --action-hover-edge: #f0d08d;
+    /* Gold as a rule — a 3px identity bar, an active link — is decoration, not text,
+       so it stays gold in both themes instead of turning brown with --gold's ink. */
+    --gold-rule: #edc777;
+    /* Hover only ever moves the primary fill away from its own ink: lighten it, so
+       the ink stays at 9.70:1 in the dark theme and 8.19:1 in the light one. */
+    --action-hover: #f0d08d;
+    /* Caution is its own ink, not a second gold: 6.67:1 on surface, 4.93:1 on
+       raised, so a warning can never be mistaken for the primary action. */
+    --warn: #f5ab63;
     --scrim: #07151fc9;
     --good: #8fd9ae;
-    --bad: #ff9c99;
-    --purple: #d8a9ef;
+    --bad: #ffb0ad;
+    --purple: #e2bcf5;
     --shadow: 0 12px 32px #030d1680;
-    --radius: 5px;
-    --space: 20px;
-    --row: 12px;
-    --font: 'Trebuchet MS', 'Segoe UI', sans-serif;
-    --mono: 'Cascadia Code', 'DejaVu Sans Mono', monospace;
+    /* Three jobs, four steps: surfaces, the control scale, pills. Anything else is
+       drift. The steps are generous on purpose: this is a dense panel product, and the
+       soft corner is what keeps twelve surfaces of numbers from reading as a
+       spreadsheet. The surface step stays well clear of the control step, so a control
+       inside a panel never looks like the panel's own edge.
+       The control scale has two steps because a corner is read against the height it
+       rounds: 14px on a 40px control is a third of its height, while the same 14px on
+       the 32px step is nearly half and turns a row action into a lozenge. 11px keeps
+       both at the same character, so one family carries two sizes. */
+    --radius: 20px;
+    --radius-control: 14px;
+    --radius-control-sm: 11px;
+    --radius-pill: 999px;
+    --control: 40px;
+    /* The sizes client art is drawn at, one per job: a row thumbnail, a tile, an
+       equipped slot. Two lists picking their own 30px and 34px was drift, not design.
+       Every size is a step on the pack's own canvas — all of it is 96px square — so a
+       44px row was 96 ÷ 2.18: a resample with no whole pixels in it, which is why the
+       art at that size looked softer than the same icon in the game. 48 / 64 are 96 ÷ 2
+       and 96 ÷ 1.5, and nothing is drawn above 96, because above native the browser can
+       only invent the extra pixels. */
+    --icon-row: 48px;
+    --icon-tile: 64px;
+    --icon-slot: 64px;
+    /* A ramp of three real steps: 32 / 36 / 44. 34 against 36 was a 2px difference
+       that read as misalignment rather than as a smaller control. */
+    --control-sm: 32px;
+    --control-lg: 44px;
+    --elev-1: 0 1px 2px #030d1640;
+    --elev-2: 0 6px 18px #030d1640;
+    /* Bars, sliders and effect chips carry meaning, so their ink is a token too:
+       a fill that only reads in one theme reads as a bug in the other. */
+    --meter: #e6bc62;
+    --meter-edge: #f5da98;
+    --effect-bg: #48391f;
+    --effect-fg: #f1d48d;
+    --effect-line: #8a6a32;
+    --effect-strong: #e1c792;
+    /* Terminal surface: the log and console panes are their own material, so the
+       palette is defined per theme instead of baked into the panes. */
+    /* A field on the terminal's toolbar needs its own step: the page recess was
+       1.01:1 from --term-bg-top, so the search box had no shape at all. */
+    --field-on-term: #2b4d63;
+    --term-bg: #08131c;
+    --term-bg-top: #0f2231;
+    --term-fg: #d6e4ee;
+    --term-time: #7c9bb1;
+    --term-level: #8fa8b9;
+    --term-info: #7fc6dc;
+    --term-warn: #edc777;
+    --term-error: #ffb0ad;
+    --term-debug: #8aa3b4;
+    --term-command: #5ee0a6;
+    --term-input: #7de9ff;
+    --term-response: #cfe0ec;
+    --term-line: #2f5468;
+    --term-hover: #ffffff08;
+    --term-scroll: #44647c;
+    --term-scroll-bg: #0a1721;
+    /* The page's breathing room, in one number: block gaps and the padding inside a
+       panel are the same value, so a panel's edge never sits closer to its content than
+       two panels sit to each other. */
+    --space: 26px;
+    /* Table cell padding above and below its content. A row is as tall as the tallest
+       thing in it — usually the 36px row action — so 12px here measured 60px rows for
+       one line of text: twelve visible rows per screen, and a 30-row list that scrolled
+       twice. 6px puts a single-line row at 48px and a two-line row at 68px. */
+    --row: 6px;
+    /* The platform face, because a shipped-in-2005 display font is the loudest
+       "dated" signal on the page; no webfont is loaded, so nothing is delayed. */
+    --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --mono:
+        ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Cascadia Mono',
+        'DejaVu Sans Mono', monospace;
 }
 [data-theme='light'] {
     color-scheme: light;
-    --canvas: #e6eef3;
+    /* The workspace sits a step down from the panels it holds. A pale canvas next to
+       white panels left a fill-only control only 1.06:1 from the ground it sat on —
+       visible inside a panel, a whisper on the page — because a fill between two grounds
+       1.19:1 apart can be no more than 1.08:1 from either. Deepening the canvas is what
+       gives the fills room: raised 1.33:1, fields 1.14:1, panels 1.54:1. */
+    --canvas: #c0d3e0;
     --surface: #ffffff;
-    --raised: #dce8ef;
-    --inset: #f1f6f9;
-    --line: #bdcfdc;
-    --line-bright: #6f8b9e;
+    /* Lifted to the top of its band: the raised fill has to clear both grounds now, and
+       one fill between a canvas and a panel 1.54:1 apart can never be far from either.
+       1.33:1 from the canvas, 1.16:1 from a panel, is as even as the two allow. */
+    --raised: #e4f0f7;
+    /* The recessed fill, deepened so a field or a frame reads against a white panel
+       without a hairline: #f1f6f9 sat 1.09:1 from the panel and only its rim said
+       where it was. Kept a step below the raised fill — at #dbe6ee the button and the
+       field beside it were 1.02:1 apart and shared one fill. Every fill boundary in
+       this theme now lands between 1.14:1 and 1.35:1: the button 1.16:1 from a panel
+       and 1.33:1 from the canvas, the field 1.35:1 and 1.14:1. */
+    --inset: #d0e0eb;
+    /* The decorative hairline, deepened with the canvas: at #bdcfdc it measured 1.04:1
+       against the workspace, which is not a rule, it is a rumour. */
+    --line: #a7bfd0;
+    --line-bright: #678193;
+    /* 1.18:1 was not a line: on white panels that lost their shadow, the container
+       edge has to be visible at 1x. This clears 2.05:1 against a panel and 1.33:1
+       against the canvas, which is the quietest that reads on either. */
+    --line-panel: #9fb9ca;
+    --line-data: #7f93a2;
     --text: #203a4d;
-    --muted: #4b687c;
+    --muted: #3f5c70;
     --cyan: #00677b;
     --gold: #795411;
-    --action: #805a16;
-    --action-text: #ffffff;
-    --good: #237445;
-    --bad: #b13a38;
-    --purple: #79549b;
+    /* Two steps of gold, not three. The primary keeps the fill the dark theme uses — a
+       game console's action colour is its gold, and painting it brown in daylight made
+       the two themes read as two products — and #795411 above stays the ink gold is
+       *written* in. A third gold (#c79b3c) sat between them for the rules, close
+       enough to the fill to look like a mistake and far enough to see. */
+    --action: #edc777;
+    --action-text: #152c3b;
+    --action-hover: #f0d08d;
+    --action-edge: var(--gold);
+    --action-hover-edge: var(--gold);
+    /* Rules carry state on white — the active nav bar, the selected tab, the identity
+       bar — and #edc777 against white is 1.55:1, which is not a state anyone can see.
+       The rule gold is the darker one; the fill gold above stays for the button. */
+    --gold-rule: #b8862f;
+    --warn: #933f00;
+    --good: #1d6539;
+    --bad: #a52f2d;
+    --purple: #6b3f8f;
     --shadow: 0 12px 32px #24465d1a;
+    /* Elevation is a theme token, not a dark-theme constant: white surfaces kept the
+       dark shadow and read as if they were floating under the wrong light. */
+    --elev-1: 0 1px 2px #24465d26;
+    --elev-2: 0 6px 18px #24465d24;
+    /* Stars and rating pips sit on gold and white, where a black halo is dirt. */
+    --star-halo: 0 1px 1px #7a5a1033;
+    --meter: #9a6c12;
+    --meter-edge: #6f4d0a;
+    --effect-bg: #f5e6b6;
+    --effect-fg: #674614;
+    --effect-line: #a97f27;
+    --effect-strong: #755321;
+    /* A paper-and-ink terminal keeps the same structure and severity semantics. */
+    --field-on-term: #c8dce9;
+    /* The screen has to stay recessed against the panel it sits in: at #f8fafc it was
+       1.12:1 from the canvas and identical to the panel fill, so the light theme's
+       terminal read as an empty white card. */
+    --term-bg: #eef4f8;
+    --term-bg-top: #eef3f7;
+    --term-fg: #1c2f3d;
+    --term-time: #52697b;
+    --term-level: #52697b;
+    --term-info: #0c6076;
+    --term-warn: #7d5500;
+    --term-error: #9e2b26;
+    --term-debug: #52697b;
+    --term-command: #0a6b51;
+    --term-input: #08566a;
+    --term-response: #24384a;
+    --term-line: #b7c8d6;
+    --term-hover: #1c2f3d0d;
+    --term-scroll: #9db3c2;
+    --term-scroll-bg: #e7eef4;
 }
 [data-density='compact'] {
-    --space: 13px;
-    --row: 7px;
+    --space: 15px;
+    --row: 3px;
 }

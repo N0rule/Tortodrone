@@ -12,6 +12,12 @@ public final class StandaloneTestSuite {
 
     public static void main(String[] tests) {
         if (tests.length == 0) throw new IllegalArgumentException("Select at least one standalone test class");
+        System.out.printf(
+                Locale.ROOT,
+                "Run %s of %s programs (shard %s)%n",
+                tests.length,
+                System.getProperty("unitPrograms", String.valueOf(tests.length)),
+                System.getProperty("unitShard", "1/1"));
         var failures = new ArrayList<String>();
         var durations = new LinkedHashMap<String, Long>();
         long started = System.nanoTime();
@@ -32,11 +38,32 @@ public final class StandaloneTestSuite {
             }
         }
         System.out.printf(Locale.ROOT, "Unit time: %.2fs; slowest programs:%n", (System.nanoTime() - started) / 1e9);
+        // Every program, not the top five: a shard split or a prune needs the whole
+        // distribution, and the log is the only place it is visible.
         durations.entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .limit(5)
                 .forEach(entry ->
                         System.out.printf(Locale.ROOT, "  %.2fs %s%n", entry.getValue() / 1e9, entry.getKey()));
+        // Only a whole-suite run rewrites the record. A shard that recorded itself would
+        // shift the weights of the shards around it, and then "shard 2 of 4" would select
+        // different programs on the next run: the slices must be a pure function of the
+        // record, or a local sequence of shard runs silently duplicates and drops programs.
+        String timings = System.getProperty("unitTimings", "");
+        if (!timings.isEmpty() && Boolean.getBoolean("unitRecordTimings")) {
+            var file = java.nio.file.Path.of(timings);
+            try {
+                java.nio.file.Files.createDirectories(file.getParent());
+                var lines = new ArrayList<String>();
+                // Sorted, so the record stays diffable when it is copied into
+                // scripts/tests/unit-timings.properties as the checked-in baseline.
+                durations.entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .forEach(entry -> lines.add(entry.getKey() + "=" + entry.getValue()));
+                java.nio.file.Files.write(file, lines);
+            } catch (java.io.IOException ignored) {
+                // A missing record only falls the next sharded run back to index modulo.
+            }
+        }
         if (!failures.isEmpty()) throw new AssertionError("Unit test failures: " + String.join("; ", failures));
         System.out.println("PASS: " + tests.length + " standalone unit programs");
     }

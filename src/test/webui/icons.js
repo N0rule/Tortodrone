@@ -62,27 +62,21 @@ export async function run({ disposable = false } = {}) {
             'Active icon matches gold navigation'
         );
     const failed = symbol('slot-helmet');
-    failed.classList.add('slot-icon');
+    document.body.append(failed);
     failed.querySelector('image').dispatchEvent(new Event('error'));
-    check(
-        failed.classList.contains('slot-icon') &&
-            failed.querySelector('path') &&
-            !failed.querySelector('image'),
-        'Image failure preserves category sizing and supplies an outline'
-    );
+    check(!failed.isConnected, 'A broken icon file leaves no icon, never a drawn stand-in');
     setSymbols({ 'nav-equipment': '../private.key' });
-    check(!symbol('equipment').querySelector('image'), 'Untrusted paths use the fallback');
+    check(symbol('equipment') === null, 'Untrusted paths resolve to no icon at all');
     setSymbols();
     try {
         check(
-            symbol('equipment').querySelector('path') &&
-                !symbol('equipment').querySelector('image'),
-            'Navigation fallback works without a prepared pack'
+            symbol('equipment') === null,
+            'A job with no client art renders no icon instead of an invented one'
         );
-        check(symbol('slot-weapon').querySelector('path'), 'Empty-slot fallback');
+        check(symbol('search') === null, 'No invented magnifier');
         check(
             symbol('brand').getAttribute('src') === '/admin/assets/icons/mark.svg',
-            'Self-contained horse fallback'
+            'The product mark is the app logo, not game art'
         );
     } finally {
         setSymbols(manifest.symbols, manifest.ui);
@@ -92,6 +86,6 @@ export async function run({ disposable = false } = {}) {
         'Trojan horse logo',
         'currentColor theme inheritance',
         'packaged image loading',
-        'source fallbacks'
+        'no invented icons'
     ];
 }

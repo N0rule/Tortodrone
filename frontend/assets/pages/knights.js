@@ -1,33 +1,22 @@
 import { symbol } from '../components/symbols.js';
 import { api } from '../api.js';
 import { itemPicker } from '../components/item-picker.js';
-import {
-    el,
-    button,
-    toolbar,
-    panel,
-    badge,
-    status,
-    facts,
-    details,
-    input,
-    select,
-    tabs,
-    text,
-    number
-} from '../ui.js';
+import { el, button, routeLink, toolbar, panel, badge, status, facts, details, input, select, tabs, text, number, copy, date } from '../ui.js';
 import { DataTable } from '../components/table.js';
-import { edit, confirm, field, conflict, openDialog } from '../components/dialog.js';
+import { edit, confirm, field, conflict, openDialog, localError } from '../components/dialog.js';
 import {
     itemLine,
     currency,
+    definitionsFor,
     itemTile,
     icon,
     variantEffects,
-    gearProgress
+    gearProgress,
+    inspectItemName
 } from '../components/items.js';
 import { inspectItem, grantItem } from '../components/gear-editor.js';
 import { spriteCard } from '../components/sprite-card.js';
+import { emptyState } from '../components/states.js';
 
 const slotNames = new Map([
     [0, 'Helmet'],
@@ -71,15 +60,64 @@ export async function mount(ctx) {
             ['Account', (k) => k.username],
             [
                 'Permission',
-                (k) => badge(k.gameMaster ? 'GM' : 'Player', k.gameMaster ? 'gold' : '')
+                (k) => badge(k.gameMaster ? 'GM' : 'Player', k.gameMaster ? 'purple' : '')
             ],
             ['Status', (k) => status(k.online ? 'Online' : 'Offline', k.online)]
         ],
         {
             key: (k) => `${k.accountId}:${k.id}`,
+            id: 'knights',
+            address: true,
+            caption: 'Knights',
+            searchPlaceholder: 'Search knight, account or guild',
+            exportName: 'knights',
+            defaultSort: { index: 0 },
+            selectable: true,
+            // The dev and first-run state is "no knights yet", so it has to explain
+            // itself and offer the page that does have an action.
+            empty: {
+                title: 'No knights exist yet',
+                hint: 'Knights are created in the game client: connect to this server, make a character, and it appears here on the next refresh.',
+                action: { label: 'Open accounts', run: () => ctx.go('accounts') },
+                icon: 'knights'
+            },
+            bulkActions: (selected) => [
+                button(
+                    'Copy names',
+                    () => copy(selected().map((k) => k.name).join('\n'), 'Knight names copied.'),
+                    'secondary',
+                    () => selected().length > 0
+                ),
+                button(
+                    'Copy accounts',
+                    () =>
+                        copy(
+                            [...new Set(selected().map((k) => k.username))].join('\n'),
+                            'Account names copied.'
+                        ),
+                    'secondary',
+                    () => selected().length > 0
+                ),
+                button(
+                    'Open profile',
+                    () => {
+                        const [first] = selected();
+                        if (first)
+                            ctx.go('knights', {
+                                username: first.username,
+                                knight: first.name
+                            });
+                    },
+                    'secondary',
+                    () => selected().length === 1
+                )
+            ],
             actions: (get) => [
-                button('Open profile', () =>
-                    ctx.go('knights', { username: get().username, knight: get().name })
+                routeLink(
+                    'Open profile',
+                    'knights',
+                    { username: get().username, knight: get().name },
+                    'button'
                 )
             ],
             filters: [
@@ -112,10 +150,19 @@ export async function mount(ctx) {
     account.append(el('span', 'Account'), accountLink);
     left.append(name, badges, account);
     header.append(left, wallet);
-    const crowns = button('', () => editCurrency('CROWNS')),
-        energy = button('', () => editCurrency('ENERGY')),
-        prestige = button('', editProgress);
-    crowns.disabled = energy.disabled = prestige.disabled = !ctx.admin;
+    // `aria-disabled` plus a reason, not native `disabled`: a natively disabled button
+    // cannot take focus, so a moderator's Crowns and Energy were three dead controls with
+    // the explanation unreachable by keyboard — against the rule the rest of the
+    // application keeps.
+    const moneyReason = () =>
+        ctx.admin || 'Changing a Knight’s currency or progression needs an administrator role.';
+    const crowns = button('', () => editCurrency('CROWNS'), 'secondary', moneyReason, {
+            showReason: true
+        }),
+        energy = button('', () => editCurrency('ENERGY'), 'secondary', moneyReason, {
+            showReason: true
+        }),
+        prestige = button('', editProgress, 'secondary', moneyReason, { showReason: true });
     wallet.append(crowns, energy, prestige);
     const actions = toolbar(button('All Knights', () => ctx.go('knights')));
     if (ctx.admin)
@@ -190,7 +237,7 @@ export async function mount(ctx) {
         badges.replaceChildren(
             badge(`Rank ${view.profile.progress.rank}-${view.profile.progress.subrank}`),
             status(view.online ? 'Online' : 'Offline', view.online),
-            badge(view.gameMaster ? 'Game Master' : 'Player', view.gameMaster ? 'gold' : ''),
+            badge(view.gameMaster ? 'Game Master' : 'Player', view.gameMaster ? 'purple' : ''),
             badge(view.guild || 'No guild')
         );
         text(accountLink, view.username);
@@ -280,20 +327,29 @@ export async function mount(ctx) {
         };
         search.oninput = filter.onchange = applyFilter;
         root.append(toolbar(search, filter), grid, selection);
-        if (!candidates.length) grid.append(el('p', 'No compatible owned items.'));
+        if (!candidates.length)
+            grid.append(
+                emptyState({
+                    compact: true,
+                    icon: 'search',
+                    title: 'No owned item fits this slot',
+                    message:
+                        'Compatible gear is either equipped already or not owned yet. The grant picker below adds any item this slot accepts.'
+                })
+            );
         if (canEdit) {
             const grantSection = el('details');
             grantSection.append(el('summary', 'Grant and equip'));
             picker = itemPicker(
                 (def) => {
                     if (!def.compatibleSlots.includes(index))
-                        throw new Error('This item is not compatible with this slot.');
+                        throw localError('This item is not compatible with this slot.');
                     selected = 0;
                     grant = def.config;
                     root.dataset.unequip = 'false';
                     selection.textContent = 'Grant and equip ' + def.name;
                 },
-                { grantable: true, compatibleSlot: index }
+                { grantable: true, compatibleSlot: index, exportable: false }
             );
             grantSection.append(picker.node);
             root.append(grantSection);
@@ -309,7 +365,7 @@ export async function mount(ctx) {
             isDirty: () => canEdit && selected !== null,
             onSubmit: async () => {
                 if (!canEdit) return;
-                if (selected === null) throw new Error('Choose an item or Unequip.');
+                if (selected === null) throw localError('Choose an item or Unequip.');
                 await api.change('equipment', {
                     ...snapshot,
                     itemId: selected,
@@ -390,10 +446,29 @@ export async function mount(ctx) {
                                     ? 'trinket'
                                     : 'costume')
                 );
-                emptyIcon.classList.add('slot-icon');
-                slot.replaceChildren(item ? icon(item.config, def?.rarity) : emptyIcon, info);
+                // An empty slot only shows client art; with none available it is a
+                // labelled outline rather than a drawn placeholder.
+                if (emptyIcon) emptyIcon.classList.add('slot-icon');
+                slot.replaceChildren(
+                    item ? icon(item.config, def?.rarity) : emptyIcon || el('span'),
+                    info
+                );
                 slot.dataset.slot = index;
-                slot.disabled = !item && !view.unlockedSlots.includes(index);
+                // A locked slot stays reachable so it can say why it is locked; a native
+                // `disabled` removed both the control and the sentence.
+                if (!item && !view.unlockedSlots.includes(index)) {
+                    slot.setAttribute('aria-disabled', 'true');
+                    slot.dataset.usable = 'false';
+                    slot.title = `Slot ${index} is not unlocked for this Knight.`;
+                    slot.dataset.reason = slot.title;
+                } else {
+                    // The reason goes with the refusal: a slot that unlocked kept its
+                    // "not unlocked for this Knight" tooltip while the click worked.
+                    slot.removeAttribute('aria-disabled');
+                    slot.removeAttribute('title');
+                    delete slot.dataset.usable;
+                    delete slot.dataset.reason;
+                }
                 return slot;
             });
             const wanted = new Set(desired);
@@ -451,9 +526,22 @@ export async function mount(ctx) {
                 ],
                 ['Binding', (i) => (i.bound ? 'Bound' : 'Unbound')]
             ],
-            { search: false, actions: (get) => [button('Inspect', () => inspect(get()))] }
+            {
+                search: false,
+                id: 'knight-inventory',
+                caption: 'Owned inventory',
+                searchPlaceholder: 'Search item',
+                exportName: 'knight-inventory',
+                // An inventory row is an item, not a knight: the link built its route
+                // from `username`/`name`, which an item record does not carry, so every
+                // row pointed at `#knights?username=undefined&knight=undefined` and
+                // landed on "No such knight". The inspector is the same one the
+                // equipment grid opens.
+                actions: (get) => [button('Inspect', () => inspect(get()), 'secondary')]
+            }
         );
-        let page = 1;
+        let page = 1,
+            noItems = null;
         const previous = button('Previous', () => {
                 page--;
                 update();
@@ -527,7 +615,30 @@ export async function mount(ctx) {
                 }
                 return entry.tile;
             });
-            if (!desired.length) desired.push(el('p', 'No items match these filters.', 'empty'));
+            if (!desired.length) {
+                // One empty-state idiom for the whole application, and an action: the
+                // bare line used to tell an operator that nothing matched without
+                // offering the reset that would make something match.
+                noItems ??= emptyState({
+                    compact: true,
+                    icon: 'search',
+                    title: 'No items match these filters',
+                    message:
+                        "The whole catalogue is searched here, narrowed by a term and a category.",
+                    action: {
+                        label: 'Clear filters',
+                        run: () => {
+                            search.value = '';
+                            category.value = '';
+                            sort.value = 'name';
+                            mode.value = 'grid';
+                            page = 1;
+                            update();
+                        }
+                    }
+                });
+                desired.push(noItems);
+            }
             const wanted = new Set(desired);
             for (const child of [...grid.children]) if (!wanted.has(child)) child.remove();
             desired.forEach((child, i) => {
@@ -550,7 +661,13 @@ export async function mount(ctx) {
     function sprites() {
         const node = el('div', null, 'sprite-grid'),
             cards = new Map(),
-            empty = el('p', 'This Knight owns no Battle Sprites.', 'empty');
+            empty = emptyState({
+                compact: true,
+                icon: 'sprites',
+                title: 'This Knight owns no Battle Sprites',
+                message:
+                    'Sprites are earned in game, so there is nothing to grant from here. A Knight that has finished the Battle Sprite story shows its roster on this tab.'
+            });
         function update() {
             const desired = view.sprites.map((s) => {
                 let card = cards.get(s.state.id);
@@ -573,6 +690,105 @@ export async function mount(ctx) {
         update();
         return { node, update };
     }
+
+    /** Learned recipes as named rows, each one a route into the item it makes. */
+    /**
+     * Saved equipment snapshots, one row each. The old panel printed
+     * `details('Saved loadouts (read only)', …)` — a JSON.stringify of the raw records,
+     * so an operator with ten loadouts had to read braces to find a name.
+     */
+    function loadoutList(loadouts) {
+        const node = el('div', null, 'stack-tight');
+        node.append(el('h3', `Saved loadouts (${loadouts.length})`));
+        if (!loadouts.length) {
+            node.append(
+                el(
+                    'p',
+                    'This knight has no saved loadout. Loadouts are saved in the game client, one snapshot of the equipped gear at a time.',
+                    'muted'
+                )
+            );
+            return node;
+        }
+        const list = el('ul', null, 'recipe-list');
+        for (const loadout of loadouts) {
+            const row = el('li', null, 'recipe-row');
+            const equipment = loadout.equipment || [];
+            row.append(
+                el('strong', loadout.name || 'Untitled loadout'),
+                el(
+                    'small',
+                    [
+                        `${equipment.length} ${equipment.length === 1 ? 'piece' : 'pieces'}`,
+                        loadout.pvp ? 'PvP set' : null,
+                        loadout.sprite ? `battle sprite ${loadout.sprite}` : null,
+                        loadout.harness ? `harness ${loadout.harness}` : null,
+                        loadout.perk == null ? null : `perk ${loadout.perk}`
+                    ]
+                        .filter(Boolean)
+                        .join(' · '),
+                    'muted'
+                )
+            );
+            if (equipment.length) {
+                const gear = el('span', null, 'muted');
+                gear.textContent = equipment.join(', ');
+                row.append(gear);
+            }
+            list.append(row);
+        }
+        node.append(list);
+        return node;
+    }
+
+    function recipeList(recipes) {
+        const node = el('div', null, 'stack-tight');
+        node.append(el('h3', `Learned recipes (${recipes.length})`));
+        if (!recipes.length) {
+            node.append(
+                el(
+                    'p',
+                    'This knight has not learned a recipe yet. Recipes are learned at the forge in the game client.',
+                    'muted'
+                )
+            );
+            return node;
+        }
+        const list = el('ul', null, 'recipe-list'),
+            rows = new Map();
+        for (const recipe of recipes) {
+            const row = el('li', null, 'recipe-row');
+            // A recipe is an item, so it wears that item's client art: the row used to
+            // be the raw config path, the one thing on the page that was neither art
+            // nor a name an operator could read.
+            const line = itemLine(undefined, { config: recipe.config });
+            rows.set(recipe.config, { row, line });
+            row.append(
+                line,
+                el(
+                    'small',
+                    `${recipe.crafted ? 'crafted' : 'not crafted'} · expires ${recipe.expires ? date(recipe.expires) : 'never'}`,
+                    'muted'
+                )
+            );
+            list.append(row);
+        }
+        // The view's definitions cover the gear a knight wears, not what they have
+        // learned to craft, so the names for these rows are read once and swapped in;
+        // the config path stands in until then rather than a blank frame.
+        definitionsFor([...rows.keys()])
+            .then((definitions) => {
+                for (const [config, { row, line }] of rows) {
+                    const definition = definitions.get(config);
+                    if (!definition || !row.isConnected) continue;
+                    line.replaceWith(itemLine(definition, { config }));
+                }
+            })
+            .catch(() => {});
+        node.append(list);
+        return node;
+    }
+
     function simpleSection() {
         const node = el('div');
         function update() {
@@ -587,16 +803,63 @@ export async function mount(ctx) {
                               ['Saved loadouts', p.town.loadouts.length],
                               ['Learned recipes', p.town.recipes.length]
                           ]),
-                          details('Saved loadouts (read only)', p.town.loadouts)
+                          // A count nobody can open is trivia: each learned recipe
+                          // names an item, so each one leads to that item.
+                          recipeList(p.town.recipes),
+                          loadoutList(p.town.loadouts)
                       )
                     : panel(
                           'Knight details',
                           facts([
-                              ['Account', view.username],
-                              ['Guild', view.guild],
+                              [
+                                  'Account',
+                                  routeLink(
+                                      view.username,
+                                      'accounts',
+                                      { username: view.username },
+                                      'quiet link'
+                                  )
+                              ],
+                              ['Guild', view.guild || 'No guild'],
                               ['Status', view.online ? 'Online' : 'Offline'],
-                              ['Permission', view.gameMaster ? 'Game Master' : 'Player']
+                              ['Permission', view.gameMaster ? 'Game Master' : 'Player'],
+                              [
+                                  'Rank',
+                                  `${p.progress.rank}-${p.progress.subrank} · prestige ${number(p.progress.prestige)}`
+                              ],
+                              ['Saved loadouts', p.town.loadouts.length],
+                              ['Learned recipes', p.town.recipes.length],
+                              ['Inventory stacks', p.items.length],
+                              ['Sprites', view.sprites.length]
                           ]),
+                          toolbar(
+                              routeLink(
+                                  'Audit events naming this knight',
+                                  'audit',
+                                  { target: view.username },
+                                  'button secondary'
+                              ),
+                              button(
+                                  'Edit progression',
+                                  editProgress,
+                                  'secondary',
+                                  () => !!ctx.admin,
+                                  {
+                                      unavailable:
+                                          'Changing a knight’s level, skills or sprites needs an administrator role. A moderator can read this page but not rewrite it.'
+                                  }
+                              ),
+                              button(
+                                  'Grant item',
+                                  () => grantItem(fixed()),
+                                  'secondary',
+                                  () => !!ctx.admin,
+                                  {
+                                      unavailable:
+                                          'Granting an item needs an administrator role; a moderator can inspect this knight but cannot put anything in its inventory.'
+                                  }
+                              )
+                          ),
                           details('Identifiers and revision', {
                               worldId: p.worldId,
                               accountId: p.accountId,
@@ -656,7 +919,46 @@ export async function mount(ctx) {
                 return;
             }
         }
-        const result = await ctx.request('knight-view', { username, knight });
+        let result;
+        try {
+            result = await ctx.request('knight-view', { username, knight });
+        } catch (error) {
+            if (id !== requestId) return;
+            // The server answers a missing knight with 422 and a stale one with
+            // 409; both mean "this link is out of date", which is exactly the
+            // panel below. Only a real failure replaces the page.
+            if (![404, 409, 422].includes(error?.status)) throw error;
+            // A stale or mistyped link names a knight that is gone; the roster is
+            // still the useful page, so the miss renders beside it instead of
+            // replacing it.
+            view = null;
+            selectedKey = '';
+            list.hidden = false;
+            profileHost.hidden = false;
+            profileHost.replaceChildren(
+                panel(
+                    'No such knight',
+                    el(
+                        'p',
+                        `There is no knight named “${knight}” on account “${username}”. It may have been deleted, renamed, or the link may be stale.`,
+                        'muted'
+                    ),
+                    el('p', error.message, 'muted small'),
+                    toolbar(
+                        routeLink('Back to all knights', 'knights', {}, 'button secondary'),
+                        routeLink(
+                            'Open this account',
+                            'accounts',
+                            { username },
+                            'button secondary'
+                        )
+                    )
+                )
+            );
+            const rows = await ctx.request('knights-all').catch(() => []);
+            if (id === requestId) roster.update(rows);
+            return;
+        }
         if (id !== requestId) return;
         const switched = selectedKey !== key;
         view = result;
@@ -670,6 +972,9 @@ export async function mount(ctx) {
             tabBar = tabs(sectionNames, activeTab, (tab) =>
                 ctx.go('knights', { username: view.username, knight: view.name, tab })
             );
+            // The strip has to name the region it switches, or a tab is a button
+            // wearing a role it does not complete.
+            tabBar.bindPanel(content);
             profileHost.replaceChildren(header, actions, tabBar, content);
             showTab();
         } else if (
@@ -687,6 +992,9 @@ export async function mount(ctx) {
         refresh,
         async navigate(next) {
             requestId++;
+            // The list keeps its search in the address; an in-app link has to move the
+            // box, not only a reloaded document.
+            roster.setQuery(next.get('search') ?? '');
             const nextTab = sectionNames.some(([id]) => id === next.get('tab'))
                 ? next.get('tab')
                 : 'equipment';
@@ -698,10 +1006,7 @@ export async function mount(ctx) {
                 if (activeTab !== nextTab) {
                     activeTab = nextTab;
                     showTab();
-                    for (const b of tabBar.children) {
-                        b.setAttribute('aria-selected', b.dataset.tab === activeTab);
-                        b.tabIndex = b.dataset.tab === activeTab ? 0 : -1;
-                    }
+                    tabBar.setSelected(activeTab);
                 }
                 if (returning) await refresh();
             } else {
