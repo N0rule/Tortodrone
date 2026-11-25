@@ -619,7 +619,16 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
     const node = el('div', null, 'stack'),
         selection = el('div'),
         form = el('div', null, 'form-grid'),
+        // The catalogue is a step in this form, not a wall in front of it: as a bare
+        // grid of 24 tiles it sat between the chosen item and the fields that describe
+        // it, so the price, the quantity and the expiry began below three rows of
+        // artwork. Folded into a disclosure the same picker opens when there is nothing
+        // chosen yet and collapses to one line the moment there is — the same shape the
+        // grant dialog already gives it.
+        catalogue = el('details', null, 'grant-catalogue'),
         controls = new Map();
+    catalogue.open = !selectedConfig;
+    catalogue.append(el('summary', selectedConfig ? 'Change selected item' : 'Choose an item'));
     let selected,
         disposed = false;
     const initial = new Map();
@@ -627,9 +636,12 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
         (def) => {
             selected = def;
             selection.replaceChildren(itemLine(def));
+            catalogue.open = false;
+            text(catalogue.firstChild, 'Change selected item');
         },
         { grantable: true, exportable: false }
     );
+    catalogue.append(picker.node);
     if (selectedConfig)
         api.request('item', { config: selectedConfig })
             .then((def) => {
@@ -651,7 +663,7 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
         initial.set(f.key, f.type === 'checkbox' ? c.checked : c.value);
         form.append(label(f.title, c));
     }
-    node.append(selection, picker.node, form);
+    node.append(selection, catalogue, form);
     openDialog({
         title,
         content: node,

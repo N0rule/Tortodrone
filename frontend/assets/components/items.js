@@ -264,10 +264,10 @@ export function itemTile(def, item, onClick) {
     const rarity = rarityLine(def?.rarity);
     root.append(
         icon(def?.config || item.config),
-        el('span', def?.name || item.config.split('/').at(-1), 'item-name'),
-        ...(rarity ? [rarity] : [])
+        el('span', def?.name || item.config.split('/').at(-1), 'item-name')
     );
     if (item) {
+        if (rarity) root.append(rarity);
         root.append(
             el('small', `×${number(item.count)}${item.equippedSlot != null ? ' · Equipped' : ''}`)
         );
@@ -281,11 +281,17 @@ export function itemTile(def, item, onClick) {
                         .join(' · ')
                 )
             );
-    } else
-        root.append(
-            el('small', def.category),
-            el('small', def.grantable ? 'Available to grant' : def.reason)
-        );
+    } else {
+        // `Shield · Rarity 1`: what the item is and how rare it is answer one question,
+        // so they share a line. On two lines every tile was a row taller than its
+        // content, and the tiles that had a rarity pushed their last line two lines
+        // below the ones that did not — a grid of ragged columns.
+        const meta = el('small', null, 'item-meta');
+        if (def.category) meta.append(el('span', def.category));
+        if (rarity) meta.append(...(meta.childNodes.length ? [el('span', ' · ')] : []), rarity);
+        if (meta.childNodes.length) root.append(meta);
+        root.append(el('small', def.grantable ? 'Available to grant' : def.reason));
+    }
     return root;
 }
 

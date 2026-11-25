@@ -553,12 +553,16 @@ td .toolbar .button .ui-icon,
 /* The catalogue's "As a table" view switch is a control like the ones beside it: a
    40px fill, the control radius and a caret drawn the way the sorted column's mark is
    drawn. It was a 21px native disclosure — the last browser-default control on the
-   page — while the same job on the depot is a 40px tab. */
-.catalogue-table {
+   page — while the same job on the depot is a 40px tab. The item picker's step
+   ("Choose an item" in the grant and offer forms) is the same disclosure doing the same
+   job, so it wears the same control. */
+.catalogue-table,
+.grant-catalogue {
     border-top: 0;
     padding: 0;
 }
-.catalogue-table > summary {
+.catalogue-table > summary,
+.grant-catalogue > summary {
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -570,10 +574,12 @@ td .toolbar .button .ui-icon,
     font-weight: 500;
     list-style: none;
 }
-.catalogue-table > summary:hover {
+.catalogue-table > summary:hover,
+.grant-catalogue > summary:hover {
     background: color-mix(in srgb, var(--raised) 78%, var(--line-bright));
 }
-.catalogue-table > div {
+.catalogue-table > div,
+.grant-catalogue > div {
     padding-block-start: 14px;
 }
 .item-tile {
@@ -588,22 +594,30 @@ td .toolbar .button .ui-icon,
        drifted to the middle of every stretched grid row. */
     justify-content: flex-start;
     color: var(--text);
-    background: var(--surface);
     /* A tile is a control, so it obeys the one control language: a fill, and the step
-       between two fills when it is hovered or chosen. It kept a bright rim of its own
-       after every other control dropped one, which made 24 outlined boxes the loudest
-       thing on the catalogue. Selection is still a ring, because a ring is state. */
+       between two fills when it is hovered or chosen. The fill is a lift over whatever
+       ground the grid lands on rather than a colour of its own — the catalogue shows
+       tiles on a panel and the picker shows them on a dialog, and `--surface` was
+       invisible against the second one, so 24 tiles read as 24 loose labels. Selection
+       is still a ring, because a ring is state. */
+    background: color-mix(in srgb, var(--text) 5%, transparent);
     border: 1px solid transparent;
     padding: 13px;
     font-weight: 400;
     box-shadow: none;
 }
 .item-tile:hover {
-    background: var(--raised);
+    background: color-mix(in srgb, var(--text) 9%, transparent);
 }
 .item-tile[aria-pressed='true'] {
-    background: var(--raised);
+    background: color-mix(in srgb, var(--text) 9%, transparent);
     box-shadow: inset 0 0 0 2px var(--cyan);
+}
+/* A tile that cannot be chosen is quieter than one that can, not louder: the shared
+   disabled rule mixes toward --raised, and on a dialog that filled exactly the tiles
+   with nothing to offer while the usable ones stayed flat. */
+.item-tile:disabled {
+    background: color-mix(in srgb, var(--text) 2%, transparent);
 }
 .item-tile .item-name {
     font-weight: 600;
@@ -733,6 +747,19 @@ dialog[open]::backdrop {
        of a form to learn it had refused the save. */
     overflow: hidden;
 }
+/* The dialog and the form inside it have to agree on one height. The form capped itself
+   at `100dvh - 88px` while the dialog capped itself at `90dvh`, so on a tall form the
+   form ran about 50px past the dialog's content box — clipped by `overflow: hidden`,
+   with the sticky footer floating up over the last 20px of the body. That is where a
+   cut-off button row and a half-hidden pager came from. As a flex column the dialog
+   gives the form exactly the room it has, the form gives the fields what the heading
+   and the actions leave, and nothing has to guess. `[open]`, because a bare `#dialog`
+   display rule would out-rank the user agent's `dialog:not([open]) { display: none }`
+   and paint every closed dialog on the page. */
+#dialog[open] {
+    display: flex;
+    flex-direction: column;
+}
 /* A read-only dialog opens on its own heading, so the title takes focus with
    `tabindex="-1"` and the browser drew the focus ring around three words of it — a box
    that read as a text field on the title of every record view. Focus still lands there
@@ -744,10 +771,9 @@ dialog[open]::backdrop {
 #editor {
     display: flex;
     flex-direction: column;
-    /* The dialog's own ceiling minus its 24px padding top and bottom and the 40px of
-       gutter it keeps from the viewport edges. */
-    max-block-size: calc(100dvh - 88px);
+    flex: 1 1 auto;
     min-block-size: 0;
+    max-block-size: none;
 }
 #fields {
     display: grid;
@@ -765,6 +791,35 @@ dialog[open]::backdrop {
 #fields.is-scrollable {
     padding-block-end: 12px;
     mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+}
+/* The item picker's pager sits in the dialog's body, which is the scroll region, and it
+   used to sit at the end of it: the next 24 items were only reachable by scrolling past
+   the 24 already passed on. Pinned to the bottom of the body it never leaves the view.
+   The body's fade-out cue is turned off in this dialog, because the cue and the pager
+   want the same 20px at the bottom and the fade would paint the buttons out. The pager
+   is itself the cue that more is below. */
+#fields .item-paging {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 1;
+    padding-block: 8px;
+    background: var(--surface);
+}
+/* The body's fade used to live on the scroll box, where it and the pager want the same
+   20px. It moves here, above the pager, so the row the pager cuts through fades out
+   instead of ending on a hard edge. */
+#fields .item-paging::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 100%;
+    block-size: 20px;
+    background: linear-gradient(to top, var(--surface), transparent);
+    pointer-events: none;
+}
+#fields:has(.item-paging).is-scrollable {
+    padding-block-end: 0;
+    mask-image: none;
 }
 .form-grid {
     display: grid;

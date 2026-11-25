@@ -192,6 +192,7 @@ export function itemPicker(
         if (rebuild && asTable.open) buildTable();
     }
     const paging = toolbar(count, ...(exportable ? [exportButton] : []), previous, next);
+    paging.classList.add('item-paging');
     node.append(toolbar(search, categories), grid, ...(exportable ? [asTable] : []), paging);
     async function load() {
         clearTimeout(timer);
