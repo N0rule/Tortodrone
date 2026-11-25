@@ -620,12 +620,13 @@ function deliveredLabel(campaign) {
                 // the letter dialog repeats differently.
                 `Delivery window · ${zone}`,
                 (campaign) => {
-                    const cell = el('div', null, 'mail-window');
-                    cell.append(
-                        el('span', moment(campaign.starts)),
-                        el('span', '→', 'muted'),
-                        el('span', moment(campaign.ends))
-                    );
+                    const cell = el('div', null, 'mail-window'),
+                        end = el('span', null, 'mail-window-end');
+                    // The arrow opens the second line instead of closing the first: side
+                    // by side in a 140px column the first date took the arrow with it and
+                    // left it stranded at the end of a line, pointing at nothing.
+                    end.append(el('span', '→ ', 'muted'), moment(campaign.ends));
+                    cell.append(el('span', moment(campaign.starts)), end);
                     return cell;
                 },
                 (campaign) => campaign.starts

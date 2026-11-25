@@ -2195,8 +2195,13 @@ td:has(> .time-stamp) {
 }
 .mail-window {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px 8px;
+    flex-direction: column;
+    gap: 2px;
+}
+.mail-window-end {
+    /* A date range is two dates: the second one carries the arrow, so a wrap never
+       separates a mark from the thing it points at. */
+    white-space: nowrap;
 }
 .mail-gifts-cell {
     display: flex;
@@ -2229,10 +2234,11 @@ td:has(> .time-stamp) {
     row-gap: 4px;
 }
 /* Four controls in a column that now shrinks to its content stacked one per line and
-   made a mailing row 193px tall. This table asks for the room to pair them. */
+   made a mailing row 193px tall. This table asks for the room to pair them — the widest
+   pair is "Duplicate" beside "Cancel". */
 .mail-table td.row-actions,
 .mail-table th.row-actions {
-    min-inline-size: 216px;
+    min-inline-size: 186px;
 }
 .mail-table td,
 .mail-table th {
