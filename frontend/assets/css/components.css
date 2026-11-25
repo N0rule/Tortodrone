@@ -311,12 +311,15 @@ td .toolbar {
    a dense table scrolls sideways: the row's controls must never be the clipped part. */
 td.row-actions,
 th.row-actions {
-    /* Room for the widest triple that exists ("Inspect", "Audit trail", "Revoke") on one
-       line. `inline-size: 1%` keeps a wide table from handing 400px of slack to the last
-       column, and the toolbar below refuses to wrap, so a row's controls are always one
-       line tall: two-to-a-line made that table's rows 89px beside a 48px rhythm. */
+    /* As wide as the widest row's own controls and no wider. `inline-size: 1%` keeps a
+       wide table from handing 400px of slack to the last column, and the toolbar below
+       refuses to wrap, so a row's controls are always one line tall: two-to-a-line made
+       that table's rows 89px beside a 48px rhythm. The 224px floor that used to sit here
+       was there for the widest triple in the console ("Inspect", "Audit trail", "Revoke")
+       — that triple still sets the width where it exists, while the depot's single
+       "Open offer" stops reserving 124px of empty panel beside every row. */
     inline-size: 1%;
-    min-inline-size: 224px;
+    min-inline-size: 0;
     padding-inline: 10px;
     position: sticky;
     inset-inline-end: 0;

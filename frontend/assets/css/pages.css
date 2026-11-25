@@ -2228,6 +2228,12 @@ td:has(> .time-stamp) {
     flex-wrap: wrap;
     row-gap: 4px;
 }
+/* Four controls in a column that now shrinks to its content stacked one per line and
+   made a mailing row 193px tall. This table asks for the room to pair them. */
+.mail-table td.row-actions,
+.mail-table th.row-actions {
+    min-inline-size: 216px;
+}
 .mail-table td,
 .mail-table th {
     /* 16px of side padding in eight columns was 256px of air, and the table needed
