@@ -18,11 +18,22 @@
 @media (max-width: 520px) {
     .server-strip .toolbar {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        /* minmax(0, ...) because a bare `1fr` keeps a min-content floor: "Shut down
+           server" needs 144px, and two of those plus the 8px gap came to 298 in the
+           244px line a 320px phone leaves, so the last pair painted 5px past the
+           strip's own edge. */
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         inline-size: 100%;
     }
     .server-strip .toolbar > button {
         inline-size: 100%;
+    }
+}
+/* Narrower than a pair of the widest label: one control per line, still full width,
+   rather than two that overflow the strip. */
+@media (max-width: 380px) {
+    .server-strip .toolbar {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 /* The client's own mark for the server, at the size the catalogue's row sprites use. */
@@ -59,6 +70,11 @@
     /* A grid, not the inherited inline-flex: the label, the number and the caption
        are three stacked lines, and a flex row overlapped them past four columns. */
     display: grid;
+    /* The figure sizes itself against the tile rather than the viewport: the strip is
+       six across on a wide screen, one across on a phone, and the same 28px that is
+       right for a 185px tile set "Available" past the edge of a 156px one. Sizing the
+       container, not the screen, is what makes one font rule true in both. */
+    container-type: inline-size;
     grid-template-columns: minmax(0, 1fr);
     gap: 2px;
     justify-items: start;
@@ -89,7 +105,11 @@ button.metric:focus-visible {
 }
 .metric strong {
     display: block;
-    font-size: 28px;
+    /* The number is the tile's hero, and 17cqw of the tile's own content box is 24.6px
+       at a 185px tile and 22px at a 156px one: the ramp follows the width the figure
+       actually has to fit in, so no value has to wrap and no row changes height as the
+       clock ticks over a digit. */
+    font-size: clamp(22px, 17cqw, 28px);
     /* The same weight as every other headline number in the product. */
     font-weight: 600;
     color: var(--text);
@@ -97,6 +117,13 @@ button.metric:focus-visible {
 }
 .metric small {
     display: block;
+}
+/* The label is the one line in a tile that can outrun the tile: "Engaged monsters" is
+   126px at 14px, and the strip's 158px floor leaves a 116px content box at 1280, where
+   it ended 9px inside the tile's own inset while its neighbours kept all 20. The
+   container that sizes the figure sizes the word above it. */
+.metric .muted {
+    font-size: clamp(12.5px, 11cqw, 14px);
 }
 .knight-header {
     display: flex;
@@ -619,6 +646,10 @@ button.metric:focus-visible {
         min-block-size: 20px;
         padding: 0 8px;
         font-size: 11px;
+        /* The compact corner, not the 40px one: at 20px tall the control step clamps
+           to a stadium, which made the More pill a different shape from the filter
+           chip beside it in the same bar. */
+        border-radius: var(--radius-control-sm);
     }
 }
 .terminal-body {
@@ -1621,7 +1652,11 @@ td:has(> .time-stamp) {
         grid-template-columns: 1fr;
     }
     .metric-strip {
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        /* Two tiles a row down to 158px each, and one below that. The old 130 let a
+           320px phone keep two columns at 141px, which is narrower than the widest
+           figure the strip holds: the number then ran under its neighbour instead of
+           dropping to a row of its own. */
+        grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
     }
     .knight-header {
         padding: 15px;

@@ -143,7 +143,7 @@
 #sidebar footer button {
     min-block-size: var(--control-sm);
     padding: 0 8px;
-    border-radius: var(--radius-control);
+    border-radius: var(--radius-control-sm);
     font-size: 12.5px;
     /* A button is a flex box: `text-align: left` never moved its label, so Sign out —
        the one footer child that fills the column — set its word in the middle while

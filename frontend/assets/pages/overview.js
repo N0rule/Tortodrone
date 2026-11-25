@@ -22,6 +22,18 @@ import { confirm, field, openDialog } from '../components/dialog.js';
 import { DataTable } from '../components/table.js';
 import { symbol } from '../components/symbols.js';
 
+/* The tile's figure, not the record's. duration() prints three units, and "102h 59m
+   59s" is wider than any tile in the strip holds — the second line it bought there grew
+   all six tiles with it. Two units fit at any tile width; days take over past two of
+   them so the hours cannot run away. The exact string stays on the figure's own title
+   and in the Process-uptime disclosure, which is where a figure gets audited. */
+function uptimeFigure(seconds) {
+    seconds = Math.max(0, seconds);
+    const hours = Math.floor(seconds / 3600);
+    if (hours >= 48) return `${Math.floor(hours / 24)}d ${hours % 24}h`;
+    return `${hours}h ${Math.floor((seconds % 3600) / 60)}m`;
+}
+
 export async function mount(ctx) {
     const node = el('div', null, 'stack'),
         strip = el('div', null, 'server-strip'),
@@ -516,7 +528,8 @@ export async function mount(ctx) {
         text(counters[0][1], `${s.sessions.length} connections`);
         text(counters[1][0], s.scenes.length);
         text(counters[1][1], `${s.scenes.reduce((a, v) => a + v.players, 0)} scene occupants`);
-        text(counters[2][0], duration(s.uptimeSeconds));
+        text(counters[2][0], uptimeFigure(s.uptimeSeconds));
+        counters[2][0].title = duration(s.uptimeSeconds);
         // A caption adds the one thing the figure cannot say. This tile had none, so it
         // carried an empty 17px band under its number while the five beside it carried a
         // line, and the strip stopped reading as six of the same thing.
