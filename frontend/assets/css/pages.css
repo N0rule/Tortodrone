@@ -1991,16 +1991,6 @@ td:has(> .time-stamp) {
 .item-effects li strong {
     font-weight: 600;
 }
-/* A tooltip row is wider than its sentence, and the game's own rows are narrow enough
-   that the text fills them. The sentence is left aligned but its block sits in the
-   middle of the row, so a wrapped line keeps one left edge while the row still reads
-   centred. The lists that are scanned rather than read - the UV picker's two columns
-   and a tile's compact copy - stay left aligned at their smaller size. */
-.variant-effects .variant-effect .effect-copy,
-.item-effects li .effect-copy {
-    justify-content: center;
-    text-align: left;
-}
 .variant-effect .effect-strength {
     margin: 0;
     color: inherit;
