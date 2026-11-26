@@ -144,9 +144,10 @@ th {
        names the columns and the data stays the loudest thing on the table. */
     background: var(--surface);
     color: var(--muted);
-    border-block-end: 1px solid var(--line-bright);
+    border-block-end: 1px solid var(--line-data);
     white-space: nowrap;
-    font-weight: 400;
+    font-weight: 500;
+    font-size: 12.5px;
 }
 /* A sortable header lines up with the data under it and keeps the caret on the
    far edge, where it reads as a column control rather than a stray glyph. */
@@ -970,7 +971,7 @@ html.dialog-open {
 }
 .chart {
     width: 100%;
-    height: 190px;
+    height: 230px;
     display: block;
 }
 /* Axis labels are the smallest text in the product, and 10px was under the ramp's own
@@ -981,17 +982,58 @@ html.dialog-open {
     font: 10.5px var(--font);
     font-variant-numeric: tabular-nums;
 }
+/* The reference chart is a measurement over a page, not a boxed diagram: one
+   horizontal ruleset only, the ticks it carries, and no vertical grid or axis frame. */
 .chart .grid-line {
     stroke: var(--line);
     stroke-width: 1;
+    stroke-opacity: 0.55;
+}
+.chart .axis-label {
+    fill: var(--muted);
+}
+/* A smooth line over a soft area: the fill gives the reading a body and lets the eye
+   compare two series without a second stroke weight. The top stop is the theme's
+   chart ink at 32%, falling to nothing at the baseline. */
+.chart .area {
+    stroke: none;
+    pointer-events: none;
+}
+.chart .secondary-area {
+    opacity: 0.9;
+}
+.chart .chart-fill stop {
+    stop-color: var(--chart-series);
+}
+.chart .secondary-fill stop {
+    stop-color: var(--chart-secondary);
 }
 .chart .series {
-    stroke: var(--cyan);
+    stroke: var(--chart-series);
     stroke-width: 2;
     fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 .chart .secondary-series {
-    stroke: var(--gold);
+    stroke: var(--chart-secondary);
+}
+/* The cursor and its dots are inspection apparatus, so they appear under the
+   pointer or the arrow keys and leave the resting chart clean. */
+.chart .chart-cursor {
+    stroke: var(--line-bright);
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+}
+.chart .hover-dot,
+.chart .end-dot {
+    fill: var(--surface);
+    stroke: var(--chart-series);
+    stroke-width: 2;
+}
+.chart .hover-dot.secondary-dot,
+.chart .end-dot.secondary-dot {
+    stroke: var(--chart-secondary);
 }
 .chart-legend {
     display: flex;
@@ -1034,10 +1076,10 @@ html.dialog-open {
     block-size: 3px;
     flex: 0 0 14px;
     border-radius: var(--radius-pill);
-    background: var(--cyan);
+    background: var(--chart-series);
 }
 .chart-swatch.secondary-swatch {
-    background: var(--gold);
+    background: var(--chart-secondary);
 }
 @media (max-width: 600px) {
     .form-grid {
@@ -1092,7 +1134,7 @@ img.ui-icon {
     flex: 0 0 22px;
 }
 #navigation [aria-current='page'] .ui-icon {
-    color: var(--gold);
+    color: var(--brand);
 }
 .tabs .ui-icon,
 button > svg.ui-icon {
@@ -1122,8 +1164,8 @@ a:focus-visible {
 /* A key is a hint about a control, not a control: no rim, no keycap lip under it, no
    fill of its own — one faint lift over whatever it sits on, which is what lets the
    same chip read on the inset search trigger and inside the shortcuts panel. The
-   colour is mixed from the theme's own ink, so the light theme gets the same 8% of
-   its darker text instead of a dark theme's box on a white page. */
+   colour is mixed from the theme's own ink, so the chip follows the surface it is
+   drawn on instead of painting a fixed box. */
 .kbd {
     display: inline-block;
     padding: 0 6px;
@@ -1487,7 +1529,7 @@ caption {
     block-size: 20px;
 }
 .palette-option[aria-selected='true'] .palette-glyph {
-    color: var(--gold);
+    color: var(--brand);
 }
 .palette-kind {
     /* A fixed column, not a minimum: one long hint — "Identity · fingerprint · modulus ·
@@ -1816,12 +1858,6 @@ caption {
 }
 .identity-key[data-state='empty'] {
     color: var(--muted);
-}
-.identity-hint {
-    margin: 9px 0 0;
-    color: var(--muted);
-    font-size: 12.5px;
-    max-inline-size: 72ch;
 }
 .identity-state {
     margin: 0 0 10px;

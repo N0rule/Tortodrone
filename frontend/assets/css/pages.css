@@ -49,11 +49,13 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
-/* The client's own mark for the server, at the size the catalogue's row sprites use. */
+/* The client's own mark for the server, at the size the catalogue's row sprites use.
+   It inherits the theme brand, exactly like the sidebar wordmark, so the listener
+   card is not the one piece of shell art stuck on the old blue. */
 .server-mark {
     display: inline-flex;
     flex: 0 0 32px;
-    color: var(--cyan);
+    color: var(--brand);
 }
 .server-mark-art {
     inline-size: 32px;
@@ -441,8 +443,8 @@ button.metric:focus-visible {
 /* The terminal's ground is darker than the page, so the page's recessed fill sank
    into it: the search field measured 1.01:1 against the toolbar it sat in and the
    placeholder floated over bare terminal material. A field in a terminal takes the
-   terminal's own step — 1.81:1 on the dark ground, 1.26:1 on the light one — and its
-   hover moves the same way it does everywhere else. */
+   terminal's own step — 1.81:1 against the terminal ground — and its hover moves the
+   same way it does everywhere else. */
 .terminal-tools input:not(:disabled),
 .terminal-tools select:not(:disabled) {
     background: var(--field-on-term);
@@ -452,8 +454,8 @@ button.metric:focus-visible {
     background: color-mix(in srgb, var(--field-on-term) 84%, var(--line-bright));
 }
 /* The bar's buttons are text until they carry state. A filled secondary here competed
-   with the field for the same ground — 1.04:1 against the bar in light and 1.71:1 in
-   dark, one control trusting two grounds four times differently — and a prompt bar
+   with the field for the same ground — 1.04:1 against one backdrop and 1.71:1 against
+   another, one control trusting two grounds four times differently — and a prompt bar
    does not need two filled things side by side. Hover and press still paint, and a
    toggle that is on keeps the cyan fill that says it is on. */
 .terminal-tools button:not([aria-pressed='true']):not([aria-checked='true']),
@@ -502,9 +504,8 @@ button.metric:focus-visible {
     align-items: center;
     block-size: var(--control);
     /* Not a disclosure row: the base rule draws a hairline above every <details>, which
-       on a control in a toolbar was a bright 1px line ruled over the bar (obvious in
-       light, faint in dark). The menu is a button that opens, so it takes no rule and
-       no stacked-row padding. */
+       on a control in a toolbar was a bright 1px line ruled over the bar. The menu is
+       a button that opens, so it takes no rule and no stacked-row padding. */
     border-top: 0;
     padding: 0;
 }

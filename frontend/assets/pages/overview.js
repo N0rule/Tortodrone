@@ -12,7 +12,6 @@ import {
     date,
     time,
     copy,
-    download,
     number,
     sceneLabel,
     landOn
@@ -244,7 +243,6 @@ export async function mount(ctx) {
        the landing page. The fingerprint is still one hover away, and the mismatch
        warning still opens in full, because that is the state where the key matters. */
     const identityKey = el('code', null, 'identity-key'),
-        identityHint = el('p', null, 'identity-hint'),
         identityState = el('p', null, 'identity-state'),
         identityWarning = el('p', null, 'identity-warning'),
         identityActions = toolbar();
@@ -255,11 +253,10 @@ export async function mount(ctx) {
     const identityRow = el('div', null, 'identity-value');
     identityRow.append(identityKey, identityActions);
     const identityPanel = panel(
-        'Server identity',
+        'Server identity (public key)',
         identityWarning,
         identityState,
-        identityRow,
-        identityHint
+        identityRow
     );
     // One panel, one address: `#overview?panel=identity` is the link to hand a
     // colleague who only needs the key. Not `identity` — the footer's session line
@@ -362,11 +359,12 @@ export async function mount(ctx) {
         }
     );
     node.append(
-        // The page opens on the process, then on its numbers. The key is a value an
-        // operator copies once a month, so it closes the page instead of standing
-        // between the operator and every figure the console reports.
+        // The page opens on the process, then on its numbers. The public key is the
+        // first thing an operator comes here to copy, so it follows the figures it
+        // identifies and stays above the charts that describe the process.
         strip,
         metrics,
+        identityPanel,
         // The chart range names what it ranges over. Alone on the row, `5 minutes`
         // governed two panels below it with nothing between them to say so.
         toolbar(
@@ -380,15 +378,14 @@ export async function mount(ctx) {
         charts,
         panel('Scene monster runtime', monsters.node),
         panel('Recent warnings and errors', warnings.node),
-        diagnostics,
-        identityPanel
+        diagnostics
     );
     let diagnosticSignature;
     const currentKey = () =>
         identityCurrent ? `${identityCurrent.modulus}#${identityCurrent.exponent}` : '';
     // The value a client must trust: the file's key, or the one the private half
-    // implies when the two disagree. Copy, download and the field all use it, so a
-    // mismatch can never hand out two different keys.
+    // implies when the two disagree. Copy and the field both use it, so a mismatch
+    // can never hand out two different keys.
     const trustedKey = () =>
         identityCurrent?.pairMatches === false && identityCurrent?.expectedPublicKey
             ? identityCurrent.expectedPublicKey
@@ -407,12 +404,6 @@ export async function mount(ctx) {
             text(identityKey, '—');
             identityKey.dataset.state = 'empty';
             identityKey.removeAttribute('title');
-            text(
-                identityHint,
-                identity.keyStored
-                    ? 'Nothing here is served to clients until data/keys/public.txt is readable.'
-                    : 'Nothing here is served to clients yet: the first start writes data/keys/public.txt.'
-            );
             identityActions.replaceChildren();
             identityWarning.hidden = true;
             identityLoaded = false;
@@ -428,14 +419,11 @@ export async function mount(ctx) {
         identityWarning.textContent = mismatch
             ? `The stored public half does not match the private key that signs handshakes, so the server will refuse to start until the pair matches again.${
                   identity.expectedPublicKey
-                      ? ' The key below, Copy and Download all use the key the private half implies — the one clients must trust.'
+                      ? ' Copy uses the key the private half implies — the one clients must trust.'
                       : ''
               } Stop the server, restore the matching public.txt from your backup and start it again. Deleting data/keys lets the next start create a fresh pair, but every client pinned to the old key — including the one you are about to set up — must be re-keyed.`
             : '';
         identityCurrent = identity;
-        // The port is on the strip above; this line says where the key goes, and one
-        // sentence that fits on one line is read where two wrapped ones are skimmed.
-        text(identityHint, "Paste it under game.publicKey in the client's Add Server dialog.");
         const shown = trustedKey();
         // A five-second poll must not eat a selection the operator is copying:
         // the line is rewritten only when it is unfocused and the value changed.
@@ -451,51 +439,13 @@ export async function mount(ctx) {
         if (!identityLoaded) {
             identityLoaded = true;
             identityActions.append(
-                // One gold control per page: the server strip owns the primary, and a
-                // copy is not the page's next action. The two secondary hand-offs sit
-                // beside it as quiet words, so the row reads as one action and two
-                // conveniences instead of three controls of equal weight.
+                // The panel is a value and the one act that makes it useful. A copy is
+                // not the page's primary action, so it stays secondary beside the key.
                 button(
                     'Copy key',
                     () => copy(trustedKey(), 'Server public key copied.'),
                     'secondary'
-                ),
-                // One label for one affordance, everywhere: "card" named a container
-                // this console never calls a card, and the same job was called
-                // "Permalink" on Player Mail. The accessible name says what it links to.
-                (() => {
-                    const control = button(
-                        'Copy link',
-                        () =>
-                            copy(
-                                `${location.origin}${location.pathname}#overview?panel=identity`,
-                                'Link copied.'
-                            ),
-                        'quiet'
-                    );
-                    control.setAttribute('aria-label', 'Copy link to the server identity');
-                    control.title = 'Copy a link to the server identity';
-                    return control;
-                })(),
-                (() => {
-                    const control = button(
-                        'Download',
-                        // Normally the server sends the file's own bytes, so `sha256sum`
-                        // on the download matches the printed hash. In the mismatch
-                        // state the file is the stale half, and the button hands out the
-                        // key the warning above promises.
-                        () =>
-                            download(
-                                'public.txt',
-                                identityCurrent?.pairMatches === false
-                                    ? trustedKey()
-                                    : (identityCurrent?.fileText ?? trustedKey())
-                            ),
-                        'quiet'
-                    );
-                    control.title = 'Download public.txt';
-                    return control;
-                })()
+                )
             );
         }
     }

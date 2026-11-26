@@ -57,9 +57,9 @@ export async function run({ disposable = false } = {}) {
     if (active)
         check(
             getComputedStyle(active).color ===
-                getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() ||
+                getComputedStyle(document.documentElement).getPropertyValue('--brand').trim() ||
                 getComputedStyle(active).color === getComputedStyle(active.parentElement).color,
-            'Active icon matches gold navigation'
+            'Active icon matches brand navigation'
         );
     const failed = symbol('slot-helmet');
     document.body.append(failed);

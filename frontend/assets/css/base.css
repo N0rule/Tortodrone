@@ -57,13 +57,15 @@
 html {
     /* A deep link lands on its target, not under the sticky top bar. */
     scroll-padding-top: 64px;
-    background: var(--canvas);
+    background: var(--rail);
     scroll-behavior: smooth;
 }
 body {
     margin: 0;
     color: var(--text);
+    background: var(--rail);
     font: 14px/1.5 var(--font);
+    -webkit-font-smoothing: antialiased;
 }
 h1,
 h2,
@@ -71,26 +73,28 @@ h3,
 p {
     margin: 0 0 12px;
 }
-/* The ramp's "23 page title" step, not the "32 page hero" one: the largest type in a
-   console belongs to the one thing the operator came to read, and a page name is
-   already in the nav and in the tab. 32 is spent only where a page has a hero — the
-   running state, a knight's name. */
+/* Page titles use the display face; it is the one place besides the product name
+   where Unbounded's wide round letterforms set the tone without costing the reader
+   anything. Section headings stay in Instrument Sans, which is the working face. */
 h1 {
-    font-size: 23px;
-    font-weight: 700;
-    line-height: 1.2;
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.3;
     letter-spacing: -0.4px;
 }
 h2 {
-    font-size: 20px;
-    line-height: 1.3;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.15px;
 }
 /* A subheading opens a section, so it owns the space above it: flush against the row
    it followed, "Promotions" read as one more fact in the list that just ended. The
    space below stays smaller than the space above, which is what makes the two read as
    one block. */
 h3 {
-    font-size: 16px;
+    font-size: 14px;
     margin-block: 20px 10px;
 }
 p {
@@ -120,44 +124,45 @@ textarea {
    and dialog footers share a height. */
 button,
 .button {
-    --control-bg: var(--raised);
+    --control-bg: var(--surface);
     --control-fg: var(--text);
-    /* A control is a fill, not an outline. Its edge is the step between its own fill
-       and the surface under it, which is what makes a toolbar read as buttons instead
-       of as a form: four bordered boxes side by side draw four rectangles, and the eye
-       counts edges before it reads labels. */
-    --control-border: transparent;
+    /* A control is a fill plus one quiet boundary. The reference's secondary buttons
+       are the panel colour with a 1px edge, not a raised block; that keeps a toolbar
+       from reading as four floating cards while still locating every press. */
+    --control-border: var(--line-bright);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     min-block-size: var(--control);
-    padding: 0 16px;
+    padding: 0 14px;
     cursor: pointer;
     color: var(--control-fg);
     background: var(--control-bg);
     /* Transparent rather than absent: the border box is what gives every variant the
        same height, and a control that drops it sits 2px shorter than its neighbour. */
-    border: 1px solid transparent;
+    border: 1px solid var(--control-border);
     border-radius: var(--radius-control);
-    /* 500, not 600: with system-ui at 13px, six buttons and four headings all at 600
-       made weight say nothing. Controls are 500, headings 600, the page title 700. */
+    /* 500, not 600: with Instrument Sans at 14px, six buttons and four headings all at
+       600 made weight say nothing. Controls are 500, headings 600, the page title 600. */
     font-weight: 500;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.2;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
     white-space: nowrap;
     box-shadow: none;
     transition:
         background-color 120ms ease,
+        border-color 120ms ease,
         color 120ms ease,
         box-shadow 120ms ease;
 }
-/* Hover is a fill step, not a second accent: cyan stays the colour of focus and of
-   the pressed state, so "hovered", "focused" and "on" stop looking the same. */
+/* Hover is a fill step, not a second accent: the brand stays the colour of the current
+   page and the pressed state, so "hovered", "focused" and "on" stop looking the same. */
 button:not(:disabled):not([aria-disabled='true']):hover,
 .button:not(:disabled):not([aria-disabled='true']):hover {
-    background: color-mix(in srgb, var(--raised) 78%, var(--line-bright));
+    background: var(--raised);
+    border-color: var(--line-bright);
 }
 /* A press steps the control's own fill rather than painting every variant slate. One
    shared rule did the latter, and a gold primary went grey under the same dark ink —
@@ -288,8 +293,8 @@ td .unavailable-reason.shown {
     background: var(--raised);
     border: 1px solid var(--line-bright);
     border-radius: var(--radius);
-    /* A 38% black halo in the light theme was 2.7x heavier than the themed elevation
-       beside it: the shadow is a theme token, like every other one here. */
+    /* A fixed 38% black halo sat 2.7x heavier than the themed elevation beside it:
+       the shadow is a theme token, like every other one here. */
     box-shadow: var(--elev-2);
 }
 /* A reason asked for on a page toolbar is permanent and takes its own line: the
@@ -371,7 +376,8 @@ button.primary,
 .button.primary {
     --control-bg: var(--action);
     --control-fg: var(--action-text);
-    font-weight: 600;
+    --control-border: var(--action-edge);
+    font-weight: 500;
 }
 /* `:where()` keeps the variant class out of the specificity count, so a component
    that knows its own host (a table header, a tab) can still paint its hover: at full
@@ -385,12 +391,14 @@ button:where(.primary):not(:disabled):not([aria-disabled='true']):hover,
    plain button with a boundary that is visible on the surface it sits on. */
 button.secondary,
 .button.secondary {
-    --control-bg: var(--raised);
+    --control-bg: var(--surface);
     --control-fg: var(--text);
+    --control-border: var(--line-bright);
 }
 button:where(.secondary):not(:disabled):not([aria-disabled='true']):hover,
 .button:where(.secondary):not(:disabled):not([aria-disabled='true']):hover {
-    background: color-mix(in srgb, var(--raised) 74%, var(--line-bright));
+    background: var(--raised);
+    border-color: var(--line-bright);
 }
 button.quiet,
 .button.quiet {
@@ -400,14 +408,11 @@ button.quiet,
 }
 button:where(.quiet):not(:disabled):not([aria-disabled='true']):hover,
 .button:where(.quiet):not(:disabled):not([aria-disabled='true']):hover {
-    /* `--raised` is the colour of the host a quiet control usually sits on (a table
-       header, a hovered row), so the fill said nothing at all there. A tint that is
-       lighter than both the surface and the raised step reads as hover either way. */
-    background: color-mix(in srgb, var(--raised) 55%, var(--line-bright));
+    background: var(--raised);
 }
 /* Destructive is a filled tint, not a quiet button in red ink: it has to look
-   like a decision. The fill is opaque so the ink stays at 5.54:1 (dark) and
-   5.50:1 (light) whatever sits behind the control. */
+   like a decision. The fill is opaque so the ink stays above 5.5:1 in either
+   theme, whatever sits behind the control. */
 button.danger,
 .button.danger {
     --control-bg: color-mix(in srgb, var(--bad) 16%, var(--surface));
@@ -469,13 +474,14 @@ button.link:disabled,
     color: var(--muted);
     text-decoration: none;
 }
-/* A toggled control (Tail, Pause) and a switch (theme, density) read as pressed,
-   not hovered: both say "this is on", so both use the same fill. */
+/* A toggled control (Tail, Pause) and a switch (theme) read as pressed, not hovered:
+   both say "this is on", so both use the same brand tint. */
 button[aria-pressed='true'],
 .button[aria-pressed='true'],
 button[aria-checked='true'],
 .button[aria-checked='true'] {
-    background: color-mix(in srgb, var(--cyan) 26%, var(--raised));
+    background: color-mix(in srgb, var(--brand) 18%, var(--surface));
+    border-color: color-mix(in srgb, var(--brand) 45%, var(--line-bright));
     color: var(--text);
 }
 /* Hover deepens the pressed fill instead of replacing it, so a pressed control
@@ -484,7 +490,7 @@ button[aria-pressed='true']:not(:disabled):hover,
 .button[aria-pressed='true']:not(:disabled):hover,
 button[aria-checked='true']:not(:disabled):hover,
 .button[aria-checked='true']:not(:disabled):hover {
-    background: color-mix(in srgb, var(--cyan) 34%, var(--raised));
+    background: color-mix(in srgb, var(--brand) 26%, var(--surface));
     color: var(--text);
 }
 /* A switch draws its state as a track with a knob, and draws it the same way
@@ -507,21 +513,20 @@ button[role='switch']::after {
    loudest thing on it. */
 button[role='switch'][aria-checked='true'] {
     background: var(--control-bg);
+    border-color: var(--control-border);
     color: var(--control-fg);
 }
 button[role='switch'][aria-checked='true']::after {
     content: '';
     /* The knob keeps --text in both positions, so a switch slides rather than flips
-       colour, and the lit track is a deeper teal than a bare cyan: a knob the colour of
-       the ink needs a track it can be seen on. */
-    background-color: color-mix(in srgb, var(--cyan) 55%, var(--inset));
-    /* The knob travels to the far end of the 32px track and stays 3px inside it. Only
-       the track was changing colour before, so "on" and "off" differed by a hue shift and
-       the knob sat at the left in both — a switch whose handle never moves is a lamp. */
+       colour, and the lit track is a deeper brand than a bare accent: a knob the colour
+       of the ink needs a track it can be seen on. */
+    background-color: color-mix(in srgb, var(--brand) 62%, var(--inset));
+    /* The knob travels to the far end of the 32px track and stays 3px inside it. */
     background-image: radial-gradient(circle 7px at 22px 50%, var(--text) 99%, transparent 100%);
 }
 button[role='switch'][aria-checked='true']:not(:disabled):hover {
-    background: color-mix(in srgb, var(--raised) 78%, var(--line-bright));
+    background: var(--raised);
 }
 button.sm,
 .button.sm {
@@ -569,25 +574,58 @@ textarea {
     width: 100%;
     min-width: 0;
     /* A field and the button beside it share one height, so a toolbar reads as a
-       row instead of a staircase. */
+       row instead of a staircase. 36px is the reference's control step. */
     min-block-size: var(--control);
     padding: 6px 11px;
     color: var(--text);
-    background: var(--inset);
-    /* One edge language: a control is a fill, and this is the recessed one. A field
-       used to keep a hairline the buttons had dropped, so a toolbar showed a rimmed
-       search box, a rimmed select, a rimmed trigger and two filled buttons — three
-       edges saying three different things about four things that are all controls.
-       The fill carries it in both themes now (--inset is deepened in the light one so
-       a recess on a white panel still reads at a glance). */
-    border: 1px solid transparent;
+    /* Transparent fill with one visible rim: the reference's inputs are a boundary,
+       not a recess. On a panel the field therefore sits level with the controls. */
+    background: transparent;
+    border: 1px solid var(--line-bright);
     border-radius: var(--radius-control);
-    transition: background-color 120ms ease;
+    transition:
+        background-color 120ms ease,
+        border-color 120ms ease,
+        box-shadow 120ms ease;
 }
 input:hover:not(:disabled),
 select:hover:not(:disabled),
 textarea:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--inset) 84%, var(--line-bright));
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+    border-color: var(--line-bright);
+}
+/* The reference rings a focused field with 3px of its own boundary colour instead of
+   moving the keyboard outline inside it. The ring is drawn from the brand, so focus
+   reads the same on both themes. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 28%, transparent);
+}
+/* Native selects keep the platform popup, but the closed control is drawn like the
+   rest of the console. The caret is two 5px gradients rather than a data-URI image,
+   because the CSP allows no inline image source. */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-inline-end: 32px;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position:
+        calc(100% - 16px) calc(50% + 1px),
+        calc(100% - 11px) calc(50% + 1px);
+    background-size:
+        5px 5px,
+        5px 5px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+select option {
+    color: var(--text);
+    background: var(--surface);
 }
 /* `showReason` chooses to show a reason instead of hiding it, and outside a table cell
    there was no rule that honoured it: `.shown` was only ever un-clipped inside `td`/`th`,
@@ -641,8 +679,8 @@ textarea::placeholder {
     opacity: 1;
 }
 ::selection {
-    color: var(--inset);
-    background: var(--cyan);
+    color: var(--action-text);
+    background: var(--brand);
 }
 textarea {
     min-height: 150px;
@@ -651,8 +689,9 @@ textarea {
 label {
     display: grid;
     gap: 6px;
-    color: var(--muted);
-    font-size: 13px;
+    color: var(--text);
+    font-size: 13.5px;
+    font-weight: 500;
 }
 label.check {
     display: flex;

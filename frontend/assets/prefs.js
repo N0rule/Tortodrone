@@ -1,8 +1,8 @@
 /**
  * Interface preferences shared by the shell and every page. Values live in
  * localStorage under `tortodrone-<key>`; nothing here is account or server data.
- * The boot script `preferences.js` applies theme and density before first paint,
- * so this module is the single reader/writer for every other preference.
+ * The boot script `preferences.js` applies the theme before first paint, so this
+ * module is the single reader/writer for every preference after that.
  */
 const storage = (() => {
     if (typeof localStorage === 'undefined') return null;
@@ -18,8 +18,7 @@ const storage = (() => {
 
 /** Coercion table: the first entry of each list is the default. */
 export const schema = {
-    theme: ['dark', 'light'],
-    density: ['comfortable', 'compact'],
+    theme: ['catppuccin', 'tortodrone'],
     pageSize: [30, 15, 60, 120],
     pollScale: [1, 0.5, 2, 4],
     clock: ['date', 'date-time'],
@@ -28,8 +27,15 @@ export const schema = {
 
 const listeners = new Set();
 
+/* Stored values from the removed appearance options. `dark` was the navy console and
+   keeps working as `tortodrone`; `light` has no successor, so it lands on the default.
+   Migration happens on read and is written back by the next write, so no account or
+   server state is touched. */
+const LEGACY_THEME = { dark: 'tortodrone', light: 'catppuccin' };
+
 /** @param {string} key @returns {string|number|boolean} */
 function coerce(key, value) {
+    if (key === 'theme' && value in LEGACY_THEME) value = LEGACY_THEME[value];
     const [fallback, ...options] = schema[key] ?? [value];
     if (typeof fallback === 'number') {
         const number = Number(value);
@@ -92,7 +98,6 @@ export function apply() {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
     root.dataset.theme = read('theme');
-    root.dataset.density = read('density');
     root.dataset.motion = read('motion');
     root.dataset.clock = read('clock');
 }

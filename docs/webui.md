@@ -63,27 +63,20 @@ for pointer users.
 ## Server identity
 
 Operators used to SSH into the host to read `data/keys/public.txt`; the Overview
-page now shows it. The panel reports the key size and exponent, when the file was
-last written, the file that holds it, the `modulus#exponent` pair the client
-trusts, and two independently reproducible hashes:
+page now shows it. The panel is deliberately one value and one action: the
+`modulus#exponent` pair the client trusts, shown as a selectable, horizontally
+scrollable line, and **Copy key**, which copies that exact value and confirms with
+a toast. The key's tooltip carries the SHA-256 fingerprint. It sits below the
+metric strip and above the charts, so the value is the first thing below the
+process figures rather than the last thing on the page.
 
-- **SHA-256 over the DER SubjectPublicKeyInfo**, written as upper-case
-  colon-separated byte pairs, which is what a certificate fingerprint looks like.
-  Reproduce it with
-  `openssl pkey -pubin -inform DER -in key.der -outform DER | openssl dgst -sha256`
-  where `key.der` is the DER half of `public.txt`. Note that
-  `openssl rsa -pubin -inform DER -in key.der -noout -text` prints the modulus and
-  exponent and **no** fingerprint, so it cannot confirm this value.
-- **SHA-256 of `public.txt` itself**, so one plain command on the host confirms
-  the panel: `sha256sum data/keys/public.txt`. The panel shows the command in the
-  hash's tooltip.
-
-The panel also reports whether the stored public half still matches the private
-key that signs handshakes (`pairMatches`), and raises a warning when it does not:
+The panel reports whether the stored public half still matches the private key
+that signs handshakes (`pairMatches`), and raises a warning when it does not:
 a `public.txt` replaced while the server is running otherwise publishes a
-confident fingerprint for a key clients are not using. To rotate, stop the
-server, remove `data/keys/private.pk8` and `data/keys/public.txt`, start it again,
-and hand clients the new key — every client pinned to the old key must be updated.
+confident fingerprint for a key clients are not using. Copy uses the key the
+private half implies in that state. To rotate, stop the server, remove
+`data/keys/private.pk8` and `data/keys/public.txt`, start it again, and hand
+clients the new key — every client pinned to the old key must be updated.
 
 - **Never exposed:** the private key, its path and the reverse-proxy secret. The
   panel only reports whether a signing key is stored (`keyStored`). Every API
@@ -95,8 +88,8 @@ and hand clients the new key — every client pinned to the old key must be upda
   re-checks on every refresh so a key generated later grows its actions.
 - **Permission:** `VIEWER`. A signed-out request gets `401`, so the fingerprint is
   never public.
-- **Actions:** copy the public key, download `public.txt`, reveal the full key in a
-  read-only field, copy the fingerprint. Each confirms with a toast.
+- **Action:** copy the public key. The read-only line itself is focusable and
+  selectable, so an operator can audit or copy a fragment without another control.
 
 ## Terminal surface
 
@@ -161,9 +154,9 @@ status line counts what arrived (`12 new`) and resuming shows it, which is what
 distinguishes a pause from a silent gap. A failed read backs off instead of
 polling every four seconds, and the first success clears the error notice.
 
-The palette is theme-aware: dark theme keeps an ink-black pane, light theme
-switches to a paper-and-ink pane with the same structure and severity semantics,
-all driven by `--term-*` tokens so contrast can be checked per theme.
+The palette is theme-aware: both Catppuccin and Tortodrone have their own
+ink-black pane and severity semantics, all driven by `--term-*` tokens so contrast
+can be checked per theme.
 
 Filtering never moves the viewport: the stream stays anchored while rows are
 hidden, and a **Jump to latest** pill appears when new rows arrive off-screen.
@@ -320,8 +313,7 @@ the server and are not part of a WebUI identity.
 
 | Preference | Effect |
 | --- | --- |
-| Theme | Dark or light. The boot script applies it before first paint. |
-| Density | Comfortable or compact row and panel spacing. |
+| Theme | Catppuccin (default) or Tortodrone. The boot script applies it before first paint; `t` and the command palette switch it too. |
 | Motion | `Reduce` disables animation and smooth scrolling regardless of the OS setting. |
 | Header clock | Date only, or date and local time. |
 | Rows per page | Default page size for new tables (15/30/60/120); each table also remembers its own. |
@@ -495,6 +487,10 @@ administrator can therefore confirm the transport in use without reading
 - Charts are focusable images with a description: arrow keys, Home and End move
   through samples and the readout becomes a polite live region only while the
   keyboard is inspecting, so pointer movement never floods a screen reader.
+  Telemetry is drawn as a smooth `--chart-series` line over a gradient area with
+  horizontal grid rules only; `--chart-secondary` marks the comparison series.
+  Both tokens are theme-owned, so Catppuccin renders teal/mauve and Tortodrone
+  renders gold/cyan.
 
 ## Frontend structure
 
@@ -609,8 +605,8 @@ Every glyph and item image is copied from the installed game client by the serve
 at first start (`buildWebui` overlays a prepared pack from `local/webui-assets-optimized`
 or `-PwebuiAssets=<path>`). `assets/components/symbols.js` prefers the native symbol
 (`nav-<name>`, `slot-<name>`, `brand`) and tints it with the surrounding text colour,
-so navigation glyphs follow cyan, the active page follows gold and destructive
-actions follow red in both themes. The small set of source-owned SVG outlines in
+so navigation glyphs follow the theme's link ink, the active page follows the
+theme's brand ink and destructive actions follow red in both themes. The small set of source-owned SVG outlines in
 that module is a fallback for symbols a prepared pack does not contain — for example
 the palette magnifier and the keyboard hint — and disappears as soon as the pack
 exports a matching name.

@@ -108,14 +108,23 @@ public final class WebUiAssetsExport {
                         Map.entry("news", "feed"),
                         Map.entry("mailing", "mail"),
                         Map.entry("content", "arsenal"),
-                        Map.entry("console", "settings"),
                         Map.entry("settings", "settings"),
                         Map.entry("logs", "notice"),
-                        Map.entry("webui-users", "settings"),
                         Map.entry("details", "help"),
                         Map.entry("edit", "forge"))
                 .entrySet())
             navigation.put(entry.getKey(), "ui/hud_v2/images/icons/system/" + entry.getValue() + ".png");
+        // Destinations with no system glyph borrow a client icon that already means
+        // the job: the guild crest, the speech bubble for the console, and the key for
+        // WebUI access. Preferences keeps the gear, so the three no longer share it.
+        // Accounts uses the client's ledger folder instead of the guildhall shield,
+        // and Content Catalogue uses the recipe scroll, so no two sidebar glyphs are
+        // the same silhouette.
+        navigation.put("accounts", "ui/hud_v2/images/icons/system/arsenal.png");
+        navigation.put("content", "ui/icon/inventory/categories/icon_recipe.png");
+        navigation.put("guilds", "ui/icon/social/guild.png");
+        navigation.put("console", "ui/icon/context/talk.png");
+        navigation.put("webui-users", "ui/icon/inventory/categories/icon_key.png");
         navigation.put("auctions", "ui/icon/market_32.png");
         navigation.put("sprites", "ui/icon/inventory/categories/icon_battlesprite.png");
         navigation.put("audit", "ui/icon/check.png");
@@ -189,9 +198,10 @@ public final class WebUiAssetsExport {
         for (var entry : navigation.entrySet()) {
             var icon = new IconConfig.ColorizedImage();
             icon.file = entry.getValue();
-            if (icon.file.contains("/categories/")) icon.colorizations = socketColors;
+            var colorized = icon.file.contains("/categories/") || icon.file.contains("/social/");
+            if (colorized) icon.colorizations = socketColors;
             ui.put("nav-" + entry.getKey(), write(icon));
-            symbols.put("nav-" + entry.getKey(), writeSymbol(icon.file, icon.file.contains("/categories/")));
+            symbols.put("nav-" + entry.getKey(), writeSymbol(icon.file, colorized));
             completed++;
             progress();
         }

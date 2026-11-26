@@ -753,38 +753,6 @@ $('.skip').onclick = (event) => {
     $('#main').focus();
 };
 
-/* Appearance shortcuts stay in the shell footer; preferences own the values. The
-   label names the setting and the switch reports whether it is on. */
-const APPEARANCE = [
-    ['theme', 'dark', 'light'],
-    ['density', 'comfortable', 'compact']
-];
-function preferences() {
-    for (const [key, off, on] of APPEARANCE) {
-        const node = $('#' + key);
-        if (!node) continue;
-        // The title names what a click does, so it can never contradict the switch
-        // it sits on (a light theme used to offer to "switch the light theme").
-        const on2 = prefs.read(key) === on;
-        // The switch reports its own state. It never did: the markup's `aria-checked`
-        // stayed at the value it shipped with, so a screen reader heard "off" on a
-        // light theme and the checked styling never applied.
-        node.setAttribute('aria-checked', String(on2));
-        node.title =
-            key === 'theme'
-                ? on2
-                    ? 'Switch to the dark theme'
-                    : 'Switch to the light theme'
-                : on2
-                  ? 'Switch to comfortable density'
-                  : 'Switch to compact density';
-    }
-}
-for (const [key, off, on] of APPEARANCE) {
-    $('#' + key).onclick = () => prefs.write(key, prefs.read(key) === on ? off : on);
-}
-prefs.subscribe(() => preferences());
-
 const palette = createPalette({
     entries: () => [
         ...pages
@@ -818,17 +786,13 @@ const palette = createPalette({
         },
         {
             id: 'theme',
-            title: prefs.read('theme') === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme',
+            title:
+                prefs.read('theme') === 'catppuccin'
+                    ? 'Switch to the Tortodrone theme'
+                    : 'Switch to the Catppuccin theme',
             hint: 'Appearance',
             group: 'Action',
-            run: () => prefs.write('theme', prefs.read('theme') === 'dark' ? 'light' : 'dark')
-        },
-        {
-            id: 'density',
-            title: 'Toggle compact density',
-            hint: 'Appearance',
-            group: 'Action',
-            run: () => prefs.write('density', prefs.read('density') === 'compact' ? 'comfortable' : 'compact')
+            run: () => prefs.write('theme', prefs.read('theme') === 'catppuccin' ? 'tortodrone' : 'catppuccin')
         },
         {
             id: 'shortcuts',
@@ -935,7 +899,7 @@ document.addEventListener('keydown', (event) => {
         refresh();
     } else if (event.key === 't' && !$('#dialog').open) {
         event.preventDefault();
-        prefs.write('theme', prefs.read('theme') === 'dark' ? 'light' : 'dark');
+        prefs.write('theme', prefs.read('theme') === 'catppuccin' ? 'tortodrone' : 'catppuccin');
     }
 });
 
@@ -995,7 +959,6 @@ setInterval(async () => {
     }
 }, 240000);
 
-preferences();
 clock();
 setInterval(clock, 30000);
 await loadAssets();

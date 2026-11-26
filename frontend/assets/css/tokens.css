@@ -1,95 +1,198 @@
+/* Type, surfaces and controls in one file. The visual language follows the SK-AH
+   reference recorded in `local/design/webui-sk-ah-restyle.md`: Instrument Sans for
+   every line of UI, Unbounded only for the product name and the page title, a dark
+   inset workspace floating on a slightly lighter rail, 12px surfaces, 8px controls
+   and a quiet 1px boundary instead of a coloured outline.
+
+   Catppuccin Mocha is the default theme. The original navy-and-gold console remains
+   as `data-theme="tortodrone"`; the white theme and compact density are gone. */
+
+/* Both faces ship with the deployment (font-src 'self'), so the console never asks
+   a public CDN for type and a hosted server still renders the intended design.
+   Licences live beside the files: OFL-InstrumentSans.txt and OFL-Unbounded.txt. */
+@font-face {
+    font-family: 'Instrument Sans';
+    font-style: normal;
+    font-weight: 400 700;
+    font-stretch: 100%;
+    font-display: swap;
+    src: url('/admin/assets/fonts/instrument-sans-latin.woff2') format('woff2');
+    unicode-range:
+        U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+        U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Instrument Sans';
+    font-style: normal;
+    font-weight: 400 700;
+    font-stretch: 100%;
+    font-display: swap;
+    src: url('/admin/assets/fonts/instrument-sans-latin-ext.woff2') format('woff2');
+    unicode-range:
+        U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+        U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113,
+        U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+    font-family: 'Unbounded';
+    font-style: normal;
+    font-weight: 500 700;
+    font-display: swap;
+    src: url('/admin/assets/fonts/unbounded-latin.woff2') format('woff2');
+    unicode-range:
+        U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+        U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Unbounded';
+    font-style: normal;
+    font-weight: 500 700;
+    font-display: swap;
+    src: url('/admin/assets/fonts/unbounded-latin-ext.woff2') format('woff2');
+    unicode-range:
+        U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+        U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113,
+        U+2C60-2C7F, U+A720-A7FF;
+}
+
 /* The type ramp, and the only sizes the product uses. Anything that wants a new
    size argues with this list first: ten steps, no near-duplicates.
-   10.5 micro label / 11.5 caption / 12.5 dense body / 13 control and body /
-   14 lead-in / 16 subhead / 20 section title / 23 page title /
+   10.5 micro label / 11.5 caption / 12.5 dense body / 13.5 control and body /
+   14 lead-in / 16 subhead / 18 section title / 20 page title /
    28 headline number / 32 page hero. */
 :root {
     color-scheme: dark;
+    --font: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+        Arial, sans-serif;
+    --display: 'Unbounded', 'Instrument Sans', system-ui, sans-serif;
+    --mono:
+        ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Cascadia Mono',
+        'DejaVu Sans Mono', monospace;
+
+    /* ---- Catppuccin Mocha (default) ------------------------------------------------
+       The workspace is the darkest surface; the rail it floats on is one step lighter,
+       which is the reference's inset-sidebar composition. Panels sit on the workspace
+       fill with a 1px boundary, never an outline. */
+    --rail: #1e1e2e; /* base: body and sidebar */
+    --canvas: #11111b; /* crust: the inset workspace */
+    --surface: #181825; /* mantle: panels, cards, table beds */
+    --raised: #313244; /* surface0: hover fills, quiet cards */
+    --inset: #0b0b14; /* deeper than the workspace: recessed wells */
+    --line: #313244; /* decorative rule and container edge */
+    --line-bright: #585b70; /* component boundary: inputs, active control edges */
+    --line-panel: #313244; /* panel and table frame */
+    --line-data: #2a2c3d; /* row separator: quieter than a control edge */
+    --text: #cdd6f4; /* text */
+    --muted: #a6adc8; /* subtext0 */
+    --cyan: #89b4fa; /* links and focus: Catppuccin blue */
+    --gold: #f9e2af; /* rarity and secondary chart series */
+    --brand: #cba6f7; /* current page, active tab, identity bar: mauve */
+    --action: #cdd6f4; /* primary fill is near-white, as in the reference */
+    --action-text: #11111b;
+    --action-edge: transparent;
+    --action-hover: #e6ebff;
+    --action-hover-edge: transparent;
+    --gold-rule: #cba6f7;
+    --warn: #fab387; /* peach */
+    --scrim: #0b0b14d9;
+    --good: #a6e3a1; /* green */
+    --bad: #f38ba8; /* red */
+    --purple: #cba6f7; /* mauve: authority and Battle Sprites */
+    /* Telemetry follows the theme rather than borrowing a semantic colour: teal is
+       the measured line, mauve the comparison, both with a soft area below them. */
+    --chart-series: #94e2d5; /* teal */
+    --chart-secondary: #cba6f7; /* mauve */
+    --shadow: 0 18px 48px #000000a6;
+    --elev-1: 0 1px 2px #00000040;
+    --elev-2: 0 10px 28px #0000004d;
+    --meter: #f9e2af;
+    --meter-edge: #f9e2af;
+    --effect-bg: #3a3050;
+    --effect-fg: #e5d4ff;
+    --effect-line: #6c5a94;
+    --effect-strong: #d7c0ff;
+
+    /* Terminal surfaces stay their own material but follow the palette. */
+    --field-on-term: #313244;
+    --term-bg: #0b0b14;
+    --term-bg-top: #11111b;
+    --term-fg: #cdd6f4;
+    --term-time: #7f849c;
+    --term-level: #9399b2;
+    --term-info: #89b4fa;
+    --term-warn: #f9e2af;
+    --term-error: #f38ba8;
+    --term-debug: #7f849c;
+    --term-command: #a6e3a1;
+    --term-input: #89dceb;
+    --term-response: #cdd6f4;
+    --term-line: #313244;
+    --term-hover: #ffffff08;
+    --term-scroll: #45475a;
+    --term-scroll-bg: #0b0b14;
+
+    /* ---- Geometry -----------------------------------------------------------------
+       Three radii, four steps. A 12px surface, an 8px control and a 6px small control
+       reproduce the reference's shadcn-like proportions; the pill is reserved for
+       status dots, switch tracks and scrollbars. */
+    --radius: 12px;
+    --radius-control: 8px;
+    --radius-control-sm: 6px;
+    --radius-pill: 999px;
+    --control: 36px;
+    --control-sm: 32px;
+    --control-lg: 44px;
+    --icon-row: 48px;
+    --icon-tile: 64px;
+    --icon-slot: 64px;
+
+    /* The page's breathing room: block gaps and panel padding share one value. */
+    --space: 20px;
+    --row: 10px;
+}
+
+/* The original Tortodrone console, kept as the second theme. Its surfaces, ink and
+   semantic colours are unchanged; only the shared geometry, type and composition from
+   the base above are new. */
+[data-theme='tortodrone'] {
+    --rail: #1d3446;
     --canvas: #142635;
     --surface: #1d3446;
     --raised: #29495e;
-    /* Deeper than it was (#102330) for the same reason the light canvas moved: the
-       recessed fill has to be a step off the ground it lands on. 1.15:1 from the
-       canvas, 1.37:1 from a panel, which is what light measures too. */
     --inset: #0b1a26;
-    /* --line is a decorative rule; --line-bright is a component boundary and has
-       to clear 3:1 against both surface (4.31) and raised (3.18). */
     --line: #3b586c;
     --line-bright: #779aaf;
-    /* The edge of a container, as opposed to the edge of a control. Panels, tables and
-       strip frames use this; anything an operator clicks keeps --line-bright, because a
-       control's boundary is what locates it. */
     --line-panel: #46647a;
-    /* A rule between two rows of data is a boundary the reader has to see, not a
-       decorative hairline: this one clears 3:1 against the surface and against the
-       zebra tint (3.44 and 3.21), where --line sat at 1.71. */
-    --line-data: #63899f;
+    --line-data: #46647a;
     --text: #edf4f6;
     --muted: #b0c5d1;
     --cyan: #78dce8;
     --gold: #edc777;
+    --brand: #edc777;
     --action: #edc777;
     --action-text: #152c3b;
-    /* The primary's edge. On the dark canvas the fill is its own boundary; on white
-       it needs a darker gold around it or the button reads as a pale smear. */
-    --action-edge: #edc777;
-    --action-hover-edge: #f0d08d;
-    /* Gold as a rule — a 3px identity bar, an active link — is decoration, not text,
-       so it stays gold in both themes instead of turning brown with --gold's ink. */
-    --gold-rule: #edc777;
-    /* Hover only ever moves the primary fill away from its own ink: lighten it, so
-       the ink stays at 9.70:1 in the dark theme and 8.19:1 in the light one. */
+    --action-edge: transparent;
     --action-hover: #f0d08d;
-    /* Caution is its own ink, not a second gold: 6.67:1 on surface, 4.93:1 on
-       raised, so a warning can never be mistaken for the primary action. */
+    --action-hover-edge: #f0d08d;
+    --gold-rule: #edc777;
     --warn: #f5ab63;
     --scrim: #07151fc9;
     --good: #8fd9ae;
     --bad: #ffb0ad;
     --purple: #e2bcf5;
-    --shadow: 0 12px 32px #030d1680;
-    /* Three jobs, four steps: surfaces, the control scale, pills. Anything else is
-       drift. The steps are generous on purpose: this is a dense panel product, and the
-       soft corner is what keeps twelve surfaces of numbers from reading as a
-       spreadsheet. The surface step stays well clear of the control step, so a control
-       inside a panel never looks like the panel's own edge.
-       The control scale has two steps because a corner is read against the height it
-       rounds: 14px on a 40px control is a third of its height, while the same 14px on
-       the 32px step is nearly half and turns a row action into a lozenge. 11px keeps
-       both at the same character, so one family carries two sizes. */
-    --radius: 20px;
-    --radius-control: 14px;
-    --radius-control-sm: 11px;
-    --radius-pill: 999px;
-    --control: 40px;
-    /* The sizes client art is drawn at, one per job: a row thumbnail, a tile, an
-       equipped slot. Two lists picking their own 30px and 34px was drift, not design.
-       Every size is a step on the pack's own canvas — all of it is 96px square — so a
-       44px row was 96 ÷ 2.18: a resample with no whole pixels in it, which is why the
-       art at that size looked softer than the same icon in the game. 48 / 64 are 96 ÷ 2
-       and 96 ÷ 1.5, and nothing is drawn above 96, because above native the browser can
-       only invent the extra pixels. */
-    --icon-row: 48px;
-    --icon-tile: 64px;
-    --icon-slot: 64px;
-    /* A ramp of three real steps: 32 / 36 / 44. 34 against 36 was a 2px difference
-       that read as misalignment rather than as a smaller control. */
-    --control-sm: 32px;
-    --control-lg: 44px;
+    /* The retained console keeps its own telemetry pair: the gold brand for the
+       measured line and the cyan link ink for the comparison. */
+    --chart-series: #edc777;
+    --chart-secondary: #78dce8;
+    --shadow: 0 18px 48px #030d16a6;
     --elev-1: 0 1px 2px #030d1640;
     --elev-2: 0 6px 18px #030d1640;
-    /* Bars, sliders and effect chips carry meaning, so their ink is a token too:
-       a fill that only reads in one theme reads as a bug in the other. */
     --meter: #e6bc62;
     --meter-edge: #f5da98;
     --effect-bg: #48391f;
     --effect-fg: #f1d48d;
     --effect-line: #8a6a32;
     --effect-strong: #e1c792;
-    /* Terminal surface: the log and console panes are their own material, so the
-       palette is defined per theme instead of baked into the panes. */
-    /* A field on the terminal's toolbar needs its own step: the page recess was
-       1.01:1 from --term-bg-top, so the search box had no shape at all. */
     --field-on-term: #2b4d63;
     --term-bg: #08131c;
     --term-bg-top: #0f2231;
@@ -107,109 +210,4 @@
     --term-hover: #ffffff08;
     --term-scroll: #44647c;
     --term-scroll-bg: #0a1721;
-    /* The page's breathing room, in one number: block gaps and the padding inside a
-       panel are the same value, so a panel's edge never sits closer to its content than
-       two panels sit to each other. */
-    --space: 26px;
-    /* Table cell padding above and below its content. A row is as tall as the tallest
-       thing in it — usually the 36px row action — so 12px here measured 60px rows for
-       one line of text: twelve visible rows per screen, and a 30-row list that scrolled
-       twice. 6px puts a single-line row at 48px and a two-line row at 68px. */
-    --row: 6px;
-    /* The platform face, because a shipped-in-2005 display font is the loudest
-       "dated" signal on the page; no webfont is loaded, so nothing is delayed. */
-    --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --mono:
-        ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Cascadia Mono',
-        'DejaVu Sans Mono', monospace;
-}
-[data-theme='light'] {
-    color-scheme: light;
-    /* The workspace sits a step down from the panels it holds. A pale canvas next to
-       white panels left a fill-only control only 1.06:1 from the ground it sat on —
-       visible inside a panel, a whisper on the page — because a fill between two grounds
-       1.19:1 apart can be no more than 1.08:1 from either. Deepening the canvas is what
-       gives the fills room: raised 1.33:1, fields 1.14:1, panels 1.54:1. */
-    --canvas: #c0d3e0;
-    --surface: #ffffff;
-    /* Lifted to the top of its band: the raised fill has to clear both grounds now, and
-       one fill between a canvas and a panel 1.54:1 apart can never be far from either.
-       1.33:1 from the canvas, 1.16:1 from a panel, is as even as the two allow. */
-    --raised: #e4f0f7;
-    /* The recessed fill, deepened so a field or a frame reads against a white panel
-       without a hairline: #f1f6f9 sat 1.09:1 from the panel and only its rim said
-       where it was. Kept a step below the raised fill — at #dbe6ee the button and the
-       field beside it were 1.02:1 apart and shared one fill. Every fill boundary in
-       this theme now lands between 1.14:1 and 1.35:1: the button 1.16:1 from a panel
-       and 1.33:1 from the canvas, the field 1.35:1 and 1.14:1. */
-    --inset: #d0e0eb;
-    /* The decorative hairline, deepened with the canvas: at #bdcfdc it measured 1.04:1
-       against the workspace, which is not a rule, it is a rumour. */
-    --line: #a7bfd0;
-    --line-bright: #678193;
-    /* 1.18:1 was not a line: on white panels that lost their shadow, the container
-       edge has to be visible at 1x. This clears 2.05:1 against a panel and 1.33:1
-       against the canvas, which is the quietest that reads on either. */
-    --line-panel: #9fb9ca;
-    --line-data: #7f93a2;
-    --text: #203a4d;
-    --muted: #3f5c70;
-    --cyan: #00677b;
-    --gold: #795411;
-    /* Two steps of gold, not three. The primary keeps the fill the dark theme uses — a
-       game console's action colour is its gold, and painting it brown in daylight made
-       the two themes read as two products — and #795411 above stays the ink gold is
-       *written* in. A third gold (#c79b3c) sat between them for the rules, close
-       enough to the fill to look like a mistake and far enough to see. */
-    --action: #edc777;
-    --action-text: #152c3b;
-    --action-hover: #f0d08d;
-    --action-edge: var(--gold);
-    --action-hover-edge: var(--gold);
-    /* Rules carry state on white — the active nav bar, the selected tab, the identity
-       bar — and #edc777 against white is 1.55:1, which is not a state anyone can see.
-       The rule gold is the darker one; the fill gold above stays for the button. */
-    --gold-rule: #b8862f;
-    --warn: #933f00;
-    --good: #1d6539;
-    --bad: #a52f2d;
-    --purple: #6b3f8f;
-    --shadow: 0 12px 32px #24465d1a;
-    /* Elevation is a theme token, not a dark-theme constant: white surfaces kept the
-       dark shadow and read as if they were floating under the wrong light. */
-    --elev-1: 0 1px 2px #24465d26;
-    --elev-2: 0 6px 18px #24465d24;
-    /* Stars and rating pips sit on gold and white, where a black halo is dirt. */
-    --star-halo: 0 1px 1px #7a5a1033;
-    --meter: #9a6c12;
-    --meter-edge: #6f4d0a;
-    --effect-bg: #f5e6b6;
-    --effect-fg: #674614;
-    --effect-line: #a97f27;
-    --effect-strong: #755321;
-    /* A paper-and-ink terminal keeps the same structure and severity semantics. */
-    --field-on-term: #c8dce9;
-    /* The screen has to stay recessed against the panel it sits in: at #f8fafc it was
-       1.12:1 from the canvas and identical to the panel fill, so the light theme's
-       terminal read as an empty white card. */
-    --term-bg: #eef4f8;
-    --term-bg-top: #eef3f7;
-    --term-fg: #1c2f3d;
-    --term-time: #52697b;
-    --term-level: #52697b;
-    --term-info: #0c6076;
-    --term-warn: #7d5500;
-    --term-error: #9e2b26;
-    --term-debug: #52697b;
-    --term-command: #0a6b51;
-    --term-input: #08566a;
-    --term-response: #24384a;
-    --term-line: #b7c8d6;
-    --term-hover: #1c2f3d0d;
-    --term-scroll: #9db3c2;
-    --term-scroll-bg: #e7eef4;
-}
-[data-density='compact'] {
-    --space: 15px;
-    --row: 3px;
 }

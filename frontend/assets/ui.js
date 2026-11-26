@@ -553,7 +553,6 @@ export function paintShell() {
         if (art) node.prepend(art);
     }
     paintBrand();
-    syncAppearances();
 }
 /**
  * The brand is one piece of client art in three places: both wordmarks and the tab
@@ -567,7 +566,7 @@ export function paintBrand() {
        a duplicate id resolves to whichever copy the document reaches first: the login
        card's, whose subtree is hidden once the operator signs in. A filter inside a
        hidden subtree does not render, so the sidebar's mark fell back to the raw white
-       client art — invisible on the light theme's near-white sidebar. */
+       client art — invisible against the console's own surface. */
     for (const slot of document.querySelectorAll('.brand-mark'))
         if (!slot.querySelector('.ui-icon')) slot.append(symbol('brand'));
     const image = mark.querySelector('image');
@@ -575,32 +574,9 @@ export function paintBrand() {
     if (favicon && image) favicon.href = image.getAttribute('href');
 }
 
-/* The appearance toggles name the action they perform, so the pressed state is
-   the only place the current setting is announced. preferences.js paints
-   data-theme/data-density before styles, so that is the source of truth. */
-const appearances = [
-    ['#theme', 'theme', 'light'],
-    ['#density', 'density', 'compact']
-];
-// These two are switches, not toggles: the label names the setting ("Light theme")
-// and `aria-checked` says whether it is on, so the button can never display the
-// opposite of its own state.
-function syncAppearances() {
-    for (const [selector, key, on] of appearances) {
-        const node = $(selector);
-        if (node) {
-            node.setAttribute('role', 'switch');
-            node.setAttribute('aria-checked', String(document.documentElement.dataset[key] === on));
-        }
-    }
-}
 // The regression programs import this module in Node for its pure helpers, so
 // nothing here may touch the DOM at import time outside a browser.
 if (typeof document !== 'undefined') {
     paintShell();
-    new MutationObserver(syncAppearances).observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-theme', 'data-density']
-    });
     document.addEventListener('symbols-ready', paintBrand);
 }

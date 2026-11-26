@@ -5,12 +5,8 @@ import * as prefs from '../prefs.js';
 
 const choices = {
     theme: [
-        ['dark', 'Dark'],
-        ['light', 'Light']
-    ],
-    density: [
-        ['comfortable', 'Comfortable'],
-        ['compact', 'Compact']
+        ['catppuccin', 'Catppuccin'],
+        ['tortodrone', 'Tortodrone']
     ],
     motion: [
         ['auto', 'Follow the system'],
@@ -35,22 +31,14 @@ const choices = {
 };
 
 const describe = {
+    theme: (value) => (value === 'catppuccin' ? 'Catppuccin' : 'Tortodrone'),
     pageSize: (value) => value + ' rows',
     pollScale: (value) => `×${value}`
-};
-
-/* Theme and density are switches in the shell footer on every page. This page shows
-   the same switch rather than a select of the same two values, because two controls
-   that write one preference drift apart the moment one of them is changed. */
-const SWITCHES = {
-    theme: { on: 'light', label: 'Light theme', help: 'Applies immediately and is remembered in this browser only.' },
-    density: { on: 'compact', label: 'Compact view', help: 'Compact removes vertical padding from rows, panels and toolbars.' }
 };
 
 export async function mount(ctx) {
     const node = el('div', null, 'stack settings-page');
     const controls = new Map();
-    const switches = new Map();
     const feedback = el('p', '', 'visually-hidden');
     feedback.setAttribute('role', 'status');
     feedback.setAttribute('aria-live', 'polite');
@@ -82,55 +70,17 @@ export async function mount(ctx) {
         return row;
     }
 
-    /**
-     * The switch form of a preference the shell also switches.
-     *
-     * One row anatomy for every preference: the name and its help on the leading edge,
-     * the control on the trailing edge. The switch used to carry the setting's name
-     * itself and sit on the right, with only its help on the left, so the two switches
-     * named their row in the control column while the six selects beside them named
-     * theirs in the label column — two pages of one list, two layouts.
-     */
-    function switchSetting(key) {
-        const config = SWITCHES[key];
-        const control = el('button', null, 'quiet');
-        control.id = 'pref-' + key;
-        control.type = 'button';
-        control.setAttribute('role', 'switch');
-        switches.set(key, control);
-        control.onclick = () => {
-            const next = control.getAttribute('aria-checked') !== 'true';
-            const applied = prefs.write(key, next ? config.on : prefs.schema[key][0]);
-            text(feedback, `${config.label} ${applied === config.on ? 'on' : 'off'}.`);
-            paint();
-        };
-        const row = el('div', null, 'setting');
-        row.append(label(config.label, control), el('small', config.help, 'setting-help'));
-        return row;
-    }
-
     function paint() {
         for (const [key, control] of controls) control.value = String(prefs.read(key));
-        for (const [key, control] of switches) {
-            const on = prefs.read(key) === SWITCHES[key].on;
-            control.setAttribute('aria-checked', String(on));
-            // The word is the state, next to the switch that is drawn as one: the row's
-            // label already carries the setting's name.
-            text(control, on ? 'On' : 'Off');
-            control.title = on
-                ? key === 'theme'
-                    ? 'Switch to the dark theme'
-                    : 'Switch to comfortable density'
-                : key === 'theme'
-                  ? 'Switch to the light theme'
-                  : 'Switch to compact density';
-        }
     }
 
     const appearance = panel(
         'Appearance',
-        switchSetting('theme'),
-        switchSetting('density'),
+        setting({
+            key: 'theme',
+            title: 'Theme',
+            help: 'Catppuccin is the default. Tortodrone keeps the original navy console. Applies immediately and is remembered in this browser only.'
+        }),
         setting({
             key: 'motion',
             title: 'Motion',
