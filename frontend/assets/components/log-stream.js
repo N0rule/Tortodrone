@@ -1,4 +1,4 @@
-import { el, input, select, toolbar, button, text, download, copy, clock as clockTime } from '../ui.js';
+import { el, input, select, toolbar, button, text, download, copy, clock as clockTime, stamp } from '../ui.js';
 
 const LEVELS = ['All', 'INFO', 'WARN', 'ERROR', 'DEBUG', 'COMMAND'];
 
@@ -658,7 +658,7 @@ export function logStream({
         const line = el('div', null, 'terminal-line level-' + row.level);
         const time = el('time', clockTime(row.timestamp), 'log-time');
         time.dateTime = row.timestamp;
-        time.title = new Date(row.timestamp).toLocaleString();
+        time.title = stamp(row.timestamp);
         const level = el('span', row.level === 'COMMAND' ? 'cmd' : row.level, 'log-level');
         level.title = row.level;
         const thread = el('span', null, 'log-thread');
@@ -672,7 +672,7 @@ export function logStream({
             message.replaceChildren(answerBody(row.entry));
             line.append(message);
             line.classList.add('printed');
-            line.title = new Date(row.timestamp).toLocaleString();
+            line.title = stamp(row.timestamp);
             line.dataset.sig = signature(row);
             return line;
         }
@@ -693,7 +693,7 @@ export function logStream({
             line.classList.add('raw');
             line.append(message);
         } else line.append(time, level, thread, message);
-        line.title = new Date(row.timestamp).toLocaleString();
+        line.title = stamp(row.timestamp);
         line.dataset.sig = signature(row);
         return line;
     }

@@ -282,7 +282,7 @@ export async function mount(ctx) {
                 (r) => routeLink(sceneLabel(r.name), 'players', { scene: r.name }),
                 (r) => sceneLabel(r.name)
             ],
-            ['Template', (r) => r.templateId, (r) => r.templateId, 'end'],
+            ['Template ID', (r) => r.templateId, (r) => r.templateId, 'end'],
             ['Instance', (r) => r.instanceId, (r) => r.instanceId, 'end'],
             ['Population', (r) => r.players, (r) => r.players, 'end'],
             ['State', (r) => r.state]

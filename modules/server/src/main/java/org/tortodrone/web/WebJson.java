@@ -13,6 +13,11 @@ public final class WebJson {
     }
 
     private static Object data(Object v) throws IOException {
+        // The JSON writer knows the boxed types it can print, and a record field declared
+        // `byte` (a guild roster's rank) arrives as a Byte, which is not one of them. Widen
+        // the narrow integral types here, at the boundary, instead of teaching the writer a
+        // fourth integer spelling.
+        if (v instanceof Byte || v instanceof Short) return ((Number) v).intValue();
         if (v == null || v instanceof String || v instanceof Number || v instanceof Boolean) return v;
         if (v instanceof Enum<?> || v instanceof java.time.temporal.TemporalAccessor) return v.toString();
         if (v instanceof Collection<?> c) {

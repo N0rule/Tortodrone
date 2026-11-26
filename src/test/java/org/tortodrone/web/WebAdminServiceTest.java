@@ -122,6 +122,9 @@ public final class WebAdminServiceTest {
                                 && guildDetail.roster().getFirst().name().equals("Alice-Knight"),
                         "the guild record names the roster through the stored rank byte");
                 check(
+                        WebJson.encode(guildDetail).contains("\"rankByte\":0"),
+                        "the guild record crosses the JSON boundary with its rank byte");
+                check(
                         guildDetail.log().entryCount() >= 1
                                 && !guildDetail.log().entries().isEmpty(),
                         "the operator log page carries the recorded entries");

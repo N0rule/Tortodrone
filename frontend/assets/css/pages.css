@@ -2971,6 +2971,14 @@ dd .bad {
     border-radius: var(--radius-control-sm);
     align-items: start;
 }
+/* The console runs on this pane too, and its banner and answers have no gutter of
+   their own: the log's four columns are more specific than the single column those two
+   row kinds ask for, so the banner was handed the 88px time lane and wrapped one word
+   per line. Keep the fill chrome, but give a notice and a printed row the full width. */
+.terminal-fill .terminal-line.notice:not(.raw),
+.terminal-fill .terminal-line.printed:not(.raw) {
+    grid-template-columns: minmax(min-content, 1fr);
+}
 .terminal-fill .terminal-line:not(.raw) + .terminal-line:not(.raw) {
     border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
 }

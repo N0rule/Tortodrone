@@ -145,7 +145,9 @@ export async function mount(ctx) {
                 [
                     'Escrow',
                     a.cancelled || a.ended
-                        ? 'Settlement recorded; see deliveries below'
+                        ? deliveries.length
+                            ? 'Settlement recorded; see deliveries below'
+                            : 'Settlement recorded; no deliveries were required'
                         : 'Held by the auction service'
                 ]
             ]),

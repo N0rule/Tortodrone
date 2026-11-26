@@ -12,6 +12,7 @@ import {
     badge,
     facts,
     date,
+    time,
     localDate,
     text,
     changed,
@@ -824,9 +825,7 @@ function deliveredLabel(campaign) {
         // Reaching a figure this control can refresh, and saying when it was read, is
         // better than re-reading every knight on a 30-second poll.
         countKnights.title = rosterReadAt
-            ? `Re-read the knight roster. The reached figure is from ${new Date(
-                  rosterReadAt
-              ).toLocaleTimeString()}.`
+            ? `Re-read the knight roster. The reached figure is from ${time(rosterReadAt)}.`
             : 'The roster read failed; this retries it once.';
         // Four counts as one line of prose ("0 active 0 scheduled 0 ended 0
         // cancelled") read as a sentence with the words run together, and the figure
