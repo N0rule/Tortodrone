@@ -1965,7 +1965,7 @@ td:has(> .time-stamp) {
     background: var(--effect-fill);
     border: 0;
     border-radius: var(--radius-control);
-    font-size: 12.5px;
+    font-size: 14px;
     font-weight: 500;
     line-height: 1.35;
 }
@@ -1989,6 +1989,15 @@ td:has(> .time-stamp) {
 .variant-effect .effect-name,
 .item-effects li strong {
     font-weight: 600;
+}
+/* A tooltip row is wider than its sentence, and the game's own rows are narrow enough
+   that the text fills them. Centring the copy keeps it attached to its colour and band
+   instead of stranding it at the left rag. The lists that are scanned rather than read
+   - the UV picker's two columns and a tile's compact copy - stay left aligned. */
+.variant-effects .variant-effect .effect-copy,
+.item-effects li .effect-copy {
+    justify-content: center;
+    text-align: center;
 }
 .variant-effect .effect-strength {
     margin: 0;
@@ -2020,8 +2029,18 @@ td:has(> .time-stamp) {
     border-radius: 0;
     color: inherit;
     box-shadow: none;
-    font-size: 20px;
-    line-height: 1;
+}
+.variant-remove > .ui-icon {
+    inline-size: 18px;
+    block-size: 18px;
+}
+/* The shared hover fill is the console's raised surface; on a coloured variant row it
+   read as a dark block pasted over the band. The dismiss control lifts its own ink
+   instead, and keeps the row's fill intact. */
+button.variant-remove:not(:disabled):not([aria-disabled='true']):hover {
+    background: color-mix(in srgb, currentColor 16%, transparent);
+    border: 0;
+    box-shadow: none;
 }
 .variant-effect:has(> .variant-remove) {
     grid-template-columns: auto minmax(0, 1fr) auto;

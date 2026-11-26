@@ -199,14 +199,18 @@ export function modifierControls(def, item) {
             if (!selected.has(row.dataset.variant)) row.remove();
         for (const path of selected)
             if (![...selectedView.children].some((r) => r.dataset.variant === path)) {
+                // The remove control borrows the client's dismiss glyph, tinted with the
+                // row's own ink, instead of a text multiplication sign.
                 const row = variantEffect(path, def),
                     remove = button(
-                        '×',
+                        '',
                         () => {
                             selected.delete(path);
                             update();
                         },
-                        'variant-remove'
+                        'variant-remove',
+                        undefined,
+                        { icon: 'remove' }
                     );
                 row.dataset.variant = path;
                 remove.setAttribute(
