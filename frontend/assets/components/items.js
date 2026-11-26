@@ -331,11 +331,11 @@ export function gearProgress(def, item) {
     }
     return node;
 }
-/** The client has one mark per ability kind: the gold star in a magenta ring for a
- * Unique Variant, and the cyan arrow for an equipment bonus. `ui.unique` is the
- * client's own star; the ring is drawn by the stylesheet. */
+/** The client's three ability marks: the gold swirl for a Unique Variant, the cyan
+ * arrow for a bonus, and the magenta arrow for a penalty. The art is the game's own;
+ * the solid band behind it is the stylesheet's only addition. */
 export function effectIcon(kind = 'bonus') {
-    const asset = kind === 'unique' ? 'unique' : 'bonus',
+    const asset = kind === 'variant' ? 'variants' : kind,
         source = path(manifest.ui?.[asset]);
     if (!source) return null;
     const image = el('img');
@@ -349,17 +349,31 @@ export function effectIcon(kind = 'bonus') {
     };
     return image;
 }
+/** Anything that costs the knight is the one thing the client draws in penalty
+ * magenta: a decrease, a penalty, incoming damage, or a longer charge. "Reduction"
+ * stays a bonus because the only reduction in the presentation is a charge time one. */
+export function effectStatus(label) {
+    return /\b(decreased|increase|penalty|receiving)\b/i.test(label) ? 'penalty' : 'bonus';
+}
+function effectMark(kind) {
+    const art = effectIcon(kind);
+    if (!art) return null;
+    const mark = el('span', null, 'effect-mark');
+    mark.append(art);
+    return mark;
+}
 export function variantEffect(config, def) {
     const meta = def?.variantDisplay?.[config],
         node = el('div', null, 'variant-effect');
+    node.dataset.status = 'variant';
     const label = meta?.label || variantName(config),
         separator = label.lastIndexOf(': '),
-        art = effectIcon('unique');
-    node.append(
-        ...(art ? [art] : []),
-        el('span', separator < 0 ? label : label.slice(0, separator + 2), 'effect-name')
-    );
-    if (separator >= 0) node.append(el('small', label.slice(separator + 2), 'effect-strength'));
+        copy = el('span', null, 'effect-copy'),
+        mark = effectMark('variant');
+    copy.append(el('span', separator < 0 ? label : label.slice(0, separator + 1), 'effect-name'));
+    if (separator >= 0) copy.append(el('small', label.slice(separator + 2), 'effect-strength'));
+    node.append(copy);
+    if (mark) node.append(mark);
     return node;
 }
 export function variantEffects(def, variants = []) {

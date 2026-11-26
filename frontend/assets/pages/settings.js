@@ -14,6 +14,7 @@ const choices = {
     ],
     clock: [
         ['date', 'Date only'],
+        ['time', 'Time only'],
         ['date-time', 'Date and time']
     ],
     pageSize: [
@@ -89,7 +90,7 @@ export async function mount(ctx) {
         setting({
             key: 'clock',
             title: 'Header clock',
-            help: 'Show the date alone, or the date with the local time.'
+            help: 'Show the date, the local time, or both. The time always uses the 24-hour clock.'
         })
     );
 

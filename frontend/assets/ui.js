@@ -321,27 +321,30 @@ export const compact = (value) =>
         value
     );
 /**
- * Dates follow the browser, not this bundle. The viewer already configured a region,
- * a clock and a time zone in their operating system; `undefined` asks Intl for exactly
- * those. There is deliberately no forced `en-GB` and no forced `h23`: a browser set to
- * `en-US` reads `07:17 PM`, one set to `en-GB` reads `19:17`, and the header agrees
- * with every row. No formatter appends a zone name — the whole WebUI is local time,
- * and repeating "EET" on every cell was noise, not information.
+ * Dates follow the browser's region, but the clock does not: the console reads the
+ * 24-hour clock everywhere, even when the browser is set to a 12-hour region. The
+ * owner asked for this after a `Europe/Kiev` header still showed `5:02 PM`. `undefined`
+ * still supplies the locale, the date order and the time zone; only the hour cycle is
+ * pinned. No formatter appends a zone name — the whole WebUI is local time, and
+ * repeating "EET" on every cell was noise, not information.
  */
+const HOURS = { hourCycle: 'h23' };
 const dateFormat = new Intl.DateTimeFormat(undefined, {
     dateStyle: 'short',
-    timeStyle: 'short'
+    timeStyle: 'short',
+    ...HOURS
 });
 const calendarFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'short' });
 // Used where a *sample* time is read out loud (the chart's inspection readout and its
 // axis). Same system clock, no zone suffix.
-const timeFormat = new Intl.DateTimeFormat(undefined, { timeStyle: 'short' });
+const timeFormat = new Intl.DateTimeFormat(undefined, { timeStyle: 'short', ...HOURS });
 // Log lines carry their own HH:MM:SS, so the terminal clock keeps seconds and
 // can order rows inside one minute.
 const clockFormat = new Intl.DateTimeFormat(undefined, {
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
+    ...HOURS
 });
 export const date = (value) => (value ? dateFormat.format(new Date(value)) : '—');
 export const time = (value) => (value ? timeFormat.format(new Date(value)) : '—');
@@ -352,7 +355,8 @@ export const calendarDate = (value = Date.now()) => calendarFormat.format(new Da
 // table was already sorted by. Same locale, same clock, one more part.
 const stampFormat = new Intl.DateTimeFormat(undefined, {
     dateStyle: 'short',
-    timeStyle: 'medium'
+    timeStyle: 'medium',
+    ...HOURS
 });
 export const stamp = (value) => (value ? stampFormat.format(new Date(value)) : '—');
 export function duration(seconds) {

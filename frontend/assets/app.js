@@ -1,6 +1,18 @@
 import { symbol as uiSymbol } from './components/symbols.js';
 import { api } from './api.js';
-import { $, el, button, text, notify, report, calendarDate, date, roleBadge, toolbar } from './ui.js';
+import {
+    $,
+    el,
+    button,
+    text,
+    notify,
+    report,
+    calendarDate,
+    date,
+    time,
+    roleBadge,
+    toolbar
+} from './ui.js';
 import { route, go } from './router.js';
 import { loadAssets } from './components/items.js';
 import { dialogDirty, closeDialog } from './components/dialog.js';
@@ -248,10 +260,11 @@ function ageConnection() {
 function clock() {
     const now = new Date(),
         node = $('#clock');
-    // The header reads the same system clock and the same locale as every row below
-    // it: date alone, or date and local time. No zone suffix, because the whole view
-    // is the viewer's own time zone.
-    text(node, prefs.read('clock') === 'date-time' ? date(now) : calendarDate(now));
+    // The header reads the same system clock as every row below it: the date, the
+    // time, or both. No zone suffix, because the whole view is the viewer's own time
+    // zone, and the shared formatter always uses the 24-hour clock.
+    const mode = prefs.read('clock');
+    text(node, mode === 'time' ? time(now) : mode === 'date-time' ? date(now) : calendarDate(now));
     node.dateTime = now.toISOString();
     node.title = `This browser's clock${
         Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -967,6 +980,11 @@ setInterval(async () => {
 
 clock();
 setInterval(clock, 30000);
+// Preferences apply immediately: changing the header clock must not wait for a
+// reload, and the same subscription keeps a second tab's switch honest.
+prefs.subscribe((key) => {
+    if (key === 'clock') clock();
+});
 await loadAssets();
 try {
     await api.restore();

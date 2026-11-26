@@ -68,6 +68,14 @@ body {
     font: 14px/1.5 var(--font);
     -webkit-font-smoothing: antialiased;
 }
+/* Signed in, the shell is exactly one viewport tall and `#page` is the one scroller.
+   Hiding the document's own overflow makes that true at fractional zoom and short
+   windows too, so the fixed top bar and page heading never travel a pixel. The sign-in
+   screen keeps normal document scrolling for a phone in landscape. */
+html:has(#shell:not([hidden])),
+body:has(#shell:not([hidden])) {
+    overflow: hidden;
+}
 h1,
 h2,
 h3,
@@ -644,17 +652,40 @@ select option {
         padding: 5px;
         color: var(--text);
         background: var(--raised);
-        border: 1px solid var(--line-bright);
+        border: 1px solid var(--line);
         border-radius: var(--radius);
         box-shadow: var(--elev-2);
+        /* The open list is a panel, not a focused control: the platform drew a second
+           bright ring outside this border and another around the checked option, so
+           the menu read as two outlines around a list. The checked fill below is the
+           only selection mark the view needs. */
+        outline: none;
     }
-    ::picker(select) option {
+    select:open,
+    select:open:focus-visible,
+    ::picker(select):focus,
+    ::picker(select):focus-visible {
+        outline: none;
+    }
+    /* Options are styled through `option` itself: Chrome renders them inside the
+       picker's own tree, and a descendant of `::picker(select)` never matched them,
+       which left the platform's square row, highlight fill and focus ring in place.
+       The checked fill below is the only selection mark the menu needs. */
+    select option {
         padding: 7px 9px;
+        border: 0;
         border-radius: var(--radius-control-sm);
+        background: transparent;
+        outline: none;
     }
-    ::picker(select) option:checked {
+    select option:hover,
+    select option:focus-visible {
+        background: color-mix(in srgb, var(--text) 8%, transparent);
+        outline: none;
+    }
+    select option:checked {
         color: var(--gold);
-        background: color-mix(in srgb, var(--gold) 12%, transparent);
+        background: color-mix(in srgb, var(--gold) 14%, transparent);
     }
 }
 /* `showReason` chooses to show a reason instead of hiding it, and outside a table cell

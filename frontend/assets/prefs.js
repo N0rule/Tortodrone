@@ -21,7 +21,7 @@ export const schema = {
     theme: ['tortodrone', 'catppuccin'],
     pageSize: [30, 15, 60, 120],
     pollScale: [1, 0.5, 2, 4],
-    clock: ['date', 'date-time'],
+    clock: ['date', 'time', 'date-time'],
     motion: ['auto', 'reduce']
 };
 

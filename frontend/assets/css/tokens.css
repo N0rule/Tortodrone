@@ -98,7 +98,14 @@
     --good: #a6e3a1; /* green */
     --bad: #f38ba8; /* red */
     --purple: #cba6f7; /* mauve: authority and Battle Sprites */
-    --unique: #e07bb0; /* the ring around a Unique Variant's star */
+    /* The gear tooltip's three ability rows keep the client's own fixed colours in
+       both themes: the row fill, its sentence and the solid band are one family. */
+    --effect-bonus: #28d9ff;
+    --effect-bonus-bg: #293239;
+    --effect-penalty: #ba2f72;
+    --effect-penalty-bg: #382830;
+    --effect-variant: #ebc94d;
+    --effect-variant-bg: #875f22;
     /* Telemetry follows the theme rather than borrowing a semantic colour: teal is
        the measured line, mauve the comparison, both with a soft area below them. */
     --chart-series: #94e2d5; /* teal */
@@ -108,10 +115,6 @@
     --elev-2: 0 10px 28px #0000004d;
     --meter: #f9e2af;
     --meter-edge: #f9e2af;
-    --effect-bg: #3a3050;
-    --effect-fg: #e5d4ff;
-    --effect-line: #6c5a94;
-    --effect-strong: #d7c0ff;
 
     /* Terminal surfaces stay their own material but follow the palette. */
     --field-on-term: #313244;
@@ -181,7 +184,6 @@
     --good: #8fd9ae;
     --bad: #ffb0ad;
     --purple: #e2bcf5;
-    --unique: #b8508f; /* the ring around a Unique Variant's star */
     /* The retained console keeps its own telemetry pair: the gold brand for the
        measured line and the cyan link ink for the comparison. */
     --chart-series: #edc777;
@@ -191,10 +193,6 @@
     --elev-2: 0 6px 18px #030d1640;
     --meter: #e6bc62;
     --meter-edge: #f5da98;
-    --effect-bg: #48391f;
-    --effect-fg: #f1d48d;
-    --effect-line: #8a6a32;
-    --effect-strong: #e1c792;
     --field-on-term: #2b4d63;
     --term-bg: #08131c;
     --term-bg-top: #0f2231;

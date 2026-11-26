@@ -138,30 +138,21 @@ public final class WebUiAssetsExport {
                 Map.entry("weapon", "sword"),
                 Map.entry("trinket", "amulet"),
                 Map.entry("costume", "costume"));
-        var resources = Map.of(
-                "crowns",
-                "ui/icon/crown_32.png",
-                "energy",
-                "ui/icon/energy_32.png",
-                "prestige",
-                "ui/icon/prestige_16.png",
-                "heat",
-                "ui/window/geartip_levelbar.png",
-                "variants",
-                "ui/window/tooltip_parts/icon_variant.png",
-                // The ability marks the gear tooltip and the wiki use: the cyan arrow
-                // for an equipment bonus and the plain star the WebUI rings in variant
-                // magenta for a Unique Variant.
-                "bonus",
-                "ui/window/tooltip_parts/icon_bonus.png",
-                "unique",
-                "ui/window/tooltip_parts/geartip_rarity_star.png",
-                "equipment",
-                "ui/status/images/backing_slots.png",
-                "button",
-                "ui/button/up.png",
-                "button-active",
-                "ui/button/up_yellow.png");
+        // The gear tooltip's own marks: the gold swirl for a Unique Variant and the
+        // cyan/magenta arrows for a bonus and a penalty. A base gear bonus has no
+        // leading element icon; only a weapon's status proc does, and this page does
+        // not render those.
+        var resources = Map.ofEntries(
+                Map.entry("crowns", "ui/icon/crown_32.png"),
+                Map.entry("energy", "ui/icon/energy_32.png"),
+                Map.entry("prestige", "ui/icon/prestige_16.png"),
+                Map.entry("heat", "ui/window/geartip_levelbar.png"),
+                Map.entry("variants", "ui/window/tooltip_parts/icon_variant.png"),
+                Map.entry("bonus", "ui/window/tooltip_parts/icon_bonus.png"),
+                Map.entry("penalty", "ui/window/tooltip_parts/icon_penalty.png"),
+                Map.entry("equipment", "ui/status/images/backing_slots.png"),
+                Map.entry("button", "ui/button/up.png"),
+                Map.entry("button-active", "ui/button/up_yellow.png"));
         // Work units: one item, three icons plus each skill per Sprite, and one job per UI asset.
         total = itemConfigs.size()
                 + spriteConfigs.stream().mapToInt(c -> 3 + c.skills.length).sum()

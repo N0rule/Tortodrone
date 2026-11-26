@@ -1945,49 +1945,89 @@ td:has(> .time-stamp) {
 .gear-card .item-properties:empty {
     display: none;
 }
-.variant-effect {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 9px;
-    color: var(--effect-fg);
-    background: var(--effect-bg);
-    border: 1px solid var(--effect-line);
-    border-left: 3px solid var(--effect-line);
+/* The gear tooltip's own effect row: the client's dark fill, the sentence, and the
+   bonus, penalty or variant mark in the solid band at the trailing edge. The band's
+   colour is the in-game row colour, so the mark's own outline melts into it and the
+   dark arrow inside is what the reader sees. Only a weapon's status proc has a leading
+   element icon; a gear bonus and a Unique Variant do not, so these rows start with
+   their text. */
+.variant-effect,
+.item-effects li {
+    --effect-accent: var(--effect-variant);
+    --effect-fill: var(--effect-variant-bg);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+    min-block-size: 44px;
+    padding: 0;
+    overflow: hidden;
+    color: var(--effect-accent);
+    background: var(--effect-fill);
+    border: 0;
     border-radius: var(--radius-control);
     font-size: 12.5px;
-    font-weight: 400;
-    line-height: 1.4;
+    font-weight: 500;
+    line-height: 1.35;
 }
-.variant-effect > img {
-    width: 22px;
-    height: 22px;
-    flex: 0 0 22px;
-    object-fit: contain;
+.item-effects li[data-status='bonus'] {
+    --effect-accent: var(--effect-bonus);
+    --effect-fill: var(--effect-bonus-bg);
 }
-/* A Unique Variant is the client's gold star inside a magenta ring; the star is the
-   shipped artwork and the ring is the one thing the stylesheet adds. */
-.variant-effect > img[data-kind='unique'] {
-    padding: 1px;
-    background: var(--inset);
-    border: 2px solid var(--unique);
-    border-radius: var(--radius-pill);
+.item-effects li[data-status='penalty'] {
+    --effect-accent: var(--effect-penalty);
+    --effect-fill: var(--effect-penalty-bg);
 }
-.variant-effect .effect-name {
-    flex: 1;
+.variant-effect .effect-copy,
+.item-effects li .effect-copy {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 5px;
+    min-inline-size: 0;
+    padding: 8px 10px;
+}
+.variant-effect .effect-name,
+.item-effects li strong {
+    font-weight: 600;
 }
 .variant-effect .effect-strength {
-    font-size: 10.5px;
-    color: var(--effect-strong);
     margin: 0;
+    color: inherit;
+    font-size: inherit;
+    font-weight: 500;
+    opacity: 0.82;
+}
+.effect-mark {
+    display: grid;
+    place-items: center;
+    inline-size: 46px;
+    background: var(--effect-accent);
+}
+.effect-mark > img {
+    inline-size: 28px;
+    block-size: 28px;
+    object-fit: contain;
 }
 .variant-remove {
-    padding: 0 5px;
+    order: -1;
+    display: grid;
+    place-items: center;
+    align-self: stretch;
+    inline-size: 30px;
+    padding: 0;
     background: transparent;
     border: 0;
+    border-radius: 0;
     color: inherit;
     box-shadow: none;
     font-size: 20px;
+    line-height: 1;
+}
+.variant-effect:has(> .variant-remove) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+}
+.variant-remove + .effect-copy {
+    padding-inline-start: 4px;
 }
 .variant-picker {
     display: grid;
@@ -1997,52 +2037,31 @@ td:has(> .time-stamp) {
     overflow: auto;
     padding: 8px 2px;
 }
-/* A variant option is an item-effect row that happens to be a control: the icon on the
-   left, the effect name and its strength in one line, a real surface and a clear
-   selected edge. The old transparent button wrapped a second coloured pill inside
-   itself, so the row was a border around a border and the label sat in the inner
-   wash. */
+/* A variant option is the row itself now: the button owns no second surface, so the
+   in-game fill is not wrapped in another border. Selection is a quiet gold ring
+   outside the row, not a repaint of its text. */
 .variant-option {
     display: block;
     padding: 0;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-control);
-    background: var(--inset);
-    text-align: left;
-    white-space: normal;
-    box-shadow: none;
-}
-.variant-option:hover:not(:disabled) {
-    border-color: var(--line-bright);
-    background: var(--raised);
-}
-.variant-option .variant-effect {
-    height: 100%;
-    padding: 9px 11px;
-    color: var(--text);
     background: transparent;
     border: 0;
-    border-left: 0;
+    border-radius: var(--radius-control);
+    box-shadow: none;
+    text-align: left;
+    white-space: normal;
+}
+.variant-option .variant-effect {
+    block-size: 100%;
     border-radius: inherit;
 }
+.variant-option:hover:not(:disabled) .variant-effect {
+    filter: brightness(1.1);
+}
 .variant-option[aria-pressed='true'] {
-    border-color: var(--gold-rule);
-    background: color-mix(in srgb, var(--gold) 10%, var(--inset));
-    box-shadow: inset 0 0 0 1px var(--gold-rule);
+    box-shadow: 0 0 0 2px var(--gold);
 }
-/* Selection is a border and an ink, not a tick drawn from a character. */
-.variant-option[aria-pressed='true'] .effect-name {
-    color: var(--gold);
-}
-.variant-option .effect-name {
-    color: var(--text);
-    font-weight: 600;
-}
-.variant-option .effect-strength {
-    color: var(--muted);
-}
-.variant-option[aria-pressed='true'] .effect-strength {
-    color: var(--gold);
+.variant-option[aria-pressed='true'] .variant-effect {
+    filter: brightness(1.06);
 }
 .variant-option:disabled {
     opacity: 0.42;
@@ -2072,49 +2091,32 @@ td:has(> .time-stamp) {
     display: grid;
     gap: 5px;
 }
-.item-effects li {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 7px 10px;
-    color: var(--text);
-    background: var(--inset);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-control);
-    font-size: 12.5px;
-    line-height: 1.4;
+/* A Unique Variant row already owns its grid cell; the list item is only the slot. */
+.item-effects li:has(> .variant-effect) {
+    display: contents;
 }
-.item-effects li > img {
-    width: 22px;
-    height: 22px;
-    flex: 0 0 22px;
-    object-fit: contain;
+/* A slot in the loadout and a tile in the equip picker are both too narrow for the
+   tooltip's full-size row, so they keep its shape at a smaller scale instead. */
+.equipment-slot .variant-effect,
+.item-tile .variant-effect {
+    min-block-size: 30px;
+    border-radius: var(--radius-control-sm);
+    font-size: 11px;
+    line-height: 1.3;
 }
-.item-effects li:has(> strong) {
-    color: var(--cyan);
-    border-left: 3px solid var(--cyan);
-    background: color-mix(in srgb, var(--cyan) 8%, var(--inset));
-}
-.item-effects small {
-    display: block;
-    margin-inline-start: auto;
-    font-weight: 400;
-    color: var(--muted);
-    text-align: end;
-}
-.equipment-slot .variant-effect {
+.equipment-slot .variant-effect .effect-copy,
+.item-tile .variant-effect .effect-copy {
+    gap: 0 3px;
     padding: 4px 6px;
-    gap: 5px;
-    font-size: 11.5px;
 }
-.equipment-slot .variant-effect > img {
-    width: 18px;
-    height: 18px;
-    flex-basis: 18px;
+.equipment-slot .variant-effect .effect-mark,
+.item-tile .variant-effect .effect-mark {
+    inline-size: 28px;
 }
-.equipment-slot .effect-strength {
-    font-size: 10.5px;
-    flex-shrink: 0;
+.equipment-slot .variant-effect .effect-mark > img,
+.item-tile .variant-effect .effect-mark > img {
+    inline-size: 17px;
+    block-size: 17px;
 }
 @media (max-width: 600px) {
     .gear-progress-controls,

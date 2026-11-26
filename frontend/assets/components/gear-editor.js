@@ -15,7 +15,15 @@ import {
     report
 } from '../ui.js';
 import { openDialog, edit, field, localError } from './dialog.js';
-import { itemLine, icon, variantName, variantEffect, effectIcon, gearProgress } from './items.js';
+import {
+    itemLine,
+    icon,
+    variantName,
+    variantEffect,
+    effectIcon,
+    effectStatus,
+    gearProgress
+} from './items.js';
 import { itemPicker } from './item-picker.js';
 
 /** Rows are keyed by authoritative labels; pending requests never clear valid stats. */
@@ -303,14 +311,26 @@ function effectsView(effects = []) {
     const list = el('ul', null, 'item-effects');
     for (const e of effects) {
         const row = el('li');
-        if (e.source === 'Unique Variant')
+        if (e.source === 'Unique Variant') {
+            // The variant row carries its own gold band, so the list item is only a
+            // grid slot (`display: contents` in pages.css) around that row.
             row.append(variantEffect(e.config, { variantDisplay: { [e.config]: e } }));
-        else {
-            // An equipment bonus keeps the client's own mark: the cyan arrow the
-            // stock tooltip and the wiki use, not the Unique Variant star.
-            const art = effectIcon('bonus');
-            if (art) row.append(art);
-            row.append(el('strong', e.label), el('small', e.source));
+        } else {
+            // A base equipment bonus is text and its band. The client puts an element
+            // or target icon at the leading edge only for a weapon's status proc, which
+            // this page does not render; the gear tooltip's bonus and penalty rows are
+            // the sentence, the fill and the cyan or magenta arrow alone.
+            const status = effectStatus(e.label),
+                copy = el('span', null, 'effect-copy'),
+                mark = effectIcon(status);
+            row.dataset.status = status;
+            copy.append(el('strong', e.label), el('small', e.source, 'visually-hidden'));
+            row.append(copy);
+            if (mark) {
+                const band = el('span', null, 'effect-mark');
+                band.append(mark);
+                row.append(band);
+            }
         }
         list.append(row);
     }
