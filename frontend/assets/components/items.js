@@ -69,15 +69,21 @@ export function icon(config) {
         };
         root.append(image);
     } else fallbackLetter(root, config);
-    // Rarity is a number the game shows as stars; a glyph is not client art, and the
-    // word is what a screen reader can say, so it is written out — on its own line, by
-    // the callers that have room for one. Overlaid on the frame it covered the art at
-    // the 32px size tiles use and hung below it at 56px.
+    // Rarity is a number the game shows as stars; the client's own presentation is
+    // repeated as gold stars, with the value still available to a tooltip and a
+    // screen reader. Overlaid on the frame it covered the art at the 32px size tiles
+    // use and hung below it at 56px.
     return root;
 }
-/** Rarity as a line of its own, for the callers with room for one. */
+/** Rarity as gold stars, the way the client shows it: one to five, never a word. */
 function rarityLine(rarity) {
-    return rarity > 0 ? el('small', `Rarity ${rarity}`, 'item-rarity') : null;
+    const stars = Math.max(0, Math.min(5, Number(rarity) || 0));
+    if (!stars) return null;
+    const node = el('small', '★'.repeat(stars), 'item-rarity');
+    node.setAttribute('role', 'img');
+    node.title = `Rarity ${stars} of 5`;
+    node.setAttribute('aria-label', `Rarity ${stars} of 5`);
+    return node;
 }
 /**
  * One item, with its name as the drill-down into the shared inspector.
@@ -323,28 +329,28 @@ export function gearProgress(def, item) {
     }
     return node;
 }
+/** The client's effect mark, shared by Unique Variant rows and item effects. */
+export function effectIcon() {
+    const source = path(manifest.ui?.variants);
+    if (!source) return null;
+    const image = el('img');
+    image.src = source;
+    image.alt = '';
+    image.setAttribute('aria-hidden', 'true');
+    image.onerror = () => {
+        image.onerror = null;
+        image.remove();
+    };
+    return image;
+}
 export function variantEffect(config, def) {
     const meta = def?.variantDisplay?.[config],
         node = el('div', null, 'variant-effect');
-    const source = path(manifest.ui?.variants);
     const label = meta?.label || variantName(config),
-        separator = label.lastIndexOf(': ');
+        separator = label.lastIndexOf(': '),
+        art = effectIcon();
     node.append(
-        ...(source
-            ? [
-                  (() => {
-                      const image = el('img');
-                      image.src = source;
-                      image.alt = '';
-                      image.setAttribute('aria-hidden', 'true');
-                      image.onerror = () => {
-                          image.onerror = null;
-                          image.remove();
-                      };
-                      return image;
-                  })()
-              ]
-            : []),
+        ...(art ? [art] : []),
         el('span', separator < 0 ? label : label.slice(0, separator + 2), 'effect-name')
     );
     if (separator >= 0) node.append(el('small', label.slice(separator + 2), 'effect-strength'));

@@ -1,12 +1,12 @@
 import { api } from '../api.js';
-import { el, panel, toolbar, button, select, text, label, date, copy, badge } from '../ui.js';
+import { el, panel, toolbar, button, select, text, label, date, copy, roleBadge } from '../ui.js';
 import { toast } from '../components/toast.js';
 import * as prefs from '../prefs.js';
 
 const choices = {
     theme: [
-        ['catppuccin', 'Catppuccin'],
-        ['tortodrone', 'Tortodrone']
+        ['tortodrone', 'Tortodrone (default)'],
+        ['catppuccin', 'Catppuccin']
     ],
     motion: [
         ['auto', 'Follow the system'],
@@ -79,7 +79,7 @@ export async function mount(ctx) {
         setting({
             key: 'theme',
             title: 'Theme',
-            help: 'Catppuccin is the default. Tortodrone keeps the original navy console. Applies immediately and is remembered in this browser only.'
+            help: 'Tortodrone is the default navy console; Catppuccin Mocha is the alternate. Applies immediately and is remembered in this browser only.'
         }),
         setting({
             key: 'motion',
@@ -167,7 +167,7 @@ export async function mount(ctx) {
                     const cell = el('dd', null, 'identity-session');
                     cell.append(
                         el('span', api.session.username),
-                        badge(String(api.session.role || '').toLowerCase(), 'cyan')
+                        roleBadge(api.session.role)
                     );
                     return cell;
                 })(),

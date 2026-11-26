@@ -263,8 +263,9 @@ export async function mount(ctx) {
             grid = el('div', null, 'item-grid'),
             search = input('Search compatible equipment');
         const filter = select('Equipment filter', [
-            ['all', 'All owned'],
-            ['unequipped', 'Unequipped'],
+            ['all', 'All compatible'],
+            ['equipped', 'Currently equipped'],
+            ['unequipped', 'Not equipped'],
             ['uv', 'With Unique Variants']
         ]);
         let selected = null,
@@ -291,7 +292,8 @@ export async function mount(ctx) {
                         root.dataset.unequip = 'true';
                         for (const tile of grid.children)
                             tile.setAttribute('aria-pressed', 'false');
-                        selection.textContent = 'Unequip ' + definition(current)?.name;
+                        selection.className = 'selected-item';
+                        selection.textContent = 'Selected · Unequip ' + definition(current)?.name;
                     })
                 )
             );
@@ -309,7 +311,8 @@ export async function mount(ctx) {
                     root.dataset.unequip = 'false';
                     for (const child of grid.children)
                         child.setAttribute('aria-pressed', child === tile);
-                    selection.textContent = 'Equip ' + def.name;
+                    selection.className = 'selected-item';
+                    selection.textContent = 'Selected · Equip ' + def.name;
                 });
             tile.dataset.search = def.name.toLowerCase();
             tile.dataset.equipped = item.equippedSlot != null;
@@ -322,6 +325,7 @@ export async function mount(ctx) {
                 if (tile.dataset.search)
                     tile.hidden =
                         !tile.dataset.search.includes(search.value.toLowerCase()) ||
+                        (filter.value === 'equipped' && tile.dataset.equipped !== 'true') ||
                         (filter.value === 'unequipped' && tile.dataset.equipped === 'true') ||
                         (filter.value === 'uv' && tile.dataset.uv !== 'true');
         };
@@ -347,7 +351,8 @@ export async function mount(ctx) {
                     selected = 0;
                     grant = def.config;
                     root.dataset.unequip = 'false';
-                    selection.textContent = 'Grant and equip ' + def.name;
+                    selection.className = 'selected-item';
+                    selection.textContent = 'Selected · Grant and equip ' + def.name;
                 },
                 { grantable: true, compatibleSlot: index, exportable: false }
             );

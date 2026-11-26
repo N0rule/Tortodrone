@@ -1,12 +1,13 @@
 * {
     box-sizing: border-box;
 }
-/* One scrollbar for the whole product, drawn by the app: a 10px track, a pill thumb, and
-   no stepper arrows — the arrows are exactly what made a themed panel look like an
-   application window. */
+/* One scrollbar for the whole product, drawn by the app: a 16px lane with a 6px pill
+   thumb floating in it, and no stepper arrows — the arrows are exactly what made a
+   themed panel look like an application window. The transparent border is the gutter:
+   it keeps the thin thumb away from the content edge instead of pinning it flush. */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 16px;
+    height: 16px;
 }
 ::-webkit-scrollbar-track,
 ::-webkit-scrollbar-corner {
@@ -15,7 +16,7 @@
 ::-webkit-scrollbar-thumb {
     background: var(--line-bright);
     background-clip: content-box;
-    border: 3px solid transparent;
+    border: 5px solid transparent;
     border-radius: var(--radius-pill);
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -595,14 +596,14 @@ textarea:hover:not(:disabled) {
     border-color: var(--line-bright);
 }
 /* The reference rings a focused field with 3px of its own boundary colour instead of
-   moving the keyboard outline inside it. The ring is drawn from the brand, so focus
-   reads the same on both themes. */
+   moving the keyboard outline inside it. The owner asked for no glow: a text field is
+   marked by a calm border step, not a brand halo. No outline, no ring, no box-shadow. */
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
     outline: none;
-    border-color: var(--brand);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 28%, transparent);
+    border-color: var(--line-bright);
+    box-shadow: none;
 }
 /* Native selects keep the platform popup, but the closed control is drawn like the
    rest of the console. The caret is two 5px gradients rather than a data-URI image,
@@ -611,6 +612,9 @@ select {
     appearance: none;
     -webkit-appearance: none;
     padding-inline-end: 32px;
+    /* The same corner as the surfaces around it, not the tighter control step: a select
+       was the one rounded thing on a form drawn at 8px beside 12px panels and pills. */
+    border-radius: var(--radius);
     background-image:
         linear-gradient(45deg, transparent 50%, var(--muted) 50%),
         linear-gradient(135deg, var(--muted) 50%, transparent 50%);

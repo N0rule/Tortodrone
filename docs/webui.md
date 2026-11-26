@@ -313,7 +313,7 @@ the server and are not part of a WebUI identity.
 
 | Preference | Effect |
 | --- | --- |
-| Theme | Catppuccin (default) or Tortodrone. The boot script applies it before first paint; `t` and the command palette switch it too. |
+| Theme | Tortodrone (default) or Catppuccin. The boot script applies it before first paint; `t` and the command palette switch it too. |
 | Motion | `Reduce` disables animation and smooth scrolling regardless of the OS setting. |
 | Header clock | Date only, or date and local time. |
 | Rows per page | Default page size for new tables (15/30/60/120); each table also remembers its own. |

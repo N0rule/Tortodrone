@@ -227,9 +227,9 @@ export async function mount(ctx) {
     const listingNote = (r) => {
         const def = definitions.get(r.listing.item.config);
         if (!def) return undefined;
-        return [def.category, def.rarity > 0 ? `Rarity ${def.rarity}` : '']
-            .filter(Boolean)
-            .join(' · ');
+        // Rarity is gold stars here too, matching the tiles and the inspector.
+        const stars = Math.max(0, Math.min(5, Number(def.rarity) || 0));
+        return [def.category, stars ? '★'.repeat(stars) : ''].filter(Boolean).join(' · ');
     };
     const table = new DataTable(
         [

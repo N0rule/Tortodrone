@@ -154,30 +154,41 @@ button.metric:focus-visible {
 .knight-wallet {
     display: flex;
     flex-wrap: wrap;
-    gap: 18px;
+    align-items: flex-end;
+    gap: 26px;
 }
+/* The wallet is three figures, not three cards: the old inset boxes put a border around
+   every number and read as three unrelated controls. Each value keeps the client's
+   currency art, a quiet caption, and the number as the only loud thing; the button
+   underneath is still a button for editing, but it has no chrome until hovered. */
 .knight-wallet button {
-    /* A deliberate shared variant: the same surface, radius and states as every
-       other control, sized for a reading-sized number instead of a label. */
     display: grid;
-    gap: 2px;
+    gap: 1px;
     justify-items: start;
-    min-block-size: var(--control-lg);
-    padding: 6px 12px;
+    min-block-size: 0;
+    padding: 0;
     color: var(--text);
-    background: var(--inset);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-control);
-    font-size: 20px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 22px;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
+    line-height: 1.2;
     text-align: left;
 }
-.knight-wallet button:hover:not(:disabled) {
-    border-color: var(--cyan);
+.knight-wallet button:not(:disabled):hover {
+    background: transparent;
+    color: var(--gold);
 }
 .knight-wallet small {
+    color: var(--muted);
     font-size: 11.5px;
     font-weight: 400;
+}
+.knight-wallet button:not(:disabled):hover small {
+    color: var(--text);
 }
 .equipment-grid {
     display: grid;
@@ -224,6 +235,19 @@ button.metric:focus-visible {
 .equipment-slot.empty-slot .item-icon {
     border: 1px dashed var(--line);
     opacity: 0.5;
+}
+/* The picker's live answer to "what am I about to equip": a chosen tile keeps its ring
+   and the line under the grid stops being a hint. */
+.stack > .selected-item {
+    color: var(--text);
+    font-weight: 600;
+}
+.item-tile[aria-pressed='true'] {
+    background: color-mix(in srgb, var(--cyan) 14%, transparent);
+    box-shadow: inset 0 0 0 2px var(--cyan);
+}
+.item-tile[aria-pressed='true'] .item-name {
+    color: var(--cyan);
 }
 .sprite-grid {
     display: grid;
@@ -1872,9 +1896,11 @@ td:has(> .time-stamp) {
 }
 .gear-control-heading input {
     margin-left: auto;
-    width: 76px;
-    padding: 5px 7px;
+    inline-size: 68px;
+    min-inline-size: 68px;
+    padding: 4px 6px;
     text-align: right;
+    font-size: 13px;
     font-variant-numeric: tabular-nums;
 }
 .gear-control input[type='range'] {
@@ -1958,36 +1984,63 @@ td:has(> .time-stamp) {
 .variant-picker {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 7px;
+    gap: 8px;
     max-height: 320px;
     overflow: auto;
     padding: 8px 2px;
 }
+/* A variant option is an item-effect row that happens to be a control: the icon on the
+   left, the effect name and its strength in one line, a real surface and a clear
+   selected edge. The old transparent button wrapped a second coloured pill inside
+   itself, so the row was a border around a border and the label sat in the inner
+   wash. */
 .variant-option {
+    display: block;
     padding: 0;
-    border: 2px solid transparent;
-    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--inset);
     text-align: left;
     white-space: normal;
     box-shadow: none;
 }
+.variant-option:hover:not(:disabled) {
+    border-color: var(--line-bright);
+    background: var(--raised);
+}
 .variant-option .variant-effect {
     height: 100%;
+    padding: 9px 11px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-left: 0;
+    border-radius: inherit;
 }
 .variant-option[aria-pressed='true'] {
     border-color: var(--gold-rule);
+    background: color-mix(in srgb, var(--gold) 10%, var(--inset));
+    box-shadow: inset 0 0 0 1px var(--gold-rule);
 }
 /* Selection is a border and an ink, not a tick drawn from a character. */
 .variant-option[aria-pressed='true'] .effect-name {
     color: var(--gold);
 }
+.variant-option .effect-name {
+    color: var(--text);
+    font-weight: 600;
+}
+.variant-option .effect-strength {
+    color: var(--muted);
+}
+.variant-option[aria-pressed='true'] .effect-strength {
+    color: var(--gold);
+}
 .variant-option:disabled {
     opacity: 0.42;
 }
-.variant-option:focus-visible {
-    outline: 2px solid var(--cyan);
-    outline-offset: 2px;
-}
+/* The ring is declared beside `.equipment-slot`, which shares this picker's shape; a
+   second copy here only argued with it about the offset. */
 .uv-picker {
     padding: 12px;
     border: 1px solid var(--line);
@@ -2008,18 +2061,38 @@ td:has(> .time-stamp) {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: grid;
+    gap: 5px;
+}
+.item-effects li {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 10px;
+    color: var(--text);
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    font-size: 12.5px;
+    line-height: 1.4;
+}
+.item-effects li > img {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    object-fit: contain;
 }
 .item-effects li:has(> strong) {
     color: var(--cyan);
     border-left: 3px solid var(--cyan);
     background: color-mix(in srgb, var(--cyan) 8%, var(--inset));
-    padding: 7px 10px;
-    margin: 5px 0;
 }
 .item-effects small {
     display: block;
+    margin-inline-start: auto;
     font-weight: 400;
     color: var(--muted);
+    text-align: end;
 }
 .equipment-slot .variant-effect {
     padding: 4px 6px;
@@ -2087,8 +2160,12 @@ td:has(> .time-stamp) {
 .grant-options .check {
     white-space: nowrap;
     /* Beside the two fields, not at the far edge of the dialog: pushed right, "Bind item"
-       floated 470px from the field it belongs to and read as a separate decision. */
+       floated 470px from the field it belongs to and read as a separate decision. The
+       captionless checkbox row takes the same control height as the inputs so its box
+       centres on their box instead of dropping to the bottom of the taller label cell. */
     justify-self: start;
+    min-block-size: var(--control);
+    align-content: center;
 }
 .log-time {
     white-space: nowrap;
@@ -2157,7 +2234,7 @@ td:has(> .time-stamp) {
 /* A field plus its counter: the counter is a description, not part of the name. */
 .mail-field {
     display: grid;
-    gap: 4px;
+    gap: 6px;
     min-inline-size: 0;
 }
 .mail-preview {
@@ -2785,6 +2862,161 @@ dd .bad {
 .news-library-tile small {
     font-size: 11px;
     line-height: 1.3;
+}
+
+/* ---------------------------------------------------------------------------
+   Logs: a reading surface, not a terminal window.
+   The dark glass and bottom-anchored transcript are right for the Console, where
+   the prompt is the subject. A log page is scanned top to bottom, so it wears the
+   product's ordinary surface, its rows start at the top, and the chrome above it is
+   an ordinary toolbar instead of a title bar around a screen.
+   --------------------------------------------------------------------------- */
+.terminal-fill {
+    background: var(--surface);
+    border-color: var(--line-panel);
+}
+.terminal-fill .terminal-bar {
+    min-block-size: 46px;
+    padding: 8px 16px;
+    color: var(--muted);
+    background: var(--canvas);
+    border-bottom: 1px solid var(--line-panel);
+    font-family: var(--font);
+    font-size: 12.5px;
+}
+.terminal-fill .terminal-title {
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+.terminal-fill .terminal-bar-meta {
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 12px;
+}
+.terminal-fill .terminal-tools {
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--canvas);
+    border-bottom: 1px solid var(--line-panel);
+    font-family: var(--font);
+}
+.terminal-fill .terminal-tools input,
+.terminal-fill .terminal-tools select,
+.terminal-fill .terminal-tools button,
+.terminal-fill .terminal-menu-toggle {
+    font-family: var(--font);
+    font-size: 12.5px;
+}
+.terminal-fill .terminal-tools input:not(:disabled),
+.terminal-fill .terminal-tools select:not(:disabled) {
+    background: var(--inset);
+}
+.terminal-fill .terminal-tools input:hover:not(:disabled),
+.terminal-fill .terminal-tools select:hover:not(:disabled) {
+    background: var(--surface);
+}
+.terminal-fill .terminal-body {
+    padding: 8px 16px 16px;
+    color: var(--text);
+    background: var(--surface);
+    font: 12.5px/1.55 var(--mono);
+}
+/* A log starts at its first line. The console keeps the bottom-anchored transcript
+   that puts its prompt at the foot; here that spacer was half a screen of nothing. */
+.terminal-fill .terminal-body::before {
+    display: none;
+}
+.terminal-fill .terminal-line:not(.raw) {
+    /* The widest clock the system locale can print is `03:12:22 PM`; a 72px lane cut
+       four pixels off its tail. */
+    grid-template-columns: 88px 58px minmax(80px, 150px) minmax(0, 1fr);
+    gap: 12px;
+    padding: 7px 8px;
+    border-radius: var(--radius-control-sm);
+    align-items: start;
+}
+.terminal-fill .terminal-line:not(.raw) + .terminal-line:not(.raw) {
+    border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+}
+.terminal-fill .terminal-line:hover {
+    background: var(--inset);
+}
+.terminal-fill .log-time {
+    padding-block-start: 1px;
+    color: var(--muted);
+    font-size: 11.5px;
+}
+.terminal-fill .log-level {
+    justify-self: start;
+    padding: 1px 7px;
+    border-radius: var(--radius-pill);
+    color: var(--muted);
+    background: var(--inset);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+}
+.terminal-fill .terminal-line.level-INFO .log-level {
+    color: var(--cyan);
+    background: color-mix(in srgb, var(--cyan) 12%, var(--inset));
+}
+.terminal-fill .terminal-line.level-WARN .log-level {
+    color: var(--warn);
+    background: color-mix(in srgb, var(--warn) 14%, var(--inset));
+}
+.terminal-fill .terminal-line.level-ERROR .log-level {
+    color: var(--bad);
+    background: color-mix(in srgb, var(--bad) 14%, var(--inset));
+}
+.terminal-fill .terminal-line.level-DEBUG .log-level {
+    color: var(--muted);
+}
+.terminal-fill .terminal-line.level-ERROR .log-message {
+    font-weight: 500;
+}
+.terminal-fill .log-thread {
+    padding-block-start: 2px;
+    color: var(--muted);
+    font-size: 11.5px;
+}
+.terminal-fill .log-message {
+    color: var(--text);
+    line-height: 1.55;
+}
+.terminal-fill .log-day {
+    margin: 14px 0 4px;
+    padding: 0 8px;
+    color: var(--muted);
+    font-size: 11.5px;
+    font-weight: 600;
+}
+.terminal-fill .log-day::after {
+    background: var(--line);
+}
+.terminal-fill .terminal-status {
+    padding: 6px 16px;
+    color: var(--muted);
+    background: var(--canvas);
+    border-top: 1px solid var(--line-panel);
+    font-family: var(--font);
+    font-size: 11.5px;
+}
+.terminal-fill .terminal-find {
+    padding: 5px 16px;
+    background: var(--canvas);
+    border-bottom-color: var(--line-panel);
+    font-family: var(--font);
+}
+.terminal-fill .terminal-find-label {
+    color: var(--muted);
+}
+.terminal-fill .terminal-find input,
+.terminal-fill .terminal-find select {
+    font-family: var(--font);
 }
 
 /* A finger is not a mouse, and this is the last stylesheet, so the selector can name

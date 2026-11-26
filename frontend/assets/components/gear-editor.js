@@ -15,7 +15,7 @@ import {
     report
 } from '../ui.js';
 import { openDialog, edit, field, localError } from './dialog.js';
-import { itemLine, icon, variantName, variantEffect, gearProgress } from './items.js';
+import { itemLine, icon, variantName, variantEffect, effectIcon, gearProgress } from './items.js';
 import { itemPicker } from './item-picker.js';
 
 /** Rows are keyed by authoritative labels; pending requests never clear valid stats. */
@@ -68,15 +68,19 @@ export function modifierControls(def, item) {
     effects.hidden = true;
     card.append(itemLine(def), controls, stats.node, effects, selectedView, valid);
     node.append(card);
+    // Spiral Knights gear stops at level 10, and heat is a percentage of the next
+    // level. A definition that advertised more level rows must not turn the two small
+    // number fields into three-digit boxes.
+    const maxLevel = Math.max(1, Math.min(Number(def.levels) || 10, 10));
     const level = input('Level', (item?.level ?? 0) + 1, 'number', {
         min: 1,
-        max: def.levels,
+        max: maxLevel,
         step: 1,
         required: true
     });
     const levelSlider = input('Level slider', level.value, 'range', {
         min: 1,
-        max: def.levels,
+        max: maxLevel,
         step: 1
     });
     const heatInput = input('Heat percentage', (item?.heatProgress ?? 0) * 100, 'number', {
@@ -167,7 +171,7 @@ export function modifierControls(def, item) {
         node.append(baseline);
     }
     function update() {
-        const max = +level.value >= def.levels;
+        const max = +level.value >= maxLevel;
         if (max) heatInput.value = slider.value = 0;
         heatInput.disabled = slider.disabled = max;
         text(
@@ -180,7 +184,7 @@ export function modifierControls(def, item) {
         levelSlider.value = level.value;
         levelSlider.style.setProperty(
             '--fill',
-            `${(100 * (Number(level.value) - 1)) / Math.max(1, def.levels - 1)}%`
+            `${(100 * (Number(level.value) - 1)) / Math.max(1, maxLevel - 1)}%`
         );
         // Reconcile selected rows without touching controls or the stats subtree.
         for (const row of [...selectedView.children])
@@ -301,7 +305,13 @@ function effectsView(effects = []) {
         const row = el('li');
         if (e.source === 'Unique Variant')
             row.append(variantEffect(e.config, { variantDisplay: { [e.config]: e } }));
-        else row.append(el('strong', e.label), el('small', e.source));
+        else {
+            // The client puts the same effect mark beside every ability row, not only
+            // the Unique Variant entries the mark was shipped for.
+            const art = effectIcon();
+            if (art) row.append(art);
+            row.append(el('strong', e.label), el('small', e.source));
+        }
         list.append(row);
     }
     return list;

@@ -145,13 +145,18 @@ final class AdminViews {
         int number = p.optional("page").isEmpty() ? 1 : p.integer("page"),
                 size = p.optional("size").isEmpty() ? 48 : p.integer("size");
         if (size > 100 || number < 1 || number > 100000) throw new IllegalArgumentException("Invalid catalogue page");
+        // A grant picker must never paint an item it will then refuse: the server
+        // filters the set before paging, so totals and the last page are honest.
+        boolean grantableOnly = p.optional("grantable").equals("true");
+        var catalog = accounts.catalog();
+        String category = p.optional("category");
         if (!p.optional("slot").isEmpty()) {
             int slot = p.integer("slot");
             if (slot < 0 || slot > 15) throw new IllegalArgumentException("Invalid equipment slot");
-            var catalog = accounts.catalog();
-            String search = p.optional("search").toLowerCase(Locale.ROOT), category = p.optional("category");
+            String search = p.optional("search").toLowerCase(Locale.ROOT);
             var entries = catalog.entries().stream()
                     .filter(e -> e.slot() != null && e.slot().accepts(slot))
+                    .filter(e -> !grantableOnly || e.grantable())
                     .filter(e -> category.isEmpty() || catalog.category(e).equals(category))
                     .filter(e -> (catalog.displayName(e) + " " + e.config())
                             .toLowerCase(Locale.ROOT)
@@ -168,24 +173,39 @@ final class AdminViews {
                     number,
                     size,
                     catalog.entries().stream()
+                            .filter(e -> !grantableOnly || e.grantable())
                             .map(catalog::category)
                             .distinct()
                             .sorted()
                             .toList());
         }
-        var result = accounts.catalog()
-                .page(
-                        p.optional("search"),
-                        p.optional("category").isEmpty() ? null : p.optional("category"),
-                        number,
-                        size);
+        if (grantableOnly) {
+            var entries = catalog.search(p.optional("search")).stream()
+                    .filter(ItemCatalog.Entry::grantable)
+                    .filter(e -> category.isEmpty()
+                            || catalog.category(e).equalsIgnoreCase(category)
+                            || e.category().equalsIgnoreCase(category))
+                    .toList();
+            return new ItemPage(
+                    entries.stream()
+                            .skip((long) (number - 1) * size)
+                            .limit(size)
+                            .map(this::item)
+                            .toList(),
+                    entries.size(),
+                    number,
+                    size,
+                    entries.stream().map(catalog::category).distinct().sorted().toList());
+        }
+        var result = catalog.page(
+                p.optional("search"), p.optional("category").isEmpty() ? null : p.optional("category"), number, size);
         return new ItemPage(
                 result.entries().stream().map(this::item).toList(),
                 result.total(),
                 number,
                 size,
-                accounts.catalog().entries().stream()
-                        .map(accounts.catalog()::category)
+                catalog.entries().stream()
+                        .map(catalog::category)
                         .distinct()
                         .sorted()
                         .toList());

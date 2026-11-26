@@ -227,6 +227,27 @@ export function badge(value, className = '') {
     // and `class="badge "` made that look like a modifier that failed to arrive.
     return el('span', value, ['badge', className].filter(Boolean).join(' '));
 }
+/** One spelling of a stored role wherever the WebUI prints one. */
+export function roleName(value) {
+    return (
+        { ADMINISTRATOR: 'Administrator', MODERATOR: 'Moderator', VIEWER: 'Viewer' }[
+            String(value || '').toUpperCase()
+        ] || String(value || 'Unavailable')
+    );
+}
+/**
+ * The role chip used by the sidebar, the Preferences page and WebUI Access. One shape,
+ * one casing and one tone per role: administrator purple, moderator cyan, viewer
+ * neutral. The stored enum lives in `data-role` so the stylesheet does not have to
+ * match on display text.
+ */
+export function roleBadge(value) {
+    const upper = String(value || '').toUpperCase();
+    const node = badge(roleName(upper).toLowerCase(), 'role');
+    node.dataset.role = upper;
+    node.title = roleName(upper);
+    return node;
+}
 export function status(value, online = false) {
     return el('span', value, 'status' + (online ? ' online' : ''));
 }
@@ -274,80 +295,39 @@ export const compact = (value) =>
     new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(
         value
     );
-const preferredLocale = (() => {
-    if (typeof navigator === 'undefined') return 'en-GB';
-    const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
-    const language = languages[0] || 'en-GB';
-    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-    // Browsers often report en-US regardless of the machine region. Outside the
-    // Americas, prefer the day-first/24-hour form the user asked for.
-    return /^en[-_]US$/i.test(language) && !zone.startsWith('America/') ? 'en-GB' : language;
-})();
 /**
- * Every date the WebUI prints is a local date, and the server stores its windows as
- * Unix milliseconds UTC (`DepotStore`, `AuctionState`). Without a zone the same instant
- * read "04/12 09:00" to the operator who scheduled it and to the colleague they sent
- * the link to, in two different zones. The zone is part of the value, so it is part of
- * the string — compactly, as `GMT+3` rather than a spelled-out region name.
+ * Dates follow the browser, not this bundle. The viewer already configured a region,
+ * a clock and a time zone in their operating system; `undefined` asks Intl for exactly
+ * those. There is deliberately no forced `en-GB` and no forced `h23`: a browser set to
+ * `en-US` reads `07:17 PM`, one set to `en-GB` reads `19:17`, and the header agrees
+ * with every row. No formatter appends a zone name — the whole WebUI is local time,
+ * and repeating "EET" on every cell was noise, not information.
  */
-const dateFormat = new Intl.DateTimeFormat(preferredLocale, {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-    timeZoneName: 'short'
+const dateFormat = new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'short',
+    timeStyle: 'short'
 });
-const calendarFormat = new Intl.DateTimeFormat(preferredLocale, {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-});
+const calendarFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'short' });
 // Used where a *sample* time is read out loud (the chart's inspection readout and its
-// axis), so it carries the zone like every other date. The terminal gutter is the one
-// clock without a zone: see `clockFormat` below.
-const timeFormat = new Intl.DateTimeFormat(preferredLocale, {
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-    timeZoneName: 'short'
-});
+// axis). Same system clock, no zone suffix.
+const timeFormat = new Intl.DateTimeFormat(undefined, { timeStyle: 'short' });
 // Log lines carry their own HH:MM:SS, so the terminal clock keeps seconds and
 // can order rows inside one minute.
-const clockFormat = new Intl.DateTimeFormat(preferredLocale, {
+const clockFormat = new Intl.DateTimeFormat(undefined, {
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit',
-    hourCycle: 'h23'
+    second: '2-digit'
 });
-/**
- * The zone a date prints, read from the formatter that prints dates.
- *
- * The header clock probed the zone with `Intl.DateTimeFormat(undefined, …)` — the raw
- * browser locale — while every row used `preferredLocale`, which this bundle forces to
- * `en-GB` outside the Americas. One viewport then read "GMT+2" in the header and "EET"
- * four lines below it, and both were right.
- */
-export const zoneName = (value = Date.now()) =>
-    dateFormat.formatToParts(new Date(value)).find((part) => part.type === 'timeZoneName')
-        ?.value || '';
 export const date = (value) => (value ? dateFormat.format(new Date(value)) : '—');
 export const time = (value) => (value ? timeFormat.format(new Date(value)) : '—');
 export const clock = (value) => (value ? clockFormat.format(new Date(value)) : '—');
 export const calendarDate = (value = Date.now()) => calendarFormat.format(new Date(value));
 // A trail can hold several events inside one minute, so its stamp carries seconds:
-// five rows reading "16:15 EET" left the operator unable to read the order the table
-// was already sorted by. Same locale, same zone, one more part.
-const stampFormat = new Intl.DateTimeFormat(preferredLocale, {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hourCycle: 'h23',
-    timeZoneName: 'short'
+// five rows reading the same minute left the operator unable to read the order the
+// table was already sorted by. Same locale, same clock, one more part.
+const stampFormat = new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'short',
+    timeStyle: 'medium'
 });
 export const stamp = (value) => (value ? stampFormat.format(new Date(value)) : '—');
 export function duration(seconds) {

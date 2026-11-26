@@ -88,8 +88,8 @@ const displaySender = (value) =>
     strip(value.senderLabel) ? strip(value.senderLabel) : senderName(value.sender);
 const units = (gifts) => gifts.reduce((total, gift) => total + Number(gift.count || 0), 0);
 const unitCount = (value) => `${value} unit${value === 1 ? '' : 's'}`;
-// One formatter for the page: the app's own `date()` (24-hour, four-digit year),
-// so a window never reads 11/20/86 next to a stored row that reads 24/11/2026. A
+// One formatter for the page: the app's own `date()`, in the viewer's system locale
+// and clock, so a window never reads differently from a stored row beside it. A
 // value nobody picked yet says so instead of rendering "Invalid Date".
 const moment = (value) => (Number.isFinite(value) ? date(value) : 'an unchosen time');
 const sentTime = (value) => moment(value);
@@ -286,7 +286,6 @@ export async function mount(ctx) {
     let data = await ctx.request('mail');
     const limits = { ...FALLBACK_LIMITS, ...(data.limits || {}) },
         senders = Array.isArray(data.senders) && data.senders.length ? data.senders : [4, 5, 6],
-        zone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time',
         definitions = new Map(),
         node = el('div', null, 'stack mail-page'),
         summary = el('div', null, 'stack'),
@@ -540,7 +539,7 @@ function deliveredLabel(campaign) {
             '',
             // The facts table below carries Delivered; repeating it in the preview
             // footer printed the same zero three times in one dialog.
-            preview(campaign, definitions, [`Window · ${zone}`]),
+            preview(campaign, definitions),
             facts([
                 ['Status', mailingStatus(campaign, data.now)],
                 ['Sender', displaySender(campaign)],
@@ -623,9 +622,8 @@ function deliveredLabel(campaign) {
             ],
             ['Sender', displaySender, displaySender],
             [
-                // The zone lives in the cells, where `date()` prints "07:17 EET" beside
-                // every stamp: repeating it in the header made the label two lines wide,
-                // so the whole header row stood 72px against 42px on every other table.
+                // Every cell uses the browser's own date format, so two dates in one
+                // column read as two values and not as two zones.
                 'Delivery window',
                 (campaign) => {
                     const cell = el('div', null, 'mail-window'),

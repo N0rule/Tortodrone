@@ -16,7 +16,7 @@ test('numeric preferences return numbers, not strings', () => {
 test('writing without browser storage still applies coercion', () => {
     assert.equal(write('pageSize', 999), 30);
     assert.equal(write('pollScale', '2'), 2);
-    assert.equal(write('theme', 'chartreuse'), 'catppuccin');
+    assert.equal(write('theme', 'chartreuse'), 'tortodrone');
     assert.equal(write('theme', 'dark'), 'tortodrone');
     assert.equal(write('theme', 'light'), 'catppuccin');
     assert.equal(write('clock', 'nonsense'), 'date');

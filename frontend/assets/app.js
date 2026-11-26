@@ -1,6 +1,6 @@
 import { symbol as uiSymbol } from './components/symbols.js';
 import { api } from './api.js';
-import { $, el, button, text, notify, report, calendarDate, date, zoneName, toolbar } from './ui.js';
+import { $, el, button, text, notify, report, calendarDate, date, roleBadge, toolbar } from './ui.js';
 import { route, go } from './router.js';
 import { loadAssets } from './components/items.js';
 import { dialogDirty, closeDialog } from './components/dialog.js';
@@ -248,9 +248,10 @@ function ageConnection() {
 function clock() {
     const now = new Date(),
         node = $('#clock');
-    // The zone is part of a time, and it comes from the same formatter the rows use: the
-    // header once spelled the zone "GMT+2" over rows that spelled it "EET".
-    text(node, prefs.read('clock') === 'date-time' ? date(now) : calendarDate(now) + ' ' + zoneName(now));
+    // The header reads the same system clock and the same locale as every row below
+    // it: date alone, or date and local time. No zone suffix, because the whole view
+    // is the viewer's own time zone.
+    text(node, prefs.read('clock') === 'date-time' ? date(now) : calendarDate(now));
     node.dateTime = now.toISOString();
     node.title = `This browser's clock${
         Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -621,7 +622,12 @@ function signedIn() {
     // The name and the role are two things, so they are two elements: a middot
     // between them made one string that wrapped mid-sentence in a 220px column.
     text($('#identity-name'), api.session.username);
-    text($('#identity-role'), String(api.session.role || '').toLowerCase());
+    const sidebarRole = roleBadge(api.session.role),
+        roleNode = $('#identity-role');
+    roleNode.className = sidebarRole.className;
+    roleNode.dataset.role = sidebarRole.dataset.role;
+    roleNode.title = sidebarRole.title;
+    text(roleNode, sidebarRole.textContent);
     $('#identity').title = api.session.username + ' (' + api.session.role + ')';
     renderNavigation();
     expiryWarned = false;

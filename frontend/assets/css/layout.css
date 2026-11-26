@@ -1,17 +1,19 @@
 /* The composition follows the SK-AH reference: a lighter rail on the outside and one
-   inset workspace panel floating on it with a 1px boundary and a 12px corner. The
-   page scrolls as a whole, so the rail stays put beside it. */
+   inset workspace panel floating on it with a 1px boundary and a 12px corner. The shell
+   is exactly one viewport tall; the top bar and the page heading are fixed, and only
+   the page body scrolls under them. */
 #shell {
     display: grid;
     grid-template-columns: 248px minmax(0, 1fr);
-    min-height: 100dvh;
+    block-size: 100dvh;
     padding: 8px 8px 8px 0;
     background: var(--rail);
+    overflow: hidden;
 }
 #sidebar {
-    position: sticky;
+    position: relative;
     top: 0;
-    height: 100dvh;
+    block-size: 100%;
     display: flex;
     flex-direction: column;
     padding: 14px 10px 12px;
@@ -158,16 +160,9 @@
     line-height: 1.3;
 }
 #identity-role {
-    padding: 1px 7px;
-    border: 1px solid color-mix(in srgb, var(--purple) 38%, transparent);
-    background: color-mix(in srgb, var(--purple) 13%, transparent);
-    border-radius: var(--radius-pill);
-    color: var(--purple);
+    /* The one role chip: same shape, casing and tone as Preferences and WebUI Access.
+       Only the rail's smaller type stays local. */
     font-size: 10.5px;
-    font-weight: 600;
-    line-height: 1.45;
-    letter-spacing: 0.01em;
-    text-transform: capitalize;
 }
 #sidebar footer button {
     min-block-size: var(--control-sm);
@@ -189,11 +184,15 @@
     color: var(--text);
 }
 /* The inset workspace: one panel floating on the rail with a 1px boundary and the
-   12px corner the reference uses for every surface. It is the page's canvas, so the
-   top bar and page heading paint the same fill when they stick. */
+   12px corner the reference uses for every surface. It fills the shell's height and
+   owns the column: the top bar is its fixed head, the page heading its fixed subhead,
+   and `#page` the only part that scrolls. */
 .workspace {
     min-width: 0;
-    min-height: calc(100dvh - 16px);
+    block-size: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     background: var(--canvas);
     border: 1px solid var(--line);
     border-radius: var(--radius);
@@ -202,11 +201,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex: 0 0 56px;
     height: 56px;
-    /* The page switcher stays on screen: on a 2,300px catalogue page the Menu button
-       used to be 561px above the viewport, so changing page meant scrolling home. */
-    position: sticky;
-    top: 8px;
     z-index: 20;
     padding: 0 24px;
     border-bottom: 1px solid var(--line-data);
@@ -229,12 +225,20 @@
     padding: 0 12px;
 }
 main {
-    /* One gutter value: the sticky page heading spans it with a negative margin, so
-       the two numbers cannot drift apart at a breakpoint. */
+    /* One gutter value: the page heading spans it with a negative margin, so the two
+       numbers cannot drift apart at a breakpoint. */
     --gutter: 30px;
+    inline-size: 100%;
     max-width: 1560px;
-    margin: auto;
-    padding: 26px var(--gutter) 50px;
+    margin: 0 auto;
+    padding: 26px var(--gutter) 0;
+    /* The content column is the shell's middle row: its heading is fixed and `#page`
+       is the only scroller, so the page name never travels out of sight. */
+    flex: 1 1 auto;
+    min-block-size: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 .page-heading {
     display: flex;
@@ -244,14 +248,10 @@ main {
     align-items: flex-start;
     justify-content: space-between;
     gap: 20px;
+    flex: 0 0 auto;
     margin-bottom: 26px;
     padding-bottom: 20px;
     border-bottom: 1px solid var(--line-panel);
-    /* The page travels with its name and its one action. On a 328-row depot the
-       title and the primary control used to scroll away on the first wheel notch. */
-    position: sticky;
-    top: 64px;
-    z-index: 10;
     margin-inline: calc(var(--gutter) * -1);
     padding-inline: var(--gutter);
     background: var(--canvas);
@@ -264,6 +264,12 @@ main {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space);
     position: relative;
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 50px;
+    scrollbar-gutter: stable;
 }
 @keyframes page-enter {
     from {
@@ -400,7 +406,7 @@ main {
     }
     main {
         --gutter: 22px;
-        padding: 22px var(--gutter);
+        padding: 22px var(--gutter) 0;
     }
 }
 /* The sidebar becomes the overlay drawer at 900px, not 760: at 844x390 (a landscape
@@ -482,12 +488,12 @@ main {
         padding: 0 16px;
     }
     main {
-        /* The gutter is the padding, and the sticky page heading spans it with a
-           negative margin of the same value: leaving --gutter at the 22px of the
-           breakpoint above while the padding became 14px made every page 8px wider
-           than the viewport. */
+        /* The gutter is the padding, and the page heading spans it with a negative
+           margin of the same value: leaving --gutter at the 22px of the breakpoint
+           above while the padding became 14px made every page 8px wider than the
+           viewport. */
         --gutter: 14px;
-        padding: 20px var(--gutter);
+        padding: 20px var(--gutter) 0;
     }
     .two-columns {
         grid-template-columns: 1fr;

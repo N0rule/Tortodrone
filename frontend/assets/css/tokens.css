@@ -4,8 +4,8 @@
    inset workspace floating on a slightly lighter rail, 12px surfaces, 8px controls
    and a quiet 1px boundary instead of a coloured outline.
 
-   Catppuccin Mocha is the default theme. The original navy-and-gold console remains
-   as `data-theme="tortodrone"`; the white theme and compact density are gone. */
+   Tortodrone is the default theme and Catppuccin Mocha is the alternate. The white
+   theme and compact density are gone. */
 
 /* Both faces ship with the deployment (font-src 'self'), so the console never asks
    a public CDN for type and a hosted server still renders the intended design.
@@ -69,7 +69,7 @@
         ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Cascadia Mono',
         'DejaVu Sans Mono', monospace;
 
-    /* ---- Catppuccin Mocha (default) ------------------------------------------------
+    /* ---- Catppuccin Mocha (alternate) ----------------------------------------------
        The workspace is the darkest surface; the rail it floats on is one step lighter,
        which is the reference's inset-sidebar composition. Panels sit on the workspace
        fill with a 1px boundary, never an outline. */

@@ -149,6 +149,14 @@ public final class WebAdminServiceTest {
                                                                 .getFirst()
                                                                 .config()))),
                         "catalogue pages use authoritative display names");
+                var grantablePage = (AdminViews.ItemPage) service.read(
+                        "catalogue", new AdminService.Input(Map.of("size", "100", "page", "1", "grantable", "true")));
+                check(
+                        !grantablePage.entries().isEmpty()
+                                && grantablePage.entries().stream().allMatch(AdminViews.Item::grantable)
+                                && grantablePage.total()
+                                        <= content.items().entries().size(),
+                        "a grantable catalogue page only contains grantable items");
                 try {
                     service.read("catalogue", new AdminService.Input(Map.of("size", "101")));
                     throw new AssertionError("unbounded catalogue page accepted");

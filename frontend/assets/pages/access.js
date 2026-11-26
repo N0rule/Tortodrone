@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, text, toolbar, button, routeLink, badge, panel, facts, date, duration } from '../ui.js';
+import { el, text, toolbar, button, routeLink, roleBadge, roleName, panel, facts, date, duration } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { openDialog, edit, confirm, field, closeDialog } from '../components/dialog.js';
 import { route, go } from '../router.js';
@@ -21,10 +21,6 @@ export async function mount(ctx) {
      * what the server stores; the words below are what the operator reads and picks.
      */
     const ROLES = ['VIEWER', 'MODERATOR', 'ADMINISTRATOR'];
-    const roleName = (value) =>
-        ({ ADMINISTRATOR: 'Administrator', MODERATOR: 'Moderator', VIEWER: 'Viewer' })[
-            String(value || '').toUpperCase()
-        ] || String(value || 'Unavailable');
     // The picker shows words and submits the enum the server stores.
     const role = (value) =>
         field(
@@ -44,14 +40,6 @@ export async function mount(ctx) {
     // A plain role is a word; only the two elevated roles are worth an edge.
     // A chip is a word, not a shout: the sidebar prints the same role in the same
     // casing, and privilege wears the purple every role chip wears.
-    const roleBadge = (value) => {
-        const node = badge(
-            String(roleName(value)).toLowerCase(),
-            value === 'ADMINISTRATOR' ? 'purple' : value === 'MODERATOR' ? 'cyan' : ''
-        );
-        node.title = roleName(value);
-        return node;
-    };
     const resetPassword = (row) =>
         edit('Password · ' + row.username, 'webui-user-password', passwords(), {
             username: row.username,

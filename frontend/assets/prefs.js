@@ -18,7 +18,7 @@ const storage = (() => {
 
 /** Coercion table: the first entry of each list is the default. */
 export const schema = {
-    theme: ['catppuccin', 'tortodrone'],
+    theme: ['tortodrone', 'catppuccin'],
     pageSize: [30, 15, 60, 120],
     pollScale: [1, 0.5, 2, 4],
     clock: ['date', 'date-time'],
@@ -28,7 +28,7 @@ export const schema = {
 const listeners = new Set();
 
 /* Stored values from the removed appearance options. `dark` was the navy console and
-   keeps working as `tortodrone`; `light` has no successor, so it lands on the default.
+   keeps working as `tortodrone`; `light` has no successor, so it lands on Catppuccin.
    Migration happens on read and is written back by the next write, so no account or
    server state is touched. */
 const LEGACY_THEME = { dark: 'tortodrone', light: 'catppuccin' };
