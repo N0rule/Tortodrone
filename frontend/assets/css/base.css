@@ -235,7 +235,7 @@ button[aria-disabled='true'],
     max-inline-size: 44ch;
 }
 /* A reason that is always on costs a whole line of a phone screen to explain a
-   control nobody is reaching for, so outside a table it follows hover and focus. */
+   control nobody is reaching for, so outside a table it waits on its own control. */
 .toolbar > .unavailable-reason {
     position: absolute;
     inline-size: 1px;
@@ -244,14 +244,25 @@ button[aria-disabled='true'],
     clip-path: inset(50%);
     white-space: nowrap;
 }
-.toolbar:hover > .unavailable-reason,
-.toolbar:focus-within > .unavailable-reason,
-.toolbar:has(button:focus-visible) > .unavailable-reason {
+/* A reason asked for on a page toolbar is permanent and takes its own line: the
+   operator needs it before they reach for the button, and hover is not a channel a
+   phone has. A note inside a table cell is not this note. */
+.toolbar > .unavailable-reason.shown:not(td *) {
     position: static;
     inline-size: auto;
     block-size: auto;
     clip-path: none;
     white-space: normal;
+    order: 99;
+    flex-basis: 100%;
+    max-inline-size: none;
+}
+/* A disabled note in a toolbar takes its own line, so the controls it sits between
+   still read as one group. */
+.server-strip .toolbar .unavailable-reason {
+    order: 99;
+    flex-basis: 100%;
+    max-inline-size: none;
 }
 td .unavailable-reason,
 th .unavailable-reason {
@@ -277,46 +288,32 @@ th .unavailable-reason.shown {
     max-inline-size: 26ch;
     font-size: 11px;
 }
-tr:hover td .unavailable-reason.shown,
-tr:focus-within td .unavailable-reason.shown,
-tr:hover th .unavailable-reason.shown,
-tr:focus-within th .unavailable-reason.shown {
+/* Only the note whose own control has focus is revealed, and the script marks that
+   note: a row-wide hover reveal is what painted two boxes and moved the toolbar. It
+   floats below the control so revealing it never re-lays the row. */
+.toolbar > .unavailable-reason[data-active]:not(.shown),
+td .toolbar > .unavailable-reason.shown[data-active],
+th .toolbar > .unavailable-reason.shown[data-active],
+td .unavailable-reason[data-active],
+th .unavailable-reason[data-active] {
     display: block;
-}
-/* Shown as a floating note: revealing it inside the cell re-laid the whole table row
-   and moved the button the operator was reaching for. */
-td .unavailable-reason.shown {
     position: absolute;
-    inset-block-start: calc(100% - 8px);
-    inset-inline-end: 6px;
-    z-index: 4;
-    padding: 4px 7px;
+    inset-block-start: calc(100% + 4px);
+    inset-inline-end: 0;
+    z-index: 6;
+    inline-size: max-content;
+    max-inline-size: min(44ch, 46vw);
+    block-size: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    padding: 5px 8px;
+    color: var(--muted);
     background: var(--raised);
     border: 1px solid var(--line-bright);
     border-radius: var(--radius);
-    /* A fixed 38% black halo sat 2.7x heavier than the themed elevation beside it:
-       the shadow is a theme token, like every other one here. */
     box-shadow: var(--elev-2);
-}
-/* A reason asked for on a page toolbar is permanent and takes its own line: the
-   operator needs it before they reach for the button, and hover is not a channel a
-   phone has. */
-.toolbar > .unavailable-reason.shown {
-    position: static;
-    inline-size: auto;
-    block-size: auto;
-    clip-path: none;
-    white-space: normal;
-    order: 99;
-    flex-basis: 100%;
-    max-inline-size: none;
-}
-/* A disabled note in a toolbar takes its own line, so the controls it sits between
-   still read as one group. */
-.server-strip .toolbar .unavailable-reason {
-    order: 99;
-    flex-basis: 100%;
-    max-inline-size: none;
+    text-align: start;
 }
 /* A pending control keeps its label and grows a spinner instead of going blank. */
 button[aria-busy='true'],
@@ -630,6 +627,35 @@ select {
 select option {
     color: var(--text);
     background: var(--surface);
+}
+/* Customizable select: the closed control keeps the console's box, and the open list
+   is the same rounded panel as every surface here instead of the platform's square
+   menu. Browsers without `base-select` keep their native list. */
+@supports (appearance: base-select) {
+    select,
+    ::picker(select) {
+        appearance: base-select;
+    }
+    select::picker-icon {
+        display: none;
+    }
+    ::picker(select) {
+        margin-block-start: 6px;
+        padding: 5px;
+        color: var(--text);
+        background: var(--raised);
+        border: 1px solid var(--line-bright);
+        border-radius: var(--radius);
+        box-shadow: var(--elev-2);
+    }
+    ::picker(select) option {
+        padding: 7px 9px;
+        border-radius: var(--radius-control-sm);
+    }
+    ::picker(select) option:checked {
+        color: var(--gold);
+        background: color-mix(in srgb, var(--gold) 12%, transparent);
+    }
 }
 /* `showReason` chooses to show a reason instead of hiding it, and outside a table cell
    there was no rule that honoured it: `.shown` was only ever un-clipped inside `td`/`th`,

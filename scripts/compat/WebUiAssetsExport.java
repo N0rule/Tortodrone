@@ -149,6 +149,13 @@ public final class WebUiAssetsExport {
                 "ui/window/geartip_levelbar.png",
                 "variants",
                 "ui/window/tooltip_parts/icon_variant.png",
+                // The ability marks the gear tooltip and the wiki use: the cyan arrow
+                // for an equipment bonus and the plain star the WebUI rings in variant
+                // magenta for a Unique Variant.
+                "bonus",
+                "ui/window/tooltip_parts/icon_bonus.png",
+                "unique",
+                "ui/window/tooltip_parts/geartip_rarity_star.png",
                 "equipment",
                 "ui/status/images/backing_slots.png",
                 "button",

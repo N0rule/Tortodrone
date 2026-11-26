@@ -98,6 +98,7 @@
     --good: #a6e3a1; /* green */
     --bad: #f38ba8; /* red */
     --purple: #cba6f7; /* mauve: authority and Battle Sprites */
+    --unique: #e07bb0; /* the ring around a Unique Variant's star */
     /* Telemetry follows the theme rather than borrowing a semantic colour: teal is
        the measured line, mauve the comparison, both with a soft area below them. */
     --chart-series: #94e2d5; /* teal */
@@ -180,6 +181,7 @@
     --good: #8fd9ae;
     --bad: #ffb0ad;
     --purple: #e2bcf5;
+    --unique: #b8508f; /* the ring around a Unique Variant's star */
     /* The retained console keeps its own telemetry pair: the gold brand for the
        measured line and the cyan link ink for the comparison. */
     --chart-series: #edc777;

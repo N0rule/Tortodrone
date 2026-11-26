@@ -311,6 +311,8 @@ main {
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
+    /* A control's reason is drawn as a floating note anchored to this row. */
+    position: relative;
 }
 .toolbar input {
     width: min(300px, 100%);

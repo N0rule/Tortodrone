@@ -1965,6 +1965,14 @@ td:has(> .time-stamp) {
     flex: 0 0 22px;
     object-fit: contain;
 }
+/* A Unique Variant is the client's gold star inside a magenta ring; the star is the
+   shipped artwork and the ring is the one thing the stylesheet adds. */
+.variant-effect > img[data-kind='unique'] {
+    padding: 1px;
+    background: var(--inset);
+    border: 2px solid var(--unique);
+    border-radius: var(--radius-pill);
+}
 .variant-effect .effect-name {
     flex: 1;
 }
@@ -2246,6 +2254,13 @@ td:has(> .time-stamp) {
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--inset);
+}
+/* A record dialog drops the padding from an untitled panel, so the campaign's
+   message, its facts and its actions sat flush against one another. The record keeps
+   the stack rhythm the rest of the page uses. */
+#fields > .panel:has(.mail-preview) {
+    display: grid;
+    gap: 18px;
 }
 .mail-preview .mail-subject {
     font-size: 16px;

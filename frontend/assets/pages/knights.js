@@ -1,7 +1,7 @@
 import { symbol } from '../components/symbols.js';
 import { api } from '../api.js';
 import { itemPicker } from '../components/item-picker.js';
-import { el, button, routeLink, toolbar, panel, badge, status, facts, details, input, select, tabs, text, number, copy, date } from '../ui.js';
+import { el, button, routeLink, toolbar, panel, badge, gameMasterBadge, status, facts, details, input, select, tabs, text, number, copy, date } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { edit, confirm, field, conflict, openDialog, localError } from '../components/dialog.js';
 import {
@@ -60,7 +60,7 @@ export async function mount(ctx) {
             ['Account', (k) => k.username],
             [
                 'Permission',
-                (k) => badge(k.gameMaster ? 'GM' : 'Player', k.gameMaster ? 'purple' : '')
+                (k) => (k.gameMaster ? gameMasterBadge() : badge('Player'))
             ],
             ['Status', (k) => status(k.online ? 'Online' : 'Offline', k.online)]
         ],
@@ -237,7 +237,7 @@ export async function mount(ctx) {
         badges.replaceChildren(
             badge(`Rank ${view.profile.progress.rank}-${view.profile.progress.subrank}`),
             status(view.online ? 'Online' : 'Offline', view.online),
-            badge(view.gameMaster ? 'Game Master' : 'Player', view.gameMaster ? 'purple' : ''),
+            view.gameMaster ? gameMasterBadge() : badge('Player'),
             badge(view.guild || 'No guild')
         );
         text(accountLink, view.username);

@@ -88,6 +88,21 @@ function explain(node, why) {
         if (!note.isConnected && typeof requestAnimationFrame === 'function')
             requestAnimationFrame(place);
     }
+    // The note follows its own control instead of the whole row or toolbar. Revealing
+    // every note in a row on hover painted two overlapping boxes and re-laid the
+    // toolbar, which is what made a button jump under the pointer. Focus is the one
+    // channel that names which control asked: a pointer already gets the `title`.
+    if (!node.__reasonBound) {
+        node.__reasonBound = true;
+        const active = (on) => {
+            const current = node.__reasonNote;
+            if (!current) return;
+            if (on) current.dataset.active = 'true';
+            else delete current.dataset.active;
+        };
+        node.addEventListener('focus', () => active(true));
+        node.addEventListener('blur', () => active(false));
+    }
 }
 export function button(label, action, className = 'secondary', available, options = {}) {
     const settings = typeof options === 'string' ? { icon: options } : options;
@@ -246,6 +261,16 @@ export function roleBadge(value) {
     const node = badge(roleName(upper).toLowerCase(), 'role');
     node.dataset.role = upper;
     node.title = roleName(upper);
+    return node;
+}
+/**
+ * In-game authority wears the same pill as WebUI administration: the owner asked for
+ * the Game Master tag to read like "Administrator", not like a second badge shape.
+ */
+export function gameMasterBadge() {
+    const node = badge('game master', 'role');
+    node.dataset.role = 'GAME_MASTER';
+    node.title = 'Game Master';
     return node;
 }
 export function status(value, online = false) {

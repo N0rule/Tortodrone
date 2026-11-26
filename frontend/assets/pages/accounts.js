@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, toolbar, button, routeLink, panel, facts, badge, date, copy } from '../ui.js';
+import { el, toolbar, button, routeLink, panel, facts, badge, gameMasterBadge, date, copy } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { edit, confirm, confirmAction, field } from '../components/dialog.js';
 
@@ -25,7 +25,7 @@ export async function mount(ctx) {
             ['Account', (r) => r.username],
             [
                 'Permission',
-                (r) => badge(r.gameMaster ? 'Game Master' : 'Player', r.gameMaster ? 'purple' : '')
+                (r) => (r.gameMaster ? gameMasterBadge() : badge('Player'))
             ],
             ['Knights', (r) => r.knights, (r) => r.knights, 'end'],
             ['Created', (r) => date(r.createdAt), (r) => r.createdAt]

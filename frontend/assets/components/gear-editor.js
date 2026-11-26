@@ -306,9 +306,9 @@ function effectsView(effects = []) {
         if (e.source === 'Unique Variant')
             row.append(variantEffect(e.config, { variantDisplay: { [e.config]: e } }));
         else {
-            // The client puts the same effect mark beside every ability row, not only
-            // the Unique Variant entries the mark was shipped for.
-            const art = effectIcon();
+            // An equipment bonus keeps the client's own mark: the cyan arrow the
+            // stock tooltip and the wiki use, not the Unique Variant star.
+            const art = effectIcon('bonus');
             if (art) row.append(art);
             row.append(el('strong', e.label), el('small', e.source));
         }

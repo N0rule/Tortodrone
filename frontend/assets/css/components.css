@@ -115,7 +115,8 @@
     letter-spacing: 0.01em;
     text-transform: capitalize;
 }
-.badge.role[data-role='ADMINISTRATOR'] {
+.badge.role[data-role='ADMINISTRATOR'],
+.badge.role[data-role='GAME_MASTER'] {
     color: var(--purple);
     border-color: color-mix(in srgb, var(--purple) 45%, transparent);
     background: color-mix(in srgb, var(--purple) 12%, transparent);
@@ -248,8 +249,11 @@ th.numeric {
         white-space: nowrap;
     }
     /* A price is two figures, and the wider of them sets the column: wrapped, the
-       crowns chip dropped under the energy one and the column grew a line. */
-    .data-table td.numeric .price-cell {
+       crowns chip dropped under the energy one and the column grew a line. The pair
+       stays on one line so every row's figures end on the same edge whatever the
+       amount happens to be. */
+    .data-table td.numeric .price-cell,
+    .data-table td.numeric .toolbar {
         flex-wrap: nowrap;
         justify-content: flex-end;
     }
@@ -1885,7 +1889,9 @@ caption {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 10px;
-    align-items: start;
+    /* The key wraps to several lines; its copy action belongs to the middle of the
+       value, not to the first line of it. */
+    align-items: center;
 }
 .identity-key {
     min-inline-size: 0;

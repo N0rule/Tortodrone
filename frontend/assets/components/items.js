@@ -232,6 +232,9 @@ export async function inspectItemName(config, { definition, item, actions } = {}
 export function currency(kind, value) {
     const root = el('span', null, 'currency'),
         source = path(manifest.ui?.[kind]);
+    // The figure leads and the client's coin follows it: the owner reads "12,000
+    // crowns", so the number owns the reading edge and the icon is the unit mark.
+    root.append(el('span', number(value)));
     if (source) {
         const image = el('img');
         image.src = source;
@@ -242,7 +245,6 @@ export function currency(kind, value) {
         };
         root.append(image);
     }
-    root.append(el('span', number(value)));
     // The unit word is the fallback for a missing icon, not a second label on every
     // cell: "1,200" with the client's coin beside it needs no word.
     if (!source) root.append(el('span', ' ' + kind, 'muted'));
@@ -329,13 +331,17 @@ export function gearProgress(def, item) {
     }
     return node;
 }
-/** The client's effect mark, shared by Unique Variant rows and item effects. */
-export function effectIcon() {
-    const source = path(manifest.ui?.variants);
+/** The client has one mark per ability kind: the gold star in a magenta ring for a
+ * Unique Variant, and the cyan arrow for an equipment bonus. `ui.unique` is the
+ * client's own star; the ring is drawn by the stylesheet. */
+export function effectIcon(kind = 'bonus') {
+    const asset = kind === 'unique' ? 'unique' : 'bonus',
+        source = path(manifest.ui?.[asset]);
     if (!source) return null;
     const image = el('img');
     image.src = source;
     image.alt = '';
+    image.dataset.kind = kind;
     image.setAttribute('aria-hidden', 'true');
     image.onerror = () => {
         image.onerror = null;
@@ -348,7 +354,7 @@ export function variantEffect(config, def) {
         node = el('div', null, 'variant-effect');
     const label = meta?.label || variantName(config),
         separator = label.lastIndexOf(': '),
-        art = effectIcon();
+        art = effectIcon('unique');
     node.append(
         ...(art ? [art] : []),
         el('span', separator < 0 ? label : label.slice(0, separator + 2), 'effect-name')
