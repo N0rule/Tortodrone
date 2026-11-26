@@ -1965,7 +1965,7 @@ td:has(> .time-stamp) {
     background: var(--effect-fill);
     border: 0;
     border-radius: var(--radius-control);
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     line-height: 1.35;
 }
@@ -1982,6 +1982,7 @@ td:has(> .time-stamp) {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
+    align-content: center;
     gap: 0 5px;
     min-inline-size: 0;
     padding: 8px 10px;
@@ -1991,13 +1992,14 @@ td:has(> .time-stamp) {
     font-weight: 600;
 }
 /* A tooltip row is wider than its sentence, and the game's own rows are narrow enough
-   that the text fills them. Centring the copy keeps it attached to its colour and band
-   instead of stranding it at the left rag. The lists that are scanned rather than read
-   - the UV picker's two columns and a tile's compact copy - stay left aligned. */
+   that the text fills them. The sentence is left aligned but its block sits in the
+   middle of the row, so a wrapped line keeps one left edge while the row still reads
+   centred. The lists that are scanned rather than read - the UV picker's two columns
+   and a tile's compact copy - stay left aligned at their smaller size. */
 .variant-effects .variant-effect .effect-copy,
 .item-effects li .effect-copy {
     justify-content: center;
-    text-align: center;
+    text-align: left;
 }
 .variant-effect .effect-strength {
     margin: 0;
