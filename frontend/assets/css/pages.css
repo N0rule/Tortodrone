@@ -1987,6 +1987,11 @@ td:has(> .time-stamp) {
     min-inline-size: 0;
     padding: 8px 10px;
 }
+/* A variant row reserves its remove control at the leading edge; a bonus line has no
+   such control, so it reserves the same 30px and the two sentences share one column. */
+.item-effects li .effect-copy {
+    padding-inline-start: 40px;
+}
 .variant-effect .effect-name,
 .item-effects li strong {
     font-weight: 600;
