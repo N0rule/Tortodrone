@@ -1,3 +1,4 @@
+import com.diffplug.spotless.LineEnding
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.services.BuildService
@@ -598,6 +599,8 @@ spotless {
     java {
         target("modules/*/src/main/java/**/*.java", "src/test/java/**/*.java", "scripts/**/*.java")
         palantirJavaFormat("2.103.0")
+        // Committed Java is LF; do not let Windows make the check expect CRLF.
+        lineEndings = LineEnding.UNIX
         trimTrailingWhitespace()
         endWithNewline()
     }
