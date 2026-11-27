@@ -124,19 +124,19 @@ public final class WebIdentityStoreTest {
                 var results = pool.invokeAll(List.of(one, two));
                 check(results.get(0).get() != results.get(1).get(), "concurrent demotions preserve one administrator");
             }
-            check(
-                    store.list().stream()
-                                    .filter(i -> i.role() == WebIdentityStore.Role.ADMINISTRATOR)
-                                    .count()
-                            == 1,
-                    "last-administrator invariant");
+            // Which of the two demotions wins is the scheduler's choice, so the survivor is
+            // read back instead of assumed: both orderings keep exactly one administrator.
+            var surviving = store.list().stream()
+                    .filter(i -> i.role() == WebIdentityStore.Role.ADMINISTRATOR)
+                    .toList();
+            check(surviving.size() == 1, "last-administrator invariant");
             check(
                     new WebIdentityStore(root).bootstrapAvailable() == false,
                     "setup closure survives restart without migration");
             var viaSeam = WebFrontend.identities(root);
             check(
                     viaSeam.list().equals(store.list())
-                            && viaSeam.find("SecondAdmin").role() == WebIdentities.Role.ADMINISTRATOR,
+                            && viaSeam.find(surviving.getFirst().username()).role() == WebIdentities.Role.ADMINISTRATOR,
                     "local console reaches identities through the server seam");
             check(
                     store.audit().stream().anyMatch(e -> e.get("action").equals("identity.bootstrap")),

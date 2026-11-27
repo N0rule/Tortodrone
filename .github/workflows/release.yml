@@ -22,7 +22,7 @@ jobs:
       contents: write
     steps:
       - name: Check out tagged source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -46,11 +46,14 @@ jobs:
           fi
 
       - name: Set up Java 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '25'
           cache: gradle
+          # Same stable key as tests.yml: a tag can carry a build-script edit, and the
+          # release must not pay for a cold dependency cache on that one run.
+          cache-dependency-path: gradle/wrapper/gradle-wrapper.properties
 
       # The unit suite already gates every main push; the tag runs the packaged
       # integration gates (including the archive check) once while building the
@@ -59,7 +62,20 @@ jobs:
         shell: bash
         run: |
           chmod +x ./gradlew
-          ./gradlew --no-daemon testIntegration
+          # A 429 from Maven Central would otherwise fail a release run before the gates
+          # start. Retry only dependency transport failures; a gate that fails stays failed.
+          for attempt in 1 2 3; do
+            if ./gradlew --no-daemon testIntegration 2>&1 | tee "$RUNNER_TEMP/release-gates.log"; then
+              exit 0
+            fi
+            if ! grep -qE 'status code 429|Could not GET|Could not HEAD|Read timed out|Connection reset' \
+                "$RUNNER_TEMP/release-gates.log"; then
+              exit 1
+            fi
+            echo "Transient dependency download failure on attempt $attempt; retrying." >&2
+            sleep $((attempt * 30))
+          done
+          exit 1
 
       - name: Package one portable ZIP
         shell: bash
